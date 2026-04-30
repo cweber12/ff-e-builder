@@ -11,9 +11,9 @@ All monetary values in the database, API payloads, and application state are
 
 ## Which fields are cents
 
-| Table | Column | Notes |
-|---|---|---|
-| `items` | `unit_price_cents` | Price per single unit |
+| Table   | Column            | Notes                |
+| ------- | ----------------- | -------------------- |
+| `items` | `unit_cost_cents` | Cost per single unit |
 
 Derived values (line total, project total) are also computed in cents and only
 converted to a display string at the UI boundary.
@@ -33,31 +33,25 @@ Integer arithmetic is exact for all values that fit in a 53-bit mantissa
 
 ## How to format for display
 
-Use the `formatCents` utility (to be added in `src/lib/money.ts`):
+Use the shared `formatMoney()` utility from `src/types/project.ts`:
 
 ```ts
-// src/lib/money.ts
-export function formatCents(cents: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-  }).format(cents / 100);
-}
+import { cents, formatMoney } from '../types';
 
 // Example
-formatCents(12500);  // "$125.00"
-formatCents(99);     // "$0.99"
+formatMoney(cents(12500)); // "$125.00"
+formatMoney(cents(99)); // "$0.99"
 ```
 
 ## How to parse user input
 
 ```ts
-export function parseDollarsToCents(input: string): number {
-  const dollars = parseFloat(input.replace(/[^0-9.]/g, ''));
-  if (isNaN(dollars)) throw new Error('Invalid price input');
-  return Math.round(dollars * 100);
-}
+import { parseUnitCostDollarsInput, unitCostDollarsToCents } from '../types';
+
+const dollars = parseUnitCostDollarsInput('1234.56');
+if (dollars === undefined) throw new Error('Invalid price input');
+
+const unitCostCents = unitCostDollarsToCents(dollars);
 ```
 
 Use `Math.round`, never `Math.floor` or `Math.ceil`, when converting to cents.

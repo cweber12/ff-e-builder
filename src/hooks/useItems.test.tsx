@@ -154,6 +154,7 @@ describe('useUpdateItem', () => {
   });
 
   it('shows a 409-specific message for version conflicts', async () => {
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
     mockItemsUpdate.mockRejectedValueOnce(new MockApiError(409, 'Version conflict'));
 
     const { result } = renderHook(() => useUpdateItem('room-1'), {
@@ -168,7 +169,8 @@ describe('useUpdateItem', () => {
     });
 
     await waitFor(() => {
-      expect(mockToastError).toHaveBeenCalledWith(expect.stringContaining('another tab'));
+      expect(mockToastError).toHaveBeenCalledWith('This item changed in another tab - reloading');
     });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['items', 'room-1'] });
   });
 });

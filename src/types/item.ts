@@ -1,4 +1,6 @@
-export type ItemStatus = 'pending' | 'ordered' | 'approved' | 'received';
+import type { ItemStatus } from './itemValidation';
+
+export type { ItemStatus } from './itemValidation';
 
 export type Item = {
   id: string;

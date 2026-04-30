@@ -5,9 +5,25 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { cn } from '../lib/cn';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/calc';
-import { cents, formatMoney, type Item, type Room } from '../types';
+import { useUpdateItem } from '../hooks/useItems';
+import {
+  cents,
+  editableItemPatchSchema,
+  formatMoney,
+  itemStatuses,
+  parseMarkupPctInput,
+  parseQtyInput,
+  parseUnitCostDollarsInput,
+  unitCostDollarsToCents,
+  type Item,
+  type ItemStatus,
+  type Room,
+} from '../types';
+import type { UpdateItemInput } from '../lib/api';
 import { StatusBadge } from './primitives/StatusBadge';
 import { Button } from './primitives/Button';
+import { InlineTextEdit } from './primitives/InlineTextEdit';
+import { InlineNumberEdit } from './primitives/InlineNumberEdit';
 
 export type RoomWithItems = Room & { items: Item[] };
 
@@ -49,63 +65,249 @@ class ItemsRenderErrorBoundary extends Component<ErrorBoundaryProps, ErrorBounda
   }
 }
 
-const display = (value: string | null | undefined) =>
-  value && value.trim().length > 0 ? value : <span className="text-gray-400">-</span>;
-
 const formatPercent = (value: number) =>
   new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value);
 
-const columns: ColumnDef<Item>[] = [
+type EditableItemPatch = Omit<UpdateItemInput, 'version'>;
+
+type SaveItemPatch = (item: Item, patch: EditableItemPatch) => Promise<void>;
+
+const toNullablePatch = (value: string) => (value.trim().length > 0 ? value.trim() : null);
+
+const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
+  onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
+
+const formatDollars = (value: number) => formatMoney(cents(Math.round(value * 100)));
+
+const nextStatus = (status: ItemStatus): ItemStatus => {
+  const index = itemStatuses.indexOf(status);
+  return itemStatuses[(index + 1) % itemStatuses.length] ?? 'pending';
+};
+
+function EditableTextCell({
+  item,
+  value,
+  field,
+  label,
+  onSave,
+  required = false,
+  displayClassName,
+}: {
+  item: Item;
+  value: string | null;
+  field: keyof EditableItemPatch;
+  label: string;
+  onSave: SaveItemPatch;
+  required?: boolean | undefined;
+  displayClassName?: string | undefined;
+}) {
+  const current = value ?? '';
+
+  return (
+    <InlineTextEdit
+      value={current}
+      aria-label={`${label} for ${item.itemName}`}
+      {...(displayClassName ? { className: displayClassName } : {})}
+      onSave={(nextValue) => {
+        const patchValue = required ? nextValue.trim() : toNullablePatch(nextValue);
+        return saveValidatedPatch(onSave, item, { [field]: patchValue });
+      }}
+      renderDisplay={(displayValue) =>
+        displayValue.trim().length > 0 ? (
+          <span className={displayClassName}>{displayValue}</span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      }
+    />
+  );
+}
+
+function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatch }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const saveStatus = (status: ItemStatus) =>
+    saveValidatedPatch(onSave, item, {
+      status,
+    });
+
+  return (
+    <span
+      className="relative inline-flex items-center gap-1.5"
+      onContextMenu={(event) => {
+        event.preventDefault();
+        setMenuOpen(true);
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => void saveStatus(nextStatus(item.status))}
+        className="rounded-pill focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        <StatusBadge status={item.status} />
+      </button>
+      <button
+        type="button"
+        aria-label={`Choose status for ${item.itemName}`}
+        aria-expanded={menuOpen}
+        onClick={(event) => {
+          event.stopPropagation();
+          setMenuOpen((open) => !open);
+        }}
+        className="rounded px-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        ...
+      </button>
+      {menuOpen && (
+        <div
+          role="menu"
+          className="absolute left-0 top-full z-20 mt-1 min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+        >
+          {itemStatuses.map((status) => (
+            <button
+              key={status}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                void saveStatus(status);
+              }}
+              className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            >
+              <StatusBadge status={status} />
+            </button>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
+const createColumns = (onSave: SaveItemPatch): ColumnDef<Item>[] => [
   {
     accessorKey: 'itemIdTag',
     header: 'ID',
-    cell: ({ row }) => display(row.original.itemIdTag),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.itemIdTag}
+        field="itemIdTag"
+        label="ID"
+        onSave={onSave}
+      />
+    ),
   },
   {
     accessorKey: 'itemName',
     header: 'Item',
-    cell: ({ row }) => <span className="font-medium text-gray-950">{row.original.itemName}</span>,
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.itemName}
+        field="itemName"
+        label="Item"
+        onSave={onSave}
+        required
+        displayClassName="font-medium text-gray-950"
+      />
+    ),
   },
   {
     accessorKey: 'category',
     header: 'Category',
-    cell: ({ row }) => display(row.original.category),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.category}
+        field="category"
+        label="Category"
+        onSave={onSave}
+      />
+    ),
   },
   {
     accessorKey: 'vendor',
     header: 'Vendor',
-    cell: ({ row }) => display(row.original.vendor),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.vendor}
+        field="vendor"
+        label="Vendor"
+        onSave={onSave}
+      />
+    ),
   },
   {
     accessorKey: 'model',
     header: 'Model',
-    cell: ({ row }) => display(row.original.model),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.model}
+        field="model"
+        label="Model"
+        onSave={onSave}
+      />
+    ),
   },
   {
     accessorKey: 'dimensions',
     header: 'Dimensions',
-    cell: ({ row }) => display(row.original.dimensions),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.dimensions}
+        field="dimensions"
+        label="Dimensions"
+        onSave={onSave}
+      />
+    ),
   },
   {
     accessorKey: 'qty',
     header: 'Qty',
-    cell: ({ row }) => <span className="tabular-nums">{row.original.qty}</span>,
+    cell: ({ row }) => (
+      <InlineNumberEdit
+        value={row.original.qty}
+        aria-label={`Qty for ${row.original.itemName}`}
+        parser={parseQtyInput}
+        formatter={(value) => String(value)}
+        onSave={(qty) => saveValidatedPatch(onSave, row.original, { qty })}
+      />
+    ),
   },
   {
     accessorKey: 'unitCostCents',
     header: 'Unit Cost',
     cell: ({ row }) => (
-      <span className="tabular-nums">{formatMoney(cents(row.original.unitCostCents))}</span>
+      <InlineNumberEdit
+        value={row.original.unitCostCents / 100}
+        aria-label={`Unit Cost for ${row.original.itemName}`}
+        parser={parseUnitCostDollarsInput}
+        formatter={formatDollars}
+        onSave={(unitCostDollars) =>
+          saveValidatedPatch(onSave, row.original, {
+            unitCostCents: unitCostDollarsToCents(unitCostDollars),
+          })
+        }
+      />
     ),
   },
   {
     accessorKey: 'markupPct',
     header: 'Markup',
     cell: ({ row }) => (
-      <span className="tabular-nums">{formatPercent(row.original.markupPct)}%</span>
+      <InlineNumberEdit
+        value={row.original.markupPct}
+        aria-label={`Markup for ${row.original.itemName}`}
+        parser={parseMarkupPctInput}
+        formatter={(value) => `${formatPercent(value)}%`}
+        onSave={(markupPct) => saveValidatedPatch(onSave, row.original, { markupPct })}
+      />
     ),
   },
   {
@@ -123,17 +325,33 @@ const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    cell: ({ row }) => <EditableStatusCell item={row.original} onSave={onSave} />,
   },
   {
     accessorKey: 'leadTime',
     header: 'Lead Time',
-    cell: ({ row }) => display(row.original.leadTime),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.leadTime}
+        field="leadTime"
+        label="Lead Time"
+        onSave={onSave}
+      />
+    ),
   },
   {
     accessorKey: 'notes',
     header: 'Notes',
-    cell: ({ row }) => display(row.original.notes),
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.notes}
+        field="notes"
+        label="Notes"
+        onSave={onSave}
+      />
+    ),
   },
 ];
 
@@ -224,12 +442,23 @@ function RoomItemsSection({
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const updateItem = useUpdateItem(room.id);
   const sortedItems = useMemo(
     () =>
       [...room.items].sort(
         (a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName),
       ),
     [room.items],
+  );
+  const columns = useMemo(
+    () =>
+      createColumns(async (item, patch) => {
+        await updateItem.mutateAsync({
+          id: item.id,
+          patch: { ...patch, version: item.version },
+        });
+      }),
+    [updateItem],
   );
   const table = useReactTable({
     data: sortedItems,

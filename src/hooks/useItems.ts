@@ -54,7 +54,8 @@ export function useUpdateItem(roomId: string) {
       }
 
       if (err instanceof ApiError && err.status === 409) {
-        toast.error('This item was changed in another tab — reload to see the latest version.');
+        toast.error('This item changed in another tab - reloading');
+        void queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(roomId) });
       } else {
         toast.error(`Save failed: ${err.message}`);
       }

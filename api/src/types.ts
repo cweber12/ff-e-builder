@@ -71,6 +71,7 @@ export interface Item {
 
 // ─── Zod input schemas (co-located with types for easy import) ─────────────
 import { z } from 'zod';
+import { itemStatuses } from '../../src/types/itemValidation';
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1).max(255),
@@ -105,7 +106,7 @@ export const CreateItemSchema = z.object({
   unit_cost_cents: z.number().int().nonnegative().default(0),
   markup_pct: z.number().nonnegative().default(0),
   lead_time: z.string().max(100).nullable().default(null),
-  status: z.enum(['pending', 'ordered', 'approved', 'received']).default('pending'),
+  status: z.enum(itemStatuses).default('pending'),
   image_url: z.string().url().nullable().default(null),
   link_url: z.string().url().nullable().default(null),
   sort_order: z.number().int().nonnegative().default(0),

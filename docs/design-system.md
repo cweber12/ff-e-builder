@@ -188,8 +188,16 @@ See the source files in `src/components/primitives/` for full prop documentation
 
 ## Composite Surfaces
 
-| Component    | Description                                                                 |
-| ------------ | --------------------------------------------------------------------------- |
-| `ItemsTable` | Read-only FF&E item schedule grouped by room with subtotals and grand total |
+| Component    | Description                                                                        |
+| ------------ | ---------------------------------------------------------------------------------- |
+| `ItemsTable` | FF&E item schedule grouped by room with inline editing, subtotals, and grand total |
 
 `ItemsTable` uses `@tanstack/react-table` for column rendering. Money must be formatted through `formatMoney()` and totals must match the shared `roomSubtotalCents()` and `projectTotalCents()` helpers.
+
+Editable item cells use the Phase 4 inline-editing primitives:
+
+- Text fields use `InlineTextEdit` and save on blur or Enter.
+- Numeric fields use `InlineNumberEdit`; quantity, unit cost, and markup validate through `zod` schemas before any mutation is sent.
+- Unit cost is edited as dollars and submitted as integer cents.
+- Line total remains read-only because it is derived from quantity, unit cost, and markup.
+- Status uses the display-only `StatusBadge` primitive inside an editor that supports left-click cycling and an explicit menu with every status option.
