@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Enforce conventional commits format:
+#   feat|fix|chore|docs|refactor|test|perf|build|ci: <description>
+MSG=$(cat "$1")
+PATTERN='^(feat|fix|chore|docs|refactor|test|perf|build|ci)(\(.+\))?: .+'
+if ! echo "$MSG" | grep -qE "$PATTERN"; then
+  echo ""
+  echo "ERROR: commit message does not follow Conventional Commits format."
+  echo "  Expected: <type>(<scope>): <description>"
+  echo "  Types:    feat | fix | chore | docs | refactor | test | perf | build | ci"
+  echo "  Got:      $MSG"
+  echo ""
+  exit 1
+fi

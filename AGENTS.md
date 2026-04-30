@@ -10,7 +10,7 @@
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
-- **Never commit automatically.** After every change, output a commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the *why*.
+- **Never commit automatically.** After every change, output a commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
@@ -30,21 +30,23 @@
 
 Pin these exact versions unless a version bump is explicitly requested.
 
-| Layer | Technology | Version |
-|---|---|---|
-| UI framework | React | 18.x |
-| Build tool | Vite | 5.x |
-| Language | TypeScript | 5.x |
-| Package manager | pnpm | 9.x |
-| Runtime (Node) | Node.js | 20 LTS |
-| Auth | Firebase Auth | 10.x |
-| API runtime | Cloudflare Workers | (wrangler 3.x) |
-| Database | Neon (serverless Postgres) | — |
-| ORM / query builder | Drizzle ORM | 0.30.x |
-| Styling | Tailwind CSS | 3.x |
-| Component library | shadcn/ui | latest |
-| Testing | Vitest + Testing Library | 1.x |
-| Linting | ESLint + Prettier | — |
+| Layer               | Technology                     | Version        |
+| ------------------- | ------------------------------ | -------------- |
+| UI framework        | React                          | 18.x           |
+| Build tool          | Vite                           | 5.x            |
+| Language            | TypeScript                     | 5.x            |
+| Package manager     | pnpm                           | 9.x            |
+| Runtime (Node)      | Node.js                        | 20 LTS         |
+| Auth                | Firebase Auth                  | 10.x           |
+| API runtime         | Cloudflare Workers             | (wrangler 3.x) |
+| API framework       | Hono                           | 4.x            |
+| Database            | Neon (serverless Postgres)     | —              |
+| ORM / query builder | Drizzle ORM                    | 0.30.x         |
+| Migration runner    | tsx + @neondatabase/serverless | —              |
+| Styling             | Tailwind CSS                   | 3.x            |
+| Component library   | shadcn/ui                      | latest         |
+| Testing             | Vitest + Testing Library       | 2.x            |
+| Linting             | ESLint + Prettier              | —              |
 
 ---
 
@@ -57,7 +59,7 @@ Every feature is done when **all** of the following are true:
 - [ ] **Docs updated** — `/README.md`, `/docs/`, and any sub-folder README touched if relevant
 - [ ] **Lint passes** — `pnpm lint` exits 0
 - [ ] **Build passes** — `pnpm build` exits 0
-- [ ] **Commit message drafted** — conventional-commits format with a body explaining the *why*
+- [ ] **Commit message drafted** — conventional-commits format with a body explaining the _why_
 
 ---
 

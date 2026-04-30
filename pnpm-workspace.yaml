@@ -1,0 +1,12 @@
+packages:
+  - api
+
+ignoredBuiltDependencies:
+  - esbuild
+  - protobufjs
+  - sharp
+
+onlyBuiltDependencies:
+  - protobufjs
+  - sharp
+  - workerd

@@ -1,0 +1,12 @@
+name = "ffe-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+FIREBASE_PROJECT_ID = "ffe-tool-auth"
+
+# Secrets — set via `wrangler secret put <VAR_NAME>` (never committed):
+#   NEON_DATABASE_URL
+#   FIREBASE_ADMIN_CLIENT_EMAIL
+#   FIREBASE_ADMIN_PRIVATE_KEY

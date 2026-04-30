@@ -50,17 +50,27 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   ├── components/    # Shared UI components
 │   ├── features/      # Feature-sliced modules (projects, rooms, items…)
 │   ├── hooks/         # Custom React hooks
-│   └── lib/           # Client-side utilities (auth, API client, formatters)
-├── api/               # Cloudflare Workers API (TypeScript)
+│   ├── lib/           # Client-side utilities (auth, API client, formatters)
+│   ├── test/          # Vitest setup and unit tests
+│   └── vite-env.d.ts  # Vite client-types reference
+├── tests/
+│   └── e2e/           # Playwright end-to-end tests
+├── public/            # Static assets (Vite copies to dist/)
+│   └── 404.html       # GitHub Pages SPA redirect script
+├── api/               # Cloudflare Workers API (TypeScript) — Phase 2
 │   └── routes/        # Hono route handlers
-├── db/                # Database layer (Drizzle ORM)
+├── db/                # Database layer (Drizzle ORM) — Phase 2
 │   ├── migrations/    # SQL migration files — never run from client
 │   └── schema.ts      # Drizzle schema (source of truth for DB types)
 ├── docs/              # Project documentation
 │   └── adr/           # Architecture Decision Records
-├── scripts/           # One-off and CI scripts
+├── .github/
+│   └── workflows/     # ci.yml (PR gates) + deploy.yml (main → gh-pages)
 ├── .env.example       # Required environment variables (no secrets)
 ├── AGENTS.md          # Canonical rules for all AI agents
+├── vite.config.ts     # Vite + Vitest config
+├── tailwind.config.ts # Tailwind v3 design tokens
+├── playwright.config.ts
 └── README.md          # This file
 ```
 
@@ -68,10 +78,10 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 
 ## Where to go next
 
-| Audience | Resource |
-|---|---|
-| AI agents & Codex | [AGENTS.md](AGENTS.md) |
+| Audience             | Resource                                     |
+| -------------------- | -------------------------------------------- |
+| AI agents & Codex    | [AGENTS.md](AGENTS.md)                       |
 | Engineers onboarding | [docs/architecture.md](docs/architecture.md) |
-| Ops / deployment | [docs/runbook.md](docs/runbook.md) |
-| Changelog | [docs/changelog.md](docs/changelog.md) |
-| Contributing | [docs/contributing.md](docs/contributing.md) |
+| Ops / deployment     | [docs/runbook.md](docs/runbook.md)           |
+| Changelog            | [docs/changelog.md](docs/changelog.md)       |
+| Contributing         | [docs/contributing.md](docs/contributing.md) |

@@ -53,22 +53,22 @@ C4Component
 
 ```mermaid
 sequenceDiagram
-  actor Designer
-  participant SPA as React SPA
-  participant Firebase
-  participant Worker as CF Worker /api
-  participant DB as Neon Postgres
+  participant U as User
+  participant W as React (GitHub Pages)
+  participant F as Firebase Auth
+  participant A as Worker (api.workers.dev)
+  participant D as Neon Postgres
 
-  Designer->>SPA: Edits item (name, quantity, unit_price_cents)
-  SPA->>Firebase: getIdToken()
-  Firebase-->>SPA: JWT (1-hour token)
-  SPA->>Worker: PATCH /api/items/:id  {Authorization: Bearer <jwt>}
-  Worker->>Firebase: Verify ID token (Admin SDK)
-  Firebase-->>Worker: Decoded token {uid, email}
-  Worker->>DB: UPDATE items SET ... WHERE id=:id AND project_owner=:uid
-  DB-->>Worker: Updated row
-  Worker-->>SPA: 200 {item}
-  SPA-->>Designer: UI reflects saved state
+  U->>W: Click "Save"
+  W->>F: Get current ID token
+  F-->>W: ID token JWT
+  W->>A: PATCH /api/v1/items/:id  (Bearer <token>)
+  A->>F: verifyIdToken (Admin SDK)
+  F-->>A: { uid: ... }
+  A->>D: SELECT ownership; UPDATE item
+  D-->>A: rows
+  A-->>W: 200 OK { item }
+  W-->>U: re-render
 ```
 
 ---
@@ -124,6 +124,7 @@ erDiagram
 
 Architecture decisions are recorded as ADRs in [/docs/adr/](/docs/adr/).
 
-| # | Decision | Status |
-|---|---|---|
-| [0001](adr/0001-server-side-db-proxy.md) | Server-side DB proxy (Cloudflare Worker between client and Neon) | Accepted |
+| #                                        | Decision                                                                     | Status   |
+| ---------------------------------------- | ---------------------------------------------------------------------------- | -------- |
+| [0001](adr/0001-server-side-db-proxy.md) | Server-side DB proxy (Cloudflare Worker between client and Neon)             | Accepted |
+| [0002](adr/0002-manual-types-for-now.md) | Hand-written TypeScript types; defer auto-generation until schema stabilizes | Accepted |

@@ -6,18 +6,48 @@ Operational procedures for FF&E Builder.
 
 ## Deploy
 
+### Frontend (GitHub Pages) — automated
+
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which:
+
+1. Runs `pnpm build` (Vite + TypeScript)
+2. Uploads `dist/` as a GitHub Pages artifact
+3. Deploys via `actions/deploy-pages@v4`
+
+The `public/404.html` SPA redirect script is included in the build automatically.
+No manual steps are needed for the frontend.
+
+### API Worker (Cloudflare)
+
 ```bash
-pnpm deploy
-# Runs: wrangler deploy (api/) + vite build + upload to Pages
+cd api
+pnpm deploy          # runs: wrangler deploy
 ```
 
-- All environment variables must be set in the Cloudflare dashboard (Worker env) and
-  in the repo's CI secrets before deploying.
-- Worker secrets are managed via `wrangler secret put <VAR_NAME>` — never committed.
+Prerequisites before first deploy:
+
+1. Worker secrets must be set (see **Set Worker secrets** below).
+2. Run the initial DB migration against the production Neon branch (see **Run a migration**).
+3. The Cloudflare account must have the Worker created (`wrangler deploy` creates it on first run).
 
 ---
 
 ## Rollback
+
+### Frontend rollback
+
+Revert the merge commit on `main` — this re-triggers `deploy.yml` and redeploys
+the previous build automatically:
+
+```bash
+git revert -m 1 <merge-commit-sha>
+git push origin main
+```
+
+Alternatively, open **Settings → Pages → Deployments** in GitHub and redeploy
+an earlier artifact.
+
+### API Worker rollback
 
 1. Open the Cloudflare dashboard → Workers → `ffe-api` → Deployments.
 2. Find the previous stable deployment and click **Rollback to this deployment**.
@@ -35,6 +65,64 @@ wrangler tail ffe-api --format pretty  # human-readable
 ```
 
 For historic logs, use the Cloudflare dashboard → Workers Analytics or Logpush.
+
+---
+
+## Set Worker secrets
+
+Secrets are **never** committed to the repo. Set them once via Wrangler:
+
+```bash
+cd api
+wrangler secret put NEON_DATABASE_URL
+# paste the Neon connection string when prompted
+
+wrangler secret put FIREBASE_ADMIN_CLIENT_EMAIL
+# paste the service account client_email
+
+wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
+# paste the full PEM private key (including -----BEGIN/END----- lines)
+# Wrangler stores \n as literal \\n; the Worker decodes it on startup.
+```
+
+Verify secrets are set:
+
+```bash
+wrangler secret list
+```
+
+---
+
+## Run a DB migration
+
+### Locally
+
+```bash
+# Load your Neon connection string (never commit .env.local)
+source .env.local   # or: dotenv -e .env.local -- pnpm migrate
+
+pnpm migrate
+# Applies any .sql files in /db/migrations/ not yet in the _migrations table.
+```
+
+### In CI / on deploy
+
+1. Set `NEON_DATABASE_URL` as a GitHub Actions secret.
+2. Add a migration step to the deploy workflow **before** `wrangler deploy`:
+
+```yaml
+- name: Run DB migrations
+  run: pnpm migrate
+  env:
+    NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+```
+
+### Adding a new migration
+
+1. Create `db/migrations/<NNNN>_<description>.sql` (next sequential number).
+2. Write idempotent SQL (`IF NOT EXISTS`, `CREATE OR REPLACE`, etc.).
+3. Test locally: `pnpm migrate`.
+4. Commit the file; it will be applied on the next CI deploy run.
 
 ---
 

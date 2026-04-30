@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/ff-e-builder/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FF&amp;E Builder</title>
+    <!--
+      Single Page Apps for GitHub Pages — decode script
+      MIT License — https://github.com/rafgraph/spa-github-pages
+
+      When GitHub Pages redirects an unknown path to 404.html, that page
+      encodes the path into the query string and sends the browser to /.
+      This script runs on the index page and restores the original URL via
+      history.replaceState so React Router sees the correct path.
+    -->
+    <script>
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash,
+          );
+        }
+      })(window.location);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
