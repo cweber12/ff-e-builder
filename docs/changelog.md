@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(phase-1): Vite + React + TS scaffold with lint/format/test toolchain and CI/CD
 - feat(api): Cloudflare Worker proxy with Hono, Firebase auth, ownership checks, DB migration schema
 - feat(client): typed API client, TanStack Query hooks with optimistic updates, Firebase auth gate
+- fix(migrate): run SQL migration files through Neon Pool so multi-statement schema setup succeeds
 
 ---
 
