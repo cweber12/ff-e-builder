@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(api): Cloudflare Worker proxy with Hono, Firebase auth, ownership checks, DB migration schema
 - feat(client): typed API client, TanStack Query hooks with optimistic updates, Firebase auth gate
 - fix(migrate): run SQL migration files through Neon Pool so multi-statement schema setup succeeds
+- feat(design-system): tokens, primitives, and project header
 
 ---
 

@@ -7,19 +7,30 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          primary: '#1D4ED8', // blue-700  — primary actions and headings
-          secondary: '#7C3AED', // violet-600 — secondary accents
-          accent: '#F59E0B', // amber-500  — highlights / warnings
+          50: '#F1F5F2',
+          500: '#1A6B4A',
+          600: '#155A3E',
+          700: '#0F4631',
         },
         surface: {
           DEFAULT: '#FFFFFF',
-          muted: '#F9FAFB', // gray-50   — page backgrounds
-          subtle: '#F3F4F6', // gray-100  — card backgrounds
+          muted: '#F8F6F1', // warm off-white background
+          inverse: '#1C1C1A',
+        },
+        danger: {
+          500: '#DC2626',
+          600: '#B91C1C',
+        },
+        success: {
+          500: '#059669',
+        },
+        warning: {
+          500: '#D97706',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        sans: ['DM Sans Variable', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
       },
       spacing: {
         '18': '4.5rem',
@@ -27,7 +38,7 @@ const config: Config = {
         '128': '32rem',
       },
       borderRadius: {
-        '4xl': '2rem',
+        pill: '999px',
       },
     },
   },
