@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.output/
+.vercel/
+
+# Environment — secrets live here, never committed
+.env.local
+.env.*.local
+
+# Wrangler local state
+.wrangler/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# pnpm
+.pnpm-store/

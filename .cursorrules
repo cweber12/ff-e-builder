@@ -1,0 +1,15 @@
+# Cursor Rules — FF&E Builder
+
+Read /AGENTS.md before any change.
+
+This project follows the operating rules, tech stack pins, definition of done, and
+commit conventions defined in /AGENTS.md. All four agent context files (AGENTS.md,
+CLAUDE.md, .cursorrules, .github/copilot-instructions.md) point here so there is a
+single source of truth.
+
+Key reminders:
+- Never access Neon DB from client code — all queries go through the /api/* Worker.
+- Money is integer cents. See /docs/money.md.
+- Never commit automatically; draft a conventional-commits message instead.
+- Never run destructive commands without explicit user confirmation.
+- After any structural change, update README.md and /docs/ in the same commit.
