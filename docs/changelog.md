@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ci): use packageManager as the single pnpm version source in GitHub Actions
 - fix(ci): provide Vite env values for test and deploy workflows
 - feat(auth): add email/password sign-in and surface Firebase auth errors
+- fix(deploy): emit stable frontend asset filenames to avoid GitHub Pages 404s after deploy
 
 ---
 

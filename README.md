@@ -47,6 +47,13 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - Project header and design-system primitives provide the first editable project surface.
 - `ItemsTable` renders FF&E items read-only with rooms grouped, persisted room collapse state, room subtotals, and a sticky grand total powered by `@tanstack/react-table`.
 
+## Frontend deploy notes
+
+- GitHub Pages serves the Vite app from `/ff-e-builder/`.
+- The frontend build now emits stable asset filenames in `dist/assets/` so a new
+  Pages deploy does not leave the browser pointing at a removed hashed bundle
+  from the previous release.
+
 ---
 
 ## Project structure

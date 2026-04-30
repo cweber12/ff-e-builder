@@ -17,6 +17,10 @@ Pushing to `main` triggers `.github/workflows/deploy.yml`, which:
 The `public/404.html` SPA redirect script is included in the build automatically.
 No manual steps are needed for the frontend.
 
+The Vite build uses stable asset filenames for GitHub Pages. This avoids blank
+screens caused by browsers requesting an older hashed bundle name after a fresh
+deploy.
+
 Required GitHub Actions secrets for the production frontend build:
 
 ```text

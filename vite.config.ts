@@ -5,6 +5,16 @@ import { fileURLToPath, URL } from 'node:url';
 export default defineConfig({
   base: '/ff-e-builder/',
 
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name][extname]',
+      },
+    },
+  },
+
   plugins: [react()],
 
   resolve: {
