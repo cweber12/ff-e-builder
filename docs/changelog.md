@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(migrate): run SQL migration files through Neon Pool so multi-statement schema setup succeeds
 - feat(design-system): tokens, primitives, and project header
 - feat(table): read-only items table with room grouping and totals
+- fix(ci): use packageManager as the single pnpm version source in GitHub Actions
 
 ---
 
