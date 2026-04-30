@@ -11,6 +11,7 @@ This document is the **source of truth** for all visual and interaction decision
 3. [Inline Editing UX Rules](#inline-editing-ux-rules)
 4. [Status Badge Spec](#status-badge-spec)
 5. [Primitives Reference](#primitives-reference)
+6. [Composite Surfaces](#composite-surfaces)
 
 ---
 
@@ -182,3 +183,13 @@ All primitives live in `src/components/primitives/`.
 | `Toast` / `ToastProvider` | Thin wrapper around `sonner`                          |
 
 See the source files in `src/components/primitives/` for full prop documentation.
+
+---
+
+## Composite Surfaces
+
+| Component    | Description                                                                 |
+| ------------ | --------------------------------------------------------------------------- |
+| `ItemsTable` | Read-only FF&E item schedule grouped by room with subtotals and grand total |
+
+`ItemsTable` uses `@tanstack/react-table` for column rendering. Money must be formatted through `formatMoney()` and totals must match the shared `roomSubtotalCents()` and `projectTotalCents()` helpers.

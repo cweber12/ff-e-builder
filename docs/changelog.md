@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(client): typed API client, TanStack Query hooks with optimistic updates, Firebase auth gate
 - fix(migrate): run SQL migration files through Neon Pool so multi-statement schema setup succeeds
 - feat(design-system): tokens, primitives, and project header
+- feat(table): read-only items table with room grouping and totals
 
 ---
 
