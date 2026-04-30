@@ -30,6 +30,16 @@ VITE_API_BASE_URL
 These `VITE_` values are public client configuration, but GitHub Actions still
 requires them to be mapped explicitly into the build step environment.
 
+Firebase Authentication must also be configured for the deployed frontend:
+
+1. Open Firebase Console -> Authentication -> Settings -> Authorized domains.
+2. Add the deployed GitHub Pages host, for example `cweber12.github.io`.
+3. Add any custom production domain used for the app.
+4. Open Authentication -> Sign-in method and enable both Google and Email/Password providers.
+
+If the deployed app logs `auth/unauthorized-domain`, the current browser host is
+missing from Firebase Authorized domains.
+
 ### API Worker (Cloudflare)
 
 ```bash

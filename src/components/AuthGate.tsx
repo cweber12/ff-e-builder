@@ -1,5 +1,12 @@
+import { useState, type FormEvent } from 'react';
 import type { ReactNode } from 'react';
-import { signInWithGoogle, signOut, useAuthUser } from '../lib/auth';
+import {
+  createAccountWithEmailPassword,
+  signInWithEmailPassword,
+  signInWithGoogle,
+  signOut,
+  useAuthUser,
+} from '../lib/auth';
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 
@@ -12,6 +19,42 @@ function FullScreenSpinner() {
 }
 
 function SignInCard() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'sign-in' | 'create-account'>('sign-in');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      if (authMode === 'create-account') {
+        await createAccountWithEmailPassword(email.trim(), password);
+      } else {
+        await signInWithEmailPassword(email.trim(), password);
+      }
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center gap-6 w-full max-w-sm">
@@ -19,15 +62,104 @@ function SignInCard() {
         <p className="text-sm text-gray-500 text-center">
           Sign in to manage your projects and specifications.
         </p>
+
+        {error && (
+          <p
+            role="alert"
+            className="w-full rounded-md border border-danger-500/30 bg-red-50 px-3 py-2 text-sm text-danger-600"
+          >
+            {error}
+          </p>
+        )}
+
+        <form
+          onSubmit={(event) => void handleEmailSubmit(event)}
+          className="flex w-full flex-col gap-3"
+        >
+          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            Email
+            <input
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            Password
+            <input
+              type="password"
+              autoComplete={authMode === 'create-account' ? 'new-password' : 'current-password'}
+              required
+              minLength={6}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-lg bg-brand-500 px-4 py-2 text-white font-medium hover:bg-brand-600 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {authMode === 'create-account' ? 'Create account' : 'Sign in with email'}
+          </button>
+        </form>
+
         <button
-          onClick={() => void signInWithGoogle()}
-          className="w-full rounded-lg bg-brand-500 px-4 py-2 text-white font-medium hover:bg-brand-600 transition-colors"
+          type="button"
+          onClick={() => {
+            setError('');
+            setAuthMode((mode) => (mode === 'sign-in' ? 'create-account' : 'sign-in'));
+          }}
+          className="text-sm font-medium text-brand-600 hover:text-brand-700"
+        >
+          {authMode === 'create-account'
+            ? 'Already have an account? Sign in'
+            : 'Need an account? Create one'}
+        </button>
+
+        <div className="flex w-full items-center gap-3 text-xs uppercase tracking-wide text-gray-400">
+          <span className="h-px flex-1 bg-gray-200" />
+          or
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void handleGoogleSignIn()}
+          disabled={isSubmitting}
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-800 font-medium hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
         >
           Sign in with Google
         </button>
       </div>
     </div>
   );
+}
+
+function getAuthErrorMessage(err: unknown): string {
+  const code = typeof err === 'object' && err !== null && 'code' in err ? String(err.code) : '';
+
+  if (code === 'auth/unauthorized-domain') {
+    return 'This domain is not authorized in Firebase. Add the deployed site domain in Firebase Authentication settings.';
+  }
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+    return 'Email or password is incorrect.';
+  }
+  if (code === 'auth/user-not-found') {
+    return 'No account exists for that email.';
+  }
+  if (code === 'auth/email-already-in-use') {
+    return 'An account already exists for that email.';
+  }
+  if (code === 'auth/weak-password') {
+    return 'Use a password with at least 6 characters.';
+  }
+
+  return 'Sign-in failed. Please try again.';
 }
 
 function UserChip() {
