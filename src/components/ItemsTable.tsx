@@ -1,31 +1,23 @@
 import { Component, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
-import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
 import { cn } from '../lib/cn';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/calc';
 import { cents, formatMoney, type Item, type Room } from '../types';
-import { useRooms } from '../hooks/useRooms';
-import { itemKeys } from '../hooks/useItems';
 import { StatusBadge } from './primitives/StatusBadge';
 import { Button } from './primitives/Button';
 
 export type RoomWithItems = Room & { items: Item[] };
 
-type ItemsTableProps =
-  | {
-      projectId: string;
-      className?: string | undefined;
-    }
-  | {
-      roomsWithItems: RoomWithItems[];
-      isLoading?: boolean | undefined;
-      error?: Error | null;
-      onReload?: (() => void) | undefined;
-      className?: string | undefined;
-    };
+type ItemsTableProps = {
+  roomsWithItems: RoomWithItems[];
+  isLoading?: boolean | undefined;
+  error?: Error | null;
+  onReload?: (() => void) | undefined;
+  className?: string | undefined;
+};
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -169,44 +161,6 @@ function readRoomCollapsed(roomId: string) {
 function writeRoomCollapsed(roomId: string, value: boolean) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(`room:${roomId}:collapsed`, String(value));
-}
-
-function ItemsTableData({
-  projectId,
-  className,
-}: {
-  projectId: string;
-  className?: string | undefined;
-}) {
-  const roomsQuery = useRooms(projectId);
-  const rooms = roomsQuery.data ?? [];
-
-  const itemQueries = useQueries({
-    queries: rooms.map((room) => ({
-      queryKey: itemKeys.forRoom(room.id),
-      queryFn: () => api.items.list(room.id),
-      enabled: roomsQuery.isSuccess,
-    })),
-  });
-
-  const roomsWithItems = rooms.map((room, index) => ({
-    ...room,
-    items: itemQueries[index]?.data ?? [],
-  }));
-
-  const firstItemError = itemQueries.find((query) => query.error)?.error;
-  const isLoading =
-    roomsQuery.isLoading || itemQueries.some((query) => query.isLoading || query.isPending);
-  const error = roomsQuery.error ?? firstItemError ?? null;
-
-  return (
-    <ItemsTableView
-      roomsWithItems={roomsWithItems}
-      isLoading={isLoading}
-      error={error instanceof Error ? error : null}
-      className={className}
-    />
-  );
 }
 
 function ItemsErrorState({ onReload }: { onReload?: (() => void) | undefined }) {
@@ -416,17 +370,13 @@ export function ItemsTable(props: ItemsTableProps) {
 
   return (
     <ItemsRenderErrorBoundary queryClient={queryClient}>
-      {'roomsWithItems' in props ? (
-        <ItemsTableView
-          roomsWithItems={props.roomsWithItems}
-          isLoading={props.isLoading}
-          error={props.error ?? null}
-          onReload={props.onReload ?? reload}
-          className={props.className}
-        />
-      ) : (
-        <ItemsTableData projectId={props.projectId} className={props.className} />
-      )}
+      <ItemsTableView
+        roomsWithItems={props.roomsWithItems}
+        isLoading={props.isLoading}
+        error={props.error ?? null}
+        onReload={props.onReload ?? reload}
+        className={props.className}
+      />
     </ItemsRenderErrorBoundary>
   );
 }

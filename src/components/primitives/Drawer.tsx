@@ -19,13 +19,10 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
     if (open) {
       previousFocusRef.current = document.activeElement as HTMLElement;
       document.body.style.overflow = 'hidden';
-      // Move focus into panel after transition
-      requestAnimationFrame(() => {
-        const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        firstFocusable?.focus();
-      });
+      const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      firstFocusable?.focus();
     } else {
       document.body.style.overflow = '';
       previousFocusRef.current?.focus();

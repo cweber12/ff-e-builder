@@ -17,6 +17,19 @@ Pushing to `main` triggers `.github/workflows/deploy.yml`, which:
 The `public/404.html` SPA redirect script is included in the build automatically.
 No manual steps are needed for the frontend.
 
+Required GitHub Actions secrets for the production frontend build:
+
+```text
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_APP_ID
+VITE_API_BASE_URL
+```
+
+These `VITE_` values are public client configuration, but GitHub Actions still
+requires them to be mapped explicitly into the build step environment.
+
 ### API Worker (Cloudflare)
 
 ```bash
