@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env, HonoVariables } from '../types';
 import { UpdateRoomSchema, CreateItemSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
+import { getDb } from '../lib/db';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -20,14 +21,17 @@ router.patch('/:id', async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
 
-  // TODO Phase 3: UPDATE rooms SET ... WHERE id = $id
-  return c.json({
-    room: {
-      id,
-      ...parsed.data,
-      updated_at: new Date().toISOString(),
-    },
-  });
+  const sql = getDb(c.env);
+  const rows = await sql`
+    UPDATE rooms
+    SET
+      name       = COALESCE(${parsed.data.name ?? null}, name),
+      sort_order = COALESCE(${parsed.data.sort_order ?? null}, sort_order)
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  if (!rows[0]) return c.json({ error: 'Not found' }, 404);
+  return c.json({ room: rows[0] });
 });
 
 // DELETE /api/v1/rooms/:id — delete a room (cascades to items)
@@ -41,7 +45,8 @@ router.delete('/:id', async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
 
-  // TODO Phase 3: DELETE FROM rooms WHERE id = $id
+  const sql = getDb(c.env);
+  await sql`DELETE FROM rooms WHERE id = ${id}`;
   return c.body(null, 204);
 });
 
@@ -56,8 +61,13 @@ router.get('/:id/items', async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
 
-  // TODO Phase 3: SELECT * FROM items WHERE room_id = $id ORDER BY sort_order
-  return c.json({ items: [] });
+  const sql = getDb(c.env);
+  const rows = await sql`
+    SELECT * FROM items
+    WHERE room_id = ${id}
+    ORDER BY sort_order, created_at
+  `;
+  return c.json({ items: rows });
 });
 
 // POST /api/v1/rooms/:id/items — create an item in a room
@@ -75,20 +85,36 @@ router.post('/:id/items', async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
 
-  // TODO Phase 3: INSERT INTO items (room_id, item_name, ...) VALUES (...)
-  return c.json(
-    {
-      item: {
-        id: '00000000-0000-0000-0000-000000000000',
-        room_id: roomId,
-        ...parsed.data,
-        version: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    },
-    201,
-  );
+  const sql = getDb(c.env);
+  const rows = await sql`
+    INSERT INTO items (
+      room_id, item_name, category, vendor, model, item_id_tag,
+      dimensions, seat_height, finishes, notes, qty, unit_cost_cents,
+      markup_pct, lead_time, status, image_url, link_url, sort_order
+    )
+    VALUES (
+      ${roomId},
+      ${parsed.data.item_name},
+      ${parsed.data.category},
+      ${parsed.data.vendor},
+      ${parsed.data.model},
+      ${parsed.data.item_id_tag},
+      ${parsed.data.dimensions},
+      ${parsed.data.seat_height},
+      ${parsed.data.finishes},
+      ${parsed.data.notes},
+      ${parsed.data.qty},
+      ${parsed.data.unit_cost_cents},
+      ${parsed.data.markup_pct},
+      ${parsed.data.lead_time},
+      ${parsed.data.status},
+      ${parsed.data.image_url},
+      ${parsed.data.link_url},
+      ${parsed.data.sort_order}
+    )
+    RETURNING *
+  `;
+  return c.json({ item: rows[0] }, 201);
 });
 
 export { router as roomsRouter };

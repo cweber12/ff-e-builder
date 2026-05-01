@@ -2,10 +2,11 @@ import { Hono } from 'hono';
 import type { Env, HonoVariables } from '../types';
 import { UpdateItemSchema } from '../types';
 import { assertItemOwnership } from '../lib/ownership';
+import { getDb } from '../lib/db';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
-// PATCH /api/v1/items/:id — update an item
+// PATCH /api/v1/items/:id — update an item with optimistic concurrency
 router.patch('/:id', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
@@ -20,16 +21,36 @@ router.patch('/:id', async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
 
-  // TODO Phase 3: UPDATE items SET ..., version = version + 1 WHERE id = $id
-  // Implement optimistic concurrency: accept client-supplied `version` and
-  // WHERE version = $client_version — if 0 rows updated, return 409 Conflict.
-  return c.json({
-    item: {
-      id,
-      ...parsed.data,
-      updated_at: new Date().toISOString(),
-    },
-  });
+  const sql = getDb(c.env);
+  // COALESCE(provided ?? null, column) leaves each field unchanged when not included in the patch.
+  // Note: explicitly sending null for a nullable field will also leave it unchanged (known limitation).
+  const rows = await sql`
+    UPDATE items
+    SET
+      item_name       = COALESCE(${parsed.data.item_name ?? null}, item_name),
+      room_id         = COALESCE(${parsed.data.room_id ?? null}, room_id),
+      category        = COALESCE(${parsed.data.category ?? null}, category),
+      vendor          = COALESCE(${parsed.data.vendor ?? null}, vendor),
+      model           = COALESCE(${parsed.data.model ?? null}, model),
+      item_id_tag     = COALESCE(${parsed.data.item_id_tag ?? null}, item_id_tag),
+      dimensions      = COALESCE(${parsed.data.dimensions ?? null}, dimensions),
+      seat_height     = COALESCE(${parsed.data.seat_height ?? null}, seat_height),
+      finishes        = COALESCE(${parsed.data.finishes ?? null}, finishes),
+      notes           = COALESCE(${parsed.data.notes ?? null}, notes),
+      qty             = COALESCE(${parsed.data.qty ?? null}, qty),
+      unit_cost_cents = COALESCE(${parsed.data.unit_cost_cents ?? null}, unit_cost_cents),
+      markup_pct      = COALESCE(${parsed.data.markup_pct ?? null}, markup_pct),
+      lead_time       = COALESCE(${parsed.data.lead_time ?? null}, lead_time),
+      status          = COALESCE(${parsed.data.status ?? null}, status),
+      image_url       = COALESCE(${parsed.data.image_url ?? null}, image_url),
+      link_url        = COALESCE(${parsed.data.link_url ?? null}, link_url),
+      sort_order      = COALESCE(${parsed.data.sort_order ?? null}, sort_order),
+      version         = version + 1
+    WHERE id = ${id} AND version = ${parsed.data.version}
+    RETURNING *
+  `;
+  if (!rows[0]) return c.json({ error: 'Conflict' }, 409);
+  return c.json({ item: rows[0] });
 });
 
 // DELETE /api/v1/items/:id — delete an item
@@ -43,7 +64,8 @@ router.delete('/:id', async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
 
-  // TODO Phase 3: DELETE FROM items WHERE id = $id
+  const sql = getDb(c.env);
+  await sql`DELETE FROM items WHERE id = ${id}`;
   return c.body(null, 204);
 });
 

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
+  getRedirectResult,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithRedirect,
@@ -51,6 +52,8 @@ export const signOut = async (): Promise<void> => {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
+  redirectError: unknown;
+  clearRedirectError: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -58,17 +61,33 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [redirectError, setRedirectError] = useState<unknown>(null);
 
-  useEffect(
-    () =>
-      onAuthStateChanged(auth, (u) => {
-        setUser(u);
-        setIsLoading(false);
-      }),
-    [],
+  const clearRedirectError = () => setRedirectError(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setIsLoading(false);
+    });
+
+    // Process any pending redirect result once on app start.
+    // Success is handled by onAuthStateChanged above; we only need this for error reporting.
+    // The .catch() ensures COOP-related iframe failures don't surface as unhandled rejections.
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) setRedirectError(null);
+      })
+      .catch((err: unknown) => setRedirectError(err));
+
+    return unsubscribe;
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, redirectError, clearRedirectError }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={{ user, isLoading }}>{children}</AuthContext.Provider>;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────

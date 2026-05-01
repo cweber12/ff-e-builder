@@ -20,14 +20,22 @@ function FullScreenSpinner() {
 }
 
 export function SignInPage() {
+  const { redirectError, clearRedirectError } = useAuthUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState<'sign-in' | 'create-account'>('sign-in');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleGoogleSignIn = async () => {
+  const displayError = error || (redirectError ? getAuthErrorMessage(redirectError) : '');
+
+  const clearErrors = () => {
     setError('');
+    clearRedirectError();
+  };
+
+  const handleGoogleSignIn = async () => {
+    clearErrors();
     setIsSubmitting(true);
     try {
       await signInWithGoogle();
@@ -40,7 +48,7 @@ export function SignInPage() {
 
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError('');
+    clearErrors();
     setIsSubmitting(true);
 
     try {
@@ -64,12 +72,12 @@ export function SignInPage() {
           Sign in to manage your projects and specifications.
         </p>
 
-        {error && (
+        {displayError && (
           <p
             role="alert"
             className="w-full rounded-md border border-danger-500/30 bg-red-50 px-3 py-2 text-sm text-danger-600"
           >
-            {error}
+            {displayError}
           </p>
         )}
 
@@ -112,7 +120,7 @@ export function SignInPage() {
         <button
           type="button"
           onClick={() => {
-            setError('');
+            clearErrors();
             setAuthMode((mode) => (mode === 'sign-in' ? 'create-account' : 'sign-in'));
           }}
           className="text-sm font-medium text-brand-600 hover:text-brand-700"

@@ -17,7 +17,12 @@ vi.mock('../lib/auth', () => authMocks);
 describe('AuthGate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    authMocks.useAuthUser.mockReturnValue({ user: null, isLoading: false });
+    authMocks.useAuthUser.mockReturnValue({
+      user: null,
+      isLoading: false,
+      redirectError: null,
+      clearRedirectError: vi.fn(),
+    });
   });
 
   it('renders email/password sign-in and Google sign-in options', () => {
