@@ -1,13 +1,39 @@
-import { Component, useMemo, useState } from 'react';
+import { Component, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type ColumnDef,
+  type Row,
+} from '@tanstack/react-table';
 import { useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { cn } from '../lib/cn';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/calc';
-import { useUpdateItem } from '../hooks/useItems';
+import { emptyToNull } from '../lib/textUtils';
+import { getSortOrderPatches } from '../lib/itemSort';
+import { useCreateItem, useDeleteItem, useMoveItem, useUpdateItem } from '../hooks/useItems';
+import { useCreateRoom, useDeleteRoom } from '../hooks/useRooms';
 import {
   cents,
+  dollarsToCents,
   editableItemPatchSchema,
   formatMoney,
   itemStatuses,
@@ -24,11 +50,14 @@ import { StatusBadge } from './primitives/StatusBadge';
 import { Button } from './primitives/Button';
 import { InlineTextEdit } from './primitives/InlineTextEdit';
 import { InlineNumberEdit } from './primitives/InlineNumberEdit';
+import { Modal } from './primitives/Modal';
+import { AddItemDrawer } from './AddItemDrawer';
 
 export type RoomWithItems = Room & { items: Item[] };
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
+  projectId: string;
   isLoading?: boolean | undefined;
   error?: Error | null;
   onReload?: (() => void) | undefined;
@@ -75,12 +104,17 @@ type EditableItemPatch = Omit<UpdateItemInput, 'version'>;
 
 type SaveItemPatch = (item: Item, patch: EditableItemPatch) => Promise<void>;
 
-const toNullablePatch = (value: string) => (value.trim().length > 0 ? value.trim() : null);
+type TableActions = {
+  rooms: RoomWithItems[];
+  onDuplicate: (item: Item) => Promise<void>;
+  onMove: (item: Item, toRoomId: string) => Promise<void>;
+  onDelete: (item: Item) => Promise<void>;
+};
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
   onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
 
-const formatDollars = (value: number) => formatMoney(cents(Math.round(value * 100)));
+const formatDollars = (value: number) => formatMoney(dollarsToCents(value));
 
 const nextStatus = (status: ItemStatus): ItemStatus => {
   const index = itemStatuses.indexOf(status);
@@ -112,7 +146,7 @@ function EditableTextCell({
       aria-label={`${label} for ${item.itemName}`}
       {...(displayClassName ? { className: displayClassName } : {})}
       onSave={(nextValue) => {
-        const patchValue = required ? nextValue.trim() : toNullablePatch(nextValue);
+        const patchValue = required ? nextValue.trim() : emptyToNull(nextValue);
         return saveValidatedPatch(onSave, item, { [field]: patchValue });
       }}
       renderDisplay={(displayValue) =>
@@ -186,7 +220,113 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
   );
 }
 
-const createColumns = (onSave: SaveItemPatch): ColumnDef<Item>[] => [
+function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }) {
+  const [open, setOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const targetRooms = actions.rooms.filter((room) => room.id !== item.roomId);
+
+  return (
+    <>
+      <span className="relative inline-flex items-center">
+        <button
+          type="button"
+          aria-label={`Open item actions for ${item.itemName}`}
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+          className="rounded px-2 py-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          ...
+        </button>
+        {open && (
+          <div
+            role="menu"
+            className="absolute right-0 top-full z-20 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                void actions.onDuplicate(item);
+              }}
+              className={menuItemClassName}
+            >
+              Duplicate
+            </button>
+            {targetRooms.length > 0 && (
+              <div className="border-t border-gray-100 pt-1">
+                <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Move to room
+                </div>
+                {targetRooms.map((room) => (
+                  <button
+                    key={room.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpen(false);
+                      void actions.onMove(item, room.id);
+                    }}
+                    className={menuItemClassName}
+                  >
+                    {room.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                setConfirmDelete(true);
+              }}
+              className={cn(menuItemClassName, 'text-danger-600')}
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </span>
+      <Modal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title={`Delete ${item.itemName}?`}
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-600">
+            This removes the item from the schedule. This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                setConfirmDelete(false);
+                void actions.onDelete(item);
+              }}
+            >
+              Delete item
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+const menuItemClassName =
+  'flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+
+const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<Item>[] => [
+  {
+    id: 'drag',
+    header: '',
+    cell: () => null,
+  },
   {
     accessorKey: 'itemIdTag',
     header: 'ID',
@@ -353,6 +493,11 @@ const createColumns = (onSave: SaveItemPatch): ColumnDef<Item>[] => [
       />
     ),
   },
+  {
+    id: 'actions',
+    header: '',
+    cell: ({ row }) => <RowActionsCell item={row.original} actions={actions} />,
+  },
 ];
 
 function useCollapsedRooms(rooms: RoomWithItems[]) {
@@ -420,35 +565,264 @@ function ItemsLoadingState() {
   );
 }
 
-function EmptyProjectState() {
+function EmptyProjectState({ onAddRoom }: { onAddRoom?: (() => void) | undefined }) {
   return (
     <div className="flex min-h-[22rem] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-      <div>
+      <div className="flex flex-col items-center gap-4">
         <h2 className="text-xl font-semibold text-gray-950">No rooms yet</h2>
         <p className="mt-2 max-w-md text-sm text-gray-600">
           Rooms and FF&amp;E items will appear here once this project has a room schedule.
         </p>
+        {onAddRoom && (
+          <Button type="button" variant="secondary" onClick={onAddRoom}>
+            Add room
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
+function AddRoomModal({
+  open,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (name: string) => Promise<void> | void;
+}) {
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    if (!open) setName('');
+  }, [open]);
+
+  return (
+    <Modal open={open} onClose={onClose} title="Add room">
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const trimmed = name.trim();
+          if (!trimmed) return;
+          void Promise.resolve(onSubmit(trimmed)).then(() => {
+            setName('');
+            onClose();
+          });
+        }}
+      >
+        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+          Room name
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+          />
+        </label>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Add room</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function DeleteRoomModal({
+  room,
+  rooms,
+  open,
+  onClose,
+  onConfirm,
+}: {
+  room: RoomWithItems | null;
+  rooms: RoomWithItems[];
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (targetRoomId: string | null) => Promise<void> | void;
+}) {
+  const [targetRoomId, setTargetRoomId] = useState('');
+  const otherRooms = rooms.filter((candidate) => candidate.id !== room?.id);
+  const itemCount = room?.items.length ?? 0;
+  const needsTarget = itemCount > 0;
+  const canDelete = !needsTarget || targetRoomId.length > 0;
+
+  useEffect(() => {
+    if (open) setTargetRoomId('');
+  }, [open, room?.id]);
+
+  return (
+    <Modal open={open} onClose={onClose} title={room ? `Delete ${room.name}?` : 'Delete room'}>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-gray-600">
+          {needsTarget
+            ? `${room?.name} has ${itemCount} ${itemCount === 1 ? 'item' : 'items'}. Choose another room before deleting it.`
+            : 'This room is empty and can be deleted.'}
+        </p>
+        {needsTarget && (
+          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            Move items to...
+            <select
+              value={targetRoomId}
+              onChange={(event) => setTargetRoomId(event.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+            >
+              <option value="">Choose a room</option>
+              {otherRooms.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={!canDelete}
+            onClick={() => {
+              void Promise.resolve(onConfirm(needsTarget ? targetRoomId : null)).then(() => {
+                setTargetRoomId('');
+                onClose();
+              });
+            }}
+          >
+            Delete room
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function SortableItemRow({ row }: { row: Row<Item> }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.original.id,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={cn('hover:bg-brand-50/40', isDragging && 'bg-brand-50 shadow-md')}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <td key={cell.id} className="whitespace-nowrap px-3 py-3 text-gray-700">
+          {cell.column.id === 'drag' ? (
+            <button
+              type="button"
+              aria-label={`Drag ${row.original.itemName}`}
+              className="cursor-grab rounded px-1 text-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              {...attributes}
+              {...listeners}
+            >
+              ::
+            </button>
+          ) : (
+            flexRender(cell.column.columnDef.cell, cell.getContext())
+          )}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
 function RoomItemsSection({
   room,
+  rooms,
   collapsed,
   onToggle,
+  onDeleteRoom,
 }: {
   room: RoomWithItems;
+  rooms: RoomWithItems[];
   collapsed: boolean;
   onToggle: () => void;
+  onDeleteRoom: (room: RoomWithItems) => void;
 }) {
   const updateItem = useUpdateItem(room.id);
+  const createItem = useCreateItem(room.id);
+  const deleteItem = useDeleteItem(room.id);
+  const moveItem = useMoveItem();
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const sortedItems = useMemo(
     () =>
       [...room.items].sort(
         (a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName),
       ),
     [room.items],
+  );
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+  const existingCategories = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          rooms.flatMap((candidate) =>
+            candidate.items
+              .map((item) => item.category)
+              .filter((category): category is string => Boolean(category)),
+          ),
+        ),
+      ).sort(),
+    [rooms],
+  );
+  const duplicateItem = useCallback(
+    async (item: Item) => {
+      await createItem.mutateAsync({
+        itemName: item.itemName,
+        category: item.category,
+        vendor: item.vendor,
+        model: item.model,
+        itemIdTag: item.itemIdTag,
+        dimensions: item.dimensions,
+        seatHeight: item.seatHeight,
+        finishes: item.finishes,
+        notes: item.notes,
+        qty: item.qty,
+        unitCostCents: item.unitCostCents,
+        markupPct: item.markupPct,
+        leadTime: item.leadTime,
+        status: item.status,
+        imageUrl: item.imageUrl,
+        linkUrl: item.linkUrl,
+        sortOrder: sortedItems.length,
+      });
+    },
+    [createItem, sortedItems.length],
+  );
+  const actions = useMemo<TableActions>(
+    () => ({
+      rooms,
+      onDuplicate: duplicateItem,
+      onMove: async (item, toRoomId) => {
+        await moveItem.mutateAsync({
+          id: item.id,
+          fromRoomId: item.roomId,
+          toRoomId,
+          version: item.version,
+        });
+      },
+      onDelete: async (item) => {
+        await deleteItem.mutateAsync(item.id);
+      },
+    }),
+    [deleteItem, duplicateItem, moveItem, rooms],
   );
   const columns = useMemo(
     () =>
@@ -457,8 +831,8 @@ function RoomItemsSection({
           id: item.id,
           patch: { ...patch, version: item.version },
         });
-      }),
-    [updateItem],
+      }, actions),
+    [actions, updateItem],
   );
   const table = useReactTable({
     data: sortedItems,
@@ -467,76 +841,112 @@ function RoomItemsSection({
   });
   const subtotal = roomSubtotalCents(room.items);
   const itemCount = room.items.length;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const patches = getSortOrderPatches(sortedItems, String(active.id), String(over.id));
+    void (async () => {
+      for (const { item, sortOrder } of patches) {
+        await updateItem.mutateAsync({ id: item.id, patch: { sortOrder, version: item.version } });
+      }
+    })();
+  };
 
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-        className="flex w-full items-center justify-between gap-4 border-b border-gray-100 bg-surface-muted px-4 py-3 text-left"
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <span
-            aria-hidden="true"
-            className={cn(
-              'inline-block text-xs text-gray-500 transition-transform',
-              collapsed ? '-rotate-90' : 'rotate-0',
-            )}
-          >
-            v
+      <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-surface-muted px-4 py-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!collapsed}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span
+              aria-hidden="true"
+              className={cn(
+                'inline-block text-xs text-gray-500 transition-transform',
+                collapsed ? '-rotate-90' : 'rotate-0',
+              )}
+            >
+              v
+            </span>
+            <span className="truncate text-sm font-semibold text-gray-950">{room.name}</span>
+            <span className="rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
+              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+            </span>
           </span>
-          <span className="truncate text-sm font-semibold text-gray-950">{room.name}</span>
-          <span className="rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </span>
-        </span>
+        </button>
         <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
           {formatMoney(cents(subtotal))}
         </span>
-      </button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="secondary" onClick={() => setAddDrawerOpen(true)}>
+            Add item
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => onDeleteRoom(room)}>
+            Delete room
+          </Button>
+        </div>
+      </div>
+
+      <AddItemDrawer
+        open={addDrawerOpen}
+        roomName={room.name}
+        existingCategories={existingCategories}
+        onClose={() => setAddDrawerOpen(false)}
+        onSubmit={async (input) => {
+          await createItem.mutateAsync({ ...input, sortOrder: sortedItems.length });
+        }}
+      />
 
       {!collapsed && (
         <div className="overflow-x-auto">
-          <table className="min-w-[1120px] w-full border-collapse text-sm">
-            <thead className="bg-white text-left text-xs uppercase tracking-wide text-gray-500">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="border-b border-gray-100 px-3 py-3 font-semibold"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className="p-3">
-                    <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-                      No items yet
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-brand-50/40">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="whitespace-nowrap px-3 py-3 text-gray-700">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <table className="min-w-[1120px] w-full border-collapse text-sm">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-gray-500">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="border-b border-gray-100 px-3 py-3 font-semibold"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
                     ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {table.getRowModel().rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length} className="p-3">
+                      <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+                        No items yet
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  <SortableContext
+                    items={sortedItems.map((item) => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {table.getRowModel().rows.map((row) => (
+                      <SortableItemRow key={row.original.id} row={row} />
+                    ))}
+                  </SortableContext>
+                )}
+              </tbody>
+            </table>
+          </DndContext>
         </div>
       )}
     </section>
@@ -545,18 +955,25 @@ function RoomItemsSection({
 
 export function ItemsTableView({
   roomsWithItems,
+  projectId,
   isLoading = false,
   error = null,
   onReload,
   className,
 }: {
   roomsWithItems: RoomWithItems[];
+  projectId: string;
   isLoading?: boolean | undefined;
   error?: Error | null;
   onReload?: (() => void) | undefined;
   className?: string | undefined;
 }) {
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
+  const createRoom = useCreateRoom(projectId);
+  const deleteRoom = useDeleteRoom(projectId);
+  const moveItem = useMoveItem();
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<RoomWithItems | null>(null);
   const sortedRooms = useMemo(
     () =>
       [...roomsWithItems].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
@@ -566,7 +983,20 @@ export function ItemsTableView({
 
   if (isLoading) return <ItemsLoadingState />;
   if (error) return <ItemsErrorState onReload={onReload} />;
-  if (sortedRooms.length === 0) return <EmptyProjectState />;
+  if (sortedRooms.length === 0) {
+    return (
+      <>
+        <EmptyProjectState onAddRoom={projectId ? () => setAddRoomOpen(true) : undefined} />
+        <AddRoomModal
+          open={addRoomOpen}
+          onClose={() => setAddRoomOpen(false)}
+          onSubmit={async (name) => {
+            await createRoom.mutateAsync({ name, sortOrder: 0 });
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <div className={cn('relative flex flex-col gap-4 pb-16', className)}>
@@ -574,10 +1004,18 @@ export function ItemsTableView({
         <RoomItemsSection
           key={room.id}
           room={room}
+          rooms={sortedRooms}
           collapsed={collapsed[room.id] ?? false}
           onToggle={() => toggle(room.id)}
+          onDeleteRoom={setRoomToDelete}
         />
       ))}
+
+      <div className="flex justify-center">
+        <Button type="button" variant="secondary" onClick={() => setAddRoomOpen(true)}>
+          Add room
+        </Button>
+      </div>
 
       <div className="sticky bottom-0 z-10 rounded-lg border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
         <div className="flex items-center justify-between gap-4">
@@ -589,6 +1027,41 @@ export function ItemsTableView({
           </span>
         </div>
       </div>
+
+      <AddRoomModal
+        open={addRoomOpen}
+        onClose={() => setAddRoomOpen(false)}
+        onSubmit={async (name) => {
+          await createRoom.mutateAsync({
+            name,
+            sortOrder: sortedRooms.length,
+          });
+        }}
+      />
+
+      <DeleteRoomModal
+        open={roomToDelete !== null}
+        room={roomToDelete}
+        rooms={sortedRooms}
+        onClose={() => setRoomToDelete(null)}
+        onConfirm={async (targetRoomId) => {
+          if (roomToDelete?.items.length && targetRoomId) {
+            await Promise.all(
+              roomToDelete.items.map((item) =>
+                moveItem.mutateAsync({
+                  id: item.id,
+                  fromRoomId: roomToDelete.id,
+                  toRoomId: targetRoomId,
+                  version: item.version,
+                }),
+              ),
+            );
+          }
+          if (roomToDelete) {
+            await deleteRoom.mutateAsync(roomToDelete.id);
+          }
+        }}
+      />
     </div>
   );
 }
@@ -601,6 +1074,7 @@ export function ItemsTable(props: ItemsTableProps) {
     <ItemsRenderErrorBoundary queryClient={queryClient}>
       <ItemsTableView
         roomsWithItems={props.roomsWithItems}
+        projectId={props.projectId}
         isLoading={props.isLoading}
         error={props.error ?? null}
         onReload={props.onReload ?? reload}

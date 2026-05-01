@@ -10,9 +10,7 @@ describe('Drawer', () => {
         <p>body</p>
       </Drawer>,
     );
-    const panel = screen.getByRole('dialog');
-    expect(panel.className).toContain('translate-x-full');
-    expect(panel.className).not.toContain('translate-x-0');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('panel is visible when open', () => {
@@ -81,10 +79,11 @@ describe('Drawer', () => {
     );
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveAttribute('aria-modal', 'true');
-    expect(dialog).toHaveAttribute('aria-labelledby', 'drawer-title');
+    const titleId = dialog.getAttribute('aria-labelledby');
+    expect(titleId).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Accessible drawer' })).toHaveAttribute(
       'id',
-      'drawer-title',
+      titleId,
     );
   });
 });

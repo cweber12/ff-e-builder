@@ -13,6 +13,14 @@ const nullableText = (max: number) =>
     .max(max)
     .transform((value) => (value.length > 0 ? value : null));
 
+const optionalUrlInput = (label: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || z.string().url().safeParse(value).success, {
+      message: `Enter a valid ${label} URL`,
+    });
+
 export const itemNameSchema = z.string().trim().min(1, 'Item name is required').max(255);
 export const itemQtySchema = z
   .number()
@@ -28,23 +36,48 @@ export const itemMarkupPctSchema = z
   .max(999.99, 'Markup must be 999.99 or less');
 
 export const editableItemPatchSchema = z.object({
+  roomId: z.string().min(1).optional(),
   itemName: itemNameSchema.optional(),
   category: nullableText(100).optional(),
   vendor: nullableText(255).optional(),
   model: nullableText(255).optional(),
   itemIdTag: nullableText(100).optional(),
   dimensions: nullableText(100).optional(),
-  notes: z
-    .string()
-    .trim()
-    .transform((value) => (value.length > 0 ? value : null))
-    .optional(),
+  seatHeight: nullableText(100).optional(),
+  finishes: nullableText(255).optional(),
+  notes: nullableText(2000).optional(),
   qty: itemQtySchema.optional(),
   unitCostCents: itemUnitCostCentsSchema.optional(),
   markupPct: itemMarkupPctSchema.optional(),
   leadTime: nullableText(100).optional(),
   status: ItemStatusSchema.optional(),
+  imageUrl: nullableText(2048).optional(),
+  linkUrl: nullableText(2048).optional(),
 });
+
+export const itemFormSchema = z.object({
+  itemName: itemNameSchema,
+  category: z.string().trim().max(100).default(''),
+  itemIdTag: z.string().trim().max(100).default(''),
+  vendor: z.string().trim().max(255).default(''),
+  dimensions: z.string().trim().max(100).default(''),
+  seatHeight: z.string().trim().max(100).default(''),
+  qty: z.string().refine((value) => parseQtyInput(value) !== undefined, {
+    message: 'Quantity must be a whole number 0 or greater',
+  }),
+  unitCost: z.string().refine((value) => parseUnitCostDollarsInput(value) !== undefined, {
+    message: 'Unit cost must be 0 or greater with max 2 decimals',
+  }),
+  markupPct: z.string().refine((value) => parseMarkupPctInput(value) !== undefined, {
+    message: 'Markup must be between 0 and 999.99',
+  }),
+  finishes: z.string().trim().max(255).default(''),
+  notes: z.string().trim().default(''),
+  imageUrl: optionalUrlInput('image').default(''),
+  linkUrl: optionalUrlInput('link').default(''),
+});
+
+export type ItemFormValues = z.infer<typeof itemFormSchema>;
 
 const normalizeDecimalInput = (raw: string) => raw.trim().replace(/[$,%\s,]/g, '');
 

@@ -201,3 +201,6 @@ Editable item cells use the Phase 4 inline-editing primitives:
 - Unit cost is edited as dollars and submitted as integer cents.
 - Line total remains read-only because it is derived from quantity, unit cost, and markup.
 - Status uses the display-only `StatusBadge` primitive inside an editor that supports left-click cycling and an explicit menu with every status option.
+- Each room exposes an `Add item` drawer. The form uses the shared item schema, category supports existing values plus free input, and money input is collected as dollars before converting to cents.
+- Room deletion always uses a confirmation modal. Rooms with items require a target room before deletion so items are moved deliberately.
+- Per-item actions live behind a row menu for duplicate, move to room, and delete. Sort order is changed with drag handles and saved optimistically.

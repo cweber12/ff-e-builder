@@ -93,6 +93,7 @@ export const UpdateRoomSchema = CreateRoomSchema.partial();
 export type UpdateRoomInput = z.infer<typeof UpdateRoomSchema>;
 
 export const CreateItemSchema = z.object({
+  room_id: z.string().uuid().optional(),
   item_name: z.string().min(1).max(255),
   category: z.string().max(100).nullable().default(null),
   vendor: z.string().max(255).nullable().default(null),
@@ -113,5 +114,7 @@ export const CreateItemSchema = z.object({
 });
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
 
-export const UpdateItemSchema = CreateItemSchema.partial();
+export const UpdateItemSchema = CreateItemSchema.partial().extend({
+  version: z.number().int().nonnegative(),
+});
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;

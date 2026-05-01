@@ -36,6 +36,27 @@ export default [
     },
   },
 
+  // Cloudflare Worker TypeScript files.
+  {
+    files: ['api/src/**/*.ts', 'api/test/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: './api/tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+      globals: {
+        ...globals.es2022,
+        console: 'readonly',
+      },
+    },
+    plugins: { '@typescript-eslint': tsPlugin },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...(tsPlugin.configs['recommended-type-checked']?.rules ?? {}),
+    },
+  },
+
   // TypeScript config files at root — no project type checking
   {
     files: ['*.ts', '*.tsx'],

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 
 interface DrawerProps {
@@ -13,6 +13,7 @@ interface DrawerProps {
 export function Drawer({ open, onClose, title, children, className }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
 
   // Lock scroll and manage focus
   useEffect(() => {
@@ -78,33 +79,33 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open]);
 
+  if (!open) return null;
+
   return (
     <>
       {/* Backdrop */}
-      {open && (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 bg-black/40 z-40 transition-opacity"
-          onClick={onClose}
-        />
-      )}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 bg-black/40 z-40 transition-opacity"
+        onClick={onClose}
+      />
 
       {/* Panel */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="drawer-title"
+        aria-labelledby={titleId}
         className={cn(
           'fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-surface shadow-xl',
           'transition-transform duration-300 ease-in-out',
-          open ? 'translate-x-0' : 'translate-x-full',
+          'translate-x-0',
           className,
         )}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 id="drawer-title" className="text-lg font-semibold text-gray-900">
+          <h2 id={titleId} className="text-lg font-semibold text-gray-900">
             {title}
           </h2>
           <button

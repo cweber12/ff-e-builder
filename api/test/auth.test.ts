@@ -176,7 +176,9 @@ describe('Input validation', () => {
       mockEnv,
     );
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { project: Record<string, unknown> };
-    expect(body.project).toMatchObject({ name: 'Ocean House', budget_cents: 500000 });
+    const body: unknown = await res.json();
+    expect(body).toMatchObject({
+      project: { name: 'Ocean House', budget_cents: 500000 },
+    });
   });
 });

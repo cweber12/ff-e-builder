@@ -1,18 +1,39 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ItemsTable } from './ItemsTable';
 import { roomSubtotalCents, projectTotalCents } from '../lib/calc';
+import { getSortOrderPatches } from '../lib/itemSort';
 import { cents, formatMoney, type Item, type Room } from '../types';
 import type { RoomWithItems } from './ItemsTable';
 
-const { mockMutateAsync } = vi.hoisted(() => ({
-  mockMutateAsync: vi.fn(),
+const {
+  mockUpdateMutateAsync,
+  mockCreateItemMutateAsync,
+  mockDeleteItemMutateAsync,
+  mockMoveItemMutateAsync,
+  mockCreateRoomMutateAsync,
+  mockDeleteRoomMutateAsync,
+} = vi.hoisted(() => ({
+  mockUpdateMutateAsync: vi.fn(),
+  mockCreateItemMutateAsync: vi.fn(),
+  mockDeleteItemMutateAsync: vi.fn(),
+  mockMoveItemMutateAsync: vi.fn(),
+  mockCreateRoomMutateAsync: vi.fn(),
+  mockDeleteRoomMutateAsync: vi.fn(),
 }));
 
 vi.mock('../hooks/useItems', () => ({
-  useUpdateItem: () => ({ mutateAsync: mockMutateAsync }),
+  useUpdateItem: () => ({ mutateAsync: mockUpdateMutateAsync }),
+  useCreateItem: () => ({ mutateAsync: mockCreateItemMutateAsync }),
+  useDeleteItem: () => ({ mutateAsync: mockDeleteItemMutateAsync }),
+  useMoveItem: () => ({ mutateAsync: mockMoveItemMutateAsync }),
+}));
+
+vi.mock('../hooks/useRooms', () => ({
+  useCreateRoom: () => ({ mutateAsync: mockCreateRoomMutateAsync }),
+  useDeleteRoom: () => ({ mutateAsync: mockDeleteRoomMutateAsync }),
 }));
 
 const makeRoom = (overrides: Partial<Room> = {}): Room => ({
@@ -106,7 +127,7 @@ function renderTable(roomsWithItems = fixture) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <ItemsTable roomsWithItems={roomsWithItems} />
+      <ItemsTable roomsWithItems={roomsWithItems} projectId="project-1" />
     </QueryClientProvider>,
   );
 }
@@ -114,7 +135,12 @@ function renderTable(roomsWithItems = fixture) {
 describe('ItemsTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMutateAsync.mockResolvedValue(makeItem());
+    mockUpdateMutateAsync.mockResolvedValue(makeItem());
+    mockCreateItemMutateAsync.mockResolvedValue(makeItem({ id: 'item-created' }));
+    mockDeleteItemMutateAsync.mockResolvedValue(undefined);
+    mockMoveItemMutateAsync.mockResolvedValue(makeItem({ roomId: 'room-2' }));
+    mockCreateRoomMutateAsync.mockResolvedValue(makeRoom({ id: 'room-created' }));
+    mockDeleteRoomMutateAsync.mockResolvedValue(undefined);
     window.localStorage.clear();
   });
 
@@ -172,7 +198,7 @@ describe('ItemsTable', () => {
   it('renders five shimmer rows while loading', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <ItemsTable roomsWithItems={[]} isLoading />
+        <ItemsTable roomsWithItems={[]} projectId="project-1" isLoading />
       </QueryClientProvider>,
     );
 
@@ -189,7 +215,7 @@ describe('ItemsTable', () => {
     await user.type(input, '999.99');
     await user.tab();
 
-    expect(mockMutateAsync).toHaveBeenCalledWith({
+    expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
       id: 'item-1',
       patch: { unitCostCents: 99_999, version: 1 },
     });
@@ -206,7 +232,7 @@ describe('ItemsTable', () => {
     await user.tab();
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Invalid number');
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
   });
 
   it('cycles status pending to ordered to approved to received to pending', async () => {
@@ -220,14 +246,14 @@ describe('ItemsTable', () => {
     let rooms = makeRoomsWithStatus('pending', 1);
     const tableForCurrentStatus = () => (
       <QueryClientProvider client={new QueryClient()}>
-        <ItemsTable key={rooms[0]!.items[0]!.status} roomsWithItems={rooms} />
+        <ItemsTable key={rooms[0]!.items[0]!.status} roomsWithItems={rooms} projectId="project-1" />
       </QueryClientProvider>
     );
 
     const { rerender } = render(tableForCurrentStatus());
 
     await user.click(screen.getByRole('button', { name: /Pending/ }));
-    expect(mockMutateAsync).toHaveBeenLastCalledWith({
+    expect(mockUpdateMutateAsync).toHaveBeenLastCalledWith({
       id: 'item-1',
       patch: { status: 'ordered', version: 1 },
     });
@@ -236,7 +262,7 @@ describe('ItemsTable', () => {
     rerender(tableForCurrentStatus());
 
     await user.click(screen.getByRole('button', { name: /Ordered/ }));
-    expect(mockMutateAsync).toHaveBeenLastCalledWith({
+    expect(mockUpdateMutateAsync).toHaveBeenLastCalledWith({
       id: 'item-1',
       patch: { status: 'approved', version: 2 },
     });
@@ -245,7 +271,7 @@ describe('ItemsTable', () => {
     rerender(tableForCurrentStatus());
 
     await user.click(screen.getByRole('button', { name: /Approved/ }));
-    expect(mockMutateAsync).toHaveBeenLastCalledWith({
+    expect(mockUpdateMutateAsync).toHaveBeenLastCalledWith({
       id: 'item-1',
       patch: { status: 'received', version: 3 },
     });
@@ -254,9 +280,124 @@ describe('ItemsTable', () => {
     rerender(tableForCurrentStatus());
 
     await user.click(screen.getByRole('button', { name: /Received/ }));
-    expect(mockMutateAsync).toHaveBeenLastCalledWith({
+    expect(mockUpdateMutateAsync).toHaveBeenLastCalledWith({
       id: 'item-1',
       patch: { status: 'pending', version: 4 },
     });
+  });
+
+  it('adds an item via the drawer and submits every field to the API call', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getAllByRole('button', { name: 'Add item' })[0]!);
+    const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
+
+    await user.type(within(drawer).getByLabelText('Item name'), 'Side Table');
+    await user.type(within(drawer).getByLabelText('Category'), 'Casegoods');
+    await user.type(within(drawer).getByLabelText('Item ID/tag'), 'TB-02');
+    await user.type(within(drawer).getByLabelText('Vendor/manufacturer'), 'HAY');
+    await user.type(within(drawer).getByLabelText('Dimensions'), '20 x 20 x 24');
+    await user.type(within(drawer).getByLabelText('Seat height'), 'n/a');
+    await user.clear(within(drawer).getByLabelText('Qty'));
+    await user.type(within(drawer).getByLabelText('Qty'), '3');
+    await user.clear(within(drawer).getByLabelText('Unit cost'));
+    await user.type(within(drawer).getByLabelText('Unit cost'), '250.50');
+    await user.clear(within(drawer).getByLabelText('Markup %'));
+    await user.type(within(drawer).getByLabelText('Markup %'), '15.5');
+    await user.type(within(drawer).getByLabelText('Finishes'), 'Walnut');
+    await user.type(within(drawer).getByLabelText('Notes'), 'Match sample finish');
+    await user.type(within(drawer).getByLabelText('Image URL'), 'https://example.com/image.jpg');
+    await user.type(within(drawer).getByLabelText('Link URL'), 'https://example.com/spec');
+    await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
+
+    expect(mockCreateItemMutateAsync).toHaveBeenCalledWith({
+      itemName: 'Side Table',
+      category: 'Casegoods',
+      itemIdTag: 'TB-02',
+      vendor: 'HAY',
+      dimensions: '20 x 20 x 24',
+      seatHeight: 'n/a',
+      qty: 3,
+      unitCostCents: 25050,
+      markupPct: 15.5,
+      finishes: 'Walnut',
+      notes: 'Match sample finish',
+      imageUrl: 'https://example.com/image.jpg',
+      linkUrl: 'https://example.com/spec',
+      sortOrder: 2,
+    });
+    expect(
+      screen.queryByRole('dialog', { name: /Add item to Living Room/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps the drawer open and validates before adding an item', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getAllByRole('button', { name: 'Add item' })[0]!);
+    const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
+    await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
+
+    expect(await screen.findByText('Item name is required')).toBeInTheDocument();
+    expect(mockCreateItemMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('does not allow deleting a room with items until a target room is selected', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getAllByRole('button', { name: 'Delete room' })[0]!);
+
+    expect(screen.getByText(/has 2 items/)).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', { name: /Delete Living Room/ });
+    expect(within(dialog).getByRole('button', { name: 'Delete room' })).toBeDisabled();
+
+    await user.selectOptions(within(dialog).getByLabelText('Move items to...'), 'room-2');
+    await user.click(within(dialog).getByRole('button', { name: 'Delete room' }));
+
+    expect(mockMoveItemMutateAsync).toHaveBeenCalledWith({
+      id: 'item-1',
+      fromRoomId: 'room-1',
+      toRoomId: 'room-2',
+      version: 1,
+    });
+    expect(mockDeleteRoomMutateAsync).toHaveBeenCalledWith('room-1');
+  });
+
+  it('duplicates an item with identical editable fields', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getByRole('button', { name: 'Open item actions for Lounge Chair' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Duplicate' }));
+
+    expect(mockCreateItemMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemName: 'Lounge Chair',
+        category: 'Seating',
+        vendor: 'Muuto',
+        model: 'Fiber',
+        itemIdTag: 'CH-01',
+        dimensions: '28 x 30 x 31',
+        seatHeight: '18',
+        qty: 2,
+        unitCostCents: 123456,
+        markupPct: 20,
+        finishes: 'Oak, ivory textile',
+        notes: 'COM approved',
+        sortOrder: 2,
+      }),
+    );
+  });
+
+  it('calculates sort_order patches for drag-and-drop reorder', () => {
+    const patches = getSortOrderPatches(fixture[0]!.items, 'item-2', 'item-1');
+
+    expect(patches.map(({ item, sortOrder }) => ({ id: item.id, sortOrder }))).toEqual([
+      { id: 'item-2', sortOrder: 0 },
+      { id: 'item-1', sortOrder: 1 },
+    ]);
   });
 });

@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { useUpdateItem } from './useItems';
+import { useCreateItem, useUpdateItem } from './useItems';
 import type { Item } from '../types';
 
 // ─── Hoisted stubs (available inside vi.mock factory closures) ─────────────
 
-const { MockApiError, mockItemsUpdate, mockToastError } = vi.hoisted(() => {
+const { MockApiError, mockItemsCreate, mockItemsUpdate, mockToastError } = vi.hoisted(() => {
   class MockApiError extends Error {
     status: number;
     body: unknown;
@@ -20,6 +20,7 @@ const { MockApiError, mockItemsUpdate, mockToastError } = vi.hoisted(() => {
   }
   return {
     MockApiError,
+    mockItemsCreate: vi.fn<() => Promise<Item>>(),
     mockItemsUpdate: vi.fn<() => Promise<Item>>(),
     mockToastError: vi.fn<(msg: string) => void>(),
   };
@@ -36,8 +37,8 @@ vi.mock('../lib/api', () => ({
   api: {
     items: {
       update: mockItemsUpdate,
+      create: mockItemsCreate,
       list: vi.fn(),
-      create: vi.fn(),
       delete: vi.fn(),
     },
     projects: { list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
@@ -172,5 +173,58 @@ describe('useUpdateItem', () => {
       expect(mockToastError).toHaveBeenCalledWith('This item changed in another tab - reloading');
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['items', 'room-1'] });
+  });
+});
+
+describe('useCreateItem', () => {
+  let qc: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    qc = createTestClient();
+    qc.setQueryData<Item[]>(['items', 'room-1'], [makeItem()]);
+  });
+
+  it('adds an optimistic item before the server responds', async () => {
+    let settle!: (item: Item) => void;
+    mockItemsCreate.mockReturnValueOnce(
+      new Promise<Item>((res) => {
+        settle = res;
+      }),
+    );
+
+    const { result } = renderHook(() => useCreateItem('room-1'), {
+      wrapper: makeWrapper(qc),
+    });
+
+    act(() => {
+      result.current.mutate({
+        itemName: 'New Side Table',
+        qty: 2,
+        unitCostCents: 12_500,
+        markupPct: 15,
+      });
+    });
+
+    await waitFor(() => {
+      const items = qc.getQueryData<Item[]>(['items', 'room-1']);
+      const optimistic = items?.find((item) => item.id.startsWith('optimistic-'));
+      expect(optimistic).toBeDefined();
+      expect(optimistic?.itemName).toBe('New Side Table');
+      expect(optimistic?.qty).toBe(2);
+      expect(optimistic?.unitCostCents).toBe(12_500);
+      expect(optimistic?.markupPct).toBe(15);
+    });
+
+    act(() => {
+      settle(makeItem({ id: 'item-created', itemName: 'New Side Table', version: 1 }));
+    });
+
+    await waitFor(() => {
+      const items = qc.getQueryData<Item[]>(['items', 'room-1']);
+      expect(items).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: 'item-created' })]),
+      );
+    });
   });
 });

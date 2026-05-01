@@ -6,7 +6,7 @@ import { assertProjectOwnership } from '../lib/ownership';
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
 // GET /api/v1/projects — list caller's projects
-router.get('/', async (c) => {
+router.get('/', (c) => {
   // TODO Phase 3: SELECT * FROM projects WHERE owner_uid = $uid ORDER BY created_at DESC
   return c.json({ projects: [] });
 });

@@ -152,6 +152,7 @@ export type CreateItemInput = {
 };
 
 export type UpdateItemInput = {
+  roomId?: string;
   itemName?: string;
   category?: string | null;
   vendor?: string | null;
@@ -299,6 +300,7 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify({
           item_name: patch.itemName,
+          room_id: patch.roomId,
           category: patch.category,
           vendor: patch.vendor,
           model: patch.model,

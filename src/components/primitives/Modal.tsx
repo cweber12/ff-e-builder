@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type MouseEvent, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 
 interface ModalProps {
@@ -13,6 +13,7 @@ interface ModalProps {
 /** Focus-trappable, Esc-closeable centered modal backed by <dialog>. */
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const el = dialogRef.current;
@@ -50,10 +51,12 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     if (e.target === e.currentTarget) onClose();
   };
 
+  if (!open) return null;
+
   return (
     <dialog
       ref={dialogRef}
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
       onClick={handleBackdropClick}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
@@ -71,7 +74,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       <div className="flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
+          <h2 id={titleId} className="text-lg font-semibold text-gray-900">
             {title}
           </h2>
           <button

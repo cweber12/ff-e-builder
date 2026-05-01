@@ -45,7 +45,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 ## UI surfaces
 
 - Project header and design-system primitives provide the first editable project surface.
-- `ItemsTable` renders FF&E items with rooms grouped, persisted room collapse state, room subtotals, a sticky grand total, and inline editing for item fields while keeping derived totals read-only.
+- `ItemsTable` renders FF&E items with rooms grouped, persisted room collapse state, room subtotals, a sticky grand total, inline editing for item fields, and structure mutations for adding rooms/items, duplicating or moving items, deleting with confirmation, and drag reordering.
 
 ## Frontend deploy notes
 

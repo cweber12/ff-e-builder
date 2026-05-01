@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(auth): add email/password sign-in and surface Firebase auth errors
 - fix(deploy): emit stable frontend asset filenames to avoid GitHub Pages 404s after deploy
 - feat(table): add validated inline editing for item cells and status changes
+- feat(table): add item and room structure mutations with drawer forms, confirmations, and reorder support
 
 ---
 

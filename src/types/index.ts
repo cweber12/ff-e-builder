@@ -5,9 +5,11 @@ export type { Item, ItemStatus } from './item';
 export {
   ItemStatusSchema,
   editableItemPatchSchema,
+  itemFormSchema,
   itemStatuses,
   parseMarkupPctInput,
   parseQtyInput,
   parseUnitCostDollarsInput,
   unitCostDollarsToCents,
 } from './itemValidation';
+export type { ItemFormValues } from './itemValidation';
