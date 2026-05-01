@@ -5,6 +5,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Design tokens as CSS custom properties.
+  Values are space-separated RGB channels so Tailwind's opacity modifier
+  syntax (bg-brand-500/20) works: rgb(var(--color-brand-500) / 0.2)
+  To retheme the app, override these variables in :root or a scoped selector.
+*/
+:root {
+  /* Brand */
+  --color-brand-50: 241 245 242;
+  --color-brand-500: 26 107 74;
+  --color-brand-600: 21 90 62;
+  --color-brand-700: 15 70 49;
+
+  /* Surface */
+  --color-surface: 255 255 255;
+  --color-surface-muted: 248 246 241;
+  --color-surface-inverse: 28 28 26;
+
+  /* Semantic */
+  --color-danger-500: 220 38 38;
+  --color-danger-600: 185 28 28;
+  --color-success-500: 5 150 105;
+  --color-warning-500: 217 119 6;
+}
+
 @layer components {
   .catalog-page {
     box-sizing: border-box;
@@ -60,7 +85,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: rgb(26 107 74 / 0.12);
+    background: rgb(var(--color-brand-500) / 0.12);
     color: theme('colors.brand.700');
     font-size: 42px;
     font-weight: 700;

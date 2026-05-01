@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { ReactNode } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   createAccountWithEmailPassword,
   signInWithEmailPassword,
@@ -184,17 +184,34 @@ function getAuthErrorMessage(err: unknown): string {
 function UserChip() {
   const { user } = useAuthUser();
   return (
-    <div className="fixed top-3 right-3 flex items-center gap-2 bg-white rounded-full shadow px-3 py-1.5 text-sm">
-      {user?.photoURL && <img src={user.photoURL} alt="" className="h-6 w-6 rounded-full" />}
-      <span className="max-w-[160px] truncate text-gray-700">{user?.email}</span>
+    <div className="flex items-center gap-2 text-sm">
+      {user?.photoURL && (
+        <img src={user.photoURL} alt="" className="h-7 w-7 rounded-full ring-2 ring-gray-200" />
+      )}
+      <span className="hidden max-w-[160px] truncate text-gray-600 sm:block">{user?.email}</span>
       <button
+        type="button"
         onClick={() => void signOut()}
-        className="text-gray-400 hover:text-gray-600 ml-1"
+        className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
         aria-label="Sign out"
       >
-        ✕
+        Sign out
       </button>
     </div>
+  );
+}
+
+function TopBar() {
+  return (
+    <header className="no-print sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+      <Link
+        to="/projects"
+        className="text-sm font-bold tracking-tight text-brand-500 hover:text-brand-600 transition-colors"
+      >
+        FF&amp;E Builder
+      </Link>
+      <UserChip />
+    </header>
   );
 }
 
@@ -211,7 +228,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <UserChip />
+      <TopBar />
       {children}
     </>
   );

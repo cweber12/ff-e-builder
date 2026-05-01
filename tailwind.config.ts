@@ -7,25 +7,25 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: '#F1F5F2',
-          500: '#1A6B4A',
-          600: '#155A3E',
-          700: '#0F4631',
+          50: 'rgb(var(--color-brand-50)  / <alpha-value>)',
+          500: 'rgb(var(--color-brand-500) / <alpha-value>)',
+          600: 'rgb(var(--color-brand-600) / <alpha-value>)',
+          700: 'rgb(var(--color-brand-700) / <alpha-value>)',
         },
         surface: {
-          DEFAULT: '#FFFFFF',
-          muted: '#F8F6F1', // warm off-white background
-          inverse: '#1C1C1A',
+          DEFAULT: 'rgb(var(--color-surface)         / <alpha-value>)',
+          muted: 'rgb(var(--color-surface-muted)   / <alpha-value>)',
+          inverse: 'rgb(var(--color-surface-inverse) / <alpha-value>)',
         },
         danger: {
-          500: '#DC2626',
-          600: '#B91C1C',
+          500: 'rgb(var(--color-danger-500) / <alpha-value>)',
+          600: 'rgb(var(--color-danger-600) / <alpha-value>)',
         },
         success: {
-          500: '#059669',
+          500: 'rgb(var(--color-success-500) / <alpha-value>)',
         },
         warning: {
-          500: '#D97706',
+          500: 'rgb(var(--color-warning-500) / <alpha-value>)',
         },
       },
       fontFamily: {

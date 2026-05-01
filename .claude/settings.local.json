@@ -6,7 +6,11 @@
       "Bash(npx eslint *)",
       "Bash(pnpm test *)",
       "Bash(npx vitest *)",
-      "Bash(python3)"
+      "Bash(python3)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Force | Where-Object { $_.PSIsContainer -eq $false } | Select-Object -ExpandProperty FullName | head -50)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Force | Where-Object { $_.PSIsContainer -eq $false } | Select-Object -ExpandProperty FullName | Select-Object -First 50)"
     ]
   }
 }

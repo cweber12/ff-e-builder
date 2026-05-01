@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { cn } from '../lib/cn';
 import { formatMoney, dollarsToCents } from '../types';
 import type { Project } from '../types';
@@ -55,9 +56,9 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
   }
 
   return (
-    <dl className="flex flex-col items-end gap-0.5 text-sm tabular-nums">
+    <dl className="flex flex-col items-start gap-0.5 text-sm tabular-nums md:items-end">
       <div className="flex items-center gap-3">
-        <dt className="text-white w-20 text-right">Budget</dt>
+        <dt className="w-16 text-white/80 md:w-20 md:text-right">Budget</dt>
         <dd className="text-white font-medium">
           <InlineNumberEdit
             value={budgetCents / 100}
@@ -69,13 +70,13 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
         </dd>
       </div>
       <div className="flex items-center gap-3">
-        <dt className="text-white w-20 text-right">Actual</dt>
+        <dt className="w-16 text-white/80 md:w-20 md:text-right">Actual</dt>
         <dd className="text-white font-medium">
           {formatMoney(actualCents as Parameters<typeof formatMoney>[0])}
         </dd>
       </div>
       <div className="flex items-center gap-3">
-        <dt className="text-white w-20 text-right">Remaining</dt>
+        <dt className="w-16 text-white/80 md:w-20 md:text-right">Remaining</dt>
         <dd className={cn('font-medium flex items-center gap-1', remainingColor)}>
           {remainingCents < 0 && (
             <svg
@@ -123,8 +124,27 @@ export function ProjectHeader({
 
   return (
     <header className="no-print flex flex-col gap-4 bg-brand-500 px-6 py-4 md:flex-row md:items-center md:justify-between">
-      {/* Left: project name + client */}
+      {/* Left: back link, project name, client */}
       <div className="flex min-w-0 flex-col gap-1">
+        <Link
+          to="/projects"
+          className="flex w-fit items-center gap-1 text-xs text-white/70 transition-colors hover:text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="h-3 w-3 shrink-0"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"
+              clipRule="evenodd"
+            />
+          </svg>
+          All projects
+        </Link>
         <InlineTextEdit
           value={project.name}
           onSave={onNameSave}
