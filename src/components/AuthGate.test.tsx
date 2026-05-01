@@ -20,8 +20,6 @@ describe('AuthGate', () => {
     authMocks.useAuthUser.mockReturnValue({
       user: null,
       isLoading: false,
-      redirectError: null,
-      clearRedirectError: vi.fn(),
     });
   });
 

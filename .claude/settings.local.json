@@ -1,5 +1,11 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm install *)", "Bash(pnpm exec *)", "Bash(npx eslint *)"]
+    "allow": [
+      "Bash(pnpm install *)",
+      "Bash(pnpm exec *)",
+      "Bash(npx eslint *)",
+      "Bash(pnpm test *)",
+      "Bash(npx vitest *)"
+    ]
   }
 }

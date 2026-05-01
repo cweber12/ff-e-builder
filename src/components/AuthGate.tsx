@@ -20,19 +20,13 @@ function FullScreenSpinner() {
 }
 
 export function SignInPage() {
-  const { redirectError, clearRedirectError } = useAuthUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState<'sign-in' | 'create-account'>('sign-in');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const displayError = error || (redirectError ? getAuthErrorMessage(redirectError) : '');
-
-  const clearErrors = () => {
-    setError('');
-    clearRedirectError();
-  };
+  const clearErrors = () => setError('');
 
   const handleGoogleSignIn = async () => {
     clearErrors();
@@ -72,12 +66,12 @@ export function SignInPage() {
           Sign in to manage your projects and specifications.
         </p>
 
-        {displayError && (
+        {error && (
           <p
             role="alert"
             className="w-full rounded-md border border-danger-500/30 bg-red-50 px-3 py-2 text-sm text-danger-600"
           >
-            {displayError}
+            {error}
           </p>
         )}
 
@@ -152,6 +146,13 @@ export function SignInPage() {
 function getAuthErrorMessage(err: unknown): string {
   const code = typeof err === 'object' && err !== null && 'code' in err ? String(err.code) : '';
 
+  // User-initiated dismissals — show nothing so the button just re-enables.
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return '';
+  }
+  if (code === 'auth/popup-blocked') {
+    return 'Sign-in popup was blocked. Allow popups for this site and try again.';
+  }
   if (code === 'auth/unauthorized-domain') {
     return 'This domain is not authorized in Firebase. Add the deployed site domain in Firebase Authentication settings.';
   }
