@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
+  getAdditionalUserInfo,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -27,8 +28,9 @@ export const auth = getAuth();
 
 // ─── Auth actions ─────────────────────────────────────────────────────────
 
-export const signInWithGoogle = async (): Promise<void> => {
-  await signInWithPopup(auth, new GoogleAuthProvider());
+export const signInWithGoogle = async (): Promise<{ isNewUser: boolean }> => {
+  const result = await signInWithPopup(auth, new GoogleAuthProvider());
+  return { isNewUser: getAdditionalUserInfo(result)?.isNewUser ?? false };
 };
 
 export const signInWithEmailPassword = async (email: string, password: string): Promise<void> => {

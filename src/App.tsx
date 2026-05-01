@@ -15,9 +15,11 @@ import { ItemsTable, type RoomWithItems } from './components/ItemsTable';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
+import { Button } from './components/primitives/Button';
+import { Modal } from './components/primitives/Modal';
 import { projectTotalCents } from './lib/calc';
 import { recordSession } from './lib/telemetry';
-import { useProjects, useUpdateProject } from './hooks/useProjects';
+import { useProjects, useUpdateProject, useDeleteProject } from './hooks/useProjects';
 import { useRoomsWithItems } from './hooks/useRoomsWithItems';
 import type { Project } from './types';
 
@@ -57,7 +59,9 @@ function App() {
 
 function ProjectList() {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
   const { data: projects, isLoading } = useProjects();
+  const deleteProject = useDeleteProject();
 
   return (
     <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
@@ -85,24 +89,91 @@ function ProjectList() {
         ) : (
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => (
-              <Link
+              <article
                 key={project.id}
-                to={`/projects/${project.id}/table`}
-                className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-brand-500 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="group relative rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-brand-500 hover:shadow-md focus-within:border-brand-500"
               >
-                {project.clientName && (
-                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
-                    {project.clientName}
-                  </p>
-                )}
-                <h2 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h2>
-              </Link>
+                <Link
+                  to={`/projects/${project.id}/table`}
+                  className="block p-5 focus-visible:outline-none"
+                >
+                  {project.clientName && (
+                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                      {project.clientName}
+                    </p>
+                  )}
+                  <h2 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h2>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setPendingDelete(project)}
+                  aria-label={`Delete ${project.name}`}
+                  className="absolute right-3 top-3 rounded-md p-1 text-gray-300 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 group-hover:opacity-100"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </article>
             ))}
           </div>
         )}
       </div>
+
       <NewProjectModal open={newProjectOpen} onClose={() => setNewProjectOpen(false)} />
+      <DeleteProjectModal
+        project={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={(id) => deleteProject.mutate(id)}
+      />
     </main>
+  );
+}
+
+function DeleteProjectModal({
+  project,
+  onClose,
+  onConfirm,
+}: {
+  project: Project | null;
+  onClose: () => void;
+  onConfirm: (id: string) => void;
+}) {
+  if (!project) return null;
+  return (
+    <Modal open onClose={onClose} title="Delete project">
+      <div className="flex flex-col gap-5">
+        <p className="text-sm text-gray-600">
+          Permanently delete <strong className="font-semibold text-gray-950">{project.name}</strong>
+          ? All rooms and items will be removed. This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => {
+              onConfirm(project.id);
+              onClose();
+            }}
+          >
+            Delete project
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

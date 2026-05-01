@@ -30,7 +30,7 @@ import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/cal
 import { emptyToNull } from '../lib/textUtils';
 import { getSortOrderPatches } from '../lib/itemSort';
 import { useCreateItem, useDeleteItem, useMoveItem, useUpdateItem } from '../hooks/useItems';
-import { useCreateRoom, useDeleteRoom } from '../hooks/useRooms';
+import { useCreateRoom, useDeleteRoom, useUpdateRoom } from '../hooks/useRooms';
 import {
   cents,
   dollarsToCents,
@@ -889,17 +889,20 @@ function MobileField({ label, children }: { label: string; children: ReactNode }
 function RoomItemsSection({
   room,
   rooms,
+  projectId,
   collapsed,
   onToggle,
   onDeleteRoom,
 }: {
   room: RoomWithItems;
   rooms: RoomWithItems[];
+  projectId: string;
   collapsed: boolean;
   onToggle: () => void;
   onDeleteRoom: (room: RoomWithItems) => void;
 }) {
   const updateItem = useUpdateItem(room.id);
+  const updateRoom = useUpdateRoom(projectId);
   const createItem = useCreateItem(room.id);
   const deleteItem = useDeleteItem(room.id);
   const moveItem = useMoveItem();
@@ -1005,28 +1008,39 @@ function RoomItemsSection({
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-surface-muted px-4 py-3">
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={!collapsed}
-          className="flex min-w-0 flex-1 items-center gap-3 text-left"
-        >
-          <span className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={!collapsed}
+            aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
+            className="shrink-0 rounded px-1 text-xs text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          >
             <span
               aria-hidden="true"
               className={cn(
-                'inline-block text-xs text-gray-500 transition-transform',
+                'inline-block transition-transform',
                 collapsed ? '-rotate-90' : 'rotate-0',
               )}
             >
               v
             </span>
-            <span className="truncate text-sm font-semibold text-gray-950">{room.name}</span>
-            <span className="rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
-              {itemCount} {itemCount === 1 ? 'item' : 'items'}
-            </span>
+          </button>
+          <InlineTextEdit
+            value={room.name}
+            onSave={async (name) => {
+              await updateRoom.mutateAsync({ id: room.id, patch: { name } });
+            }}
+            aria-label="Room name"
+            renderDisplay={(v) => (
+              <span className="truncate text-sm font-semibold text-gray-950">{v}</span>
+            )}
+            inputClassName="text-sm font-semibold text-gray-950 border-gray-300 bg-white"
+          />
+          <span className="shrink-0 rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
-        </button>
+        </div>
         <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
           {formatMoney(cents(subtotal))}
         </span>
@@ -1160,6 +1174,7 @@ export function ItemsTableView({
           key={room.id}
           room={room}
           rooms={sortedRooms}
+          projectId={projectId}
           collapsed={collapsed[room.id] ?? false}
           onToggle={() => toggle(room.id)}
           onDeleteRoom={setRoomToDelete}

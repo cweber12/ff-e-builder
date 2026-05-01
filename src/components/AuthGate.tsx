@@ -8,6 +8,7 @@ import {
   signOut,
   useAuthUser,
 } from '../lib/auth';
+import { seedExampleProject } from '../lib/seed';
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 
@@ -41,7 +42,8 @@ export function SignInPage() {
     clearErrors();
     setIsSubmitting(true);
     try {
-      await signInWithGoogle();
+      const { isNewUser } = await signInWithGoogle();
+      if (isNewUser) void seedExampleProject().catch(() => {});
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -57,6 +59,7 @@ export function SignInPage() {
     try {
       if (authMode === 'create-account') {
         await createAccountWithEmailPassword(email.trim(), password);
+        void seedExampleProject().catch(() => {});
       } else {
         await signInWithEmailPassword(email.trim(), password);
       }
