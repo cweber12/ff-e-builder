@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './lib/auth';
-import { AuthGate } from './components/AuthGate';
+import { RootErrorBoundary } from './components/RootErrorBoundary';
 import { queryClient } from './lib/queryClient';
 import './index.css';
 import App from './App';
@@ -19,11 +19,11 @@ createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename={routerBasename}>
-        <AuthProvider>
-          <AuthGate>
+        <RootErrorBoundary>
+          <AuthProvider>
             <App />
-          </AuthGate>
-        </AuthProvider>
+          </AuthProvider>
+        </RootErrorBoundary>
       </BrowserRouter>
       <Toaster richColors />
       <ReactQueryDevtools initialIsOpen={false} />

@@ -47,6 +47,20 @@ C4Component
   Rel(handlers, db, "Queries")
 ```
 
+Actual frontend route shell:
+
+- `/projects` renders project cards.
+- `/projects/:id` redirects to `/projects/:id/table`.
+- `/projects/:id/table` renders the editable grouped FF&E table.
+- `/projects/:id/catalog` renders the printable one-item-per-page catalog.
+- `/projects/:id/summary` renders totals by room, status, and vendor.
+- `/signin` is public; project routes are protected by Firebase Auth.
+
+The current launch build keeps demo fixture data for the visible project surface
+while API, auth, ownership checks, migrations, and Worker deployment remain the
+production integration boundary. The React client still never connects directly
+to Neon.
+
 ---
 
 ## 3. Sequence diagram — "user edits an item"

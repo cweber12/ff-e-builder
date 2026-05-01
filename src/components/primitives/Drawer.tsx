@@ -97,7 +97,7 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-surface shadow-xl',
+          'fixed inset-0 z-50 flex w-full flex-col bg-surface shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md',
           'transition-transform duration-300 ease-in-out',
           'translate-x-0',
           className,

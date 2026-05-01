@@ -16,9 +16,20 @@ test('catalog PDF page count matches fixture item count', async ({ page, browser
   test.skip(browserName !== 'chromium', 'PDF generation is only available in Chromium.');
 
   await page.goto('./projects/demo-project/catalog');
-  const pdf = await page.pdf({ format: 'A4', printBackground: true });
+  await page.emulateMedia({ media: 'print' });
+  const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true });
   const pdfText = pdf.toString('latin1');
-  const pageCount = pdfText.match(/\/Type\s*\/Page\b/g)?.length ?? 0;
+  const pageCount = getPdfPageCount(pdfText);
 
   expect(pageCount).toBe(3);
 });
+
+function getPdfPageCount(pdfText: string) {
+  const explicitCounts = [...pdfText.matchAll(/\/Count\s+(\d+)/g)]
+    .map((match) => Number(match[1]))
+    .filter(Number.isFinite);
+
+  if (explicitCounts.length > 0) return Math.max(...explicitCounts);
+
+  return pdfText.match(/\/Type\s*\/Page\b/g)?.length ?? 0;
+}

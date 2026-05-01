@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.0.0] - 2026-05-01
+
 - chore(scaffold): initialize repo with agent context and docs
 - build(phase-1): Vite + React + TS scaffold with lint/format/test toolchain and CI/CD
 - feat(api): Cloudflare Worker proxy with Hono, Firebase auth, ownership checks, DB migration schema
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(table): add item and room structure mutations with drawer forms, confirmations, and reorder support
 - fix(deploy): keep a compatibility copy of the known stale GitHub Pages bundle name
 - feat(catalog): add printable item catalog route with PDF-oriented A4 layout
+- feat(release): nested routing, summary view, responsive layouts, accessibility audit, and launch docs
 
 ---
 

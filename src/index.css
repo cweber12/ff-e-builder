@@ -158,6 +158,26 @@
   }
 }
 
+@media screen and (max-width: 860px) {
+  .catalog-page {
+    width: calc(100vw - 32px);
+    height: auto;
+    min-height: calc((100vw - 32px) * 1123 / 794);
+    padding: 24px;
+  }
+
+  .catalog-body {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 28px 0 24px;
+  }
+
+  .catalog-image-wrap,
+  .catalog-placeholder {
+    min-height: 360px;
+  }
+}
+
 @media print {
   @page {
     size: A4;
@@ -187,7 +207,14 @@
     padding: 0 !important;
   }
 
+  .project-content {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
   .catalog-page {
+    width: 794px;
+    height: 1123px;
     box-shadow: none !important;
     break-after: page;
     page-break-after: always;

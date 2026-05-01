@@ -26,6 +26,8 @@ logs/
 
 # Test coverage
 coverage/
+test-results/
+playwright-report/
 
 # TypeScript cache
 *.tsbuildinfo

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api, ApiError } from '../lib/api';
+import { recordItemCreated } from '../lib/telemetry';
 import type { CreateItemInput, UpdateItemInput } from '../lib/api';
 import type { Item } from '../types';
 
@@ -59,6 +60,7 @@ export function useCreateItem(roomId: string) {
       }
     },
     onSuccess: (created, _input, ctx) => {
+      recordItemCreated();
       queryClient.setQueryData<Item[]>(
         itemKeys.forRoom(roomId),
         (old) => old?.map((item) => (item.id === ctx?.optimisticId ? created : item)) ?? [created],

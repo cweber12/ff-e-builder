@@ -9,25 +9,25 @@ const statusConfig: Record<
     label: 'Pending',
     icon: '⏳',
     bgClass: 'bg-amber-50',
-    textClass: 'text-warning-500',
+    textClass: 'text-amber-700',
   },
   approved: {
     label: 'Approved',
     icon: '✓',
     bgClass: 'bg-brand-50',
-    textClass: 'text-brand-500',
+    textClass: 'text-brand-700',
   },
   ordered: {
     label: 'Ordered',
     icon: '📦',
     bgClass: 'bg-blue-50',
-    textClass: 'text-blue-600',
+    textClass: 'text-blue-700',
   },
   received: {
     label: 'Received',
     icon: '✓',
     bgClass: 'bg-emerald-50',
-    textClass: 'text-success-500',
+    textClass: 'text-emerald-700',
   },
 };
 
@@ -40,6 +40,8 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const cfg = statusConfig[status];
   return (
     <span
+      role="status"
+      aria-label={`Status: ${cfg.label}`}
       className={cn(
         'inline-flex items-center gap-1 rounded-pill px-2.5 py-0.5 text-xs font-medium',
         cfg.bgClass,

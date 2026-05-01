@@ -153,7 +153,7 @@ describe('ItemsTable', () => {
     expect(screen.getByText('Lounge Chair')).toBeInTheDocument();
     expect(screen.getByText('Floor Lamp')).toBeInTheDocument();
     expect(screen.getByText('Dining Table')).toBeInTheDocument();
-    expect(screen.getByText('No items yet')).toBeInTheDocument();
+    expect(screen.getByText('Add first item ->')).toBeInTheDocument();
   });
 
   it('renders room subtotals matching roomSubtotalCents', () => {

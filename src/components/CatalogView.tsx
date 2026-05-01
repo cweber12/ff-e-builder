@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../lib/calc';
-import { cents, formatMoney, type Project } from '../types';
-import type { CatalogItem, CatalogRoom } from '../data/catalogFixture';
+import { cents, formatMoney, type Item, type Project } from '../types';
+import type { RoomWithItems } from './ItemsTable';
 import { Button } from './primitives';
 
 type CatalogEntry = {
-  item: CatalogItem;
-  room: CatalogRoom;
+  item: Item & { color?: string | null; designer?: string | null };
+  room: RoomWithItems;
 };
 
 type CatalogViewProps = {
   project: Project;
-  rooms: CatalogRoom[];
+  rooms: RoomWithItems[];
 };
 
 export function CatalogView({ project, rooms }: CatalogViewProps) {
@@ -30,7 +30,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
 
   if (!entry) {
     return (
-      <main className="min-h-screen bg-surface-muted px-6 py-12">
+      <div className="min-h-screen bg-surface-muted px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
           <h1 className="text-2xl font-semibold text-gray-950">No catalog items yet</h1>
           <p className="text-sm text-gray-600">
@@ -40,12 +40,12 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             Back
           </Button>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-surface-muted py-8">
+    <div className="min-h-screen bg-surface-muted py-8">
       <CatalogNav
         project={project}
         rooms={rooms}
@@ -74,7 +74,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
           />
         ))}
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -86,7 +86,7 @@ function CatalogNav({
   onPageChange,
 }: {
   project: Project;
-  rooms: CatalogRoom[];
+  rooms: RoomWithItems[];
   currentIndex: number;
   total: number;
   onPageChange: (index: number) => void;
@@ -144,7 +144,7 @@ function CatalogNav({
           Print / Save as PDF
         </Button>
       </div>
-      <span className="text-sm text-gray-500">
+      <span className="text-sm text-gray-700">
         {currentIndex + 1} of {total}
       </span>
       <span className="sr-only">{project.name}</span>
@@ -207,8 +207,8 @@ export function CatalogPage({
             <DataPoint label="Vendor" value={item.vendor} />
             <DataPoint label="Dimensions" value={item.dimensions} />
             <DataPoint label="Materials" value={item.finishes} />
-            <DataPoint label="Color" value={item.color} />
-            <DataPoint label="Designer" value={item.designer} />
+            <DataPoint label="Color" value={item.color ?? null} />
+            <DataPoint label="Designer" value={item.designer ?? null} />
           </dl>
 
           <div className="catalog-price-block">
@@ -250,7 +250,7 @@ function DataPoint({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-function flattenCatalogEntries(rooms: CatalogRoom[]): CatalogEntry[] {
+function flattenCatalogEntries(rooms: RoomWithItems[]): CatalogEntry[] {
   return [...rooms]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
     .flatMap((room) =>

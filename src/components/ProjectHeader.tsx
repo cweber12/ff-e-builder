@@ -29,7 +29,7 @@ function SkeletonBar() {
 interface BudgetTrackerProps {
   budgetCents: number;
   actualCents: number;
-  onBudgetSave: (cents: number) => Promise<void>;
+  onBudgetSave: (cents: number) => Promise<void> | void;
 }
 
 function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTrackerProps) {
@@ -37,10 +37,10 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
 
   const remainingColor =
     remainingCents < 0
-      ? 'text-red-300'
+      ? 'text-white'
       : remainingCents < budgetCents * 0.1
-        ? 'text-amber-300'
-        : 'text-emerald-300';
+        ? 'text-white'
+        : 'text-white';
 
   if (budgetCents === 0) {
     return (
@@ -49,7 +49,7 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
         onSave={(dollars) => onBudgetSave(dollarsToCents(dollars))}
         formatter={() => 'Set budget'}
         aria-label="Set project budget"
-        className="text-white/70 hover:text-white cursor-pointer text-sm underline underline-offset-2"
+        className="text-white hover:text-white cursor-pointer text-sm underline underline-offset-2"
       />
     );
   }
@@ -57,7 +57,7 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
   return (
     <dl className="flex flex-col items-end gap-0.5 text-sm tabular-nums">
       <div className="flex items-center gap-3">
-        <dt className="text-white/70 w-20 text-right">Budget</dt>
+        <dt className="text-white w-20 text-right">Budget</dt>
         <dd className="text-white font-medium">
           <InlineNumberEdit
             value={budgetCents / 100}
@@ -69,13 +69,13 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
         </dd>
       </div>
       <div className="flex items-center gap-3">
-        <dt className="text-white/70 w-20 text-right">Actual</dt>
+        <dt className="text-white w-20 text-right">Actual</dt>
         <dd className="text-white font-medium">
           {formatMoney(actualCents as Parameters<typeof formatMoney>[0])}
         </dd>
       </div>
       <div className="flex items-center gap-3">
-        <dt className="text-white/70 w-20 text-right">Remaining</dt>
+        <dt className="text-white w-20 text-right">Remaining</dt>
         <dd className={cn('font-medium flex items-center gap-1', remainingColor)}>
           {remainingCents < 0 && (
             <svg
@@ -107,9 +107,9 @@ interface ProjectHeaderProps {
   project: Project | undefined;
   /** Live-derived actual spend for the project (integer cents). */
   actualCents: number;
-  onNameSave: (name: string) => Promise<void>;
-  onClientSave: (clientName: string) => Promise<void>;
-  onBudgetSave: (budgetCents: number) => Promise<void>;
+  onNameSave: (name: string) => Promise<void> | void;
+  onClientSave: (clientName: string) => Promise<void> | void;
+  onBudgetSave: (budgetCents: number) => Promise<void> | void;
 }
 
 export function ProjectHeader({
@@ -122,9 +122,9 @@ export function ProjectHeader({
   if (!project) return <SkeletonBar />;
 
   return (
-    <header className="bg-brand-500 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+    <header className="no-print flex flex-col gap-4 bg-brand-500 px-6 py-4 md:flex-row md:items-center md:justify-between">
       {/* Left: project name + client */}
-      <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex min-w-0 flex-col gap-1">
         <InlineTextEdit
           value={project.name}
           onSave={onNameSave}
@@ -142,12 +142,12 @@ export function ProjectHeader({
           aria-label="Client name"
           renderDisplay={(v) =>
             v ? (
-              <span className="text-sm text-white/80">{v}</span>
+              <span className="text-sm text-white">{v}</span>
             ) : (
-              <span className="text-sm text-white/50 italic">Add client name</span>
+              <span className="text-sm text-white italic">Add client name</span>
             )
           }
-          className="text-sm text-white/80"
+          className="text-sm text-white"
           inputClassName="text-sm bg-brand-600 text-white border-white/30 placeholder-white/50"
         />
       </div>

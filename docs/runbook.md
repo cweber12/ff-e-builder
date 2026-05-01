@@ -61,6 +61,44 @@ not a print library. Validate the print path before a release:
    placement; if an item bleeds into the next page, check that `.catalog-page`
    still has `break-after: page` and `@page { size: A4; margin: 0; }`.
 
+### Final 1.0.0 launch steps
+
+1. Configure Firebase Authentication:
+   - Authorized domains: `cweber12.github.io`
+   - Sign-in providers: Google enabled
+   - Email/password disabled for the 1-user-tier launch
+2. Configure Worker CORS origin to `https://cweber12.github.io`.
+3. Set Worker secrets:
+   ```bash
+   cd api
+   wrangler secret put NEON_DATABASE_URL
+   wrangler secret put FIREBASE_ADMIN_CLIENT_EMAIL
+   wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
+   ```
+4. Apply migrations from the repo root:
+   ```bash
+   pnpm migrate
+   ```
+5. Deploy the Worker:
+   ```bash
+   cd api
+   wrangler deploy
+   ```
+6. Push to `main`; GitHub Actions deploys the frontend to Pages.
+
+Smoke checklist:
+
+1. Open the GitHub Pages URL.
+2. Sign in with Google.
+3. Create a project.
+4. Edit the project budget.
+5. Add a room.
+6. Add an item.
+7. Edit item quantity, unit cost, and markup.
+8. Change item status.
+9. Export CSV.
+10. Open catalog and print/save as PDF.
+
 ### API Worker (Cloudflare)
 
 ```bash

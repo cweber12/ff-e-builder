@@ -47,6 +47,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - Project header and design-system primitives provide the first editable project surface.
 - `ItemsTable` renders FF&E items with rooms grouped, persisted room collapse state, room subtotals, a sticky grand total, inline editing for item fields, and structure mutations for adding rooms/items, duplicating or moving items, deleting with confirmation, and drag reordering.
 - `CatalogView` renders `/projects/:id/catalog` as a printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, and browser print/PDF support.
+- `SummaryView` renders `/projects/:id/summary` with room subtotals, budget progress, status counts, and vendor totals.
 
 ## Frontend deploy notes
 
@@ -96,10 +97,13 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 
 ## Where to go next
 
-| Audience             | Resource                                     |
-| -------------------- | -------------------------------------------- |
-| AI agents & Codex    | [AGENTS.md](AGENTS.md)                       |
-| Engineers onboarding | [docs/architecture.md](docs/architecture.md) |
-| Ops / deployment     | [docs/runbook.md](docs/runbook.md)           |
-| Changelog            | [docs/changelog.md](docs/changelog.md)       |
-| Contributing         | [docs/contributing.md](docs/contributing.md) |
+| Audience             | Resource                                           |
+| -------------------- | -------------------------------------------------- |
+| AI agents & Codex    | [AGENTS.md](AGENTS.md)                             |
+| Engineers onboarding | [docs/architecture.md](docs/architecture.md)       |
+| Ops / deployment     | [docs/runbook.md](docs/runbook.md)                 |
+| Accessibility        | [docs/accessibility.md](docs/accessibility.md)     |
+| Privacy              | [docs/privacy.md](docs/privacy.md)                 |
+| Troubleshooting      | [docs/troubleshooting.md](docs/troubleshooting.md) |
+| Changelog            | [docs/changelog.md](docs/changelog.md)             |
+| Contributing         | [docs/contributing.md](docs/contributing.md)       |

@@ -526,6 +526,27 @@ function writeRoomCollapsed(roomId: string, value: boolean) {
   window.localStorage.setItem(`room:${roomId}:collapsed`, String(value));
 }
 
+function useIsMobileViewport() {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return window.matchMedia('(max-width: 767px)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const updateViewport = () => setIsMobile(mediaQuery.matches);
+
+    updateViewport();
+    mediaQuery.addEventListener('change', updateViewport);
+
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
+
+  return isMobile;
+}
+
 function ItemsErrorState({ onReload }: { onReload?: (() => void) | undefined }) {
   return (
     <div className="flex min-h-[18rem] flex-col items-center justify-center gap-4 rounded-lg border border-danger-500/30 bg-white px-6 py-10 text-center">
@@ -738,6 +759,133 @@ function SortableItemRow({ row }: { row: Row<Item> }) {
   );
 }
 
+function MobileItemCards({
+  items,
+  actions,
+  onSave,
+}: {
+  items: Item[];
+  actions: TableActions;
+  onSave: SaveItemPatch;
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+        Add first item -&gt;
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {items.map((item) => (
+        <article key={item.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <EditableTextCell
+                item={item}
+                value={item.itemName}
+                field="itemName"
+                label="Item"
+                onSave={onSave}
+                required
+                displayClassName="text-base font-semibold text-gray-950"
+              />
+              <div className="mt-1 text-sm text-gray-500">
+                <EditableTextCell
+                  item={item}
+                  value={item.itemIdTag}
+                  field="itemIdTag"
+                  label="ID"
+                  onSave={onSave}
+                />
+              </div>
+            </div>
+            <RowActionsCell item={item} actions={actions} />
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <MobileField label="Category">
+              <EditableTextCell
+                item={item}
+                value={item.category}
+                field="category"
+                label="Category"
+                onSave={onSave}
+              />
+            </MobileField>
+            <MobileField label="Vendor">
+              <EditableTextCell
+                item={item}
+                value={item.vendor}
+                field="vendor"
+                label="Vendor"
+                onSave={onSave}
+              />
+            </MobileField>
+            <MobileField label="Qty">
+              <InlineNumberEdit
+                value={item.qty}
+                aria-label={`Qty for ${item.itemName}`}
+                parser={parseQtyInput}
+                formatter={(value) => String(value)}
+                onSave={(qty) => saveValidatedPatch(onSave, item, { qty })}
+              />
+            </MobileField>
+            <MobileField label="Unit cost">
+              <InlineNumberEdit
+                value={item.unitCostCents / 100}
+                aria-label={`Unit Cost for ${item.itemName}`}
+                parser={parseUnitCostDollarsInput}
+                formatter={formatDollars}
+                onSave={(unitCostDollars) =>
+                  saveValidatedPatch(onSave, item, {
+                    unitCostCents: unitCostDollarsToCents(unitCostDollars),
+                  })
+                }
+              />
+            </MobileField>
+            <MobileField label="Markup">
+              <InlineNumberEdit
+                value={item.markupPct}
+                aria-label={`Markup for ${item.itemName}`}
+                parser={parseMarkupPctInput}
+                formatter={(value) => `${formatPercent(value)}%`}
+                onSave={(markupPct) => saveValidatedPatch(onSave, item, { markupPct })}
+              />
+            </MobileField>
+            <MobileField label="Total">
+              <span className="font-semibold tabular-nums">
+                {formatMoney(cents(lineTotalCents(item.unitCostCents, item.markupPct, item.qty)))}
+              </span>
+            </MobileField>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <EditableStatusCell item={item} onSave={onSave} />
+            <EditableTextCell
+              item={item}
+              value={item.notes}
+              field="notes"
+              label="Notes"
+              onSave={onSave}
+            />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function MobileField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
+      <div className="mt-1 text-gray-950">{children}</div>
+    </div>
+  );
+}
+
 function RoomItemsSection({
   room,
   rooms,
@@ -756,6 +904,7 @@ function RoomItemsSection({
   const deleteItem = useDeleteItem(room.id);
   const moveItem = useMoveItem();
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const isMobile = useIsMobileViewport();
   const sortedItems = useMemo(
     () =>
       [...room.items].sort(
@@ -824,16 +973,16 @@ function RoomItemsSection({
     }),
     [deleteItem, duplicateItem, moveItem, rooms],
   );
-  const columns = useMemo(
-    () =>
-      createColumns(async (item, patch) => {
-        await updateItem.mutateAsync({
-          id: item.id,
-          patch: { ...patch, version: item.version },
-        });
-      }, actions),
-    [actions, updateItem],
+  const saveItemPatch = useCallback<SaveItemPatch>(
+    async (item, patch) => {
+      await updateItem.mutateAsync({
+        id: item.id,
+        patch: { ...patch, version: item.version },
+      });
+    },
+    [updateItem],
   );
+  const columns = useMemo(() => createColumns(saveItemPatch, actions), [actions, saveItemPatch]);
   const table = useReactTable({
     data: sortedItems,
     columns,
@@ -901,8 +1050,14 @@ function RoomItemsSection({
         }}
       />
 
-      {!collapsed && (
-        <div className="overflow-x-auto">
+      {!collapsed && isMobile && (
+        <div className="p-3">
+          <MobileItemCards items={sortedItems} actions={actions} onSave={saveItemPatch} />
+        </div>
+      )}
+
+      {!collapsed && !isMobile && (
+        <div tabIndex={0} aria-label={`${room.name} items table`} className="overflow-x-auto">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -930,7 +1085,7 @@ function RoomItemsSection({
                   <tr>
                     <td colSpan={columns.length} className="p-3">
                       <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-                        No items yet
+                        Add first item -&gt;
                       </div>
                     </td>
                   </tr>

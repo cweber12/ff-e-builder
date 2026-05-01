@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   createAccountWithEmailPassword,
   signInWithEmailPassword,
@@ -12,13 +13,13 @@ import {
 
 function FullScreenSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-muted">
+    <main className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="h-10 w-10 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
-    </div>
+    </main>
   );
 }
 
-function SignInCard() {
+export function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState<'sign-in' | 'create-account'>('sign-in');
@@ -56,7 +57,7 @@ function SignInCard() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-muted">
+    <main className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center gap-6 w-full max-w-sm">
         <h1 className="text-2xl font-bold text-brand-500">FF&amp;E Builder</h1>
         <p className="text-sm text-gray-500 text-center">
@@ -121,7 +122,7 @@ function SignInCard() {
             : 'Need an account? Create one'}
         </button>
 
-        <div className="flex w-full items-center gap-3 text-xs uppercase tracking-wide text-gray-400">
+        <div className="flex w-full items-center gap-3 text-xs uppercase tracking-wide text-gray-600">
           <span className="h-px flex-1 bg-gray-200" />
           or
           <span className="h-px flex-1 bg-gray-200" />
@@ -136,7 +137,7 @@ function SignInCard() {
           Sign in with Google
         </button>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -187,7 +188,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   if (bypassAuth) return children;
   if (isLoading) return <FullScreenSpinner />;
-  if (!user) return <SignInCard />;
+  if (!user) return <Navigate to="/signin" replace />;
 
   return (
     <>
