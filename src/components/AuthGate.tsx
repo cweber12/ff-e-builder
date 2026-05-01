@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   createAccountWithEmailPassword,
   signInWithEmailPassword,
@@ -20,6 +20,15 @@ function FullScreenSpinner() {
 }
 
 export function SignInPage() {
+  const { user, isLoading } = useAuthUser();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from ?? '/projects';
+
+  useEffect(() => {
+    if (!isLoading && user) navigate(from, { replace: true });
+  }, [user, isLoading, navigate, from]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState<'sign-in' | 'create-account'>('sign-in');
@@ -193,11 +202,12 @@ function UserChip() {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuthUser();
+  const location = useLocation();
   const bypassAuth = import.meta.env.VITE_E2E_BYPASS_AUTH === 'true';
 
   if (bypassAuth) return children;
   if (isLoading) return <FullScreenSpinner />;
-  if (!user) return <Navigate to="/signin" replace />;
+  if (!user) return <Navigate to="/signin" state={{ from: location.pathname }} replace />;
 
   return (
     <>

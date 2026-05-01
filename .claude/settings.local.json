@@ -5,7 +5,8 @@
       "Bash(pnpm exec *)",
       "Bash(npx eslint *)",
       "Bash(pnpm test *)",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(python3)"
     ]
   }
 }

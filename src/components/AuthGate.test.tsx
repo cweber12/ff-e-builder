@@ -24,7 +24,11 @@ describe('AuthGate', () => {
   });
 
   it('renders email/password sign-in and Google sign-in options', () => {
-    render(<SignInPage />);
+    render(
+      <MemoryRouter>
+        <SignInPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
@@ -36,7 +40,11 @@ describe('AuthGate', () => {
     const user = userEvent.setup();
     authMocks.signInWithEmailPassword.mockResolvedValue(undefined);
 
-    render(<SignInPage />);
+    render(
+      <MemoryRouter>
+        <SignInPage />
+      </MemoryRouter>,
+    );
 
     await user.type(screen.getByLabelText('Email'), 'designer@example.com');
     await user.type(screen.getByLabelText('Password'), 'secret123');
@@ -52,7 +60,11 @@ describe('AuthGate', () => {
     const user = userEvent.setup();
     authMocks.createAccountWithEmailPassword.mockResolvedValue(undefined);
 
-    render(<SignInPage />);
+    render(
+      <MemoryRouter>
+        <SignInPage />
+      </MemoryRouter>,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Need an account? Create one' }));
     await user.type(screen.getByLabelText('Email'), 'new@example.com');
@@ -69,7 +81,11 @@ describe('AuthGate', () => {
     const user = userEvent.setup();
     authMocks.signInWithGoogle.mockRejectedValue({ code: 'auth/unauthorized-domain' });
 
-    render(<SignInPage />);
+    render(
+      <MemoryRouter>
+        <SignInPage />
+      </MemoryRouter>,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
 
