@@ -47,6 +47,7 @@ export default [
       },
       globals: {
         ...globals.es2022,
+        ...globals.browser,
         console: 'readonly',
       },
     },

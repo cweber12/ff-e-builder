@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.4",
-    "firebase-admin": "^12.4.0",
     "hono": "^4.5.0",
     "zod": "^3.23.0"
   },
