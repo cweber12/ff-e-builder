@@ -37,9 +37,9 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
 
   const remainingColor =
     remainingCents < 0
-      ? 'text-white'
+      ? 'text-red-300'
       : remainingCents < budgetCents * 0.1
-        ? 'text-white'
+        ? 'text-yellow-300'
         : 'text-white';
 
   if (budgetCents === 0) {
