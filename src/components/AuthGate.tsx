@@ -20,17 +20,13 @@ function FullScreenSpinner() {
 }
 
 export function SignInPage() {
-  const { redirectError, clearRedirectError } = useAuthUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState<'sign-in' | 'create-account'>('sign-in');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const displayError = error || (redirectError ? getAuthErrorMessage({ code: redirectError }) : '');
-
   const handleGoogleSignIn = async () => {
-    clearRedirectError();
     setError('');
     setIsSubmitting(true);
     try {
@@ -68,12 +64,12 @@ export function SignInPage() {
           Sign in to manage your projects and specifications.
         </p>
 
-        {displayError && (
+        {error && (
           <p
             role="alert"
             className="w-full rounded-md border border-danger-500/30 bg-red-50 px-3 py-2 text-sm text-danger-600"
           >
-            {displayError}
+            {error}
           </p>
         )}
 
@@ -116,7 +112,6 @@ export function SignInPage() {
         <button
           type="button"
           onClick={() => {
-            clearRedirectError();
             setError('');
             setAuthMode((mode) => (mode === 'sign-in' ? 'create-account' : 'sign-in'));
           }}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Link,
   Navigate,
@@ -17,15 +17,14 @@ import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
 import { projectTotalCents } from './lib/calc';
 import { recordSession } from './lib/telemetry';
-import { catalogProjectFixture, catalogRoomsFixture } from './data/catalogFixture';
+import { useProjects, useUpdateProject } from './hooks/useProjects';
+import { useRoomsWithItems } from './hooks/useRoomsWithItems';
 import type { Project } from './types';
 
 type ProjectContext = {
   project: Project;
   roomsWithItems: RoomWithItems[];
 };
-
-const demoRoomsWithItems: RoomWithItems[] = catalogRoomsFixture;
 
 function App() {
   useEffect(() => {
@@ -58,7 +57,7 @@ function App() {
 
 function ProjectList() {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
-  const projects = [catalogProjectFixture];
+  const { data: projects, isLoading } = useProjects();
 
   return (
     <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
@@ -77,7 +76,11 @@ function ProjectList() {
           </button>
         </div>
 
-        {projects.length === 0 ? (
+        {isLoading ? (
+          <div className="mt-8 flex justify-center py-12">
+            <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+          </div>
+        ) : !projects?.length ? (
           <NoProjectsEmptyState onCreate={() => setNewProjectOpen(true)} />
         ) : (
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -87,14 +90,12 @@ function ProjectList() {
                 to={`/projects/${project.id}/table`}
                 className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-brand-500 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
               >
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
-                  {project.clientName}
-                </p>
+                {project.clientName && (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                    {project.clientName}
+                  </p>
+                )}
                 <h2 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h2>
-                <p className="mt-4 text-sm text-gray-600">
-                  {demoRoomsWithItems.length} rooms ·{' '}
-                  {demoRoomsWithItems.reduce((sum, room) => sum + room.items.length, 0)} items
-                </p>
               </Link>
             ))}
           </div>
@@ -107,11 +108,15 @@ function ProjectList() {
 
 function ProjectLayout() {
   const { id } = useParams();
-  const [project, setProject] = useState(catalogProjectFixture);
-  const roomsWithItems = useMemo(() => demoRoomsWithItems, []);
+  const { data: projects, isLoading: projectsLoading } = useProjects();
+  const project = projects?.find((p) => p.id === id);
+  const updateProject = useUpdateProject();
+  const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
 
-  if (id !== catalogProjectFixture.id) return <NotFound />;
+  // Projects loaded but this ID doesn't exist → 404
+  if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
 
+  const isLoading = projectsLoading || dataLoading;
   const actualCents = projectTotalCents(roomsWithItems);
 
   return (
@@ -119,52 +124,60 @@ function ProjectLayout() {
       <ProjectHeader
         project={project}
         actualCents={actualCents}
-        onNameSave={(name) => setProject((current) => ({ ...current, name }))}
-        onClientSave={(clientName) => setProject((current) => ({ ...current, clientName }))}
-        onBudgetSave={(budgetCents) => setProject((current) => ({ ...current, budgetCents }))}
+        onNameSave={(name) => updateProject.mutate({ id: id!, patch: { name } })}
+        onClientSave={(clientName) => updateProject.mutate({ id: id!, patch: { clientName } })}
+        onBudgetSave={(budgetCents) => updateProject.mutate({ id: id!, patch: { budgetCents } })}
       />
-      <h1 className="sr-only">{project.name}</h1>
-      <nav
-        aria-label="Project sections"
-        className="no-print border-b border-gray-200 bg-white px-4 md:px-6"
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-          <div className="flex gap-2 overflow-x-auto">
-            {(
-              [
-                ['table', 'Table'],
-                ['catalog', 'Catalog'],
-                ['summary', 'Summary'],
-              ] as const
-            ).map(([to, label]) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  [
-                    'border-b-2 px-3 py-3 text-sm font-medium',
-                    isActive
-                      ? 'border-brand-500 text-brand-700'
-                      : 'border-transparent text-gray-600 hover:text-brand-700',
-                  ].join(' ')
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => exportProjectCsv(project, roomsWithItems)}
-            className="shrink-0 rounded-md border border-brand-500 bg-white px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          >
-            Export CSV
-          </button>
+      {isLoading ? (
+        <div className="flex justify-center py-24">
+          <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
         </div>
-      </nav>
-      <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <Outlet context={{ project, roomsWithItems } satisfies ProjectContext} />
-      </section>
+      ) : project ? (
+        <>
+          <h1 className="sr-only">{project.name}</h1>
+          <nav
+            aria-label="Project sections"
+            className="no-print border-b border-gray-200 bg-white px-4 md:px-6"
+          >
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+              <div className="flex gap-2 overflow-x-auto">
+                {(
+                  [
+                    ['table', 'Table'],
+                    ['catalog', 'Catalog'],
+                    ['summary', 'Summary'],
+                  ] as const
+                ).map(([to, label]) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    className={({ isActive }) =>
+                      [
+                        'border-b-2 px-3 py-3 text-sm font-medium',
+                        isActive
+                          ? 'border-brand-500 text-brand-700'
+                          : 'border-transparent text-gray-600 hover:text-brand-700',
+                      ].join(' ')
+                    }
+                  >
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => exportProjectCsv(project, roomsWithItems)}
+                className="shrink-0 rounded-md border border-brand-500 bg-white px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                Export CSV
+              </button>
+            </div>
+          </nav>
+          <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
+            <Outlet context={{ project, roomsWithItems } satisfies ProjectContext} />
+          </section>
+        </>
+      ) : null}
     </main>
   );
 }

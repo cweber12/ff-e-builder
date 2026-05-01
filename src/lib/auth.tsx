@@ -6,7 +6,6 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithRedirect,
-  getRedirectResult,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
@@ -52,8 +51,6 @@ export const signOut = async (): Promise<void> => {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  redirectError: string | null;
-  clearRedirectError: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -61,30 +58,17 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [redirectError, setRedirectError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void getRedirectResult(auth).catch((err: unknown) => {
-      const code =
-        typeof err === 'object' && err !== null && 'code' in err
-          ? String(err.code)
-          : 'auth/unknown';
-      setRedirectError(code);
-    });
-
-    return onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setIsLoading(false);
-    });
-  }, []);
-
-  return (
-    <AuthContext.Provider
-      value={{ user, isLoading, redirectError, clearRedirectError: () => setRedirectError(null) }}
-    >
-      {children}
-    </AuthContext.Provider>
+  useEffect(
+    () =>
+      onAuthStateChanged(auth, (u) => {
+        setUser(u);
+        setIsLoading(false);
+      }),
+    [],
   );
+
+  return <AuthContext.Provider value={{ user, isLoading }}>{children}</AuthContext.Provider>;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────

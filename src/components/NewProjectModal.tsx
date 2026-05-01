@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from './primitives/Modal';
 import { Button } from './primitives/Button';
-import { dollarsToCents } from '../types';
+import { dollarsToCents, parseUnitCostDollarsInput } from '../types';
 import { useCreateProject } from '../hooks/useProjects';
 
 interface NewProjectModalProps {
@@ -38,8 +38,8 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
       return;
     }
 
-    const budgetNum = budgetDollars ? parseFloat(budgetDollars) : 0;
-    const budgetCents = Number.isFinite(budgetNum) ? dollarsToCents(budgetNum) : 0;
+    const parsedDollars = budgetDollars ? parseUnitCostDollarsInput(budgetDollars) : undefined;
+    const budgetCents = parsedDollars !== undefined ? dollarsToCents(parsedDollars) : 0;
 
     try {
       const input: Parameters<typeof createProject.mutateAsync>[0] = {

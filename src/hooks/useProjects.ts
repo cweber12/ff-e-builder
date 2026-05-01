@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { CreateProjectInput, UpdateProjectInput } from '../lib/api';
 import type { Project } from '../types';
@@ -34,6 +35,7 @@ export function useUpdateProject() {
         (old) => old?.map((p) => (p.id === updated.id ? updated : p)) ?? [],
       );
     },
+    onError: (err) => toast.error(`Save failed: ${err.message}`),
   });
 }
 
@@ -47,5 +49,6 @@ export function useDeleteProject() {
         (old) => old?.filter((p) => p.id !== id) ?? [],
       );
     },
+    onError: (err) => toast.error(`Delete failed: ${err.message}`),
   });
 }
