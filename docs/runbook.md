@@ -21,6 +21,11 @@ The Vite build uses stable asset filenames for GitHub Pages. This avoids blank
 screens caused by browsers requesting an older hashed bundle name after a fresh
 deploy.
 
+The build also writes a compatibility copy at
+`dist/assets/index-BD_UO_br.js`. This covers the known stale bundle requested by
+previously cached `index.html` files. After this release has aged out of browser
+caches, the copy can be removed in a maintenance cleanup.
+
 Required GitHub Actions secrets for the production frontend build:
 
 ```text
@@ -43,6 +48,18 @@ Firebase Authentication must also be configured for the deployed frontend:
 
 If the deployed app logs `auth/unauthorized-domain`, the current browser host is
 missing from Firebase Authorized domains.
+
+### Catalog print checks
+
+The catalog route is `/projects/:id/catalog`. It uses regular browser printing,
+not a print library. Validate the print path before a release:
+
+1. Open the catalog in Chrome.
+2. Click **Print / Save as PDF**.
+3. Confirm the preview shows one A4 page per item with no navigation chrome.
+4. Repeat in Safari when available. Safari may be stricter about page-break
+   placement; if an item bleeds into the next page, check that `.catalog-page`
+   still has `break-after: page` and `@page { size: A4; margin: 0; }`.
 
 ### API Worker (Cloudflare)
 

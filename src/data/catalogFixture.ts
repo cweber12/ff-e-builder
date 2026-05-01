@@ -1,0 +1,123 @@
+import type { Item, Project, Room } from '../types';
+
+export type CatalogItem = Item & {
+  color: string | null;
+  designer: string | null;
+};
+
+export type CatalogRoom = Room & {
+  items: CatalogItem[];
+};
+
+export const catalogProjectFixture: Project = {
+  id: 'demo-project',
+  ownerUid: 'demo-user',
+  name: 'Ocean House',
+  clientName: 'Harbor & Pine',
+  budgetCents: 250_000_00,
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-08T00:00:00Z',
+};
+
+export const catalogRoomsFixture: CatalogRoom[] = [
+  {
+    id: 'room-living',
+    projectId: catalogProjectFixture.id,
+    name: 'Living Room',
+    sortOrder: 0,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-08T00:00:00Z',
+    items: [
+      {
+        id: 'item-lounge-chair',
+        roomId: 'room-living',
+        itemName: 'Channel Lounge Chair',
+        category: 'Seating',
+        vendor: 'Atelier Forma',
+        model: 'Channel 32',
+        itemIdTag: 'LR-CH-01',
+        dimensions: '32"W x 34"D x 30"H',
+        seatHeight: '17"',
+        finishes: 'Boucle upholstery, white oak base',
+        notes: 'Use performance fabric and confirm COM yardage before order.',
+        qty: 2,
+        unitCostCents: 245_000,
+        markupPct: 30,
+        leadTime: '10 weeks',
+        status: 'approved',
+        imageUrl:
+          'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=1200&q=80',
+        linkUrl: 'https://example.com/channel-lounge-chair',
+        sortOrder: 0,
+        version: 1,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-08T00:00:00Z',
+        color: 'Ivory',
+        designer: 'Mara Vale',
+      },
+      {
+        id: 'item-floor-lamp',
+        roomId: 'room-living',
+        itemName: 'Arc Floor Lamp',
+        category: 'Lighting',
+        vendor: 'Northline Studio',
+        model: 'Arc 72',
+        itemIdTag: 'LR-LT-02',
+        dimensions: '18"W x 72"H',
+        seatHeight: null,
+        finishes: 'Brushed brass, linen shade',
+        notes: 'Confirm dimmer compatibility with electrical plan.',
+        qty: 1,
+        unitCostCents: 98_500,
+        markupPct: 25,
+        leadTime: '8 weeks',
+        status: 'ordered',
+        imageUrl: null,
+        linkUrl: 'https://example.com/arc-floor-lamp',
+        sortOrder: 1,
+        version: 1,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-08T00:00:00Z',
+        color: 'Warm brass',
+        designer: 'Northline Studio',
+      },
+    ],
+  },
+  {
+    id: 'room-dining',
+    projectId: catalogProjectFixture.id,
+    name: 'Dining Room',
+    sortOrder: 1,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-08T00:00:00Z',
+    items: [
+      {
+        id: 'item-dining-table',
+        roomId: 'room-dining',
+        itemName: 'Plinth Dining Table',
+        category: 'Tables',
+        vendor: 'Stone & Field',
+        model: 'Plinth 96',
+        itemIdTag: 'DR-TB-01',
+        dimensions: '96"W x 42"D x 30"H',
+        seatHeight: null,
+        finishes: 'Travertine slab, honed sealer',
+        notes: 'White glove delivery required. Verify elevator clearance.',
+        qty: 1,
+        unitCostCents: 675_000,
+        markupPct: 30,
+        leadTime: '14 weeks',
+        status: 'pending',
+        imageUrl:
+          'https://images.unsplash.com/photo-1617103996702-96ff29b1c467?auto=format&fit=crop&w=1200&q=80',
+        linkUrl: 'https://example.com/plinth-dining-table',
+        sortOrder: 0,
+        version: 1,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-08T00:00:00Z',
+        color: 'Warm ivory stone',
+        designer: 'Elena Voss',
+      },
+    ],
+  },
+];

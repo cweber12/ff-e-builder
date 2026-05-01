@@ -13,10 +13,12 @@ import App from './App';
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root not found in DOM');
 
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/ff-e-builder">
+      <BrowserRouter basename={routerBasename}>
         <AuthProvider>
           <AuthGate>
             <App />

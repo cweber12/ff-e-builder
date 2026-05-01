@@ -183,7 +183,9 @@ function UserChip() {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuthUser();
+  const bypassAuth = import.meta.env.VITE_E2E_BYPASS_AUTH === 'true';
 
+  if (bypassAuth) return children;
   if (isLoading) return <FullScreenSpinner />;
   if (!user) return <SignInCard />;
 

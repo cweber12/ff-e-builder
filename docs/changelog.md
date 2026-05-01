@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(deploy): emit stable frontend asset filenames to avoid GitHub Pages 404s after deploy
 - feat(table): add validated inline editing for item cells and status changes
 - feat(table): add item and room structure mutations with drawer forms, confirmations, and reorder support
+- fix(deploy): keep a compatibility copy of the known stale GitHub Pages bundle name
+- feat(catalog): add printable item catalog route with PDF-oriented A4 layout
 
 ---
 

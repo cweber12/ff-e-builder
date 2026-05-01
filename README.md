@@ -46,6 +46,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 
 - Project header and design-system primitives provide the first editable project surface.
 - `ItemsTable` renders FF&E items with rooms grouped, persisted room collapse state, room subtotals, a sticky grand total, inline editing for item fields, and structure mutations for adding rooms/items, duplicating or moving items, deleting with confirmation, and drag reordering.
+- `CatalogView` renders `/projects/:id/catalog` as a printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, and browser print/PDF support.
 
 ## Frontend deploy notes
 
@@ -53,6 +54,9 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - The frontend build now emits stable asset filenames in `dist/assets/` so a new
   Pages deploy does not leave the browser pointing at a removed hashed bundle
   from the previous release.
+- The build also publishes a compatibility copy for the known stale bundle name
+  `assets/index-BD_UO_br.js`; this lets browsers with a cached older
+  `index.html` recover instead of loading a blank page from a 404 script.
 
 ---
 
