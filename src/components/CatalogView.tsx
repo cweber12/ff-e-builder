@@ -347,6 +347,29 @@ export function CatalogPage({
             <DataPoint label="Designer" value={item.designer ?? null} />
           </dl>
 
+          {item.materials.length > 0 && (
+            <div className="grid gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">
+                Material library
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {item.materials.map((material) => (
+                  <span
+                    key={material.id}
+                    className="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
+                  >
+                    <span
+                      className="h-3 w-3 rounded-full border border-gray-200"
+                      style={{ backgroundColor: material.swatchHex }}
+                      aria-hidden="true"
+                    />
+                    {material.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="catalog-price-block">
             <div>
               <span>Unit cost</span>

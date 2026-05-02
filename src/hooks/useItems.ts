@@ -47,6 +47,7 @@ export function useCreateItem(roomId: string) {
         version: 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        materials: [],
       };
       queryClient.setQueryData<Item[]>(itemKeys.forRoom(roomId), (old) => [
         ...(old ?? []),

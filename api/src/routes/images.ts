@@ -2,7 +2,12 @@ import { Hono } from 'hono';
 import type { Env, HonoVariables, ImageAsset, ImageEntityType } from '../types';
 import { ImageListQuerySchema, ImageUploadQuerySchema } from '../types';
 import { getDb } from '../lib/db';
-import { getOwnedItemContext, getOwnedProjectContext, getOwnedRoomContext } from '../lib/ownership';
+import {
+  getOwnedItemContext,
+  getOwnedMaterialContext,
+  getOwnedProjectContext,
+  getOwnedRoomContext,
+} from '../lib/ownership';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -13,6 +18,7 @@ type EntityContext = {
   projectId: string;
   roomId: string | null;
   itemId: string | null;
+  materialId: string | null;
 };
 
 function extensionForContentType(contentType: string): string {
@@ -47,16 +53,26 @@ async function getOwnedEntityContext(
 ): Promise<EntityContext> {
   if (entityType === 'project') {
     const project = await getOwnedProjectContext(env, entityId, uid);
-    return { projectId: project.projectId, roomId: null, itemId: null };
+    return { projectId: project.projectId, roomId: null, itemId: null, materialId: null };
   }
 
   if (entityType === 'room') {
     const room = await getOwnedRoomContext(env, entityId, uid);
-    return { projectId: room.projectId, roomId: room.roomId, itemId: null };
+    return { projectId: room.projectId, roomId: room.roomId, itemId: null, materialId: null };
+  }
+
+  if (entityType === 'material') {
+    const material = await getOwnedMaterialContext(env, entityId, uid);
+    return {
+      projectId: material.projectId,
+      roomId: null,
+      itemId: null,
+      materialId: material.materialId,
+    };
   }
 
   const item = await getOwnedItemContext(env, entityId, uid);
-  return { projectId: item.projectId, roomId: item.roomId, itemId: item.itemId };
+  return { projectId: item.projectId, roomId: item.roomId, itemId: item.itemId, materialId: null };
 }
 
 function buildR2Key(
@@ -69,6 +85,7 @@ function buildR2Key(
   const base = `users/${uid}/projects/${context.projectId}`;
   if (entityType === 'project') return `${base}/project/${imageId}.${ext}`;
   if (entityType === 'room') return `${base}/rooms/${context.roomId}/${imageId}.${ext}`;
+  if (entityType === 'material') return `${base}/materials/${context.materialId}/${imageId}.${ext}`;
   return `${base}/rooms/${context.roomId}/items/${context.itemId}/${imageId}.${ext}`;
 }
 
@@ -109,6 +126,7 @@ router.get('/', async (c) => {
       AND project_id = ${context.projectId}
       AND room_id IS NOT DISTINCT FROM ${context.roomId}
       AND item_id IS NOT DISTINCT FROM ${context.itemId}
+      AND material_id IS NOT DISTINCT FROM ${context.materialId}
     ORDER BY is_primary DESC, created_at DESC
   `;
 
@@ -169,9 +187,10 @@ router.post('/', async (c) => {
           AND project_id = ${context.projectId}
           AND room_id IS NOT DISTINCT FROM ${context.roomId}
           AND item_id IS NOT DISTINCT FROM ${context.itemId}
+          AND material_id IS NOT DISTINCT FROM ${context.materialId}
       )
       INSERT INTO image_assets (
-        id, owner_uid, project_id, room_id, item_id, r2_key,
+        id, owner_uid, project_id, room_id, item_id, material_id, r2_key,
         filename, content_type, byte_size, alt_text, is_primary
       )
       VALUES (
@@ -180,6 +199,7 @@ router.post('/', async (c) => {
         ${context.projectId},
         ${context.roomId},
         ${context.itemId},
+        ${context.materialId},
         ${r2Key},
         ${cleanFilename(file.name)},
         ${file.type},

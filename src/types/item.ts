@@ -1,4 +1,5 @@
 import type { ItemStatus } from './itemValidation';
+import type { Material } from './material';
 
 export type { ItemStatus } from './itemValidation';
 
@@ -28,4 +29,5 @@ export type Item = {
   version: number;
   createdAt: string;
   updatedAt: string;
+  materials: Material[];
 };

@@ -55,6 +55,7 @@ import { InlineNumberEdit } from './primitives/InlineNumberEdit';
 import { Modal } from './primitives/Modal';
 import { AddItemDrawer } from './AddItemDrawer';
 import { ImageFrame } from './ImageFrame';
+import { MaterialBadges, MaterialLibraryModal } from './MaterialLibraryModal';
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
@@ -111,6 +112,7 @@ type TableActions = {
   onDuplicate: (item: Item) => Promise<void>;
   onMove: (item: Item, toRoomId: string) => Promise<void>;
   onDelete: (item: Item) => Promise<void>;
+  onEditMaterials: (item: Item) => void;
 };
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
@@ -491,6 +493,16 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         field="dimensions"
         label="Dimensions"
         onSave={onSave}
+      />
+    ),
+  },
+  {
+    id: 'materials',
+    header: 'Materials',
+    cell: ({ row }) => (
+      <MaterialBadges
+        materials={row.original.materials}
+        onOpen={() => actions.onEditMaterials(row.original)}
       />
     ),
   },
@@ -947,6 +959,12 @@ function MobileItemCards({
                 onSave={onSave}
               />
             </MobileField>
+            <MobileField label="Materials">
+              <MaterialBadges
+                materials={item.materials}
+                onOpen={() => actions.onEditMaterials(item)}
+              />
+            </MobileField>
             <MobileField label="Qty">
               <InlineNumberEdit
                 value={item.qty}
@@ -1138,6 +1156,7 @@ function RoomItemsSection({
   const moveItem = useMoveItem();
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [materialItem, setMaterialItem] = useState<Item | null>(null);
   const isMobile = useIsMobileViewport();
   const sortedItems = useMemo(
     () =>
@@ -1204,6 +1223,7 @@ function RoomItemsSection({
       onDelete: async (item) => {
         await deleteItem.mutateAsync(item.id);
       },
+      onEditMaterials: (item) => setMaterialItem(item),
     }),
     [deleteItem, duplicateItem, moveItem, rooms],
   );
@@ -1297,6 +1317,16 @@ function RoomItemsSection({
           await createItem.mutateAsync({ ...input, sortOrder: sortedItems.length });
         }}
       />
+
+      {materialItem && (
+        <MaterialLibraryModal
+          open
+          projectId={projectId}
+          roomId={room.id}
+          item={materialItem}
+          onClose={() => setMaterialItem(null)}
+        />
+      )}
 
       {!collapsed && isMobile && (
         <div className="grid gap-3 p-3">

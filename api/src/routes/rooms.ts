@@ -63,9 +63,19 @@ router.get('/:id/items', async (c) => {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    SELECT * FROM items
-    WHERE room_id = ${id}
-    ORDER BY sort_order, created_at
+    SELECT
+      i.*,
+      COALESCE(
+        json_agg(m.* ORDER BY im.sort_order, lower(m.name))
+          FILTER (WHERE m.id IS NOT NULL),
+        '[]'::json
+      ) AS materials
+    FROM items i
+    LEFT JOIN item_materials im ON im.item_id = i.id
+    LEFT JOIN materials m ON m.id = im.material_id
+    WHERE i.room_id = ${id}
+    GROUP BY i.id
+    ORDER BY i.sort_order, i.created_at
   `;
   return c.json({ items: rows });
 });

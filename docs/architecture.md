@@ -145,6 +145,7 @@ erDiagram
     uuid project_id FK
     uuid room_id FK "nullable"
     uuid item_id FK "nullable"
+    uuid material_id FK "nullable"
     text r2_key
     text filename
     text content_type
@@ -155,11 +156,33 @@ erDiagram
     timestamptz updated_at
   }
 
+  MATERIALS {
+    uuid id PK
+    uuid project_id FK
+    text name
+    text material_id
+    text description
+    text swatch_hex
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  ITEM_MATERIALS {
+    uuid item_id FK
+    uuid material_id FK
+    int sort_order
+    timestamptz created_at
+  }
+
   PROJECTS ||--o{ ROOMS : contains
   ROOMS ||--o{ ITEMS : contains
   PROJECTS ||--o{ IMAGE_ASSETS : has
   ROOMS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ IMAGE_ASSETS : can_have
+  PROJECTS ||--o{ MATERIALS : has
+  MATERIALS ||--o{ IMAGE_ASSETS : can_have
+  ITEMS ||--o{ ITEM_MATERIALS : uses
+  MATERIALS ||--o{ ITEM_MATERIALS : assigned_to
 ```
 
 ---

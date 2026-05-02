@@ -68,9 +68,21 @@ export interface Item {
   version: number;
   created_at: string;
   updated_at: string;
+  materials?: Material[];
 }
 
-export type ImageEntityType = 'project' | 'room' | 'item';
+export interface Material {
+  id: string;
+  project_id: string;
+  name: string;
+  material_id: string;
+  description: string;
+  swatch_hex: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ImageEntityType = 'project' | 'room' | 'item' | 'material';
 
 export interface ImageAsset {
   id: string;
@@ -78,6 +90,7 @@ export interface ImageAsset {
   project_id: string;
   room_id: string | null;
   item_id: string | null;
+  material_id: string | null;
   r2_key: string;
   filename: string;
   content_type: string;
@@ -141,8 +154,27 @@ export const UpdateItemSchema = CreateItemSchema.partial().extend({
 });
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
+const SwatchHexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
+
+export const CreateMaterialSchema = z.object({
+  name: z.string().min(1).max(255),
+  material_id: z.string().max(100).default(''),
+  description: z.string().max(1000).default(''),
+  swatch_hex: SwatchHexSchema.default('#D9D4C8'),
+});
+export type CreateMaterialInput = z.infer<typeof CreateMaterialSchema>;
+
+export const UpdateMaterialSchema = CreateMaterialSchema.partial();
+export type UpdateMaterialInput = z.infer<typeof UpdateMaterialSchema>;
+
+export const AssignMaterialSchema = z.object({
+  material_id: z.string().uuid(),
+});
+
+export const CreateAndAssignMaterialSchema = CreateMaterialSchema;
+
 export const ImageEntitySchema = z.object({
-  entity_type: z.enum(['project', 'room', 'item']),
+  entity_type: z.enum(['project', 'room', 'item', 'material']),
   entity_id: z.string().uuid(),
 });
 

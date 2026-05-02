@@ -1,5 +1,13 @@
 import { auth } from './auth';
-import type { ImageAsset, ImageEntityType, Item, ItemStatus, Project, Room } from '../types';
+import type {
+  ImageAsset,
+  ImageEntityType,
+  Item,
+  ItemStatus,
+  Material,
+  Project,
+  Room,
+} from '../types';
 
 // ─── Error type ───────────────────────────────────────────────────────────
 
@@ -59,6 +67,7 @@ interface RawItem {
   version: number;
   created_at: string;
   updated_at: string;
+  materials?: RawMaterial[];
 }
 
 interface RawImageAsset {
@@ -67,11 +76,23 @@ interface RawImageAsset {
   project_id: string;
   room_id: string | null;
   item_id: string | null;
+  material_id: string | null;
   filename: string;
   content_type: string;
   byte_size: number;
   alt_text: string;
   is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RawMaterial {
+  id: string;
+  project_id: string;
+  name: string;
+  material_id: string;
+  description: string;
+  swatch_hex: string;
   created_at: string;
   updated_at: string;
 }
@@ -120,6 +141,7 @@ const mapItem = (r: RawItem): Item => ({
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  materials: (r.materials ?? []).map(mapMaterial),
 });
 
 const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
@@ -128,11 +150,23 @@ const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   projectId: r.project_id,
   roomId: r.room_id,
   itemId: r.item_id,
+  materialId: r.material_id ?? null,
   filename: r.filename,
   contentType: r.content_type,
   byteSize: r.byte_size,
   altText: r.alt_text,
   isPrimary: r.is_primary,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+const mapMaterial = (r: RawMaterial): Material => ({
+  id: r.id,
+  projectId: r.project_id,
+  name: r.name,
+  materialId: r.material_id,
+  description: r.description,
+  swatchHex: r.swatch_hex,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -213,6 +247,15 @@ export type UploadImageInput = ImageEntityRef & {
   file: File;
   altText?: string;
 };
+
+export type CreateMaterialInput = {
+  name: string;
+  materialId?: string;
+  description?: string;
+  swatchHex?: string;
+};
+
+export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 
 // ─── Core fetch helper ────────────────────────────────────────────────────
 
@@ -414,5 +457,56 @@ export const api = {
 
     delete: (imageId: string): Promise<void> =>
       apiFetch<void>(`/api/v1/images/${imageId}`, { method: 'DELETE' }),
+  },
+  materials: {
+    list: (projectId: string): Promise<Material[]> =>
+      apiFetch<{ materials: RawMaterial[] }>(`/api/v1/projects/${projectId}/materials`).then((r) =>
+        r.materials.map(mapMaterial),
+      ),
+
+    create: (projectId: string, input: CreateMaterialInput): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/projects/${projectId}/materials`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: input.name,
+          material_id: input.materialId ?? '',
+          description: input.description ?? '',
+          swatch_hex: input.swatchHex ?? '#D9D4C8',
+        }),
+      }).then((r) => mapMaterial(r.material)),
+
+    update: (id: string, patch: UpdateMaterialInput): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/materials/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: patch.name,
+          material_id: patch.materialId,
+          description: patch.description,
+          swatch_hex: patch.swatchHex,
+        }),
+      }).then((r) => mapMaterial(r.material)),
+
+    delete: (id: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/materials/${id}`, { method: 'DELETE' }),
+
+    assignToItem: (itemId: string, materialId: string): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials`, {
+        method: 'POST',
+        body: JSON.stringify({ material_id: materialId }),
+      }).then((r) => mapMaterial(r.material)),
+
+    createAndAssignToItem: (itemId: string, input: CreateMaterialInput): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials/new`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: input.name,
+          material_id: input.materialId ?? '',
+          description: input.description ?? '',
+          swatch_hex: input.swatchHex ?? '#D9D4C8',
+        }),
+      }).then((r) => mapMaterial(r.material)),
+
+    removeFromItem: (itemId: string, materialId: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/items/${itemId}/materials/${materialId}`, { method: 'DELETE' }),
   },
 };

@@ -3,6 +3,7 @@ export { cents, dollarsToCents, formatMoney } from './project';
 export type { Room, RoomWithItems } from './room';
 export type { Item, ItemStatus } from './item';
 export type { ImageAsset, ImageEntityType } from './image';
+export type { Material } from './material';
 export {
   ItemStatusSchema,
   editableItemPatchSchema,

@@ -14,6 +14,7 @@ const {
   mockMoveItemMutateAsync,
   mockCreateRoomMutateAsync,
   mockDeleteRoomMutateAsync,
+  mockCreateAndAssignMaterialMutateAsync,
 } = vi.hoisted(() => ({
   mockUpdateMutateAsync: vi.fn(),
   mockCreateItemMutateAsync: vi.fn(),
@@ -21,6 +22,7 @@ const {
   mockMoveItemMutateAsync: vi.fn(),
   mockCreateRoomMutateAsync: vi.fn(),
   mockDeleteRoomMutateAsync: vi.fn(),
+  mockCreateAndAssignMaterialMutateAsync: vi.fn(),
 }));
 
 vi.mock('../hooks/useItems', () => ({
@@ -34,6 +36,16 @@ vi.mock('../hooks/useRooms', () => ({
   useCreateRoom: () => ({ mutateAsync: mockCreateRoomMutateAsync }),
   useDeleteRoom: () => ({ mutateAsync: mockDeleteRoomMutateAsync }),
   useUpdateRoom: () => ({ mutateAsync: vi.fn() }),
+}));
+
+vi.mock('../hooks/useMaterials', () => ({
+  useMaterials: () => ({ data: [], isLoading: false }),
+  useCreateMaterial: () => ({ mutateAsync: vi.fn() }),
+  useUpdateMaterial: () => ({ mutateAsync: vi.fn() }),
+  useDeleteMaterial: () => ({ mutateAsync: vi.fn() }),
+  useAssignMaterial: () => ({ mutateAsync: vi.fn() }),
+  useCreateAndAssignMaterial: () => ({ mutateAsync: mockCreateAndAssignMaterialMutateAsync }),
+  useRemoveMaterialFromItem: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock('../lib/exportUtils', () => ({
@@ -79,6 +91,7 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   version: 1,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+  materials: [],
   ...overrides,
 });
 
@@ -155,6 +168,16 @@ describe('ItemsTable', () => {
     mockMoveItemMutateAsync.mockResolvedValue(makeItem({ roomId: 'room-2' }));
     mockCreateRoomMutateAsync.mockResolvedValue(makeRoom({ id: 'room-created' }));
     mockDeleteRoomMutateAsync.mockResolvedValue(undefined);
+    mockCreateAndAssignMaterialMutateAsync.mockResolvedValue({
+      id: 'material-created',
+      projectId: 'project-1',
+      name: 'Ivory boucle',
+      materialId: 'FAB-001',
+      description: '',
+      swatchHex: '#e8e2d6',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    });
     window.localStorage.clear();
   });
 
@@ -369,6 +392,27 @@ describe('ItemsTable', () => {
     await user.click(within(drawer).getByRole('button', { name: 'Accessories' }));
 
     expect(within(drawer).getByLabelText('Category')).toHaveValue('Accessories');
+  });
+
+  it('opens the material library and creates a new assigned material', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getAllByRole('button', { name: 'Edit item materials' })[0]!);
+    const dialog = screen.getByRole('dialog', { name: 'Material library' });
+    await user.type(within(dialog).getByLabelText('Name'), 'Ivory boucle');
+    await user.type(within(dialog).getByLabelText('ID'), 'FAB-001');
+    await user.click(within(dialog).getByRole('button', { name: 'Add and assign' }));
+
+    expect(mockCreateAndAssignMaterialMutateAsync).toHaveBeenCalledWith({
+      itemId: 'item-1',
+      input: {
+        name: 'Ivory boucle',
+        materialId: 'FAB-001',
+        description: '',
+        swatchHex: '#D9D4C8',
+      },
+    });
   });
 
   it('keeps the drawer open and validates before adding an item', async () => {

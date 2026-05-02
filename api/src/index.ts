@@ -6,6 +6,7 @@ import { projectsRouter } from './routes/projects';
 import { roomsRouter } from './routes/rooms';
 import { itemsRouter } from './routes/items';
 import { imagesRouter } from './routes/images';
+import { materialsRouter } from './routes/materials';
 
 export const app = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -33,6 +34,7 @@ app.route('/api/v1/projects', projectsRouter);
 app.route('/api/v1/rooms', roomsRouter);
 app.route('/api/v1/items', itemsRouter);
 app.route('/api/v1/images', imagesRouter);
+app.route('/api/v1', materialsRouter);
 
 // ─── Fallback ─────────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ error: 'Not found' }, 404));

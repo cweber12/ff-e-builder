@@ -12,6 +12,7 @@ Image metadata is normalized in `image_assets`:
 - `project_id` is always populated.
 - `room_id` is populated for room and item images.
 - `item_id` is populated for item images.
+- `material_id` is populated for material library images.
 - `r2_key` points to the private object in R2.
 
 The R2 object key shape is:
@@ -20,6 +21,7 @@ The R2 object key shape is:
 users/{uid}/projects/{projectId}/project/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/items/{itemId}/{imageId}.{ext}
+users/{uid}/projects/{projectId}/materials/{materialId}/{imageId}.{ext}
 ```
 
 ## API
@@ -31,6 +33,7 @@ existence.
 - `GET /api/v1/images?entity_type=project&entity_id={projectId}`
 - `GET /api/v1/images?entity_type=room&entity_id={roomId}`
 - `GET /api/v1/images?entity_type=item&entity_id={itemId}`
+- `GET /api/v1/images?entity_type=material&entity_id={materialId}`
 - `POST /api/v1/images?entity_type=...&entity_id=...&alt_text=...`
   - multipart form field: `file`
   - allowed types: JPEG, PNG, WebP, GIF
@@ -50,6 +53,7 @@ The shared image frame is used for:
 - room image frames beside each room table on `/projects/:id/table`
 - item thumbnails before the item ID on the table view
 - catalog item image slots on `/projects/:id/catalog`
+- material cards in the project material library
 
 Empty frames open the local file picker. Existing frames render the protected R2
 image through an authenticated blob request rather than a public URL.
@@ -93,4 +97,5 @@ Apply the migration after setting `NEON_DATABASE_URL` in the shell:
 pnpm migrate
 ```
 
-This applies `db/migrations/0002_image_assets.sql`.
+This applies `db/migrations/0002_image_assets.sql` and later image-related
+migrations such as `db/migrations/0003_material_library.sql`.

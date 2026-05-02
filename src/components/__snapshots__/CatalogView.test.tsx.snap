@@ -111,6 +111,29 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         </div>
       </dl>
       <div
+        class="grid gap-2"
+      >
+        <p
+          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
+        >
+          Material library
+        </p>
+        <div
+          class="flex flex-wrap gap-2"
+        >
+          <span
+            class="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
+          >
+            <span
+              aria-hidden="true"
+              class="h-3 w-3 rounded-full border border-gray-200"
+              style="background-color: rgb(232, 226, 214);"
+            />
+            Ivory boucle
+          </span>
+        </div>
+      </div>
+      <div
         class="catalog-price-block"
       >
         <div>

@@ -107,3 +107,37 @@ export async function getOwnedItemContext(
   if (!row?.item_id || !row.room_id || !row.project_id) throw new Error('not_found');
   return { projectId: row.project_id, roomId: row.room_id, itemId: row.item_id };
 }
+
+export async function assertMaterialOwnership(
+  env: Env,
+  materialId: string,
+  uid: string,
+): Promise<void> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT 1
+    FROM materials m
+    JOIN projects p ON m.project_id = p.id
+    WHERE m.id = ${materialId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  if (rows.length === 0) throw new Error('not_found');
+}
+
+export async function getOwnedMaterialContext(
+  env: Env,
+  materialId: string,
+  uid: string,
+): Promise<{ projectId: string; materialId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT m.id AS material_id, m.project_id
+    FROM materials m
+    JOIN projects p ON m.project_id = p.id
+    WHERE m.id = ${materialId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { material_id?: string; project_id?: string } | undefined;
+  if (!row?.material_id || !row.project_id) throw new Error('not_found');
+  return { projectId: row.project_id, materialId: row.material_id };
+}
