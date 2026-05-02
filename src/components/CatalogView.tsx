@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../types';
@@ -51,7 +51,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted py-8">
+    <div className="min-h-screen bg-surface-muted">
       <CatalogNav
         project={project}
         rooms={rooms}
@@ -62,16 +62,18 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         onPageChange={setPage}
       />
 
-      <div
-        key={entry.item.id}
-        className={`screen-only ${slideDirection === 'next' ? 'catalog-slide-next' : 'catalog-slide-previous'}`}
-      >
-        <CatalogPage
-          project={project}
-          entry={entry}
-          pageNumber={pageIndex + 1}
-          pageCount={entries.length}
-        />
+      <div className="screen-only catalog-stage">
+        <div
+          key={entry.item.id}
+          className={slideDirection === 'next' ? 'catalog-page-next' : 'catalog-page-previous'}
+        >
+          <CatalogPage
+            project={project}
+            entry={entry}
+            pageNumber={pageIndex + 1}
+            pageCount={entries.length}
+          />
+        </div>
       </div>
 
       <div className="print-only">
@@ -167,21 +169,7 @@ function CatalogNav({
             <span aria-hidden="true">&gt;</span>
             <span className="sr-only">Next</span>
           </Button>
-          <Button type="button" variant="secondary" onClick={() => window.print()}>
-            Print
-          </Button>
-          <Button type="button" onClick={() => exportCatalogPdf(project, rooms)}>
-            Export PDF
-          </Button>
-          {currentItemId && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => exportCatalogItemPdf(project, rooms, currentItemId)}
-            >
-              Export this item
-            </Button>
-          )}
+          <CatalogActionsMenu project={project} rooms={rooms} currentItemId={currentItemId} />
         </div>
         <div className="flex min-w-24 flex-col items-end gap-1">
           <span className="text-sm font-semibold tabular-nums text-gray-700">
@@ -197,6 +185,96 @@ function CatalogNav({
       </div>
       <span className="sr-only">{project.name}</span>
     </nav>
+  );
+}
+
+function CatalogActionsMenu({
+  project,
+  rooms,
+  currentItemId,
+}: {
+  project: Project;
+  rooms: RoomWithItems[];
+  currentItemId: string | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const runAction = (action: () => void) => {
+    setOpen(false);
+    action();
+  };
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Open catalog options"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        <MoreIcon />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className={catalogMenuItemClassName}
+            onClick={() => runAction(() => window.print())}
+          >
+            Print
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={catalogMenuItemClassName}
+            onClick={() => runAction(() => exportCatalogPdf(project, rooms))}
+          >
+            Export PDF
+          </button>
+          {currentItemId && (
+            <button
+              type="button"
+              role="menuitem"
+              className={catalogMenuItemClassName}
+              onClick={() => runAction(() => exportCatalogItemPdf(project, rooms, currentItemId))}
+            >
+              Export this item
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const catalogMenuItemClassName =
+  'flex w-full items-center rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+      <circle cx="5" cy="10" r="1.5" />
+      <circle cx="10" cy="10" r="1.5" />
+      <circle cx="15" cy="10" r="1.5" />
+    </svg>
   );
 }
 

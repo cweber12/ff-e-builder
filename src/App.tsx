@@ -6,21 +6,34 @@ import {
   Outlet,
   Route,
   Routes,
+  useLocation,
   useOutletContext,
   useParams,
 } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthGate, SignInPage } from './components/AuthGate';
 import { CatalogView } from './components/CatalogView';
 import { ItemsTable } from './components/ItemsTable';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
+import { ExportMenu } from './components/ExportMenu';
+import { ImportExcelModal } from './components/ImportExcelModal';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
 import { ImageFrame } from './components/ImageFrame';
 import { projectTotalCents } from './lib/calc';
+import {
+  exportSummaryCsv,
+  exportSummaryExcel,
+  exportSummaryPdf,
+  exportTableCsv,
+  exportTableExcel,
+  exportTablePdf,
+} from './lib/exportUtils';
 import { recordSession } from './lib/telemetry';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/useProjects';
 import { useRoomsWithItems } from './hooks/useRoomsWithItems';
+import { Button } from './components/primitives';
 import type { Project, RoomWithItems } from './types';
 
 type ProjectContext = {
@@ -150,10 +163,13 @@ function ProjectList() {
 
 function ProjectLayout() {
   const { id } = useParams();
+  const location = useLocation();
+  const queryClient = useQueryClient();
   const { data: projects, isLoading: projectsLoading } = useProjects();
   const project = projects?.find((p) => p.id === id);
   const updateProject = useUpdateProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
+  const [importOpen, setImportOpen] = useState(false);
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
@@ -206,15 +222,80 @@ function ProjectLayout() {
                   </NavLink>
                 ))}
               </div>
+              {project && (
+                <ProjectTabActions
+                  activePath={location.pathname}
+                  project={project}
+                  roomsWithItems={roomsWithItems}
+                  onImport={() => setImportOpen(true)}
+                />
+              )}
             </div>
           </nav>
           <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
             <Outlet context={{ project, roomsWithItems } satisfies ProjectContext} />
           </section>
+          {project && (
+            <ImportExcelModal
+              open={importOpen}
+              projectId={project.id}
+              rooms={roomsWithItems}
+              onClose={() => setImportOpen(false)}
+              onSuccess={() => {
+                setImportOpen(false);
+                void queryClient.invalidateQueries();
+              }}
+            />
+          )}
         </>
       ) : null}
     </main>
   );
+}
+
+function ProjectTabActions({
+  activePath,
+  project,
+  roomsWithItems,
+  onImport,
+}: {
+  activePath: string;
+  project: Project;
+  roomsWithItems: RoomWithItems[];
+  onImport: () => void;
+}) {
+  if (activePath.endsWith('/table')) {
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        <ExportMenu
+          label="Export all"
+          size="sm"
+          onCsv={() => exportTableCsv(project, roomsWithItems)}
+          onExcel={() => exportTableExcel(project, roomsWithItems)}
+          onPdf={() => exportTablePdf(project, roomsWithItems)}
+        />
+        <Button type="button" variant="secondary" size="sm" onClick={onImport}>
+          Import from Excel
+        </Button>
+      </div>
+    );
+  }
+
+  if (activePath.endsWith('/summary')) {
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        <ExportMenu
+          label="Export"
+          size="sm"
+          onCsv={() => exportSummaryCsv(project, roomsWithItems)}
+          onExcel={() => exportSummaryExcel(project, roomsWithItems)}
+          onPdf={() => exportSummaryPdf(project, roomsWithItems)}
+        />
+      </div>
+    );
+  }
+
+  return <div className="min-h-8" />;
 }
 
 function ProjectTableRoute() {

@@ -22,7 +22,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       class="catalog-image-wrap"
     >
       <div
-        class="relative overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm h-full w-full border-0 shadow-none"
+        class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-full w-full border-0 shadow-none"
       >
         <button
           aria-expanded="false"
@@ -32,7 +32,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         >
           <img
             alt="Channel Lounge Chair"
-            class="h-full w-full object-cover catalog-image"
+            class="h-full w-full object-contain object-center catalog-image"
             src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=1200&q=80"
           />
         </button>

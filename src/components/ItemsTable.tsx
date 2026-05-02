@@ -1,4 +1,4 @@
-import { Component, useCallback, useEffect, useMemo, useState } from 'react';
+import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   closestCenter,
@@ -54,8 +54,6 @@ import { InlineTextEdit } from './primitives/InlineTextEdit';
 import { InlineNumberEdit } from './primitives/InlineNumberEdit';
 import { Modal } from './primitives/Modal';
 import { AddItemDrawer } from './AddItemDrawer';
-import { ExportMenu } from './ExportMenu';
-import { ImportExcelModal } from './ImportExcelModal';
 import { ImageFrame } from './ImageFrame';
 
 type ItemsTableProps = {
@@ -1012,6 +1010,106 @@ function MobileField({ label, children }: { label: string; children: ReactNode }
   );
 }
 
+function RoomActionsMenu({
+  room,
+  rooms,
+  project,
+  onAddItem,
+  onDeleteRoom,
+}: {
+  room: RoomWithItems;
+  rooms: RoomWithItems[];
+  project?: Project;
+  onAddItem: () => void;
+  onDeleteRoom: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const runAction = (action: () => void) => {
+    setOpen(false);
+    action();
+  };
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Open options for ${room.name}`}
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        <MoreIcon />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+        >
+          {project && (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                className={menuItemClassName}
+                onClick={() => runAction(() => exportTableCsv(project, rooms, room))}
+              >
+                Export CSV
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={menuItemClassName}
+                onClick={() => runAction(() => exportTableExcel(project, rooms, room))}
+              >
+                Export Excel
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={menuItemClassName}
+                onClick={() => runAction(() => exportTablePdf(project, rooms, room))}
+              >
+                Export PDF
+              </button>
+              <div className="my-1 h-px bg-gray-100" />
+            </>
+          )}
+          <button
+            type="button"
+            role="menuitem"
+            className={menuItemClassName}
+            onClick={() => runAction(onAddItem)}
+          >
+            Add item
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={cn(menuItemClassName, 'text-danger-600')}
+            onClick={() => runAction(onDeleteRoom)}
+          >
+            Delete room
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RoomItemsSection({
   room,
   rooms,
@@ -1169,34 +1267,24 @@ function RoomItemsSection({
         <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
           {formatMoney(cents(subtotal))}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <RoomActionsMenu
+            room={room}
+            rooms={rooms}
+            {...(project !== undefined ? { project } : {})}
+            onAddItem={() => setAddDrawerOpen(true)}
+            onDeleteRoom={() => onDeleteRoom(room)}
+          />
           {!isMobile && !collapsed && (
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
               aria-label="Expand table view"
               onClick={() => setIsExpanded(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
               <ExpandIcon />
-              Expand
-            </Button>
+            </button>
           )}
-          {project && (
-            <ExportMenu
-              label="Export"
-              size="sm"
-              onCsv={() => exportTableCsv(project, rooms, room)}
-              onExcel={() => exportTableExcel(project, rooms, room)}
-              onPdf={() => exportTablePdf(project, rooms, room)}
-            />
-          )}
-          <Button type="button" variant="secondary" onClick={() => setAddDrawerOpen(true)}>
-            Add item
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => onDeleteRoom(room)}>
-            Delete room
-          </Button>
         </div>
       </div>
 
@@ -1412,14 +1500,12 @@ export function ItemsTableView({
   onReload?: (() => void) | undefined;
   className?: string | undefined;
 }) {
-  const queryClient = useQueryClient();
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
   const { collapsed: imageCollapsed, toggle: toggleImage } = useCollapsedRoomImages(roomsWithItems);
   const createRoom = useCreateRoom(projectId);
   const deleteRoom = useDeleteRoom(projectId);
   const moveItem = useMoveItem();
   const [addRoomOpen, setAddRoomOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState<RoomWithItems | null>(null);
   const sortedRooms = useMemo(
     () =>
@@ -1447,20 +1533,6 @@ export function ItemsTableView({
 
   return (
     <div className={cn('relative flex flex-col gap-4 pb-16', className)}>
-      {project && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <ExportMenu
-            label="Export all"
-            size="md"
-            onCsv={() => exportTableCsv(project, sortedRooms)}
-            onExcel={() => exportTableExcel(project, sortedRooms)}
-            onPdf={() => exportTablePdf(project, sortedRooms)}
-          />
-          <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
-            Import from Excel
-          </Button>
-        </div>
-      )}
       {sortedRooms.map((room) => (
         <RoomItemsSection
           key={room.id}
@@ -1527,19 +1599,6 @@ export function ItemsTableView({
           }
         }}
       />
-
-      {project && (
-        <ImportExcelModal
-          open={importOpen}
-          projectId={projectId}
-          rooms={sortedRooms}
-          onClose={() => setImportOpen(false)}
-          onSuccess={() => {
-            setImportOpen(false);
-            void queryClient.invalidateQueries();
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -58,6 +58,8 @@ export function ImageFrame({
   const canRemove =
     !disabled && (Boolean(primaryImage) || Boolean(fallbackUrl && onFallbackDelete));
   const isBusy = images.isLoading || imageLoading || upload.isPending || deleteImage.isPending;
+  const isRoomImage = entityType === 'room';
+  const imageFitClassName = entityType === 'project' ? 'object-cover' : 'object-contain';
 
   useEffect(() => {
     const node = frameRef.current;
@@ -139,12 +141,13 @@ export function ImageFrame({
         <img
           src={displayUrl}
           alt={primaryImage?.altText || alt}
-          className={cn('h-full w-full object-contain object-center', imageClassName)}
+          className={cn('h-full w-full', imageFitClassName, 'object-center', imageClassName)}
         />
       ) : (
         <div
           className={cn(
-            'flex h-full w-full flex-col items-center justify-center gap-1 bg-surface-muted text-center text-gray-400',
+            'flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400',
+            !isRoomImage && 'bg-surface-muted',
             placeholderClassName,
           )}
         >
@@ -175,7 +178,8 @@ export function ImageFrame({
     <div
       ref={frameRef}
       className={cn(
-        'relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm',
+        'relative overflow-hidden rounded-md',
+        isRoomImage ? 'bg-transparent' : 'border border-gray-200 bg-surface-muted shadow-sm',
         className,
       )}
     >
