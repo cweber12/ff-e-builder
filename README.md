@@ -30,12 +30,14 @@ C4Context
   System(app, "FF&E Builder", "React SPA + Cloudflare Workers API")
   System_Ext(firebase, "Firebase Auth", "Google-managed identity provider")
   System_Ext(neon, "Neon Postgres", "Serverless relational database")
+  System_Ext(r2, "Cloudflare R2", "Private image object storage")
   System_Ext(cf, "Cloudflare", "Edge network hosting the Workers API")
 
   Rel(designer, app, "Uses", "HTTPS")
   Rel(app, firebase, "Authenticates via", "Firebase SDK / REST")
   Rel(app, cf, "API calls to Workers", "HTTPS /api/*")
   Rel(cf, neon, "Queries via", "Neon serverless driver")
+  Rel(cf, r2, "Stores private images", "R2 binding")
 ```
 
 For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md](docs/architecture.md).
@@ -48,6 +50,9 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - `ItemsTable` renders FF&E items with rooms grouped, persisted room collapse state, room subtotals, a sticky grand total, inline editing for item fields, and structure mutations for adding rooms/items, duplicating or moving items, deleting with confirmation, and drag reordering.
 - `CatalogView` renders `/projects/:id/catalog` as a printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, and browser print/PDF support.
 - `SummaryView` renders `/projects/:id/summary` with room subtotals, budget progress, status counts, and vendor totals.
+- Project, room, and item image metadata is normalized in Neon while image bytes
+  are stored in the private Cloudflare R2 `ffe-images` bucket through the API
+  Worker. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes
 

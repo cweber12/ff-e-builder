@@ -23,6 +23,77 @@ beforeEach(() => {
   mockAuth.currentUser = null;
 });
 
+describe('api client - images', () => {
+  it('lists image metadata for an entity', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        images: [
+          {
+            id: 'img-1',
+            owner_uid: 'uid-1',
+            project_id: 'project-1',
+            room_id: null,
+            item_id: null,
+            filename: 'hero.jpg',
+            content_type: 'image/jpeg',
+            byte_size: 1024,
+            alt_text: 'Project hero',
+            is_primary: true,
+            created_at: '2026-05-01T00:00:00Z',
+            updated_at: '2026-05-01T00:00:00Z',
+          },
+        ],
+      }),
+    );
+
+    const images = await api.images.list({ entityType: 'project', entityId: 'project-1' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/images?entity_type=project&entity_id=project-1'),
+      expect.any(Object),
+    );
+    expect(images[0]).toMatchObject({
+      id: 'img-1',
+      projectId: 'project-1',
+      contentType: 'image/jpeg',
+      isPrimary: true,
+    });
+  });
+
+  it('uploads image files as form data without a JSON content type', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        {
+          image: {
+            id: 'img-1',
+            owner_uid: 'uid-1',
+            project_id: 'project-1',
+            room_id: null,
+            item_id: null,
+            filename: 'hero.jpg',
+            content_type: 'image/jpeg',
+            byte_size: 1024,
+            alt_text: '',
+            is_primary: true,
+            created_at: '2026-05-01T00:00:00Z',
+            updated_at: '2026-05-01T00:00:00Z',
+          },
+        },
+        201,
+      ),
+    );
+
+    const file = new File(['image-bytes'], 'hero.jpg', { type: 'image/jpeg' });
+    await api.images.upload({ entityType: 'project', entityId: 'project-1', file });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect(init?.headers).toBeInstanceOf(Headers);
+    expect((init?.headers as Headers).get('Content-Type')).toBeNull();
+  });
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -39,13 +110,9 @@ describe('api client — auth header', () => {
 
     await api.projects.list();
 
-    expect(fetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        headers: expect.objectContaining({ Authorization: `Bearer ${token}` }),
-      }),
-    );
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.headers).toBeInstanceOf(Headers);
+    expect((init?.headers as Headers).get('Authorization')).toBe(`Bearer ${token}`);
   });
 
   it('omits Authorization header when signed out', async () => {
@@ -53,13 +120,9 @@ describe('api client — auth header', () => {
 
     await api.projects.list();
 
-    expect(fetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.not.objectContaining({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        headers: expect.objectContaining({ Authorization: expect.any(String) }),
-      }),
-    );
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.headers).toBeInstanceOf(Headers);
+    expect((init?.headers as Headers).get('Authorization')).toBeNull();
   });
 });
 

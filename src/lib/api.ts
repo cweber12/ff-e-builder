@@ -1,5 +1,5 @@
 import { auth } from './auth';
-import type { Item, ItemStatus, Project, Room } from '../types';
+import type { ImageAsset, ImageEntityType, Item, ItemStatus, Project, Room } from '../types';
 
 // ─── Error type ───────────────────────────────────────────────────────────
 
@@ -61,6 +61,21 @@ interface RawItem {
   updated_at: string;
 }
 
+interface RawImageAsset {
+  id: string;
+  owner_uid: string;
+  project_id: string;
+  room_id: string | null;
+  item_id: string | null;
+  filename: string;
+  content_type: string;
+  byte_size: number;
+  alt_text: string;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Mappers ──────────────────────────────────────────────────────────────
 
 const mapProject = (r: RawProject): Project => ({
@@ -103,6 +118,21 @@ const mapItem = (r: RawItem): Item => ({
   linkUrl: r.link_url,
   sortOrder: r.sort_order,
   version: r.version,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
+  id: r.id,
+  ownerUid: r.owner_uid,
+  projectId: r.project_id,
+  roomId: r.room_id,
+  itemId: r.item_id,
+  filename: r.filename,
+  contentType: r.content_type,
+  byteSize: r.byte_size,
+  altText: r.alt_text,
+  isPrimary: r.is_primary,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -174,21 +204,36 @@ export type UpdateItemInput = {
   version: number;
 };
 
+export type ImageEntityRef = {
+  entityType: ImageEntityType;
+  entityId: string;
+};
+
+export type UploadImageInput = ImageEntityRef & {
+  file: File;
+  altText?: string;
+};
+
 // ─── Core fetch helper ────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const apiFetch = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+const buildAuthHeaders = async (init: RequestInit): Promise<Headers> => {
   const token = await auth.currentUser?.getIdToken(false);
 
-  const headers: Record<string, string> = {};
-  if (init.body !== undefined) {
-    headers['Content-Type'] = 'application/json';
+  const headers = new Headers(init.headers);
+  if (init.body !== undefined && !(init.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
   }
   if (token !== undefined) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
+  return headers;
+};
+
+const apiFetchResponse = async (path: string, init: RequestInit = {}): Promise<Response> => {
+  const headers = await buildAuthHeaders(init);
   const res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
 
   if (!res.ok) {
@@ -196,6 +241,12 @@ const apiFetch = async <T>(path: string, init: RequestInit = {}): Promise<T> => 
     const message = typeof body['message'] === 'string' ? body['message'] : res.statusText;
     throw new ApiError(res.status, message, body);
   }
+
+  return res;
+};
+
+const apiFetch = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+  const res = await apiFetchResponse(path, init);
 
   if (res.status === 204) {
     return undefined as unknown as T;
@@ -323,5 +374,45 @@ export const api = {
 
     delete: (id: string): Promise<void> =>
       apiFetch<void>(`/api/v1/items/${id}`, { method: 'DELETE' }),
+  },
+
+  images: {
+    list: ({ entityType, entityId }: ImageEntityRef): Promise<ImageAsset[]> => {
+      const params = new URLSearchParams({
+        entity_type: entityType,
+        entity_id: entityId,
+      });
+      return apiFetch<{ images: RawImageAsset[] }>(`/api/v1/images?${params}`).then((r) =>
+        r.images.map(mapImageAsset),
+      );
+    },
+
+    upload: ({
+      entityType,
+      entityId,
+      file,
+      altText = '',
+    }: UploadImageInput): Promise<ImageAsset> => {
+      const params = new URLSearchParams({
+        entity_type: entityType,
+        entity_id: entityId,
+        alt_text: altText,
+      });
+      const body = new FormData();
+      body.append('file', file);
+
+      return apiFetch<{ image: RawImageAsset }>(`/api/v1/images?${params}`, {
+        method: 'POST',
+        body,
+      }).then((r) => mapImageAsset(r.image));
+    },
+
+    getContentBlob: async (imageId: string): Promise<Blob> => {
+      const response = await apiFetchResponse(`/api/v1/images/${imageId}/content`);
+      return response.blob();
+    },
+
+    delete: (imageId: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/images/${imageId}`, { method: 'DELETE' }),
   },
 };

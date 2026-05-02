@@ -56,6 +56,7 @@ import { Modal } from './primitives/Modal';
 import { AddItemDrawer } from './AddItemDrawer';
 import { ExportMenu } from './ExportMenu';
 import { ImportExcelModal } from './ImportExcelModal';
+import { ImageFrame } from './ImageFrame';
 
 export type RoomWithItems = Room & { items: Item[] };
 
@@ -331,6 +332,20 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
     id: 'drag',
     header: '',
     cell: () => null,
+  },
+  {
+    id: 'image',
+    header: '',
+    cell: ({ row }) => (
+      <ImageFrame
+        entityType="item"
+        entityId={row.original.id}
+        alt={row.original.itemName}
+        fallbackUrl={row.original.imageUrl}
+        className="h-12 w-12"
+        compact
+      />
+    ),
   },
   {
     accessorKey: 'itemIdTag',
@@ -786,24 +801,34 @@ function MobileItemCards({
       {items.map((item) => (
         <article key={item.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <EditableTextCell
-                item={item}
-                value={item.itemName}
-                field="itemName"
-                label="Item"
-                onSave={onSave}
-                required
-                displayClassName="text-base font-semibold text-gray-950"
+            <div className="flex min-w-0 items-start gap-3">
+              <ImageFrame
+                entityType="item"
+                entityId={item.id}
+                alt={item.itemName}
+                fallbackUrl={item.imageUrl}
+                className="h-14 w-14 shrink-0"
+                compact
               />
-              <div className="mt-1 text-sm text-gray-500">
+              <div className="min-w-0">
                 <EditableTextCell
                   item={item}
-                  value={item.itemIdTag}
-                  field="itemIdTag"
-                  label="ID"
+                  value={item.itemName}
+                  field="itemName"
+                  label="Item"
                   onSave={onSave}
+                  required
+                  displayClassName="text-base font-semibold text-gray-950"
                 />
+                <div className="mt-1 text-sm text-gray-500">
+                  <EditableTextCell
+                    item={item}
+                    value={item.itemIdTag}
+                    field="itemIdTag"
+                    label="ID"
+                    onSave={onSave}
+                  />
+                </div>
               </div>
             </div>
             <RowActionsCell item={item} actions={actions} />
@@ -1081,57 +1106,77 @@ function RoomItemsSection({
       />
 
       {!collapsed && isMobile && (
-        <div className="p-3">
+        <div className="grid gap-3 p-3">
+          <ImageFrame
+            entityType="room"
+            entityId={room.id}
+            alt={`${room.name} room`}
+            className="h-40 w-full"
+          />
           <MobileItemCards items={sortedItems} actions={actions} onSave={saveItemPatch} />
         </div>
       )}
 
       {!collapsed && !isMobile && (
-        <div tabIndex={0} aria-label={`${room.name} items table`} className="overflow-x-auto">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        <div className="flex items-stretch">
+          <div className="w-36 shrink-0 border-r border-gray-100 p-3">
+            <ImageFrame
+              entityType="room"
+              entityId={room.id}
+              alt={`${room.name} room`}
+              className="h-full min-h-32 w-full"
+            />
+          </div>
+          <div
+            tabIndex={0}
+            aria-label={`${room.name} items table`}
+            className="min-w-0 flex-1 overflow-x-auto"
           >
-            <table className="min-w-[1120px] w-full border-collapse text-sm">
-              <thead className="bg-white text-left text-xs uppercase tracking-wide text-gray-500">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="border-b border-gray-100 px-3 py-3 font-semibold"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {table.getRowModel().rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={columns.length} className="p-3">
-                      <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-                        Add first item -&gt;
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  <SortableContext
-                    items={sortedItems.map((item) => item.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <SortableItemRow key={row.original.id} row={row} />
-                    ))}
-                  </SortableContext>
-                )}
-              </tbody>
-            </table>
-          </DndContext>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <table className="min-w-[1180px] w-full border-collapse text-sm">
+                <thead className="bg-white text-left text-xs uppercase tracking-wide text-gray-500">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="border-b border-gray-100 px-3 py-3 font-semibold"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {table.getRowModel().rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={columns.length} className="p-3">
+                        <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+                          Add first item -&gt;
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <SortableContext
+                      items={sortedItems.map((item) => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {table.getRowModel().rows.map((row) => (
+                        <SortableItemRow key={row.original.id} row={row} />
+                      ))}
+                    </SortableContext>
+                  )}
+                </tbody>
+              </table>
+            </DndContext>
+          </div>
         </div>
       )}
     </section>

@@ -49,6 +49,7 @@ export default [
         ...globals.es2022,
         ...globals.browser,
         console: 'readonly',
+        R2Bucket: 'readonly',
       },
     },
     plugins: { '@typescript-eslint': tsPlugin },

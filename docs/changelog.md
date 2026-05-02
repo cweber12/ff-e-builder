@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(images): add uploadable project, room, item, and catalog image frames
+- feat(images): add private R2-backed image storage API and normalized image metadata
 - feat(exports): add CSV, Excel, PDF export flows and spreadsheet import mapping
 
 ---

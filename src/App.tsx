@@ -15,6 +15,7 @@ import { ItemsTable, type RoomWithItems } from './components/ItemsTable';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
+import { ImageFrame } from './components/ImageFrame';
 import { Button } from './components/primitives/Button';
 import { Modal } from './components/primitives/Modal';
 import { projectTotalCents } from './lib/calc';
@@ -93,6 +94,14 @@ function ProjectList() {
                 key={project.id}
                 className="group relative rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-brand-500 hover:shadow-md focus-within:border-brand-500"
               >
+                <div className="p-3 pb-0">
+                  <ImageFrame
+                    entityType="project"
+                    entityId={project.id}
+                    alt={`${project.name} project`}
+                    className="h-36 w-full"
+                  />
+                </div>
                 <Link
                   to={`/projects/${project.id}/table`}
                   className="block p-5 focus-visible:outline-none"

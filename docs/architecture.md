@@ -10,12 +10,14 @@ C4Context
   System(app, "FF&E Builder", "React SPA + Cloudflare Workers API")
   System_Ext(firebase, "Firebase Auth", "Google-managed OIDC identity provider")
   System_Ext(neon, "Neon Postgres", "Serverless relational database (branching, autoscale)")
+  System_Ext(r2, "Cloudflare R2", "Private object storage for user-scoped images")
   System_Ext(cf, "Cloudflare Workers", "Edge compute that hosts the API")
 
   Rel(designer, app, "Uses", "HTTPS browser")
   Rel(app, firebase, "Authenticates", "Firebase JS SDK / REST")
   Rel(app, cf, "Calls API", "HTTPS /api/*  (JWT in Authorization header)")
   Rel(cf, neon, "Queries", "Neon serverless driver over WebSocket")
+  Rel(cf, r2, "Reads/writes private image objects", "R2 binding")
 ```
 
 ---
@@ -37,6 +39,7 @@ C4Component
     Component(authMw, "Auth middleware", "Firebase Admin SDK", "Verifies ID tokens")
     Component(handlers, "Route handlers", "TypeScript", "Business logic")
     Component(db, "DB layer", "Drizzle ORM + Neon driver", "SQL queries")
+    Component(images, "Image storage", "Cloudflare R2 binding", "Stores and serves private project, room, and item images")
   }
 
   Rel(ui, auth, "Uses")
@@ -45,6 +48,7 @@ C4Component
   Rel(router, authMw, "Middleware chain")
   Rel(authMw, handlers, "Passes verified userId")
   Rel(handlers, db, "Queries")
+  Rel(handlers, images, "Streams image uploads/downloads")
 ```
 
 Actual frontend route shell:
@@ -60,6 +64,11 @@ The current launch build keeps demo fixture data for the visible project surface
 while API, auth, ownership checks, migrations, and Worker deployment remain the
 production integration boundary. The React client still never connects directly
 to Neon.
+
+Project, room, and item image bytes are stored in a private Cloudflare R2 bucket
+named `ffe-images`. The Worker is the only R2 gateway: it validates Firebase
+ownership against Neon image metadata before accepting uploads or returning image
+content.
 
 ---
 
@@ -127,9 +136,25 @@ erDiagram
     timestamptz updated_at
   }
 
+  IMAGE_ASSETS {
+    uuid id PK
+    text owner_uid
+    uuid project_id FK
+    uuid room_id FK "nullable"
+    uuid item_id FK "nullable"
+    text r2_key
+    text content_type
+    int byte_size
+    boolean is_primary
+    timestamptz created_at
+  }
+
   USERS ||--o{ PROJECTS : owns
   PROJECTS ||--o{ ROOMS : contains
   ROOMS ||--o{ ITEMS : contains
+  PROJECTS ||--o{ IMAGE_ASSETS : has
+  ROOMS ||--o{ IMAGE_ASSETS : can_have
+  ITEMS ||--o{ IMAGE_ASSETS : can_have
 ```
 
 ---

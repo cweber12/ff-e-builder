@@ -5,6 +5,7 @@ import { cents, formatMoney, type Item, type Project } from '../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../lib/exportUtils';
 import type { RoomWithItems } from './ItemsTable';
 import { Button } from './primitives';
+import { ImageFrame } from './ImageFrame';
 
 type CatalogEntry = {
   item: Item & { color?: string | null; designer?: string | null };
@@ -195,13 +196,16 @@ export function CatalogPage({
 
       <section className="catalog-body">
         <div className="catalog-image-wrap">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.itemName} className="catalog-image" />
-          ) : (
-            <div className="catalog-placeholder" aria-label="No item image">
-              <span>{initials(item.itemName)}</span>
-            </div>
-          )}
+          <ImageFrame
+            entityType="item"
+            entityId={item.id}
+            alt={item.itemName}
+            fallbackUrl={item.imageUrl}
+            className="h-full w-full border-0 shadow-none"
+            imageClassName="catalog-image"
+            placeholderClassName="catalog-placeholder"
+            placeholderContent={<span>{initials(item.itemName)}</span>}
+          />
         </div>
 
         <div className="catalog-details">
