@@ -12,13 +12,6 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 - Use a web crawler to fetch the product image and description.
 - Display the product image and description in the item console.
 
-### Add item — categories
-
-- Display categories as clickable chips below the category text input.
-- Text input should auto-populate from existing categories.
-- Create a new chip for a new category when none match.
-- Clicking a chip populates the category input.
-
 ### Add item — quantity
 
 - Arrow buttons to increment/decrement quantity.
@@ -35,8 +28,9 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 
 ### Material library
 
-- Library of materials with swatches and material names.
+- Library of project-specific materials with swatches and material names.
 - Add materials to the library with swatch, name, ID, and description.
+- Materials should have an image associated with them.
 - Select from the library when setting a material for an item.
 - Edit swatch and name for existing library entries.
 - Delete entries from the library.

@@ -5,7 +5,10 @@ const mockAuth = vi.hoisted(() => ({
   currentUser: null as null | { getIdToken: (force: boolean) => Promise<string> },
 }));
 
-vi.mock('./auth', () => ({ auth: mockAuth }));
+vi.mock('./auth', () => ({
+  auth: mockAuth,
+  getCurrentIdToken: () => mockAuth.currentUser?.getIdToken(false),
+}));
 
 // Import AFTER mocks are set up
 import { api, ApiError } from './api';

@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { lineTotalCents, roomSubtotalCents, projectTotalCents, sellPriceCents } from './calc';
 import { BRAND_RGB } from './constants';
 import { cents, formatMoney } from '../types';
-import type { Item, Project } from '../types';
+import type { Item, Material, Project } from '../types';
 import type { RoomWithItems } from '../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -228,6 +228,25 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   XLSX.writeFile(wb, `${safeName(project.name)}-summary.xlsx`);
 }
 
+const MATERIAL_HEADERS = ['Name', 'Material ID', 'Swatches', 'Description'];
+
+function materialToRow(material: Material): string[] {
+  return [
+    material.name,
+    material.materialId,
+    (material.swatches.length ? material.swatches : [material.swatchHex]).join(', '),
+    material.description,
+  ];
+}
+
+export function exportMaterialsExcel(project: Project, materials: Material[]): void {
+  const wb = XLSX.utils.book_new();
+  const rows = materials.map(materialToRow);
+  const ws = XLSX.utils.aoa_to_sheet([MATERIAL_HEADERS, ...rows]);
+  XLSX.utils.book_append_sheet(wb, ws, 'Materials');
+  XLSX.writeFile(wb, `${safeName(project.name)}-materials.xlsx`);
+}
+
 // ─── PDF – Table ──────────────────────────────────────────────────────────────
 
 export function exportTablePdf(
@@ -390,6 +409,31 @@ export function exportSummaryPdf(project: Project, rooms: RoomWithItems[]): void
   });
 
   doc.save(`${safeName(project.name)}-summary.pdf`);
+}
+
+export function exportMaterialsPdf(project: Project, materials: Material[]): void {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  doc.setFontSize(14);
+  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+  doc.text(project.name, 14, 14);
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Materials', 14, 21);
+
+  autoTable(doc, {
+    startY: 28,
+    head: [MATERIAL_HEADERS],
+    body: materials.map(materialToRow),
+    headStyles: { fillColor: [...BRAND] as [number, number, number] },
+    bodyStyles: { fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 42 },
+      1: { cellWidth: 32 },
+      2: { cellWidth: 42 },
+    },
+  });
+
+  doc.save(`${safeName(project.name)}-materials.pdf`);
 }
 
 // ─── PDF – Catalog ────────────────────────────────────────────────────────────

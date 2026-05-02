@@ -27,6 +27,7 @@ interface AddItemDrawerProps {
   roomName: string;
   existingCategories: string[];
   existingMaterials?: Material[];
+  priorityMaterialIds?: string[] | undefined;
   onClose: () => void;
   onSubmit: (input: CreateItemInput, materials: AddItemMaterialSelection[]) => Promise<void> | void;
 }
@@ -71,6 +72,7 @@ export function AddItemDrawer({
   roomName,
   existingCategories,
   existingMaterials = [],
+  priorityMaterialIds = [],
   onClose,
   onSubmit,
 }: AddItemDrawerProps) {
@@ -353,6 +355,7 @@ export function AddItemDrawer({
         open={materialLibraryOpen}
         projectId={projectId}
         roomId={roomId}
+        priorityMaterialIds={priorityMaterialIds}
         onClose={() => setMaterialLibraryOpen(false)}
       />
     </Drawer>

@@ -1206,6 +1206,15 @@ function RoomItemsSection({
       ).sort(),
     [rooms],
   );
+  const roomMaterialIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          room.items.flatMap((candidate) => candidate.materials.map((material) => material.id)),
+        ),
+      ),
+    [room.items],
+  );
   const duplicateItem = useCallback(
     async (item: Item) => {
       await createItem.mutateAsync({
@@ -1337,6 +1346,7 @@ function RoomItemsSection({
         roomName={room.name}
         existingCategories={existingCategories}
         existingMaterials={projectMaterials.data ?? []}
+        priorityMaterialIds={roomMaterialIds}
         onClose={() => setAddDrawerOpen(false)}
         onSubmit={async (input, materials) => {
           const createdItem = await createItem.mutateAsync({
@@ -1358,6 +1368,7 @@ function RoomItemsSection({
           projectId={projectId}
           roomId={room.id}
           item={materialItem}
+          priorityMaterialIds={roomMaterialIds}
           onClose={() => setMaterialItem(null)}
         />
       )}

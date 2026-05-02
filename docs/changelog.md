@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): add searchable material picker cards and table/export library view
 - fix(auth): wait for Firebase auth readiness before attaching API bearer tokens
 - feat(materials): add project Materials tab and project-mounted material API routes
 - feat(materials): support multiple material swatches and add-item material assignment
