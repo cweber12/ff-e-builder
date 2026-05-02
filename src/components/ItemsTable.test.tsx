@@ -205,6 +205,17 @@ describe('ItemsTable', () => {
     expect(screen.queryByText('Lounge Chair')).not.toBeInTheDocument();
   });
 
+  it('opens and closes an expanded room table view', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getAllByRole('button', { name: 'Expand table view' })[0]!);
+
+    expect(screen.getByLabelText('Living Room expanded items table')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Minimize table view' }));
+    expect(screen.queryByLabelText('Living Room expanded items table')).not.toBeInTheDocument();
+  });
+
   it('renders five shimmer rows while loading', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
@@ -340,6 +351,18 @@ describe('ItemsTable', () => {
     expect(
       screen.queryByRole('dialog', { name: /Add item to Living Room/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it('sets the category from the suggested category bank', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getAllByRole('button', { name: 'Add item' })[0]!);
+    const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
+
+    await user.click(within(drawer).getByRole('button', { name: 'Accessories' }));
+
+    expect(within(drawer).getByLabelText('Category')).toHaveValue('Accessories');
   });
 
   it('keeps the drawer open and validates before adding an item', async () => {

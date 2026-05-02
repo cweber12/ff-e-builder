@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import type { CreateItemInput } from '../lib/api';
@@ -38,6 +38,21 @@ const defaultValues: ItemFormValues = {
   linkUrl: '',
 };
 
+const typicalCategories = [
+  'Seating',
+  'Tables',
+  'Lighting',
+  'Casegoods',
+  'Beds',
+  'Rugs',
+  'Window Treatments',
+  'Artwork',
+  'Accessories',
+  'Plumbing',
+  'Appliances',
+  'Hardware',
+];
+
 export function AddItemDrawer({
   open,
   roomName,
@@ -49,11 +64,20 @@ export function AddItemDrawer({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemFormSchema),
     defaultValues,
   });
+
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(new Set([...typicalCategories, ...existingCategories].filter(Boolean))).sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [existingCategories],
+  );
 
   useEffect(() => {
     if (open) reset(defaultValues);
@@ -96,10 +120,22 @@ export function AddItemDrawer({
             className={inputClassName}
           />
           <datalist id="item-category-options">
-            {existingCategories.map((category) => (
+            {categoryOptions.map((category) => (
               <option key={category} value={category} />
             ))}
           </datalist>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+            {categoryOptions.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className="text-xs font-medium text-brand-700 underline-offset-2 hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                onClick={() => setValue('category', category, { shouldDirty: true })}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
         </Field>
 
         <Field label="Item ID/tag" error={errors.itemIdTag?.message}>
@@ -121,7 +157,14 @@ export function AddItemDrawer({
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Qty" error={errors.qty?.message}>
-            <input {...register('qty')} inputMode="numeric" className={inputClassName} />
+            <input
+              {...register('qty')}
+              type="number"
+              min="1"
+              step="1"
+              inputMode="numeric"
+              className={inputClassName}
+            />
           </Field>
           <Field label="Unit cost" error={errors.unitCost?.message}>
             <input {...register('unitCost')} inputMode="decimal" className={inputClassName} />

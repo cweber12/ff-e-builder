@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(ui): refine room table scrolling, expanded table view, budget popover, image containment, and add-item category controls
 - feat(images): add image update/delete menus and collapsible room image panels
 - feat(ui): add collapsible budget control, animated catalog navigation, and clean status icons
 - feat(images): add uploadable project, room, item, and catalog image frames

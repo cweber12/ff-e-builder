@@ -197,7 +197,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
         }}
         className="rounded px-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        ...
+        <MoreIcon />
       </button>
       {menuOpen && (
         <div
@@ -239,7 +239,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
           onClick={() => setOpen((current) => !current)}
           className="rounded px-2 py-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
-          ...
+          <MoreIcon />
         </button>
         {open && (
           <div
@@ -324,6 +324,76 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
 
 const menuItemClassName =
   'flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+
+function ChevronIcon({ direction = 'down' }: { direction?: 'down' | 'left' | 'right' }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden="true"
+      className={cn(
+        'h-4 w-4 transition-transform',
+        direction === 'left' && 'rotate-90',
+        direction === 'right' && '-rotate-90',
+      )}
+    >
+      <path
+        d="m5.5 8 4.5 4.5L14.5 8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+      <circle cx="5" cy="10" r="1.5" />
+      <circle cx="10" cy="10" r="1.5" />
+      <circle cx="15" cy="10" r="1.5" />
+    </svg>
+  );
+}
+
+function GripIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+      <circle cx="7" cy="5" r="1.2" />
+      <circle cx="13" cy="5" r="1.2" />
+      <circle cx="7" cy="10" r="1.2" />
+      <circle cx="13" cy="10" r="1.2" />
+      <circle cx="7" cy="15" r="1.2" />
+      <circle cx="13" cy="15" r="1.2" />
+    </svg>
+  );
+}
+
+function ExpandIcon({ expanded }: { expanded?: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      {expanded ? (
+        <path
+          d="M7.5 4.5v4h-4m9 7v-4h4M7.5 8.5 3.5 4.5m9 7 4 4"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M8 4H4v4m8-4h4v4M8 16H4v-4m8 4h4v-4M4.5 4.5 8 8m7.5-3.5L12 8m-7.5 7.5L8 12m7.5 3.5L12 12"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  );
+}
 
 const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<Item>[] => [
   {
@@ -793,7 +863,7 @@ function SortableItemRow({ row }: { row: Row<Item> }) {
               {...attributes}
               {...listeners}
             >
-              ::
+              <GripIcon />
             </button>
           ) : (
             flexRender(cell.column.columnDef.cell, cell.getContext())
@@ -969,6 +1039,7 @@ function RoomItemsSection({
   const deleteItem = useDeleteItem(room.id);
   const moveItem = useMoveItem();
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const isMobile = useIsMobileViewport();
   const sortedItems = useMemo(
     () =>
@@ -1078,15 +1149,7 @@ function RoomItemsSection({
             aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
             className="shrink-0 rounded px-1 text-xs text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           >
-            <span
-              aria-hidden="true"
-              className={cn(
-                'inline-block transition-transform',
-                collapsed ? '-rotate-90' : 'rotate-0',
-              )}
-            >
-              v
-            </span>
+            <ChevronIcon direction={collapsed ? 'right' : 'down'} />
           </button>
           <InlineTextEdit
             value={room.name}
@@ -1107,6 +1170,18 @@ function RoomItemsSection({
           {formatMoney(cents(subtotal))}
         </span>
         <div className="flex items-center gap-2">
+          {!isMobile && !collapsed && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Expand table view"
+              onClick={() => setIsExpanded(true)}
+            >
+              <ExpandIcon />
+              Expand
+            </Button>
+          )}
           {project && (
             <ExportMenu
               label="Export"
@@ -1159,40 +1234,39 @@ function RoomItemsSection({
 
       {!collapsed && !isMobile && (
         <div className="relative flex items-stretch">
-          <button
-            type="button"
-            className={cn(
-              'absolute top-1/2 z-20 -translate-y-1/2 rounded-r-md border border-l-0 border-gray-200 bg-white px-1.5 py-4 text-xs font-semibold text-gray-500 shadow-sm hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-              imageCollapsed ? 'left-0' : 'left-96',
-            )}
-            onClick={onToggleImage}
-            aria-expanded={!imageCollapsed}
-            aria-label={imageCollapsed ? 'Show room image' : 'Hide room image'}
-          >
-            {imageCollapsed ? '>' : '<'}
-          </button>
+          <div className="flex w-9 shrink-0 items-center justify-center border-r border-gray-100 bg-white">
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              onClick={onToggleImage}
+              aria-expanded={!imageCollapsed}
+              aria-label={imageCollapsed ? 'Show room image' : 'Hide room image'}
+            >
+              <ChevronIcon direction={imageCollapsed ? 'right' : 'left'} />
+            </button>
+          </div>
           {!imageCollapsed && (
-            <div className="w-96 shrink-0 border-r border-gray-100 p-3">
+            <div className="h-[22rem] w-80 shrink-0 border-r border-gray-100 p-3 xl:w-96">
               <ImageFrame
                 entityType="room"
                 entityId={room.id}
                 alt={`${room.name} room`}
-                className="h-full min-h-32 w-full object-fit"
+                className="h-full w-full"
               />
             </div>
           )}
           <div
             tabIndex={0}
             aria-label={`${room.name} items table`}
-            className="min-w-0 flex-1 overflow-x-auto"
+            className="max-h-[22rem] min-w-0 flex-1 overflow-auto"
           >
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <table className="min-w-[1180px] w-full border-collapse text-sm">
-                <thead className="bg-white text-left text-xs uppercase tracking-wide text-gray-500">
+              <table className="w-full min-w-[1180px] border-collapse text-sm">
+                <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
@@ -1230,6 +1304,90 @@ function RoomItemsSection({
                 </tbody>
               </table>
             </DndContext>
+          </div>
+        </div>
+      )}
+      {isExpanded && (
+        <div className="fixed inset-0 z-50 bg-gray-950/35 p-4 backdrop-blur-sm">
+          <div className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-surface px-4 py-3">
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-semibold text-gray-950">{room.name}</h2>
+                <p className="text-xs text-gray-500">
+                  {itemCount} {itemCount === 1 ? 'item' : 'items'} - {formatMoney(cents(subtotal))}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="Minimize table view"
+                onClick={() => setIsExpanded(false)}
+              >
+                <ExpandIcon expanded />
+                Minimize
+              </Button>
+            </div>
+            <div className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)] gap-0">
+              <aside className="border-r border-gray-100 bg-surface-muted p-4">
+                <ImageFrame
+                  entityType="room"
+                  entityId={room.id}
+                  alt={`${room.name} room`}
+                  className="h-72 w-full"
+                />
+              </aside>
+              <div
+                tabIndex={0}
+                aria-label={`${room.name} expanded items table`}
+                className="min-w-0 overflow-auto"
+              >
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <table className="w-full min-w-[1180px] border-collapse text-sm">
+                    <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="border-b border-gray-100 px-3 py-3 font-semibold"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {table.getRowModel().rows.length === 0 ? (
+                        <tr>
+                          <td colSpan={columns.length} className="p-3">
+                            <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+                              Add first item -&gt;
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <SortableContext
+                          items={sortedItems.map((item) => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {table.getRowModel().rows.map((row) => (
+                            <SortableItemRow key={row.original.id} row={row} />
+                          ))}
+                        </SortableContext>
+                      )}
+                    </tbody>
+                  </table>
+                </DndContext>
+              </div>
+            </div>
           </div>
         </div>
       )}

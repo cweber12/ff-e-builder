@@ -139,7 +139,7 @@ export function ImageFrame({
         <img
           src={displayUrl}
           alt={primaryImage?.altText || alt}
-          className={cn('h-full w-full object-cover', imageClassName)}
+          className={cn('h-full w-full object-contain object-center', imageClassName)}
         />
       ) : (
         <div
@@ -175,7 +175,7 @@ export function ImageFrame({
     <div
       ref={frameRef}
       className={cn(
-        'relative overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm',
+        'relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm',
         className,
       )}
     >
