@@ -30,6 +30,7 @@ import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/cal
 import { emptyToNull } from '../lib/textUtils';
 import { getSortOrderPatches } from '../lib/itemSort';
 import { useCreateItem, useDeleteItem, useMoveItem, useUpdateItem } from '../hooks/useItems';
+import { useAssignMaterial, useCreateAndAssignMaterial, useMaterials } from '../hooks/useMaterials';
 import { useCreateRoom, useDeleteRoom, useUpdateRoom } from '../hooks/useRooms';
 import {
   cents,
@@ -46,14 +47,14 @@ import {
   type Project,
   type RoomWithItems,
 } from '../types';
-import type { UpdateItemInput } from '../lib/api';
+import type { CreateMaterialInput, UpdateItemInput } from '../lib/api';
 import { exportTableCsv, exportTableExcel, exportTablePdf } from '../lib/exportUtils';
 import { StatusBadge } from './primitives/StatusBadge';
 import { Button } from './primitives/Button';
 import { InlineTextEdit } from './primitives/InlineTextEdit';
 import { InlineNumberEdit } from './primitives/InlineNumberEdit';
 import { Modal } from './primitives/Modal';
-import { AddItemDrawer } from './AddItemDrawer';
+import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from './ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from './MaterialLibraryModal';
 
@@ -117,6 +118,24 @@ type TableActions = {
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
   onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
+
+async function assignMaterialsToItem(
+  itemId: string,
+  materials: AddItemMaterialSelection[],
+  assignMaterial: (input: { itemId: string; materialId: string }) => Promise<unknown>,
+  createAndAssignMaterial: (input: {
+    itemId: string;
+    input: CreateMaterialInput;
+  }) => Promise<unknown>,
+) {
+  for (const material of materials) {
+    if (material.type === 'existing') {
+      await assignMaterial({ itemId, materialId: material.materialId });
+    } else {
+      await createAndAssignMaterial({ itemId, input: material.input });
+    }
+  }
+}
 
 const formatDollars = (value: number) => formatMoney(dollarsToCents(value));
 
@@ -1154,6 +1173,9 @@ function RoomItemsSection({
   const createItem = useCreateItem(room.id);
   const deleteItem = useDeleteItem(room.id);
   const moveItem = useMoveItem();
+  const projectMaterials = useMaterials(projectId);
+  const assignMaterial = useAssignMaterial(room.id, projectId);
+  const createAndAssignMaterial = useCreateAndAssignMaterial(room.id, projectId);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
@@ -1312,9 +1334,19 @@ function RoomItemsSection({
         open={addDrawerOpen}
         roomName={room.name}
         existingCategories={existingCategories}
+        existingMaterials={projectMaterials.data ?? []}
         onClose={() => setAddDrawerOpen(false)}
-        onSubmit={async (input) => {
-          await createItem.mutateAsync({ ...input, sortOrder: sortedItems.length });
+        onSubmit={async (input, materials) => {
+          const createdItem = await createItem.mutateAsync({
+            ...input,
+            sortOrder: sortedItems.length,
+          });
+          await assignMaterialsToItem(
+            createdItem.id,
+            materials,
+            assignMaterial.mutateAsync,
+            createAndAssignMaterial.mutateAsync,
+          );
         }}
       />
 

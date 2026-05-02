@@ -40,7 +40,7 @@ export function MaterialLibraryModal({
     name: '',
     materialId: '',
     description: '',
-    swatchHex: defaultSwatch,
+    swatches: [defaultSwatch],
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const assignedIds = useMemo(
@@ -50,7 +50,7 @@ export function MaterialLibraryModal({
   const editingMaterial = materials.data?.find((material) => material.id === editingId);
 
   const resetDraft = () => {
-    setDraft({ name: '', materialId: '', description: '', swatchHex: defaultSwatch });
+    setDraft({ name: '', materialId: '', description: '', swatches: [defaultSwatch] });
     setEditingId(null);
   };
 
@@ -60,16 +60,18 @@ export function MaterialLibraryModal({
       name: material.name,
       materialId: material.materialId,
       description: material.description,
-      swatchHex: material.swatchHex,
+      swatches: material.swatches.length ? material.swatches : [material.swatchHex],
     });
   };
 
   const saveDraft = async () => {
+    const swatches = normalizeSwatches(draft.swatches);
     const input = {
       name: draft.name.trim(),
       materialId: draft.materialId.trim(),
       description: draft.description.trim(),
-      swatchHex: draft.swatchHex,
+      swatchHex: swatches[0] ?? defaultSwatch,
+      swatches,
     };
     if (!input.name) return;
     if (editingId) {
@@ -80,6 +82,22 @@ export function MaterialLibraryModal({
       await createMaterial.mutateAsync(input);
     }
     resetDraft();
+  };
+
+  const updateSwatch = (index: number, value: string) => {
+    setDraft((current) => ({
+      ...current,
+      swatches: current.swatches.map((swatch, swatchIndex) =>
+        swatchIndex === index ? value : swatch,
+      ),
+    }));
+  };
+
+  const removeSwatch = (index: number) => {
+    setDraft((current) => {
+      const next = current.swatches.filter((_swatch, swatchIndex) => swatchIndex !== index);
+      return { ...current, swatches: next.length ? next : [defaultSwatch] };
+    });
   };
 
   return (
@@ -110,26 +128,50 @@ export function MaterialLibraryModal({
                 className={inputClassName}
               />
             </label>
-            <label className="grid gap-1 text-sm font-medium text-gray-700">
-              Swatch
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={draft.swatchHex}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, swatchHex: event.target.value }))
+            <div className="grid gap-2 text-sm font-medium text-gray-700">
+              <div className="flex items-center justify-between gap-2">
+                <span>Swatches</span>
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-brand-700 underline-offset-2 hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:text-gray-400 disabled:no-underline"
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      swatches: [...current.swatches, defaultSwatch].slice(0, 12),
+                    }))
                   }
-                  className="h-10 w-12 rounded-md border border-gray-300 bg-white p-1"
-                />
-                <input
-                  value={draft.swatchHex}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, swatchHex: event.target.value }))
-                  }
-                  className={inputClassName}
-                />
+                  disabled={draft.swatches.length >= 12}
+                >
+                  Add swatch
+                </button>
               </div>
-            </label>
+              <div className="grid gap-2">
+                {draft.swatches.map((swatch, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={isHexSwatch(swatch) ? swatch : defaultSwatch}
+                      onChange={(event) => updateSwatch(index, event.target.value)}
+                      className="h-10 w-12 rounded-md border border-gray-300 bg-white p-1"
+                    />
+                    <input
+                      value={swatch}
+                      onChange={(event) => updateSwatch(index, event.target.value)}
+                      className={inputClassName}
+                      aria-label={`Swatch ${index + 1} hex value`}
+                    />
+                    <button
+                      type="button"
+                      className="rounded-md px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-white hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                      onClick={() => removeSwatch(index)}
+                      aria-label={`Remove swatch ${index + 1}`}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
             <label className="grid gap-1 text-sm font-medium text-gray-700">
               Description
               <textarea
@@ -171,10 +213,10 @@ export function MaterialLibraryModal({
                       className="grid gap-3 rounded-lg border border-gray-200 p-3"
                     >
                       <div className="flex items-start gap-3">
-                        <span
-                          className="mt-0.5 h-8 w-8 shrink-0 rounded-md border border-gray-200"
-                          style={{ backgroundColor: material.swatchHex }}
-                          aria-hidden="true"
+                        <MaterialSwatches
+                          swatches={material.swatches}
+                          fallback={material.swatchHex}
+                          className="mt-0.5"
                         />
                         <div className="min-w-0 flex-1">
                           <h4 className="truncate text-sm font-semibold text-gray-950">
@@ -190,6 +232,7 @@ export function MaterialLibraryModal({
                           alt={material.name}
                           className="h-16 w-16 shrink-0"
                           compact
+                          placeholderContent={<span className="text-lg text-gray-400">+</span>}
                         />
                       </div>
                       {material.description && (
@@ -271,14 +314,14 @@ export function MaterialBadges({
         materials.map((material) => (
           <span
             key={material.id}
-            className="inline-flex items-center gap-1 rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
+            className="inline-flex max-w-full items-center gap-1 rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
           >
-            <span
-              className="h-2.5 w-2.5 rounded-full border border-gray-200"
-              style={{ backgroundColor: material.swatchHex }}
-              aria-hidden="true"
+            <MaterialSwatches
+              swatches={material.swatches}
+              fallback={material.swatchHex}
+              size="sm"
             />
-            {material.name}
+            <span className="truncate">{material.name}</span>
           </span>
         ))
       ) : (
@@ -286,6 +329,46 @@ export function MaterialBadges({
       )}
     </button>
   );
+}
+
+export function MaterialSwatches({
+  swatches,
+  fallback,
+  size = 'md',
+  className = '',
+}: {
+  swatches: string[];
+  fallback: string;
+  size?: 'sm' | 'md';
+  className?: string | undefined;
+}) {
+  const visibleSwatches = normalizeSwatches(swatches.length ? swatches : [fallback]);
+  const dotClassName = size === 'sm' ? 'h-2.5 w-2.5 rounded-full' : 'h-8 w-8 rounded-md shadow-sm';
+  const offsetClassName = size === 'sm' ? '-ml-1.5 first:ml-0' : '-ml-3 first:ml-0';
+
+  return (
+    <span className={`inline-flex shrink-0 items-center ${className}`}>
+      {visibleSwatches.map((swatch, index) => (
+        <span
+          key={`${swatch}-${index}`}
+          className={`${dotClassName} ${offsetClassName} border border-gray-200`}
+          style={{ backgroundColor: swatch }}
+          aria-hidden="true"
+        />
+      ))}
+    </span>
+  );
+}
+
+function normalizeSwatches(swatches: string[]) {
+  const valid = swatches.filter(isHexSwatch);
+  return (valid.length ? valid : [defaultSwatch])
+    .filter((swatch, index, array) => array.indexOf(swatch) === index)
+    .slice(0, 12);
+}
+
+function isHexSwatch(value: string) {
+  return /^#[0-9A-Fa-f]{6}$/.test(value);
 }
 
 const inputClassName =

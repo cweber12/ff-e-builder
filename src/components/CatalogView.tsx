@@ -7,6 +7,7 @@ import { useUpdateItem } from '../hooks/useItems';
 import type { RoomWithItems } from '../types';
 import { Button } from './primitives';
 import { ImageFrame } from './ImageFrame';
+import { MaterialSwatches } from './MaterialLibraryModal';
 
 type CatalogEntry = {
   item: Item & { color?: string | null; designer?: string | null };
@@ -358,10 +359,10 @@ export function CatalogPage({
                     key={material.id}
                     className="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
                   >
-                    <span
-                      className="h-3 w-3 rounded-full border border-gray-200"
-                      style={{ backgroundColor: material.swatchHex }}
-                      aria-hidden="true"
+                    <MaterialSwatches
+                      swatches={material.swatches}
+                      fallback={material.swatchHex}
+                      size="sm"
                     />
                     {material.name}
                   </span>

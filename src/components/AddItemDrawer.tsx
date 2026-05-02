@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
-import type { CreateItemInput } from '../lib/api';
+import type { CreateItemInput, CreateMaterialInput } from '../lib/api';
 import {
   itemFormSchema,
   parseMarkupPctInput,
@@ -12,14 +12,21 @@ import {
   type ItemFormValues,
 } from '../types';
 import { emptyToNull } from '../lib/textUtils';
+import type { Material } from '../types';
+import { MaterialSwatches } from './MaterialLibraryModal';
 import { Button, Drawer } from './primitives';
+
+export type AddItemMaterialSelection =
+  | { type: 'existing'; materialId: string }
+  | { type: 'new'; input: CreateMaterialInput };
 
 interface AddItemDrawerProps {
   open: boolean;
   roomName: string;
   existingCategories: string[];
+  existingMaterials?: Material[];
   onClose: () => void;
-  onSubmit: (input: CreateItemInput) => Promise<void> | void;
+  onSubmit: (input: CreateItemInput, materials: AddItemMaterialSelection[]) => Promise<void> | void;
 }
 
 const defaultValues: ItemFormValues = {
@@ -53,13 +60,18 @@ const typicalCategories = [
   'Hardware',
 ];
 
+const defaultSwatch = '#D9D4C8';
+
 export function AddItemDrawer({
   open,
   roomName,
   existingCategories,
+  existingMaterials = [],
   onClose,
   onSubmit,
 }: AddItemDrawerProps) {
+  const [materialName, setMaterialName] = useState('');
+  const [selectedMaterials, setSelectedMaterials] = useState<AddItemMaterialSelection[]>([]);
   const {
     register,
     handleSubmit,
@@ -80,29 +92,90 @@ export function AddItemDrawer({
   );
 
   useEffect(() => {
-    if (open) reset(defaultValues);
+    if (open) {
+      reset(defaultValues);
+      setMaterialName('');
+      setSelectedMaterials([]);
+    }
   }, [open, reset]);
+
+  const selectedMaterialIds = useMemo(
+    () =>
+      new Set(
+        selectedMaterials
+          .filter(
+            (material): material is { type: 'existing'; materialId: string } =>
+              material.type === 'existing',
+          )
+          .map((material) => material.materialId),
+      ),
+    [selectedMaterials],
+  );
+
+  const addMaterial = () => {
+    const name = materialName.trim();
+    if (!name) return;
+
+    const existing = existingMaterials.find(
+      (material) => material.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (existing) {
+      if (!selectedMaterialIds.has(existing.id)) {
+        setSelectedMaterials((current) => [
+          ...current,
+          { type: 'existing', materialId: existing.id },
+        ]);
+      }
+    } else if (
+      !selectedMaterials.some(
+        (material) =>
+          material.type === 'new' && material.input.name.toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      setSelectedMaterials((current) => [
+        ...current,
+        {
+          type: 'new',
+          input: {
+            name,
+            swatchHex: defaultSwatch,
+            swatches: [defaultSwatch],
+          },
+        },
+      ]);
+    }
+    setMaterialName('');
+  };
+
+  const removeMaterial = (index: number) => {
+    setSelectedMaterials((current) =>
+      current.filter((_material, materialIndex) => materialIndex !== index),
+    );
+  };
 
   const submit = handleSubmit(async (values) => {
     const qty = parseQtyInput(values.qty) ?? 1;
     const unitCostDollars = parseUnitCostDollarsInput(values.unitCost) ?? 0;
     const markupPct = parseMarkupPctInput(values.markupPct) ?? 0;
 
-    await onSubmit({
-      itemName: values.itemName.trim(),
-      category: emptyToNull(values.category),
-      itemIdTag: emptyToNull(values.itemIdTag),
-      vendor: emptyToNull(values.vendor),
-      dimensions: emptyToNull(values.dimensions),
-      seatHeight: emptyToNull(values.seatHeight),
-      qty,
-      unitCostCents: unitCostDollarsToCents(unitCostDollars),
-      markupPct,
-      finishes: emptyToNull(values.finishes),
-      notes: emptyToNull(values.notes),
-      imageUrl: emptyToNull(values.imageUrl),
-      linkUrl: emptyToNull(values.linkUrl),
-    });
+    await onSubmit(
+      {
+        itemName: values.itemName.trim(),
+        category: emptyToNull(values.category),
+        itemIdTag: emptyToNull(values.itemIdTag),
+        vendor: emptyToNull(values.vendor),
+        dimensions: emptyToNull(values.dimensions),
+        seatHeight: emptyToNull(values.seatHeight),
+        qty,
+        unitCostCents: unitCostDollarsToCents(unitCostDollars),
+        markupPct,
+        finishes: emptyToNull(values.finishes),
+        notes: emptyToNull(values.notes),
+        imageUrl: emptyToNull(values.imageUrl),
+        linkUrl: emptyToNull(values.linkUrl),
+      },
+      selectedMaterials,
+    );
     onClose();
   });
 
@@ -176,6 +249,74 @@ export function AddItemDrawer({
 
         <Field label="Finishes" error={errors.finishes?.message}>
           <textarea {...register('finishes')} rows={3} className={inputClassName} />
+        </Field>
+
+        <Field label="Materials">
+          <div className="flex gap-2">
+            <input
+              value={materialName}
+              list="item-material-options"
+              onChange={(event) => setMaterialName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  addMaterial();
+                }
+              }}
+              className={inputClassName}
+            />
+            <datalist id="item-material-options">
+              {existingMaterials.map((material) => (
+                <option key={material.id} value={material.name} />
+              ))}
+            </datalist>
+            <Button type="button" variant="secondary" onClick={addMaterial}>
+              Add
+            </Button>
+          </div>
+          {selectedMaterials.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selectedMaterials.map((selection, index) => {
+                const material =
+                  selection.type === 'existing'
+                    ? existingMaterials.find((candidate) => candidate.id === selection.materialId)
+                    : undefined;
+                const name =
+                  material?.name ?? (selection.type === 'new' ? selection.input.name : '');
+                const swatches =
+                  material?.swatches ??
+                  (selection.type === 'new' ? (selection.input.swatches ?? []) : []);
+                const fallback =
+                  material?.swatchHex ??
+                  (selection.type === 'new'
+                    ? (selection.input.swatchHex ?? defaultSwatch)
+                    : defaultSwatch);
+
+                return (
+                  <span
+                    key={`${selection.type}-${name}-${index}`}
+                    className="inline-flex items-center gap-1.5 rounded-pill border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700"
+                  >
+                    <MaterialSwatches swatches={swatches} fallback={fallback} size="sm" />
+                    <span>{name}</span>
+                    {selection.type === 'new' && (
+                      <span className="rounded-pill bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-700">
+                        New
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="rounded-sm px-1 text-gray-400 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                      onClick={() => removeMaterial(index)}
+                      aria-label={`Remove ${name}`}
+                    >
+                      x
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </Field>
 
         <Field label="Notes" error={errors.notes?.message}>

@@ -66,7 +66,27 @@ router.get('/:id/items', async (c) => {
     SELECT
       i.*,
       COALESCE(
-        json_agg(m.* ORDER BY im.sort_order, lower(m.name))
+        json_agg(
+          json_build_object(
+            'id', m.id,
+            'project_id', m.project_id,
+            'name', m.name,
+            'material_id', m.material_id,
+            'description', m.description,
+            'swatch_hex', m.swatch_hex,
+            'swatches', COALESCE(
+              (
+                SELECT array_agg(ms.swatch_hex ORDER BY ms.sort_order)
+                FROM material_swatches ms
+                WHERE ms.material_id = m.id
+              ),
+              ARRAY[m.swatch_hex]
+            ),
+            'created_at', m.created_at,
+            'updated_at', m.updated_at
+          )
+          ORDER BY im.sort_order, lower(m.name)
+        )
           FILTER (WHERE m.id IS NOT NULL),
         '[]'::json
       ) AS materials

@@ -167,6 +167,14 @@ erDiagram
     timestamptz updated_at
   }
 
+  MATERIAL_SWATCHES {
+    uuid id PK
+    uuid material_id FK
+    text swatch_hex
+    int sort_order
+    timestamptz created_at
+  }
+
   ITEM_MATERIALS {
     uuid item_id FK
     uuid material_id FK
@@ -180,6 +188,7 @@ erDiagram
   ROOMS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ IMAGE_ASSETS : can_have
   PROJECTS ||--o{ MATERIALS : has
+  MATERIALS ||--o{ MATERIAL_SWATCHES : has
   MATERIALS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ ITEM_MATERIALS : uses
   MATERIALS ||--o{ ITEM_MATERIALS : assigned_to

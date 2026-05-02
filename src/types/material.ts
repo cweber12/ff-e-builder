@@ -5,6 +5,7 @@ export type Material = {
   materialId: string;
   description: string;
   swatchHex: string;
+  swatches: string[];
   createdAt: string;
   updatedAt: string;
 };

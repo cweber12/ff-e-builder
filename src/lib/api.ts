@@ -93,6 +93,7 @@ interface RawMaterial {
   material_id: string;
   description: string;
   swatch_hex: string;
+  swatches?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -167,6 +168,7 @@ const mapMaterial = (r: RawMaterial): Material => ({
   materialId: r.material_id,
   description: r.description,
   swatchHex: r.swatch_hex,
+  swatches: r.swatches?.length ? r.swatches : [r.swatch_hex],
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -253,6 +255,7 @@ export type CreateMaterialInput = {
   materialId?: string;
   description?: string;
   swatchHex?: string;
+  swatches?: string[];
 };
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
@@ -472,6 +475,7 @@ export const api = {
           material_id: input.materialId ?? '',
           description: input.description ?? '',
           swatch_hex: input.swatchHex ?? '#D9D4C8',
+          swatches: input.swatches,
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -483,6 +487,7 @@ export const api = {
           material_id: patch.materialId,
           description: patch.description,
           swatch_hex: patch.swatchHex,
+          swatches: patch.swatches,
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -503,6 +508,7 @@ export const api = {
           material_id: input.materialId ?? '',
           description: input.description ?? '',
           swatch_hex: input.swatchHex ?? '#D9D4C8',
+          swatches: input.swatches,
         }),
       }).then((r) => mapMaterial(r.material)),
 

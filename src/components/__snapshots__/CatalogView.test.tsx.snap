@@ -125,10 +125,19 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             class="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
           >
             <span
-              aria-hidden="true"
-              class="h-3 w-3 rounded-full border border-gray-200"
-              style="background-color: rgb(232, 226, 214);"
-            />
+              class="inline-flex shrink-0 items-center "
+            >
+              <span
+                aria-hidden="true"
+                class="h-2.5 w-2.5 rounded-full -ml-1.5 first:ml-0 border border-gray-200"
+                style="background-color: rgb(232, 226, 214);"
+              />
+              <span
+                aria-hidden="true"
+                class="h-2.5 w-2.5 rounded-full -ml-1.5 first:ml-0 border border-gray-200"
+                style="background-color: rgb(201, 191, 175);"
+              />
+            </span>
             Ivory boucle
           </span>
         </div>

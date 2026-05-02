@@ -16,6 +16,41 @@ import {
 import { getDb } from '../lib/db';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
+const defaultSwatch = '#D9D4C8';
+
+type Sql = ReturnType<typeof getDb>;
+type MaterialRow = { id: string; swatch_hex: string };
+
+function normalizeSwatches(swatches: string[] | undefined, swatchHex: string | undefined) {
+  const candidates = swatches?.length ? swatches : [swatchHex ?? defaultSwatch];
+  return candidates.filter((swatch, index) => candidates.indexOf(swatch) === index).slice(0, 12);
+}
+
+async function setMaterialSwatches(sql: Sql, materialId: string, swatches: string[]) {
+  await sql`DELETE FROM material_swatches WHERE material_id = ${materialId}`;
+  for (const [index, swatch] of swatches.entries()) {
+    await sql`
+      INSERT INTO material_swatches (material_id, swatch_hex, sort_order)
+      VALUES (${materialId}, ${swatch}, ${index})
+    `;
+  }
+}
+
+async function selectMaterialById(sql: Sql, materialId: string) {
+  const rows = await sql`
+    SELECT
+      m.*,
+      COALESCE(
+        array_agg(ms.swatch_hex ORDER BY ms.sort_order) FILTER (WHERE ms.id IS NOT NULL),
+        ARRAY[m.swatch_hex]
+      ) AS swatches
+    FROM materials m
+    LEFT JOIN material_swatches ms ON ms.material_id = m.id
+    WHERE m.id = ${materialId}
+    GROUP BY m.id
+  `;
+  return rows[0];
+}
 
 router.get('/projects/:projectId/materials', async (c) => {
   const uid = c.get('uid');
@@ -29,10 +64,17 @@ router.get('/projects/:projectId/materials', async (c) => {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    SELECT *
-    FROM materials
-    WHERE project_id = ${projectId}
-    ORDER BY lower(name), created_at
+    SELECT
+      m.*,
+      COALESCE(
+        array_agg(ms.swatch_hex ORDER BY ms.sort_order) FILTER (WHERE ms.id IS NOT NULL),
+        ARRAY[m.swatch_hex]
+      ) AS swatches
+    FROM materials m
+    LEFT JOIN material_swatches ms ON ms.material_id = m.id
+    WHERE m.project_id = ${projectId}
+    GROUP BY m.id
+    ORDER BY lower(m.name), m.created_at
   `;
   return c.json({ materials: rows });
 });
@@ -51,6 +93,7 @@ router.post('/projects/:projectId/materials', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
   const rows = await sql`
     INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
     VALUES (
@@ -58,7 +101,7 @@ router.post('/projects/:projectId/materials', async (c) => {
       ${parsed.data.name},
       ${parsed.data.material_id},
       ${parsed.data.description},
-      ${parsed.data.swatch_hex}
+      ${swatches[0] ?? defaultSwatch}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
@@ -67,7 +110,9 @@ router.post('/projects/:projectId/materials', async (c) => {
       swatch_hex = EXCLUDED.swatch_hex
     RETURNING *
   `;
-  return c.json({ material: rows[0] }, 201);
+  const material = rows[0] as MaterialRow;
+  await setMaterialSwatches(sql, material.id, swatches);
+  return c.json({ material: await selectMaterialById(sql, material.id) }, 201);
 });
 
 router.patch('/materials/:id', async (c) => {
@@ -84,18 +129,25 @@ router.patch('/materials/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const currentRows = await sql`SELECT swatch_hex FROM materials WHERE id = ${id}`;
+  const currentSwatch = (currentRows[0] as { swatch_hex?: string } | undefined)?.swatch_hex;
+  const swatches =
+    parsed.data.swatches !== undefined || parsed.data.swatch_hex !== undefined
+      ? normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex ?? currentSwatch)
+      : undefined;
   const rows = await sql`
     UPDATE materials
     SET
       name = COALESCE(${parsed.data.name ?? null}, name),
       material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
       description = COALESCE(${parsed.data.description ?? null}, description),
-      swatch_hex = COALESCE(${parsed.data.swatch_hex ?? null}, swatch_hex)
+      swatch_hex = COALESCE(${swatches?.[0] ?? null}, swatch_hex)
     WHERE id = ${id}
     RETURNING *
   `;
   if (!rows[0]) return c.json({ error: 'Not found' }, 404);
-  return c.json({ material: rows[0] });
+  if (swatches) await setMaterialSwatches(sql, id, swatches);
+  return c.json({ material: await selectMaterialById(sql, id) });
 });
 
 router.delete('/materials/:id', async (c) => {
@@ -145,13 +197,9 @@ router.post('/items/:itemId/materials', async (c) => {
     VALUES (${itemId}, ${parsed.data.material_id}, ${nextSortOrder})
     ON CONFLICT (item_id, material_id) DO NOTHING
   `;
-  const rows = await sql`
-    SELECT *
-    FROM materials
-    WHERE id = ${parsed.data.material_id}
-  `;
+  const material = await selectMaterialById(sql, parsed.data.material_id);
   await assertItemOwnership(c.env, itemId, uid);
-  return c.json({ material: rows[0] }, 201);
+  return c.json({ material }, 201);
 });
 
 router.post('/items/:itemId/materials/new', async (c) => {
@@ -169,6 +217,7 @@ router.post('/items/:itemId/materials/new', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
   const materialRows = await sql`
     INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
     VALUES (
@@ -176,7 +225,7 @@ router.post('/items/:itemId/materials/new', async (c) => {
       ${parsed.data.name},
       ${parsed.data.material_id},
       ${parsed.data.description},
-      ${parsed.data.swatch_hex}
+      ${swatches[0] ?? defaultSwatch}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
@@ -186,6 +235,7 @@ router.post('/items/:itemId/materials/new', async (c) => {
     RETURNING *
   `;
   const material = materialRows[0] as { id: string };
+  await setMaterialSwatches(sql, material.id, swatches);
   const maxRows = await sql`
     SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort_order
     FROM item_materials
@@ -197,7 +247,7 @@ router.post('/items/:itemId/materials/new', async (c) => {
     VALUES (${itemId}, ${material.id}, ${nextSortOrder})
     ON CONFLICT (item_id, material_id) DO NOTHING
   `;
-  return c.json({ material: materialRows[0] }, 201);
+  return c.json({ material: await selectMaterialById(sql, material.id) }, 201);
 });
 
 router.delete('/items/:itemId/materials/:materialId', async (c) => {
