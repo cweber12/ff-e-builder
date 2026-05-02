@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../types';
+import { exportCatalogPdf, exportCatalogItemPdf } from '../lib/exportUtils';
 import type { RoomWithItems } from './ItemsTable';
 import { Button } from './primitives';
 
@@ -51,6 +52,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         rooms={rooms}
         currentIndex={pageIndex}
         total={entries.length}
+        currentItemId={entry?.item.id}
         onPageChange={setPage}
       />
 
@@ -83,22 +85,24 @@ function CatalogNav({
   rooms,
   currentIndex,
   total,
+  currentItemId,
   onPageChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
   currentIndex: number;
   total: number;
+  currentItemId: string | undefined;
   onPageChange: (index: number) => void;
 }) {
   let itemIndex = 0;
 
   return (
-    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 flex max-w-5xl items-center justify-between gap-3 border-b border-gray-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
+    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
       <Link to="/" className="text-sm font-medium text-brand-600 hover:text-brand-700">
         FF&amp;E Builder
       </Link>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           variant="secondary"
@@ -140,9 +144,21 @@ function CatalogNav({
         >
           Next
         </Button>
-        <Button type="button" onClick={() => window.print()}>
-          Print / Save as PDF
+        <Button type="button" variant="secondary" onClick={() => window.print()}>
+          Print
         </Button>
+        <Button type="button" onClick={() => exportCatalogPdf(project, rooms)}>
+          Export PDF
+        </Button>
+        {currentItemId && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => exportCatalogItemPdf(project, rooms, currentItemId)}
+          >
+            Export this item
+          </Button>
+        )}
       </div>
       <span className="text-sm text-gray-700">
         {currentIndex + 1} of {total}

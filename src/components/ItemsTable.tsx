@@ -43,21 +43,26 @@ import {
   unitCostDollarsToCents,
   type Item,
   type ItemStatus,
+  type Project,
   type Room,
 } from '../types';
 import type { UpdateItemInput } from '../lib/api';
+import { exportTableCsv, exportTableExcel, exportTablePdf } from '../lib/exportUtils';
 import { StatusBadge } from './primitives/StatusBadge';
 import { Button } from './primitives/Button';
 import { InlineTextEdit } from './primitives/InlineTextEdit';
 import { InlineNumberEdit } from './primitives/InlineNumberEdit';
 import { Modal } from './primitives/Modal';
 import { AddItemDrawer } from './AddItemDrawer';
+import { ExportMenu } from './ExportMenu';
+import { ImportExcelModal } from './ImportExcelModal';
 
 export type RoomWithItems = Room & { items: Item[] };
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
   projectId: string;
+  project?: Project;
   isLoading?: boolean | undefined;
   error?: Error | null;
   onReload?: (() => void) | undefined;
@@ -890,6 +895,7 @@ function RoomItemsSection({
   room,
   rooms,
   projectId,
+  project,
   collapsed,
   onToggle,
   onDeleteRoom,
@@ -897,6 +903,7 @@ function RoomItemsSection({
   room: RoomWithItems;
   rooms: RoomWithItems[];
   projectId: string;
+  project?: Project;
   collapsed: boolean;
   onToggle: () => void;
   onDeleteRoom: (room: RoomWithItems) => void;
@@ -1045,6 +1052,15 @@ function RoomItemsSection({
           {formatMoney(cents(subtotal))}
         </span>
         <div className="flex items-center gap-2">
+          {project && (
+            <ExportMenu
+              label="Export"
+              size="sm"
+              onCsv={() => exportTableCsv(project, rooms, room)}
+              onExcel={() => exportTableExcel(project, rooms, room)}
+              onPdf={() => exportTablePdf(project, rooms, room)}
+            />
+          )}
           <Button type="button" variant="secondary" onClick={() => setAddDrawerOpen(true)}>
             Add item
           </Button>
@@ -1125,6 +1141,7 @@ function RoomItemsSection({
 export function ItemsTableView({
   roomsWithItems,
   projectId,
+  project,
   isLoading = false,
   error = null,
   onReload,
@@ -1132,16 +1149,19 @@ export function ItemsTableView({
 }: {
   roomsWithItems: RoomWithItems[];
   projectId: string;
+  project?: Project;
   isLoading?: boolean | undefined;
   error?: Error | null;
   onReload?: (() => void) | undefined;
   className?: string | undefined;
 }) {
+  const queryClient = useQueryClient();
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
   const createRoom = useCreateRoom(projectId);
   const deleteRoom = useDeleteRoom(projectId);
   const moveItem = useMoveItem();
   const [addRoomOpen, setAddRoomOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState<RoomWithItems | null>(null);
   const sortedRooms = useMemo(
     () =>
@@ -1169,12 +1189,27 @@ export function ItemsTableView({
 
   return (
     <div className={cn('relative flex flex-col gap-4 pb-16', className)}>
+      {project && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <ExportMenu
+            label="Export all"
+            size="md"
+            onCsv={() => exportTableCsv(project, sortedRooms)}
+            onExcel={() => exportTableExcel(project, sortedRooms)}
+            onPdf={() => exportTablePdf(project, sortedRooms)}
+          />
+          <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
+            Import from Excel
+          </Button>
+        </div>
+      )}
       {sortedRooms.map((room) => (
         <RoomItemsSection
           key={room.id}
           room={room}
           rooms={sortedRooms}
           projectId={projectId}
+          {...(project !== undefined ? { project } : {})}
           collapsed={collapsed[room.id] ?? false}
           onToggle={() => toggle(room.id)}
           onDeleteRoom={setRoomToDelete}
@@ -1232,6 +1267,19 @@ export function ItemsTableView({
           }
         }}
       />
+
+      {project && (
+        <ImportExcelModal
+          open={importOpen}
+          projectId={projectId}
+          rooms={sortedRooms}
+          onClose={() => setImportOpen(false)}
+          onSuccess={() => {
+            setImportOpen(false);
+            void queryClient.invalidateQueries();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1245,6 +1293,7 @@ export function ItemsTable(props: ItemsTableProps) {
       <ItemsTableView
         roomsWithItems={props.roomsWithItems}
         projectId={props.projectId}
+        {...(props.project !== undefined ? { project: props.project } : {})}
         isLoading={props.isLoading}
         error={props.error ?? null}
         onReload={props.onReload ?? reload}

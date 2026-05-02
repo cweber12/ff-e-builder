@@ -1,8 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { ProjectHeader } from './ProjectHeader';
 import type { Project } from '../types';
+import type { ReactElement } from 'react';
+
+const renderWithRouter = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 const makeProject = (overrides?: Partial<Project>): Project => ({
   id: 'proj-1',
@@ -32,7 +36,7 @@ describe('ProjectHeader', () => {
   });
 
   it('renders project name and client name', () => {
-    render(
+    renderWithRouter(
       <ProjectHeader
         project={makeProject()}
         actualCents={18_742_00}
@@ -46,7 +50,7 @@ describe('ProjectHeader', () => {
   });
 
   it('renders three budget values formatted as currency', () => {
-    render(
+    renderWithRouter(
       <ProjectHeader
         project={makeProject({ budgetCents: 25_000_000 })}
         actualCents={18_742_000}
@@ -64,7 +68,7 @@ describe('ProjectHeader', () => {
   });
 
   it('shows red color when over budget', () => {
-    const { container } = render(
+    const { container } = renderWithRouter(
       <ProjectHeader
         project={makeProject({ budgetCents: 10_000_000 })}
         actualCents={15_000_000} // $150k actual on $100k budget
@@ -79,7 +83,7 @@ describe('ProjectHeader', () => {
   });
 
   it('shows warning icon when over budget', () => {
-    render(
+    renderWithRouter(
       <ProjectHeader
         project={makeProject({ budgetCents: 10_000_000 })}
         actualCents={12_000_000}
@@ -92,7 +96,7 @@ describe('ProjectHeader', () => {
   });
 
   it('shows "Set budget" CTA when budget is zero', () => {
-    render(
+    renderWithRouter(
       <ProjectHeader
         project={makeProject({ budgetCents: 0 })}
         actualCents={0}
@@ -107,7 +111,7 @@ describe('ProjectHeader', () => {
   it('calls onNameSave with new value when edited', async () => {
     const user = userEvent.setup();
     const onNameSave = vi.fn().mockResolvedValue(undefined);
-    render(
+    renderWithRouter(
       <ProjectHeader
         project={makeProject()}
         actualCents={0}

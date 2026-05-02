@@ -235,13 +235,6 @@ function ProjectLayout() {
                   </NavLink>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => exportProjectCsv(project, roomsWithItems)}
-                className="shrink-0 rounded-md border border-brand-500 bg-white px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                Export CSV
-              </button>
             </div>
           </nav>
           <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
@@ -255,7 +248,7 @@ function ProjectLayout() {
 
 function ProjectTableRoute() {
   const { project, roomsWithItems } = useProjectContext();
-  return <ItemsTable projectId={project.id} roomsWithItems={roomsWithItems} />;
+  return <ItemsTable projectId={project.id} project={project} roomsWithItems={roomsWithItems} />;
 }
 
 function ProjectCatalogRoute() {
@@ -298,49 +291,6 @@ function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
       </div>
     </div>
   );
-}
-
-function exportProjectCsv(project: Project, roomsWithItems: RoomWithItems[]) {
-  const rows = [
-    [
-      'Project',
-      'Room',
-      'Item ID',
-      'Item',
-      'Category',
-      'Vendor',
-      'Qty',
-      'Unit Cost Cents',
-      'Markup %',
-      'Status',
-    ],
-    ...roomsWithItems.flatMap((room) =>
-      room.items.map((item) => [
-        project.name,
-        room.name,
-        item.itemIdTag ?? '',
-        item.itemName,
-        item.category ?? '',
-        item.vendor ?? '',
-        String(item.qty),
-        String(item.unitCostCents),
-        String(item.markupPct),
-        item.status,
-      ]),
-    ),
-  ];
-  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-items.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function csvCell(value: string) {
-  return `"${value.replace(/"/g, '""')}"`;
 }
 
 function NotFound() {

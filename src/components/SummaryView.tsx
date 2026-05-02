@@ -1,6 +1,8 @@
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/calc';
 import { cents, formatMoney, itemStatuses, type Item, type Project } from '../types';
+import { exportSummaryCsv, exportSummaryExcel, exportSummaryPdf } from '../lib/exportUtils';
 import type { RoomWithItems } from './ItemsTable';
+import { ExportMenu } from './ExportMenu';
 import { StatusBadge } from './primitives';
 
 type SummaryViewProps = {
@@ -23,6 +25,16 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <ExportMenu
+          label="Export"
+          size="md"
+          onCsv={() => exportSummaryCsv(project, roomsWithItems)}
+          onExcel={() => exportSummaryExcel(project, roomsWithItems)}
+          onPdf={() => exportSummaryPdf(project, roomsWithItems)}
+        />
+      </div>
+
       <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

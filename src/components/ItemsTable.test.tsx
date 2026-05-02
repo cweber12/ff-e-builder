@@ -34,6 +34,17 @@ vi.mock('../hooks/useItems', () => ({
 vi.mock('../hooks/useRooms', () => ({
   useCreateRoom: () => ({ mutateAsync: mockCreateRoomMutateAsync }),
   useDeleteRoom: () => ({ mutateAsync: mockDeleteRoomMutateAsync }),
+  useUpdateRoom: () => ({ mutateAsync: vi.fn() }),
+}));
+
+vi.mock('../lib/exportUtils', () => ({
+  exportTableCsv: vi.fn(),
+  exportTableExcel: vi.fn(),
+  exportTablePdf: vi.fn(),
+}));
+
+vi.mock('./ImportExcelModal', () => ({
+  ImportExcelModal: () => null,
 }));
 
 const makeRoom = (overrides: Partial<Room> = {}): Room => ({
