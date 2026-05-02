@@ -1,4 +1,4 @@
-import { auth } from './auth';
+import { getCurrentIdToken } from './auth';
 import type {
   ImageAsset,
   ImageEntityType,
@@ -265,7 +265,7 @@ export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const buildAuthHeaders = async (init: RequestInit): Promise<Headers> => {
-  const token = await auth.currentUser?.getIdToken(false);
+  const token = await getCurrentIdToken();
 
   const headers = new Headers(init.headers);
   if (init.body !== undefined && !(init.body instanceof FormData)) {

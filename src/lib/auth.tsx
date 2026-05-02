@@ -26,6 +26,13 @@ if (getApps().length === 0) {
 
 export const auth = getAuth();
 
+export async function getCurrentIdToken(): Promise<string | undefined> {
+  if ('authStateReady' in auth && typeof auth.authStateReady === 'function') {
+    await auth.authStateReady();
+  }
+  return auth.currentUser?.getIdToken(false);
+}
+
 // ─── Auth actions ─────────────────────────────────────────────────────────
 
 export const signInWithGoogle = async (): Promise<{ isNewUser: boolean }> => {
