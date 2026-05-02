@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/cn';
-import { formatMoney, dollarsToCents } from '../types';
+import { formatMoney, dollarsToCents, cents } from '../types';
 import type { Project } from '../types';
 import { InlineTextEdit } from './primitives/InlineTextEdit';
 import { InlineNumberEdit } from './primitives/InlineNumberEdit';
@@ -38,10 +38,11 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
   const [expanded, setExpanded] = useState(true);
   const remainingCents = budgetCents - actualCents;
 
+  const BUDGET_WARNING_PCT = 0.1;
   const remainingColor =
     remainingCents < 0
       ? 'text-red-300'
-      : remainingCents < budgetCents * 0.1
+      : remainingCents < budgetCents * BUDGET_WARNING_PCT
         ? 'text-yellow-300'
         : 'text-white';
 
@@ -95,7 +96,7 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
               <InlineNumberEdit
                 value={budgetCents / 100}
                 onSave={(dollars) => onBudgetSave(dollarsToCents(dollars))}
-                formatter={(d) => formatMoney((d * 100) as Parameters<typeof formatMoney>[0])}
+                formatter={(d) => formatMoney(cents(d * 100))}
                 aria-label="Project budget"
                 className="text-white"
               />
@@ -103,9 +104,7 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
           </div>
           <div className="flex items-center gap-3">
             <dt className="w-16 text-white/80 md:w-20 md:text-right">Actual</dt>
-            <dd className="font-medium text-white">
-              {formatMoney(actualCents as Parameters<typeof formatMoney>[0])}
-            </dd>
+            <dd className="font-medium text-white">{formatMoney(cents(actualCents))}</dd>
           </div>
           <div className="flex items-center gap-3">
             <dt className="w-16 text-white/80 md:w-20 md:text-right">Remaining</dt>
@@ -125,7 +124,7 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
                   />
                 </svg>
               )}
-              {formatMoney(Math.abs(remainingCents) as Parameters<typeof formatMoney>[0])}
+              {formatMoney(cents(Math.abs(remainingCents)))}
               {remainingCents < 0 && ' over'}
             </dd>
           </div>

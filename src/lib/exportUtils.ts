@@ -2,13 +2,14 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { lineTotalCents, roomSubtotalCents, projectTotalCents, sellPriceCents } from './calc';
+import { BRAND_RGB } from './constants';
 import { cents, formatMoney } from '../types';
 import type { Item, Project } from '../types';
 import type { RoomWithItems } from '../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const BRAND: [number, number, number] = [26, 107, 74];
+const BRAND = BRAND_RGB;
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -78,6 +79,29 @@ function sortedItems(room: RoomWithItems): Item[] {
   );
 }
 
+function buildStatusBreakdown(items: Item[]): Map<string, { count: number; total: number }> {
+  const map = new Map<string, { count: number; total: number }>();
+  for (const item of items) {
+    const entry = map.get(item.status) ?? { count: 0, total: 0 };
+    entry.count += 1;
+    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
+    map.set(item.status, entry);
+  }
+  return map;
+}
+
+function buildVendorBreakdown(items: Item[]): Map<string, { count: number; total: number }> {
+  const map = new Map<string, { count: number; total: number }>();
+  for (const item of items) {
+    const vendor = item.vendor?.trim() || 'Unassigned';
+    const entry = map.get(vendor) ?? { count: 0, total: 0 };
+    entry.count += 1;
+    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
+    map.set(vendor, entry);
+  }
+  return map;
+}
+
 // ─── CSV ──────────────────────────────────────────────────────────────────────
 
 function csvCell(v: string): string {
@@ -118,13 +142,7 @@ export function exportSummaryCsv(project: Project, rooms: RoomWithItems[]): void
     fmtMoney(roomSubtotalCents(r.items)),
   ]);
 
-  const statusMap = new Map<string, { count: number; total: number }>();
-  for (const item of allItems) {
-    const entry = statusMap.get(item.status) ?? { count: 0, total: 0 };
-    entry.count += 1;
-    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    statusMap.set(item.status, entry);
-  }
+  const statusMap = buildStatusBreakdown(allItems);
 
   const sections: string[][] = [
     ['Summary:', project.name],
@@ -191,13 +209,7 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   const roomsWs = XLSX.utils.aoa_to_sheet([['Room', 'Items', 'Subtotal'], ...roomRows]);
   XLSX.utils.book_append_sheet(wb, roomsWs, 'Rooms');
 
-  const statusMap = new Map<string, { count: number; total: number }>();
-  for (const item of allItems) {
-    const entry = statusMap.get(item.status) ?? { count: 0, total: 0 };
-    entry.count += 1;
-    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    statusMap.set(item.status, entry);
-  }
+  const statusMap = buildStatusBreakdown(allItems);
   const statusRows = [...statusMap.entries()].map(([status, { count, total: t }]) => [
     status,
     count,
@@ -206,14 +218,7 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   const statusWs = XLSX.utils.aoa_to_sheet([['Status', 'Items', 'Total'], ...statusRows]);
   XLSX.utils.book_append_sheet(wb, statusWs, 'Status');
 
-  const vendorMap = new Map<string, { count: number; total: number }>();
-  for (const item of allItems) {
-    const vendor = item.vendor?.trim() || 'Unassigned';
-    const entry = vendorMap.get(vendor) ?? { count: 0, total: 0 };
-    entry.count += 1;
-    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    vendorMap.set(vendor, entry);
-  }
+  const vendorMap = buildVendorBreakdown(allItems);
   const vendorRows = [...vendorMap.entries()]
     .sort((a, b) => b[1].total - a[1].total)
     .map(([vendor, { count, total: t }]) => [vendor, count, fmtMoney(t)]);
@@ -369,13 +374,7 @@ export function exportSummaryPdf(project: Project, rooms: RoomWithItems[]): void
 
   y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
 
-  const statusMap = new Map<string, { count: number; total: number }>();
-  for (const item of allItems) {
-    const entry = statusMap.get(item.status) ?? { count: 0, total: 0 };
-    entry.count += 1;
-    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    statusMap.set(item.status, entry);
-  }
+  const statusMap = buildStatusBreakdown(allItems);
 
   autoTable(doc, {
     startY: y,

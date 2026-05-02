@@ -63,6 +63,9 @@ export function useUpdateRoom(projectId: string) {
         (old) => old?.map((r) => (r.id === updated.id ? updated : r)) ?? [],
       );
     },
+    onError: (err: Error) => {
+      toast.error(`Failed to update room: ${err.message}`);
+    },
   });
 }
 
