@@ -31,6 +31,7 @@ app.use('/api/v1/*', authMiddleware);
 
 // ─── Routes ───────────────────────────────────────────────────────────────
 app.route('/api/v1/projects', projectsRouter);
+app.route('/api/v1/projects', materialsRouter);
 app.route('/api/v1/rooms', roomsRouter);
 app.route('/api/v1/items', itemsRouter);
 app.route('/api/v1/images', imagesRouter);

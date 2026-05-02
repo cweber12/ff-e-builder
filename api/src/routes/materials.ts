@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { Env, HonoVariables } from '../types';
 import {
   AssignMaterialSchema,
@@ -19,6 +19,7 @@ const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 const defaultSwatch = '#D9D4C8';
 
 type Sql = ReturnType<typeof getDb>;
+type AppContext = Context<{ Bindings: Env; Variables: HonoVariables }>;
 type MaterialRow = { id: string; swatch_hex: string };
 
 function normalizeSwatches(swatches: string[] | undefined, swatchHex: string | undefined) {
@@ -52,7 +53,7 @@ async function selectMaterialById(sql: Sql, materialId: string) {
   return rows[0];
 }
 
-router.get('/projects/:projectId/materials', async (c) => {
+async function listProjectMaterials(c: AppContext) {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
 
@@ -77,9 +78,9 @@ router.get('/projects/:projectId/materials', async (c) => {
     ORDER BY lower(m.name), m.created_at
   `;
   return c.json({ materials: rows });
-});
+}
 
-router.post('/projects/:projectId/materials', async (c) => {
+async function createProjectMaterial(c: AppContext) {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
   const body = await c.req.json<unknown>().catch(() => null);
@@ -113,7 +114,12 @@ router.post('/projects/:projectId/materials', async (c) => {
   const material = rows[0] as MaterialRow;
   await setMaterialSwatches(sql, material.id, swatches);
   return c.json({ material: await selectMaterialById(sql, material.id) }, 201);
-});
+}
+
+router.get('/:projectId/materials', listProjectMaterials);
+router.get('/projects/:projectId/materials', listProjectMaterials);
+router.post('/:projectId/materials', createProjectMaterial);
+router.post('/projects/:projectId/materials', createProjectMaterial);
 
 router.patch('/materials/:id', async (c) => {
   const uid = c.get('uid');

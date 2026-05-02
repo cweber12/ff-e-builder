@@ -430,7 +430,7 @@ describe('ItemsTable', () => {
 
     await user.type(within(drawer).getByLabelText('Item name'), 'Accent Chair');
     await user.type(within(drawer).getByLabelText('Materials'), 'Ivory boucle');
-    await user.click(within(drawer).getByRole('button', { name: 'Add' }));
+    await user.click(within(drawer).getByRole('button', { name: 'Select' }));
     await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
 
     expect(mockCreateItemMutateAsync).toHaveBeenCalledWith(
@@ -444,6 +444,19 @@ describe('ItemsTable', () => {
         swatches: ['#D9D4C8'],
       },
     });
+  });
+
+  it('opens the project material form from the add item drawer', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await openLivingRoomActions(user);
+    await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
+    const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
+
+    await user.click(within(drawer).getByRole('button', { name: 'Add material' }));
+
+    expect(screen.getByRole('dialog', { name: 'Material library' })).toBeInTheDocument();
   });
 
   it('keeps the drawer open and validates before adding an item', async () => {

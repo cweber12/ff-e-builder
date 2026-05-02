@@ -174,6 +174,7 @@ router.post('/', async (c) => {
       projectId: context.projectId,
       entityType: parsed.data.entity_type,
       imageId,
+      materialId: context.materialId ?? '',
     },
   });
 

@@ -13,7 +13,7 @@ import {
 } from '../types';
 import { emptyToNull } from '../lib/textUtils';
 import type { Material } from '../types';
-import { MaterialSwatches } from './MaterialLibraryModal';
+import { MaterialLibraryModal, MaterialSwatches } from './MaterialLibraryModal';
 import { Button, Drawer } from './primitives';
 
 export type AddItemMaterialSelection =
@@ -22,6 +22,8 @@ export type AddItemMaterialSelection =
 
 interface AddItemDrawerProps {
   open: boolean;
+  projectId: string;
+  roomId: string;
   roomName: string;
   existingCategories: string[];
   existingMaterials?: Material[];
@@ -64,6 +66,8 @@ const defaultSwatch = '#D9D4C8';
 
 export function AddItemDrawer({
   open,
+  projectId,
+  roomId,
   roomName,
   existingCategories,
   existingMaterials = [],
@@ -71,6 +75,7 @@ export function AddItemDrawer({
   onSubmit,
 }: AddItemDrawerProps) {
   const [materialName, setMaterialName] = useState('');
+  const [materialLibraryOpen, setMaterialLibraryOpen] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<AddItemMaterialSelection[]>([]);
   const {
     register,
@@ -95,6 +100,7 @@ export function AddItemDrawer({
     if (open) {
       reset(defaultValues);
       setMaterialName('');
+      setMaterialLibraryOpen(false);
       setSelectedMaterials([]);
     }
   }, [open, reset]);
@@ -252,7 +258,7 @@ export function AddItemDrawer({
         </Field>
 
         <Field label="Materials">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={materialName}
               list="item-material-options"
@@ -263,7 +269,7 @@ export function AddItemDrawer({
                   addMaterial();
                 }
               }}
-              className={inputClassName}
+              className={`${inputClassName} min-w-0 flex-1`}
             />
             <datalist id="item-material-options">
               {existingMaterials.map((material) => (
@@ -271,7 +277,10 @@ export function AddItemDrawer({
               ))}
             </datalist>
             <Button type="button" variant="secondary" onClick={addMaterial}>
-              Add
+              Select
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setMaterialLibraryOpen(true)}>
+              Add material
             </Button>
           </div>
           {selectedMaterials.length > 0 && (
@@ -340,6 +349,12 @@ export function AddItemDrawer({
           </Button>
         </div>
       </form>
+      <MaterialLibraryModal
+        open={materialLibraryOpen}
+        projectId={projectId}
+        roomId={roomId}
+        onClose={() => setMaterialLibraryOpen(false)}
+      />
     </Drawer>
   );
 }

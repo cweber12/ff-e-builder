@@ -98,4 +98,6 @@ pnpm migrate
 ```
 
 This applies `db/migrations/0002_image_assets.sql` and later image-related
-migrations such as `db/migrations/0003_material_library.sql`.
+migrations such as `db/migrations/0003_material_library.sql`. Material images
+require that migration because it adds the `image_assets.material_id` reference
+and material-specific primary-image index.

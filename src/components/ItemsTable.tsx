@@ -1332,6 +1332,8 @@ function RoomItemsSection({
 
       <AddItemDrawer
         open={addDrawerOpen}
+        projectId={projectId}
+        roomId={room.id}
         roomName={room.name}
         existingCategories={existingCategories}
         existingMaterials={projectMaterials.data ?? []}

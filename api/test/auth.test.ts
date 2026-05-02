@@ -137,6 +137,28 @@ describe('Ownership enforcement', () => {
     );
     expect(res.status).toBe(200);
   });
+
+  it('serves project-scoped materials from the project route mount', async () => {
+    mockGetDb.mockReturnValue(
+      makeMockSql([{ id: 'material-1', name: 'Ivory boucle' }]) as unknown as ReturnType<
+        typeof getDb
+      >,
+    );
+
+    const res = await app.request(
+      '/api/v1/projects/00000000-0000-0000-0000-000000000001/materials',
+      {
+        headers: {
+          Authorization: 'Bearer token-for-user-a',
+        },
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body: unknown = await res.json();
+    expect(body).toMatchObject({ materials: [{ id: 'material-1' }] });
+  });
 });
 
 // ─── Input validation tests ────────────────────────────────────────────────

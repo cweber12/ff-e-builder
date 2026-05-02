@@ -18,9 +18,10 @@ multiple items, and each item can have multiple materials.
 ## UI Flow
 
 - Open an item's material editor from the Materials cell in the table.
-- Add materials while creating an item from the Add Item drawer; existing
-  material names are reused, and new names are added to the project library and
-  assigned after the item is created.
+- Use the Materials tab to view and manage all library entries for the project.
+- Add materials while creating an item from the Add Item drawer. The drawer can
+  select existing material names and can open the same material library form used
+  by the table and Materials tab.
 - Assign existing library entries or add a new material and assign it in one
   step.
 - Edit material name, ID, description, and one or more swatches from the library

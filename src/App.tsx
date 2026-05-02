@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AuthGate, SignInPage } from './components/AuthGate';
 import { CatalogView } from './components/CatalogView';
 import { ItemsTable } from './components/ItemsTable';
+import { MaterialsView } from './components/MaterialsView';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ExportMenu } from './components/ExportMenu';
 import { ImportExcelModal } from './components/ImportExcelModal';
@@ -62,6 +63,7 @@ function App() {
           <Route index element={<Navigate to="table" replace />} />
           <Route path="table" element={<ProjectTableRoute />} />
           <Route path="catalog" element={<ProjectCatalogRoute />} />
+          <Route path="materials" element={<ProjectMaterialsRoute />} />
           <Route path="summary" element={<ProjectSummaryRoute />} />
         </Route>
       </Route>
@@ -203,6 +205,7 @@ function ProjectLayout() {
                   [
                     ['table', 'Table'],
                     ['catalog', 'Catalog'],
+                    ['materials', 'Materials'],
                     ['summary', 'Summary'],
                   ] as const
                 ).map(([to, label]) => (
@@ -311,6 +314,11 @@ function ProjectCatalogRoute() {
 function ProjectSummaryRoute() {
   const { project, roomsWithItems } = useProjectContext();
   return <SummaryView project={project} roomsWithItems={roomsWithItems} />;
+}
+
+function ProjectMaterialsRoute() {
+  const { project } = useProjectContext();
+  return <MaterialsView project={project} />;
 }
 
 function useProjectContext() {
