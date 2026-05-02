@@ -8,6 +8,7 @@ export interface Env {
   FIREBASE_ADMIN_PRIVATE_KEY: string;
   /** Neon serverless connection string — Worker secret */
   NEON_DATABASE_URL: string;
+  IMAGES_BUCKET: R2Bucket;
 }
 
 // ─── Hono context variables ────────────────────────────────────────────────
@@ -69,6 +70,24 @@ export interface Item {
   updated_at: string;
 }
 
+export type ImageEntityType = 'project' | 'room' | 'item';
+
+export interface ImageAsset {
+  id: string;
+  owner_uid: string;
+  project_id: string;
+  room_id: string | null;
+  item_id: string | null;
+  r2_key: string;
+  filename: string;
+  content_type: string;
+  byte_size: number;
+  alt_text: string;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Zod input schemas (co-located with types for easy import) ─────────────
 import { z } from 'zod';
 import { itemStatuses } from '../../src/types/itemValidation';
@@ -118,3 +137,14 @@ export const UpdateItemSchema = CreateItemSchema.partial().extend({
   version: z.number().int().nonnegative(),
 });
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
+
+export const ImageEntitySchema = z.object({
+  entity_type: z.enum(['project', 'room', 'item']),
+  entity_id: z.string().uuid(),
+});
+
+export const ImageUploadQuerySchema = ImageEntitySchema.extend({
+  alt_text: z.string().max(500).optional().default(''),
+});
+
+export const ImageListQuerySchema = ImageEntitySchema;

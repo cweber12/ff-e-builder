@@ -163,6 +163,20 @@ describe('Input validation', () => {
   });
 
   it('returns 201 on POST /projects with valid body', async () => {
+    mockGetDb.mockReturnValue(
+      makeMockSql([
+        {
+          id: '00000000-0000-0000-0000-000000000001',
+          owner_uid: 'user-123',
+          name: 'Ocean House',
+          client_name: '',
+          budget_cents: 500000,
+          created_at: '2026-05-01T00:00:00Z',
+          updated_at: '2026-05-01T00:00:00Z',
+        },
+      ]) as unknown as ReturnType<typeof getDb>,
+    );
+
     const res = await app.request(
       '/api/v1/projects',
       {

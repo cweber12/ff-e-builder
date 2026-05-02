@@ -5,6 +5,7 @@ import { authMiddleware } from './middleware/auth';
 import { projectsRouter } from './routes/projects';
 import { roomsRouter } from './routes/rooms';
 import { itemsRouter } from './routes/items';
+import { imagesRouter } from './routes/images';
 
 export const app = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -31,6 +32,7 @@ app.use('/api/v1/*', authMiddleware);
 app.route('/api/v1/projects', projectsRouter);
 app.route('/api/v1/rooms', roomsRouter);
 app.route('/api/v1/items', itemsRouter);
+app.route('/api/v1/images', imagesRouter);
 
 // ─── Fallback ─────────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ error: 'Not found' }, 404));

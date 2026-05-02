@@ -21,6 +21,23 @@ export async function assertProjectOwnership(
   if (rows.length === 0) throw new Error('not_found');
 }
 
+export async function getOwnedProjectContext(
+  env: Env,
+  projectId: string,
+  uid: string,
+): Promise<{ projectId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT id
+    FROM projects
+    WHERE id = ${projectId} AND owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { id?: string } | undefined;
+  if (!row?.id) throw new Error('not_found');
+  return { projectId: row.id };
+}
+
 /**
  * Asserts that the given user owns the project that contains the room.
  * Throws if no matching row is found.
@@ -35,6 +52,24 @@ export async function assertRoomOwnership(env: Env, roomId: string, uid: string)
     LIMIT 1
   `;
   if (rows.length === 0) throw new Error('not_found');
+}
+
+export async function getOwnedRoomContext(
+  env: Env,
+  roomId: string,
+  uid: string,
+): Promise<{ projectId: string; roomId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT r.id AS room_id, r.project_id
+    FROM rooms r
+    JOIN projects p ON r.project_id = p.id
+    WHERE r.id = ${roomId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { room_id?: string; project_id?: string } | undefined;
+  if (!row?.room_id || !row.project_id) throw new Error('not_found');
+  return { projectId: row.project_id, roomId: row.room_id };
 }
 
 /**
@@ -52,4 +87,23 @@ export async function assertItemOwnership(env: Env, itemId: string, uid: string)
     LIMIT 1
   `;
   if (rows.length === 0) throw new Error('not_found');
+}
+
+export async function getOwnedItemContext(
+  env: Env,
+  itemId: string,
+  uid: string,
+): Promise<{ projectId: string; roomId: string; itemId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT i.id AS item_id, i.room_id, r.project_id
+    FROM items i
+    JOIN rooms r ON i.room_id = r.id
+    JOIN projects p ON r.project_id = p.id
+    WHERE i.id = ${itemId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { item_id?: string; room_id?: string; project_id?: string } | undefined;
+  if (!row?.item_id || !row.room_id || !row.project_id) throw new Error('not_found');
+  return { projectId: row.project_id, roomId: row.room_id, itemId: row.item_id };
 }
