@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/cn';
 import { formatMoney, dollarsToCents } from '../types';
@@ -34,6 +35,7 @@ interface BudgetTrackerProps {
 }
 
 function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTrackerProps) {
+  const [expanded, setExpanded] = useState(true);
   const remainingCents = budgetCents - actualCents;
 
   const remainingColor =
@@ -56,48 +58,80 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
   }
 
   return (
-    <dl className="flex flex-col items-start gap-0.5 text-sm tabular-nums md:items-end">
-      <div className="flex items-center gap-3">
-        <dt className="w-16 text-white/80 md:w-20 md:text-right">Budget</dt>
-        <dd className="text-white font-medium">
-          <InlineNumberEdit
-            value={budgetCents / 100}
-            onSave={(dollars) => onBudgetSave(dollarsToCents(dollars))}
-            formatter={(d) => formatMoney((d * 100) as Parameters<typeof formatMoney>[0])}
-            aria-label="Project budget"
-            className="text-white"
+    <div className="relative flex flex-col items-start gap-2 md:items-end">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        aria-label={expanded ? 'Hide budget information' : 'Show budget information'}
+        onClick={() => setExpanded((open) => !open)}
+        className="inline-flex items-center gap-2 rounded-pill bg-white/12 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/18 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+      >
+        <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+          <path
+            d="M4 14.5V10m6 4.5v-9m6 9v-6"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
           />
-        </dd>
-      </div>
-      <div className="flex items-center gap-3">
-        <dt className="w-16 text-white/80 md:w-20 md:text-right">Actual</dt>
-        <dd className="text-white font-medium">
-          {formatMoney(actualCents as Parameters<typeof formatMoney>[0])}
-        </dd>
-      </div>
-      <div className="flex items-center gap-3">
-        <dt className="w-16 text-white/80 md:w-20 md:text-right">Remaining</dt>
-        <dd className={cn('font-medium flex items-center gap-1', remainingColor)}>
-          {remainingCents < 0 && (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="h-3.5 w-3.5 flex-shrink-0"
-              aria-label="Over budget"
-            >
-              <path
-                fillRule="evenodd"
-                d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 1 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-                clipRule="evenodd"
+          <path
+            d="M3 16h14"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
+        </svg>
+        <span>Budget</span>
+        <span aria-hidden="true" className="text-white/70">
+          {expanded ? '^' : 'v'}
+        </span>
+      </button>
+
+      {expanded && (
+        <dl className="flex flex-col items-start gap-0.5 rounded-md bg-brand-600/45 px-3 py-2 text-sm tabular-nums ring-1 ring-white/15 md:items-end">
+          <div className="flex items-center gap-3">
+            <dt className="w-16 text-white/80 md:w-20 md:text-right">Budget</dt>
+            <dd className="font-medium text-white">
+              <InlineNumberEdit
+                value={budgetCents / 100}
+                onSave={(dollars) => onBudgetSave(dollarsToCents(dollars))}
+                formatter={(d) => formatMoney((d * 100) as Parameters<typeof formatMoney>[0])}
+                aria-label="Project budget"
+                className="text-white"
               />
-            </svg>
-          )}
-          {formatMoney(Math.abs(remainingCents) as Parameters<typeof formatMoney>[0])}
-          {remainingCents < 0 && ' over'}
-        </dd>
-      </div>
-    </dl>
+            </dd>
+          </div>
+          <div className="flex items-center gap-3">
+            <dt className="w-16 text-white/80 md:w-20 md:text-right">Actual</dt>
+            <dd className="font-medium text-white">
+              {formatMoney(actualCents as Parameters<typeof formatMoney>[0])}
+            </dd>
+          </div>
+          <div className="flex items-center gap-3">
+            <dt className="w-16 text-white/80 md:w-20 md:text-right">Remaining</dt>
+            <dd className={cn('flex items-center gap-1 font-medium', remainingColor)}>
+              {remainingCents < 0 && (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  aria-label="Over budget"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 1 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              {formatMoney(Math.abs(remainingCents) as Parameters<typeof formatMoney>[0])}
+              {remainingCents < 0 && ' over'}
+            </dd>
+          </div>
+        </dl>
+      )}
+    </div>
   );
 }
 

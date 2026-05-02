@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../lib/exportUtils';
+import { useUpdateItem } from '../hooks/useItems';
 import type { RoomWithItems } from './ItemsTable';
 import { Button } from './primitives';
 import { ImageFrame } from './ImageFrame';
@@ -24,9 +25,12 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const requestedPage = Number(searchParams.get('page') ?? '1');
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
   const entry = entries[pageIndex];
+  const [slideDirection, setSlideDirection] = useState<'next' | 'previous'>('next');
 
   const setPage = (nextIndex: number) => {
-    const nextPage = clampPageIndex(nextIndex, entries.length) + 1;
+    const clampedIndex = clampPageIndex(nextIndex, entries.length);
+    setSlideDirection(clampedIndex >= pageIndex ? 'next' : 'previous');
+    const nextPage = clampedIndex + 1;
     navigate({ search: `?page=${nextPage}` });
   };
 
@@ -53,11 +57,15 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         rooms={rooms}
         currentIndex={pageIndex}
         total={entries.length}
+        currentEntry={entry}
         currentItemId={entry?.item.id}
         onPageChange={setPage}
       />
 
-      <div className="screen-only">
+      <div
+        key={entry.item.id}
+        className={`screen-only ${slideDirection === 'next' ? 'catalog-slide-next' : 'catalog-slide-previous'}`}
+      >
         <CatalogPage
           project={project}
           entry={entry}
@@ -86,6 +94,7 @@ function CatalogNav({
   rooms,
   currentIndex,
   total,
+  currentEntry,
   currentItemId,
   onPageChange,
 }: {
@@ -93,77 +102,99 @@ function CatalogNav({
   rooms: RoomWithItems[];
   currentIndex: number;
   total: number;
+  currentEntry: CatalogEntry | undefined;
   currentItemId: string | undefined;
   onPageChange: (index: number) => void;
 }) {
   let itemIndex = 0;
 
   return (
-    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
-      <Link to="/" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-        FF&amp;E Builder
-      </Link>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={currentIndex === 0}
-          aria-label="Previous catalog item"
-          onClick={() => onPageChange(currentIndex - 1)}
-        >
-          Previous
-        </Button>
-        <label className="sr-only" htmlFor="catalog-jump">
-          Jump to catalog item
-        </label>
-        <select
-          id="catalog-jump"
-          value={currentIndex}
-          onChange={(event) => onPageChange(Number(event.target.value))}
-          className="min-w-56 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-        >
-          {rooms.map((room) => (
-            <optgroup key={room.id} label={room.name}>
-              {room.items.map((item) => {
-                const optionIndex = itemIndex;
-                itemIndex += 1;
-                return (
-                  <option key={item.id} value={optionIndex}>
-                    {item.itemName}
-                  </option>
-                );
-              })}
-            </optgroup>
-          ))}
-        </select>
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={currentIndex === total - 1}
-          aria-label="Next catalog item"
-          onClick={() => onPageChange(currentIndex + 1)}
-        >
-          Next
-        </Button>
-        <Button type="button" variant="secondary" onClick={() => window.print()}>
-          Print
-        </Button>
-        <Button type="button" onClick={() => exportCatalogPdf(project, rooms)}>
-          Export PDF
-        </Button>
-        {currentItemId && (
+    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-gray-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <Link
+            to="/"
+            className="text-xs font-semibold uppercase tracking-wide text-brand-600 hover:text-brand-700"
+          >
+            FF&amp;E Builder
+          </Link>
+          <p className="mt-1 truncate text-sm font-semibold text-gray-950">
+            {currentEntry?.item.itemName ?? 'Catalog'}
+          </p>
+          <p className="text-xs text-gray-500">{currentEntry?.room.name}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
-            variant="ghost"
-            onClick={() => exportCatalogItemPdf(project, rooms, currentItemId)}
+            variant="secondary"
+            disabled={currentIndex === 0}
+            aria-label="Previous catalog item"
+            onClick={() => onPageChange(currentIndex - 1)}
           >
-            Export this item
+            <span aria-hidden="true">&lt;</span>
+            <span className="sr-only">Previous</span>
           </Button>
-        )}
+          <label className="sr-only" htmlFor="catalog-jump">
+            Jump to catalog item
+          </label>
+          <select
+            id="catalog-jump"
+            value={currentIndex}
+            onChange={(event) => onPageChange(Number(event.target.value))}
+            className="min-w-56 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
+          >
+            {rooms.map((room) => (
+              <optgroup key={room.id} label={room.name}>
+                {room.items.map((item) => {
+                  const optionIndex = itemIndex;
+                  itemIndex += 1;
+                  return (
+                    <option key={item.id} value={optionIndex}>
+                      {item.itemName}
+                    </option>
+                  );
+                })}
+              </optgroup>
+            ))}
+          </select>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={currentIndex === total - 1}
+            aria-label="Next catalog item"
+            onClick={() => onPageChange(currentIndex + 1)}
+          >
+            <span aria-hidden="true">&gt;</span>
+            <span className="sr-only">Next</span>
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => window.print()}>
+            Print
+          </Button>
+          <Button type="button" onClick={() => exportCatalogPdf(project, rooms)}>
+            Export PDF
+          </Button>
+          {currentItemId && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => exportCatalogItemPdf(project, rooms, currentItemId)}
+            >
+              Export this item
+            </Button>
+          )}
+        </div>
+        <div className="flex min-w-24 flex-col items-end gap-1">
+          <span className="text-sm font-semibold tabular-nums text-gray-700">
+            {currentIndex + 1} / {total}
+          </span>
+          <div className="h-1.5 w-24 overflow-hidden rounded-pill bg-gray-200">
+            <div
+              className="h-full rounded-pill bg-brand-500 transition-all"
+              style={{ width: `${total > 0 ? ((currentIndex + 1) / total) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
       </div>
-      <span className="text-sm text-gray-700">
-        {currentIndex + 1} of {total}
-      </span>
       <span className="sr-only">{project.name}</span>
     </nav>
   );
@@ -181,6 +212,7 @@ export function CatalogPage({
   pageCount: number;
 }) {
   const { item, room } = entry;
+  const updateItem = useUpdateItem(item.roomId);
   const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
   const projectSlug = slugify(project.name);
 
@@ -201,6 +233,12 @@ export function CatalogPage({
             entityId={item.id}
             alt={item.itemName}
             fallbackUrl={item.imageUrl}
+            onFallbackDelete={async () => {
+              await updateItem.mutateAsync({
+                id: item.id,
+                patch: { imageUrl: null, version: item.version },
+              });
+            }}
             className="h-full w-full border-0 shadow-none"
             imageClassName="catalog-image"
             placeholderClassName="catalog-placeholder"

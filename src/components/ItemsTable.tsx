@@ -342,6 +342,7 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         entityId={row.original.id}
         alt={row.original.itemName}
         fallbackUrl={row.original.imageUrl}
+        onFallbackDelete={() => saveValidatedPatch(onSave, row.original, { imageUrl: null })}
         className="h-12 w-12"
         compact
       />
@@ -544,6 +545,32 @@ function readRoomCollapsed(roomId: string) {
 function writeRoomCollapsed(roomId: string, value: boolean) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(`room:${roomId}:collapsed`, String(value));
+}
+
+function useCollapsedRoomImages(rooms: RoomWithItems[]) {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(rooms.map((room) => [room.id, readRoomImageCollapsed(room.id)])),
+  );
+
+  const toggle = (roomId: string) => {
+    setCollapsed((current) => {
+      const nextValue = !current[roomId];
+      writeRoomImageCollapsed(roomId, nextValue);
+      return { ...current, [roomId]: nextValue };
+    });
+  };
+
+  return { collapsed, toggle };
+}
+
+function readRoomImageCollapsed(roomId: string) {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(`room:${roomId}:imageCollapsed`) === 'true';
+}
+
+function writeRoomImageCollapsed(roomId: string, value: boolean) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(`room:${roomId}:imageCollapsed`, String(value));
 }
 
 function useIsMobileViewport() {
@@ -807,6 +834,7 @@ function MobileItemCards({
                 entityId={item.id}
                 alt={item.itemName}
                 fallbackUrl={item.imageUrl}
+                onFallbackDelete={() => saveValidatedPatch(onSave, item, { imageUrl: null })}
                 className="h-14 w-14 shrink-0"
                 compact
               />
@@ -922,7 +950,9 @@ function RoomItemsSection({
   projectId,
   project,
   collapsed,
+  imageCollapsed,
   onToggle,
+  onToggleImage,
   onDeleteRoom,
 }: {
   room: RoomWithItems;
@@ -930,7 +960,9 @@ function RoomItemsSection({
   projectId: string;
   project?: Project;
   collapsed: boolean;
+  imageCollapsed: boolean;
   onToggle: () => void;
+  onToggleImage: () => void;
   onDeleteRoom: (room: RoomWithItems) => void;
 }) {
   const updateItem = useUpdateItem(room.id);
@@ -1107,26 +1139,50 @@ function RoomItemsSection({
 
       {!collapsed && isMobile && (
         <div className="grid gap-3 p-3">
-          <ImageFrame
-            entityType="room"
-            entityId={room.id}
-            alt={`${room.name} room`}
-            className="h-40 w-full"
-          />
+          <button
+            type="button"
+            className="w-fit rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            onClick={onToggleImage}
+            aria-expanded={!imageCollapsed}
+          >
+            {imageCollapsed ? 'Show room image' : 'Hide room image'}
+          </button>
+          {!imageCollapsed && (
+            <ImageFrame
+              entityType="room"
+              entityId={room.id}
+              alt={`${room.name} room`}
+              className="h-40 w-full"
+            />
+          )}
           <MobileItemCards items={sortedItems} actions={actions} onSave={saveItemPatch} />
         </div>
       )}
 
       {!collapsed && !isMobile && (
-        <div className="flex items-stretch">
-          <div className="w-36 shrink-0 border-r border-gray-100 p-3">
-            <ImageFrame
-              entityType="room"
-              entityId={room.id}
-              alt={`${room.name} room`}
-              className="h-full min-h-32 w-full"
-            />
-          </div>
+        <div className="relative flex items-stretch">
+          <button
+            type="button"
+            className={cn(
+              'absolute top-1/2 z-20 -translate-y-1/2 rounded-r-md border border-l-0 border-gray-200 bg-white px-1.5 py-4 text-xs font-semibold text-gray-500 shadow-sm hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+              imageCollapsed ? 'left-0' : 'left-36',
+            )}
+            onClick={onToggleImage}
+            aria-expanded={!imageCollapsed}
+            aria-label={imageCollapsed ? 'Show room image' : 'Hide room image'}
+          >
+            {imageCollapsed ? '>' : '<'}
+          </button>
+          {!imageCollapsed && (
+            <div className="w-36 shrink-0 border-r border-gray-100 p-3">
+              <ImageFrame
+                entityType="room"
+                entityId={room.id}
+                alt={`${room.name} room`}
+                className="h-full min-h-32 w-full"
+              />
+            </div>
+          )}
           <div
             tabIndex={0}
             aria-label={`${room.name} items table`}
@@ -1202,6 +1258,7 @@ export function ItemsTableView({
 }) {
   const queryClient = useQueryClient();
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
+  const { collapsed: imageCollapsed, toggle: toggleImage } = useCollapsedRoomImages(roomsWithItems);
   const createRoom = useCreateRoom(projectId);
   const deleteRoom = useDeleteRoom(projectId);
   const moveItem = useMoveItem();
@@ -1256,7 +1313,9 @@ export function ItemsTableView({
           projectId={projectId}
           {...(project !== undefined ? { project } : {})}
           collapsed={collapsed[room.id] ?? false}
+          imageCollapsed={imageCollapsed[room.id] ?? false}
           onToggle={() => toggle(room.id)}
+          onToggleImage={() => toggleImage(room.id)}
           onDeleteRoom={setRoomToDelete}
         />
       ))}

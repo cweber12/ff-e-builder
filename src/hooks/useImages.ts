@@ -43,3 +43,18 @@ export function useUploadImage(entityType: ImageEntityType, entityId: string) {
     onError: (err) => toast.error(`Image upload failed: ${err.message}`),
   });
 }
+
+export function useDeleteImage(entityType: ImageEntityType, entityId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (imageId: string) => api.images.delete(imageId),
+    onSuccess: (_data, imageId) => {
+      queryClient.setQueryData<ImageAsset[]>(
+        imageKeys.forEntity(entityType, entityId),
+        (old) => old?.filter((image) => image.id !== imageId) ?? [],
+      );
+    },
+    onError: (err) => toast.error(`Image delete failed: ${err.message}`),
+  });
+}

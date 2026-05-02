@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
 import { api } from '../lib/api';
-import { isPersistedImageEntityId, useImages, useUploadImage } from '../hooks/useImages';
+import {
+  isPersistedImageEntityId,
+  useDeleteImage,
+  useImages,
+  useUploadImage,
+} from '../hooks/useImages';
 import type { ImageEntityType } from '../types';
 
 type ImageFrameProps = {
@@ -13,6 +18,7 @@ type ImageFrameProps = {
   imageClassName?: string;
   placeholderClassName?: string;
   placeholderContent?: ReactNode;
+  onFallbackDelete?: (() => Promise<void> | void) | undefined;
   disabled?: boolean;
   compact?: boolean;
 };
@@ -28,6 +34,7 @@ export function ImageFrame({
   imageClassName,
   placeholderClassName,
   placeholderContent,
+  onFallbackDelete,
   disabled = false,
   compact = false,
 }: ImageFrameProps) {
@@ -37,15 +44,20 @@ export function ImageFrame({
   const canLoad = isPersistedImageEntityId(entityId);
   const images = useImages(entityType, entityId);
   const upload = useUploadImage(entityType, entityId);
+  const deleteImage = useDeleteImage(entityType, entityId);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const primaryImage = useMemo(
     () => images.data?.find((image) => image.isPrimary) ?? images.data?.[0] ?? null,
     [images.data],
   );
   const displayUrl = imageUrl ?? fallbackUrl;
-  const canUpload = canLoad && !disabled && !primaryImage && !fallbackUrl && !upload.isPending;
-  const isBusy = images.isLoading || imageLoading || upload.isPending;
+  const hasImage = Boolean(displayUrl || primaryImage);
+  const canUpload = canLoad && !disabled && !upload.isPending;
+  const canRemove =
+    !disabled && (Boolean(primaryImage) || Boolean(fallbackUrl && onFallbackDelete));
+  const isBusy = images.isLoading || imageLoading || upload.isPending || deleteImage.isPending;
 
   useEffect(() => {
     const node = frameRef.current;
@@ -105,8 +117,20 @@ export function ImageFrame({
   }, [hasEnteredViewport, primaryImage]);
 
   const handleFile = (file: File | undefined) => {
-    if (!file || !canLoad || primaryImage) return;
+    if (!file || !canUpload) return;
+    setMenuOpen(false);
     upload.mutate({ file, altText: alt });
+  };
+
+  const handleRemove = () => {
+    setMenuOpen(false);
+    if (primaryImage) {
+      deleteImage.mutate(primaryImage.id);
+      return;
+    }
+    if (fallbackUrl && onFallbackDelete) {
+      void Promise.resolve(onFallbackDelete());
+    }
   };
 
   const content = (
@@ -155,7 +179,41 @@ export function ImageFrame({
         className,
       )}
     >
-      {canUpload ? (
+      {hasImage && !disabled ? (
+        <>
+          <button
+            type="button"
+            className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            aria-label={`Open image actions for ${alt}`}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {content}
+          </button>
+          {menuOpen && (
+            <div className="absolute left-2 top-2 z-20 min-w-28 rounded-md border border-gray-200 bg-white p-1 text-xs shadow-lg">
+              {canUpload && (
+                <button
+                  type="button"
+                  className="flex w-full items-center rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                  onClick={() => inputRef.current?.click()}
+                >
+                  Update
+                </button>
+              )}
+              {canRemove && (
+                <button
+                  type="button"
+                  className="flex w-full items-center rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500"
+                  onClick={handleRemove}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      ) : canUpload ? (
         <button
           type="button"
           className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"

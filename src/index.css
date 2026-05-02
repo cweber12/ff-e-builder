@@ -92,6 +92,36 @@
     letter-spacing: 0.08em;
   }
 
+  .catalog-slide-next {
+    animation: catalogSlideNext 220ms ease-out;
+  }
+
+  .catalog-slide-previous {
+    animation: catalogSlidePrevious 220ms ease-out;
+  }
+
+  @keyframes catalogSlideNext {
+    from {
+      opacity: 0;
+      transform: translateX(32px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes catalogSlidePrevious {
+    from {
+      opacity: 0;
+      transform: translateX(-32px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
   .catalog-details {
     display: flex;
     flex-direction: column;
