@@ -2,7 +2,7 @@ import { useQueries } from '@tanstack/react-query';
 import { useRooms } from './useRooms';
 import { itemKeys } from './useItems';
 import { api } from '../lib/api';
-import type { RoomWithItems } from '../components/ItemsTable';
+import type { RoomWithItems } from '../types';
 
 export function useRoomsWithItems(projectId: string) {
   const { data: rooms, isLoading: roomsLoading, error: roomsError } = useRooms(projectId);

@@ -1,3 +1,5 @@
+import type { Item } from './item';
+
 export type Room = {
   id: string;
   projectId: string;
@@ -6,3 +8,5 @@ export type Room = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type RoomWithItems = Room & { items: Item[] };

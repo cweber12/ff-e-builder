@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { lineTotalCents, roomSubtotalCents, projectTotalCents, sellPriceCents } from './calc';
 import { cents, formatMoney } from '../types';
 import type { Item, Project } from '../types';
-import type { RoomWithItems } from '../components/ItemsTable';
+import type { RoomWithItems } from '../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

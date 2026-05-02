@@ -90,7 +90,10 @@ export interface ImageAsset {
 
 // ─── Zod input schemas (co-located with types for easy import) ─────────────
 import { z } from 'zod';
-import { itemStatuses } from '../../src/types/itemValidation';
+
+// Intentionally duplicated from src/types/itemValidation to keep the API worker
+// self-contained and avoid cross-boundary imports from the React client bundle.
+const itemStatuses = ['pending', 'ordered', 'approved', 'received'] as const;
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1).max(255),

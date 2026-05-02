@@ -4,7 +4,7 @@ import { sellPriceCents } from '../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../lib/exportUtils';
 import { useUpdateItem } from '../hooks/useItems';
-import type { RoomWithItems } from './ItemsTable';
+import type { RoomWithItems } from '../types';
 import { Button } from './primitives';
 import { ImageFrame } from './ImageFrame';
 

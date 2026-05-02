@@ -60,11 +60,6 @@ Actual frontend route shell:
 - `/projects/:id/summary` renders totals by room, status, and vendor.
 - `/signin` is public; project routes are protected by Firebase Auth.
 
-The current launch build keeps demo fixture data for the visible project surface
-while API, auth, ownership checks, migrations, and Worker deployment remain the
-production integration boundary. The React client still never connects directly
-to Neon.
-
 Project, room, and item image bytes are stored in a private Cloudflare R2 bucket
 named `ffe-images`. The Worker is the only R2 gateway: it validates Firebase
 ownership against Neon image metadata before accepting uploads or returning image
@@ -100,17 +95,12 @@ sequenceDiagram
 
 ```mermaid
 erDiagram
-  USERS {
-    text id PK "Firebase UID"
-    text email
-    timestamptz created_at
-  }
-
   PROJECTS {
     uuid id PK
-    text owner_id FK
+    text owner_uid FK "Firebase UID"
     text name
-    text status
+    text client_name
+    int budget_cents "always integer cents"
     timestamptz created_at
     timestamptz updated_at
   }
@@ -120,36 +110,51 @@ erDiagram
     uuid project_id FK
     text name
     int sort_order
+    timestamptz created_at
+    timestamptz updated_at
   }
 
   ITEMS {
     uuid id PK
     uuid room_id FK
-    text name
-    text vendor
-    text model_number
-    int quantity
-    int unit_price_cents "always integer cents"
-    text status
-    text notes
+    text item_name
+    text category "nullable"
+    text vendor "nullable"
+    text model "nullable"
+    text item_id_tag "nullable"
+    text dimensions "nullable"
+    text seat_height "nullable"
+    text finishes "nullable"
+    text notes "nullable"
+    int qty
+    int unit_cost_cents "always integer cents"
+    numeric markup_pct "numeric(5,2)"
+    text lead_time "nullable"
+    text status "pending | ordered | approved | received"
+    text image_url "nullable"
+    text link_url "nullable"
+    int sort_order
+    int version "optimistic concurrency counter"
     timestamptz created_at
     timestamptz updated_at
   }
 
   IMAGE_ASSETS {
     uuid id PK
-    text owner_uid
+    text owner_uid "Firebase UID"
     uuid project_id FK
     uuid room_id FK "nullable"
     uuid item_id FK "nullable"
     text r2_key
+    text filename
     text content_type
     int byte_size
+    text alt_text
     boolean is_primary
     timestamptz created_at
+    timestamptz updated_at
   }
 
-  USERS ||--o{ PROJECTS : owns
   PROJECTS ||--o{ ROOMS : contains
   ROOMS ||--o{ ITEMS : contains
   PROJECTS ||--o{ IMAGE_ASSETS : has

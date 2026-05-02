@@ -26,6 +26,33 @@
 
 ---
 
+## Code organisation rules
+
+> These rules keep the codebase consistent as it grows. Follow them whenever creating or moving code.
+
+### Types
+
+- **Domain types live in `src/types/`.** If a type describes a data model (project, room, item, image, or any combination like `RoomWithItems`), it belongs in `src/types/`, not inside a component or hook file.
+- **Re-export everything from `src/types/index.ts`.** Consumers should be able to import all types from `'../types'` — never from `'../types/room'`, `'../types/item'`, etc., directly.
+- **`RoomWithItems` is defined in `src/types/room.ts`** and re-exported from `src/types/index.ts`. Do not re-export it from `ItemsTable.tsx` or any other component.
+
+### Hooks
+
+- **Hooks live in `src/hooks/` and are barrel-exported from `src/hooks/index.ts`.** When adding a new hook file, add its exports to `index.ts` in the same commit.
+- **Hooks must not import from component files.** A hook can import from `../types`, `../lib/*`, or other hooks. It must never import from `../components/*` — not even for types.
+
+### Components
+
+- **Each component gets its own file.** Do not define a second exported component inside an existing component file (e.g. modals, sub-views). Extract it to `src/components/<ComponentName>.tsx`.
+- **Primitives live in `src/components/primitives/` and are barrel-exported from `src/components/primitives/index.ts`.** Generic, reusable UI atoms (Button, Modal, Drawer, etc.) go here; domain-aware components (ProjectHeader, ItemsTable, etc.) go directly under `src/components/`.
+
+### API / monorepo boundary
+
+- **The API worker (`api/`) must never import from `src/`.** The `api/` and `src/` packages are independent — the Worker must be self-contained. If both packages need the same constant (e.g. `itemStatuses`), define it in each package separately and add a comment noting the intentional duplication.
+- **The React client (`src/`) must never import from `api/`.** All communication goes through the HTTP API at runtime.
+
+---
+
 ## Tech stack
 
 Pin these exact versions unless a version bump is explicitly requested.

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(images): add uploadable project, room, item, and catalog image frames
 - feat(images): add private R2-backed image storage API and normalized image metadata
 - feat(exports): add CSV, Excel, PDF export flows and spreadsheet import mapping
+- refactor(quality): phase-1 code-quality pass — fix silent reportError, remove API→client cross-boundary import, move RoomWithItems to types layer, extract DeleteProjectModal, add hooks barrel export
 
 ---
 

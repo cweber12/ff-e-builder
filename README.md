@@ -46,13 +46,11 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 
 ## UI surfaces
 
-- Project header and design-system primitives provide the first editable project surface.
-- `ItemsTable` renders FF&E items with rooms grouped, persisted room collapse state, room subtotals, a sticky grand total, inline editing for item fields, and structure mutations for adding rooms/items, duplicating or moving items, deleting with confirmation, and drag reordering.
-- `CatalogView` renders `/projects/:id/catalog` as a printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, and browser print/PDF support.
-- `SummaryView` renders `/projects/:id/summary` with room subtotals, budget progress, status counts, and vendor totals.
-- Project, room, and item image metadata is normalized in Neon while image bytes
-  are stored in the private Cloudflare R2 `ffe-images` bucket through the API
-  Worker. See [docs/images.md](docs/images.md).
+- **Project header** — editable project name, client name, and budget with a live budget tracker.
+- **Table** (`/projects/:id/table`) — FF&E items grouped by room with persisted collapse state, room subtotals, a sticky grand total, inline editing, structure mutations (add/duplicate/move/delete/reorder), per-room and full-project export (CSV, Excel, PDF), and Excel import with column-mapping wizard.
+- **Catalog** (`/projects/:id/catalog`) — printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, "Print" (browser dialog) and "Export PDF" (direct download) buttons, and a per-item PDF export.
+- **Summary** (`/projects/:id/summary`) — room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
+- **Images** — project, room, and item image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes
 
@@ -71,21 +69,25 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 ```
 /
 ├── src/               # React + Vite front-end (TypeScript)
-│   ├── components/    # Shared UI components
-│   ├── features/      # Feature-sliced modules (projects, rooms, items…)
-│   ├── hooks/         # Custom React hooks
-│   ├── lib/           # Client-side utilities (auth, API client, formatters)
-│   ├── test/          # Vitest setup and unit tests
+│   ├── components/    # Domain-aware UI components (ItemsTable, CatalogView, …)
+│   │   └── primitives/  # Generic design-system atoms (Button, Modal, Drawer, …)
+│   ├── hooks/         # Custom React hooks with barrel export (index.ts)
+│   ├── lib/           # Client-side utilities (API client, calc, export/import, …)
+│   ├── types/         # Shared TypeScript types with barrel export (index.ts)
+│   ├── data/          # Static fixture data (demo seed)
+│   ├── test/          # Vitest global setup
 │   └── vite-env.d.ts  # Vite client-types reference
 ├── tests/
 │   └── e2e/           # Playwright end-to-end tests
 ├── public/            # Static assets (Vite copies to dist/)
 │   └── 404.html       # GitHub Pages SPA redirect script
-├── api/               # Cloudflare Workers API (TypeScript) — Phase 2
-│   └── routes/        # Hono route handlers
-├── db/                # Database layer (Drizzle ORM) — Phase 2
-│   ├── migrations/    # SQL migration files — never run from client
-│   └── schema.ts      # Drizzle schema (source of truth for DB types)
+├── api/               # Cloudflare Workers API (TypeScript)
+│   └── src/
+│       ├── routes/    # Hono route handlers (projects, rooms, items, images)
+│       ├── middleware/ # Auth middleware (Firebase JWT verification)
+│       └── lib/       # Worker-only utilities (db, firebase-auth, ownership)
+├── db/
+│   └── migrations/    # SQL migration files — apply via `pnpm db:migrate`, never from client
 ├── docs/              # Project documentation
 │   └── adr/           # Architecture Decision Records
 ├── .github/

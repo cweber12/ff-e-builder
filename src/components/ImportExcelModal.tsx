@@ -7,7 +7,7 @@ import {
   type ColumnMap,
   type ParsedSpreadsheet,
 } from '../lib/importUtils';
-import type { RoomWithItems } from './ItemsTable';
+import type { RoomWithItems } from '../types';
 import { Button } from './primitives/Button';
 import { Modal } from './primitives/Modal';
 

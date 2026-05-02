@@ -11,18 +11,17 @@ import {
 } from 'react-router-dom';
 import { AuthGate, SignInPage } from './components/AuthGate';
 import { CatalogView } from './components/CatalogView';
-import { ItemsTable, type RoomWithItems } from './components/ItemsTable';
+import { ItemsTable } from './components/ItemsTable';
+import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
 import { ImageFrame } from './components/ImageFrame';
-import { Button } from './components/primitives/Button';
-import { Modal } from './components/primitives/Modal';
 import { projectTotalCents } from './lib/calc';
 import { recordSession } from './lib/telemetry';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/useProjects';
 import { useRoomsWithItems } from './hooks/useRoomsWithItems';
-import type { Project } from './types';
+import type { Project, RoomWithItems } from './types';
 
 type ProjectContext = {
   project: Project;
@@ -146,43 +145,6 @@ function ProjectList() {
         onConfirm={(id) => deleteProject.mutate(id)}
       />
     </main>
-  );
-}
-
-function DeleteProjectModal({
-  project,
-  onClose,
-  onConfirm,
-}: {
-  project: Project | null;
-  onClose: () => void;
-  onConfirm: (id: string) => void;
-}) {
-  if (!project) return null;
-  return (
-    <Modal open onClose={onClose} title="Delete project">
-      <div className="flex flex-col gap-5">
-        <p className="text-sm text-gray-600">
-          Permanently delete <strong className="font-semibold text-gray-950">{project.name}</strong>
-          ? All rooms and items will be removed. This cannot be undone.
-        </p>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={() => {
-              onConfirm(project.id);
-              onClose();
-            }}
-          >
-            Delete project
-          </Button>
-        </div>
-      </div>
-    </Modal>
   );
 }
 

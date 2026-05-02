@@ -44,7 +44,7 @@ import {
   type Item,
   type ItemStatus,
   type Project,
-  type Room,
+  type RoomWithItems,
 } from '../types';
 import type { UpdateItemInput } from '../lib/api';
 import { exportTableCsv, exportTableExcel, exportTablePdf } from '../lib/exportUtils';
@@ -57,8 +57,6 @@ import { AddItemDrawer } from './AddItemDrawer';
 import { ExportMenu } from './ExportMenu';
 import { ImportExcelModal } from './ImportExcelModal';
 import { ImageFrame } from './ImageFrame';
-
-export type RoomWithItems = Room & { items: Item[] };
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
@@ -1165,7 +1163,7 @@ function RoomItemsSection({
             type="button"
             className={cn(
               'absolute top-1/2 z-20 -translate-y-1/2 rounded-r-md border border-l-0 border-gray-200 bg-white px-1.5 py-4 text-xs font-semibold text-gray-500 shadow-sm hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-              imageCollapsed ? 'left-0' : 'left-36',
+              imageCollapsed ? 'left-0' : 'left-96',
             )}
             onClick={onToggleImage}
             aria-expanded={!imageCollapsed}
@@ -1174,12 +1172,12 @@ function RoomItemsSection({
             {imageCollapsed ? '>' : '<'}
           </button>
           {!imageCollapsed && (
-            <div className="w-36 shrink-0 border-r border-gray-100 p-3">
+            <div className="w-96 shrink-0 border-r border-gray-100 p-3">
               <ImageFrame
                 entityType="room"
                 entityId={room.id}
                 alt={`${room.name} room`}
-                className="h-full min-h-32 w-full"
+                className="h-full min-h-32 w-full object-fit"
               />
             </div>
           )}

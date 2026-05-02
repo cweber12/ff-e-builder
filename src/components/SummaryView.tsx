@@ -1,7 +1,7 @@
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../lib/calc';
 import { cents, formatMoney, itemStatuses, type Item, type Project } from '../types';
 import { exportSummaryCsv, exportSummaryExcel, exportSummaryPdf } from '../lib/exportUtils';
-import type { RoomWithItems } from './ItemsTable';
+import type { RoomWithItems } from '../types';
 import { ExportMenu } from './ExportMenu';
 import { StatusBadge } from './primitives';
 

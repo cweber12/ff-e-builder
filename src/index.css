@@ -60,20 +60,20 @@
   }
 
   .catalog-image-wrap {
-    min-height: 680px;
+    max-height: 320px;
     background: theme('colors.brand.50');
   }
 
   .catalog-image {
     height: 100%;
     width: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 
   .catalog-placeholder {
     display: flex;
     height: 100%;
-    min-height: 680px;
+    min-height: 320px;
     align-items: center;
     justify-content: center;
   }

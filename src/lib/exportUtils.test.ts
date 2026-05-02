@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { safeName, exportTableCsv, exportSummaryCsv } from './exportUtils';
 import type { Project } from '../types';
-import type { RoomWithItems } from '../components/ItemsTable';
+import type { RoomWithItems } from '../types';
 import type { Item } from '../types/item';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

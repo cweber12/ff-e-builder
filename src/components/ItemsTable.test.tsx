@@ -5,8 +5,7 @@ import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ItemsTable } from './ItemsTable';
 import { roomSubtotalCents, projectTotalCents } from '../lib/calc';
 import { getSortOrderPatches } from '../lib/itemSort';
-import { cents, formatMoney, type Item, type Room } from '../types';
-import type { RoomWithItems } from './ItemsTable';
+import { cents, formatMoney, type Item, type Room, type RoomWithItems } from '../types';
 
 const {
   mockUpdateMutateAsync,
