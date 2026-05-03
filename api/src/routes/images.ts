@@ -243,6 +243,7 @@ router.post('/', async (c) => {
   });
 
   const sql = getDb(c.env);
+  let projectImageCount = 0;
   try {
     if (parsed.data.entity_type === 'project') {
       const existing = await sql`
@@ -256,10 +257,39 @@ router.post('/', async (c) => {
           AND takeoff_item_id IS NULL
       `;
       const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
+      projectImageCount = count;
       if (count >= 3) {
         await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
         return c.json({ error: 'Projects can have up to 3 images' }, 400);
       }
+    }
+
+    const isPrimary = parsed.data.entity_type !== 'project' || projectImageCount === 0;
+
+    if (parsed.data.entity_type === 'project') {
+      const rows = await sql`
+        INSERT INTO image_assets (
+          id, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
+          filename, content_type, byte_size, alt_text, is_primary
+        )
+        VALUES (
+          ${imageId},
+          ${uid},
+          ${context.projectId},
+          ${context.roomId},
+          ${context.itemId},
+          ${context.materialId},
+          ${context.takeoffItemId},
+          ${r2Key},
+          ${cleanFilename(file.name)},
+          ${file.type},
+          ${file.size},
+          ${parsed.data.alt_text},
+          ${isPrimary}
+        )
+        RETURNING *
+      `;
+      return c.json({ image: imageRow(rows[0]) }, 201);
     }
 
     const rows = await sql`
@@ -290,7 +320,7 @@ router.post('/', async (c) => {
         ${file.type},
         ${file.size},
         ${parsed.data.alt_text},
-        true
+        ${isPrimary}
       )
       RETURNING *
     `;

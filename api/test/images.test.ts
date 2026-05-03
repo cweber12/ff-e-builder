@@ -26,6 +26,8 @@ const mockGetDb = vi.mocked(getDb);
 const mockGetOwnedProjectContext = vi.mocked(getOwnedProjectContext);
 const mockGetOwnedTakeoffItemContext = vi.mocked(getOwnedTakeoffItemContext);
 
+const projectId = '00000000-0000-0000-0000-000000000001';
+const takeoffItemId = '00000000-0000-0000-0000-000000000002';
 const bucketPut = vi.fn().mockResolvedValue(undefined);
 const bucketDelete = vi.fn().mockResolvedValue(undefined);
 
@@ -45,18 +47,22 @@ const mockEnv = {
   },
 };
 
+function multipartImageBody(filename = 'rendering.png') {
+  const body = new FormData();
+  body.append('file', new File(['image-bytes'], filename, { type: 'image/png' }));
+  return body;
+}
+
 describe('Image uploads', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     bucketPut.mockResolvedValue(undefined);
     bucketDelete.mockResolvedValue(undefined);
     mockVerify.mockResolvedValue({ uid: 'user-123' });
-    mockGetOwnedProjectContext.mockResolvedValue({
-      projectId: '00000000-0000-0000-0000-000000000001',
-    });
+    mockGetOwnedProjectContext.mockResolvedValue({ projectId });
     mockGetOwnedTakeoffItemContext.mockResolvedValue({
-      projectId: '00000000-0000-0000-0000-000000000001',
-      takeoffItemId: '00000000-0000-0000-0000-000000000002',
+      projectId,
+      takeoffItemId,
     });
   });
 
@@ -66,15 +72,12 @@ describe('Image uploads', () => {
       .mockRejectedValueOnce(new Error('duplicate key value violates unique constraint'));
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
 
-    const body = new FormData();
-    body.append('file', new File(['image-bytes'], 'rendering.png', { type: 'image/png' }));
-
     const res = await app.request(
-      '/api/v1/images?entity_type=takeoff_item&entity_id=00000000-0000-0000-0000-000000000002&alt_text=MI-1+rendering',
+      `/api/v1/images?entity_type=takeoff_item&entity_id=${takeoffItemId}&alt_text=MI-1+rendering`,
       {
         method: 'POST',
         headers: { Authorization: 'Bearer valid-token' },
-        body,
+        body: multipartImageBody(),
       },
       mockEnv,
     );
@@ -84,6 +87,69 @@ describe('Image uploads', () => {
     expect(bucketDelete).toHaveBeenCalledTimes(1);
   });
 
+  it('allows a second project image without making it the preview image', async () => {
+    const sql = vi.fn(
+      async (strings: TemplateStringsArray, ...values: unknown[]) =>
+        await Promise.resolve(() => {
+          const query = strings.join('?');
+
+          if (query.includes('COUNT(*)::int AS count')) return [{ count: 1 }];
+          if (query.includes('INSERT INTO image_assets')) {
+            const isPrimary = values.at(-1);
+            if (isPrimary !== false) {
+              throw new Error(
+                'duplicate key value violates unique constraint "image_assets_primary_project_idx"',
+              );
+            }
+            return [
+              {
+                id: '00000000-0000-0000-0000-000000000010',
+                owner_uid: 'user-123',
+                project_id: projectId,
+                room_id: null,
+                item_id: null,
+                material_id: null,
+                takeoff_item_id: null,
+                r2_key: 'users/user-123/projects/project/project-2.png',
+                filename: 'project-2.png',
+                content_type: 'image/png',
+                byte_size: 11,
+                alt_text: 'Sample Project image 2',
+                is_primary: false,
+                created_at: '2026-05-03T00:00:00Z',
+                updated_at: '2026-05-03T00:00:00Z',
+              },
+            ];
+          }
+
+          return [];
+        }),
+    );
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      `/api/v1/images?entity_type=project&entity_id=${projectId}&alt_text=Sample+Project+image+2`,
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+        body: multipartImageBody('project-2.png'),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(201);
+    expect(sql).toHaveBeenCalledTimes(2);
+    const statements = sql.mock.calls.map(([strings]) => Array.from(strings).join(' '));
+    expect(statements[1]).toContain('INSERT INTO image_assets');
+    expect(statements[1]).not.toContain('UPDATE image_assets');
+    await expect(res.json()).resolves.toMatchObject({
+      image: {
+        project_id: projectId,
+        is_primary: false,
+      },
+    });
+  });
+
   it('promotes another project image when the current preview image is deleted', async () => {
     const sql = vi
       .fn()
@@ -91,7 +157,7 @@ describe('Image uploads', () => {
         {
           id: '00000000-0000-0000-0000-000000000011',
           owner_uid: 'user-123',
-          project_id: '00000000-0000-0000-0000-000000000001',
+          project_id: projectId,
           room_id: null,
           item_id: null,
           material_id: null,
@@ -111,7 +177,7 @@ describe('Image uploads', () => {
         {
           id: '00000000-0000-0000-0000-000000000012',
           owner_uid: 'user-123',
-          project_id: '00000000-0000-0000-0000-000000000001',
+          project_id: projectId,
           room_id: null,
           item_id: null,
           material_id: null,
@@ -141,7 +207,9 @@ describe('Image uploads', () => {
     expect(res.status).toBe(204);
     expect(bucketDelete).toHaveBeenCalledTimes(1);
     expect(sql).toHaveBeenCalledTimes(4);
-    const statements = sql.mock.calls.map(([strings]) => Array.from(strings as string[]).join(' '));
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
     expect(statements[2]).toContain('SELECT *');
     expect(statements[3]).toContain('UPDATE image_assets');
   });

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(images): insert additional project images as non-preview images so uploads can reach the 3-image limit
 - fix(images): allow Take-Off renderings and multiple Project Images by repairing image constraints, preview promotion, and inline upload errors
 - docs(context): add domain glossary, current architecture map, and project-scoped tool ADR
 - feat(takeoff): add ChillDesignStudio project shell, user info, project metadata, budgets, and Take-Off Table tool
