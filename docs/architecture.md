@@ -6,11 +6,11 @@
 C4Context
   title ChillDesignStudio - System Context
 
-  Person(designer, "Designer / Procurement User", "Creates projects, FF&E schedules, take-off tables, material libraries, and exports")
+  Person(designer, "Designer / Procurement User", "Creates projects, FF&E schedules, Take-Off Tables, material libraries, and exports")
   System(app, "ChillDesignStudio", "React SPA + Cloudflare Workers API")
   System_Ext(firebase, "Firebase Auth", "OIDC identity provider")
   System_Ext(neon, "Neon Postgres", "Serverless relational database")
-  System_Ext(r2, "Cloudflare R2", "Private object storage for project images and row renderings")
+  System_Ext(r2, "Cloudflare R2", "Private object storage for Project Images and row-level Renderings")
   System_Ext(cf, "Cloudflare Workers", "Edge runtime hosting the API")
 
   Rel(designer, app, "Uses", "HTTPS browser")
@@ -30,9 +30,9 @@ C4Component
   title ChillDesignStudio - Components
 
   Container_Boundary(spa, "React SPA (Vite, TypeScript)") {
-    Component(routes, "Route Shell", "react-router-dom", "Project list, project chooser, FF&E pages, Take-Off pages")
+    Component(routes, "Route Shell", "react-router-dom", "Project list, tool chooser, FF&E pages, Take-Off Table pages")
     Component(ui, "Components", "React + Tailwind", "Tables, modals, headers, exports, imports, image frames")
-    Component(hooks, "Data Hooks", "TanStack Query", "Project, room, item, material, image, user profile, and take-off queries")
+    Component(hooks, "Data Hooks", "TanStack Query", "Project, room, item, material, image, user profile, and Take-Off Table queries")
     Component(auth, "Auth Module", "Firebase Auth SDK", "Sign-in state and ID token access")
     Component(apiClient, "API Client", "fetch", "Maps client models to /api/v1 payloads")
   }
@@ -84,8 +84,8 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
-- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, and `takeoff_item`.
-- Project images are limited to three per Project, with one `is_primary` image used as the project card preview.
+- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, and `takeoff_item`. In domain language, the primary image attached to an FF&E Item or Take-Off Item row is a Rendering.
+- Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Take-Off Category defaults are created lazily when a project's take-off categories are read: Millwork, Ceiling, Flooring, and Walls.
 
 ## 5. Data Flow

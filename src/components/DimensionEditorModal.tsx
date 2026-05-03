@@ -237,7 +237,7 @@ function NumberField({
         step="1"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+        className="rounded-md border border-gray-300 px-2 py-1.5 text-sm w-full focus:border-brand-500 focus:outline-none"
       />
     </label>
   );
