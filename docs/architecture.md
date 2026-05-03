@@ -1,120 +1,163 @@
 # Architecture
 
-## 1. Context diagram (C4 Level 1)
+## 1. System Context
 
 ```mermaid
 C4Context
-  title FF&E Builder — System Context
+  title ChillDesignStudio - System Context
 
-  Person(designer, "Designer / Buyer", "Creates projects, rooms, and FF&E items; exports specs")
-  System(app, "FF&E Builder", "React SPA + Cloudflare Workers API")
-  System_Ext(firebase, "Firebase Auth", "Google-managed OIDC identity provider")
-  System_Ext(neon, "Neon Postgres", "Serverless relational database (branching, autoscale)")
-  System_Ext(r2, "Cloudflare R2", "Private object storage for user-scoped images")
-  System_Ext(cf, "Cloudflare Workers", "Edge compute that hosts the API")
+  Person(designer, "Designer / Procurement User", "Creates projects, FF&E schedules, take-off tables, material libraries, and exports")
+  System(app, "ChillDesignStudio", "React SPA + Cloudflare Workers API")
+  System_Ext(firebase, "Firebase Auth", "OIDC identity provider")
+  System_Ext(neon, "Neon Postgres", "Serverless relational database")
+  System_Ext(r2, "Cloudflare R2", "Private object storage for project images and row renderings")
+  System_Ext(cf, "Cloudflare Workers", "Edge runtime hosting the API")
 
   Rel(designer, app, "Uses", "HTTPS browser")
-  Rel(app, firebase, "Authenticates", "Firebase JS SDK / REST")
-  Rel(app, cf, "Calls API", "HTTPS /api/*  (JWT in Authorization header)")
-  Rel(cf, neon, "Queries", "Neon serverless driver over WebSocket")
-  Rel(cf, r2, "Reads/writes private image objects", "R2 binding")
+  Rel(app, firebase, "Signs in and refreshes tokens", "Firebase JS SDK")
+  Rel(app, cf, "Calls authenticated API", "HTTPS /api/v1/* with Bearer token")
+  Rel(cf, firebase, "Verifies ID tokens", "Firebase public keys")
+  Rel(cf, neon, "Reads and writes data", "Neon serverless SQL client")
+  Rel(cf, r2, "Streams private image objects", "R2 binding")
 ```
 
----
+ChillDesignStudio is still stored in the `ffe-builder` repository. In domain language, FF&E is one tool inside the product; it is no longer the whole product shell. See [../CONTEXT.md](../CONTEXT.md) for canonical project terms.
 
-## 2. Component diagram (C4 Level 2)
+## 2. Main Modules
 
 ```mermaid
 C4Component
-  title FF&E Builder — Components
+  title ChillDesignStudio - Components
 
   Container_Boundary(spa, "React SPA (Vite, TypeScript)") {
-    Component(ui, "UI Layer", "React, shadcn/ui, Tailwind", "Renders views and forms")
-    Component(auth, "Auth module", "Firebase Auth SDK", "Sign-in, token refresh")
-    Component(apiClient, "API Client", "fetch + Zod", "Calls /api/* with JWT")
+    Component(routes, "Route Shell", "react-router-dom", "Project list, project chooser, FF&E pages, Take-Off pages")
+    Component(ui, "Components", "React + Tailwind", "Tables, modals, headers, exports, imports, image frames")
+    Component(hooks, "Data Hooks", "TanStack Query", "Project, room, item, material, image, user profile, and take-off queries")
+    Component(auth, "Auth Module", "Firebase Auth SDK", "Sign-in state and ID token access")
+    Component(apiClient, "API Client", "fetch", "Maps client models to /api/v1 payloads")
   }
 
   Container_Boundary(worker, "Cloudflare Workers API (Hono, TypeScript)") {
-    Component(router, "Router", "Hono", "Routes HTTP requests to handlers")
-    Component(authMw, "Auth middleware", "Firebase Admin SDK", "Verifies ID tokens")
-    Component(handlers, "Route handlers", "TypeScript", "Business logic")
-    Component(db, "DB layer", "Drizzle ORM + Neon driver", "SQL queries")
-    Component(images, "Image storage", "Cloudflare R2 binding", "Stores and serves private project, room, and item images")
+    Component(router, "Router", "Hono", "Mounts route modules under /api/v1")
+    Component(authMw, "Auth Middleware", "Firebase token verification", "Rejects unauthenticated API calls")
+    Component(ownership, "Ownership Helpers", "SQL lookups", "Ensures resources belong to the Firebase UID")
+    Component(routeHandlers, "Route Handlers", "TypeScript", "Projects, rooms, items, materials, take-off, images, users")
+    Component(db, "Database Client", "Neon serverless SQL template", "Hand-written SQL queries")
+    Component(imageGateway, "Image Gateway", "Cloudflare R2 binding", "Uploads, primary image selection, protected downloads")
   }
 
-  Rel(ui, auth, "Uses")
-  Rel(ui, apiClient, "Calls")
-  Rel(apiClient, router, "HTTPS /api/*")
-  Rel(router, authMw, "Middleware chain")
-  Rel(authMw, handlers, "Passes verified userId")
-  Rel(handlers, db, "Queries")
-  Rel(handlers, images, "Streams image uploads/downloads")
+  Rel(routes, ui, "Renders")
+  Rel(ui, hooks, "Reads and mutates")
+  Rel(hooks, apiClient, "Calls")
+  Rel(apiClient, auth, "Gets current ID token")
+  Rel(apiClient, router, "HTTPS /api/v1/*")
+  Rel(router, authMw, "Applies to /api/v1/*")
+  Rel(authMw, routeHandlers, "Passes Firebase UID")
+  Rel(routeHandlers, ownership, "Checks")
+  Rel(routeHandlers, db, "Queries")
+  Rel(routeHandlers, imageGateway, "Streams image bytes")
 ```
 
-Actual frontend route shell:
+The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no current Drizzle schema in the repo. SQL migrations in `db/migrations/` are the database source of truth, and API/client TypeScript models are maintained manually.
 
-- `/projects` renders project cards.
-- `/projects/:id` renders the project tool chooser for FF&E and Take-Off Table.
-- `/projects/:id/ffe/table` renders the editable grouped FF&E table.
-- `/projects/:id/ffe/catalog` renders the printable one-item-per-page catalog.
-- `/projects/:id/ffe/materials` renders the project material library in the FF&E tool.
-- `/projects/:id/ffe/summary` renders totals by room, status, and vendor.
-- `/projects/:id/takeoff/table` renders the editable grouped take-off table.
-- `/projects/:id/takeoff/materials` renders the project material library in the take-off tool.
-- `/projects/:id/takeoff/summary` renders take-off totals by category.
-- `/signin` is public; project routes are protected by Firebase Auth.
+## 3. Frontend Routes
 
-Project, room, item, material, and take-off rendering image bytes are stored in a private Cloudflare R2 bucket
-named `ffe-images`. The Worker is the only R2 gateway: it validates Firebase
-ownership against Neon image metadata before accepting uploads or returning image
-content.
+- `/signin` is public.
+- `/projects` lists projects, editable user information, and project image previews.
+- `/projects/:id` shows the tool chooser for FF&E and Take-Off Table.
+- `/projects/:id/ffe/table` shows the editable FF&E table grouped by Room.
+- `/projects/:id/ffe/catalog` shows printable FF&E catalog pages.
+- `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
+- `/projects/:id/ffe/summary` shows FF&E budget and status summaries.
+- `/projects/:id/takeoff/table` shows the editable Take-Off Table grouped by Take-Off Category.
+- `/projects/:id/takeoff/materials` shows the shared project material library from the Take-Off tool.
+- `/projects/:id/takeoff/summary` shows Take-Off category and cost summaries.
 
-Take-off data is project-scoped but separate from FF&E rooms/items. The
-`takeoff_categories` and `takeoff_items` tables share only `projects` ownership
-and the `image_assets` gateway, so take-off schema changes do not modify FF&E
-room or item behavior.
+Legacy project routes such as `/projects/:id/table` redirect to their FF&E equivalents.
 
----
+## 4. API, Auth, And Storage Conventions
 
-## 3. Sequence diagram — "user edits an item"
+- Firebase Auth owns user identity. The client waits for auth readiness and sends the current ID token as `Authorization: Bearer <token>` on API calls.
+- The Worker auth middleware protects all `/api/v1/*` routes. `/healthz` is public.
+- The client never imports API worker code and never talks to Neon or R2 directly.
+- Route modules live under `api/src/routes/`: `projects`, `rooms`, `items`, `materials`, `takeoff`, `images`, and `users`.
+- Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
+- Money is stored and transported as integer cents. See [money.md](money.md).
+- Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
+- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, and `takeoff_item`.
+- Project images are limited to three per Project, with one `is_primary` image used as the project card preview.
+- Take-Off Category defaults are created lazily when a project's take-off categories are read: Millwork, Ceiling, Flooring, and Walls.
+
+## 5. Data Flow
+
+### User edits an FF&E Item
 
 ```mermaid
 sequenceDiagram
   participant U as User
-  participant W as React (GitHub Pages)
+  participant W as React SPA
   participant F as Firebase Auth
-  participant A as Worker (api.workers.dev)
+  participant A as Worker API
   participant D as Neon Postgres
 
-  U->>W: Click "Save"
+  U->>W: Edit item cell
   W->>F: Get current ID token
   F-->>W: ID token JWT
-  W->>A: PATCH /api/v1/items/:id  (Bearer <token>)
-  A->>F: verifyIdToken (Admin SDK)
-  F-->>A: { uid: ... }
-  A->>D: SELECT ownership; UPDATE item
-  D-->>A: rows
-  A-->>W: 200 OK { item }
-  W-->>U: re-render
+  W->>A: PATCH /api/v1/items/:id
+  A->>A: Verify token and load UID
+  A->>D: Check item ownership through room/project
+  A->>D: UPDATE item WHERE id and version match
+  D-->>A: Updated row
+  A-->>W: JSON item
+  W-->>U: Refresh table state
 ```
 
----
+### User uploads an image
 
-## 4. Entity-Relationship Diagram
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant W as React SPA
+  participant A as Worker API
+  participant D as Neon Postgres
+  participant R as Cloudflare R2
+
+  U->>W: Choose image file
+  W->>A: POST /api/v1/images?entity_type=...&entity_id=...
+  A->>D: Verify entity ownership
+  A->>R: Put object under users/{uid}/projects/{projectId}/...
+  A->>D: Insert image_assets metadata
+  A-->>W: JSON image metadata
+  W->>A: GET /api/v1/images/:id/content
+  A->>R: Read private object
+  A-->>W: Image bytes
+```
+
+## 6. Entity Relationship Diagram
 
 ```mermaid
 erDiagram
   PROJECTS {
     uuid id PK
-    text owner_uid FK "Firebase UID"
+    text owner_uid "Firebase UID"
     text name
     text client_name
     text company_name
     text project_location
     text budget_mode "shared | individual"
-    int budget_cents "always integer cents"
-    int ffe_budget_cents "always integer cents"
-    int takeoff_budget_cents "always integer cents"
+    bigint budget_cents "integer cents"
+    bigint ffe_budget_cents "integer cents"
+    bigint takeoff_budget_cents "integer cents"
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  USER_PROFILES {
+    text owner_uid PK "Firebase UID"
+    text name
+    text email
+    text phone
+    text company_name
     timestamptz created_at
     timestamptz updated_at
   }
@@ -132,51 +175,17 @@ erDiagram
     uuid id PK
     uuid room_id FK
     text item_name
-    text category "nullable"
-    text vendor "nullable"
-    text model "nullable"
-    text item_id_tag "nullable"
-    text dimensions "nullable"
-    text seat_height "nullable"
-    text finishes "nullable"
-    text notes "nullable"
+    text category
+    text vendor
+    text model
+    text item_id_tag
+    text dimensions
     int qty
-    int unit_cost_cents "always integer cents"
-    numeric markup_pct "numeric(5,2)"
-    text lead_time "nullable"
-    text status "pending | ordered | approved | received"
-    text image_url "nullable"
-    text link_url "nullable"
+    bigint unit_cost_cents "integer cents"
+    numeric markup_pct
+    text status
     int sort_order
-    int version "optimistic concurrency counter"
-    timestamptz created_at
-    timestamptz updated_at
-  }
-
-  IMAGE_ASSETS {
-    uuid id PK
-    text owner_uid "Firebase UID"
-    uuid project_id FK
-    uuid room_id FK "nullable"
-    uuid item_id FK "nullable"
-    uuid material_id FK "nullable"
-    uuid takeoff_item_id FK "nullable"
-    text r2_key
-    text filename
-    text content_type
-    int byte_size
-    text alt_text
-    boolean is_primary
-    timestamptz created_at
-    timestamptz updated_at
-  }
-
-  USER_PROFILES {
-    text owner_uid PK "Firebase UID"
-    text name
-    text email
-    text phone
-    text company_name
+    int version
     timestamptz created_at
     timestamptz updated_at
   }
@@ -208,7 +217,7 @@ erDiagram
     numeric cbm
     numeric quantity
     text quantity_unit
-    int unit_cost_cents "always integer cents"
+    bigint unit_cost_cents "integer cents"
     int sort_order
     int version
     timestamptz created_at
@@ -241,28 +250,90 @@ erDiagram
     timestamptz created_at
   }
 
+  IMAGE_ASSETS {
+    uuid id PK
+    text owner_uid "Firebase UID"
+    uuid project_id FK
+    uuid room_id FK
+    uuid item_id FK
+    uuid material_id FK
+    uuid takeoff_item_id FK
+    text r2_key
+    text filename
+    text content_type
+    int byte_size
+    text alt_text
+    boolean is_primary
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
   PROJECTS ||--o{ ROOMS : contains
   ROOMS ||--o{ ITEMS : contains
+  PROJECTS ||--o{ TAKEOFF_CATEGORIES : contains
+  TAKEOFF_CATEGORIES ||--o{ TAKEOFF_ITEMS : contains
+  PROJECTS ||--o{ MATERIALS : owns
+  ITEMS ||--o{ ITEM_MATERIALS : uses
+  MATERIALS ||--o{ ITEM_MATERIALS : assigned_to
+  MATERIALS ||--o{ MATERIAL_SWATCHES : has
   PROJECTS ||--o{ IMAGE_ASSETS : has
   ROOMS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ IMAGE_ASSETS : can_have
-  PROJECTS ||--o{ MATERIALS : has
-  PROJECTS ||--o{ TAKEOFF_CATEGORIES : has
-  TAKEOFF_CATEGORIES ||--o{ TAKEOFF_ITEMS : contains
-  MATERIALS ||--o{ MATERIAL_SWATCHES : has
   MATERIALS ||--o{ IMAGE_ASSETS : can_have
-  ITEMS ||--o{ ITEM_MATERIALS : uses
-  MATERIALS ||--o{ ITEM_MATERIALS : assigned_to
   TAKEOFF_ITEMS ||--o{ IMAGE_ASSETS : can_have
 ```
 
----
+## 7. Testing And Verification
 
-## 5. Decisions
+Common local checks:
 
-Architecture decisions are recorded as ADRs in [/docs/adr/](/docs/adr/).
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm --filter ffe-api typecheck
+pnpm --filter ffe-api test
+```
 
-| #                                        | Decision                                                                     | Status   |
-| ---------------------------------------- | ---------------------------------------------------------------------------- | -------- |
-| [0001](adr/0001-server-side-db-proxy.md) | Server-side DB proxy (Cloudflare Worker between client and Neon)             | Accepted |
-| [0002](adr/0002-manual-types-for-now.md) | Hand-written TypeScript types; defer auto-generation until schema stabilizes | Accepted |
+Focused checks are preferred while iterating, for example:
+
+```bash
+pnpm exec vitest run src/components/ItemsTable.test.tsx
+pnpm exec vitest run src/lib/exportUtils.test.ts
+```
+
+Database migrations are applied with:
+
+```bash
+pnpm migrate
+```
+
+The API Worker can be run locally with:
+
+```bash
+pnpm --filter ffe-api dev
+```
+
+## 8. Agent Guardrails
+
+- Read `README.md`, `AGENTS.md`, this file, and `docs/changelog.md` before broad changes.
+- Never commit automatically; provide a conventional commit message after changes.
+- Do not run destructive commands or force-push without explicit confirmation.
+- Keep the client/API boundary intact: `src/` must not import from `api/`, and `api/` must not import from `src/`.
+- Put domain types in `src/types/` and export them from `src/types/index.ts`.
+- Put hooks in `src/hooks/` and export them from `src/hooks/index.ts`.
+- Put reusable UI primitives in `src/components/primitives/` and export them from its barrel.
+- Update docs and `docs/changelog.md` when feature behavior, public APIs, env vars, file structure, or dependencies change.
+- Keep monetary values as integer cents from DB through API and application state.
+
+## 9. Decisions
+
+Architecture decisions are recorded as ADRs in [adr/](adr/).
+
+| #                                              | Decision                                                                  | Status   |
+| ---------------------------------------------- | ------------------------------------------------------------------------- | -------- |
+| [0001](adr/0001-server-side-db-proxy.md)       | Server-side DB proxy between the client and Neon                          | Accepted |
+| [0002](adr/0002-manual-types-for-now.md)       | Hand-written TypeScript types; defer generation until schema pain is real | Accepted |
+| [0003](adr/0003-no-storybook-yet.md)           | No Storybook in v1; rely on focused tests and written design-system docs  | Accepted |
+| [0004](adr/0004-project-scoped-tool-models.md) | Keep FF&E and Take-Off as separate project-scoped data models             | Accepted |

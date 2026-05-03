@@ -24,10 +24,10 @@ Open [http://localhost:5173](http://localhost:5173).
 
 ```mermaid
 C4Context
-  title FF&E Builder — System Context
+  title ChillDesignStudio - System Context
 
-  Person(designer, "Designer", "Creates projects, rooms, and FF&E items")
-  System(app, "FF&E Builder", "React SPA + Cloudflare Workers API")
+  Person(designer, "Designer", "Creates projects, FF&E schedules, take-off tables, material libraries, and exports")
+  System(app, "ChillDesignStudio", "React SPA + Cloudflare Workers API")
   System_Ext(firebase, "Firebase Auth", "Google-managed identity provider")
   System_Ext(neon, "Neon Postgres", "Serverless relational database")
   System_Ext(r2, "Cloudflare R2", "Private image object storage")
@@ -52,12 +52,12 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, drawing/location fields, size entry, swatches, CBM, quantity units, integer-cent totals, Excel import, and CSV/Excel/PDF exports.
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
-- **Project header** — editable project name, client name, and budget with a live budget tracker.
-- **Table** (`/projects/:id/table`) — FF&E items grouped by room with persisted collapse state, room subtotals, a sticky grand total, inline editing, structure mutations (add/duplicate/move/delete/reorder), per-room and full-project export (CSV, Excel, PDF), and Excel import with column-mapping wizard.
-- **Catalog** (`/projects/:id/catalog`) — printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, "Print" (browser dialog) and "Export PDF" (direct download) buttons, and a per-item PDF export.
-- **Summary** (`/projects/:id/summary`) — room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
-- **Materials** (`/projects/:id/materials`) — project-specific material libraries store an image swatch, ID, and description, then assign multiple materials to items from the library or Add Item drawer and catalog pages. See [docs/materials.md](docs/materials.md).
-- **Images** — project, room, and item image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
+- **Project header** -- editable project name, client, company, location, and shared or individual budgets.
+- **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
+- **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, browser print, direct PDF export, and per-item PDF export.
+- **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
+- **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/takeoff/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials.md](docs/materials.md).
+- **Images** -- project, room, FF&E item, material, and take-off item image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes
 
@@ -90,16 +90,17 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   └── 404.html       # GitHub Pages SPA redirect script
 ├── api/               # Cloudflare Workers API (TypeScript)
 │   └── src/
-│       ├── routes/    # Hono route handlers (projects, rooms, items, images)
+│       ├── routes/    # Hono route handlers (projects, rooms, items, materials, takeoff, images, users)
 │       ├── middleware/ # Auth middleware (Firebase JWT verification)
 │       └── lib/       # Worker-only utilities (db, firebase-auth, ownership)
 ├── db/
-│   └── migrations/    # SQL migration files — apply via `pnpm db:migrate`, never from client
+│   └── migrations/    # SQL migration files; apply via `pnpm migrate`, never from client
 ├── docs/              # Project documentation
 │   └── adr/           # Architecture Decision Records
 ├── .github/
 │   └── workflows/     # ci.yml (PR gates) + deploy.yml (main → gh-pages)
 ├── .env.example       # Required environment variables (no secrets)
+├── CONTEXT.md         # Canonical product/domain language for agents and engineers
 ├── AGENTS.md          # Canonical rules for all AI agents
 ├── vite.config.ts     # Vite + Vitest config
 ├── tailwind.config.ts # Tailwind v3 design tokens
@@ -114,6 +115,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 | Audience             | Resource                                           |
 | -------------------- | -------------------------------------------------- |
 | AI agents & Codex    | [AGENTS.md](AGENTS.md)                             |
+| Domain language      | [CONTEXT.md](CONTEXT.md)                           |
 | Engineers onboarding | [docs/architecture.md](docs/architecture.md)       |
 | Ops / deployment     | [docs/runbook.md](docs/runbook.md)                 |
 | Accessibility        | [docs/accessibility.md](docs/accessibility.md)     |
