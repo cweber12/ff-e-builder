@@ -8,7 +8,7 @@ const { mockUploadMutate, mockDeleteMutate, mockPrimaryMutate, mockUseImages } =
   mockUploadMutate: vi.fn(),
   mockDeleteMutate: vi.fn(),
   mockPrimaryMutate: vi.fn(),
-  mockUseImages: vi.fn(() => ({ data: [], isLoading: false })),
+  mockUseImages: vi.fn(() => ({ data: [] as ImageAsset[], isLoading: false })),
 }));
 
 vi.mock('../hooks', () => ({
@@ -124,15 +124,15 @@ describe('ProjectImagesModal – full slot flow', () => {
     expect(fileInputs).toHaveLength(3);
 
     // Upload into the second slot (index 1)
-    await user.upload(fileInputs[1], new File(['bytes'], 'new.png', { type: 'image/png' }));
+    await user.upload(fileInputs[1]!, new File(['bytes'], 'new.png', { type: 'image/png' }));
 
     const errors = screen.getAllByText('Projects can have up to 3 images');
     expect(errors).toHaveLength(1);
 
     // The error is inside the second slot, not the first
     const slots = container.querySelectorAll<HTMLElement>('div.grid.gap-2');
-    expect(within(slots[1]).getByText('Projects can have up to 3 images')).toBeInTheDocument();
-    expect(within(slots[0]).queryByText('Projects can have up to 3 images')).toBeNull();
+    expect(within(slots[1]!).getByText('Projects can have up to 3 images')).toBeInTheDocument();
+    expect(within(slots[0]!).queryByText('Projects can have up to 3 images')).toBeNull();
   });
 
   it('calls deleteImage.mutate with the correct image id when Remove is clicked', async () => {
@@ -156,7 +156,7 @@ describe('ProjectImagesModal – full slot flow', () => {
     render(<ProjectImagesModal open onClose={() => {}} project={PROJECT} />);
 
     const radios = screen.getAllByRole('radio', { name: /preview/i });
-    await user.click(radios[1]);
+    await user.click(radios[1]!);
 
     expect(mockPrimaryMutate).toHaveBeenCalledWith('img-secondary');
   });
