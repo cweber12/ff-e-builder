@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(images): allow Take-Off renderings and multiple Project Images by repairing image constraints, preview promotion, and inline upload errors
 - docs(context): add domain glossary, current architecture map, and project-scoped tool ADR
 - feat(takeoff): add ChillDesignStudio project shell, user info, project metadata, budgets, and Take-Off Table tool
 - feat(takeoff): split FF&E and Take-Off into separate project pages with take-off tabs, import, and exports

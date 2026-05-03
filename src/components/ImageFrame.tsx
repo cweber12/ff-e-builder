@@ -56,6 +56,7 @@ export function ImageFrame({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const primaryImage = useMemo(
     () => images.data?.find((image) => image.isPrimary) ?? images.data?.[0] ?? null,
     [images.data],
@@ -129,7 +130,16 @@ export function ImageFrame({
   const handleFile = (file: File | undefined) => {
     if (!file || !canUpload) return;
     setMenuOpen(false);
-    upload.mutate({ file, altText: alt });
+    setUploadError(null);
+    upload.mutate(
+      { file, altText: alt },
+      {
+        onSuccess: () => setUploadError(null),
+        onError: (err) => {
+          setUploadError(err instanceof Error ? err.message : 'Image upload failed');
+        },
+      },
+    );
   };
 
   const handlePaste = (event: ClipboardEvent | ReactClipboardEvent) => {
@@ -215,88 +225,91 @@ export function ImageFrame({
   );
 
   return (
-    <div
-      ref={frameRef}
-      tabIndex={canUpload ? 0 : undefined}
-      onPaste={handlePaste}
-      onMouseEnter={enablePasteTarget}
-      onMouseLeave={disablePasteTarget}
-      onFocus={enablePasteTarget}
-      onBlur={disablePasteTarget}
-      onContextMenu={() => {
-        if (canUpload) frameRef.current?.focus();
-      }}
-      title={canUpload ? 'Upload, paste, or update image' : undefined}
-      className={cn(
-        'relative overflow-hidden rounded-md',
-        canUpload &&
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-        isRoomImage ? 'bg-transparent' : 'border border-gray-200 bg-surface-muted shadow-sm',
-        className,
-      )}
-    >
-      {hasImage && !disabled ? (
-        <>
+    <div className="grid gap-1">
+      <div
+        ref={frameRef}
+        tabIndex={canUpload ? 0 : undefined}
+        onPaste={handlePaste}
+        onMouseEnter={enablePasteTarget}
+        onMouseLeave={disablePasteTarget}
+        onFocus={enablePasteTarget}
+        onBlur={disablePasteTarget}
+        onContextMenu={() => {
+          if (canUpload) frameRef.current?.focus();
+        }}
+        title={canUpload ? 'Upload, paste, or update image' : undefined}
+        className={cn(
+          'relative overflow-hidden rounded-md',
+          canUpload &&
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+          isRoomImage ? 'bg-transparent' : 'border border-gray-200 bg-surface-muted shadow-sm',
+          className,
+        )}
+      >
+        {hasImage && !disabled ? (
+          <>
+            <button
+              type="button"
+              className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              aria-label={`Open image actions for ${alt}`}
+              aria-expanded={menuOpen}
+              title={`Open image actions for ${alt}`}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {content}
+            </button>
+            {menuOpen && (
+              <div className="absolute left-2 top-2 z-20 min-w-28 rounded-md border border-gray-200 bg-white p-1 text-xs shadow-lg">
+                {canUpload && (
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                    onClick={() => inputRef.current?.click()}
+                    title={`Update ${alt}`}
+                  >
+                    Update
+                  </button>
+                )}
+                {canRemove && (
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500"
+                    onClick={handleRemove}
+                    title={`Remove ${alt}`}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        ) : canUpload ? (
           <button
             type="button"
             className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-            aria-label={`Open image actions for ${alt}`}
-            aria-expanded={menuOpen}
-            title={`Open image actions for ${alt}`}
-            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={`Upload image for ${alt}`}
+            title={`Upload or paste image for ${alt}`}
+            onClick={() => inputRef.current?.click()}
           >
             {content}
           </button>
-          {menuOpen && (
-            <div className="absolute left-2 top-2 z-20 min-w-28 rounded-md border border-gray-200 bg-white p-1 text-xs shadow-lg">
-              {canUpload && (
-                <button
-                  type="button"
-                  className="flex w-full items-center rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                  onClick={() => inputRef.current?.click()}
-                  title={`Update ${alt}`}
-                >
-                  Update
-                </button>
-              )}
-              {canRemove && (
-                <button
-                  type="button"
-                  className="flex w-full items-center rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500"
-                  onClick={handleRemove}
-                  title={`Remove ${alt}`}
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          )}
-        </>
-      ) : canUpload ? (
-        <button
-          type="button"
-          className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          aria-label={`Upload image for ${alt}`}
-          title={`Upload or paste image for ${alt}`}
-          onClick={() => inputRef.current?.click()}
-        >
-          {content}
-        </button>
-      ) : (
-        content
-      )}
-      {canUpload && (
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          className="sr-only"
-          onChange={(event) => {
-            handleFile(event.target.files?.[0]);
-            event.currentTarget.value = '';
-          }}
-        />
-      )}
+        ) : (
+          content
+        )}
+        {canUpload && (
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="sr-only"
+            onChange={(event) => {
+              handleFile(event.target.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
+        )}
+      </div>
+      {uploadError ? <p className="text-xs text-danger-600">{uploadError}</p> : null}
     </div>
   );
 }

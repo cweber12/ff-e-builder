@@ -37,7 +37,9 @@ export function useUploadImage(entityType: ImageEntityType, entityId: string) {
     onSuccess: (image) => {
       queryClient.setQueryData<ImageAsset[]>(imageKeys.forEntity(entityType, entityId), (old) => [
         image,
-        ...(old ?? []).filter((candidate) => candidate.id !== image.id),
+        ...(old ?? [])
+          .filter((candidate) => candidate.id !== image.id)
+          .map((candidate) => ({ ...candidate, isPrimary: false })),
       ]);
     },
     onError: (err) => toast.error(`Image upload failed: ${err.message}`),
@@ -49,11 +51,12 @@ export function useDeleteImage(entityType: ImageEntityType, entityId: string) {
 
   return useMutation({
     mutationFn: (imageId: string) => api.images.delete(imageId),
-    onSuccess: (_data, imageId) => {
+    onSuccess: async (_data, imageId) => {
       queryClient.setQueryData<ImageAsset[]>(
         imageKeys.forEntity(entityType, entityId),
         (old) => old?.filter((image) => image.id !== imageId) ?? [],
       );
+      await queryClient.invalidateQueries({ queryKey: imageKeys.forEntity(entityType, entityId) });
     },
     onError: (err) => toast.error(`Image delete failed: ${err.message}`),
   });

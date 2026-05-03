@@ -47,6 +47,33 @@ function imageRow(row: unknown): ImageAsset {
   return row as ImageAsset;
 }
 
+function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): string | null {
+  const message = err instanceof Error ? err.message.toLowerCase() : '';
+
+  if (message.includes('projects can have up to 3 images')) {
+    return 'Projects can have up to 3 images';
+  }
+
+  if (!message.includes('duplicate key value violates unique constraint')) return null;
+
+  if (entityType === 'project') return 'Projects can have only one preview image at a time';
+  if (entityType === 'item' || entityType === 'takeoff_item') {
+    return 'This row already has a rendering';
+  }
+  if (entityType === 'room') return 'This room already has an image';
+  if (entityType === 'material') return 'This material already has an image';
+  return 'An image already exists for this entity';
+}
+
+function isProjectImageAsset(image: ImageAsset): boolean {
+  return (
+    image.room_id === null &&
+    image.item_id === null &&
+    image.material_id === null &&
+    image.takeoff_item_id === null
+  );
+}
+
 async function getOwnedEntityContext(
   env: Env,
   entityType: ImageEntityType,
@@ -270,6 +297,8 @@ router.post('/', async (c) => {
     return c.json({ image: imageRow(rows[0]) }, 201);
   } catch (err) {
     await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+    const validationError = imageInsertErrorMessage(parsed.data.entity_type, err);
+    if (validationError) return c.json({ error: validationError }, 409);
     throw err;
   }
 });
@@ -343,6 +372,30 @@ router.delete('/:id', async (c) => {
 
   const sql = getDb(c.env);
   await sql`DELETE FROM image_assets WHERE id = ${id} AND owner_uid = ${uid}`;
+
+  if (image.is_primary && isProjectImageAsset(image)) {
+    const nextRows = await sql`
+      SELECT *
+      FROM image_assets
+      WHERE owner_uid = ${uid}
+        AND project_id = ${image.project_id}
+        AND room_id IS NULL
+        AND item_id IS NULL
+        AND material_id IS NULL
+        AND takeoff_item_id IS NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+    const nextImage = nextRows[0] as ImageAsset | undefined;
+    if (nextImage) {
+      await sql`
+        UPDATE image_assets
+        SET is_primary = true
+        WHERE id = ${nextImage.id} AND owner_uid = ${uid}
+      `;
+    }
+  }
+
   await c.env.IMAGES_BUCKET.delete(image.r2_key);
   return c.body(null, 204);
 });

@@ -25,6 +25,7 @@ function ProjectImagesPanel({ project }: { project: Project }) {
   const deleteImage = useDeleteImage('project', project.id);
   const setPrimary = useSetPrimaryImage('project', project.id);
   const slots = [...(images.data ?? [])].slice(0, 3);
+  const [slotErrors, setSlotErrors] = useState<Record<number, string>>({});
 
   return (
     <div className="grid gap-4">
@@ -37,10 +38,25 @@ function ProjectImagesPanel({ project }: { project: Project }) {
             key={slot}
             project={project}
             image={slots[slot] ?? null}
+            error={slotErrors[slot] ?? null}
             disabled={upload.isPending || deleteImage.isPending || setPrimary.isPending}
-            onUpload={(file) =>
-              upload.mutate({ file, altText: `${project.name} image ${slot + 1}` })
-            }
+            onUpload={(file) => {
+              setSlotErrors((current) => ({ ...current, [slot]: '' }));
+              upload.mutate(
+                { file, altText: `${project.name} image ${slot + 1}` },
+                {
+                  onSuccess: () => {
+                    setSlotErrors((current) => ({ ...current, [slot]: '' }));
+                  },
+                  onError: (err) => {
+                    setSlotErrors((current) => ({
+                      ...current,
+                      [slot]: err instanceof Error ? err.message : 'Image upload failed',
+                    }));
+                  },
+                },
+              );
+            }}
             onDelete={(imageId) => deleteImage.mutate(imageId)}
             onPrimary={(imageId) => setPrimary.mutate(imageId)}
           />
@@ -53,6 +69,7 @@ function ProjectImagesPanel({ project }: { project: Project }) {
 function ProjectImageSlot({
   project,
   image,
+  error,
   disabled,
   onUpload,
   onDelete,
@@ -60,6 +77,7 @@ function ProjectImageSlot({
 }: {
   project: Project;
   image: ImageAsset | null;
+  error: string | null;
   disabled: boolean;
   onUpload: (file: File) => void;
   onDelete: (imageId: string) => void;
@@ -131,6 +149,7 @@ function ProjectImageSlot({
           </Button>
         </div>
       )}
+      {error ? <p className="text-xs text-danger-600">{error}</p> : null}
     </div>
   );
 }
