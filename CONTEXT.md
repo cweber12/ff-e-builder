@@ -58,6 +58,12 @@ _Avoid_: FF&E item, product only
 The unit of measure attached to a Take-Off Item quantity, such as unit, sq ft, or ln ft.
 _Avoid_: Size unit
 
+### Shared Table UI
+
+**Table Group**:
+The unit of organisation inside a tool's table view — a **Room** in FF&E, a **Take-Off Category** in Take-Off. Both tools share table chrome primitives (group header, add-group button, grand total bar, export menu) but own their own column layout and row behaviour separately.
+_Avoid_: Section, bucket, container
+
 ### Materials And Images
 
 **Material**:

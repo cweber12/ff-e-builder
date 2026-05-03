@@ -11,21 +11,21 @@ import {
   useParams,
 } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AuthGate, SignInPage } from './components/AuthGate';
-import { CatalogView } from './components/CatalogView';
-import { ItemsTable } from './components/ItemsTable';
-import { MaterialsView } from './components/MaterialsView';
-import { DeleteProjectModal } from './components/DeleteProjectModal';
-import { ExportMenu } from './components/ExportMenu';
-import { ImportExcelModal } from './components/ImportExcelModal';
-import { ImportTakeoffExcelModal } from './components/ImportTakeoffExcelModal';
-import { NewProjectModal } from './components/NewProjectModal';
-import { ProjectHeader } from './components/ProjectHeader';
-import { ProjectImagesModal } from './components/ProjectImagesModal';
-import { SummaryView } from './components/SummaryView';
-import { TakeoffSummaryView } from './components/TakeoffSummaryView';
-import { TakeoffTable } from './components/TakeoffTable';
-import { ImageFrame } from './components/ImageFrame';
+import { AuthGate, SignInPage } from './components/shared/AuthGate';
+import { CatalogView } from './components/ffe/catalog/CatalogView';
+import { ItemsTable } from './components/ffe/items/ItemsTable';
+import { MaterialsView } from './components/materials/MaterialsView';
+import { DeleteProjectModal } from './components/project/DeleteProjectModal';
+import { ExportMenu } from './components/shared/ExportMenu';
+import { ImportExcelModal } from './components/ffe/import/ImportExcelModal';
+import { ImportTakeoffExcelModal } from './components/takeoff/import/ImportTakeoffExcelModal';
+import { NewProjectModal } from './components/project/NewProjectModal';
+import { ProjectHeader } from './components/project/ProjectHeader';
+import { ProjectImagesModal } from './components/project/ProjectImagesModal';
+import { SummaryView } from './components/ffe/summary/SummaryView';
+import { TakeoffSummaryView } from './components/takeoff/summary/TakeoffSummaryView';
+import { TakeoffTable } from './components/takeoff/table/TakeoffTable';
+import { ImageFrame } from './components/shared/ImageFrame';
 import { projectTotalCents, takeoffProjectTotalCents } from './lib/calc';
 import {
   exportSummaryCsv,
@@ -39,10 +39,10 @@ import {
   exportTablePdf,
 } from './lib/exportUtils';
 import { recordSession } from './lib/telemetry';
-import { useProjects, useUpdateProject, useDeleteProject } from './hooks/useProjects';
-import { useRoomsWithItems } from './hooks/useRoomsWithItems';
-import { useTakeoffWithItems } from './hooks/useTakeoff';
-import { useUpdateUserProfile, useUserProfile } from './hooks/useUserProfile';
+import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
+import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
+import { useTakeoffWithItems } from './hooks/takeoff/useTakeoff';
+import { useUpdateUserProfile, useUserProfile } from './hooks/shared/useUserProfile';
 import { Button } from './components/primitives';
 import type { Project, RoomWithItems, TakeoffCategoryWithItems } from './types';
 
