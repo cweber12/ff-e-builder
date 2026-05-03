@@ -18,9 +18,11 @@ import { MaterialsView } from './components/MaterialsView';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ExportMenu } from './components/ExportMenu';
 import { ImportExcelModal } from './components/ImportExcelModal';
+import { ImportTakeoffExcelModal } from './components/ImportTakeoffExcelModal';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
+import { TakeoffSummaryView } from './components/TakeoffSummaryView';
 import { TakeoffTable } from './components/TakeoffTable';
 import { ImageFrame } from './components/ImageFrame';
 import { projectTotalCents, takeoffProjectTotalCents } from './lib/calc';
@@ -28,6 +30,9 @@ import {
   exportSummaryCsv,
   exportSummaryExcel,
   exportSummaryPdf,
+  exportTakeoffCsv,
+  exportTakeoffExcel,
+  exportTakeoffPdf,
   exportTableCsv,
   exportTableExcel,
   exportTablePdf,
@@ -65,11 +70,19 @@ function App() {
         <Route path="/projects" element={<ProjectList />} />
         <Route path="/projects/:id" element={<ProjectLayout />}>
           <Route index element={<ProjectToolChooser />} />
-          <Route path="table" element={<ProjectTableRoute />} />
-          <Route path="takeoff" element={<ProjectTakeoffRoute />} />
-          <Route path="catalog" element={<ProjectCatalogRoute />} />
-          <Route path="materials" element={<ProjectMaterialsRoute />} />
-          <Route path="summary" element={<ProjectSummaryRoute />} />
+          <Route path="ffe" element={<ProjectToolRedirect tool="ffe" />} />
+          <Route path="ffe/table" element={<ProjectTableRoute />} />
+          <Route path="ffe/catalog" element={<ProjectCatalogRoute />} />
+          <Route path="ffe/materials" element={<ProjectMaterialsRoute />} />
+          <Route path="ffe/summary" element={<ProjectSummaryRoute />} />
+          <Route path="takeoff" element={<ProjectToolRedirect tool="takeoff" />} />
+          <Route path="takeoff/table" element={<ProjectTakeoffRoute />} />
+          <Route path="takeoff/materials" element={<ProjectTakeoffMaterialsRoute />} />
+          <Route path="takeoff/summary" element={<ProjectTakeoffSummaryRoute />} />
+          <Route path="table" element={<Navigate to="ffe/table" replace />} />
+          <Route path="catalog" element={<Navigate to="ffe/catalog" replace />} />
+          <Route path="materials" element={<Navigate to="ffe/materials" replace />} />
+          <Route path="summary" element={<Navigate to="ffe/summary" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
@@ -191,6 +204,7 @@ function ProjectLayout() {
   const { categoriesWithItems: takeoffCategoriesWithItems, isLoading: takeoffLoading } =
     useTakeoffWithItems(id ?? '');
   const [importOpen, setImportOpen] = useState(false);
+  const [takeoffImportOpen, setTakeoffImportOpen] = useState(false);
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
@@ -234,15 +248,7 @@ function ProjectLayout() {
           >
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
               <div className="flex gap-2 overflow-x-auto">
-                {(
-                  [
-                    ['table', 'Table'],
-                    ['takeoff', 'Take-Off'],
-                    ['catalog', 'Catalog'],
-                    ['materials', 'Materials'],
-                    ['summary', 'Summary'],
-                  ] as const
-                ).map(([to, label]) => (
+                {getSectionTabs(location.pathname).map(([to, label]) => (
                   <NavLink
                     key={to}
                     to={to}
@@ -264,7 +270,9 @@ function ProjectLayout() {
                   activePath={location.pathname}
                   project={project}
                   roomsWithItems={roomsWithItems}
+                  takeoffCategoriesWithItems={takeoffCategoriesWithItems}
                   onImport={() => setImportOpen(true)}
+                  onTakeoffImport={() => setTakeoffImportOpen(true)}
                 />
               )}
             </div>
@@ -277,16 +285,28 @@ function ProjectLayout() {
             />
           </section>
           {project && (
-            <ImportExcelModal
-              open={importOpen}
-              projectId={project.id}
-              rooms={roomsWithItems}
-              onClose={() => setImportOpen(false)}
-              onSuccess={() => {
-                setImportOpen(false);
-                void queryClient.invalidateQueries();
-              }}
-            />
+            <>
+              <ImportExcelModal
+                open={importOpen}
+                projectId={project.id}
+                rooms={roomsWithItems}
+                onClose={() => setImportOpen(false)}
+                onSuccess={() => {
+                  setImportOpen(false);
+                  void queryClient.invalidateQueries();
+                }}
+              />
+              <ImportTakeoffExcelModal
+                open={takeoffImportOpen}
+                projectId={project.id}
+                categories={takeoffCategoriesWithItems}
+                onClose={() => setTakeoffImportOpen(false)}
+                onSuccess={() => {
+                  setTakeoffImportOpen(false);
+                  void queryClient.invalidateQueries();
+                }}
+              />
+            </>
           )}
         </>
       ) : null}
@@ -298,14 +318,18 @@ function ProjectTabActions({
   activePath,
   project,
   roomsWithItems,
+  takeoffCategoriesWithItems,
   onImport,
+  onTakeoffImport,
 }: {
   activePath: string;
   project: Project;
   roomsWithItems: RoomWithItems[];
+  takeoffCategoriesWithItems: TakeoffCategoryWithItems[];
   onImport: () => void;
+  onTakeoffImport: () => void;
 }) {
-  if (activePath.endsWith('/table')) {
+  if (activePath.endsWith('/ffe/table')) {
     return (
       <div className="flex shrink-0 items-center gap-2">
         <ExportMenu
@@ -322,7 +346,7 @@ function ProjectTabActions({
     );
   }
 
-  if (activePath.endsWith('/summary')) {
+  if (activePath.endsWith('/ffe/summary')) {
     return (
       <div className="flex shrink-0 items-center gap-2">
         <ExportMenu
@@ -336,7 +360,41 @@ function ProjectTabActions({
     );
   }
 
+  if (activePath.endsWith('/takeoff/table')) {
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        <ExportMenu
+          label="Export"
+          size="sm"
+          onCsv={() => exportTakeoffCsv(project, takeoffCategoriesWithItems)}
+          onExcel={() => exportTakeoffExcel(project, takeoffCategoriesWithItems)}
+          onPdf={() => exportTakeoffPdf(project, takeoffCategoriesWithItems)}
+        />
+        <Button type="button" variant="secondary" size="sm" onClick={onTakeoffImport}>
+          Import from Excel
+        </Button>
+      </div>
+    );
+  }
+
   return <div className="min-h-8" />;
+}
+
+function getSectionTabs(pathname: string): [string, string][] {
+  if (pathname.includes('/takeoff')) {
+    return [
+      ['takeoff/table', 'Table'],
+      ['takeoff/materials', 'Materials'],
+      ['takeoff/summary', 'Summary'],
+    ];
+  }
+
+  return [
+    ['ffe/table', 'Table'],
+    ['ffe/catalog', 'Catalog'],
+    ['ffe/materials', 'Materials'],
+    ['ffe/summary', 'Summary'],
+  ];
 }
 
 function ProjectTableRoute() {
@@ -344,9 +402,24 @@ function ProjectTableRoute() {
   return <ItemsTable projectId={project.id} project={project} roomsWithItems={roomsWithItems} />;
 }
 
+function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'takeoff' }) {
+  const { id } = useParams();
+  return <Navigate to={`/projects/${id}/${tool}/table`} replace />;
+}
+
 function ProjectTakeoffRoute() {
   const { project } = useProjectContext();
   return <TakeoffTable projectId={project.id} />;
+}
+
+function ProjectTakeoffMaterialsRoute() {
+  const { project } = useProjectContext();
+  return <MaterialsView project={project} />;
+}
+
+function ProjectTakeoffSummaryRoute() {
+  const { project, takeoffCategoriesWithItems } = useProjectContext();
+  return <TakeoffSummaryView project={project} categories={takeoffCategoriesWithItems} />;
 }
 
 function ProjectToolChooser() {
@@ -357,13 +430,13 @@ function ProjectToolChooser() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <ToolCard
-        to="table"
+        to="ffe/table"
         title={hasFfe ? 'Open FF&E' : 'Create FF&E'}
         description="Rooms, items, materials, catalog pages, and FF&E exports."
         meta={`${roomsWithItems.length} rooms`}
       />
       <ToolCard
-        to="takeoff"
+        to="takeoff/table"
         title={hasTakeoff ? 'Open Take-Off Table' : 'Create Take-Off Table'}
         description="Category-based quantities, drawings, swatches, CBM, and cost totals."
         meta={`${takeoffCategoriesWithItems.length} categories`}

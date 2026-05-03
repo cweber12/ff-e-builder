@@ -1,11 +1,19 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { lineTotalCents, roomSubtotalCents, projectTotalCents, sellPriceCents } from './calc';
+import {
+  lineTotalCents,
+  roomSubtotalCents,
+  projectTotalCents,
+  sellPriceCents,
+  takeoffCategorySubtotalCents,
+  takeoffLineTotalCents,
+  takeoffProjectTotalCents,
+} from './calc';
 import { BRAND_RGB } from './constants';
 import { api } from './api';
 import { cents, formatMoney } from '../types';
-import type { Item, Material, Project } from '../types';
+import type { Item, Material, Project, TakeoffCategoryWithItems, TakeoffItem } from '../types';
 import type { RoomWithItems } from '../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -53,6 +61,21 @@ const TABLE_HEADERS = [
   'Notes',
 ];
 
+const TAKEOFF_HEADERS = [
+  'Rendering',
+  'Product Tag',
+  'Plan',
+  'Drawings / Location',
+  'Product Description',
+  'Size',
+  'Swatch',
+  'CBM',
+  'Quantity',
+  'Unit',
+  'Unit Cost',
+  'Total Cost',
+];
+
 function itemToRow(item: Item): string[] {
   const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
   const lineTotal = sellPrice * item.qty;
@@ -71,6 +94,23 @@ function itemToRow(item: Item): string[] {
     item.status,
     item.leadTime ?? '',
     item.notes ?? '',
+  ];
+}
+
+function takeoffItemToRow(item: TakeoffItem): string[] {
+  return [
+    '',
+    item.productTag,
+    item.plan,
+    [item.drawings, item.location].filter(Boolean).join(' / '),
+    item.description,
+    item.sizeLabel,
+    item.swatches.join('; '),
+    String(item.cbm),
+    String(item.quantity),
+    item.quantityUnit,
+    fmtMoney(item.unitCostCents),
+    fmtMoney(takeoffLineTotalCents(item)),
   ];
 }
 
@@ -167,6 +207,18 @@ export function exportSummaryCsv(project: Project, rooms: RoomWithItems[]): void
   triggerDownload(blob, `${safeName(project.name)}-summary.csv`);
 }
 
+export function exportTakeoffCsv(project: Project, categories: TakeoffCategoryWithItems[]): void {
+  const rows = [
+    ['Project', 'Category', ...TAKEOFF_HEADERS],
+    ...categories.flatMap((category) =>
+      category.items.map((item) => [project.name, category.name, ...takeoffItemToRow(item)]),
+    ),
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  triggerDownload(blob, `${safeName(project.name)}-takeoff.csv`);
+}
+
 // ─── Excel ────────────────────────────────────────────────────────────────────
 
 export function exportTableExcel(
@@ -227,6 +279,28 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   XLSX.utils.book_append_sheet(wb, vendorWs, 'Vendors');
 
   XLSX.writeFile(wb, `${safeName(project.name)}-summary.xlsx`);
+}
+
+export function exportTakeoffExcel(project: Project, categories: TakeoffCategoryWithItems[]): void {
+  const wb = XLSX.utils.book_new();
+  const allRows = [
+    ['Project', 'Category', ...TAKEOFF_HEADERS],
+    ...categories.flatMap((category) =>
+      category.items.map((item) => [project.name, category.name, ...takeoffItemToRow(item)]),
+    ),
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(allRows), 'All Take-Off');
+
+  for (const category of categories) {
+    const rows = category.items.map((item) => takeoffItemToRow(item));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([TAKEOFF_HEADERS, ...rows]),
+      category.name.slice(0, 31),
+    );
+  }
+
+  XLSX.writeFile(wb, `${safeName(project.name)}-takeoff.xlsx`);
 }
 
 const MATERIAL_HEADERS = ['Name', 'Material ID', 'Swatch Image', 'Description'];
@@ -384,6 +458,80 @@ export function exportTablePdf(
 
   const suffix = filterRoom ? `-${safeName(filterRoom.name)}` : '';
   doc.save(`${safeName(project.name)}${suffix}-items.pdf`);
+}
+
+export function exportTakeoffPdf(project: Project, categories: TakeoffCategoryWithItems[]): void {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFillColor(230, 230, 230);
+  doc.rect(0, 0, pageWidth, 21, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text((project.companyName || 'ChillDesignStudio').toUpperCase(), pageWidth / 2, 7, {
+    align: 'center',
+  });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(project.name.toUpperCase(), pageWidth / 2, 16, { align: 'center' });
+
+  let startY = 28;
+  for (const category of categories) {
+    doc.setFillColor(255, 245, 205);
+    doc.rect(0, startY - 6, pageWidth, 10, 'F');
+    doc.setTextColor(220, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(category.name.toUpperCase(), 10, startY);
+
+    autoTable(doc, {
+      startY: startY + 5,
+      head: [TAKEOFF_HEADERS],
+      body: [
+        ...category.items.map((item) => takeoffItemToRow(item)),
+        [
+          '',
+          { content: `${category.name} subtotal`, colSpan: 10, styles: { fontStyle: 'bold' } },
+          fmtMoney(takeoffCategorySubtotalCents(category.items)),
+        ],
+      ],
+      theme: 'grid',
+      headStyles: {
+        fillColor: [230, 230, 230],
+        textColor: [0, 0, 0],
+        fontSize: 6,
+        halign: 'center',
+      },
+      bodyStyles: { fontSize: 6, valign: 'middle' },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 22 },
+        3: { cellWidth: 26 },
+        4: { cellWidth: 42 },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 22 },
+        7: { cellWidth: 14 },
+        8: { cellWidth: 18 },
+        9: { cellWidth: 15 },
+        10: { cellWidth: 20 },
+        11: { cellWidth: 22 },
+      },
+      margin: { left: 0, right: 0 },
+    });
+    startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    if (startY > 175) {
+      doc.addPage();
+      startY = 18;
+    }
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+  doc.text(`Grand total: ${fmtMoney(takeoffProjectTotalCents(categories))}`, 10, startY + 2);
+  doc.save(`${safeName(project.name)}-takeoff.pdf`);
 }
 
 // ─── PDF – Summary ────────────────────────────────────────────────────────────

@@ -18,7 +18,11 @@ import {
   type TakeoffItem,
   type SizeMode,
 } from '../types';
-import { takeoffCategorySubtotalCents, takeoffLineTotalCents } from '../lib/calc';
+import {
+  takeoffCategorySubtotalCents,
+  takeoffLineTotalCents,
+  takeoffProjectTotalCents,
+} from '../lib/calc';
 import type { UpdateTakeoffItemInput } from '../lib/api';
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
@@ -43,6 +47,7 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
   const deleteCategory = useDeleteTakeoffCategory(projectId);
   const updateItem = useUpdateTakeoffItem();
   const [newCategoryName, setNewCategoryName] = useState('');
+  const grandTotal = takeoffProjectTotalCents(categoriesWithItems);
 
   const addCategory = async () => {
     const name = newCategoryName.trim();
@@ -63,7 +68,7 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="relative flex flex-col gap-4 pb-16">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-gray-950">Take-Off Table</h2>
@@ -104,6 +109,17 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
           onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch })}
         />
       ))}
+
+      <div className="sticky bottom-0 z-10 rounded-lg border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-semibold uppercase tracking-wide text-gray-600">
+            Grand total
+          </span>
+          <span className="text-lg font-bold tabular-nums text-brand-700">
+            {formatMoney(cents(grandTotal))}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

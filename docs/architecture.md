@@ -55,10 +55,13 @@ Actual frontend route shell:
 
 - `/projects` renders project cards.
 - `/projects/:id` renders the project tool chooser for FF&E and Take-Off Table.
-- `/projects/:id/table` renders the editable grouped FF&E table.
-- `/projects/:id/takeoff` renders the editable grouped take-off table.
-- `/projects/:id/catalog` renders the printable one-item-per-page catalog.
-- `/projects/:id/summary` renders totals by room, status, and vendor.
+- `/projects/:id/ffe/table` renders the editable grouped FF&E table.
+- `/projects/:id/ffe/catalog` renders the printable one-item-per-page catalog.
+- `/projects/:id/ffe/materials` renders the project material library in the FF&E tool.
+- `/projects/:id/ffe/summary` renders totals by room, status, and vendor.
+- `/projects/:id/takeoff/table` renders the editable grouped take-off table.
+- `/projects/:id/takeoff/materials` renders the project material library in the take-off tool.
+- `/projects/:id/takeoff/summary` renders take-off totals by category.
 - `/signin` is public; project routes are protected by Firebase Auth.
 
 Project, room, item, material, and take-off rendering image bytes are stored in a private Cloudflare R2 bucket

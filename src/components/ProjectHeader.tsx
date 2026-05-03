@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { cn } from '../lib/cn';
 import { formatMoney, dollarsToCents, cents } from '../types';
 import type { Project } from '../types';
@@ -174,91 +174,117 @@ export function ProjectHeader({
   if (!project) return <SkeletonBar />;
 
   return (
-    <header className="no-print relative z-20 flex min-h-[6.5rem] flex-col gap-4 overflow-visible bg-brand-500 px-6 py-4 md:flex-row md:items-center md:justify-between">
-      {/* Left: back link, project name, client */}
-      <div className="flex min-w-0 flex-col gap-1">
-        <Link
-          to="/projects"
-          className="flex w-fit items-center gap-1 text-xs text-white/70 transition-colors hover:text-white"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="h-3 w-3 shrink-0"
-            aria-hidden="true"
+    <header className="no-print relative z-20 overflow-visible bg-brand-500 px-6 py-4">
+      <div className="flex min-h-[6.5rem] flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 flex-col gap-1">
+          <Link
+            to="/projects"
+            className="flex w-fit items-center gap-1 text-xs text-white/70 transition-colors hover:text-white"
           >
-            <path
-              fillRule="evenodd"
-              d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"
-              clipRule="evenodd"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-3 w-3 shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"
+                clipRule="evenodd"
+              />
+            </svg>
+            All projects
+          </Link>
+          <InlineTextEdit
+            value={project.name}
+            onSave={onNameSave}
+            aria-label="Project name"
+            renderDisplay={(v) => (
+              <span className="truncate text-xl font-semibold text-white">{v}</span>
+            )}
+            className="text-xl font-semibold text-white"
+            inputClassName="text-xl font-semibold bg-brand-600 text-white border-white/30 placeholder-white/50"
+          />
+          <InlineTextEdit
+            value={project.clientName}
+            onSave={onClientSave}
+            placeholder="Add client name"
+            aria-label="Client name"
+            renderDisplay={(v) =>
+              v ? (
+                <span className="text-sm text-white">{v}</span>
+              ) : (
+                <span className="text-sm italic text-white">Add client name</span>
+              )
+            }
+            className="text-sm text-white"
+            inputClassName="text-sm bg-brand-600 text-white border-white/30 placeholder-white/50"
+          />
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <InlineTextEdit
+              value={project.companyName ?? ''}
+              onSave={onCompanySave}
+              placeholder="Add company"
+              aria-label="Company"
+              renderDisplay={(v) => (
+                <span className="text-xs text-white/85">{v ? `Company: ${v}` : 'Add company'}</span>
+              )}
+              className="text-xs text-white/85"
+              inputClassName="text-xs bg-brand-600 text-white border-white/30 placeholder-white/50"
             />
-          </svg>
-          All projects
-        </Link>
-        <InlineTextEdit
-          value={project.name}
-          onSave={onNameSave}
-          aria-label="Project name"
-          renderDisplay={(v) => (
-            <span className="text-xl font-semibold text-white truncate">{v}</span>
-          )}
-          className="text-xl font-semibold text-white"
-          inputClassName="text-xl font-semibold bg-brand-600 text-white border-white/30 placeholder-white/50"
-        />
-        <InlineTextEdit
-          value={project.clientName}
-          onSave={onClientSave}
-          placeholder="Add client name"
-          aria-label="Client name"
-          renderDisplay={(v) =>
-            v ? (
-              <span className="text-sm text-white">{v}</span>
-            ) : (
-              <span className="text-sm text-white italic">Add client name</span>
-            )
-          }
-          className="text-sm text-white"
-          inputClassName="text-sm bg-brand-600 text-white border-white/30 placeholder-white/50"
-        />
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <InlineTextEdit
-            value={project.companyName ?? ''}
-            onSave={onCompanySave}
-            placeholder="Add company"
-            aria-label="Company"
-            renderDisplay={(v) => (
-              <span className="text-xs text-white/85">{v ? `Company: ${v}` : 'Add company'}</span>
-            )}
-            className="text-xs text-white/85"
-            inputClassName="text-xs bg-brand-600 text-white border-white/30 placeholder-white/50"
-          />
-          <InlineTextEdit
-            value={project.projectLocation ?? ''}
-            onSave={onLocationSave}
-            placeholder="Add location"
-            aria-label="Project location"
-            renderDisplay={(v) => (
-              <span className="text-xs text-white/85">{v ? `Location: ${v}` : 'Add location'}</span>
-            )}
-            className="text-xs text-white/85"
-            inputClassName="text-xs bg-brand-600 text-white border-white/30 placeholder-white/50"
-          />
+            <InlineTextEdit
+              value={project.projectLocation ?? ''}
+              onSave={onLocationSave}
+              placeholder="Add location"
+              aria-label="Project location"
+              renderDisplay={(v) => (
+                <span className="text-xs text-white/85">
+                  {v ? `Location: ${v}` : 'Add location'}
+                </span>
+              )}
+              className="text-xs text-white/85"
+              inputClassName="text-xs bg-brand-600 text-white border-white/30 placeholder-white/50"
+            />
+          </div>
         </div>
+
+        <BudgetTracker
+          budgetCents={project.budgetCents}
+          ffeBudgetCents={project.ffeBudgetCents ?? 0}
+          takeoffBudgetCents={project.takeoffBudgetCents ?? 0}
+          budgetMode={project.budgetMode ?? 'shared'}
+          actualCents={actualCents}
+          onBudgetSave={onBudgetSave}
+          onFfeBudgetSave={onFfeBudgetSave}
+          onTakeoffBudgetSave={onTakeoffBudgetSave}
+          onBudgetModeSave={onBudgetModeSave}
+        />
       </div>
 
-      {/* Right: budget tracker */}
-      <BudgetTracker
-        budgetCents={project.budgetCents}
-        ffeBudgetCents={project.ffeBudgetCents ?? 0}
-        takeoffBudgetCents={project.takeoffBudgetCents ?? 0}
-        budgetMode={project.budgetMode ?? 'shared'}
-        actualCents={actualCents}
-        onBudgetSave={onBudgetSave}
-        onFfeBudgetSave={onFfeBudgetSave}
-        onTakeoffBudgetSave={onTakeoffBudgetSave}
-        onBudgetModeSave={onBudgetModeSave}
-      />
+      <nav aria-label="Project tools" className="mt-3 flex gap-2 overflow-x-auto">
+        {(
+          [
+            [`/projects/${project.id}/ffe/table`, 'FF&E'],
+            [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
+          ] as const
+        ).map(([to, label]) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              [
+                'rounded-md px-3 py-1.5 text-sm font-semibold transition',
+                isActive
+                  ? 'bg-white text-brand-700 shadow-sm'
+                  : 'text-white/75 hover:bg-white/10 hover:text-white',
+              ].join(' ')
+            }
+          >
+            {label}
+          </NavLink>
+        ))}
+      </nav>
     </header>
   );
 }
