@@ -60,7 +60,7 @@ export const catalogRoomsFixture: CatalogRoom[] = [
             materialId: 'FAB-001',
             description: 'Performance boucle upholstery',
             swatchHex: '#E8E2D6',
-            swatches: ['#E8E2D6', '#C9BFAF'],
+            swatches: ['#E8E2D6'],
             createdAt: '2026-01-01T00:00:00Z',
             updatedAt: '2026-01-08T00:00:00Z',
           },

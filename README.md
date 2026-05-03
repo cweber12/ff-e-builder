@@ -50,7 +50,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **Table** (`/projects/:id/table`) — FF&E items grouped by room with persisted collapse state, room subtotals, a sticky grand total, inline editing, structure mutations (add/duplicate/move/delete/reorder), per-room and full-project export (CSV, Excel, PDF), and Excel import with column-mapping wizard.
 - **Catalog** (`/projects/:id/catalog`) — printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, "Print" (browser dialog) and "Export PDF" (direct download) buttons, and a per-item PDF export.
 - **Summary** (`/projects/:id/summary`) — room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
-- **Materials** (`/projects/:id/materials`) — project-specific material libraries store multiple swatches, IDs, descriptions, and images, then assign multiple materials to items from the library or Add Item drawer and catalog pages. See [docs/materials.md](docs/materials.md).
+- **Materials** (`/projects/:id/materials`) — project-specific material libraries store an image swatch, ID, and description, then assign multiple materials to items from the library or Add Item drawer and catalog pages. See [docs/materials.md](docs/materials.md).
 - **Images** — project, room, and item image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes

@@ -24,7 +24,7 @@ type MaterialRow = { id: string; swatch_hex: string };
 
 function normalizeSwatches(swatches: string[] | undefined, swatchHex: string | undefined) {
   const candidates = swatches?.length ? swatches : [swatchHex ?? defaultSwatch];
-  return candidates.filter((swatch, index) => candidates.indexOf(swatch) === index).slice(0, 12);
+  return candidates.filter((swatch, index) => candidates.indexOf(swatch) === index).slice(0, 1);
 }
 
 async function setMaterialSwatches(sql: Sql, materialId: string, swatches: string[]) {

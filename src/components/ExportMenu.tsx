@@ -7,6 +7,7 @@ type ExportMenuProps = {
   onPdf: () => void;
   className?: string;
   size?: 'sm' | 'md';
+  disabled?: boolean;
 };
 
 export function ExportMenu({
@@ -16,6 +17,7 @@ export function ExportMenu({
   onPdf,
   className = '',
   size = 'sm',
+  disabled = false,
 }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +48,8 @@ export function ExportMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={baseBtn}
+        className={`${baseBtn} disabled:cursor-not-allowed disabled:opacity-50`}
+        disabled={disabled}
       >
         {label}
         <svg

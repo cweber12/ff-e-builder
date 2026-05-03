@@ -13,7 +13,7 @@ import {
 } from '../types';
 import { emptyToNull } from '../lib/textUtils';
 import type { Material } from '../types';
-import { MaterialLibraryModal, MaterialSwatches } from './MaterialLibraryModal';
+import { MaterialLibraryModal, MaterialSwatchImage } from './MaterialLibraryModal';
 import { Button, Drawer } from './primitives';
 
 export type AddItemMaterialSelection =
@@ -62,8 +62,6 @@ const typicalCategories = [
   'Appliances',
   'Hardware',
 ];
-
-const defaultSwatch = '#D9D4C8';
 
 export function AddItemDrawer({
   open,
@@ -146,8 +144,6 @@ export function AddItemDrawer({
           type: 'new',
           input: {
             name,
-            swatchHex: defaultSwatch,
-            swatches: [defaultSwatch],
           },
         },
       ]);
@@ -294,21 +290,16 @@ export function AddItemDrawer({
                     : undefined;
                 const name =
                   material?.name ?? (selection.type === 'new' ? selection.input.name : '');
-                const swatches =
-                  material?.swatches ??
-                  (selection.type === 'new' ? (selection.input.swatches ?? []) : []);
-                const fallback =
-                  material?.swatchHex ??
-                  (selection.type === 'new'
-                    ? (selection.input.swatchHex ?? defaultSwatch)
-                    : defaultSwatch);
-
                 return (
                   <span
                     key={`${selection.type}-${name}-${index}`}
                     className="inline-flex items-center gap-1.5 rounded-pill border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700"
                   >
-                    <MaterialSwatches swatches={swatches} fallback={fallback} size="sm" />
+                    {material ? (
+                      <MaterialSwatchImage material={material} size="sm" />
+                    ) : (
+                      <span className="h-6 w-6 rounded-full border border-gray-200 bg-surface-muted" />
+                    )}
                     <span>{name}</span>
                     {selection.type === 'new' && (
                       <span className="rounded-pill bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-700">

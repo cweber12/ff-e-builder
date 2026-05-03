@@ -403,9 +403,6 @@ describe('ItemsTable', () => {
     const dialog = screen.getByRole('dialog', { name: 'Material library' });
     await user.type(within(dialog).getByLabelText('Name'), 'Ivory boucle');
     await user.type(within(dialog).getByLabelText('ID'), 'FAB-001');
-    await user.click(within(dialog).getByRole('button', { name: 'Add swatch' }));
-    await user.clear(within(dialog).getByLabelText('Swatch 2 hex value'));
-    await user.type(within(dialog).getByLabelText('Swatch 2 hex value'), '#C9BFAF');
     await user.click(within(dialog).getByRole('button', { name: 'Add and assign' }));
 
     expect(mockCreateAndAssignMaterialMutateAsync).toHaveBeenCalledWith({
@@ -414,8 +411,6 @@ describe('ItemsTable', () => {
         name: 'Ivory boucle',
         materialId: 'FAB-001',
         description: '',
-        swatchHex: '#D9D4C8',
-        swatches: ['#D9D4C8', '#C9BFAF'],
       },
     });
   });
@@ -440,8 +435,6 @@ describe('ItemsTable', () => {
       itemId: 'item-created',
       input: {
         name: 'Ivory boucle',
-        swatchHex: '#D9D4C8',
-        swatches: ['#D9D4C8'],
       },
     });
   });

@@ -1,5 +1,5 @@
 -- Migration: 0004_material_swatches
--- Allows each project material to have multiple ordered swatches.
+-- Legacy color swatch storage retained for backward-compatible material records.
 
 CREATE TABLE IF NOT EXISTS material_swatches (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),

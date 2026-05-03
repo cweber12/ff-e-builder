@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): use material images as swatches in forms, tables, and exports
+- fix(materials): clarify assignment and removal flows and limit materials to one swatch
 - feat(materials): add searchable material picker cards and table/export library view
 - fix(auth): wait for Firebase auth readiness before attaching API bearer tokens
 - feat(materials): add project Materials tab and project-mounted material API routes

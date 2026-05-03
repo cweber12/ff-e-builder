@@ -162,7 +162,7 @@ export const CreateMaterialSchema = z.object({
   material_id: z.string().max(100).default(''),
   description: z.string().max(1000).default(''),
   swatch_hex: SwatchHexSchema.default('#D9D4C8'),
-  swatches: z.array(SwatchHexSchema).max(12).optional(),
+  swatches: z.array(SwatchHexSchema).max(1).optional(),
 });
 export type CreateMaterialInput = z.infer<typeof CreateMaterialSchema>;
 
