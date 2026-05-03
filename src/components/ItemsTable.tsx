@@ -210,6 +210,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
         type="button"
         aria-label={`Choose status for ${item.itemName}`}
         aria-expanded={menuOpen}
+        title={`Choose status for ${item.itemName}`}
         onClick={(event) => {
           event.stopPropagation();
           setMenuOpen((open) => !open);
@@ -255,6 +256,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
           type="button"
           aria-label={`Open item actions for ${item.itemName}`}
           aria-expanded={open}
+          title={`Open item actions for ${item.itemName}`}
           onClick={() => setOpen((current) => !current)}
           className="rounded px-2 py-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
@@ -373,6 +375,19 @@ function MoreIcon() {
       <circle cx="5" cy="10" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="15" cy="10" r="1.5" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M10 4.5v11M4.5 10h11"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -646,28 +661,17 @@ function writeRoomCollapsed(roomId: string, value: boolean) {
 
 function useCollapsedRoomImages(rooms: RoomWithItems[]) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(rooms.map((room) => [room.id, readRoomImageCollapsed(room.id)])),
+    Object.fromEntries(rooms.map((room) => [room.id, true])),
   );
 
   const toggle = (roomId: string) => {
     setCollapsed((current) => {
       const nextValue = !current[roomId];
-      writeRoomImageCollapsed(roomId, nextValue);
       return { ...current, [roomId]: nextValue };
     });
   };
 
   return { collapsed, toggle };
-}
-
-function readRoomImageCollapsed(roomId: string) {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(`room:${roomId}:imageCollapsed`) === 'true';
-}
-
-function writeRoomImageCollapsed(roomId: string, value: boolean) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(`room:${roomId}:imageCollapsed`, String(value));
 }
 
 function useIsMobileViewport() {
@@ -1051,13 +1055,11 @@ function RoomActionsMenu({
   room,
   rooms,
   project,
-  onAddItem,
   onDeleteRoom,
 }: {
   room: RoomWithItems;
   rooms: RoomWithItems[];
   project?: Project;
-  onAddItem: () => void;
   onDeleteRoom: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -1086,6 +1088,7 @@ function RoomActionsMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Open options for ${room.name}`}
+        title={`Open options for ${room.name}`}
         onClick={() => setOpen((current) => !current)}
         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
@@ -1125,14 +1128,6 @@ function RoomActionsMenu({
               <div className="my-1 h-px bg-gray-100" />
             </>
           )}
-          <button
-            type="button"
-            role="menuitem"
-            className={menuItemClassName}
-            onClick={() => runAction(onAddItem)}
-          >
-            Add item
-          </button>
           <button
             type="button"
             role="menuitem"
@@ -1296,6 +1291,7 @@ function RoomItemsSection({
             onClick={onToggle}
             aria-expanded={!collapsed}
             aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
+            title={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
             className="shrink-0 rounded px-1 text-xs text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <ChevronIcon direction={collapsed ? 'right' : 'down'} />
@@ -1319,17 +1315,26 @@ function RoomItemsSection({
           {formatMoney(cents(subtotal))}
         </span>
         <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label={`Add item to ${room.name}`}
+            title={`Add item to ${room.name}`}
+            onClick={() => setAddDrawerOpen(true)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          >
+            <PlusIcon />
+          </button>
           <RoomActionsMenu
             room={room}
             rooms={rooms}
             {...(project !== undefined ? { project } : {})}
-            onAddItem={() => setAddDrawerOpen(true)}
             onDeleteRoom={() => onDeleteRoom(room)}
           />
           {!isMobile && !collapsed && (
             <button
               type="button"
               aria-label="Expand table view"
+              title="Expand table view"
               onClick={() => setIsExpanded(true)}
               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
@@ -1380,6 +1385,7 @@ function RoomItemsSection({
             className="w-fit rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             onClick={onToggleImage}
             aria-expanded={!imageCollapsed}
+            title={imageCollapsed ? 'Show room image' : 'Hide room image'}
           >
             {imageCollapsed ? 'Show room image' : 'Hide room image'}
           </button>
@@ -1404,12 +1410,13 @@ function RoomItemsSection({
               onClick={onToggleImage}
               aria-expanded={!imageCollapsed}
               aria-label={imageCollapsed ? 'Show room image' : 'Hide room image'}
+              title={imageCollapsed ? 'Show room image' : 'Hide room image'}
             >
               <ChevronIcon direction={imageCollapsed ? 'right' : 'left'} />
             </button>
           </div>
           {!imageCollapsed && (
-            <div className="h-[22rem] w-80 shrink-0 border-r border-gray-100 p-3 xl:w-96">
+            <div className="h-[22rem] w-80 min-w-48 max-w-[50%] shrink-0 resize-x overflow-auto border-r border-gray-100 p-3 xl:w-96">
               <ImageFrame
                 entityType="room"
                 entityId={room.id}
@@ -1485,6 +1492,7 @@ function RoomItemsSection({
                 variant="ghost"
                 size="sm"
                 aria-label="Minimize table view"
+                title="Minimize table view"
                 onClick={() => setIsExpanded(false)}
               >
                 <ExpandIcon expanded />

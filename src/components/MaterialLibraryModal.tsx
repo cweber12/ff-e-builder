@@ -244,9 +244,11 @@ export function MaterialLibraryPanel({
             <p className="rounded-md border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
               {searchQuery.trim()
                 ? 'No available materials match the current search.'
-                : item
-                  ? 'All project materials are already assigned to this item.'
-                  : 'Add the first project material to build a reusable library.'}
+                : (materials.data ?? []).length === 0
+                  ? 'No materials in the project library yet.'
+                  : item
+                    ? 'All project materials are already assigned to this item.'
+                    : 'Add the first project material to build a reusable library.'}
             </p>
           )}
         </div>
@@ -323,6 +325,7 @@ export function MaterialForm({
             className="group flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-dashed border-gray-300 bg-white text-gray-400 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             onClick={() => swatchInputRef.current?.click()}
             aria-label="Upload swatch image"
+            title="Upload swatch image"
           >
             <span className="flex h-full w-full items-center justify-center">
               {previewUrl ? (
@@ -428,6 +431,7 @@ function MaterialPickerCard({
                 onSelect();
               }}
               aria-label={`Add ${material.name}`}
+              title={`Add ${material.name}`}
               disabled={assigning}
             >
               <AddIcon className="h-4 w-4" />
@@ -441,6 +445,7 @@ function MaterialPickerCard({
               onEdit();
             }}
             aria-label={`Edit ${material.name}`}
+            title={`Edit ${material.name}`}
           >
             <EditIcon className="h-4 w-4" />
           </button>

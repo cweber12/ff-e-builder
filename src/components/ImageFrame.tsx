@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+  type ReactNode,
+} from 'react';
 import { cn } from '../lib/cn';
 import { api } from '../lib/api';
 import {
@@ -40,6 +47,7 @@ export function ImageFrame({
 }: ImageFrameProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
   const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
   const canLoad = isPersistedImageEntityId(entityId);
   const images = useImages(entityType, entityId);
@@ -124,6 +132,38 @@ export function ImageFrame({
     upload.mutate({ file, altText: alt });
   };
 
+  const handlePaste = (event: ClipboardEvent | ReactClipboardEvent) => {
+    if (!canUpload) return;
+    const pastedImage = Array.from(event.clipboardData?.items ?? [])
+      .find((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      ?.getAsFile();
+    if (!pastedImage) return;
+    event.preventDefault();
+    handleFile(pastedImage);
+  };
+
+  const enablePasteTarget = () => {
+    if (!canUpload || documentPasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => handlePaste(event);
+    documentPasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disablePasteTarget = () => {
+    const handler = documentPasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    documentPasteHandlerRef.current = null;
+  };
+
+  useEffect(
+    () => () => {
+      const handler = documentPasteHandlerRef.current;
+      if (handler) document.removeEventListener('paste', handler);
+    },
+    [],
+  );
+
   const handleRemove = () => {
     setMenuOpen(false);
     if (primaryImage) {
@@ -177,8 +217,20 @@ export function ImageFrame({
   return (
     <div
       ref={frameRef}
+      tabIndex={canUpload ? 0 : undefined}
+      onPaste={handlePaste}
+      onMouseEnter={enablePasteTarget}
+      onMouseLeave={disablePasteTarget}
+      onFocus={enablePasteTarget}
+      onBlur={disablePasteTarget}
+      onContextMenu={() => {
+        if (canUpload) frameRef.current?.focus();
+      }}
+      title={canUpload ? 'Upload, paste, or update image' : undefined}
       className={cn(
         'relative overflow-hidden rounded-md',
+        canUpload &&
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
         isRoomImage ? 'bg-transparent' : 'border border-gray-200 bg-surface-muted shadow-sm',
         className,
       )}
@@ -190,6 +242,7 @@ export function ImageFrame({
             className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             aria-label={`Open image actions for ${alt}`}
             aria-expanded={menuOpen}
+            title={`Open image actions for ${alt}`}
             onClick={() => setMenuOpen((open) => !open)}
           >
             {content}
@@ -201,6 +254,7 @@ export function ImageFrame({
                   type="button"
                   className="flex w-full items-center rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                   onClick={() => inputRef.current?.click()}
+                  title={`Update ${alt}`}
                 >
                   Update
                 </button>
@@ -210,6 +264,7 @@ export function ImageFrame({
                   type="button"
                   className="flex w-full items-center rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500"
                   onClick={handleRemove}
+                  title={`Remove ${alt}`}
                 >
                   Remove
                 </button>
@@ -222,6 +277,7 @@ export function ImageFrame({
           type="button"
           className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           aria-label={`Upload image for ${alt}`}
+          title={`Upload or paste image for ${alt}`}
           onClick={() => inputRef.current?.click()}
         >
           {content}

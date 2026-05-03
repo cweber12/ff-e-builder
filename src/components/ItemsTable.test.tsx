@@ -159,6 +159,10 @@ async function openLivingRoomActions(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Open options for Living Room' }));
 }
 
+async function openLivingRoomAddItem(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Add item to Living Room' }));
+}
+
 describe('ItemsTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -339,8 +343,7 @@ describe('ItemsTable', () => {
     const user = userEvent.setup();
     renderTable();
 
-    await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
+    await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
 
     await user.type(within(drawer).getByLabelText('Item name'), 'Side Table');
@@ -386,8 +389,7 @@ describe('ItemsTable', () => {
     const user = userEvent.setup();
     renderTable();
 
-    await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
+    await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
 
     await user.click(within(drawer).getByRole('button', { name: 'Accessories' }));
@@ -419,8 +421,7 @@ describe('ItemsTable', () => {
     const user = userEvent.setup();
     renderTable();
 
-    await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
+    await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
 
     await user.type(within(drawer).getByLabelText('Item name'), 'Accent Chair');
@@ -443,8 +444,7 @@ describe('ItemsTable', () => {
     const user = userEvent.setup();
     renderTable();
 
-    await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
+    await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
 
     await user.click(within(drawer).getByRole('button', { name: 'Add material' }));
@@ -456,8 +456,7 @@ describe('ItemsTable', () => {
     const user = userEvent.setup();
     renderTable();
 
-    await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
+    await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
     await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
 

@@ -78,7 +78,7 @@ describe('ProjectHeader', () => {
       />,
     );
     // Remaining is negative — red-300 class should appear
-    const remainingEl = container.querySelector('.text-danger-600');
+    const remainingEl = container.querySelector('.text-red-100');
     expect(remainingEl).toBeInTheDocument();
   });
 
