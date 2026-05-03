@@ -27,8 +27,21 @@ router.post('/', async (c) => {
   const uid = c.get('uid');
   const sql = getDb(c.env);
   const rows = await sql`
-    INSERT INTO projects (owner_uid, name, client_name, budget_cents)
-    VALUES (${uid}, ${parsed.data.name}, ${parsed.data.client_name}, ${parsed.data.budget_cents})
+    INSERT INTO projects (
+      owner_uid, name, client_name, company_name, project_location,
+      budget_mode, budget_cents, ffe_budget_cents, takeoff_budget_cents
+    )
+    VALUES (
+      ${uid},
+      ${parsed.data.name},
+      ${parsed.data.client_name},
+      ${parsed.data.company_name},
+      ${parsed.data.project_location},
+      ${parsed.data.budget_mode},
+      ${parsed.data.budget_cents},
+      ${parsed.data.ffe_budget_cents},
+      ${parsed.data.takeoff_budget_cents}
+    )
     RETURNING *
   `;
   return c.json({ project: rows[0] }, 201);
@@ -55,7 +68,15 @@ router.patch('/:id', async (c) => {
     SET
       name         = COALESCE(${parsed.data.name ?? null}, name),
       client_name  = COALESCE(${parsed.data.client_name ?? null}, client_name),
-      budget_cents = COALESCE(${parsed.data.budget_cents ?? null}, budget_cents)
+      company_name = COALESCE(${parsed.data.company_name ?? null}, company_name),
+      project_location = COALESCE(${parsed.data.project_location ?? null}, project_location),
+      budget_mode = COALESCE(${parsed.data.budget_mode ?? null}, budget_mode),
+      budget_cents = COALESCE(${parsed.data.budget_cents ?? null}, budget_cents),
+      ffe_budget_cents = COALESCE(${parsed.data.ffe_budget_cents ?? null}, ffe_budget_cents),
+      takeoff_budget_cents = COALESCE(
+        ${parsed.data.takeoff_budget_cents ?? null},
+        takeoff_budget_cents
+      )
     WHERE id = ${id} AND owner_uid = ${uid}
     RETURNING *
   `;

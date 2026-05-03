@@ -1,4 +1,4 @@
-export type ImageEntityType = 'project' | 'room' | 'item' | 'material';
+export type ImageEntityType = 'project' | 'room' | 'item' | 'material' | 'takeoff_item';
 
 export type ImageAsset = {
   id: string;
@@ -7,6 +7,7 @@ export type ImageAsset = {
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;
+  takeoffItemId: string | null;
   filename: string;
   contentType: string;
   byteSize: number;

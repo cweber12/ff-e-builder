@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { lineTotalCents, projectTotalCents, roomSubtotalCents, sellPriceCents } from './calc';
+import {
+  lineTotalCents,
+  projectTotalCents,
+  roomSubtotalCents,
+  sellPriceCents,
+  takeoffLineTotalCents,
+  takeoffProjectTotalCents,
+} from './calc';
 import type { Item } from '../types/item';
+import type { TakeoffItem } from '../types/takeoff';
 
 const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'i1',
@@ -27,6 +35,65 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   updatedAt: '2024-01-01T00:00:00Z',
   materials: [],
   ...overrides,
+});
+
+const makeTakeoffItem = (overrides: Partial<TakeoffItem> = {}): TakeoffItem => ({
+  id: 'to1',
+  categoryId: 'cat1',
+  productTag: 'MW-1',
+  plan: '',
+  drawings: '',
+  location: '',
+  description: '',
+  sizeLabel: '',
+  sizeMode: 'imperial',
+  sizeW: '',
+  sizeD: '',
+  sizeH: '',
+  sizeUnit: 'ft/in',
+  swatches: [],
+  cbm: 0,
+  quantity: 1,
+  quantityUnit: 'unit',
+  unitCostCents: 10000,
+  sortOrder: 0,
+  version: 1,
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+  ...overrides,
+});
+
+describe('takeoff totals', () => {
+  it('multiplies unit cost cents by decimal quantity', () => {
+    expect(takeoffLineTotalCents(makeTakeoffItem({ unitCostCents: 1250, quantity: 2.5 }))).toBe(
+      3125,
+    );
+  });
+
+  it('sums take-off categories into a project total', () => {
+    expect(
+      takeoffProjectTotalCents([
+        {
+          id: 'cat1',
+          projectId: 'p1',
+          name: 'Millwork',
+          sortOrder: 0,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          items: [makeTakeoffItem({ unitCostCents: 2000, quantity: 3 })],
+        },
+        {
+          id: 'cat2',
+          projectId: 'p1',
+          name: 'Flooring',
+          sortOrder: 1,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          items: [makeTakeoffItem({ unitCostCents: 500, quantity: 12 })],
+        },
+      ]),
+    ).toBe(12000);
+  });
 });
 
 describe('sellPriceCents', () => {

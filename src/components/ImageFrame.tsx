@@ -285,16 +285,18 @@ export function ImageFrame({
       ) : (
         content
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        className="sr-only"
-        onChange={(event) => {
-          handleFile(event.target.files?.[0]);
-          event.currentTarget.value = '';
-        }}
-      />
+      {canUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="sr-only"
+          onChange={(event) => {
+            handleFile(event.target.files?.[0]);
+            event.currentTarget.value = '';
+          }}
+        />
+      )}
     </div>
   );
 }

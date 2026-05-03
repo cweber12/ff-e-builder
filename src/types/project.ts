@@ -2,6 +2,7 @@
 
 /** Integer cents — prevents accidental dollar / cent mix-ups. */
 export type Cents = number & { readonly __brand: 'Cents' };
+export type BudgetMode = 'shared' | 'individual';
 
 export const cents = (n: number): Cents => n as Cents;
 
@@ -17,8 +18,13 @@ export type Project = {
   ownerUid: string;
   name: string;
   clientName: string;
+  companyName?: string;
+  projectLocation?: string;
+  budgetMode?: BudgetMode;
   /** Always integer cents — see /docs/money.md */
   budgetCents: number;
+  ffeBudgetCents?: number;
+  takeoffBudgetCents?: number;
   createdAt: string;
   updatedAt: string;
 };

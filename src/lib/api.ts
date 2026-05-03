@@ -7,6 +7,9 @@ import type {
   Material,
   Project,
   Room,
+  TakeoffCategory,
+  TakeoffItem,
+  UserProfile,
 } from '../types';
 
 // ─── Error type ───────────────────────────────────────────────────────────
@@ -29,7 +32,12 @@ interface RawProject {
   owner_uid: string;
   name: string;
   client_name: string;
+  company_name: string;
+  project_location: string;
+  budget_mode: 'shared' | 'individual';
   budget_cents: number;
+  ffe_budget_cents: number;
+  takeoff_budget_cents: number;
   created_at: string;
   updated_at: string;
 }
@@ -77,11 +85,56 @@ interface RawImageAsset {
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
+  takeoff_item_id: string | null;
   filename: string;
   content_type: string;
   byte_size: number;
   alt_text: string;
   is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RawUserProfile {
+  owner_uid: string;
+  name: string;
+  email: string;
+  phone: string;
+  company_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RawTakeoffCategory {
+  id: string;
+  project_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RawTakeoffItem {
+  id: string;
+  category_id: string;
+  product_tag: string;
+  plan: string;
+  drawings: string;
+  location: string;
+  description: string;
+  size_label: string;
+  size_mode: 'imperial' | 'metric';
+  size_w: string;
+  size_d: string;
+  size_h: string;
+  size_unit: string;
+  swatches: string[];
+  cbm: string;
+  quantity: string;
+  quantity_unit: string;
+  unit_cost_cents: number;
+  sort_order: number;
+  version: number;
   created_at: string;
   updated_at: string;
 }
@@ -105,7 +158,12 @@ const mapProject = (r: RawProject): Project => ({
   ownerUid: r.owner_uid,
   name: r.name,
   clientName: r.client_name,
+  companyName: r.company_name ?? '',
+  projectLocation: r.project_location ?? '',
+  budgetMode: r.budget_mode ?? 'shared',
   budgetCents: r.budget_cents,
+  ffeBudgetCents: r.ffe_budget_cents ?? 0,
+  takeoffBudgetCents: r.takeoff_budget_cents ?? 0,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -152,11 +210,56 @@ const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   roomId: r.room_id,
   itemId: r.item_id,
   materialId: r.material_id ?? null,
+  takeoffItemId: r.takeoff_item_id ?? null,
   filename: r.filename,
   contentType: r.content_type,
   byteSize: r.byte_size,
   altText: r.alt_text,
   isPrimary: r.is_primary,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+const mapUserProfile = (r: RawUserProfile): UserProfile => ({
+  ownerUid: r.owner_uid,
+  name: r.name,
+  email: r.email,
+  phone: r.phone,
+  companyName: r.company_name,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+const mapTakeoffCategory = (r: RawTakeoffCategory): TakeoffCategory => ({
+  id: r.id,
+  projectId: r.project_id,
+  name: r.name,
+  sortOrder: r.sort_order,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+const mapTakeoffItem = (r: RawTakeoffItem): TakeoffItem => ({
+  id: r.id,
+  categoryId: r.category_id,
+  productTag: r.product_tag,
+  plan: r.plan,
+  drawings: r.drawings,
+  location: r.location,
+  description: r.description,
+  sizeLabel: r.size_label,
+  sizeMode: r.size_mode,
+  sizeW: r.size_w,
+  sizeD: r.size_d,
+  sizeH: r.size_h,
+  sizeUnit: r.size_unit as TakeoffItem['sizeUnit'],
+  swatches: Array.isArray(r.swatches) ? r.swatches : [],
+  cbm: Number(r.cbm),
+  quantity: Number(r.quantity),
+  quantityUnit: r.quantity_unit,
+  unitCostCents: r.unit_cost_cents,
+  sortOrder: r.sort_order,
+  version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -178,13 +281,23 @@ const mapMaterial = (r: RawMaterial): Material => ({
 export type CreateProjectInput = {
   name: string;
   clientName?: string;
+  companyName?: string;
+  projectLocation?: string;
+  budgetMode?: 'shared' | 'individual';
   budgetCents?: number;
+  ffeBudgetCents?: number;
+  takeoffBudgetCents?: number;
 };
 
 export type UpdateProjectInput = {
   name?: string;
   clientName?: string;
+  companyName?: string;
+  projectLocation?: string;
+  budgetMode?: 'shared' | 'individual';
   budgetCents?: number;
+  ffeBudgetCents?: number;
+  takeoffBudgetCents?: number;
 };
 
 export type CreateRoomInput = {
@@ -260,6 +373,48 @@ export type CreateMaterialInput = {
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 
+export type UpsertUserProfileInput = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  companyName?: string;
+};
+
+export type CreateTakeoffCategoryInput = {
+  name: string;
+  sortOrder?: number;
+};
+
+export type UpdateTakeoffCategoryInput = {
+  name?: string;
+  sortOrder?: number;
+};
+
+export type CreateTakeoffItemInput = {
+  productTag?: string;
+  plan?: string;
+  drawings?: string;
+  location?: string;
+  description?: string;
+  sizeLabel?: string;
+  sizeMode?: 'imperial' | 'metric';
+  sizeW?: string;
+  sizeD?: string;
+  sizeH?: string;
+  sizeUnit?: string;
+  swatches?: string[];
+  cbm?: number;
+  quantity?: number;
+  quantityUnit?: string;
+  unitCostCents?: number;
+  sortOrder?: number;
+};
+
+export type UpdateTakeoffItemInput = Partial<CreateTakeoffItemInput> & {
+  categoryId?: string;
+  version: number;
+};
+
 // ─── Core fetch helper ────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -316,7 +471,12 @@ export const api = {
         body: JSON.stringify({
           name: input.name,
           client_name: input.clientName ?? '',
+          company_name: input.companyName ?? '',
+          project_location: input.projectLocation ?? '',
+          budget_mode: input.budgetMode ?? 'shared',
           budget_cents: input.budgetCents ?? 0,
+          ffe_budget_cents: input.ffeBudgetCents ?? 0,
+          takeoff_budget_cents: input.takeoffBudgetCents ?? 0,
         }),
       }).then((r) => mapProject(r.project)),
 
@@ -326,12 +486,126 @@ export const api = {
         body: JSON.stringify({
           name: patch.name,
           client_name: patch.clientName,
+          company_name: patch.companyName,
+          project_location: patch.projectLocation,
+          budget_mode: patch.budgetMode,
           budget_cents: patch.budgetCents,
+          ffe_budget_cents: patch.ffeBudgetCents,
+          takeoff_budget_cents: patch.takeoffBudgetCents,
         }),
       }).then((r) => mapProject(r.project)),
 
     delete: (id: string): Promise<void> =>
       apiFetch<void>(`/api/v1/projects/${id}`, { method: 'DELETE' }),
+  },
+  users: {
+    me: (): Promise<UserProfile> =>
+      apiFetch<{ profile: RawUserProfile }>('/api/v1/users/me').then((r) =>
+        mapUserProfile(r.profile),
+      ),
+
+    updateMe: (input: UpsertUserProfileInput): Promise<UserProfile> =>
+      apiFetch<{ profile: RawUserProfile }>('/api/v1/users/me', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: input.name ?? '',
+          email: input.email ?? '',
+          phone: input.phone ?? '',
+          company_name: input.companyName ?? '',
+        }),
+      }).then((r) => mapUserProfile(r.profile)),
+  },
+
+  takeoff: {
+    categories: (projectId: string): Promise<TakeoffCategory[]> =>
+      apiFetch<{ categories: RawTakeoffCategory[] }>(
+        `/api/v1/projects/${projectId}/takeoff/categories`,
+      ).then((r) => r.categories.map(mapTakeoffCategory)),
+
+    createCategory: (
+      projectId: string,
+      input: CreateTakeoffCategoryInput,
+    ): Promise<TakeoffCategory> =>
+      apiFetch<{ category: RawTakeoffCategory }>(
+        `/api/v1/projects/${projectId}/takeoff/categories`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: input.name,
+            sort_order: input.sortOrder ?? 0,
+          }),
+        },
+      ).then((r) => mapTakeoffCategory(r.category)),
+
+    updateCategory: (id: string, patch: UpdateTakeoffCategoryInput): Promise<TakeoffCategory> =>
+      apiFetch<{ category: RawTakeoffCategory }>(`/api/v1/takeoff/categories/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: patch.name,
+          sort_order: patch.sortOrder,
+        }),
+      }).then((r) => mapTakeoffCategory(r.category)),
+
+    deleteCategory: (id: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/takeoff/categories/${id}`, { method: 'DELETE' }),
+
+    items: (categoryId: string): Promise<TakeoffItem[]> =>
+      apiFetch<{ items: RawTakeoffItem[] }>(`/api/v1/takeoff/categories/${categoryId}/items`).then(
+        (r) => r.items.map(mapTakeoffItem),
+      ),
+
+    createItem: (categoryId: string, input: CreateTakeoffItemInput): Promise<TakeoffItem> =>
+      apiFetch<{ item: RawTakeoffItem }>(`/api/v1/takeoff/categories/${categoryId}/items`, {
+        method: 'POST',
+        body: JSON.stringify({
+          product_tag: input.productTag ?? '',
+          plan: input.plan ?? '',
+          drawings: input.drawings ?? '',
+          location: input.location ?? '',
+          description: input.description ?? '',
+          size_label: input.sizeLabel ?? '',
+          size_mode: input.sizeMode ?? 'imperial',
+          size_w: input.sizeW ?? '',
+          size_d: input.sizeD ?? '',
+          size_h: input.sizeH ?? '',
+          size_unit: input.sizeUnit ?? 'in',
+          swatches: input.swatches ?? [],
+          cbm: input.cbm ?? 0,
+          quantity: input.quantity ?? 1,
+          quantity_unit: input.quantityUnit ?? 'unit',
+          unit_cost_cents: input.unitCostCents ?? 0,
+          sort_order: input.sortOrder ?? 0,
+        }),
+      }).then((r) => mapTakeoffItem(r.item)),
+
+    updateItem: (id: string, patch: UpdateTakeoffItemInput): Promise<TakeoffItem> =>
+      apiFetch<{ item: RawTakeoffItem }>(`/api/v1/takeoff/items/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          category_id: patch.categoryId,
+          product_tag: patch.productTag,
+          plan: patch.plan,
+          drawings: patch.drawings,
+          location: patch.location,
+          description: patch.description,
+          size_label: patch.sizeLabel,
+          size_mode: patch.sizeMode,
+          size_w: patch.sizeW,
+          size_d: patch.sizeD,
+          size_h: patch.sizeH,
+          size_unit: patch.sizeUnit,
+          swatches: patch.swatches,
+          cbm: patch.cbm,
+          quantity: patch.quantity,
+          quantity_unit: patch.quantityUnit,
+          unit_cost_cents: patch.unitCostCents,
+          sort_order: patch.sortOrder,
+          version: patch.version,
+        }),
+      }).then((r) => mapTakeoffItem(r.item)),
+
+    deleteItem: (id: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/takeoff/items/${id}`, { method: 'DELETE' }),
   },
 
   rooms: {

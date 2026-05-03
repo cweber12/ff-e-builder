@@ -28,6 +28,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           aria-expanded="false"
           aria-label="Open image actions for Channel Lounge Chair"
           class="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          title="Open image actions for Channel Lounge Chair"
           type="button"
         >
           <img
@@ -36,11 +37,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=1200&q=80"
           />
         </button>
-        <input
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          class="sr-only"
-          type="file"
-        />
       </div>
     </div>
     <div
@@ -124,20 +120,19 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           <span
             class="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
           >
-            <span
-              class="inline-flex shrink-0 items-center "
+            <div
+              class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-6 w-6 rounded-full shrink-0 border-gray-200 shadow-none "
             >
-              <span
-                aria-hidden="true"
-                class="h-2.5 w-2.5 rounded-full -ml-1.5 first:ml-0 border border-gray-200"
-                style="background-color: rgb(232, 226, 214);"
-              />
-              <span
-                aria-hidden="true"
-                class="h-2.5 w-2.5 rounded-full -ml-1.5 first:ml-0 border border-gray-200"
-                style="background-color: rgb(201, 191, 175);"
-              />
-            </span>
+              <div
+                class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
+              >
+                <span
+                  class="text-[10px] font-semibold text-gray-400"
+                >
+                  IMG
+                </span>
+              </div>
+            </div>
             Ivory boucle
           </span>
         </div>

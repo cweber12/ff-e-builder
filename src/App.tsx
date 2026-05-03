@@ -21,8 +21,9 @@ import { ImportExcelModal } from './components/ImportExcelModal';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
 import { SummaryView } from './components/SummaryView';
+import { TakeoffTable } from './components/TakeoffTable';
 import { ImageFrame } from './components/ImageFrame';
-import { projectTotalCents } from './lib/calc';
+import { projectTotalCents, takeoffProjectTotalCents } from './lib/calc';
 import {
   exportSummaryCsv,
   exportSummaryExcel,
@@ -34,12 +35,15 @@ import {
 import { recordSession } from './lib/telemetry';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/useProjects';
 import { useRoomsWithItems } from './hooks/useRoomsWithItems';
+import { useTakeoffWithItems } from './hooks/useTakeoff';
+import { useUpdateUserProfile, useUserProfile } from './hooks/useUserProfile';
 import { Button } from './components/primitives';
-import type { Project, RoomWithItems } from './types';
+import type { Project, RoomWithItems, TakeoffCategoryWithItems } from './types';
 
 type ProjectContext = {
   project: Project;
   roomsWithItems: RoomWithItems[];
+  takeoffCategoriesWithItems: TakeoffCategoryWithItems[];
 };
 
 function App() {
@@ -60,8 +64,9 @@ function App() {
       >
         <Route path="/projects" element={<ProjectList />} />
         <Route path="/projects/:id" element={<ProjectLayout />}>
-          <Route index element={<Navigate to="table" replace />} />
+          <Route index element={<ProjectToolChooser />} />
           <Route path="table" element={<ProjectTableRoute />} />
+          <Route path="takeoff" element={<ProjectTakeoffRoute />} />
           <Route path="catalog" element={<ProjectCatalogRoute />} />
           <Route path="materials" element={<ProjectMaterialsRoute />} />
           <Route path="summary" element={<ProjectSummaryRoute />} />
@@ -83,8 +88,13 @@ function ProjectList() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-950">Projects</h1>
-            <p className="mt-1 text-sm text-gray-600">Manage FF&amp;E schedules and catalogs.</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">
+              ChillDesignStudio
+            </p>
+            <h1 className="mt-1 text-3xl font-bold text-gray-950">Projects</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Manage FF&amp;E schedules, catalogs, materials, and take-off tables.
+            </p>
           </div>
           <button
             type="button"
@@ -94,6 +104,8 @@ function ProjectList() {
             + New project
           </button>
         </div>
+
+        <UserInfoSection />
 
         {isLoading ? (
           <div className="mt-8 flex justify-center py-12">
@@ -117,7 +129,7 @@ function ProjectList() {
                   />
                 </div>
                 <Link
-                  to={`/projects/${project.id}/table`}
+                  to={`/projects/${project.id}`}
                   className="block p-5 focus-visible:outline-none"
                 >
                   {project.clientName && (
@@ -126,6 +138,11 @@ function ProjectList() {
                     </p>
                   )}
                   <h2 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h2>
+                  {(project.companyName || project.projectLocation) && (
+                    <p className="mt-2 text-sm text-gray-500">
+                      {[project.companyName, project.projectLocation].filter(Boolean).join(' | ')}
+                    </p>
+                  )}
                 </Link>
                 <button
                   type="button"
@@ -171,13 +188,18 @@ function ProjectLayout() {
   const project = projects?.find((p) => p.id === id);
   const updateProject = useUpdateProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
+  const { categoriesWithItems: takeoffCategoriesWithItems, isLoading: takeoffLoading } =
+    useTakeoffWithItems(id ?? '');
   const [importOpen, setImportOpen] = useState(false);
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
 
-  const isLoading = projectsLoading || dataLoading;
-  const actualCents = projectTotalCents(roomsWithItems);
+  const isLoading = projectsLoading || dataLoading || takeoffLoading;
+  const ffeActualCents = projectTotalCents(roomsWithItems);
+  const takeoffActualCents = takeoffProjectTotalCents(takeoffCategoriesWithItems);
+  const actualCents =
+    project?.budgetMode === 'individual' ? ffeActualCents : ffeActualCents + takeoffActualCents;
 
   return (
     <main className="min-h-screen bg-surface-muted">
@@ -186,7 +208,18 @@ function ProjectLayout() {
         actualCents={actualCents}
         onNameSave={(name) => updateProject.mutate({ id: id!, patch: { name } })}
         onClientSave={(clientName) => updateProject.mutate({ id: id!, patch: { clientName } })}
+        onCompanySave={(companyName) => updateProject.mutate({ id: id!, patch: { companyName } })}
+        onLocationSave={(projectLocation) =>
+          updateProject.mutate({ id: id!, patch: { projectLocation } })
+        }
         onBudgetSave={(budgetCents) => updateProject.mutate({ id: id!, patch: { budgetCents } })}
+        onFfeBudgetSave={(ffeBudgetCents) =>
+          updateProject.mutate({ id: id!, patch: { ffeBudgetCents } })
+        }
+        onTakeoffBudgetSave={(takeoffBudgetCents) =>
+          updateProject.mutate({ id: id!, patch: { takeoffBudgetCents } })
+        }
+        onBudgetModeSave={(budgetMode) => updateProject.mutate({ id: id!, patch: { budgetMode } })}
       />
       {isLoading ? (
         <div className="flex justify-center py-24">
@@ -204,6 +237,7 @@ function ProjectLayout() {
                 {(
                   [
                     ['table', 'Table'],
+                    ['takeoff', 'Take-Off'],
                     ['catalog', 'Catalog'],
                     ['materials', 'Materials'],
                     ['summary', 'Summary'],
@@ -236,7 +270,11 @@ function ProjectLayout() {
             </div>
           </nav>
           <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
-            <Outlet context={{ project, roomsWithItems } satisfies ProjectContext} />
+            <Outlet
+              context={
+                { project, roomsWithItems, takeoffCategoriesWithItems } satisfies ProjectContext
+              }
+            />
           </section>
           {project && (
             <ImportExcelModal
@@ -306,6 +344,61 @@ function ProjectTableRoute() {
   return <ItemsTable projectId={project.id} project={project} roomsWithItems={roomsWithItems} />;
 }
 
+function ProjectTakeoffRoute() {
+  const { project } = useProjectContext();
+  return <TakeoffTable projectId={project.id} />;
+}
+
+function ProjectToolChooser() {
+  const { project, roomsWithItems, takeoffCategoriesWithItems } = useProjectContext();
+  const hasFfe = roomsWithItems.some((room) => room.items.length > 0);
+  const hasTakeoff = takeoffCategoriesWithItems.some((category) => category.items.length > 0);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <ToolCard
+        to="table"
+        title={hasFfe ? 'Open FF&E' : 'Create FF&E'}
+        description="Rooms, items, materials, catalog pages, and FF&E exports."
+        meta={`${roomsWithItems.length} rooms`}
+      />
+      <ToolCard
+        to="takeoff"
+        title={hasTakeoff ? 'Open Take-Off Table' : 'Create Take-Off Table'}
+        description="Category-based quantities, drawings, swatches, CBM, and cost totals."
+        meta={`${takeoffCategoriesWithItems.length} categories`}
+      />
+      <p className="md:col-span-2 text-sm text-gray-500">
+        {project.name} can use either tool independently, or move between both from the project
+        tabs.
+      </p>
+    </div>
+  );
+}
+
+function ToolCard({
+  to,
+  title,
+  description,
+  meta,
+}: {
+  to: string;
+  title: string;
+  description: string;
+  meta: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-brand-500 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+    >
+      <span className="text-xs font-semibold uppercase tracking-wide text-brand-600">{meta}</span>
+      <h2 className="mt-3 text-2xl font-semibold text-gray-950">{title}</h2>
+      <p className="mt-2 text-sm text-gray-600">{description}</p>
+    </Link>
+  );
+}
+
 function ProjectCatalogRoute() {
   const { project, roomsWithItems } = useProjectContext();
   return <CatalogView project={project} rooms={roomsWithItems} />;
@@ -350,6 +443,77 @@ function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
         </button>
       </div>
     </div>
+  );
+}
+
+function UserInfoSection() {
+  const { data: profile } = useUserProfile();
+  const updateProfile = useUpdateUserProfile();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [companyName, setCompanyName] = useState('');
+
+  useEffect(() => {
+    if (!profile) return;
+    setName(profile.name);
+    setEmail(profile.email);
+    setPhone(profile.phone);
+    setCompanyName(profile.companyName);
+  }, [profile]);
+
+  return (
+    <section className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <span>
+          <span className="block text-sm font-semibold text-gray-950">User information</span>
+          <span className="text-sm text-gray-500">
+            {[profile?.name, profile?.email, profile?.companyName].filter(Boolean).join(' | ') ||
+              'Add contact details for project documentation'}
+          </span>
+        </span>
+        <span className="text-sm font-medium text-brand-700">{open ? 'Close' : 'Edit'}</span>
+      </button>
+      {open && (
+        <form
+          className="mt-4 grid gap-3 md:grid-cols-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            updateProfile.mutate({ name, email, phone, companyName });
+          }}
+        >
+          {[
+            ['Name', name, setName],
+            ['Email', email, setEmail],
+            ['Phone', phone, setPhone],
+            ['Company', companyName, setCompanyName],
+          ].map(([label, value, setter]) => (
+            <label
+              key={label as string}
+              className="flex flex-col gap-1 text-sm font-medium text-gray-700"
+            >
+              {label as string}
+              <input
+                type={label === 'Email' ? 'email' : 'text'}
+                value={value as string}
+                onChange={(event) => (setter as (next: string) => void)(event.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+              />
+            </label>
+          ))}
+          <div className="flex items-end">
+            <Button type="submit" variant="primary" disabled={updateProfile.isPending}>
+              Save
+            </Button>
+          </div>
+        </form>
+      )}
+    </section>
   );
 }
 

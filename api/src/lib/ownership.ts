@@ -141,3 +141,55 @@ export async function getOwnedMaterialContext(
   if (!row?.material_id || !row.project_id) throw new Error('not_found');
   return { projectId: row.project_id, materialId: row.material_id };
 }
+
+export async function assertTakeoffCategoryOwnership(
+  env: Env,
+  categoryId: string,
+  uid: string,
+): Promise<void> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT 1
+    FROM takeoff_categories c
+    JOIN projects p ON c.project_id = p.id
+    WHERE c.id = ${categoryId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  if (rows.length === 0) throw new Error('not_found');
+}
+
+export async function assertTakeoffItemOwnership(
+  env: Env,
+  itemId: string,
+  uid: string,
+): Promise<void> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT 1
+    FROM takeoff_items i
+    JOIN takeoff_categories c ON i.category_id = c.id
+    JOIN projects p ON c.project_id = p.id
+    WHERE i.id = ${itemId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  if (rows.length === 0) throw new Error('not_found');
+}
+
+export async function getOwnedTakeoffItemContext(
+  env: Env,
+  itemId: string,
+  uid: string,
+): Promise<{ projectId: string; takeoffItemId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT i.id AS takeoff_item_id, c.project_id
+    FROM takeoff_items i
+    JOIN takeoff_categories c ON i.category_id = c.id
+    JOIN projects p ON c.project_id = p.id
+    WHERE i.id = ${itemId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { takeoff_item_id?: string; project_id?: string } | undefined;
+  if (!row?.takeoff_item_id || !row.project_id) throw new Error('not_found');
+  return { projectId: row.project_id, takeoffItemId: row.takeoff_item_id };
+}

@@ -1,9 +1,18 @@
-export type { Cents, Project } from './project';
+export type { BudgetMode, Cents, Project } from './project';
 export { cents, dollarsToCents, formatMoney } from './project';
 export type { Room, RoomWithItems } from './room';
 export type { Item, ItemStatus } from './item';
 export type { ImageAsset, ImageEntityType } from './image';
 export type { Material } from './material';
+export type {
+  MeasurementUnit,
+  SizeMode,
+  TakeoffCategory,
+  TakeoffCategoryWithItems,
+  TakeoffItem,
+  TakeoffQuantityUnit,
+  UserProfile,
+} from './takeoff';
 export {
   ItemStatusSchema,
   editableItemPatchSchema,

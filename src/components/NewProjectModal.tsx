@@ -16,12 +16,16 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
 
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [projectLocation, setProjectLocation] = useState('');
   const [budgetDollars, setBudgetDollars] = useState('');
   const [nameError, setNameError] = useState('');
 
   const reset = () => {
     setName('');
     setClientName('');
+    setCompanyName('');
+    setProjectLocation('');
     setBudgetDollars('');
     setNameError('');
   };
@@ -45,6 +49,8 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
       const input: Parameters<typeof createProject.mutateAsync>[0] = {
         name: name.trim(),
         ...(clientName.trim() ? { clientName: clientName.trim() } : {}),
+        ...(companyName.trim() ? { companyName: companyName.trim() } : {}),
+        ...(projectLocation.trim() ? { projectLocation: projectLocation.trim() } : {}),
         ...(budgetCents > 0 ? { budgetCents } : {}),
       };
       const project = await createProject.mutateAsync(input);
@@ -99,6 +105,36 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
               className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
               placeholder="Jane Smith"
             />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="np-company" className="text-sm font-medium text-gray-700">
+                Company <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                id="np-company"
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+                placeholder="Chill Design Studio"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="np-location" className="text-sm font-medium text-gray-700">
+                Project location <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                id="np-location"
+                type="text"
+                value={projectLocation}
+                onChange={(e) => setProjectLocation(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+                placeholder="Palm Springs, CA"
+              />
+            </div>
           </div>
 
           {/* Budget */}

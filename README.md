@@ -1,4 +1,4 @@
-# FF&E Builder
+# ChillDesignStudio
 
 > Specification management for interior designers — organize furniture, fixtures & equipment across projects, rooms, and vendors.
 
@@ -45,6 +45,11 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 ---
 
 ## UI surfaces
+
+- **Brand** -- the application presents as ChillDesignStudio while retaining the existing project-first workspace.
+- **User information** -- the projects page includes editable user contact details for project documentation.
+- **Project tools** (`/projects/:id`) -- choose whether to open/create FF&E or a Take-Off Table for the selected project, then switch between tools from the project tabs.
+- **Take-Off Table** (`/projects/:id/takeoff`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, drawing/location fields, size entry, swatches, CBM, quantity units, and integer-cent totals.
 
 - **Project header** — editable project name, client name, and budget with a live budget tracker.
 - **Table** (`/projects/:id/table`) — FF&E items grouped by room with persisted collapse state, room subtotals, a sticky grand total, inline editing, structure mutations (add/duplicate/move/delete/reorder), per-room and full-project export (CSV, Excel, PDF), and Excel import with column-mapping wizard.

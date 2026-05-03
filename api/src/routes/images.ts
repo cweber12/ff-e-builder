@@ -7,6 +7,7 @@ import {
   getOwnedMaterialContext,
   getOwnedProjectContext,
   getOwnedRoomContext,
+  getOwnedTakeoffItemContext,
 } from '../lib/ownership';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -19,6 +20,7 @@ type EntityContext = {
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;
+  takeoffItemId: string | null;
 };
 
 function extensionForContentType(contentType: string): string {
@@ -53,12 +55,24 @@ async function getOwnedEntityContext(
 ): Promise<EntityContext> {
   if (entityType === 'project') {
     const project = await getOwnedProjectContext(env, entityId, uid);
-    return { projectId: project.projectId, roomId: null, itemId: null, materialId: null };
+    return {
+      projectId: project.projectId,
+      roomId: null,
+      itemId: null,
+      materialId: null,
+      takeoffItemId: null,
+    };
   }
 
   if (entityType === 'room') {
     const room = await getOwnedRoomContext(env, entityId, uid);
-    return { projectId: room.projectId, roomId: room.roomId, itemId: null, materialId: null };
+    return {
+      projectId: room.projectId,
+      roomId: room.roomId,
+      itemId: null,
+      materialId: null,
+      takeoffItemId: null,
+    };
   }
 
   if (entityType === 'material') {
@@ -68,11 +82,29 @@ async function getOwnedEntityContext(
       roomId: null,
       itemId: null,
       materialId: material.materialId,
+      takeoffItemId: null,
+    };
+  }
+
+  if (entityType === 'takeoff_item') {
+    const takeoffItem = await getOwnedTakeoffItemContext(env, entityId, uid);
+    return {
+      projectId: takeoffItem.projectId,
+      roomId: null,
+      itemId: null,
+      materialId: null,
+      takeoffItemId: takeoffItem.takeoffItemId,
     };
   }
 
   const item = await getOwnedItemContext(env, entityId, uid);
-  return { projectId: item.projectId, roomId: item.roomId, itemId: item.itemId, materialId: null };
+  return {
+    projectId: item.projectId,
+    roomId: item.roomId,
+    itemId: item.itemId,
+    materialId: null,
+    takeoffItemId: null,
+  };
 }
 
 function buildR2Key(
@@ -86,6 +118,9 @@ function buildR2Key(
   if (entityType === 'project') return `${base}/project/${imageId}.${ext}`;
   if (entityType === 'room') return `${base}/rooms/${context.roomId}/${imageId}.${ext}`;
   if (entityType === 'material') return `${base}/materials/${context.materialId}/${imageId}.${ext}`;
+  if (entityType === 'takeoff_item') {
+    return `${base}/takeoff/items/${context.takeoffItemId}/${imageId}.${ext}`;
+  }
   return `${base}/rooms/${context.roomId}/items/${context.itemId}/${imageId}.${ext}`;
 }
 
@@ -127,6 +162,7 @@ router.get('/', async (c) => {
       AND room_id IS NOT DISTINCT FROM ${context.roomId}
       AND item_id IS NOT DISTINCT FROM ${context.itemId}
       AND material_id IS NOT DISTINCT FROM ${context.materialId}
+      AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
     ORDER BY is_primary DESC, created_at DESC
   `;
 
@@ -175,6 +211,7 @@ router.post('/', async (c) => {
       entityType: parsed.data.entity_type,
       imageId,
       materialId: context.materialId ?? '',
+      takeoffItemId: context.takeoffItemId ?? '',
     },
   });
 
@@ -189,9 +226,10 @@ router.post('/', async (c) => {
           AND room_id IS NOT DISTINCT FROM ${context.roomId}
           AND item_id IS NOT DISTINCT FROM ${context.itemId}
           AND material_id IS NOT DISTINCT FROM ${context.materialId}
+          AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
       )
       INSERT INTO image_assets (
-        id, owner_uid, project_id, room_id, item_id, material_id, r2_key,
+        id, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
         filename, content_type, byte_size, alt_text, is_primary
       )
       VALUES (
@@ -201,6 +239,7 @@ router.post('/', async (c) => {
         ${context.roomId},
         ${context.itemId},
         ${context.materialId},
+        ${context.takeoffItemId},
         ${r2Key},
         ${cleanFilename(file.name)},
         ${file.type},

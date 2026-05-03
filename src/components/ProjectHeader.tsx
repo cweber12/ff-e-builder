@@ -30,11 +30,27 @@ function SkeletonBar() {
 
 interface BudgetTrackerProps {
   budgetCents: number;
+  ffeBudgetCents: number;
+  takeoffBudgetCents: number;
+  budgetMode: NonNullable<Project['budgetMode']>;
   actualCents: number;
   onBudgetSave: (cents: number) => Promise<void> | void;
+  onFfeBudgetSave: (cents: number) => Promise<void> | void;
+  onTakeoffBudgetSave: (cents: number) => Promise<void> | void;
+  onBudgetModeSave: (mode: NonNullable<Project['budgetMode']>) => Promise<void> | void;
 }
 
-function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTrackerProps) {
+function BudgetTracker({
+  budgetCents,
+  ffeBudgetCents,
+  takeoffBudgetCents,
+  budgetMode,
+  actualCents,
+  onBudgetSave,
+  onFfeBudgetSave,
+  onTakeoffBudgetSave,
+  onBudgetModeSave,
+}: BudgetTrackerProps) {
   const [expanded, setExpanded] = useState(true);
   const remainingCents = budgetCents - actualCents;
   const budgetPercent =
@@ -74,13 +90,29 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
           <div className="flex items-baseline gap-1">
             <span className="text-white/55">Budget</span>
             <InlineNumberEdit
-              value={budgetCents / 100}
-              onSave={(dollars) => onBudgetSave(dollarsToCents(dollars))}
+              value={(budgetMode === 'shared' ? budgetCents : ffeBudgetCents) / 100}
+              onSave={(dollars) =>
+                budgetMode === 'shared'
+                  ? onBudgetSave(dollarsToCents(dollars))
+                  : onFfeBudgetSave(dollarsToCents(dollars))
+              }
               formatter={(d) => (d > 0 ? formatMoney(cents(d * 100)) : 'Set budget')}
-              aria-label={budgetCents > 0 ? 'Project budget' : 'Set budget'}
+              aria-label={budgetMode === 'shared' ? 'Project budget' : 'FF&E budget'}
               className="justify-end text-xs font-semibold text-white"
             />
           </div>
+          {budgetMode === 'individual' && (
+            <div className="hidden items-baseline gap-1 xl:flex">
+              <span className="text-white/55">Take-Off</span>
+              <InlineNumberEdit
+                value={takeoffBudgetCents / 100}
+                onSave={(dollars) => onTakeoffBudgetSave(dollarsToCents(dollars))}
+                formatter={(d) => (d > 0 ? formatMoney(cents(d * 100)) : 'Set budget')}
+                aria-label="Take-off budget"
+                className="justify-end text-xs font-semibold text-white"
+              />
+            </div>
+          )}
           <div className="hidden items-baseline gap-1 sm:flex">
             <span className="text-white/55">Actual</span>
             <span className="font-semibold text-white">{formatMoney(cents(actualCents))}</span>
@@ -95,6 +127,15 @@ function BudgetTracker({ budgetCents, actualCents, onBudgetSave }: BudgetTracker
             </span>
           </div>
           <span className="hidden text-white/55 lg:inline">{budgetPercent}% committed</span>
+          <button
+            type="button"
+            className="hidden rounded border border-white/20 px-2 py-1 text-[11px] font-semibold text-white/80 transition hover:bg-white/10 md:inline-flex"
+            onClick={() => {
+              void onBudgetModeSave(budgetMode === 'shared' ? 'individual' : 'shared');
+            }}
+          >
+            {budgetMode === 'shared' ? 'Shared' : 'Individual'}
+          </button>
         </div>
       )}
     </div>
@@ -110,7 +151,12 @@ interface ProjectHeaderProps {
   actualCents: number;
   onNameSave: (name: string) => Promise<void> | void;
   onClientSave: (clientName: string) => Promise<void> | void;
+  onCompanySave?: (companyName: string) => Promise<void> | void;
+  onLocationSave?: (projectLocation: string) => Promise<void> | void;
   onBudgetSave: (budgetCents: number) => Promise<void> | void;
+  onFfeBudgetSave?: (budgetCents: number) => Promise<void> | void;
+  onTakeoffBudgetSave?: (budgetCents: number) => Promise<void> | void;
+  onBudgetModeSave?: (mode: NonNullable<Project['budgetMode']>) => Promise<void> | void;
 }
 
 export function ProjectHeader({
@@ -118,7 +164,12 @@ export function ProjectHeader({
   actualCents,
   onNameSave,
   onClientSave,
+  onCompanySave = () => undefined,
+  onLocationSave = () => undefined,
   onBudgetSave,
+  onFfeBudgetSave = () => undefined,
+  onTakeoffBudgetSave = () => undefined,
+  onBudgetModeSave = () => undefined,
 }: ProjectHeaderProps) {
   if (!project) return <SkeletonBar />;
 
@@ -170,13 +221,43 @@ export function ProjectHeader({
           className="text-sm text-white"
           inputClassName="text-sm bg-brand-600 text-white border-white/30 placeholder-white/50"
         />
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <InlineTextEdit
+            value={project.companyName ?? ''}
+            onSave={onCompanySave}
+            placeholder="Add company"
+            aria-label="Company"
+            renderDisplay={(v) => (
+              <span className="text-xs text-white/85">{v ? `Company: ${v}` : 'Add company'}</span>
+            )}
+            className="text-xs text-white/85"
+            inputClassName="text-xs bg-brand-600 text-white border-white/30 placeholder-white/50"
+          />
+          <InlineTextEdit
+            value={project.projectLocation ?? ''}
+            onSave={onLocationSave}
+            placeholder="Add location"
+            aria-label="Project location"
+            renderDisplay={(v) => (
+              <span className="text-xs text-white/85">{v ? `Location: ${v}` : 'Add location'}</span>
+            )}
+            className="text-xs text-white/85"
+            inputClassName="text-xs bg-brand-600 text-white border-white/30 placeholder-white/50"
+          />
+        </div>
       </div>
 
       {/* Right: budget tracker */}
       <BudgetTracker
         budgetCents={project.budgetCents}
+        ffeBudgetCents={project.ffeBudgetCents ?? 0}
+        takeoffBudgetCents={project.takeoffBudgetCents ?? 0}
+        budgetMode={project.budgetMode ?? 'shared'}
         actualCents={actualCents}
         onBudgetSave={onBudgetSave}
+        onFfeBudgetSave={onFfeBudgetSave}
+        onTakeoffBudgetSave={onTakeoffBudgetSave}
+        onBudgetModeSave={onBudgetModeSave}
       />
     </header>
   );

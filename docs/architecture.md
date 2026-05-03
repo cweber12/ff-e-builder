@@ -54,16 +54,22 @@ C4Component
 Actual frontend route shell:
 
 - `/projects` renders project cards.
-- `/projects/:id` redirects to `/projects/:id/table`.
+- `/projects/:id` renders the project tool chooser for FF&E and Take-Off Table.
 - `/projects/:id/table` renders the editable grouped FF&E table.
+- `/projects/:id/takeoff` renders the editable grouped take-off table.
 - `/projects/:id/catalog` renders the printable one-item-per-page catalog.
 - `/projects/:id/summary` renders totals by room, status, and vendor.
 - `/signin` is public; project routes are protected by Firebase Auth.
 
-Project, room, and item image bytes are stored in a private Cloudflare R2 bucket
+Project, room, item, material, and take-off rendering image bytes are stored in a private Cloudflare R2 bucket
 named `ffe-images`. The Worker is the only R2 gateway: it validates Firebase
 ownership against Neon image metadata before accepting uploads or returning image
 content.
+
+Take-off data is project-scoped but separate from FF&E rooms/items. The
+`takeoff_categories` and `takeoff_items` tables share only `projects` ownership
+and the `image_assets` gateway, so take-off schema changes do not modify FF&E
+room or item behavior.
 
 ---
 
@@ -100,7 +106,12 @@ erDiagram
     text owner_uid FK "Firebase UID"
     text name
     text client_name
+    text company_name
+    text project_location
+    text budget_mode "shared | individual"
     int budget_cents "always integer cents"
+    int ffe_budget_cents "always integer cents"
+    int takeoff_budget_cents "always integer cents"
     timestamptz created_at
     timestamptz updated_at
   }
@@ -146,12 +157,57 @@ erDiagram
     uuid room_id FK "nullable"
     uuid item_id FK "nullable"
     uuid material_id FK "nullable"
+    uuid takeoff_item_id FK "nullable"
     text r2_key
     text filename
     text content_type
     int byte_size
     text alt_text
     boolean is_primary
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  USER_PROFILES {
+    text owner_uid PK "Firebase UID"
+    text name
+    text email
+    text phone
+    text company_name
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  TAKEOFF_CATEGORIES {
+    uuid id PK
+    uuid project_id FK
+    text name
+    int sort_order
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  TAKEOFF_ITEMS {
+    uuid id PK
+    uuid category_id FK
+    text product_tag
+    text plan
+    text drawings
+    text location
+    text description
+    text size_label
+    text size_mode "imperial | metric"
+    text size_w
+    text size_d
+    text size_h
+    text size_unit
+    jsonb swatches
+    numeric cbm
+    numeric quantity
+    text quantity_unit
+    int unit_cost_cents "always integer cents"
+    int sort_order
+    int version
     timestamptz created_at
     timestamptz updated_at
   }
@@ -188,10 +244,13 @@ erDiagram
   ROOMS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ IMAGE_ASSETS : can_have
   PROJECTS ||--o{ MATERIALS : has
+  PROJECTS ||--o{ TAKEOFF_CATEGORIES : has
+  TAKEOFF_CATEGORIES ||--o{ TAKEOFF_ITEMS : contains
   MATERIALS ||--o{ MATERIAL_SWATCHES : has
   MATERIALS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ ITEM_MATERIALS : uses
   MATERIALS ||--o{ ITEM_MATERIALS : assigned_to
+  TAKEOFF_ITEMS ||--o{ IMAGE_ASSETS : can_have
 ```
 
 ---

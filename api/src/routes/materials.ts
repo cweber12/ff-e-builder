@@ -56,6 +56,7 @@ async function selectMaterialById(sql: Sql, materialId: string) {
 async function listProjectMaterials(c: AppContext) {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
+  if (!projectId) return c.json({ error: 'Not found' }, 404);
 
   try {
     await assertProjectOwnership(c.env, projectId, uid);
@@ -83,6 +84,7 @@ async function listProjectMaterials(c: AppContext) {
 async function createProjectMaterial(c: AppContext) {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
+  if (!projectId) return c.json({ error: 'Not found' }, 404);
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = CreateMaterialSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);

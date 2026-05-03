@@ -11,9 +11,13 @@ All monetary values in the database, API payloads, and application state are
 
 ## Which fields are cents
 
-| Table   | Column            | Notes                |
-| ------- | ----------------- | -------------------- |
-| `items` | `unit_cost_cents` | Cost per single unit |
+| Table           | Column                 | Notes                              |
+| --------------- | ---------------------- | ---------------------------------- |
+| `projects`      | `budget_cents`         | Shared project budget              |
+| `projects`      | `ffe_budget_cents`     | FF&E budget when budgets are split |
+| `projects`      | `takeoff_budget_cents` | Take-off budget when budgets split |
+| `items`         | `unit_cost_cents`      | Cost per single FF&E unit          |
+| `takeoff_items` | `unit_cost_cents`      | Cost per take-off quantity unit    |
 
 Derived values (line total, project total) are also computed in cents and only
 converted to a display string at the UI boundary.

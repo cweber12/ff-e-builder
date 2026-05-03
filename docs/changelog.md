@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(takeoff): add ChillDesignStudio project shell, user info, project metadata, budgets, and Take-Off Table tool
 - feat(ui): add pasted image uploads, room add icons, collapsed room images, and subtler budget display
 - fix(materials): simplify swatch upload and use icon-only material card actions
 - feat(materials): use material images as swatches in forms, tables, and exports

@@ -24,8 +24,15 @@ export interface Project {
   owner_uid: string;
   name: string;
   client_name: string;
+  company_name: string;
+  project_location: string;
+  budget_mode: 'shared' | 'individual';
   /** Always integer cents — see /docs/money.md */
   budget_cents: number;
+  /** Always integer cents - see /docs/money.md */
+  ffe_budget_cents: number;
+  /** Always integer cents - see /docs/money.md */
+  takeoff_budget_cents: number;
   created_at: string;
   updated_at: string;
 }
@@ -83,7 +90,51 @@ export interface Material {
   updated_at: string;
 }
 
-export type ImageEntityType = 'project' | 'room' | 'item' | 'material';
+export interface UserProfile {
+  owner_uid: string;
+  name: string;
+  email: string;
+  phone: string;
+  company_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TakeoffCategory {
+  id: string;
+  project_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TakeoffItem {
+  id: string;
+  category_id: string;
+  product_tag: string;
+  plan: string;
+  drawings: string;
+  location: string;
+  description: string;
+  size_label: string;
+  size_mode: 'imperial' | 'metric';
+  size_w: string;
+  size_d: string;
+  size_h: string;
+  size_unit: string;
+  swatches: string[];
+  cbm: string;
+  quantity: string;
+  quantity_unit: string;
+  unit_cost_cents: number;
+  sort_order: number;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ImageEntityType = 'project' | 'room' | 'item' | 'material' | 'takeoff_item';
 
 export interface ImageAsset {
   id: string;
@@ -92,6 +143,7 @@ export interface ImageAsset {
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
+  takeoff_item_id: string | null;
   r2_key: string;
   filename: string;
   content_type: string;
@@ -108,11 +160,18 @@ import { z } from 'zod';
 // Intentionally duplicated from src/types/itemValidation to keep the API worker
 // self-contained and avoid cross-boundary imports from the React client bundle.
 const itemStatuses = ['pending', 'ordered', 'approved', 'received'] as const;
+const budgetModes = ['shared', 'individual'] as const;
+const sizeModes = ['imperial', 'metric'] as const;
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1).max(255),
   client_name: z.string().max(255).default(''),
+  company_name: z.string().max(255).default(''),
+  project_location: z.string().max(255).default(''),
+  budget_mode: z.enum(budgetModes).default('shared'),
   budget_cents: z.number().int().nonnegative().default(0),
+  ffe_budget_cents: z.number().int().nonnegative().default(0),
+  takeoff_budget_cents: z.number().int().nonnegative().default(0),
 });
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
 
@@ -175,8 +234,54 @@ export const AssignMaterialSchema = z.object({
 
 export const CreateAndAssignMaterialSchema = CreateMaterialSchema;
 
+export const UpsertUserProfileSchema = z.object({
+  name: z.string().max(255).default(''),
+  email: z.string().email().or(z.literal('')).default(''),
+  phone: z.string().max(100).default(''),
+  company_name: z.string().max(255).default(''),
+});
+export type UpsertUserProfileInput = z.infer<typeof UpsertUserProfileSchema>;
+
+export const CreateTakeoffCategorySchema = z.object({
+  name: z.string().min(1).max(100),
+  sort_order: z.number().int().nonnegative().default(0),
+});
+export type CreateTakeoffCategoryInput = z.infer<typeof CreateTakeoffCategorySchema>;
+
+export const UpdateTakeoffCategorySchema = CreateTakeoffCategorySchema.partial();
+export type UpdateTakeoffCategoryInput = z.infer<typeof UpdateTakeoffCategorySchema>;
+
+const swatchSchema = z.string().trim().min(1).max(100);
+
+export const CreateTakeoffItemSchema = z.object({
+  category_id: z.string().uuid().optional(),
+  product_tag: z.string().max(100).default(''),
+  plan: z.string().max(255).default(''),
+  drawings: z.string().max(255).default(''),
+  location: z.string().max(255).default(''),
+  description: z.string().max(1000).default(''),
+  size_label: z.string().max(255).default(''),
+  size_mode: z.enum(sizeModes).default('imperial'),
+  size_w: z.string().max(50).default(''),
+  size_d: z.string().max(50).default(''),
+  size_h: z.string().max(50).default(''),
+  size_unit: z.string().max(20).default('in'),
+  swatches: z.array(swatchSchema).max(12).default([]),
+  cbm: z.number().nonnegative().default(0),
+  quantity: z.number().nonnegative().default(1),
+  quantity_unit: z.string().max(50).default('unit'),
+  unit_cost_cents: z.number().int().nonnegative().default(0),
+  sort_order: z.number().int().nonnegative().default(0),
+});
+export type CreateTakeoffItemInput = z.infer<typeof CreateTakeoffItemSchema>;
+
+export const UpdateTakeoffItemSchema = CreateTakeoffItemSchema.partial().extend({
+  version: z.number().int().nonnegative(),
+});
+export type UpdateTakeoffItemInput = z.infer<typeof UpdateTakeoffItemSchema>;
+
 export const ImageEntitySchema = z.object({
-  entity_type: z.enum(['project', 'room', 'item', 'material']),
+  entity_type: z.enum(['project', 'room', 'item', 'material', 'takeoff_item']),
   entity_id: z.string().uuid(),
 });
 
