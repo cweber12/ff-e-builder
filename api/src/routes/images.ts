@@ -217,6 +217,24 @@ router.post('/', async (c) => {
 
   const sql = getDb(c.env);
   try {
+    if (parsed.data.entity_type === 'project') {
+      const existing = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM image_assets
+        WHERE owner_uid = ${uid}
+          AND project_id = ${context.projectId}
+          AND room_id IS NULL
+          AND item_id IS NULL
+          AND material_id IS NULL
+          AND takeoff_item_id IS NULL
+      `;
+      const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
+      if (count >= 3) {
+        await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+        return c.json({ error: 'Projects can have up to 3 images' }, 400);
+      }
+    }
+
     const rows = await sql`
       WITH demote_existing AS (
         UPDATE image_assets
@@ -254,6 +272,38 @@ router.post('/', async (c) => {
     await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
     throw err;
   }
+});
+
+router.patch('/:id/primary', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+
+  let image: ImageAsset;
+  try {
+    image = await getOwnedImage(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    WITH demote_existing AS (
+      UPDATE image_assets
+      SET is_primary = false
+      WHERE owner_uid = ${uid}
+        AND project_id = ${image.project_id}
+        AND room_id IS NOT DISTINCT FROM ${image.room_id}
+        AND item_id IS NOT DISTINCT FROM ${image.item_id}
+        AND material_id IS NOT DISTINCT FROM ${image.material_id}
+        AND takeoff_item_id IS NOT DISTINCT FROM ${image.takeoff_item_id}
+    )
+    UPDATE image_assets
+    SET is_primary = true
+    WHERE id = ${id} AND owner_uid = ${uid}
+    RETURNING *
+  `;
+
+  return c.json({ image: imageRow(rows[0]) });
 });
 
 router.get('/:id/content', async (c) => {

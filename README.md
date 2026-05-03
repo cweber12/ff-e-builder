@@ -50,6 +50,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **User information** -- the projects page includes editable user contact details for project documentation.
 - **Project tools** (`/projects/:id`) -- choose whether to open/create FF&E or a Take-Off Table for the selected project, then switch between tools from the project header.
 - **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, drawing/location fields, size entry, swatches, CBM, quantity units, integer-cent totals, Excel import, and CSV/Excel/PDF exports.
+- **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
 - **Project header** — editable project name, client name, and budget with a live budget tracker.
 - **Table** (`/projects/:id/table`) — FF&E items grouped by room with persisted collapse state, room subtotals, a sticky grand total, inline editing, structure mutations (add/duplicate/move/delete/reorder), per-room and full-project export (CSV, Excel, PDF), and Excel import with column-mapping wizard.

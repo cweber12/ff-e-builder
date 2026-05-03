@@ -21,6 +21,7 @@ import { ImportExcelModal } from './components/ImportExcelModal';
 import { ImportTakeoffExcelModal } from './components/ImportTakeoffExcelModal';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectHeader } from './components/ProjectHeader';
+import { ProjectImagesModal } from './components/ProjectImagesModal';
 import { SummaryView } from './components/SummaryView';
 import { TakeoffSummaryView } from './components/TakeoffSummaryView';
 import { TakeoffTable } from './components/TakeoffTable';
@@ -93,6 +94,8 @@ function App() {
 function ProjectList() {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
+  const [imageProject, setImageProject] = useState<Project | null>(null);
+  const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
   const { data: projects, isLoading } = useProjects();
   const deleteProject = useDeleteProject();
 
@@ -139,6 +142,7 @@ function ProjectList() {
                     entityId={project.id}
                     alt={`${project.name} project`}
                     className="h-36 w-full"
+                    disabled
                   />
                 </div>
                 <Link
@@ -157,26 +161,45 @@ function ProjectList() {
                     </p>
                   )}
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => setPendingDelete(project)}
-                  aria-label={`Delete ${project.name}`}
-                  className="absolute right-3 top-3 rounded-md p-1 text-gray-300 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 group-hover:opacity-100"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                    className="h-4 w-4"
-                    aria-hidden="true"
+                <div className="absolute bottom-3 right-3">
+                  <button
+                    type="button"
+                    aria-label={`Open options for ${project.name}`}
+                    aria-expanded={openProjectMenuId === project.id}
+                    onClick={() =>
+                      setOpenProjectMenuId((current) =>
+                        current === project.id ? null : project.id,
+                      )
+                    }
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
+                    <MoreIcon />
+                  </button>
+                  {openProjectMenuId === project.id && (
+                    <div className="absolute bottom-full right-0 z-20 mb-1 min-w-44 rounded-md border border-gray-200 bg-white p-1 text-sm shadow-lg">
+                      <button
+                        type="button"
+                        className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"
+                        onClick={() => {
+                          setOpenProjectMenuId(null);
+                          setImageProject(project);
+                        }}
+                      >
+                        Project images
+                      </button>
+                      <button
+                        type="button"
+                        className="flex w-full rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50"
+                        onClick={() => {
+                          setOpenProjectMenuId(null);
+                          setPendingDelete(project);
+                        }}
+                      >
+                        Delete project
+                      </button>
+                    </div>
+                  )}
+                </div>
               </article>
             ))}
           </div>
@@ -188,6 +211,11 @@ function ProjectList() {
         project={pendingDelete}
         onClose={() => setPendingDelete(null)}
         onConfirm={(id) => deleteProject.mutate(id)}
+      />
+      <ProjectImagesModal
+        project={imageProject}
+        open={imageProject !== null}
+        onClose={() => setImageProject(null)}
       />
     </main>
   );
@@ -367,8 +395,8 @@ function ProjectTabActions({
           label="Export"
           size="sm"
           onCsv={() => exportTakeoffCsv(project, takeoffCategoriesWithItems)}
-          onExcel={() => exportTakeoffExcel(project, takeoffCategoriesWithItems)}
-          onPdf={() => exportTakeoffPdf(project, takeoffCategoriesWithItems)}
+          onExcel={() => void exportTakeoffExcel(project, takeoffCategoriesWithItems)}
+          onPdf={() => void exportTakeoffPdf(project, takeoffCategoriesWithItems)}
         />
         <Button type="button" variant="secondary" size="sm" onClick={onTakeoffImport}>
           Import from Excel
@@ -413,8 +441,15 @@ function ProjectTakeoffRoute() {
 }
 
 function ProjectTakeoffMaterialsRoute() {
-  const { project } = useProjectContext();
-  return <MaterialsView project={project} />;
+  const { project, roomsWithItems, takeoffCategoriesWithItems } = useProjectContext();
+  return (
+    <MaterialsView
+      project={project}
+      tool="takeoff"
+      roomsWithItems={roomsWithItems}
+      takeoffCategoriesWithItems={takeoffCategoriesWithItems}
+    />
+  );
 }
 
 function ProjectTakeoffSummaryRoute() {
@@ -472,6 +507,16 @@ function ToolCard({
   );
 }
 
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+      <circle cx="5" cy="10" r="1.5" />
+      <circle cx="10" cy="10" r="1.5" />
+      <circle cx="15" cy="10" r="1.5" />
+    </svg>
+  );
+}
+
 function ProjectCatalogRoute() {
   const { project, roomsWithItems } = useProjectContext();
   return <CatalogView project={project} rooms={roomsWithItems} />;
@@ -483,8 +528,15 @@ function ProjectSummaryRoute() {
 }
 
 function ProjectMaterialsRoute() {
-  const { project } = useProjectContext();
-  return <MaterialsView project={project} />;
+  const { project, roomsWithItems, takeoffCategoriesWithItems } = useProjectContext();
+  return (
+    <MaterialsView
+      project={project}
+      tool="ffe"
+      roomsWithItems={roomsWithItems}
+      takeoffCategoriesWithItems={takeoffCategoriesWithItems}
+    />
+  );
 }
 
 function useProjectContext() {

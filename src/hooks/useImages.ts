@@ -58,3 +58,22 @@ export function useDeleteImage(entityType: ImageEntityType, entityId: string) {
     onError: (err) => toast.error(`Image delete failed: ${err.message}`),
   });
 }
+
+export function useSetPrimaryImage(entityType: ImageEntityType, entityId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (imageId: string) => api.images.setPrimary(imageId),
+    onSuccess: (primaryImage) => {
+      queryClient.setQueryData<ImageAsset[]>(
+        imageKeys.forEntity(entityType, entityId),
+        (old) =>
+          old?.map((image) => ({
+            ...image,
+            isPrimary: image.id === primaryImage.id,
+          })) ?? [primaryImage],
+      );
+    },
+    onError: (err) => toast.error(`Preview image update failed: ${err.message}`),
+  });
+}

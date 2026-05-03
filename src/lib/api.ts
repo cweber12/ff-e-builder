@@ -734,6 +734,11 @@ export const api = {
 
     delete: (imageId: string): Promise<void> =>
       apiFetch<void>(`/api/v1/images/${imageId}`, { method: 'DELETE' }),
+
+    setPrimary: (imageId: string): Promise<ImageAsset> =>
+      apiFetch<{ image: RawImageAsset }>(`/api/v1/images/${imageId}/primary`, {
+        method: 'PATCH',
+      }).then((r) => mapImageAsset(r.image)),
   },
   materials: {
     list: (projectId: string): Promise<Material[]> =>

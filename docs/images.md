@@ -26,6 +26,9 @@ users/{uid}/projects/{projectId}/materials/{materialId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/takeoff/items/{takeoffItemId}/{imageId}.{ext}
 ```
 
+Project entities may store up to three images. One image is marked `is_primary`
+and is used as the project card preview.
+
 ## API
 
 All endpoints require the same Firebase bearer token as the rest of the API.
@@ -41,6 +44,7 @@ existence.
   - multipart form field: `file`
   - allowed types: JPEG, PNG, WebP, GIF
   - max size: 5 MB
+- `PATCH /api/v1/images/{imageId}/primary`
 - `GET /api/v1/images/{imageId}/content`
 - `DELETE /api/v1/images/{imageId}`
 

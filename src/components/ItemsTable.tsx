@@ -57,6 +57,13 @@ import { Modal } from './primitives/Modal';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from './ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from './MaterialLibraryModal';
+import { DimensionEditorModal } from './DimensionEditorModal';
+import {
+  GroupedTableHeader,
+  GroupedTableSection,
+  StickyGrandTotal,
+  TableViewStack,
+} from './TableViewWrappers';
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
@@ -241,6 +248,34 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
         </div>
       )}
     </span>
+  );
+}
+
+function EditableDimensionsCell({ item, onSave }: { item: Item; onSave: SaveItemPatch }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-md px-1 py-0.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        {item.dimensions?.trim() ? (
+          item.dimensions
+        ) : (
+          <span className="text-gray-400">Set dimensions</span>
+        )}
+      </button>
+      <DimensionEditorModal
+        open={open}
+        title="Set dimensions"
+        onClose={() => setOpen(false)}
+        onSave={({ label }) => {
+          setOpen(false);
+          void saveValidatedPatch(onSave, item, { dimensions: label || null });
+        }}
+      />
+    </>
   );
 }
 
@@ -520,15 +555,7 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   {
     accessorKey: 'dimensions',
     header: 'Dimensions',
-    cell: ({ row }) => (
-      <EditableTextCell
-        item={row.original}
-        value={row.original.dimensions}
-        field="dimensions"
-        label="Dimensions"
-        onSave={onSave}
-      />
-    ),
+    cell: ({ row }) => <EditableDimensionsCell item={row.original} onSave={onSave} />,
   },
   {
     id: 'materials',
@@ -1283,8 +1310,8 @@ function RoomItemsSection({
   };
 
   return (
-    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-surface-muted px-4 py-3">
+    <GroupedTableSection>
+      <GroupedTableHeader>
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
@@ -1342,7 +1369,7 @@ function RoomItemsSection({
             </button>
           )}
         </div>
-      </div>
+      </GroupedTableHeader>
 
       <AddItemDrawer
         open={addDrawerOpen}
@@ -1562,7 +1589,7 @@ function RoomItemsSection({
           </div>
         </div>
       )}
-    </section>
+    </GroupedTableSection>
   );
 }
 
@@ -1615,7 +1642,7 @@ export function ItemsTableView({
   }
 
   return (
-    <div className={cn('relative flex flex-col gap-4 pb-16', className)}>
+    <TableViewStack className={className}>
       {sortedRooms.map((room) => (
         <RoomItemsSection
           key={room.id}
@@ -1637,16 +1664,7 @@ export function ItemsTableView({
         </Button>
       </div>
 
-      <div className="sticky bottom-0 z-10 rounded-lg border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Grand total
-          </span>
-          <span className="text-lg font-bold tabular-nums text-brand-700">
-            {formatMoney(cents(grandTotal))}
-          </span>
-        </div>
-      </div>
+      <StickyGrandTotal value={formatMoney(cents(grandTotal))} />
 
       <AddRoomModal
         open={addRoomOpen}
@@ -1682,7 +1700,7 @@ export function ItemsTableView({
           }
         }}
       />
-    </div>
+    </TableViewStack>
   );
 }
 

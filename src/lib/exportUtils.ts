@@ -281,9 +281,17 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   XLSX.writeFile(wb, `${safeName(project.name)}-summary.xlsx`);
 }
 
-export function exportTakeoffExcel(project: Project, categories: TakeoffCategoryWithItems[]): void {
+export async function exportTakeoffExcel(
+  project: Project,
+  categories: TakeoffCategoryWithItems[],
+): Promise<void> {
   const wb = XLSX.utils.book_new();
+  const projectImages = await api.images.list({ entityType: 'project', entityId: project.id });
   const allRows = [
+    ['Project', project.name],
+    ['Prepared by', project.companyName || 'ChillDesignStudio'],
+    ['Project images', ...projectImages.slice(0, 3).map((image) => image.filename)],
+    [],
     ['Project', 'Category', ...TAKEOFF_HEADERS],
     ...categories.flatMap((category) =>
       category.items.map((item) => [project.name, category.name, ...takeoffItemToRow(item)]),
@@ -460,9 +468,13 @@ export function exportTablePdf(
   doc.save(`${safeName(project.name)}${suffix}-items.pdf`);
 }
 
-export function exportTakeoffPdf(project: Project, categories: TakeoffCategoryWithItems[]): void {
+export async function exportTakeoffPdf(
+  project: Project,
+  categories: TakeoffCategoryWithItems[],
+): Promise<void> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const projectImages = await buildProjectImageDataUrls(project.id);
 
   doc.setFillColor(230, 230, 230);
   doc.rect(0, 0, pageWidth, 21, 'F');
@@ -477,6 +489,15 @@ export function exportTakeoffPdf(project: Project, categories: TakeoffCategoryWi
   doc.text(project.name.toUpperCase(), pageWidth / 2, 16, { align: 'center' });
 
   let startY = 28;
+  if (projectImages.length) {
+    const imageHeight = 42;
+    const imageWidth = pageWidth / projectImages.length;
+    projectImages.forEach((image, index) => {
+      const format = image.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      doc.addImage(image, format, index * imageWidth, 22, imageWidth, imageHeight);
+    });
+    startY = 72;
+  }
   for (const category of categories) {
     doc.setFillColor(255, 245, 205);
     doc.rect(0, startY - 6, pageWidth, 10, 'F');
@@ -532,6 +553,20 @@ export function exportTakeoffPdf(project: Project, categories: TakeoffCategoryWi
   doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
   doc.text(`Grand total: ${fmtMoney(takeoffProjectTotalCents(categories))}`, 10, startY + 2);
   doc.save(`${safeName(project.name)}-takeoff.pdf`);
+}
+
+async function buildProjectImageDataUrls(projectId: string): Promise<string[]> {
+  const images = await api.images.list({ entityType: 'project', entityId: projectId });
+  const dataUrls = await Promise.all(
+    images.slice(0, 3).map(async (image) => {
+      try {
+        return await blobToDataUrl(await api.images.getContentBlob(image.id));
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return dataUrls.filter((url): url is string => Boolean(url));
 }
 
 // ─── PDF – Summary ────────────────────────────────────────────────────────────

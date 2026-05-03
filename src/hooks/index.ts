@@ -19,6 +19,7 @@ export {
   useImages,
   useUploadImage,
   useDeleteImage,
+  useSetPrimaryImage,
   imageKeys,
   isPersistedImageEntityId,
 } from './useImages';

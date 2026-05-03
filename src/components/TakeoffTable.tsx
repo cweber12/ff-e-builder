@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { Button, Modal } from './primitives';
 import { ImageFrame } from './ImageFrame';
 import {
@@ -9,6 +9,7 @@ import {
   useTakeoffWithItems,
   useUpdateTakeoffCategory,
   useUpdateTakeoffItem,
+  useMaterials,
 } from '../hooks';
 import {
   dollarsToCents,
@@ -16,7 +17,7 @@ import {
   formatMoney,
   parseUnitCostDollarsInput,
   type TakeoffItem,
-  type SizeMode,
+  type Material,
 } from '../types';
 import {
   takeoffCategorySubtotalCents,
@@ -24,20 +25,19 @@ import {
   takeoffProjectTotalCents,
 } from '../lib/calc';
 import type { UpdateTakeoffItemInput } from '../lib/api';
+import { DimensionEditorModal } from './DimensionEditorModal';
+import {
+  GroupedTableHeader,
+  GroupedTableSection,
+  StickyGrandTotal,
+  TableViewStack,
+} from './TableViewWrappers';
+import { MaterialSwatchImage } from './MaterialLibraryModal';
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
-const metricUnits = ['mm', 'cm', 'm'] as const;
 
 type TakeoffTableProps = {
   projectId: string;
-};
-
-type SizeDraft = {
-  mode: SizeMode;
-  w: string;
-  d: string;
-  h: string;
-  unit: string;
 };
 
 export function TakeoffTable({ projectId }: TakeoffTableProps) {
@@ -68,7 +68,7 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
   }
 
   return (
-    <div className="relative flex flex-col gap-4 pb-16">
+    <TableViewStack>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-gray-950">Take-Off Table</h2>
@@ -110,21 +110,13 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
         />
       ))}
 
-      <div className="sticky bottom-0 z-10 rounded-lg border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Grand total
-          </span>
-          <span className="text-lg font-bold tabular-nums text-brand-700">
-            {formatMoney(cents(grandTotal))}
-          </span>
-        </div>
-      </div>
-    </div>
+      <StickyGrandTotal value={formatMoney(cents(grandTotal))} />
+    </TableViewStack>
   );
 }
 
 function TakeoffCategorySection({
+  projectId,
   categoryId,
   categoryName,
   items,
@@ -147,8 +139,8 @@ function TakeoffCategorySection({
   const [categoryDraft, setCategoryDraft] = useState(categoryName);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-surface-muted px-4 py-3">
+    <GroupedTableSection>
+      <GroupedTableHeader className="flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <input
             type="text"
@@ -185,7 +177,7 @@ function TakeoffCategorySection({
             Delete
           </Button>
         </div>
-      </div>
+      </GroupedTableHeader>
       <div className="overflow-x-auto">
         <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
           <thead className="bg-white text-xs uppercase tracking-wide text-gray-500">
@@ -216,6 +208,7 @@ function TakeoffCategorySection({
               <TakeoffRow
                 key={item.id}
                 item={item}
+                projectId={projectId}
                 onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                 onDelete={() => deleteItem.mutate(item.id)}
               />
@@ -223,16 +216,18 @@ function TakeoffCategorySection({
           </tbody>
         </table>
       </div>
-    </section>
+    </GroupedTableSection>
   );
 }
 
 function TakeoffRow({
   item,
+  projectId,
   onSave,
   onDelete,
 }: {
   item: TakeoffItem;
+  projectId: string;
   onSave: (patch: Omit<UpdateTakeoffItemInput, 'version'>) => void;
   onDelete: () => void;
 }) {
@@ -278,7 +273,11 @@ function TakeoffRow({
         />
       </td>
       <td className="min-w-48 px-3 py-2">
-        <SwatchEditor item={item} onSave={(swatches) => onSave({ swatches })} />
+        <TakeoffMaterialCell
+          projectId={projectId}
+          item={item}
+          onSave={(swatches) => onSave({ swatches })}
+        />
       </td>
       <NumberCell
         value={item.cbm}
@@ -406,50 +405,146 @@ function MoneyCell({
   );
 }
 
-function SwatchEditor({
+function TakeoffMaterialCell({
+  projectId,
   item,
   onSave,
 }: {
+  projectId: string;
   item: TakeoffItem;
   onSave: (swatches: string[]) => void;
 }) {
-  const [draft, setDraft] = useState('');
-  const add = () => {
-    const next = draft.trim();
-    if (!next) return;
-    onSave([...item.swatches, next]);
-    setDraft('');
+  const [open, setOpen] = useState(false);
+  const materials = useMaterials(projectId);
+  const assignedMaterials = useMemo(
+    () =>
+      (materials.data ?? []).filter((material) =>
+        item.swatches.some(
+          (swatch) =>
+            swatch.toLowerCase() === material.name.toLowerCase() ||
+            swatch.toLowerCase() === material.materialId.toLowerCase(),
+        ),
+      ),
+    [item.swatches, materials.data],
+  );
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex max-w-60 flex-wrap gap-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-label="Edit take-off materials"
+      >
+        {assignedMaterials.length > 0 ? (
+          assignedMaterials.map((material) => (
+            <span
+              key={material.id}
+              className="inline-flex max-w-full items-center gap-1 rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
+            >
+              <MaterialSwatchImage material={material} size="sm" />
+              <span className="truncate">{material.name}</span>
+            </span>
+          ))
+        ) : item.swatches.length ? (
+          item.swatches.map((swatch) => (
+            <span
+              key={swatch}
+              className="rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
+            >
+              {swatch}
+            </span>
+          ))
+        ) : (
+          <span className="text-gray-400">Add materials</span>
+        )}
+      </button>
+      <TakeoffMaterialModal
+        open={open}
+        materials={materials.data ?? []}
+        selected={item.swatches}
+        onClose={() => setOpen(false)}
+        onSave={(swatches) => {
+          setOpen(false);
+          onSave(swatches);
+        }}
+      />
+    </>
+  );
+}
+
+function TakeoffMaterialModal({
+  open,
+  materials,
+  selected,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  materials: Material[];
+  selected: string[];
+  onClose: () => void;
+  onSave: (swatches: string[]) => void;
+}) {
+  const [draft, setDraft] = useState<string[]>(selected);
+
+  const toggle = (material: Material) => {
+    setDraft((current) =>
+      current.some((name) => name.toLowerCase() === material.name.toLowerCase())
+        ? current.filter((name) => name.toLowerCase() !== material.name.toLowerCase())
+        : [...current, material.name],
+    );
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {item.swatches.map((swatch) => (
-        <button
-          key={swatch}
-          type="button"
-          title={`Remove ${swatch}`}
-          onClick={() => onSave(item.swatches.filter((candidate) => candidate !== swatch))}
-          className="rounded border border-gray-200 bg-surface-muted px-2 py-1 text-xs text-gray-700"
-        >
-          {swatch}
-        </button>
-      ))}
-      <input
-        type="text"
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            add();
-          }
-        }}
-        onBlur={add}
-        className="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-brand-500 focus:outline-none"
-        placeholder="Add"
-        aria-label="Add swatch"
-      />
-    </div>
+    <Modal open={open} onClose={onClose} title="Take-off materials" className="max-w-3xl">
+      <div className="grid gap-4">
+        <p className="text-sm text-gray-600">
+          Select from the shared project material library. Materials remain accessible from both
+          FF&E and Take-Off.
+        </p>
+        <div className="grid max-h-[28rem] gap-3 overflow-y-auto sm:grid-cols-2 md:grid-cols-3">
+          {materials.map((material) => {
+            const checked = draft.some(
+              (name) => name.toLowerCase() === material.name.toLowerCase(),
+            );
+            return (
+              <button
+                key={material.id}
+                type="button"
+                onClick={() => toggle(material)}
+                className={`grid gap-2 rounded-lg border p-3 text-left transition ${
+                  checked
+                    ? 'border-brand-500 bg-brand-50'
+                    : 'border-gray-200 bg-white hover:border-brand-400'
+                }`}
+              >
+                <ImageFrame
+                  entityType="material"
+                  entityId={material.id}
+                  alt={material.name}
+                  className="h-24 w-full rounded-md border-gray-200 shadow-none"
+                  compact
+                  disabled
+                />
+                <span className="text-sm font-semibold text-gray-950">{material.name}</span>
+                <span className="text-xs text-gray-500">
+                  {material.materialId || 'No material ID'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={() => onSave(draft)}>
+            Save materials
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -464,96 +559,29 @@ function SizeModal({
   onClose: () => void;
   onSave: (patch: Omit<UpdateTakeoffItemInput, 'version'>) => void;
 }) {
-  const [draft, setDraft] = useState<SizeDraft>({
-    mode: item.sizeMode,
-    w: item.sizeW,
-    d: item.sizeD,
-    h: item.sizeH,
-    unit: item.sizeUnit,
-  });
-
-  const save = () => {
-    const unit = draft.mode === 'imperial' ? 'ft/in' : draft.unit;
-    const sizeLabel = [
-      draft.w && `W ${draft.w}`,
-      draft.d && `D ${draft.d}`,
-      draft.h && `H ${draft.h}`,
-    ]
-      .filter(Boolean)
-      .join(' x ');
-    onSave({
-      sizeMode: draft.mode,
-      sizeW: draft.w,
-      sizeD: draft.d,
-      sizeH: draft.h,
-      sizeUnit: unit,
-      sizeLabel: sizeLabel ? `${sizeLabel} ${unit}` : '',
-    });
-  };
-
   return (
-    <Modal open={open} onClose={onClose} title="Set size">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 rounded-md bg-surface-muted p-1">
-          {(['imperial', 'metric'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() =>
-                setDraft((current) => ({
-                  ...current,
-                  mode,
-                  unit: mode === 'imperial' ? 'ft/in' : 'mm',
-                }))
-              }
-              className={`rounded px-3 py-2 text-sm font-medium ${
-                draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-600'
-              }`}
-            >
-              {mode === 'imperial' ? 'Imperial' : 'Metric'}
-            </button>
-          ))}
-        </div>
-        {draft.mode === 'metric' && (
-          <select
-            value={draft.unit}
-            onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value }))}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-            aria-label="Metric unit"
-          >
-            {metricUnits.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
-        )}
-        <div className="grid gap-3 sm:grid-cols-3">
-          {(['w', 'd', 'h'] as const).map((field) => (
-            <label key={field} className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-              {field.toUpperCase()}
-              <input
-                type="text"
-                value={draft[field]}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, [field]: event.target.value }))
-                }
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-                placeholder={draft.mode === 'imperial' ? '4 ft 6 1/2 in' : '1200'}
-              />
-            </label>
-          ))}
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="button" variant="primary" onClick={save}>
-            Save size
-          </Button>
-        </div>
-      </div>
-    </Modal>
+    <DimensionEditorModal
+      open={open}
+      title="Set size"
+      initial={{
+        mode: item.sizeMode,
+        unit: item.sizeUnit,
+        w: item.sizeW,
+        d: item.sizeD,
+        h: item.sizeH,
+      }}
+      onClose={onClose}
+      onSave={({ label, mode, unit, w, d, h }) =>
+        onSave({
+          sizeMode: mode,
+          sizeUnit: unit,
+          sizeW: w,
+          sizeD: d,
+          sizeH: h,
+          sizeLabel: label,
+        })
+      }
+    />
   );
 }
 

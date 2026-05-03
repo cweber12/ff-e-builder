@@ -65,28 +65,37 @@ function BudgetTracker({
         : 'text-white';
 
   return (
-    <div className="flex h-10 items-center justify-end gap-3 text-white">
+    <div className="flex items-start justify-end gap-3 text-white">
       <button
         type="button"
         aria-expanded={expanded}
         aria-label={expanded ? 'Hide budget information' : 'Show budget information'}
         title={expanded ? 'Hide budget information' : 'Show budget information'}
         onClick={() => setExpanded((open) => !open)}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/65 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
       >
-        <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
           <path
-            d="M4.5 15V9.5m5.5 5.5V5m5.5 10v-7"
+            d="M4.25 6.75A2.25 2.25 0 0 1 6.5 4.5h7A2.25 2.25 0 0 1 15.75 6.75v6.5A2.25 2.25 0 0 1 13.5 15.5h-7a2.25 2.25 0 0 1-2.25-2.25v-6.5Z"
             stroke="currentColor"
-            strokeWidth="1.8"
+            strokeWidth="1.6"
+          />
+          <path
+            d="M13 9.25h2.75v3.5H13a1.75 1.75 0 1 1 0-3.5Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
+          <path
+            d="M6.5 4.5 12.25 2.75"
+            stroke="currentColor"
+            strokeWidth="1.6"
             strokeLinecap="round"
           />
-          <path d="M3.5 16h13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       </button>
 
       {expanded && (
-        <div className="flex h-full items-center gap-4 text-xs tabular-nums text-white/85">
+        <div className="flex flex-col items-end gap-1 text-xs tabular-nums text-white/85">
           <div className="flex items-baseline gap-1">
             <span className="text-white/55">Budget</span>
             <InlineNumberEdit

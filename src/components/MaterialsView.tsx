@@ -4,7 +4,7 @@ import { exportMaterialsExcel, exportMaterialsPdf } from '../lib/exportUtils';
 import { api } from '../lib/api';
 import { useCreateMaterial, useDeleteMaterial, useMaterials, useUpdateMaterial } from '../hooks';
 import { imageKeys } from '../hooks/useImages';
-import type { Material, Project } from '../types';
+import type { Material, Project, RoomWithItems, TakeoffCategoryWithItems } from '../types';
 import { Button } from './primitives';
 import { ImageFrame } from './ImageFrame';
 import { ExportMenu } from './ExportMenu';
@@ -12,6 +12,9 @@ import { MaterialForm, MaterialSwatchImage } from './MaterialLibraryModal';
 
 type MaterialsViewProps = {
   project: Project;
+  tool?: 'ffe' | 'takeoff';
+  roomsWithItems?: RoomWithItems[];
+  takeoffCategoriesWithItems?: TakeoffCategoryWithItems[];
 };
 
 type MaterialDraft = {
@@ -28,7 +31,12 @@ const emptyDraft: MaterialDraft = {
   swatchFile: null,
 };
 
-export function MaterialsView({ project }: MaterialsViewProps) {
+export function MaterialsView({
+  project,
+  tool = 'ffe',
+  roomsWithItems = [],
+  takeoffCategoriesWithItems = [],
+}: MaterialsViewProps) {
   const materials = useMaterials(project.id);
   const createMaterial = useCreateMaterial(project.id);
   const updateMaterial = useUpdateMaterial(project.id);
@@ -36,15 +44,34 @@ export function MaterialsView({ project }: MaterialsViewProps) {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
+  const [scope, setScope] = useState<'all' | 'ffe' | 'takeoff'>(tool);
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingMaterial = materials.data?.find((material) => material.id === editingId);
   const filteredMaterials = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    const ffeIds = new Set(
+      roomsWithItems.flatMap((room) =>
+        room.items.flatMap((item) => item.materials.map((material) => material.id)),
+      ),
+    );
+    const takeoffNames = new Set(
+      takeoffCategoriesWithItems.flatMap((category) =>
+        category.items.flatMap((item) => item.swatches.map((swatch) => swatch.toLowerCase())),
+      ),
+    );
     return [...(materials.data ?? [])]
+      .filter((material) => {
+        if (scope === 'all') return true;
+        if (scope === 'ffe') return ffeIds.has(material.id);
+        return (
+          takeoffNames.has(material.name.toLowerCase()) ||
+          takeoffNames.has(material.materialId.toLowerCase())
+        );
+      })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [materials.data, query]);
+  }, [materials.data, query, roomsWithItems, scope, takeoffCategoriesWithItems]);
 
   const resetDraft = () => {
     setDraft(emptyDraft);
@@ -98,6 +125,18 @@ export function MaterialsView({ project }: MaterialsViewProps) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
+            {(['all', 'ffe', 'takeoff'] as const).map((nextScope) => (
+              <button
+                key={nextScope}
+                type="button"
+                className={scope === nextScope ? activeToggleClassName : toggleClassName}
+                onClick={() => setScope(nextScope)}
+              >
+                {nextScope === 'all' ? 'All' : nextScope === 'ffe' ? 'FF&E' : 'Take-Off'}
+              </button>
+            ))}
+          </div>
           <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
             <button
               type="button"
