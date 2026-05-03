@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useAssignMaterial,
@@ -181,18 +181,14 @@ export function MaterialLibraryPanel({
                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Assigned to item
                 </span>
-                <span className="text-xs font-medium text-gray-600">
-                  {assignedMaterials.length} selected
-                </span>
               </div>
               {assignedMaterials.length ? (
                 <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                   {assignedMaterials.map((material) => (
                     <span
                       key={material.id}
-                      className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
+                      className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
                     >
-                      <MaterialSwatchImage material={material} size="sm" />
                       <span className="min-w-0 truncate">{material.name}</span>
                       <button
                         type="button"
@@ -282,6 +278,7 @@ export function MaterialForm({
   onSubmit: () => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const swatchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!draft.swatchFile) {
@@ -319,37 +316,35 @@ export function MaterialForm({
             className={inputClassName}
           />
         </label>
-        <label className="grid gap-2 text-sm font-medium text-gray-700">
-          Swatch image
-          <div className="grid gap-2">
-            <div className="flex items-center gap-3">
-              <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-white">
-                {previewUrl ? (
-                  <img src={previewUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-400">
-                    Image
-                  </span>
-                )}
-              </span>
-              <span className="min-w-0 text-xs font-normal text-gray-500">
-                {draft.swatchFile?.name ?? 'Upload the material swatch image.'}
-              </span>
-            </div>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={(event) =>
-                onDraftChange((current) => ({
-                  ...current,
-                  swatchFile: event.target.files?.[0] ?? null,
-                }))
-              }
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700 focus:border-brand-500 focus:outline-none"
-              aria-label="Swatch image"
-            />
-          </div>
-        </label>
+        <div className="grid gap-2 text-sm font-medium text-gray-700">
+          <span>Swatch</span>
+          <button
+            type="button"
+            className="group flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-dashed border-gray-300 bg-white text-gray-400 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            onClick={() => swatchInputRef.current?.click()}
+            aria-label="Upload swatch image"
+          >
+            <span className="flex h-full w-full items-center justify-center">
+              {previewUrl ? (
+                <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <UploadIcon className="h-5 w-5 transition group-hover:scale-105" />
+              )}
+            </span>
+          </button>
+          <input
+            ref={swatchInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={(event) =>
+              onDraftChange((current) => ({
+                ...current,
+                swatchFile: event.target.files?.[0] ?? null,
+              }))
+            }
+            className="sr-only"
+          />
+        </div>
         <label className="grid gap-1 text-sm font-medium text-gray-700">
           Description
           <textarea
@@ -423,24 +418,32 @@ function MaterialPickerCard({
             {material.materialId || 'No material ID'}
           </p>
         </div>
-        <MaterialSwatchImage material={material} size="sm" />
-        <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
-          <span className="rounded-full bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700">
-            {assigning ? 'Adding...' : assignable ? 'Click to add' : 'Library item'}
-          </span>
-          <div className="flex gap-1">
-            <Button
+        <div className="flex items-center justify-end gap-1 pt-1">
+          {assignable && (
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-brand-700 transition hover:border-brand-500 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-60"
               onClick={(event) => {
                 event.stopPropagation();
-                onEdit();
+                onSelect();
               }}
+              aria-label={`Add ${material.name}`}
+              disabled={assigning}
             >
-              Edit
-            </Button>
-          </div>
+              <AddIcon className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 transition hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+            aria-label={`Edit ${material.name}`}
+          >
+            <EditIcon className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </article>
@@ -513,3 +516,57 @@ function materialMatchesQuery(material: Material, query: string) {
 
 const inputClassName =
   'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none';
+
+function AddIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M10 4.5v11M4.5 10h11" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function EditIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M4.75 14.75 5.5 11l7.2-7.2a1.55 1.55 0 0 1 2.2 0l1.3 1.3a1.55 1.55 0 0 1 0 2.2L9 14.5l-4.25.25Z"
+        strokeLinejoin="round"
+      />
+      <path d="m11.75 4.75 3.5 3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UploadIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M10 13V4.75" strokeLinecap="round" />
+      <path d="m6.75 8 3.25-3.25L13.25 8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M4.5 12.75v1.75a1.75 1.75 0 0 0 1.75 1.75h7.5a1.75 1.75 0 0 0 1.75-1.75v-1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(materials): simplify swatch upload and use icon-only material card actions
 - feat(materials): use material images as swatches in forms, tables, and exports
 - fix(materials): clarify assignment and removal flows and limit materials to one swatch
 - feat(materials): add searchable material picker cards and table/export library view
