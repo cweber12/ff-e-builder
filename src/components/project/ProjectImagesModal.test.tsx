@@ -24,6 +24,7 @@ vi.mock('../../lib/api', () => ({
 
 const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   id: '00000000-0000-0000-0000-000000000010',
+  entityType: 'project',
   ownerUid: 'uid-1',
   projectId: '00000000-0000-0000-0000-000000000001',
   roomId: null,

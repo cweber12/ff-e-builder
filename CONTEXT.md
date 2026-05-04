@@ -82,6 +82,10 @@ _Avoid_: Material when referring only to the visual sample
 The primary image attached to an FF&E Item or Take-Off Item row.
 _Avoid_: Screenshot, render URL
 
+**Plan Image**:
+A plan visual attached directly to a Take-Off Item. In the Take-Off Table, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
+_Avoid_: Rendering, Swatch, drawing when referring to the Plan cell image
+
 ## Relationships
 
 - A **Project** belongs to exactly one authenticated user.
@@ -91,7 +95,7 @@ _Avoid_: Screenshot, render URL
 - A **Project** owns a shared **Material** library that can be accessed from both **FF&E** and **Take-Off Table** views.
 - An **FF&E Item** can use multiple **Materials**.
 - A **Take-Off Item** can show up to four **Swatches**.
-- A **Take-Off Item** can have one optional **Rendering** and up to four optional **Swatches**.
+- A **Take-Off Item** can have one optional **Rendering**, one optional **Plan Image**, and up to four optional **Swatches**.
 - A **Take-Off Item** owns its **Swatches** directly for this pass instead of selecting them from the shared **Material** library.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Take-Off Table** budgets.

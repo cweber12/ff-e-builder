@@ -321,6 +321,7 @@ type TakeoffExportColumn = {
 type TakeoffAssetBundle = {
   projectImages: string[];
   renderingByItemId: Map<string, string>;
+  planByItemId: Map<string, string>;
   swatchesByItemId: Map<string, string[]>;
 };
 
@@ -328,6 +329,7 @@ type TakeoffExportRow = {
   item: TakeoffItem;
   values: Record<TakeoffExportColumnKey, string>;
   rendering: string | null;
+  planImage: string | null;
   swatches: string[];
 };
 
@@ -374,6 +376,7 @@ const TAKEOFF_EXPORT_COLUMNS: TakeoffExportColumn[] = [
 const TAKEOFF_PDF_ROW_HEIGHT = 34;
 const TAKEOFF_EXCEL_ROW_HEIGHT = 56;
 const TAKEOFF_PDF_CELL_PADDING = 1.6;
+const TAKEOFF_EXCEL_IMAGE_PADDING_PX = 2;
 const TAKEOFF_SWATCH_LIMIT = 4;
 
 function filteredTakeoffCategories(categories: TakeoffCategoryWithItems[]) {
@@ -412,10 +415,13 @@ function buildTakeoffVisibleColumns(
 ): TakeoffExportColumn[] {
   const items = categories.flatMap((category) => category.items);
   const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
+  const hasPlanImages = items.some((item) => assets.planByItemId.has(item.id));
   const hasSwatches = items.some((item) => (assets.swatchesByItemId.get(item.id)?.length ?? 0) > 0);
 
   return TAKEOFF_EXPORT_COLUMNS.filter((column) => {
     if (column.key === 'rendering') return hasRendering;
+    if (column.key === 'plan')
+      return hasPlanImages || items.some((item) => takeoffColumnHasData(item, column.key));
     if (column.key === 'swatch') return hasSwatches;
     if (column.alwaysVisible) return true;
     return items.some((item) => takeoffColumnHasData(item, column.key));
@@ -448,6 +454,7 @@ function buildTakeoffExportDocument(
     rows: category.items.map((item) => ({
       item,
       rendering: assets.renderingByItemId.get(item.id) ?? null,
+      planImage: assets.planByItemId.get(item.id) ?? null,
       swatches: assets.swatchesByItemId.get(item.id) ?? [],
       values: Object.fromEntries(
         TAKEOFF_EXPORT_COLUMNS.map((column) => [
@@ -582,13 +589,15 @@ async function buildTakeoffAssetBundle(
   );
 
   const renderingByItemId = new Map<string, string>();
+  const planByItemId = new Map<string, string>();
   const swatchesByItemId = new Map<string, string[]>();
   const items = categories.flatMap((category) => category.items);
 
   await Promise.all(
     items.map(async (item) => {
-      const [renderingImages, swatchImages] = await Promise.all([
+      const [renderingImages, planImages, swatchImages] = await Promise.all([
         api.images.list({ entityType: 'takeoff_item', entityId: item.id }),
+        api.images.list({ entityType: 'takeoff_plan', entityId: item.id }),
         api.images.list({ entityType: 'takeoff_swatch', entityId: item.id }),
       ]);
 
@@ -596,6 +605,11 @@ async function buildTakeoffAssetBundle(
       if (rendering) {
         const dataUrl = await imageAssetToPngDataUrl(rendering);
         if (dataUrl) renderingByItemId.set(item.id, dataUrl);
+      }
+      const plan = planImages[0];
+      if (plan) {
+        const dataUrl = await imageAssetToPngDataUrl(plan);
+        if (dataUrl) planByItemId.set(item.id, dataUrl);
       }
 
       const swatchData = await Promise.all(
@@ -613,6 +627,7 @@ async function buildTakeoffAssetBundle(
   return {
     projectImages: projectImageData.filter((value): value is string => Boolean(value)),
     renderingByItemId,
+    planByItemId,
     swatchesByItemId,
   };
 }
@@ -898,10 +913,9 @@ function addExcelImage(
   },
 ) {
   worksheet.addImage(imageId, {
-    tl: position.tl as never,
-    br: position.br as never,
+    ...position,
     editAs: 'oneCell',
-  });
+  } as never);
 }
 
 type ExcelImageBox = {
@@ -911,20 +925,40 @@ type ExcelImageBox = {
   bottom: number;
 };
 
-function boxWidth(box: ExcelImageBox) {
-  return Math.max(0.01, box.right - box.left);
+type ExcelImagePlacement = {
+  box: ExcelImageBox;
+  widthPx: number;
+  heightPx: number;
+};
+
+function excelColumnWidthToPixels(width: number) {
+  return Math.max(1, Math.round(width * 7 + 5));
 }
 
-function boxHeight(box: ExcelImageBox) {
-  return Math.max(0.01, box.bottom - box.top);
+function excelRowHeightToPixels(heightPoints: number) {
+  return Math.max(1, Math.round(heightPoints * (96 / 72)));
 }
 
-function insetExcelImageBox(box: ExcelImageBox, inset: number): ExcelImageBox {
+function excelPaddedCellPlacement(
+  columnIndex: number,
+  rowNumber: number,
+  columnWidth: number,
+  rowHeight: number,
+  paddingPx = TAKEOFF_EXCEL_IMAGE_PADDING_PX,
+): ExcelImagePlacement {
+  const widthPx = excelColumnWidthToPixels(columnWidth);
+  const heightPx = excelRowHeightToPixels(rowHeight);
+  const horizontalInset = Math.min(0.45, paddingPx / widthPx);
+  const verticalInset = Math.min(0.45, paddingPx / heightPx);
   return {
-    left: box.left + inset,
-    top: box.top + inset,
-    right: box.right - inset,
-    bottom: box.bottom - inset,
+    box: {
+      left: columnIndex + horizontalInset,
+      top: rowNumber - 1 + verticalInset,
+      right: columnIndex + 1 - horizontalInset,
+      bottom: rowNumber - verticalInset,
+    },
+    widthPx: Math.max(1, widthPx - paddingPx * 2),
+    heightPx: Math.max(1, heightPx - paddingPx * 2),
   };
 }
 
@@ -972,11 +1006,40 @@ async function cropDataUrlToCover(
   return canvas.toDataURL('image/png');
 }
 
+async function fitDataUrlToContain(
+  dataUrl: string,
+  targetWidth: number,
+  targetHeight: number,
+): Promise<string> {
+  const width = Math.max(1, Math.round(targetWidth));
+  const height = Math.max(1, Math.round(targetHeight));
+  const image = await loadImageElement(dataUrl);
+  const sourceWidth = image.naturalWidth || image.width || width;
+  const sourceHeight = image.naturalHeight || image.height || height;
+  const scale = Math.min(width / sourceWidth, height / sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Unable to prepare export image.');
+  context.clearRect(0, 0, width, height);
+  context.drawImage(
+    image,
+    (width - drawWidth) / 2,
+    (height - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  );
+  return canvas.toDataURL('image/png');
+}
+
 async function addExcelCoverImage(
   workbook: Workbook,
   worksheet: Worksheet,
   dataUrl: string,
-  box: ExcelImageBox,
+  placement: ExcelImagePlacement,
   targetWidth: number,
   targetHeight: number,
 ) {
@@ -985,9 +1048,123 @@ async function addExcelCoverImage(
     extension: 'png',
   });
   addExcelImage(worksheet, imageId, {
-    tl: { col: box.left, row: box.top },
-    br: { col: box.right, row: box.bottom },
+    tl: { col: placement.box.left, row: placement.box.top },
+    br: { col: placement.box.right, row: placement.box.bottom },
   });
+}
+
+async function addExcelContainImage(
+  workbook: Workbook,
+  worksheet: Worksheet,
+  dataUrl: string,
+  placement: ExcelImagePlacement,
+  targetWidth: number,
+  targetHeight: number,
+) {
+  const imageId = workbook.addImage({
+    base64: await fitDataUrlToContain(dataUrl, targetWidth, targetHeight),
+    extension: 'png',
+  });
+  addExcelImage(worksheet, imageId, {
+    tl: { col: placement.box.left, row: placement.box.top },
+    br: { col: placement.box.right, row: placement.box.bottom },
+  });
+}
+
+async function drawCircularCoverDataUrl(
+  dataUrl: string,
+  targetWidth: number,
+  targetHeight: number,
+): Promise<string> {
+  const width = Math.max(1, Math.round(targetWidth));
+  const height = Math.max(1, Math.round(targetHeight));
+  const image = await loadImageElement(dataUrl);
+  const sourceWidth = image.naturalWidth || image.width || width;
+  const sourceHeight = image.naturalHeight || image.height || height;
+  const diameter = Math.max(1, Math.min(width, height));
+  const circleX = (width - diameter) / 2;
+  const circleY = (height - diameter) / 2;
+  const scale = Math.max(diameter / sourceWidth, diameter / sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Unable to prepare export image.');
+  context.clearRect(0, 0, width, height);
+  context.save();
+  context.beginPath();
+  context.arc(width / 2, height / 2, diameter / 2, 0, Math.PI * 2);
+  context.clip();
+  context.drawImage(
+    image,
+    circleX + (diameter - drawWidth) / 2,
+    circleY + (diameter - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  );
+  context.restore();
+  return canvas.toDataURL('image/png');
+}
+
+async function addExcelCircularCoverImage(
+  workbook: Workbook,
+  worksheet: Worksheet,
+  dataUrl: string,
+  placement: ExcelImagePlacement,
+) {
+  const imageId = workbook.addImage({
+    base64: await drawCircularCoverDataUrl(dataUrl, placement.widthPx, placement.heightPx),
+    extension: 'png',
+  });
+  addExcelImage(worksheet, imageId, {
+    tl: { col: placement.box.left, row: placement.box.top },
+    br: { col: placement.box.right, row: placement.box.bottom },
+  });
+}
+
+function excelColumnAnchorAtWidth(widths: number[], targetWidth: number) {
+  const boundedTarget = Math.max(
+    0,
+    Math.min(
+      targetWidth,
+      widths.reduce((sum, width) => sum + width, 0),
+    ),
+  );
+  let consumed = 0;
+  for (const [index, width] of widths.entries()) {
+    const next = consumed + width;
+    if (boundedTarget <= next || index === widths.length - 1) {
+      const fraction = width > 0 ? (boundedTarget - consumed) / width : 0;
+      return index + Math.max(0, Math.min(1, fraction));
+    }
+    consumed = next;
+  }
+  return widths.length;
+}
+
+function excelEqualWidthSlotPlacement(
+  widths: number[],
+  row: number,
+  rowHeight: number,
+  slot: number,
+  slotCount: number,
+): ExcelImagePlacement {
+  const widthPixels = widths.map(excelColumnWidthToPixels);
+  const totalWidthPx = widthPixels.reduce((sum, width) => sum + width, 0);
+  const slotWidthPx = Math.floor(totalWidthPx / slotCount);
+  return {
+    box: {
+      left: excelColumnAnchorAtWidth(widthPixels, slot * slotWidthPx),
+      top: row - 1,
+      right: excelColumnAnchorAtWidth(widthPixels, (slot + 1) * slotWidthPx),
+      bottom: row,
+    },
+    widthPx: slot === slotCount - 1 ? totalWidthPx - slotWidthPx * slot : slotWidthPx,
+    heightPx: excelRowHeightToPixels(rowHeight),
+  };
 }
 
 export async function exportTakeoffExcel(
@@ -1055,23 +1232,42 @@ export async function exportTakeoffExcel(
 
   if (exportDoc.projectImages.length > 0) {
     const imageBandRow = currentRow;
-    worksheet.mergeCells(imageBandRow, 1, imageBandRow, endColumn);
-    const imageBandCell = worksheet.getCell(imageBandRow, 1);
-    imageBandCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
-    imageBandCell.border = thinBorder();
-    worksheet.getRow(imageBandRow).height = 112;
-    const slotWidth = endColumn / 3;
+    const imageBandHeight = 112;
+    worksheet.getRow(imageBandRow).height = imageBandHeight;
+    const columnWidths = columns.map((column) => column.excelWidth);
+    const slotRanges = [
+      { start: 1, end: Math.max(1, Math.floor(endColumn / 3)) },
+      {
+        start: Math.max(1, Math.floor(endColumn / 3)) + 1,
+        end: Math.max(2, Math.floor((endColumn * 2) / 3)),
+      },
+      { start: Math.max(3, Math.floor((endColumn * 2) / 3)) + 1, end: endColumn },
+    ];
+    slotRanges.forEach((range) => {
+      worksheet.mergeCells(imageBandRow, range.start, imageBandRow, range.end);
+      const slotCell = worksheet.getCell(imageBandRow, range.start);
+      slotCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
+      slotCell.border = thinBorder();
+    });
     await Promise.all(
       [0, 1, 2].map(async (slot) => {
         const image = exportDoc.projectImages[slot];
         if (!image) return;
-        const box = {
-          left: slotWidth * slot,
-          top: imageBandRow - 1,
-          right: slotWidth * (slot + 1),
-          bottom: imageBandRow,
-        };
-        await addExcelCoverImage(workbook, worksheet, image, box, 480, 180);
+        const placement = excelEqualWidthSlotPlacement(
+          columnWidths,
+          imageBandRow,
+          imageBandHeight,
+          slot,
+          3,
+        );
+        await addExcelCoverImage(
+          workbook,
+          worksheet,
+          image,
+          placement,
+          placement.widthPx,
+          placement.heightPx,
+        );
       }),
     );
     currentRow += 2;
@@ -1133,69 +1329,65 @@ export async function exportTakeoffExcel(
       });
 
       const renderingColumn = columns.findIndex((column) => column.key === 'rendering');
+      const planColumn = columns.findIndex((column) => column.key === 'plan');
       const swatchColumn = columns.findIndex((column) => column.key === 'swatch');
       if (renderingColumn >= 0) {
-        const cell = row.getCell(renderingColumn + 1);
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
-        if (rowData.rendering) {
-          await addExcelCoverImage(
+        const renderingExportColumn = columns[renderingColumn];
+        if (rowData.rendering && renderingExportColumn) {
+          const placement = excelPaddedCellPlacement(
+            renderingColumn,
+            currentRow,
+            renderingExportColumn.excelWidth,
+            TAKEOFF_EXCEL_ROW_HEIGHT,
+          );
+          await addExcelContainImage(
             workbook,
             worksheet,
             rowData.rendering,
-            insetExcelImageBox(
-              {
-                left: renderingColumn,
-                top: currentRow - 1,
-                right: renderingColumn + 1,
-                bottom: currentRow,
-              },
-              0.02,
-            ),
-            220,
-            220,
+            placement,
+            placement.widthPx,
+            placement.heightPx,
+          );
+        }
+      }
+
+      if (planColumn >= 0 && rowData.planImage) {
+        const planExportColumn = columns[planColumn];
+        if (planExportColumn) {
+          const planCell = row.getCell(planColumn + 1);
+          planCell.value = '';
+          const placement = excelPaddedCellPlacement(
+            planColumn,
+            currentRow,
+            planExportColumn.excelWidth,
+            TAKEOFF_EXCEL_ROW_HEIGHT,
+          );
+          await addExcelContainImage(
+            workbook,
+            worksheet,
+            rowData.planImage,
+            placement,
+            placement.widthPx,
+            placement.heightPx,
           );
         }
       }
 
       if (swatchColumn >= 0) {
+        const swatchExportColumn = columns[swatchColumn];
         const swatches = rowData.swatches;
         const swatchCell = row.getCell(swatchColumn + 1);
         swatchCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
-        const visibleSwatches = swatches.slice(0, TAKEOFF_SWATCH_LIMIT);
-        const outerInset = 0.04;
-        const innerGap = 0.04;
-        const stackBox = insetExcelImageBox(
-          {
-            left: swatchColumn,
-            top: currentRow - 1,
-            right: swatchColumn + 1,
-            bottom: currentRow,
-          },
-          outerInset,
-        );
-        const slotHeight =
-          visibleSwatches.length > 0
-            ? (boxHeight(stackBox) - innerGap * Math.max(0, visibleSwatches.length - 1)) /
-              visibleSwatches.length
-            : 0;
-        await Promise.all(
-          visibleSwatches.map(async (swatch, index) => {
-            const top = stackBox.top + index * (slotHeight + innerGap);
-            await addExcelCoverImage(
-              workbook,
-              worksheet,
-              swatch,
-              {
-                left: stackBox.left,
-                top,
-                right: stackBox.right,
-                bottom: top + slotHeight,
-              },
-              160,
-              Math.max(36, Math.round((160 * slotHeight) / Math.max(0.01, boxWidth(stackBox)))),
-            );
-          }),
-        );
+        const swatch = swatches[0];
+        if (swatch && swatchExportColumn) {
+          const placement = excelPaddedCellPlacement(
+            swatchColumn,
+            currentRow,
+            swatchExportColumn.excelWidth,
+            TAKEOFF_EXCEL_ROW_HEIGHT,
+          );
+          await addExcelCircularCoverImage(workbook, worksheet, swatch, placement);
+        }
       }
 
       currentRow += 1;

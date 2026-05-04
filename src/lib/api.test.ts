@@ -33,6 +33,7 @@ describe('api client - images', () => {
         images: [
           {
             id: 'img-1',
+            entity_type: 'project',
             owner_uid: 'uid-1',
             project_id: 'project-1',
             room_id: null,
@@ -57,6 +58,7 @@ describe('api client - images', () => {
     );
     expect(images[0]).toMatchObject({
       id: 'img-1',
+      entityType: 'project',
       projectId: 'project-1',
       contentType: 'image/jpeg',
       isPrimary: true,
@@ -69,6 +71,7 @@ describe('api client - images', () => {
         {
           image: {
             id: 'img-1',
+            entity_type: 'project',
             owner_uid: 'uid-1',
             project_id: 'project-1',
             room_id: null,

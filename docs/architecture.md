@@ -84,7 +84,7 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
-- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, and `takeoff_item`. In domain language, the primary image attached to an FF&E Item or Take-Off Item row is a Rendering.
+- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, `takeoff_item`, `takeoff_plan`, and `takeoff_swatch`. In domain language, the primary image attached to an FF&E Item or Take-Off Item row is a Rendering, while a Take-Off Plan Image is a separate row-level visual.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Take-Off Category defaults are created lazily when a project's take-off categories are read: Millwork, Ceiling, Flooring, and Walls.
 

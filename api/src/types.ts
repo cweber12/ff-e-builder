@@ -140,10 +140,12 @@ export type ImageEntityType =
   | 'item'
   | 'material'
   | 'takeoff_item'
-  | 'takeoff_swatch';
+  | 'takeoff_swatch'
+  | 'takeoff_plan';
 
 export interface ImageAsset {
   id: string;
+  entity_type: ImageEntityType;
   owner_uid: string;
   project_id: string;
   room_id: string | null;
@@ -287,7 +289,15 @@ export const UpdateTakeoffItemSchema = CreateTakeoffItemSchema.partial().extend(
 export type UpdateTakeoffItemInput = z.infer<typeof UpdateTakeoffItemSchema>;
 
 export const ImageEntitySchema = z.object({
-  entity_type: z.enum(['project', 'room', 'item', 'material', 'takeoff_item', 'takeoff_swatch']),
+  entity_type: z.enum([
+    'project',
+    'room',
+    'item',
+    'material',
+    'takeoff_item',
+    'takeoff_swatch',
+    'takeoff_plan',
+  ]),
   entity_id: z.string().uuid(),
 });
 

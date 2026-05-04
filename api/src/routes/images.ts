@@ -64,6 +64,7 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
   if (entityType === 'item' || entityType === 'takeoff_item') {
     return 'This row already has a rendering';
   }
+  if (entityType === 'takeoff_plan') return 'This row already has a plan image';
   if (entityType === 'takeoff_swatch') return 'Take-Off items can have up to 4 swatches';
   if (entityType === 'room') return 'This room already has an image';
   if (entityType === 'material') return 'This material already has an image';
@@ -75,7 +76,8 @@ function isProjectImageAsset(image: ImageAsset): boolean {
     image.room_id === null &&
     image.item_id === null &&
     image.material_id === null &&
-    image.takeoff_item_id === null
+    image.takeoff_item_id === null &&
+    image.entity_type === 'project'
   );
 }
 
@@ -118,7 +120,11 @@ async function getOwnedEntityContext(
     };
   }
 
-  if (entityType === 'takeoff_item' || entityType === 'takeoff_swatch') {
+  if (
+    entityType === 'takeoff_item' ||
+    entityType === 'takeoff_swatch' ||
+    entityType === 'takeoff_plan'
+  ) {
     const takeoffItem = await getOwnedTakeoffItemContext(env, entityId, uid);
     return {
       projectId: takeoffItem.projectId,
@@ -156,6 +162,9 @@ function buildR2Key(
   if (entityType === 'takeoff_swatch') {
     return `${base}/takeoff/items/${context.takeoffItemId}/swatches/${imageId}.${ext}`;
   }
+  if (entityType === 'takeoff_plan') {
+    return `${base}/takeoff/items/${context.takeoffItemId}/plan/${imageId}.${ext}`;
+  }
   return `${base}/rooms/${context.roomId}/items/${context.itemId}/${imageId}.${ext}`;
 }
 
@@ -189,44 +198,18 @@ router.get('/', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows =
-    parsed.data.entity_type === 'takeoff_item'
-      ? await sql`
-          SELECT *
-          FROM image_assets
-          WHERE owner_uid = ${uid}
-            AND project_id = ${context.projectId}
-            AND room_id IS NOT DISTINCT FROM ${context.roomId}
-            AND item_id IS NOT DISTINCT FROM ${context.itemId}
-            AND material_id IS NOT DISTINCT FROM ${context.materialId}
-            AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
-            AND is_primary = true
-          ORDER BY created_at DESC
-        `
-      : parsed.data.entity_type === 'takeoff_swatch'
-        ? await sql`
-            SELECT *
-            FROM image_assets
-            WHERE owner_uid = ${uid}
-              AND project_id = ${context.projectId}
-              AND room_id IS NOT DISTINCT FROM ${context.roomId}
-              AND item_id IS NOT DISTINCT FROM ${context.itemId}
-              AND material_id IS NOT DISTINCT FROM ${context.materialId}
-              AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
-              AND is_primary = false
-            ORDER BY created_at DESC
-          `
-        : await sql`
-            SELECT *
-            FROM image_assets
-            WHERE owner_uid = ${uid}
-              AND project_id = ${context.projectId}
-              AND room_id IS NOT DISTINCT FROM ${context.roomId}
-              AND item_id IS NOT DISTINCT FROM ${context.itemId}
-              AND material_id IS NOT DISTINCT FROM ${context.materialId}
-              AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
-            ORDER BY is_primary DESC, created_at DESC
-          `;
+  const rows = await sql`
+    SELECT *
+    FROM image_assets
+    WHERE owner_uid = ${uid}
+      AND project_id = ${context.projectId}
+      AND entity_type = ${parsed.data.entity_type}
+      AND room_id IS NOT DISTINCT FROM ${context.roomId}
+      AND item_id IS NOT DISTINCT FROM ${context.itemId}
+      AND material_id IS NOT DISTINCT FROM ${context.materialId}
+      AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
+    ORDER BY is_primary DESC, created_at DESC
+  `;
 
   return c.json({ images: rows.map(imageRow) });
 });
@@ -286,6 +269,7 @@ router.post('/', async (c) => {
         FROM image_assets
         WHERE owner_uid = ${uid}
           AND project_id = ${context.projectId}
+          AND entity_type = 'project'
           AND room_id IS NULL
           AND item_id IS NULL
           AND material_id IS NULL
@@ -305,7 +289,7 @@ router.post('/', async (c) => {
         FROM image_assets
         WHERE owner_uid = ${uid}
           AND takeoff_item_id = ${context.takeoffItemId}
-          AND is_primary = false
+          AND entity_type = 'takeoff_swatch'
       `;
       const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
       if (count >= 4) {
@@ -324,11 +308,12 @@ router.post('/', async (c) => {
     if (parsed.data.entity_type === 'project' || parsed.data.entity_type === 'takeoff_swatch') {
       const rows = await sql`
         INSERT INTO image_assets (
-          id, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
+          id, entity_type, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
           filename, content_type, byte_size, alt_text, is_primary
         )
         VALUES (
           ${imageId},
+          ${parsed.data.entity_type},
           ${uid},
           ${context.projectId},
           ${context.roomId},
@@ -353,17 +338,19 @@ router.post('/', async (c) => {
         SET is_primary = false
         WHERE owner_uid = ${uid}
           AND project_id = ${context.projectId}
+          AND entity_type = ${parsed.data.entity_type}
           AND room_id IS NOT DISTINCT FROM ${context.roomId}
           AND item_id IS NOT DISTINCT FROM ${context.itemId}
           AND material_id IS NOT DISTINCT FROM ${context.materialId}
           AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
       )
       INSERT INTO image_assets (
-        id, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
+        id, entity_type, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
         filename, content_type, byte_size, alt_text, is_primary
       )
       VALUES (
         ${imageId},
+        ${parsed.data.entity_type},
         ${uid},
         ${context.projectId},
         ${context.roomId},
@@ -406,6 +393,7 @@ router.patch('/:id/primary', async (c) => {
       SET is_primary = false
       WHERE owner_uid = ${uid}
         AND project_id = ${image.project_id}
+        AND entity_type = ${image.entity_type}
         AND room_id IS NOT DISTINCT FROM ${image.room_id}
         AND item_id IS NOT DISTINCT FROM ${image.item_id}
         AND material_id IS NOT DISTINCT FROM ${image.material_id}
@@ -464,6 +452,7 @@ router.delete('/:id', async (c) => {
       FROM image_assets
       WHERE owner_uid = ${uid}
         AND project_id = ${image.project_id}
+        AND entity_type = 'project'
         AND room_id IS NULL
         AND item_id IS NULL
         AND material_id IS NULL

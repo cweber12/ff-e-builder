@@ -104,6 +104,7 @@ describe('Image uploads', () => {
             return [
               {
                 id: '00000000-0000-0000-0000-000000000010',
+                entity_type: 'project',
                 owner_uid: 'user-123',
                 project_id: projectId,
                 room_id: null,
@@ -162,6 +163,7 @@ describe('Image uploads', () => {
             return [
               {
                 id: '00000000-0000-0000-0000-000000000013',
+                entity_type: 'takeoff_swatch',
                 owner_uid: 'user-123',
                 project_id: projectId,
                 room_id: null,
@@ -204,6 +206,62 @@ describe('Image uploads', () => {
     });
   });
 
+  it('allows a take-off plan image without colliding with the rendering image role', async () => {
+    const sql = vi.fn(
+      async (strings: TemplateStringsArray) =>
+        await Promise.resolve().then(() => {
+          const query = strings.join('?');
+
+          if (query.includes('INSERT INTO image_assets')) {
+            return [
+              {
+                id: '00000000-0000-0000-0000-000000000014',
+                entity_type: 'takeoff_plan',
+                owner_uid: 'user-123',
+                project_id: projectId,
+                room_id: null,
+                item_id: null,
+                material_id: null,
+                takeoff_item_id: takeoffItemId,
+                r2_key: 'users/user-123/projects/project-1/takeoff/items/item-1/plan/1.png',
+                filename: 'plan.png',
+                content_type: 'image/png',
+                byte_size: 11,
+                alt_text: 'Take-Off plan',
+                is_primary: true,
+                created_at: '2026-05-03T00:00:00Z',
+                updated_at: '2026-05-03T00:00:00Z',
+              },
+            ];
+          }
+
+          return [];
+        }),
+    );
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      `/api/v1/images?entity_type=takeoff_plan&entity_id=${takeoffItemId}&alt_text=Take-Off+plan`,
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+        body: multipartImageBody('plan.png'),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(201);
+    const statement = Array.from(sql.mock.calls[0]?.[0] ?? []).join(' ');
+    expect(statement).toContain('entity_type =');
+    await expect(res.json()).resolves.toMatchObject({
+      image: {
+        entity_type: 'takeoff_plan',
+        takeoff_item_id: takeoffItemId,
+        is_primary: true,
+      },
+    });
+  });
+
   it('rejects a fifth take-off swatch with a client error', async () => {
     const sql = vi.fn().mockResolvedValueOnce([{ count: 4 }]);
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
@@ -231,6 +289,7 @@ describe('Image uploads', () => {
       .mockResolvedValueOnce([
         {
           id: '00000000-0000-0000-0000-000000000011',
+          entity_type: 'project',
           owner_uid: 'user-123',
           project_id: projectId,
           room_id: null,
@@ -251,6 +310,7 @@ describe('Image uploads', () => {
       .mockResolvedValueOnce([
         {
           id: '00000000-0000-0000-0000-000000000012',
+          entity_type: 'project',
           owner_uid: 'user-123',
           project_id: projectId,
           room_id: null,

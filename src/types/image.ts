@@ -4,10 +4,12 @@ export type ImageEntityType =
   | 'item'
   | 'material'
   | 'takeoff_item'
-  | 'takeoff_swatch';
+  | 'takeoff_swatch'
+  | 'takeoff_plan';
 
 export type ImageAsset = {
   id: string;
+  entityType: ImageEntityType;
   ownerUid: string;
   projectId: string;
   roomId: string | null;

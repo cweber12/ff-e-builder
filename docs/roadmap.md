@@ -69,6 +69,7 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 
 - Walls, flooring, ceiling, and paint quantities.
 - Uniform cell size; images scale to fit.
+- PDF export should render Take-Off Plan Images after the PDF layout cleanup pass.
 
 ### Catalog navigation
 

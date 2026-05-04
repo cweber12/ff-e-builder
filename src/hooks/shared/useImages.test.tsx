@@ -35,6 +35,7 @@ vi.mock('sonner', () => ({
 
 const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   id: '00000000-0000-0000-0000-000000000011',
+  entityType: 'project',
   ownerUid: 'user-123',
   projectId: '00000000-0000-0000-0000-000000000001',
   roomId: null,

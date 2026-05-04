@@ -450,7 +450,15 @@ function TakeoffRow({
         />
       </td>
       <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
-      <EditableCell value={item.plan} onSave={(plan) => onSave({ plan })} />
+      <td className="w-28 px-3 py-2">
+        <ImageFrame
+          entityType="takeoff_plan"
+          entityId={item.id}
+          alt={`${item.productTag || 'Take-off'} plan`}
+          className="h-20 w-24"
+          compact
+        />
+      </td>
       <EditableCell value={item.drawings} onSave={(drawings) => onSave({ drawings })} />
       <EditableCell value={item.location} onSave={(location) => onSave({ location })} />
       <EditableCell

@@ -80,6 +80,7 @@ interface RawItem {
 
 interface RawImageAsset {
   id: string;
+  entity_type: ImageEntityType;
   owner_uid: string;
   project_id: string;
   room_id: string | null;
@@ -205,6 +206,7 @@ const mapItem = (r: RawItem): Item => ({
 
 const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   id: r.id,
+  entityType: r.entity_type,
   ownerUid: r.owner_uid,
   projectId: r.project_id,
   roomId: r.room_id,
