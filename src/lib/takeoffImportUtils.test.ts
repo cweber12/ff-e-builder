@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   TAKEOFF_IMPORT_EMPTY_MAP,
   autoMapTakeoffColumns,
+  imageToFile,
   isSummaryTakeoffRow,
   rowHasImportableContent,
   type TakeoffParsedRow,
@@ -16,6 +17,31 @@ const BASE_ROW: TakeoffParsedRow = {
   images: { rendering: [], plan: [], swatches: [] },
   sourceSectionIndex: 0,
 };
+
+describe('imageToFile', () => {
+  it('converts image bytes to file without including extra buffer bytes', () => {
+    const source = new Uint8Array([255, 216, 255, 224, 1, 2, 3, 4]);
+    const sliced = source.subarray(0, 4);
+
+    const file = imageToFile(
+      {
+        id: 'img-1',
+        filename: 'test.jpg',
+        contentType: 'image/jpeg',
+        bytes: sliced,
+        row: 1,
+        column: 1,
+        rowEnd: 1,
+        columnEnd: 1,
+      },
+      'fallback.jpg',
+    );
+
+    expect(file.size).toBe(4);
+    expect(file.type).toBe('image/jpeg');
+    expect(file.name).toBe('test.jpg');
+  });
+});
 
 describe('autoMapTakeoffColumns', () => {
   it('maps take-off aliases from spreadsheet headers', () => {

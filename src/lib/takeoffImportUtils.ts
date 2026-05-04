@@ -166,7 +166,9 @@ export function isSummaryTakeoffRow(row: TakeoffParsedRow): boolean {
 
 export function imageToFile(image: TakeoffImportImage, fallbackName: string): File {
   const bytes = new Uint8Array(image.bytes);
-  const blob = new Blob([bytes.buffer], { type: image.contentType });
+  // Use the exact byte view; using bytes.buffer can include unrelated bytes
+  // when the source Uint8Array is a sliced view.
+  const blob = new Blob([bytes], { type: image.contentType });
   return new File([blob], image.filename || fallbackName, { type: image.contentType });
 }
 
