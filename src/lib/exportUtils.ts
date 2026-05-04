@@ -391,14 +391,7 @@ export async function exportTableExcel(
           FFE_EXCEL_COLS[imageColIndex].width,
           FFE_EXCEL_ROW_HEIGHT,
         );
-        await addExcelCoverImage(
-          workbook,
-          worksheet,
-          imageDataUrl,
-          placement,
-          placement.widthPx,
-          placement.heightPx,
-        );
+        await addExcelContainImage(workbook, worksheet, imageDataUrl, placement);
       }
 
       currentRow += 1;
@@ -1280,6 +1273,64 @@ async function addExcelCoverImage(
   });
 }
 
+async function scaleDataUrlToContain(
+  dataUrl: string,
+  targetWidth: number,
+  targetHeight: number,
+  maxOutputPx = 1600,
+): Promise<string> {
+  const cellW = Math.max(1, Math.round(targetWidth));
+  const cellH = Math.max(1, Math.round(targetHeight));
+  const image = await loadImageElement(dataUrl);
+  const srcW = image.naturalWidth || image.width || cellW;
+  const srcH = image.naturalHeight || image.height || cellH;
+
+  // Scale source to output resolution, capped at maxOutputPx on the longer side.
+  const outputScale = Math.min(1, maxOutputPx / Math.max(srcW, srcH));
+  const drawW = Math.max(1, Math.round(srcW * outputScale));
+  const drawH = Math.max(1, Math.round(srcH * outputScale));
+
+  // Canvas matches the cell's aspect ratio and is sized to contain the drawn
+  // image with transparent letterbox padding on the shorter axis.
+  const cellAspect = cellW / cellH;
+  const imageAspect = drawW / drawH;
+  let canvasW: number, canvasH: number;
+  if (imageAspect > cellAspect) {
+    canvasW = drawW;
+    canvasH = Math.max(1, Math.round(drawW / cellAspect));
+  } else {
+    canvasH = drawH;
+    canvasW = Math.max(1, Math.round(drawH * cellAspect));
+  }
+
+  const drawX = Math.round((canvasW - drawW) / 2);
+  const drawY = Math.round((canvasH - drawH) / 2);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Unable to prepare export image.');
+  context.drawImage(image, 0, 0, srcW, srcH, drawX, drawY, drawW, drawH);
+  return canvas.toDataURL('image/png');
+}
+
+async function addExcelContainImage(
+  workbook: Workbook,
+  worksheet: Worksheet,
+  dataUrl: string,
+  placement: ExcelImagePlacement,
+) {
+  const imageId = workbook.addImage({
+    base64: await scaleDataUrlToContain(dataUrl, placement.widthPx, placement.heightPx),
+    extension: 'png',
+  });
+  addExcelImage(worksheet, imageId, {
+    tl: { col: placement.box.left, row: placement.box.top },
+    ext: { width: placement.widthPx, height: placement.heightPx },
+  });
+}
+
 async function drawCircularCoverDataUrl(
   dataUrl: string,
   targetWidth: number,
@@ -1553,14 +1604,7 @@ export async function exportTakeoffExcel(
             renderingExportColumn.excelWidth,
             TAKEOFF_EXCEL_ROW_HEIGHT,
           );
-          await addExcelCoverImage(
-            workbook,
-            worksheet,
-            rowData.rendering,
-            placement,
-            placement.widthPx,
-            placement.heightPx,
-          );
+          await addExcelContainImage(workbook, worksheet, rowData.rendering, placement);
         }
       }
 
@@ -1575,14 +1619,7 @@ export async function exportTakeoffExcel(
             planExportColumn.excelWidth,
             TAKEOFF_EXCEL_ROW_HEIGHT,
           );
-          await addExcelCoverImage(
-            workbook,
-            worksheet,
-            rowData.planImage,
-            placement,
-            placement.widthPx,
-            placement.heightPx,
-          );
+          await addExcelContainImage(workbook, worksheet, rowData.planImage, placement);
         }
       }
 
