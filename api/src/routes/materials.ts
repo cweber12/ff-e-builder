@@ -10,48 +10,24 @@ import {
   assertItemOwnership,
   assertMaterialOwnership,
   assertProjectOwnership,
+  assertTakeoffItemOwnership,
   getOwnedItemContext,
   getOwnedMaterialContext,
 } from '../lib/ownership';
 import { getDb } from '../lib/db';
+import {
+  countMaterialReferences,
+  forkMaterial,
+  normalizeSwatches,
+  selectMaterialById,
+  setMaterialSwatches,
+} from './materialHelpers';
 
+const DEFAULT_SWATCH = '#D9D4C8';
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
-const defaultSwatch = '#D9D4C8';
 
-type Sql = ReturnType<typeof getDb>;
 type AppContext = Context<{ Bindings: Env; Variables: HonoVariables }>;
 type MaterialRow = { id: string; swatch_hex: string };
-
-function normalizeSwatches(swatches: string[] | undefined, swatchHex: string | undefined) {
-  const candidates = swatches?.length ? swatches : [swatchHex ?? defaultSwatch];
-  return candidates.filter((swatch, index) => candidates.indexOf(swatch) === index).slice(0, 1);
-}
-
-async function setMaterialSwatches(sql: Sql, materialId: string, swatches: string[]) {
-  await sql`DELETE FROM material_swatches WHERE material_id = ${materialId}`;
-  for (const [index, swatch] of swatches.entries()) {
-    await sql`
-      INSERT INTO material_swatches (material_id, swatch_hex, sort_order)
-      VALUES (${materialId}, ${swatch}, ${index})
-    `;
-  }
-}
-
-async function selectMaterialById(sql: Sql, materialId: string) {
-  const rows = await sql`
-    SELECT
-      m.*,
-      COALESCE(
-        array_agg(ms.swatch_hex ORDER BY ms.sort_order) FILTER (WHERE ms.id IS NOT NULL),
-        ARRAY[m.swatch_hex]
-      ) AS swatches
-    FROM materials m
-    LEFT JOIN material_swatches ms ON ms.material_id = m.id
-    WHERE m.id = ${materialId}
-    GROUP BY m.id
-  `;
-  return rows[0];
-}
 
 async function listProjectMaterials(c: AppContext) {
   const uid = c.get('uid');
@@ -104,7 +80,7 @@ async function createProjectMaterial(c: AppContext) {
       ${parsed.data.name},
       ${parsed.data.material_id},
       ${parsed.data.description},
-      ${swatches[0] ?? defaultSwatch}
+      ${swatches[0] ?? DEFAULT_SWATCH}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
@@ -233,7 +209,7 @@ router.post('/items/:itemId/materials/new', async (c) => {
       ${parsed.data.name},
       ${parsed.data.material_id},
       ${parsed.data.description},
-      ${swatches[0] ?? defaultSwatch}
+      ${swatches[0] ?? DEFAULT_SWATCH}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
@@ -276,6 +252,96 @@ router.delete('/items/:itemId/materials/:materialId', async (c) => {
     WHERE item_id = ${itemId} AND material_id = ${materialId}
   `;
   return c.body(null, 204);
+});
+
+// ─── Scoped update with copy-on-write for shared materials ────────────────
+
+router.patch('/items/:itemId/materials/:materialId', async (c) => {
+  const uid = c.get('uid');
+  const itemId = c.req.param('itemId');
+  const materialId = c.req.param('materialId');
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = UpdateMaterialSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  try {
+    await assertItemOwnership(c.env, itemId, uid);
+    await assertMaterialOwnership(c.env, materialId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const refCount = await countMaterialReferences(sql, materialId);
+
+  let finalId = materialId;
+  if (refCount > 1) {
+    finalId = await forkMaterial(sql, c.env, uid, materialId, parsed.data);
+    await sql`
+      UPDATE item_materials
+      SET material_id = ${finalId}
+      WHERE item_id = ${itemId} AND material_id = ${materialId}
+    `;
+  } else {
+    const swatches =
+      parsed.data.swatches !== undefined || parsed.data.swatch_hex !== undefined
+        ? normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex)
+        : undefined;
+    await sql`
+      UPDATE materials SET
+        name        = COALESCE(${parsed.data.name ?? null}, name),
+        material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
+        description = COALESCE(${parsed.data.description ?? null}, description),
+        swatch_hex  = COALESCE(${swatches?.[0] ?? null}, swatch_hex)
+      WHERE id = ${materialId}
+    `;
+    if (swatches) await setMaterialSwatches(sql, materialId, swatches);
+  }
+  return c.json({ material: await selectMaterialById(sql, finalId) });
+});
+
+router.patch('/takeoff/items/:takeoffItemId/materials/:materialId', async (c) => {
+  const uid = c.get('uid');
+  const takeoffItemId = c.req.param('takeoffItemId');
+  const materialId = c.req.param('materialId');
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = UpdateMaterialSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  try {
+    await assertTakeoffItemOwnership(c.env, takeoffItemId, uid);
+    await assertMaterialOwnership(c.env, materialId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const refCount = await countMaterialReferences(sql, materialId);
+
+  let finalId = materialId;
+  if (refCount > 1) {
+    finalId = await forkMaterial(sql, c.env, uid, materialId, parsed.data);
+    await sql`
+      UPDATE takeoff_item_materials
+      SET material_id = ${finalId}
+      WHERE takeoff_item_id = ${takeoffItemId} AND material_id = ${materialId}
+    `;
+  } else {
+    const swatches =
+      parsed.data.swatches !== undefined || parsed.data.swatch_hex !== undefined
+        ? normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex)
+        : undefined;
+    await sql`
+      UPDATE materials SET
+        name        = COALESCE(${parsed.data.name ?? null}, name),
+        material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
+        description = COALESCE(${parsed.data.description ?? null}, description),
+        swatch_hex  = COALESCE(${swatches?.[0] ?? null}, swatch_hex)
+      WHERE id = ${materialId}
+    `;
+    if (swatches) await setMaterialSwatches(sql, materialId, swatches);
+  }
+  return c.json({ material: await selectMaterialById(sql, finalId) });
 });
 
 export { router as materialsRouter };

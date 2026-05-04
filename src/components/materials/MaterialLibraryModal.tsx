@@ -2,60 +2,80 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useAssignMaterial,
+  useAssignMaterialToTakeoffItem,
   useCreateAndAssignMaterial,
+  useCreateAndAssignMaterialToTakeoffItem,
   useCreateMaterial,
   useMaterials,
   useRemoveMaterialFromItem,
+  useRemoveMaterialFromTakeoffItem,
   useUpdateMaterial,
+  useUpdateMaterialForItem,
+  useUpdateMaterialForTakeoffItem,
 } from '../../hooks/materials/useMaterials';
 import { imageKeys } from '../../hooks/shared/useImages';
 import { api } from '../../lib/api';
-import type { Item, Material } from '../../types';
+import type { Item, Material, TakeoffItem } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/ImageFrame';
+
+type FfeContext = {
+  context: 'ffe';
+  item?: Item | undefined;
+  roomId: string;
+};
+
+type TakeoffContext = {
+  context: 'takeoff';
+  item?: TakeoffItem | undefined;
+  categoryId: string;
+};
 
 type MaterialLibraryModalProps = {
   open: boolean;
   projectId: string;
-  roomId: string;
-  item?: Item | undefined;
   priorityMaterialIds?: string[] | undefined;
   onClose: () => void;
-};
+} & (FfeContext | TakeoffContext);
 
-export function MaterialLibraryModal({
-  open,
-  projectId,
-  roomId,
-  item,
-  priorityMaterialIds = [],
-  onClose,
-}: MaterialLibraryModalProps) {
+export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
+  const { open, onClose } = props;
   return (
-    <Modal open={open} onClose={onClose} title="Material library" className="max-w-5xl">
-      <MaterialLibraryPanel
-        projectId={projectId}
-        roomId={roomId}
-        item={item}
-        priorityMaterialIds={priorityMaterialIds}
-      />
+    <Modal open={open} onClose={onClose} title="Finish Library" className="max-w-5xl">
+      <MaterialLibraryPanel {...props} />
     </Modal>
   );
 }
 
-export function MaterialLibraryPanel({
-  projectId,
-  roomId,
-  item,
-  priorityMaterialIds = [],
-}: Omit<MaterialLibraryModalProps, 'open' | 'onClose'>) {
+type MaterialLibraryPanelProps =
+  | ({
+      projectId: string;
+      priorityMaterialIds?: string[] | undefined;
+    } & FfeContext)
+  | ({
+      projectId: string;
+      priorityMaterialIds?: string[] | undefined;
+    } & TakeoffContext);
+
+export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
+  const { projectId, priorityMaterialIds = [] } = props;
+  const roomId = props.context === 'ffe' ? props.roomId : '';
+  const categoryId = props.context === 'takeoff' ? props.categoryId : '';
+  const activeItem: Item | TakeoffItem | undefined = props.item;
+
   const materials = useMaterials(projectId);
   const createMaterial = useCreateMaterial(projectId);
   const updateMaterial = useUpdateMaterial(projectId);
   const assignMaterial = useAssignMaterial(roomId, projectId);
+  const assignToTakeoff = useAssignMaterialToTakeoffItem(categoryId, projectId);
   const createAndAssignMaterial = useCreateAndAssignMaterial(roomId, projectId);
+  const createAndAssignToTakeoff = useCreateAndAssignMaterialToTakeoffItem(categoryId, projectId);
   const removeMaterial = useRemoveMaterialFromItem(roomId);
+  const removeFromTakeoff = useRemoveMaterialFromTakeoffItem(categoryId);
+  const updateForItem = useUpdateMaterialForItem(roomId, projectId);
+  const updateForTakeoffItem = useUpdateMaterialForTakeoffItem(categoryId, projectId);
   const queryClient = useQueryClient();
+
   const [draft, setDraft] = useState({
     name: '',
     materialId: '',
@@ -63,25 +83,28 @@ export function MaterialLibraryPanel({
     swatchFile: null as File | null,
   });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingAssigned, setEditingAssigned] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingAssignmentId, setPendingAssignmentId] = useState<string | null>(null);
   const [addedMaterialName, setAddedMaterialName] = useState<string | null>(null);
   const [removedMaterialName, setRemovedMaterialName] = useState<string | null>(null);
+
   const assignedIds = useMemo(
-    () => new Set(item?.materials.map((material) => material.id) ?? []),
-    [item?.materials],
+    () => new Set(activeItem?.materials.map((m) => m.id) ?? []),
+    [activeItem?.materials],
   );
   const priorityIds = useMemo(() => new Set(priorityMaterialIds), [priorityMaterialIds]);
-  const editingMaterial = materials.data?.find((material) => material.id === editingId);
+  const editingMaterial = materials.data?.find((m) => m.id === editingId);
+
   const assignedMaterials = useMemo(
-    () => [...(item?.materials ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
-    [item?.materials],
+    () => [...(activeItem?.materials ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [activeItem?.materials],
   );
   const visibleMaterials = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return [...(materials.data ?? [])]
-      .filter((material) => !assignedIds.has(material.id) && material.id !== pendingAssignmentId)
-      .filter((material) => materialMatchesQuery(material, query))
+      .filter((m) => !assignedIds.has(m.id) && m.id !== pendingAssignmentId)
+      .filter((m) => materialMatchesQuery(m, query))
       .sort((a, b) => {
         const prioritySort = Number(priorityIds.has(b.id)) - Number(priorityIds.has(a.id));
         if (prioritySort !== 0) return prioritySort;
@@ -92,10 +115,12 @@ export function MaterialLibraryPanel({
   const resetDraft = () => {
     setDraft({ name: '', materialId: '', description: '', swatchFile: null });
     setEditingId(null);
+    setEditingAssigned(false);
   };
 
-  const startEdit = (material: Material) => {
+  const startEdit = (material: Material, isAssigned = false) => {
     setEditingId(material.id);
+    setEditingAssigned(isAssigned);
     setDraft({
       name: material.name,
       materialId: material.materialId,
@@ -112,15 +137,39 @@ export function MaterialLibraryPanel({
     };
     if (!input.name) return;
     let savedMaterial: Material;
-    if (editingId) {
+
+    if (editingId && editingAssigned && activeItem) {
+      // Scoped update: fork-if-shared
+      if (props.context === 'ffe') {
+        savedMaterial = await updateForItem.mutateAsync({
+          itemId: activeItem.id,
+          materialId: editingId,
+          patch: input,
+        });
+      } else {
+        savedMaterial = await updateForTakeoffItem.mutateAsync({
+          takeoffItemId: activeItem.id,
+          materialId: editingId,
+          patch: input,
+        });
+      }
+    } else if (editingId) {
       savedMaterial = await updateMaterial.mutateAsync({ id: editingId, patch: input });
-    } else if (item) {
-      savedMaterial = await createAndAssignMaterial.mutateAsync({ itemId: item.id, input });
+    } else if (activeItem) {
+      if (props.context === 'ffe') {
+        savedMaterial = await createAndAssignMaterial.mutateAsync({ itemId: activeItem.id, input });
+      } else {
+        savedMaterial = await createAndAssignToTakeoff.mutateAsync({
+          takeoffItemId: activeItem.id,
+          input,
+        });
+      }
       setAddedMaterialName(savedMaterial.name);
       setRemovedMaterialName(null);
     } else {
       savedMaterial = await createMaterial.mutateAsync(input);
     }
+
     if (draft.swatchFile) {
       await api.images.upload({
         entityType: 'material',
@@ -136,37 +185,57 @@ export function MaterialLibraryPanel({
   };
 
   const assignExistingMaterial = async (material: Material) => {
-    if (!item || assignedIds.has(material.id) || pendingAssignmentId) return;
+    if (!activeItem || assignedIds.has(material.id) || pendingAssignmentId) return;
     setAddedMaterialName(null);
     setRemovedMaterialName(null);
     setPendingAssignmentId(material.id);
     try {
-      const assignedMaterial = await assignMaterial.mutateAsync({
-        itemId: item.id,
-        materialId: material.id,
-      });
-      setAddedMaterialName(assignedMaterial.name);
+      let assigned: Material;
+      if (props.context === 'ffe') {
+        assigned = await assignMaterial.mutateAsync({
+          itemId: activeItem.id,
+          materialId: material.id,
+        });
+      } else {
+        assigned = await assignToTakeoff.mutateAsync({
+          takeoffItemId: activeItem.id,
+          materialId: material.id,
+        });
+      }
+      setAddedMaterialName(assigned.name);
     } finally {
       setPendingAssignmentId(null);
     }
   };
 
   const removeAssignedMaterial = async (material: Material) => {
-    if (!item) return;
-    await removeMaterial.mutateAsync({
-      itemId: item.id,
-      materialId: material.id,
-    });
+    if (!activeItem) return;
+    if (props.context === 'ffe') {
+      await removeMaterial.mutateAsync({ itemId: activeItem.id, materialId: material.id });
+    } else {
+      await removeFromTakeoff.mutateAsync({
+        takeoffItemId: activeItem.id,
+        materialId: material.id,
+      });
+    }
     setAddedMaterialName(null);
     setRemovedMaterialName(material.name);
   };
+
+  const submitLabel = editingId
+    ? editingAssigned
+      ? 'Save (this item only)'
+      : 'Save changes'
+    : activeItem
+      ? 'Add and assign'
+      : 'Add to library';
 
   return (
     <div className="grid min-w-0 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
       <MaterialForm
         draft={draft}
         editing={Boolean(editingMaterial)}
-        submitLabel={editingId ? 'Save changes' : item ? 'Add and assign' : 'Add material'}
+        submitLabel={submitLabel}
         onDraftChange={setDraft}
         onCancel={editingId ? resetDraft : undefined}
         onSubmit={() => void saveDraft()}
@@ -174,30 +243,36 @@ export function MaterialLibraryPanel({
 
       <section className="flex min-h-[24rem] max-h-[34rem] min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="grid gap-3 border-b border-gray-100 px-4 py-3">
-          <h3 className="min-w-0 text-sm font-semibold text-gray-950">Project materials</h3>
-          {item && (
+          <h3 className="min-w-0 text-sm font-semibold text-gray-950">Project library</h3>
+          {activeItem && (
             <div className="grid min-w-0 gap-3 rounded-lg border border-gray-200 bg-surface-muted p-3">
-              <div className="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Assigned to item
-                </span>
-              </div>
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Assigned to item
+              </span>
               {assignedMaterials.length ? (
                 <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                   {assignedMaterials.map((material) => (
                     <span
                       key={material.id}
-                      className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
+                      className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
                     >
                       <MaterialSwatchImage material={material} size="sm" />
                       <span className="min-w-0 truncate">{material.name}</span>
                       <button
                         type="button"
-                        className="rounded px-1.5 py-0.5 font-semibold text-danger-700 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                        className="rounded px-1 py-0.5 font-semibold text-gray-500 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                        onClick={() => startEdit(material, true)}
+                        aria-label={`Edit ${material.name}`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded px-1 py-0.5 font-semibold text-danger-700 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                         onClick={() => void removeAssignedMaterial(material)}
                         aria-label={`Remove ${material.name} from item`}
                       >
-                        Remove
+                        ×
                       </button>
                     </span>
                   ))}
@@ -219,15 +294,15 @@ export function MaterialLibraryPanel({
           )}
           <input
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search materials"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search library"
             className={`${inputClassName} min-w-0`}
-            aria-label="Search project materials"
+            aria-label="Search project library"
           />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4">
           {materials.isLoading ? (
-            <p className="text-sm text-gray-500">Loading materials...</p>
+            <p className="text-sm text-gray-500">Loading library...</p>
           ) : visibleMaterials.length ? (
             <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3">
               {visibleMaterials.map((material) => (
@@ -235,19 +310,19 @@ export function MaterialLibraryPanel({
                   key={material.id}
                   material={material}
                   assigning={pendingAssignmentId === material.id}
-                  assignable={Boolean(item)}
+                  assignable={Boolean(activeItem)}
                   onSelect={() => void assignExistingMaterial(material)}
-                  onEdit={() => startEdit(material)}
+                  onEdit={() => startEdit(material, false)}
                 />
               ))}
             </div>
           ) : (
             <p className="rounded-md border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
               {searchQuery.trim()
-                ? 'No available materials match the current search.'
-                : item
-                  ? 'All project materials are already assigned to this item.'
-                  : 'Add the first project material to build a reusable library.'}
+                ? 'No library items match the current search.'
+                : activeItem
+                  ? 'All library items are already assigned to this item.'
+                  : 'Add the first item to build the project library.'}
             </p>
           )}
         </div>
@@ -293,16 +368,14 @@ export function MaterialForm({
   return (
     <section className="rounded-lg border border-gray-200 bg-surface-muted p-4">
       <h3 className="text-sm font-semibold text-gray-950">
-        {editing ? 'Edit material' : 'Add material'}
+        {editing ? 'Edit item' : 'Add to library'}
       </h3>
       <div className="mt-3 grid gap-3">
         <label className="grid gap-1 text-sm font-medium text-gray-700">
           Name
           <input
             value={draft.name}
-            onChange={(event) =>
-              onDraftChange((current) => ({ ...current, name: event.target.value }))
-            }
+            onChange={(e) => onDraftChange((c) => ({ ...c, name: e.target.value }))}
             className={inputClassName}
           />
         </label>
@@ -310,9 +383,7 @@ export function MaterialForm({
           ID
           <input
             value={draft.materialId}
-            onChange={(event) =>
-              onDraftChange((current) => ({ ...current, materialId: event.target.value }))
-            }
+            onChange={(e) => onDraftChange((c) => ({ ...c, materialId: e.target.value }))}
             className={inputClassName}
           />
         </label>
@@ -336,11 +407,8 @@ export function MaterialForm({
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={(event) =>
-                onDraftChange((current) => ({
-                  ...current,
-                  swatchFile: event.target.files?.[0] ?? null,
-                }))
+              onChange={(e) =>
+                onDraftChange((c) => ({ ...c, swatchFile: e.target.files?.[0] ?? null }))
               }
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700 focus:border-brand-500 focus:outline-none"
               aria-label="Swatch image"
@@ -351,9 +419,7 @@ export function MaterialForm({
           Description
           <textarea
             value={draft.description}
-            onChange={(event) =>
-              onDraftChange((current) => ({ ...current, description: event.target.value }))
-            }
+            onChange={(e) => onDraftChange((c) => ({ ...c, description: e.target.value }))}
             rows={4}
             className={inputClassName}
           />
@@ -386,9 +452,9 @@ function MaterialPickerCard({
   onSelect: () => void;
   onEdit: () => void;
 }) {
-  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
+  const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
       onSelect();
     }
   };
@@ -424,19 +490,17 @@ function MaterialPickerCard({
           <span className="rounded-full bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700">
             {assigning ? 'Adding...' : assignable ? 'Click to add' : 'Library item'}
           </span>
-          <div className="flex gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={(event) => {
-                event.stopPropagation();
-                onEdit();
-              }}
-            >
-              Edit
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
+            Edit
+          </Button>
         </div>
       </div>
     </article>

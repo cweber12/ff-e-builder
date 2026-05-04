@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import type { Env, HonoVariables } from '../types';
 import {
+  AssignMaterialSchema,
+  CreateAndAssignMaterialSchema,
   CreateTakeoffCategorySchema,
   CreateTakeoffItemSchema,
   UpdateTakeoffCategorySchema,
@@ -11,7 +13,10 @@ import {
   assertProjectOwnership,
   assertTakeoffCategoryOwnership,
   assertTakeoffItemOwnership,
+  getOwnedMaterialContext,
+  getOwnedTakeoffItemContext,
 } from '../lib/ownership';
+import { selectMaterialById, setMaterialSwatches, normalizeSwatches } from './materialHelpers';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -109,10 +114,29 @@ router.get('/takeoff/categories/:id/items', async (c) => {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    SELECT *
-    FROM takeoff_items
-    WHERE category_id = ${id}
-    ORDER BY sort_order, created_at
+    SELECT
+      ti.*,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id',          m.id,
+            'project_id',  m.project_id,
+            'name',        m.name,
+            'material_id', m.material_id,
+            'description', m.description,
+            'swatch_hex',  m.swatch_hex,
+            'created_at',  m.created_at,
+            'updated_at',  m.updated_at
+          ) ORDER BY tim.sort_order
+        ) FILTER (WHERE m.id IS NOT NULL),
+        '[]'::json
+      ) AS materials
+    FROM  takeoff_items ti
+    LEFT  JOIN takeoff_item_materials tim ON tim.takeoff_item_id = ti.id
+    LEFT  JOIN materials m               ON m.id = tim.material_id
+    WHERE ti.category_id = ${id}
+    GROUP BY ti.id
+    ORDER BY ti.sort_order, ti.created_at
   `;
   return c.json({ items: rows });
 });
@@ -218,6 +242,108 @@ router.delete('/takeoff/items/:id', async (c) => {
 
   const sql = getDb(c.env);
   await sql`DELETE FROM takeoff_items WHERE id = ${id}`;
+  return c.body(null, 204);
+});
+
+// ─── Takeoff item ↔ material library routes ───────────────────────────────
+
+router.post('/takeoff/items/:id/materials', async (c) => {
+  const uid = c.get('uid');
+  const takeoffItemId = c.req.param('id');
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = AssignMaterialSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  let itemCtx: { projectId: string; takeoffItemId: string };
+  let matCtx: { projectId: string; materialId: string };
+  try {
+    itemCtx = await getOwnedTakeoffItemContext(c.env, takeoffItemId, uid);
+    matCtx = await getOwnedMaterialContext(c.env, parsed.data.material_id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+  if (itemCtx.projectId !== matCtx.projectId) {
+    return c.json({ error: 'Material does not belong to this project' }, 400);
+  }
+
+  const sql = getDb(c.env);
+  const maxRows = await sql`
+    SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
+    FROM   takeoff_item_materials
+    WHERE  takeoff_item_id = ${takeoffItemId}
+  `;
+  const nextSort = Number((maxRows[0] as { next_sort?: number }).next_sort ?? 0);
+  await sql`
+    INSERT INTO takeoff_item_materials (takeoff_item_id, material_id, sort_order)
+    VALUES (${takeoffItemId}, ${parsed.data.material_id}, ${nextSort})
+    ON CONFLICT (takeoff_item_id, material_id) DO NOTHING
+  `;
+  return c.json({ material: await selectMaterialById(sql, parsed.data.material_id) }, 201);
+});
+
+router.post('/takeoff/items/:id/materials/new', async (c) => {
+  const uid = c.get('uid');
+  const takeoffItemId = c.req.param('id');
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = CreateAndAssignMaterialSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  let itemCtx: { projectId: string; takeoffItemId: string };
+  try {
+    itemCtx = await getOwnedTakeoffItemContext(c.env, takeoffItemId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
+  const matRows = await sql`
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
+    VALUES (
+      ${itemCtx.projectId},
+      ${parsed.data.name},
+      ${parsed.data.material_id},
+      ${parsed.data.description},
+      ${swatches[0] ?? '#D9D4C8'}
+    )
+    ON CONFLICT (project_id, (lower(name)))
+    DO UPDATE SET
+      material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
+      description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
+      swatch_hex  = EXCLUDED.swatch_hex
+    RETURNING *
+  `;
+  const mat = matRows[0] as { id: string };
+  await setMaterialSwatches(sql, mat.id, swatches);
+  const maxRows = await sql`
+    SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
+    FROM   takeoff_item_materials
+    WHERE  takeoff_item_id = ${takeoffItemId}
+  `;
+  const nextSort = Number((maxRows[0] as { next_sort?: number }).next_sort ?? 0);
+  await sql`
+    INSERT INTO takeoff_item_materials (takeoff_item_id, material_id, sort_order)
+    VALUES (${takeoffItemId}, ${mat.id}, ${nextSort})
+    ON CONFLICT (takeoff_item_id, material_id) DO NOTHING
+  `;
+  return c.json({ material: await selectMaterialById(sql, mat.id) }, 201);
+});
+
+router.delete('/takeoff/items/:id/materials/:materialId', async (c) => {
+  const uid = c.get('uid');
+  const takeoffItemId = c.req.param('id');
+  const materialId = c.req.param('materialId');
+  try {
+    await assertTakeoffItemOwnership(c.env, takeoffItemId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  await sql`
+    DELETE FROM takeoff_item_materials
+    WHERE  takeoff_item_id = ${takeoffItemId} AND material_id = ${materialId}
+  `;
   return c.body(null, 204);
 });
 

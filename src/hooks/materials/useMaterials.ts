@@ -5,6 +5,7 @@ import type { CreateMaterialInput, UpdateMaterialInput } from '../../lib/api';
 import type { Material } from '../../types';
 import { itemKeys } from '../ffe/useItems';
 import { imageKeys } from '../shared/useImages';
+import { takeoffKeys } from '../takeoff/useTakeoff';
 
 export const materialKeys = {
   forProject: (projectId: string) => ['materials', projectId] as const,
@@ -99,6 +100,90 @@ export function useRemoveMaterialFromItem(roomId: string) {
       api.materials.removeFromItem(itemId, materialId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(roomId) }),
     onError: (err) => toast.error(`Material removal failed: ${err.message}`),
+  });
+}
+
+export function useAssignMaterialToTakeoffItem(categoryId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ takeoffItemId, materialId }: { takeoffItemId: string; materialId: string }) =>
+      api.materials.assignToTakeoffItem(takeoffItemId, materialId),
+    onSuccess: (material) => {
+      queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
+        upsertMaterial(old, material),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onError: (err) => toast.error(`Material assignment failed: ${err.message}`),
+  });
+}
+
+export function useCreateAndAssignMaterialToTakeoffItem(categoryId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ takeoffItemId, input }: { takeoffItemId: string; input: CreateMaterialInput }) =>
+      api.materials.createAndAssignToTakeoffItem(takeoffItemId, input),
+    onSuccess: (material) => {
+      queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
+        upsertMaterial(old, material),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onError: (err) => toast.error(`Material assignment failed: ${err.message}`),
+  });
+}
+
+export function useRemoveMaterialFromTakeoffItem(categoryId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ takeoffItemId, materialId }: { takeoffItemId: string; materialId: string }) =>
+      api.materials.removeFromTakeoffItem(takeoffItemId, materialId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onError: (err) => toast.error(`Material removal failed: ${err.message}`),
+  });
+}
+
+export function useUpdateMaterialForItem(roomId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      itemId,
+      materialId,
+      patch,
+    }: {
+      itemId: string;
+      materialId: string;
+      patch: UpdateMaterialInput;
+    }) => api.materials.updateForItem(itemId, materialId, patch),
+    onSuccess: (material) => {
+      queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
+        upsertMaterial(old, material),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(roomId) }),
+    onError: (err) => toast.error(`Material update failed: ${err.message}`),
+  });
+}
+
+export function useUpdateMaterialForTakeoffItem(categoryId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      takeoffItemId,
+      materialId,
+      patch,
+    }: {
+      takeoffItemId: string;
+      materialId: string;
+      patch: UpdateMaterialInput;
+    }) => api.materials.updateForTakeoffItem(takeoffItemId, materialId, patch),
+    onSuccess: (material) => {
+      queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
+        upsertMaterial(old, material),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onError: (err) => toast.error(`Material update failed: ${err.message}`),
   });
 }
 

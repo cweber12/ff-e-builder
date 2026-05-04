@@ -123,7 +123,7 @@ export interface TakeoffItem {
   size_d: string;
   size_h: string;
   size_unit: string;
-  swatches: string[];
+  materials: Material[];
   cbm: string;
   quantity: string;
   quantity_unit: string;
@@ -140,7 +140,6 @@ export type ImageEntityType =
   | 'item'
   | 'material'
   | 'takeoff_item'
-  | 'takeoff_swatch'
   | 'takeoff_plan';
 
 export interface ImageAsset {
@@ -289,15 +288,7 @@ export const UpdateTakeoffItemSchema = CreateTakeoffItemSchema.partial().extend(
 export type UpdateTakeoffItemInput = z.infer<typeof UpdateTakeoffItemSchema>;
 
 export const ImageEntitySchema = z.object({
-  entity_type: z.enum([
-    'project',
-    'room',
-    'item',
-    'material',
-    'takeoff_item',
-    'takeoff_swatch',
-    'takeoff_plan',
-  ]),
+  entity_type: z.enum(['project', 'room', 'item', 'material', 'takeoff_item', 'takeoff_plan']),
   entity_id: z.string().uuid(),
 });
 

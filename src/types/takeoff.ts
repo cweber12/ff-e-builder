@@ -1,3 +1,5 @@
+import type { Material } from './material';
+
 export type SizeMode = 'imperial' | 'metric';
 export type MeasurementUnit = 'ft/in' | 'mm' | 'cm' | 'm';
 export type TakeoffQuantityUnit = string;
@@ -36,6 +38,7 @@ export type TakeoffItem = {
   sizeH: string;
   sizeUnit: MeasurementUnit;
   swatches: string[];
+  materials: Material[];
   cbm: number;
   quantity: number;
   quantityUnit: TakeoffQuantityUnit;

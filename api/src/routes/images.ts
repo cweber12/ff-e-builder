@@ -65,7 +65,6 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
     return 'This row already has a rendering';
   }
   if (entityType === 'takeoff_plan') return 'This row already has a plan image';
-  if (entityType === 'takeoff_swatch') return 'Take-Off items can have up to 4 swatches';
   if (entityType === 'room') return 'This room already has an image';
   if (entityType === 'material') return 'This material already has an image';
   return 'An image already exists for this entity';
@@ -120,11 +119,7 @@ async function getOwnedEntityContext(
     };
   }
 
-  if (
-    entityType === 'takeoff_item' ||
-    entityType === 'takeoff_swatch' ||
-    entityType === 'takeoff_plan'
-  ) {
+  if (entityType === 'takeoff_item' || entityType === 'takeoff_plan') {
     const takeoffItem = await getOwnedTakeoffItemContext(env, entityId, uid);
     return {
       projectId: takeoffItem.projectId,
@@ -158,9 +153,6 @@ function buildR2Key(
   if (entityType === 'material') return `${base}/materials/${context.materialId}/${imageId}.${ext}`;
   if (entityType === 'takeoff_item') {
     return `${base}/takeoff/items/${context.takeoffItemId}/${imageId}.${ext}`;
-  }
-  if (entityType === 'takeoff_swatch') {
-    return `${base}/takeoff/items/${context.takeoffItemId}/swatches/${imageId}.${ext}`;
   }
   if (entityType === 'takeoff_plan') {
     return `${base}/takeoff/items/${context.takeoffItemId}/plan/${imageId}.${ext}`;
@@ -283,29 +275,9 @@ router.post('/', async (c) => {
       }
     }
 
-    if (parsed.data.entity_type === 'takeoff_swatch') {
-      const existing = await sql`
-        SELECT COUNT(*)::int AS count
-        FROM image_assets
-        WHERE owner_uid = ${uid}
-          AND takeoff_item_id = ${context.takeoffItemId}
-          AND entity_type = 'takeoff_swatch'
-      `;
-      const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
-      if (count >= 4) {
-        await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
-        return c.json({ error: 'Take-Off items can have up to 4 swatches' }, 400);
-      }
-    }
+    const isPrimary = parsed.data.entity_type === 'project' ? projectImageCount === 0 : true;
 
-    const isPrimary =
-      parsed.data.entity_type === 'project'
-        ? projectImageCount === 0
-        : parsed.data.entity_type === 'takeoff_swatch'
-          ? false
-          : true;
-
-    if (parsed.data.entity_type === 'project' || parsed.data.entity_type === 'takeoff_swatch') {
+    if (parsed.data.entity_type === 'project') {
       const rows = await sql`
         INSERT INTO image_assets (
           id, entity_type, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,

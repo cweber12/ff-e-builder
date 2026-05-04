@@ -55,19 +55,16 @@ export function MaterialsView({
         room.items.flatMap((item) => item.materials.map((material) => material.id)),
       ),
     );
-    const takeoffNames = new Set(
+    const takeoffIds = new Set(
       takeoffCategoriesWithItems.flatMap((category) =>
-        category.items.flatMap((item) => item.swatches.map((swatch) => swatch.toLowerCase())),
+        category.items.flatMap((item) => item.materials.map((material) => material.id)),
       ),
     );
     return [...(materials.data ?? [])]
       .filter((material) => {
         if (scope === 'all') return true;
         if (scope === 'ffe') return ffeIds.has(material.id);
-        return (
-          takeoffNames.has(material.name.toLowerCase()) ||
-          takeoffNames.has(material.materialId.toLowerCase())
-        );
+        return takeoffIds.has(material.id);
       })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -119,9 +116,9 @@ export function MaterialsView({
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-gray-950">Materials</h2>
+          <h2 className="text-base font-semibold text-gray-950">Finish Library</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Manage the reusable material library for {project.name}.
+            Manage the reusable finish library for {project.name}.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -166,7 +163,7 @@ export function MaterialsView({
         <MaterialForm
           draft={draft}
           editing={Boolean(editingMaterial)}
-          submitLabel={editingId ? 'Save changes' : 'Add material'}
+          submitLabel={editingId ? 'Save changes' : 'Add to library'}
           onDraftChange={setDraft}
           onCancel={editingId ? resetDraft : undefined}
           onSubmit={() => void saveDraft()}
@@ -174,13 +171,13 @@ export function MaterialsView({
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-gray-950">Project materials</h3>
+            <h3 className="text-sm font-semibold text-gray-950">Project library</h3>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search materials"
+              placeholder="Search library"
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none sm:w-72"
-              aria-label="Search materials"
+              aria-label="Search library"
             />
           </div>
           <div className="max-h-[42rem] overflow-auto p-4">

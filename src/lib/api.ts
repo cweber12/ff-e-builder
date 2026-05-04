@@ -130,6 +130,7 @@ interface RawTakeoffItem {
   size_h: string;
   size_unit: string;
   swatches: string[];
+  materials?: RawMaterial[];
   cbm: string;
   quantity: string;
   quantity_unit: string;
@@ -256,6 +257,7 @@ const mapTakeoffItem = (r: RawTakeoffItem): TakeoffItem => ({
   sizeH: r.size_h,
   sizeUnit: r.size_unit as TakeoffItem['sizeUnit'],
   swatches: Array.isArray(r.swatches) ? r.swatches : [],
+  materials: Array.isArray(r.materials) ? r.materials.map(mapMaterial) : [],
   cbm: Number(r.cbm),
   quantity: Number(r.quantity),
   quantityUnit: r.quantity_unit,
@@ -795,5 +797,60 @@ export const api = {
 
     removeFromItem: (itemId: string, materialId: string): Promise<void> =>
       apiFetch<void>(`/api/v1/items/${itemId}/materials/${materialId}`, { method: 'DELETE' }),
+
+    updateForItem: (
+      itemId: string,
+      materialId: string,
+      patch: UpdateMaterialInput,
+    ): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials/${materialId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: patch.name,
+          material_id: patch.materialId,
+          description: patch.description,
+        }),
+      }).then((r) => mapMaterial(r.material)),
+
+    assignToTakeoffItem: (takeoffItemId: string, materialId: string): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/takeoff/items/${takeoffItemId}/materials`, {
+        method: 'POST',
+        body: JSON.stringify({ material_id: materialId }),
+      }).then((r) => mapMaterial(r.material)),
+
+    createAndAssignToTakeoffItem: (
+      takeoffItemId: string,
+      input: CreateMaterialInput,
+    ): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/takeoff/items/${takeoffItemId}/materials/new`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: input.name,
+          material_id: input.materialId,
+          description: input.description,
+        }),
+      }).then((r) => mapMaterial(r.material)),
+
+    removeFromTakeoffItem: (takeoffItemId: string, materialId: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/takeoff/items/${takeoffItemId}/materials/${materialId}`, {
+        method: 'DELETE',
+      }),
+
+    updateForTakeoffItem: (
+      takeoffItemId: string,
+      materialId: string,
+      patch: UpdateMaterialInput,
+    ): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(
+        `/api/v1/takeoff/items/${takeoffItemId}/materials/${materialId}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            name: patch.name,
+            material_id: patch.materialId,
+            description: patch.description,
+          }),
+        },
+      ).then((r) => mapMaterial(r.material)),
   },
 };
