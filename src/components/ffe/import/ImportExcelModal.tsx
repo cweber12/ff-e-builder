@@ -1,4 +1,4 @@
-﻿import { useCallback, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+﻿import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { api } from '../../../lib/api';
 import {
   autoMapColumns,
@@ -20,6 +20,12 @@ type Props = {
 };
 
 type Step = 'upload' | 'map';
+
+type ImportProgress = {
+  processed: number;
+  total: number;
+  startedAt: number | null;
+};
 
 const FIELD_LABELS: Record<keyof ColumnMap, string> = {
   itemName: 'Item Name *',
@@ -61,6 +67,12 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [progress, setProgress] = useState<ImportProgress>({
+    processed: 0,
+    total: 0,
+    startedAt: null,
+  });
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -85,7 +97,14 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
     setError('');
     setImporting(false);
     setResult(null);
+    setProgress({ processed: 0, total: 0, startedAt: null });
   };
+
+  useEffect(() => {
+    if (!importing) return undefined;
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [importing]);
 
   const handleClose = () => {
     reset();
@@ -158,6 +177,9 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
 
       let imported = 0;
       let skipped = 0;
+      let processed = 0;
+
+      setProgress({ processed: 0, total: items.length, startedAt: Date.now() });
 
       for (const item of items) {
         const { roomName, ...itemInput } = item;
@@ -194,6 +216,12 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         } catch {
           skipped += 1;
         }
+
+        processed += 1;
+        setProgress((current) => ({
+          ...current,
+          processed,
+        }));
       }
 
       setResult({ imported, skipped });
@@ -379,8 +407,55 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
               </Button>
             </div>
           </div>
+          {importing && progress.total > 0 && (
+            <ImportProgressBar progress={progress} nowMs={nowMs} />
+          )}
         </div>
       )}
     </Modal>
   );
+}
+
+function ImportProgressBar({ progress, nowMs }: { progress: ImportProgress; nowMs: number }) {
+  const ratio = progress.total > 0 ? Math.min(1, progress.processed / progress.total) : 0;
+  const percent = Math.round(ratio * 100);
+  const elapsedMs = progress.startedAt ? Math.max(0, nowMs - progress.startedAt) : 0;
+  const remainingSteps = Math.max(0, progress.total - progress.processed);
+  const remainingMs =
+    progress.processed > 0
+      ? Math.round((elapsedMs / progress.processed) * remainingSteps)
+      : undefined;
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-surface-muted p-3">
+      <div className="mb-1 flex items-center justify-between text-xs text-gray-600">
+        <span>
+          Import progress: {progress.processed} of {progress.total}
+        </span>
+        <span>
+          {percent}%
+          {remainingMs !== undefined ? ` • ~${formatDuration(remainingMs)} remaining` : ''}
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+        <div
+          className="h-full rounded-full bg-brand-500 transition-all duration-300"
+          style={{ width: `${percent}%` }}
+          role="progressbar"
+          aria-label="FF&E import progress"
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+          aria-valuenow={progress.processed}
+        />
+      </div>
+    </div>
+  );
+}
+
+function formatDuration(ms: number): string {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes}m ${remainder}s`;
 }

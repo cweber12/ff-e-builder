@@ -1,4 +1,12 @@
-import { useCallback, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+} from 'react';
 import { ApiError, api, type CreateTakeoffItemInput } from '../../../lib/api';
 import {
   TAKEOFF_IMPORT_EMPTY_MAP,
@@ -31,6 +39,12 @@ type ImportResult = {
   skipped: number;
   imagesImported: number;
   warnings: string[];
+};
+
+type ImportProgress = {
+  processed: number;
+  total: number;
+  startedAt: number | null;
 };
 
 const SKIP = '__skip__';
@@ -83,6 +97,12 @@ export function ImportTakeoffExcelModal({
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [progress, setProgress] = useState<ImportProgress>({
+    processed: 0,
+    total: 0,
+    startedAt: null,
+  });
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -93,7 +113,14 @@ export function ImportTakeoffExcelModal({
     setError('');
     setImporting(false);
     setResult(null);
+    setProgress({ processed: 0, total: 0, startedAt: null });
   };
+
+  useEffect(() => {
+    if (!importing) return undefined;
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [importing]);
 
   const handleClose = () => {
     reset();
@@ -163,8 +190,23 @@ export function ImportTakeoffExcelModal({
     let imported = 0;
     let skipped = 0;
     let imagesImported = 0;
+    let processedSteps = 0;
+
+    const markProgress = () => {
+      processedSteps += 1;
+      setProgress((current) => ({
+        ...current,
+        processed: processedSteps,
+      }));
+    };
 
     try {
+      setProgress({
+        processed: 0,
+        total: parsed.projectImages.length + importPlan.importableRows.length,
+        startedAt: Date.now(),
+      });
+
       const categoryNameToId = new Map(
         categories.map((category) => [category.name.toLowerCase(), category.id]),
       );
@@ -176,6 +218,11 @@ export function ImportTakeoffExcelModal({
           entityId: projectId,
         });
 
+        setProgress((current) => ({
+          ...current,
+          total: current.total + existingProjectImages.length,
+        }));
+
         for (const image of existingProjectImages) {
           try {
             await api.images.delete(image.id);
@@ -184,6 +231,7 @@ export function ImportTakeoffExcelModal({
               `Existing project image could not be removed: ${describeImportError(err)}`,
             );
           }
+          markProgress();
         }
       }
 
@@ -199,6 +247,7 @@ export function ImportTakeoffExcelModal({
         } catch (err) {
           warnings.push(`Project image ${index + 1} was skipped: ${describeImportError(err)}`);
         }
+        markProgress();
       }
 
       for (const row of importPlan.importableRows) {
@@ -295,6 +344,8 @@ export function ImportTakeoffExcelModal({
         } catch {
           skipped += 1;
         }
+
+        markProgress();
       }
 
       skipped += importPlan.skippedRows.length;
@@ -517,10 +568,57 @@ export function ImportTakeoffExcelModal({
               </Button>
             </div>
           </div>
+          {importing && progress.total > 0 && (
+            <ImportProgressBar progress={progress} nowMs={nowMs} />
+          )}
         </div>
       )}
     </Modal>
   );
+}
+
+function ImportProgressBar({ progress, nowMs }: { progress: ImportProgress; nowMs: number }) {
+  const ratio = progress.total > 0 ? Math.min(1, progress.processed / progress.total) : 0;
+  const percent = Math.round(ratio * 100);
+  const elapsedMs = progress.startedAt ? Math.max(0, nowMs - progress.startedAt) : 0;
+  const remainingSteps = Math.max(0, progress.total - progress.processed);
+  const remainingMs =
+    progress.processed > 0
+      ? Math.round((elapsedMs / progress.processed) * remainingSteps)
+      : undefined;
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-surface-muted p-3">
+      <div className="mb-1 flex items-center justify-between text-xs text-gray-600">
+        <span>
+          Import progress: {progress.processed} of {progress.total}
+        </span>
+        <span>
+          {percent}%
+          {remainingMs !== undefined ? ` • ~${formatDuration(remainingMs)} remaining` : ''}
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+        <div
+          className="h-full rounded-full bg-brand-500 transition-all duration-300"
+          style={{ width: `${percent}%` }}
+          role="progressbar"
+          aria-label="Take-Off import progress"
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+          aria-valuenow={progress.processed}
+        />
+      </div>
+    </div>
+  );
+}
+
+function formatDuration(ms: number): string {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes}m ${remainder}s`;
 }
 
 function describeImportError(err: unknown): string {
