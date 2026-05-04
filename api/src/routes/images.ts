@@ -54,12 +54,17 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
     return 'Projects can have up to 3 images';
   }
 
+  if (message.includes('take-off items can have up to 4 swatches')) {
+    return 'Take-Off items can have up to 4 swatches';
+  }
+
   if (!message.includes('duplicate key value violates unique constraint')) return null;
 
   if (entityType === 'project') return 'Projects can have only one preview image at a time';
   if (entityType === 'item' || entityType === 'takeoff_item') {
     return 'This row already has a rendering';
   }
+  if (entityType === 'takeoff_swatch') return 'Take-Off items can have up to 4 swatches';
   if (entityType === 'room') return 'This room already has an image';
   if (entityType === 'material') return 'This material already has an image';
   return 'An image already exists for this entity';
@@ -113,7 +118,7 @@ async function getOwnedEntityContext(
     };
   }
 
-  if (entityType === 'takeoff_item') {
+  if (entityType === 'takeoff_item' || entityType === 'takeoff_swatch') {
     const takeoffItem = await getOwnedTakeoffItemContext(env, entityId, uid);
     return {
       projectId: takeoffItem.projectId,
@@ -148,6 +153,9 @@ function buildR2Key(
   if (entityType === 'takeoff_item') {
     return `${base}/takeoff/items/${context.takeoffItemId}/${imageId}.${ext}`;
   }
+  if (entityType === 'takeoff_swatch') {
+    return `${base}/takeoff/items/${context.takeoffItemId}/swatches/${imageId}.${ext}`;
+  }
   return `${base}/rooms/${context.roomId}/items/${context.itemId}/${imageId}.${ext}`;
 }
 
@@ -181,17 +189,44 @@ router.get('/', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await sql`
-    SELECT *
-    FROM image_assets
-    WHERE owner_uid = ${uid}
-      AND project_id = ${context.projectId}
-      AND room_id IS NOT DISTINCT FROM ${context.roomId}
-      AND item_id IS NOT DISTINCT FROM ${context.itemId}
-      AND material_id IS NOT DISTINCT FROM ${context.materialId}
-      AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
-    ORDER BY is_primary DESC, created_at DESC
-  `;
+  const rows =
+    parsed.data.entity_type === 'takeoff_item'
+      ? await sql`
+          SELECT *
+          FROM image_assets
+          WHERE owner_uid = ${uid}
+            AND project_id = ${context.projectId}
+            AND room_id IS NOT DISTINCT FROM ${context.roomId}
+            AND item_id IS NOT DISTINCT FROM ${context.itemId}
+            AND material_id IS NOT DISTINCT FROM ${context.materialId}
+            AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
+            AND is_primary = true
+          ORDER BY created_at DESC
+        `
+      : parsed.data.entity_type === 'takeoff_swatch'
+        ? await sql`
+            SELECT *
+            FROM image_assets
+            WHERE owner_uid = ${uid}
+              AND project_id = ${context.projectId}
+              AND room_id IS NOT DISTINCT FROM ${context.roomId}
+              AND item_id IS NOT DISTINCT FROM ${context.itemId}
+              AND material_id IS NOT DISTINCT FROM ${context.materialId}
+              AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
+              AND is_primary = false
+            ORDER BY created_at DESC
+          `
+        : await sql`
+            SELECT *
+            FROM image_assets
+            WHERE owner_uid = ${uid}
+              AND project_id = ${context.projectId}
+              AND room_id IS NOT DISTINCT FROM ${context.roomId}
+              AND item_id IS NOT DISTINCT FROM ${context.itemId}
+              AND material_id IS NOT DISTINCT FROM ${context.materialId}
+              AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
+            ORDER BY is_primary DESC, created_at DESC
+          `;
 
   return c.json({ images: rows.map(imageRow) });
 });
@@ -264,9 +299,29 @@ router.post('/', async (c) => {
       }
     }
 
-    const isPrimary = parsed.data.entity_type !== 'project' || projectImageCount === 0;
+    if (parsed.data.entity_type === 'takeoff_swatch') {
+      const existing = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM image_assets
+        WHERE owner_uid = ${uid}
+          AND takeoff_item_id = ${context.takeoffItemId}
+          AND is_primary = false
+      `;
+      const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
+      if (count >= 4) {
+        await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+        return c.json({ error: 'Take-Off items can have up to 4 swatches' }, 400);
+      }
+    }
 
-    if (parsed.data.entity_type === 'project') {
+    const isPrimary =
+      parsed.data.entity_type === 'project'
+        ? projectImageCount === 0
+        : parsed.data.entity_type === 'takeoff_swatch'
+          ? false
+          : true;
+
+    if (parsed.data.entity_type === 'project' || parsed.data.entity_type === 'takeoff_swatch') {
       const rows = await sql`
         INSERT INTO image_assets (
           id, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,

@@ -90,7 +90,7 @@ describe('Image uploads', () => {
   it('allows a second project image without making it the preview image', async () => {
     const sql = vi.fn(
       async (strings: TemplateStringsArray, ...values: unknown[]) =>
-        await Promise.resolve(() => {
+        await Promise.resolve().then(() => {
           const query = strings.join('?');
 
           if (query.includes('COUNT(*)::int AS count')) return [{ count: 1 }];
@@ -148,6 +148,81 @@ describe('Image uploads', () => {
         is_primary: false,
       },
     });
+  });
+
+  it('allows up to four take-off swatches without promoting them to rendering images', async () => {
+    const sql = vi.fn(
+      async (strings: TemplateStringsArray, ...values: unknown[]) =>
+        await Promise.resolve().then(() => {
+          const query = strings.join('?');
+
+          if (query.includes('COUNT(*)::int AS count')) return [{ count: 3 }];
+          if (query.includes('INSERT INTO image_assets')) {
+            const isPrimary = values.at(-1);
+            return [
+              {
+                id: '00000000-0000-0000-0000-000000000013',
+                owner_uid: 'user-123',
+                project_id: projectId,
+                room_id: null,
+                item_id: null,
+                material_id: null,
+                takeoff_item_id: takeoffItemId,
+                r2_key: 'users/user-123/projects/project-1/takeoff/items/item-1/swatches/3.png',
+                filename: 'swatch-4.png',
+                content_type: 'image/png',
+                byte_size: 11,
+                alt_text: 'Take-Off swatch 4',
+                is_primary: isPrimary,
+                created_at: '2026-05-03T00:00:00Z',
+                updated_at: '2026-05-03T00:00:00Z',
+              },
+            ];
+          }
+
+          return [];
+        }),
+    );
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      `/api/v1/images?entity_type=takeoff_swatch&entity_id=${takeoffItemId}&alt_text=Take-Off+swatch+4`,
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+        body: multipartImageBody('swatch-4.png'),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(201);
+    await expect(res.json()).resolves.toMatchObject({
+      image: {
+        takeoff_item_id: takeoffItemId,
+        is_primary: false,
+      },
+    });
+  });
+
+  it('rejects a fifth take-off swatch with a client error', async () => {
+    const sql = vi.fn().mockResolvedValueOnce([{ count: 4 }]);
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      `/api/v1/images?entity_type=takeoff_swatch&entity_id=${takeoffItemId}&alt_text=Take-Off+swatch+5`,
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+        body: multipartImageBody('swatch-5.png'),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'Take-Off items can have up to 4 swatches',
+    });
+    expect(bucketDelete).toHaveBeenCalledTimes(1);
   });
 
   it('promotes another project image when the current preview image is deleted', async () => {
