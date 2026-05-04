@@ -15,22 +15,6 @@ import {
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
-const defaultCategoryNames = ['Millwork', 'Ceiling', 'Flooring', 'Walls'] as const;
-
-async function ensureDefaultCategories(env: Env, projectId: string) {
-  const sql = getDb(env);
-  await Promise.all(
-    defaultCategoryNames.map(
-      (name, index) =>
-        sql`
-        INSERT INTO takeoff_categories (project_id, name, sort_order)
-        VALUES (${projectId}, ${name}, ${index})
-        ON CONFLICT (project_id, name) DO NOTHING
-      `,
-    ),
-  );
-}
-
 router.get('/projects/:id/takeoff/categories', async (c) => {
   const uid = c.get('uid');
   const projectId = c.req.param('id');
@@ -40,8 +24,6 @@ router.get('/projects/:id/takeoff/categories', async (c) => {
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
-
-  await ensureDefaultCategories(c.env, projectId);
 
   const sql = getDb(c.env);
   const rows = await sql`
