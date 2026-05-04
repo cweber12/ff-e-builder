@@ -50,7 +50,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **User information** -- the projects page includes editable user contact details for project documentation.
 - **Project tools** (`/projects/:id`) -- choose whether to open/create FF&E or a Take-Off Table for the selected project, then switch between tools from the project header.
 - **Default sample content** -- every new project is preloaded with FF&E rooms/items, Take-Off categories/items, project images, item renderings, and material/swatch imagery so exports can be reviewed against realistic data immediately.
-- **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, image-only Plan cells, up to four direct image swatches per row, drawing/location fields, size entry, CBM, quantity units, integer-cent totals, Excel import, and CSV/Excel/PDF exports with equal-width project image bands plus cell-filling row imagery.
+- **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, image-only Plan cells, up to four direct image swatches per row, drawing/location fields, size entry, CBM, quantity units, integer-cent totals, image-aware Excel import with column mapping, and CSV/Excel/PDF exports with equal-width project image bands plus cell-filling row imagery.
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
 - **Project header** -- editable project name, client, company, location, and shared or individual budgets.

@@ -86,6 +86,10 @@ _Avoid_: Screenshot, render URL
 A plan visual attached directly to a Take-Off Item. In the Take-Off Table, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
 _Avoid_: Rendering, Swatch, drawing when referring to the Plan cell image
 
+**Take-Off Spreadsheet Import**:
+The workflow that turns an external Take-Off spreadsheet into Project Images, Take-Off Categories, Take-Off Items, Renderings, Plan Images, and Swatches. Header rows may appear below presentation content, single-cell headings can become Take-Off Categories, and unmapped spreadsheet data is omitted.
+_Avoid_: Raw upload, template-only import
+
 ## Relationships
 
 - A **Project** belongs to exactly one authenticated user.
@@ -98,6 +102,8 @@ _Avoid_: Rendering, Swatch, drawing when referring to the Plan cell image
 - A **Take-Off Item** can have one optional **Rendering**, one optional **Plan Image**, and up to four optional **Swatches**.
 - A **Take-Off Item** owns its **Swatches** directly for this pass instead of selecting them from the shared **Material** library.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
+- A **Take-Off Spreadsheet Import** can create missing **Take-Off Categories** from detected category headings or mapped category values.
+- A **Take-Off Spreadsheet Import** skips subtotal and financial summary rows instead of creating **Take-Off Items** from them.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Take-Off Table** budgets.
 - A **Take-Off Table** export can use different **Export Modes** without changing the underlying **Take-Off Items**.
 

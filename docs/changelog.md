@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(imports): add image-aware Take-Off spreadsheet import with detected categories, column mapping, and skipped summary rows
 - docs(agents): forbid agents from reading `.env.local`
 - feat(takeoff): add image-backed Take-Off swatches, nested PDF export modes, and polished project-aware PDF/Excel exports
 - fix(exports): align Take-Off PDF and Excel layouts around a shared presentation model and complete metadata coverage

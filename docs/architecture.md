@@ -87,6 +87,7 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, `takeoff_item`, `takeoff_plan`, and `takeoff_swatch`. In domain language, the primary image attached to an FF&E Item or Take-Off Item row is a Rendering, while a Take-Off Plan Image is a separate row-level visual.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Take-Off Category defaults are created lazily when a project's take-off categories are read: Millwork, Ceiling, Flooring, and Walls.
+- Take-Off spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.
 
 ## 5. Data Flow
 
