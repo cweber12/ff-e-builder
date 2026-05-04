@@ -18,6 +18,14 @@ _Avoid_: Cover URL, thumbnail only
 The preparer contact information used across project documentation.
 _Avoid_: Account, auth user
 
+**Company**:
+An organizational identity used to group Projects and apply shared presentation defaults.
+_Avoid_: Client when referring to the internal design organization
+
+**Company Theme**:
+A reusable presentation profile owned by a Company that defines brand color, typography, and sizing defaults for exported documents.
+_Avoid_: Per-project styling when referring to shared company defaults
+
 **Budget Mode**:
 The Project setting that determines whether FF&E and Take-Off share one budget or use separate budgets.
 _Avoid_: Budget type, pricing mode
@@ -101,7 +109,9 @@ _Avoid_: Raw upload, template-only import
 ## Relationships
 
 - A **Project** belongs to exactly one authenticated user.
+- A **Project** can optionally be associated with one **Company**.
 - A **Project** can contain zero or more **Rooms** and zero or more **Take-Off Categories**.
+- A **Company** can define one active **Company Theme** used as the default for document exports.
 - A **Room** contains zero or more **FF&E Items**.
 - A **Take-Off Category** contains zero or more **Take-Off Items**.
 - A **Project** owns a shared **Material** library that can be accessed from both **FF&E** and **Take-Off Table** views.

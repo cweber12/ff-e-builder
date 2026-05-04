@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(projects): open FF&E or Take-Off directly from project-card tool dropdown and remove the intermediate tool chooser page
+- feat(projects): restructure the landing page into Welcome, Companies, and Projects sections with two-column company cards and a projects action row
 - feat(projects): add Project Options update flow from cards and project header
 - feat(ui): simplify the Project Header into a compact read-only identity and tool navigation bar
 - feat(imports): add image-aware Take-Off spreadsheet import with detected categories, column mapping, and skipped summary rows

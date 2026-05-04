@@ -71,7 +71,7 @@ function App() {
       >
         <Route path="/projects" element={<ProjectList />} />
         <Route path="/projects/:id" element={<ProjectLayout />}>
-          <Route index element={<ProjectToolChooser />} />
+          <Route index element={<ProjectToolRedirect tool="ffe" />} />
           <Route path="ffe" element={<ProjectToolRedirect tool="ffe" />} />
           <Route path="ffe/table" element={<ProjectTableRoute />} />
           <Route path="ffe/catalog" element={<ProjectCatalogRoute />} />
@@ -98,111 +98,185 @@ function ProjectList() {
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
   const [imageProject, setImageProject] = useState<Project | null>(null);
   const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
+  const [openProjectActionId, setOpenProjectActionId] = useState<string | null>(null);
   const { data: projects, isLoading } = useProjects();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const { data: userProfile } = useUserProfile();
   const firstName = userProfile?.name?.trim().split(' ')[0];
+  const companies = Array.from(
+    new Set((projects ?? []).map((project) => project.companyName?.trim()).filter(Boolean)),
+  );
 
   return (
     <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <section className="p-1">
           <h1 className="text-3xl font-bold text-gray-950">
             {firstName ? `Hi, ${firstName}` : 'Welcome'}
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage FF&amp;E schedules, catalogs, materials, and take-off tables.
+          <p className="mt-2 max-w-3xl text-sm text-gray-600">
+            Use ChillDesignStudio to organize project specifications, build FF&amp;E and take-off
+            deliverables, and export polished documentation for stakeholders.
           </p>
-        </div>
+        </section>
 
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <aside className="h-fit rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-950">Companies</h2>
-            <p className="mt-2 text-sm text-gray-500">Company management coming soon.</p>
-          </aside>
-
-          <section>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold text-gray-950">Projects</h2>
-              <button
-                type="button"
-                onClick={() => setNewProjectOpen(true)}
-                className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                + New project
-              </button>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
-              </div>
-            ) : !projects?.length ? (
-              <NoProjectsEmptyState onCreate={() => setNewProjectOpen(true)} />
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {projects.map((project) => (
-                  <article
-                    key={project.id}
-                    className="group relative rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-brand-500 hover:shadow-md focus-within:border-brand-500"
-                  >
-                    <div className="p-3 pb-0">
-                      <ImageFrame
-                        entityType="project"
-                        entityId={project.id}
-                        alt={`${project.name} project`}
-                        className="h-36 w-full"
-                        disabled
-                      />
-                    </div>
-                    <Link
-                      to={`/projects/${project.id}`}
-                      className="block p-5 focus-visible:outline-none"
+        <section className="p-1">
+          <h2 className="text-xl font-semibold text-gray-950">Companies</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Themes and company-level settings will be managed here.
+          </p>
+          {companies.length ? (
+            <div className="mt-4 max-h-72 overflow-y-auto pr-1">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {companies.map((companyName) => {
+                  const projectCount = (projects ?? []).filter(
+                    (project) => project.companyName?.trim() === companyName,
+                  ).length;
+                  return (
+                    <article
+                      key={companyName}
+                      className="rounded-lg border border-gray-200 bg-surface p-4 shadow-sm"
                     >
-                      {project.clientName && (
-                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
-                          {project.clientName}
-                        </p>
-                      )}
-                      <h3 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h3>
-                      {(project.companyName || project.projectLocation) && (
-                        <p className="mt-2 text-sm text-gray-500">
-                          {[project.companyName, project.projectLocation]
-                            .filter(Boolean)
-                            .join(' | ')}
-                        </p>
-                      )}
-                    </Link>
-                    <div className="absolute bottom-3 right-3">
-                      <ProjectOptionsMenu
-                        projectName={project.name}
-                        open={openProjectMenuId === project.id}
-                        onToggle={() =>
-                          setOpenProjectMenuId((current) =>
-                            current === project.id ? null : project.id,
-                          )
-                        }
-                        onEdit={() => {
-                          setOpenProjectMenuId(null);
-                          setEditProject(project);
-                        }}
-                        onImages={() => {
-                          setOpenProjectMenuId(null);
-                          setImageProject(project);
-                        }}
-                        onDelete={() => {
-                          setOpenProjectMenuId(null);
-                          setPendingDelete(project);
-                        }}
-                      />
-                    </div>
-                  </article>
-                ))}
+                      <h3 className="text-sm font-semibold text-gray-950">{companyName}</h3>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {projectCount} {projectCount === 1 ? 'project' : 'projects'}
+                      </p>
+                    </article>
+                  );
+                })}
               </div>
-            )}
-          </section>
-        </div>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-gray-500">
+              No companies available yet. Create or update a project with a company name to populate
+              this section.
+            </p>
+          )}
+        </section>
+
+        <section className="p-1">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold text-gray-950">Projects</h2>
+            <button
+              type="button"
+              onClick={() => setNewProjectOpen(true)}
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            >
+              + New project
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+            </div>
+          ) : !projects?.length ? (
+            <NoProjectsEmptyState onCreate={() => setNewProjectOpen(true)} />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {projects.map((project) => (
+                <article
+                  key={project.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setOpenProjectMenuId(null);
+                    setOpenProjectActionId((current) =>
+                      current === project.id ? null : project.id,
+                    );
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    setOpenProjectMenuId(null);
+                    setOpenProjectActionId((current) =>
+                      current === project.id ? null : project.id,
+                    );
+                  }}
+                  className="group relative cursor-pointer overflow-visible rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-500 hover:shadow-xl hover:shadow-brand-500/10 focus-within:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                >
+                  <div className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-brand-50/0 to-brand-50/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="p-3 pb-0">
+                    <ImageFrame
+                      entityType="project"
+                      entityId={project.id}
+                      alt={`${project.name} project`}
+                      className="h-36 w-full transition-transform duration-500 group-hover:scale-[1.02]"
+                      disabled
+                    />
+                  </div>
+                  <div className="relative block p-5">
+                    {project.clientName && (
+                      <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                        {project.clientName}
+                      </p>
+                    )}
+                    <h3 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h3>
+                    {(project.companyName || project.projectLocation) && (
+                      <p className="mt-2 text-sm text-gray-500">
+                        {[project.companyName, project.projectLocation].filter(Boolean).join(' | ')}
+                      </p>
+                    )}
+                  </div>
+                  <div
+                    className="absolute bottom-3 right-3"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <ProjectOptionsMenu
+                      projectName={project.name}
+                      open={openProjectMenuId === project.id}
+                      onToggle={() =>
+                        setOpenProjectMenuId((current) =>
+                          current === project.id ? null : project.id,
+                        )
+                      }
+                      onEdit={() => {
+                        setOpenProjectMenuId(null);
+                        setEditProject(project);
+                      }}
+                      onImages={() => {
+                        setOpenProjectMenuId(null);
+                        setImageProject(project);
+                      }}
+                      onDelete={() => {
+                        setOpenProjectMenuId(null);
+                        setPendingDelete(project);
+                      }}
+                    />
+                  </div>
+                  {openProjectActionId === project.id && (
+                    <div
+                      className="absolute left-3 right-3 top-3 z-20 rounded-lg border border-gray-200 bg-white p-3 shadow-xl"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Open project tool
+                      </p>
+                      <div className="mt-2 grid gap-2">
+                        <Link
+                          to={`/projects/${project.id}/ffe/table`}
+                          className="rounded-md border border-gray-200 bg-surface px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                          onClick={() => setOpenProjectActionId(null)}
+                        >
+                          Open or create FF&amp;E
+                        </Link>
+                        <Link
+                          to={`/projects/${project.id}/takeoff/table`}
+                          className="rounded-md border border-gray-200 bg-surface px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                          onClick={() => setOpenProjectActionId(null)}
+                        >
+                          Open or create Take-Off
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
       <NewProjectModal open={newProjectOpen} onClose={() => setNewProjectOpen(false)} />
@@ -504,56 +578,6 @@ function ProjectTakeoffMaterialsRoute() {
 function ProjectTakeoffSummaryRoute() {
   const { project, takeoffCategoriesWithItems } = useProjectContext();
   return <TakeoffSummaryView project={project} categories={takeoffCategoriesWithItems} />;
-}
-
-function ProjectToolChooser() {
-  const { project, roomsWithItems, takeoffCategoriesWithItems } = useProjectContext();
-  const hasFfe = roomsWithItems.some((room) => room.items.length > 0);
-  const hasTakeoff = takeoffCategoriesWithItems.some((category) => category.items.length > 0);
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <ToolCard
-        to="ffe/table"
-        title={hasFfe ? 'Open FF&E' : 'Create FF&E'}
-        description="Rooms, items, materials, catalog pages, and FF&E exports."
-        meta={`${roomsWithItems.length} rooms`}
-      />
-      <ToolCard
-        to="takeoff/table"
-        title={hasTakeoff ? 'Open Take-Off Table' : 'Create Take-Off Table'}
-        description="Category-based quantities, drawings, swatches, CBM, and cost totals."
-        meta={`${takeoffCategoriesWithItems.length} categories`}
-      />
-      <p className="md:col-span-2 text-sm text-gray-500">
-        {project.name} can use either tool independently, or move between both from the project
-        tabs.
-      </p>
-    </div>
-  );
-}
-
-function ToolCard({
-  to,
-  title,
-  description,
-  meta,
-}: {
-  to: string;
-  title: string;
-  description: string;
-  meta: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-brand-500 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-    >
-      <span className="text-xs font-semibold uppercase tracking-wide text-brand-600">{meta}</span>
-      <h2 className="mt-3 text-2xl font-semibold text-gray-950">{title}</h2>
-      <p className="mt-2 text-sm text-gray-600">{description}</p>
-    </Link>
-  );
 }
 
 function ProjectCatalogRoute() {
