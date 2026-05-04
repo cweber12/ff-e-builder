@@ -10,7 +10,7 @@ import {
   useOutletContext,
   useParams,
 } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AuthGate, SignInPage } from './components/shared/AuthGate';
 import { CatalogView } from './components/ffe/catalog/CatalogView';
 import { ItemsTable } from './components/ffe/items/ItemsTable';
@@ -39,6 +39,7 @@ import {
   exportTableExcel,
   exportTablePdf,
 } from './lib/exportUtils';
+import { api } from './lib/api';
 import { recordSession } from './lib/telemetry';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
 import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
@@ -104,6 +105,21 @@ function ProjectList() {
   const deleteProject = useDeleteProject();
   const { data: userProfile } = useUserProfile();
   const firstName = userProfile?.name?.trim().split(' ')[0];
+  const { data: activeProjectToolState, isLoading: isProjectToolStateLoading } = useQuery({
+    queryKey: ['projects', 'tool-state', openProjectActionId],
+    enabled: openProjectActionId !== null,
+    queryFn: async () => {
+      if (!openProjectActionId) return { hasFfe: false, hasTakeoff: false };
+      const [rooms, takeoffCategories] = await Promise.all([
+        api.rooms.list(openProjectActionId),
+        api.takeoff.categories(openProjectActionId),
+      ]);
+      return {
+        hasFfe: rooms.length > 0,
+        hasTakeoff: takeoffCategories.length > 0,
+      };
+    },
+  });
   const companies = Array.from(
     new Set((projects ?? []).map((project) => project.companyName?.trim()).filter(Boolean)),
   );
@@ -156,14 +172,16 @@ function ProjectList() {
         </section>
 
         <section className="p-1">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="mb-4 flex flex-wrap items-center justify-start gap-4">
             <h2 className="text-xl font-semibold text-gray-950">Projects</h2>
             <button
               type="button"
+              aria-label="Add project"
+              title="Add project"
               onClick={() => setNewProjectOpen(true)}
-              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
-              + New project
+              <PlusIcon />
             </button>
           </div>
 
@@ -194,17 +212,52 @@ function ProjectList() {
                       current === project.id ? null : project.id,
                     );
                   }}
-                  className="group relative cursor-pointer overflow-visible rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-500 hover:shadow-xl hover:shadow-brand-500/10 focus-within:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                  className="project-card group relative cursor-pointer overflow-visible rounded-lg border border-gray-200 bg-white shadow-sm focus-within:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                 >
-                  <div className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-brand-50/0 to-brand-50/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <div className="p-3 pb-0">
-                    <ImageFrame
-                      entityType="project"
-                      entityId={project.id}
-                      alt={`${project.name} project`}
-                      className="h-36 w-full transition-transform duration-500 group-hover:scale-[1.02]"
-                      disabled
-                    />
+                    <div className="relative overflow-hidden rounded-lg">
+                      <ImageFrame
+                        entityType="project"
+                        entityId={project.id}
+                        alt={`${project.name} project`}
+                        className="project-card-media h-36 w-full"
+                        disabled
+                      />
+                      {openProjectActionId === project.id && (
+                        <div
+                          className="project-card-action-popover absolute inset-0 z-20 flex flex-col justify-center rounded-lg p-3"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+                            Open project tool
+                          </p>
+                          <div className="mt-2 grid gap-2">
+                            <Link
+                              to={`/projects/${project.id}/ffe/table`}
+                              className="project-card-action-link rounded-md px-3 py-2 text-sm font-medium"
+                              onClick={() => setOpenProjectActionId(null)}
+                            >
+                              {isProjectToolStateLoading
+                                ? 'Checking FF&E...'
+                                : activeProjectToolState?.hasFfe
+                                  ? 'Open FF&E'
+                                  : 'Create FF&E'}
+                            </Link>
+                            <Link
+                              to={`/projects/${project.id}/takeoff/table`}
+                              className="project-card-action-link rounded-md px-3 py-2 text-sm font-medium"
+                              onClick={() => setOpenProjectActionId(null)}
+                            >
+                              {isProjectToolStateLoading
+                                ? 'Checking Take-Off...'
+                                : activeProjectToolState?.hasTakeoff
+                                  ? 'Open Take-Off'
+                                  : 'Create Take-Off'}
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="relative block p-5">
                     {project.clientName && (
@@ -246,32 +299,6 @@ function ProjectList() {
                       }}
                     />
                   </div>
-                  {openProjectActionId === project.id && (
-                    <div
-                      className="absolute left-3 right-3 top-3 z-20 rounded-lg border border-gray-200 bg-white p-3 shadow-xl"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Open project tool
-                      </p>
-                      <div className="mt-2 grid gap-2">
-                        <Link
-                          to={`/projects/${project.id}/ffe/table`}
-                          className="rounded-md border border-gray-200 bg-surface px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                          onClick={() => setOpenProjectActionId(null)}
-                        >
-                          Open or create FF&amp;E
-                        </Link>
-                        <Link
-                          to={`/projects/${project.id}/takeoff/table`}
-                          className="rounded-md border border-gray-200 bg-surface px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                          onClick={() => setOpenProjectActionId(null)}
-                        >
-                          Open or create Take-Off
-                        </Link>
-                      </div>
-                    </div>
-                  )}
                 </article>
               ))}
             </div>
@@ -604,6 +631,19 @@ function ProjectMaterialsRoute() {
 
 function useProjectContext() {
   return useOutletContext<ProjectContext>();
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M10 4.5v11M4.5 10h11"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
 function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {

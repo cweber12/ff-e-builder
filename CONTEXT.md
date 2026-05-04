@@ -111,6 +111,7 @@ _Avoid_: Raw upload, template-only import
 - A **Project** belongs to exactly one authenticated user.
 - A **Project** can optionally be associated with one **Company**.
 - A **Project** can contain zero or more **Rooms** and zero or more **Take-Off Categories**.
+- A **Project** has one **FF&E** workspace and one **Take-Off Table** workspace; each can start empty and later be populated.
 - A **Company** can define one active **Company Theme** used as the default for document exports.
 - A **Room** contains zero or more **FF&E Items**.
 - A **Take-Off Category** contains zero or more **Take-Off Items**.

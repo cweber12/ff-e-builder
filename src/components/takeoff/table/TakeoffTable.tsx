@@ -139,6 +139,19 @@ function MoreIcon() {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M10 4.5v11M4.5 10h11"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function ExpandIcon({ expanded }: { expanded?: boolean }) {
   return (
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
@@ -284,19 +297,20 @@ function TakeoffCategorySection({
           <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
             {formatMoney(cents(subtotalCents))}
           </span>
-          <Button
+          <button
             type="button"
-            variant="secondary"
-            size="sm"
+            aria-label={`Add item to ${categoryName}`}
+            title={`Add item to ${categoryName}`}
             onClick={() =>
               createItem.mutate({
                 sortOrder: items.length,
                 productTag: `${categoryName.slice(0, 2).toUpperCase()}-${items.length + 1}`,
               })
             }
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           >
-            Add item
-          </Button>
+            <PlusIcon />
+          </button>
           <CategoryActionsMenu categoryName={categoryName} onCategoryDelete={onCategoryDelete} />
           {!collapsed && (
             <button
