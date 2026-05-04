@@ -22,6 +22,10 @@ _Avoid_: Account, auth user
 The Project setting that determines whether FF&E and Take-Off share one budget or use separate budgets.
 _Avoid_: Budget type, pricing mode
 
+**Project Header**:
+The read-only Project identity and tool navigation area shown inside an open Project. Budget status belongs in Summary views, not in the Project Header.
+_Avoid_: Budget header, project editor
+
 ### FF&E
 
 **FF&E**:
@@ -102,6 +106,7 @@ _Avoid_: Raw upload, template-only import
 - A **Take-Off Item** can have one optional **Rendering**, one optional **Plan Image**, and up to four optional **Swatches**.
 - A **Take-Off Item** owns its **Swatches** directly for this pass instead of selecting them from the shared **Material** library.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
+- A **Project Header** shows only included **Project** identity values and navigation between project tools.
 - A **Take-Off Spreadsheet Import** can create missing **Take-Off Categories** from detected category headings or mapped category values.
 - A **Take-Off Spreadsheet Import** skips subtotal and financial summary rows instead of creating **Take-Off Items** from them.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Take-Off Table** budgets.

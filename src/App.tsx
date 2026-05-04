@@ -26,7 +26,6 @@ import { SummaryView } from './components/ffe/summary/SummaryView';
 import { TakeoffSummaryView } from './components/takeoff/summary/TakeoffSummaryView';
 import { TakeoffTable } from './components/takeoff/table/TakeoffTable';
 import { ImageFrame } from './components/shared/ImageFrame';
-import { projectTotalCents, takeoffProjectTotalCents } from './lib/calc';
 import {
   exportSummaryCsv,
   exportSummaryExcel,
@@ -39,7 +38,7 @@ import {
   exportTablePdf,
 } from './lib/exportUtils';
 import { recordSession } from './lib/telemetry';
-import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
+import { useProjects, useDeleteProject } from './hooks/shared/useProjects';
 import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
 import { useTakeoffWithItems } from './hooks/takeoff/useTakeoff';
 import { useUpdateUserProfile, useUserProfile } from './hooks/shared/useUserProfile';
@@ -227,7 +226,6 @@ function ProjectLayout() {
   const queryClient = useQueryClient();
   const { data: projects, isLoading: projectsLoading } = useProjects();
   const project = projects?.find((p) => p.id === id);
-  const updateProject = useUpdateProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
   const { categoriesWithItems: takeoffCategoriesWithItems, isLoading: takeoffLoading } =
     useTakeoffWithItems(id ?? '');
@@ -238,31 +236,9 @@ function ProjectLayout() {
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
 
   const isLoading = projectsLoading || dataLoading || takeoffLoading;
-  const ffeActualCents = projectTotalCents(roomsWithItems);
-  const takeoffActualCents = takeoffProjectTotalCents(takeoffCategoriesWithItems);
-  const actualCents =
-    project?.budgetMode === 'individual' ? ffeActualCents : ffeActualCents + takeoffActualCents;
-
   return (
     <main className="min-h-screen bg-surface-muted">
-      <ProjectHeader
-        project={project}
-        actualCents={actualCents}
-        onNameSave={(name) => updateProject.mutate({ id: id!, patch: { name } })}
-        onClientSave={(clientName) => updateProject.mutate({ id: id!, patch: { clientName } })}
-        onCompanySave={(companyName) => updateProject.mutate({ id: id!, patch: { companyName } })}
-        onLocationSave={(projectLocation) =>
-          updateProject.mutate({ id: id!, patch: { projectLocation } })
-        }
-        onBudgetSave={(budgetCents) => updateProject.mutate({ id: id!, patch: { budgetCents } })}
-        onFfeBudgetSave={(ffeBudgetCents) =>
-          updateProject.mutate({ id: id!, patch: { ffeBudgetCents } })
-        }
-        onTakeoffBudgetSave={(takeoffBudgetCents) =>
-          updateProject.mutate({ id: id!, patch: { takeoffBudgetCents } })
-        }
-        onBudgetModeSave={(budgetMode) => updateProject.mutate({ id: id!, patch: { budgetMode } })}
-      />
+      <ProjectHeader project={project} />
       {isLoading ? (
         <div className="flex justify-center py-24">
           <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
