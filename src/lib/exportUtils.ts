@@ -810,10 +810,9 @@ async function buildTakeoffAssetBundle(
 
   await Promise.all(
     items.map(async (item) => {
-      const [renderingImages, planImages, swatchImages] = await Promise.all([
+      const [renderingImages, planImages] = await Promise.all([
         api.images.list({ entityType: 'takeoff_item', entityId: item.id }),
         api.images.list({ entityType: 'takeoff_plan', entityId: item.id }),
-        api.images.list({ entityType: 'takeoff_swatch', entityId: item.id }),
       ]);
 
       const rendering = renderingImages[0];
@@ -826,6 +825,20 @@ async function buildTakeoffAssetBundle(
         const dataUrl = await imageAssetToPngDataUrl(plan);
         if (dataUrl) planByItemId.set(item.id, dataUrl);
       }
+
+      const materialIds = item.materials
+        .map((material) => material.id)
+        .filter((id, index, all) => Boolean(id) && all.indexOf(id) === index)
+        .slice(0, TAKEOFF_SWATCH_LIMIT);
+
+      const materialImageSets = await Promise.all(
+        materialIds.map(async (materialId) =>
+          api.images.list({ entityType: 'material', entityId: materialId }),
+        ),
+      );
+      const swatchImages = materialImageSets
+        .map((images) => images[0])
+        .filter((image): image is ImageAsset => Boolean(image));
 
       const swatchData = await Promise.all(
         swatchImages

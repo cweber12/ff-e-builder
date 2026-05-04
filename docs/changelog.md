@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(imports): Take-Off swatch import auto-generates `material_id` (numeric max+1) and name (Import N, monotonic) when not supplied — never backfills gaps
 - feat(imports): Add optional Materials/Finishes column mapping to FF&E Excel import; comma-separated material names are created and assigned to each imported item
 - fix(ui): add missing `context="ffe"` prop to `MaterialLibraryModal` in `AddItemDrawer` and `ItemsTable`
+- fix(exports): Take-Off Excel/PDF swatch export now resolves swatch images from assigned material assets instead of removed `takeoff_swatch` image entities
 
 - fix(takeoff): stop auto-seeding default Take-Off categories from the API so new Take-Off Tables start empty
 - fix(takeoff): add a zero-category empty state message on the Take-Off Table while keeping the grand total visible
