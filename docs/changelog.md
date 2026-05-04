@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(agents): forbid agents from reading `.env.local`
 - feat(takeoff): add image-backed Take-Off swatches, nested PDF export modes, and polished project-aware PDF/Excel exports
 - fix(exports): align Take-Off PDF and Excel layouts around a shared presentation model and complete metadata coverage
+- fix(exports): make Take-Off Excel project bands span the full table width and crop rendering/swatch images to fill their cells
 - feat(sample-data): seed new projects with populated FF&E, Take-Off, project-image, and swatch content for export review
 - fix(images): insert additional project images as non-preview images so uploads can reach the 3-image limit
 - fix(images): allow Take-Off renderings and multiple Project Images by repairing image constraints, preview promotion, and inline upload errors

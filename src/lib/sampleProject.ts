@@ -521,88 +521,57 @@ export async function seedProjectSampleContent(
   project: Pick<Project, 'id' | 'name' | 'clientName' | 'companyName' | 'projectLocation'>,
   options: SeedProjectOptions,
 ): Promise<void> {
-  const [projectImageFiles, materialMap] = await Promise.all([
-    Promise.all(
-      [1, 2, 3].map((slot) =>
-        createPlaceholderImageFile({
-          label: options.projectName,
-          subtitle: `Project image ${slot}`,
-          width: 1600,
-          height: 900,
-          filename: `project-image-${slot}.png`,
-          palette: paletteByIndex(slot),
-        }),
-      ),
-    ),
-    createSampleMaterials(project.id),
-  ]);
+  const createdFfeItems: Array<{
+    itemId: string;
+    roomName: string;
+    imageLabel: string;
+    imageFilename: string;
+    paletteIndex: number;
+    materialNames: readonly string[];
+  }> = [];
 
-  await Promise.all(
-    projectImageFiles.map((file, index) =>
-      api.images.upload({
-        entityType: 'project',
-        entityId: project.id,
-        file,
-        altText: `${options.projectName} project image ${index + 1}`,
-      }),
-    ),
-  );
-
-  const roomResults = await Promise.all(
-    ffAndERoomSeeds.map(async (roomSeed, roomIndex) => {
-      const room = await api.rooms.create(project.id, {
-        name: roomSeed.name,
-        sortOrder: roomIndex,
+  for (const [roomIndex, roomSeed] of ffAndERoomSeeds.entries()) {
+    const room = await api.rooms.create(project.id, {
+      name: roomSeed.name,
+      sortOrder: roomIndex,
+    });
+    for (const [itemIndex, itemSeed] of roomSeed.items.entries()) {
+      const item = await api.items.create(room.id, {
+        itemName: itemSeed.itemName,
+        category: itemSeed.category,
+        vendor: itemSeed.vendor,
+        model: itemSeed.model,
+        itemIdTag: itemSeed.itemIdTag,
+        dimensions: itemSeed.dimensions,
+        notes: itemSeed.notes,
+        qty: itemSeed.qty,
+        unitCostCents: itemSeed.unitCostCents,
+        markupPct: itemSeed.markupPct,
+        status: itemSeed.status,
+        sortOrder: itemIndex,
       });
-      const items = await Promise.all(
-        roomSeed.items.map(async (itemSeed, itemIndex) => {
-          const item = await api.items.create(room.id, {
-            itemName: itemSeed.itemName,
-            category: itemSeed.category,
-            vendor: itemSeed.vendor,
-            model: itemSeed.model,
-            itemIdTag: itemSeed.itemIdTag,
-            dimensions: itemSeed.dimensions,
-            notes: itemSeed.notes,
-            qty: itemSeed.qty,
-            unitCostCents: itemSeed.unitCostCents,
-            markupPct: itemSeed.markupPct,
-            status: itemSeed.status,
-            sortOrder: itemIndex,
-          });
-          const itemImage = await createPlaceholderImageFile({
-            label: itemSeed.imageLabel,
-            subtitle: roomSeed.name,
-            width: 1200,
-            height: 900,
-            filename: `${itemSeed.itemIdTag?.toLowerCase() ?? `item-${itemIndex + 1}`}.png`,
-            palette: paletteByIndex(itemIndex + roomIndex + 1),
-          });
-          await api.images.upload({
-            entityType: 'item',
-            entityId: item.id,
-            file: itemImage,
-            altText: itemSeed.imageLabel,
-          });
-          await Promise.all(
-            itemSeed.materialNames.map(async (materialName) => {
-              const material = materialMap.get(materialName);
-              if (material) {
-                await api.materials.assignToItem(item.id, material.id);
-              }
-            }),
-          );
-          return item;
-        }),
-      );
-      return { room, items };
-    }),
-  );
+      createdFfeItems.push({
+        itemId: item.id,
+        roomName: roomSeed.name,
+        imageLabel: itemSeed.imageLabel,
+        imageFilename: `${itemSeed.itemIdTag?.toLowerCase() ?? `item-${itemIndex + 1}`}.png`,
+        paletteIndex: itemIndex + roomIndex + 1,
+        materialNames: itemSeed.materialNames,
+      });
+    }
+  }
 
   const takeoffCategories = await api.takeoff.categories(project.id);
   const takeoffCategoryMap = new Map(
     takeoffCategories.map((category) => [category.name, category.id]),
   );
+
+  const createdTakeoffItems: Array<{
+    itemId: string;
+    categoryName: string;
+    rowSeed: TakeoffRowSeed;
+    paletteIndex: number;
+  }> = [];
 
   for (const categorySeed of takeoffCategorySeeds) {
     const categoryId = takeoffCategoryMap.get(categorySeed.name);
@@ -626,42 +595,111 @@ export async function seedProjectSampleContent(
         unitCostCents: rowSeed.unitCostCents,
         sortOrder: rowIndex,
       });
-
-      const renderingFile = await createPlaceholderImageFile({
-        label: rowSeed.renderingLabel,
-        subtitle: categorySeed.name,
-        width: 1200,
-        height: 900,
-        filename: `${rowSeed.productTag.toLowerCase()}-rendering.png`,
-        palette: paletteByIndex(rowIndex + 2),
+      createdTakeoffItems.push({
+        itemId: item.id,
+        categoryName: categorySeed.name,
+        rowSeed,
+        paletteIndex: rowIndex + 2,
       });
-      await api.images.upload({
-        entityType: 'takeoff_item',
-        entityId: item.id,
-        file: renderingFile,
-        altText: `${rowSeed.description} rendering`,
-      });
-
-      for (const [swatchIndex, swatchLabel] of rowSeed.swatchLabels.entries()) {
-        const swatchFile = await createPlaceholderImageFile({
-          label: swatchLabel,
-          subtitle: `Swatch ${swatchIndex + 1}`,
-          width: 420,
-          height: 420,
-          filename: `${rowSeed.productTag.toLowerCase()}-swatch-${swatchIndex + 1}.png`,
-          palette: paletteByIndex(swatchIndex + rowIndex + 3),
-        });
-        await api.images.upload({
-          entityType: 'takeoff_swatch',
-          entityId: item.id,
-          file: swatchFile,
-          altText: swatchLabel,
-        });
-      }
     }
   }
 
-  void roomResults;
+  const materialMap = await createSampleMaterials(project.id);
+
+  await Promise.all(
+    createdFfeItems.map(async (item) => {
+      await Promise.all(
+        item.materialNames.map(async (materialName) => {
+          const material = materialMap.get(materialName as (typeof materialSeeds)[number]['name']);
+          if (material) {
+            await safeSampleStep(`assign material ${materialName}`, () =>
+              api.materials.assignToItem(item.itemId, material.id),
+            );
+          }
+        }),
+      );
+    }),
+  );
+
+  await Promise.all([
+    ...[1, 2, 3].map((slot) =>
+      safeSampleStep(`project image ${slot}`, async () => {
+        const file = await createPlaceholderImageFile({
+          label: options.projectName,
+          subtitle: `Project image ${slot}`,
+          width: 1600,
+          height: 900,
+          filename: `project-image-${slot}.png`,
+          palette: paletteByIndex(slot),
+        });
+        await api.images.upload({
+          entityType: 'project',
+          entityId: project.id,
+          file,
+          altText: `${options.projectName} project image ${slot}`,
+        });
+      }),
+    ),
+    ...createdFfeItems.map((item) =>
+      safeSampleStep(`FF&E image ${item.imageLabel}`, async () => {
+        const file = await createPlaceholderImageFile({
+          label: item.imageLabel,
+          subtitle: item.roomName,
+          width: 1200,
+          height: 900,
+          filename: item.imageFilename,
+          palette: paletteByIndex(item.paletteIndex),
+        });
+        await api.images.upload({
+          entityType: 'item',
+          entityId: item.itemId,
+          file,
+          altText: item.imageLabel,
+        });
+      }),
+    ),
+    ...createdTakeoffItems.map((item) =>
+      safeSampleStep(`take-off rendering ${item.rowSeed.productTag}`, async () => {
+        const file = await createPlaceholderImageFile({
+          label: item.rowSeed.renderingLabel,
+          subtitle: item.categoryName,
+          width: 1200,
+          height: 900,
+          filename: `${item.rowSeed.productTag.toLowerCase()}-rendering.png`,
+          palette: paletteByIndex(item.paletteIndex),
+        });
+        await api.images.upload({
+          entityType: 'takeoff_item',
+          entityId: item.itemId,
+          file,
+          altText: `${item.rowSeed.description} rendering`,
+        });
+      }),
+    ),
+    ...createdTakeoffItems.flatMap((item) =>
+      item.rowSeed.swatchLabels.map((swatchLabel, swatchIndex) =>
+        safeSampleStep(
+          `take-off swatch ${item.rowSeed.productTag}-${swatchIndex + 1}`,
+          async () => {
+            const file = await createPlaceholderImageFile({
+              label: swatchLabel,
+              subtitle: `Swatch ${swatchIndex + 1}`,
+              width: 420,
+              height: 420,
+              filename: `${item.rowSeed.productTag.toLowerCase()}-swatch-${swatchIndex + 1}.png`,
+              palette: paletteByIndex(item.paletteIndex + swatchIndex + 1),
+            });
+            await api.images.upload({
+              entityType: 'takeoff_swatch',
+              entityId: item.itemId,
+              file,
+              altText: swatchLabel,
+            });
+          },
+        ),
+      ),
+    ),
+  ]);
 }
 
 async function createSampleMaterials(projectId: string) {
@@ -672,29 +710,39 @@ async function createSampleMaterials(projectId: string) {
         materialId: seed.materialId,
         description: seed.description,
       });
-      const swatchImage = await createPlaceholderImageFile({
-        label: seed.name,
-        subtitle: seed.materialId,
-        width: 420,
-        height: 420,
-        filename: `${seed.materialId.toLowerCase()}.png`,
-        palette: {
-          base: seed.color,
-          panel: lighten(seed.color, 0.16),
-          accent: darken(seed.color, 0.18),
-          text: '#ffffff',
-        },
-      });
-      await api.images.upload({
-        entityType: 'material',
-        entityId: material.id,
-        file: swatchImage,
-        altText: seed.name,
+      await safeSampleStep(`material image ${seed.name}`, async () => {
+        const swatchImage = await createPlaceholderImageFile({
+          label: seed.name,
+          subtitle: seed.materialId,
+          width: 420,
+          height: 420,
+          filename: `${seed.materialId.toLowerCase()}.png`,
+          palette: {
+            base: seed.color,
+            panel: lighten(seed.color, 0.16),
+            accent: darken(seed.color, 0.18),
+            text: '#ffffff',
+          },
+        });
+        await api.images.upload({
+          entityType: 'material',
+          entityId: material.id,
+          file: swatchImage,
+          altText: seed.name,
+        });
       });
       return [seed.name, material] as const;
     }),
   );
   return new Map(materials);
+}
+
+async function safeSampleStep(label: string, run: () => Promise<unknown>) {
+  try {
+    await run();
+  } catch (error) {
+    reportError(error, { source: 'seedProjectSampleContent', step: label });
+  }
 }
 
 async function createPlaceholderImageFile(spec: PlaceholderImageSpec): Promise<File> {

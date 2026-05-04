@@ -23,7 +23,7 @@ import type {
   UserProfile,
 } from '../types';
 import type { RoomWithItems } from '../types';
-import type { Worksheet } from 'exceljs';
+import type { Workbook, Worksheet } from 'exceljs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -904,6 +904,92 @@ function addExcelImage(
   });
 }
 
+type ExcelImageBox = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
+function boxWidth(box: ExcelImageBox) {
+  return Math.max(0.01, box.right - box.left);
+}
+
+function boxHeight(box: ExcelImageBox) {
+  return Math.max(0.01, box.bottom - box.top);
+}
+
+function insetExcelImageBox(box: ExcelImageBox, inset: number): ExcelImageBox {
+  return {
+    left: box.left + inset,
+    top: box.top + inset,
+    right: box.right - inset,
+    bottom: box.bottom - inset,
+  };
+}
+
+async function loadImageElement(src: string): Promise<HTMLImageElement> {
+  return await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Unable to load export image.'));
+    image.src = src;
+  });
+}
+
+async function cropDataUrlToCover(
+  dataUrl: string,
+  targetWidth: number,
+  targetHeight: number,
+): Promise<string> {
+  const width = Math.max(1, Math.round(targetWidth));
+  const height = Math.max(1, Math.round(targetHeight));
+  const image = await loadImageElement(dataUrl);
+  const sourceWidth = image.naturalWidth || image.width || width;
+  const sourceHeight = image.naturalHeight || image.height || height;
+  const sourceAspect = sourceWidth / sourceHeight;
+  const targetAspect = width / height;
+
+  let cropWidth = sourceWidth;
+  let cropHeight = sourceHeight;
+  let cropX = 0;
+  let cropY = 0;
+
+  if (sourceAspect > targetAspect) {
+    cropWidth = sourceHeight * targetAspect;
+    cropX = (sourceWidth - cropWidth) / 2;
+  } else {
+    cropHeight = sourceWidth / targetAspect;
+    cropY = (sourceHeight - cropHeight) / 2;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Unable to prepare export image.');
+  context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
+  return canvas.toDataURL('image/png');
+}
+
+async function addExcelCoverImage(
+  workbook: Workbook,
+  worksheet: Worksheet,
+  dataUrl: string,
+  box: ExcelImageBox,
+  targetWidth: number,
+  targetHeight: number,
+) {
+  const imageId = workbook.addImage({
+    base64: await cropDataUrlToCover(dataUrl, targetWidth, targetHeight),
+    extension: 'png',
+  });
+  addExcelImage(worksheet, imageId, {
+    tl: { col: box.left, row: box.top },
+    br: { col: box.right, row: box.bottom },
+  });
+}
+
 export async function exportTakeoffExcel(
   project: Project,
   categories: TakeoffCategoryWithItems[],
@@ -968,32 +1054,26 @@ export async function exportTakeoffExcel(
   }
 
   if (exportDoc.projectImages.length > 0) {
-    const slotRanges = [
-      { start: 1, end: Math.max(1, Math.floor(endColumn / 3)) },
-      {
-        start: Math.max(1, Math.floor(endColumn / 3)) + 1,
-        end: Math.max(2, Math.floor((endColumn * 2) / 3)),
-      },
-      { start: Math.max(3, Math.floor((endColumn * 2) / 3)) + 1, end: endColumn },
-    ].map((range) => ({
-      start: Math.min(range.start, endColumn),
-      end: Math.max(Math.min(range.end, endColumn), Math.min(range.start, endColumn)),
-    }));
-    const imageStartRow = currentRow;
-    worksheet.getRow(imageStartRow).height = 96;
-    [0, 1, 2].forEach((slot) => {
-      const range = slotRanges[slot] ?? { start: 1, end: endColumn };
-      const image = exportDoc.projectImages[slot];
-      if (!image) return;
-      const imageId = workbook.addImage({
-        base64: image,
-        extension: 'png',
-      });
-      addExcelImage(worksheet, imageId, {
-        tl: { col: range.start - 1 + 0.1, row: imageStartRow - 1 + 0.08 },
-        br: { col: range.end - 0.08, row: imageStartRow + 0.92 },
-      });
-    });
+    const imageBandRow = currentRow;
+    worksheet.mergeCells(imageBandRow, 1, imageBandRow, endColumn);
+    const imageBandCell = worksheet.getCell(imageBandRow, 1);
+    imageBandCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
+    imageBandCell.border = thinBorder();
+    worksheet.getRow(imageBandRow).height = 112;
+    const slotWidth = endColumn / 3;
+    await Promise.all(
+      [0, 1, 2].map(async (slot) => {
+        const image = exportDoc.projectImages[slot];
+        if (!image) return;
+        const box = {
+          left: slotWidth * slot,
+          top: imageBandRow - 1,
+          right: slotWidth * (slot + 1),
+          bottom: imageBandRow,
+        };
+        await addExcelCoverImage(workbook, worksheet, image, box, 480, 180);
+      }),
+    );
     currentRow += 2;
   } else {
     currentRow += 1;
@@ -1055,31 +1135,67 @@ export async function exportTakeoffExcel(
       const renderingColumn = columns.findIndex((column) => column.key === 'rendering');
       const swatchColumn = columns.findIndex((column) => column.key === 'swatch');
       if (renderingColumn >= 0) {
-        if (rowData.rendering) {
-          const imageId = workbook.addImage({ base64: rowData.rendering, extension: 'png' });
-          addExcelImage(worksheet, imageId, {
-            tl: { col: renderingColumn + 0.08, row: currentRow - 1 + 0.08 },
-            br: { col: renderingColumn + 0.92, row: currentRow - 1 + 0.92 },
-          });
-        }
         const cell = row.getCell(renderingColumn + 1);
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
+        if (rowData.rendering) {
+          await addExcelCoverImage(
+            workbook,
+            worksheet,
+            rowData.rendering,
+            insetExcelImageBox(
+              {
+                left: renderingColumn,
+                top: currentRow - 1,
+                right: renderingColumn + 1,
+                bottom: currentRow,
+              },
+              0.02,
+            ),
+            220,
+            220,
+          );
+        }
       }
 
       if (swatchColumn >= 0) {
         const swatches = rowData.swatches;
         const swatchCell = row.getCell(swatchColumn + 1);
         swatchCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
-        swatches.slice(0, TAKEOFF_SWATCH_LIMIT).forEach((swatch, index) => {
-          const imageId = workbook.addImage({ base64: swatch, extension: 'png' });
-          const gap = 0.035;
-          const slotHeight = Math.max(0.12, (0.8 - gap * (swatches.length - 1)) / swatches.length);
-          const top = currentRow - 1 + 0.08 + index * (slotHeight + gap);
-          addExcelImage(worksheet, imageId, {
-            tl: { col: swatchColumn + 0.16, row: top },
-            br: { col: swatchColumn + 0.84, row: top + slotHeight },
-          });
-        });
+        const visibleSwatches = swatches.slice(0, TAKEOFF_SWATCH_LIMIT);
+        const outerInset = 0.04;
+        const innerGap = 0.04;
+        const stackBox = insetExcelImageBox(
+          {
+            left: swatchColumn,
+            top: currentRow - 1,
+            right: swatchColumn + 1,
+            bottom: currentRow,
+          },
+          outerInset,
+        );
+        const slotHeight =
+          visibleSwatches.length > 0
+            ? (boxHeight(stackBox) - innerGap * Math.max(0, visibleSwatches.length - 1)) /
+              visibleSwatches.length
+            : 0;
+        await Promise.all(
+          visibleSwatches.map(async (swatch, index) => {
+            const top = stackBox.top + index * (slotHeight + innerGap);
+            await addExcelCoverImage(
+              workbook,
+              worksheet,
+              swatch,
+              {
+                left: stackBox.left,
+                top,
+                right: stackBox.right,
+                bottom: top + slotHeight,
+              },
+              160,
+              Math.max(36, Math.round((160 * slotHeight) / Math.max(0.01, boxWidth(stackBox)))),
+            );
+          }),
+        );
       }
 
       currentRow += 1;
