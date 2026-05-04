@@ -36,3 +36,6 @@ playwright-report/
 .pnpm-store/
 
 *.har
+
+# Agent worktrees
+.claude/worktrees/
