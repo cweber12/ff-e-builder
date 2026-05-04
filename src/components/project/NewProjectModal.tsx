@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal } from '../primitives/Modal';
 import { Button } from '../primitives/Button';
 import { dollarsToCents, parseUnitCostDollarsInput } from '../../types';
-import { useCreateProject } from '../../hooks/shared/useProjects';
+import { createProjectWithSampleContent } from '../../lib/sampleProject';
 
 interface NewProjectModalProps {
   open: boolean;
@@ -12,14 +12,13 @@ interface NewProjectModalProps {
 
 export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
   const navigate = useNavigate();
-  const createProject = useCreateProject();
-
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [projectLocation, setProjectLocation] = useState('');
   const [budgetDollars, setBudgetDollars] = useState('');
   const [nameError, setNameError] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const reset = () => {
     setName('');
@@ -28,6 +27,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
     setProjectLocation('');
     setBudgetDollars('');
     setNameError('');
+    setIsCreating(false);
   };
 
   const handleClose = () => {
@@ -46,19 +46,19 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
     const budgetCents = parsedDollars !== undefined ? dollarsToCents(parsedDollars) : 0;
 
     try {
-      const input: Parameters<typeof createProject.mutateAsync>[0] = {
+      setIsCreating(true);
+      const project = await createProjectWithSampleContent({
         name: name.trim(),
         ...(clientName.trim() ? { clientName: clientName.trim() } : {}),
         ...(companyName.trim() ? { companyName: companyName.trim() } : {}),
         ...(projectLocation.trim() ? { projectLocation: projectLocation.trim() } : {}),
         ...(budgetCents > 0 ? { budgetCents } : {}),
-      };
-      const project = await createProject.mutateAsync(input);
+      });
       reset();
       onClose();
       void navigate(`/projects/${project.id}`);
     } catch {
-      // mutation error is surfaced by TanStack Query / sonner toast in hook
+      setIsCreating(false);
     }
   };
 
@@ -66,7 +66,6 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
     <Modal open={open} onClose={handleClose} title="New project">
       <form onSubmit={(e) => void handleSubmit(e)} noValidate>
         <div className="flex flex-col gap-4">
-          {/* Name */}
           <div className="flex flex-col gap-1">
             <label htmlFor="np-name" className="text-sm font-medium text-gray-700">
               Project name <span className="text-danger-500">*</span>
@@ -92,7 +91,6 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
             )}
           </div>
 
-          {/* Client name */}
           <div className="flex flex-col gap-1">
             <label htmlFor="np-client" className="text-sm font-medium text-gray-700">
               Client name <span className="text-gray-400">(optional)</span>
@@ -137,13 +135,12 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
             </div>
           </div>
 
-          {/* Budget */}
           <div className="flex flex-col gap-1">
             <label htmlFor="np-budget" className="text-sm font-medium text-gray-700">
               Budget <span className="text-gray-400">(optional, in dollars)</span>
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 text-sm">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-gray-400">
                 $
               </span>
               <input
@@ -153,19 +150,18 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
                 step="0.01"
                 value={budgetDollars}
                 onChange={(e) => setBudgetDollars(e.target.value)}
-                className="w-full rounded-md border border-gray-300 pl-6 pr-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+                className="w-full rounded-md border border-gray-300 py-2 pl-6 pr-3 text-sm focus:outline-none focus:border-brand-500"
                 placeholder="250000"
               />
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={createProject.isPending}>
-              {createProject.isPending ? 'Creating…' : 'Create project'}
+            <Button type="submit" variant="primary" disabled={isCreating}>
+              {isCreating ? 'Creating…' : 'Create project'}
             </Button>
           </div>
         </div>

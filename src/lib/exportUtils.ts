@@ -674,11 +674,12 @@ function drawPdfImageFrame(doc: jsPDF, x: number, y: number, width: number, heig
 }
 
 function drawPdfProjectImageBand(doc: jsPDF, projectImages: string[], y: number) {
-  const bandWidth = 222;
-  const slotWidth = 68;
-  const slotHeight = 38;
-  const gap = 9;
-  const startX = (doc.internal.pageSize.getWidth() - bandWidth) / 2;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const bandWidth = pageWidth - 24;
+  const gap = 3;
+  const slotWidth = (bandWidth - gap * 2) / 3;
+  const slotHeight = 42;
+  const startX = 12;
 
   [0, 1, 2].forEach((slot) => {
     const x = startX + slot * (slotWidth + gap);
@@ -1336,7 +1337,7 @@ export async function exportTakeoffPdf(
   const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
   const exportDoc = buildTakeoffExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
 
   if (mode === 'separated') {
     drawPdfTakeoffHeaderBlock(doc, exportDoc);
