@@ -1,4 +1,10 @@
-export type ImageEntityType = 'project' | 'room' | 'item' | 'material' | 'takeoff_item';
+export type ImageEntityType =
+  | 'project'
+  | 'room'
+  | 'item'
+  | 'material'
+  | 'takeoff_item'
+  | 'takeoff_swatch';
 
 export type ImageAsset = {
   id: string;

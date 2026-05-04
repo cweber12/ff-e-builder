@@ -13,8 +13,17 @@ import {
 import { BRAND_RGB } from './constants';
 import { api } from './api';
 import { cents, formatMoney } from '../types';
-import type { Item, Material, Project, TakeoffCategoryWithItems, TakeoffItem } from '../types';
+import type {
+  ImageAsset,
+  Item,
+  Material,
+  Project,
+  TakeoffCategoryWithItems,
+  TakeoffItem,
+  UserProfile,
+} from '../types';
 import type { RoomWithItems } from '../types';
+import type { Worksheet } from 'exceljs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -281,34 +290,761 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   XLSX.writeFile(wb, `${safeName(project.name)}-summary.xlsx`);
 }
 
+type TakeoffPdfMode = 'continuous' | 'separated';
+
+type TakeoffPdfOptions = {
+  mode?: TakeoffPdfMode;
+};
+
+type TakeoffExportColumnKey =
+  | 'rendering'
+  | 'productTag'
+  | 'plan'
+  | 'drawingsLocation'
+  | 'description'
+  | 'size'
+  | 'swatch'
+  | 'cbm'
+  | 'quantity'
+  | 'unit'
+  | 'unitCost'
+  | 'totalCost';
+
+type TakeoffExportColumn = {
+  key: TakeoffExportColumnKey;
+  label: string;
+  pdfWidth: number;
+  excelWidth: number;
+  alwaysVisible?: boolean;
+};
+
+type TakeoffAssetBundle = {
+  projectImages: string[];
+  renderingByItemId: Map<string, string>;
+  swatchesByItemId: Map<string, string[]>;
+};
+
+const TAKEOFF_EXPORT_COLUMNS: TakeoffExportColumn[] = [
+  { key: 'rendering', label: 'Rendering', pdfWidth: 26, excelWidth: 16 },
+  { key: 'productTag', label: 'Product Tag', pdfWidth: 22, excelWidth: 16, alwaysVisible: true },
+  { key: 'plan', label: 'Plan', pdfWidth: 18, excelWidth: 14 },
+  { key: 'drawingsLocation', label: 'Drawings / Location', pdfWidth: 28, excelWidth: 24 },
+  {
+    key: 'description',
+    label: 'Product Description',
+    pdfWidth: 42,
+    excelWidth: 28,
+    alwaysVisible: true,
+  },
+  { key: 'size', label: 'Size', pdfWidth: 24, excelWidth: 18 },
+  { key: 'swatch', label: 'Swatch', pdfWidth: 18, excelWidth: 12 },
+  { key: 'cbm', label: 'CBM', pdfWidth: 12, excelWidth: 10 },
+  { key: 'quantity', label: 'Quantity', pdfWidth: 14, excelWidth: 12, alwaysVisible: true },
+  { key: 'unit', label: 'Unit', pdfWidth: 14, excelWidth: 12, alwaysVisible: true },
+  { key: 'unitCost', label: 'Unit Cost', pdfWidth: 18, excelWidth: 14, alwaysVisible: true },
+  { key: 'totalCost', label: 'Total Cost', pdfWidth: 18, excelWidth: 14, alwaysVisible: true },
+];
+
+const TAKEOFF_PDF_ROW_HEIGHT = 28;
+const TAKEOFF_PDF_CELL_PADDING = 2;
+const TAKEOFF_SWATCH_LIMIT = 4;
+
+function filteredTakeoffCategories(categories: TakeoffCategoryWithItems[]) {
+  return categories.filter((category) => category.items.length > 0);
+}
+
+function takeoffPreparedBy(profile?: UserProfile | null) {
+  return [profile?.name?.trim(), profile?.email?.trim()].filter(Boolean).join(' | ');
+}
+
+function takeoffProjectLine(project: Project) {
+  return [project.name, project.projectLocation?.trim()].filter(Boolean).join(' | ');
+}
+
+function takeoffDocumentCompany(project: Project) {
+  return project.companyName?.trim() || 'ChillDesignStudio';
+}
+
+function getTakeoffBudgetTarget(project: Project) {
+  const relevant =
+    project.budgetMode === 'individual'
+      ? (project.takeoffBudgetCents ?? 0)
+      : (project.budgetCents ?? 0);
+  return relevant > 0 ? relevant : null;
+}
+
+function buildTakeoffVisibleColumns(
+  categories: TakeoffCategoryWithItems[],
+  assets: TakeoffAssetBundle,
+): TakeoffExportColumn[] {
+  const items = categories.flatMap((category) => category.items);
+  const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
+  const hasSwatches = items.some((item) => (assets.swatchesByItemId.get(item.id)?.length ?? 0) > 0);
+
+  return TAKEOFF_EXPORT_COLUMNS.filter((column) => {
+    if (column.key === 'rendering') return hasRendering;
+    if (column.key === 'swatch') return hasSwatches;
+    if (column.alwaysVisible) return true;
+    return items.some((item) => takeoffColumnHasData(item, column.key));
+  });
+}
+
+function takeoffColumnHasData(item: TakeoffItem, key: TakeoffExportColumnKey) {
+  switch (key) {
+    case 'plan':
+      return Boolean(item.plan.trim());
+    case 'drawingsLocation':
+      return Boolean(item.drawings.trim() || item.location.trim());
+    case 'description':
+      return Boolean(item.description.trim());
+    case 'size':
+      return Boolean(item.sizeLabel.trim());
+    case 'cbm':
+      return item.cbm > 0;
+    case 'quantity':
+      return true;
+    case 'unit':
+      return true;
+    case 'unitCost':
+      return true;
+    case 'totalCost':
+      return true;
+    case 'productTag':
+      return true;
+    case 'rendering':
+    case 'swatch':
+      return false;
+  }
+}
+
+function takeoffCellValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
+  switch (key) {
+    case 'productTag':
+      return item.productTag || '';
+    case 'plan':
+      return item.plan || '';
+    case 'drawingsLocation':
+      return [item.drawings, item.location].filter(Boolean).join(' / ');
+    case 'description':
+      return item.description || '';
+    case 'size':
+      return item.sizeLabel || '';
+    case 'cbm':
+      return item.cbm > 0 ? String(item.cbm) : '';
+    case 'quantity':
+      return String(item.quantity);
+    case 'unit':
+      return item.quantityUnit || '';
+    case 'unitCost':
+      return fmtMoney(item.unitCostCents || 0);
+    case 'totalCost':
+      return fmtMoney(takeoffLineTotalCents(item));
+    case 'rendering':
+    case 'swatch':
+      return '';
+  }
+}
+
+function truncateTakeoffText(value: string, maxChars: number) {
+  const normalized = value.trim();
+  if (normalized.length <= maxChars) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
+function takeoffWrappedCellValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
+  const value = takeoffCellValue(item, key);
+  if (key === 'description') return truncateTakeoffText(value, 96);
+  if (key === 'drawingsLocation') return truncateTakeoffText(value, 48);
+  if (key === 'size') return truncateTakeoffText(value, 30);
+  if (key === 'plan') return truncateTakeoffText(value, 24);
+  return value;
+}
+
+async function blobToPngDataUrl(blob: Blob): Promise<string> {
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new Image();
+      nextImage.onload = () => resolve(nextImage);
+      nextImage.onerror = () => reject(new Error('Unable to load export image.'));
+      nextImage.src = objectUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || image.width || 1;
+    canvas.height = image.naturalHeight || image.height || 1;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Unable to prepare export image.');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/png');
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function imageAssetToPngDataUrl(image: ImageAsset): Promise<string | null> {
+  try {
+    return await blobToPngDataUrl(await api.images.getContentBlob(image.id));
+  } catch {
+    return null;
+  }
+}
+
+async function buildTakeoffAssetBundle(
+  projectId: string,
+  categories: TakeoffCategoryWithItems[],
+): Promise<TakeoffAssetBundle> {
+  const projectImages = await api.images.list({ entityType: 'project', entityId: projectId });
+  const projectImageData = await Promise.all(
+    projectImages.slice(0, 3).map(async (image) => imageAssetToPngDataUrl(image)),
+  );
+
+  const renderingByItemId = new Map<string, string>();
+  const swatchesByItemId = new Map<string, string[]>();
+  const items = categories.flatMap((category) => category.items);
+
+  await Promise.all(
+    items.map(async (item) => {
+      const [renderingImages, swatchImages] = await Promise.all([
+        api.images.list({ entityType: 'takeoff_item', entityId: item.id }),
+        api.images.list({ entityType: 'takeoff_swatch', entityId: item.id }),
+      ]);
+
+      const rendering = renderingImages[0];
+      if (rendering) {
+        const dataUrl = await imageAssetToPngDataUrl(rendering);
+        if (dataUrl) renderingByItemId.set(item.id, dataUrl);
+      }
+
+      const swatchData = await Promise.all(
+        swatchImages
+          .slice(0, TAKEOFF_SWATCH_LIMIT)
+          .map(async (image) => imageAssetToPngDataUrl(image)),
+      );
+      const resolvedSwatches = swatchData.filter((value): value is string => Boolean(value));
+      if (resolvedSwatches.length > 0) {
+        swatchesByItemId.set(item.id, resolvedSwatches);
+      }
+    }),
+  );
+
+  return {
+    projectImages: projectImageData.filter((value): value is string => Boolean(value)),
+    renderingByItemId,
+    swatchesByItemId,
+  };
+}
+
+function drawPdfPageNumber(doc: jsPDF, pageNumber: number, totalPages: number) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(130, 130, 130);
+  doc.text(`${pageNumber} / ${totalPages}`, pageWidth - 12, pageHeight - 6, { align: 'right' });
+}
+
+function drawPdfSmallIdentityHeader(doc: jsPDF, project: Project) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text(
+    [takeoffDocumentCompany(project), project.name, project.projectLocation?.trim()]
+      .filter(Boolean)
+      .join(' | '),
+    pageWidth / 2,
+    10,
+    { align: 'center' },
+  );
+}
+
+function drawPdfCategoryBand(doc: jsPDF, label: string, y: number) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFillColor(241, 245, 242);
+  doc.rect(12, y - 5, pageWidth - 24, 9, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+  doc.text(label.toUpperCase(), 16, y);
+}
+
+function addPdfCoverImage(
+  doc: jsPDF,
+  dataUrl: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const imageProps = doc.getImageProperties(dataUrl);
+  const scale = Math.max(width / imageProps.width, height / imageProps.height);
+  const drawWidth = imageProps.width * scale;
+  const drawHeight = imageProps.height * scale;
+  const offsetX = x - (drawWidth - width) / 2;
+  const offsetY = y - (drawHeight - height) / 2;
+
+  doc.saveGraphicsState();
+  doc.rect(x, y, width, height);
+  doc.clip();
+  doc.addImage(dataUrl, 'PNG', offsetX, offsetY, drawWidth, drawHeight);
+  doc.restoreGraphicsState();
+}
+
+function drawPdfImageFrame(doc: jsPDF, x: number, y: number, width: number, height: number) {
+  doc.setFillColor(245, 245, 242);
+  doc.setDrawColor(220, 220, 220);
+  doc.rect(x, y, width, height, 'FD');
+}
+
+function drawPdfProjectImageBand(doc: jsPDF, projectImages: string[], y: number) {
+  const bandWidth = 210;
+  const slotWidth = 64;
+  const slotHeight = 36;
+  const gap = 9;
+  const startX = (doc.internal.pageSize.getWidth() - bandWidth) / 2;
+
+  [0, 1, 2].forEach((slot) => {
+    const x = startX + slot * (slotWidth + gap);
+    const image = projectImages[slot];
+    if (image) {
+      drawPdfImageFrame(doc, x, y, slotWidth, slotHeight);
+      addPdfCoverImage(doc, image, x, y, slotWidth, slotHeight);
+    }
+  });
+}
+
+function drawPdfTakeoffHeaderBlock(
+  doc: jsPDF,
+  project: Project,
+  userProfile?: UserProfile | null,
+  projectImages: string[] = [],
+) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+  doc.text(takeoffDocumentCompany(project).toUpperCase(), pageWidth / 2, 16, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(80, 80, 80);
+  doc.text(takeoffProjectLine(project), pageWidth / 2, 24, { align: 'center' });
+
+  const preparedBy = takeoffPreparedBy(userProfile);
+  if (preparedBy) {
+    doc.setFontSize(9);
+    doc.text(`Quote prepared by ${preparedBy}`, pageWidth / 2, 31, { align: 'center' });
+  }
+
+  if (projectImages.length > 0) {
+    drawPdfProjectImageBand(doc, projectImages, 38);
+  }
+}
+
+function drawPdfBudgetSummaryPage(
+  doc: jsPDF,
+  project: Project,
+  categories: TakeoffCategoryWithItems[],
+) {
+  doc.addPage();
+  drawPdfSmallIdentityHeader(doc, project);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+  doc.text('Budget Summary', 14, 22);
+
+  const body = categories.map((category) => [
+    category.name,
+    fmtMoney(takeoffCategorySubtotalCents(category.items)),
+  ]);
+  body.push(['Grand Total', fmtMoney(takeoffProjectTotalCents(categories))]);
+  const budgetTarget = getTakeoffBudgetTarget(project);
+  if (budgetTarget !== null) {
+    body.push(['Budget Target', fmtMoney(budgetTarget)]);
+  }
+
+  autoTable(doc, {
+    startY: 28,
+    head: [['Category', 'Total']],
+    body,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [...BRAND] as [number, number, number],
+      textColor: [255, 255, 255],
+    },
+    bodyStyles: {
+      fontSize: 10,
+      textColor: [40, 40, 40],
+    },
+    didParseCell: (hook) => {
+      if (hook.section === 'body' && hook.row.index >= categories.length) {
+        hook.cell.styles.fontStyle = 'bold';
+      }
+    },
+  });
+}
+
+function drawPdfTakeoffTable(
+  doc: jsPDF,
+  project: Project,
+  category: TakeoffCategoryWithItems,
+  columns: TakeoffExportColumn[],
+  assets: TakeoffAssetBundle,
+  startY: number,
+  options: {
+    drawOverflowHeader: boolean;
+  },
+) {
+  const body = category.items.map((item) =>
+    columns.map((column) => takeoffWrappedCellValue(item, column.key)),
+  );
+  body.push(
+    columns.map((_column, index) => {
+      if (index === columns.length - 2) return `${category.name} subtotal`;
+      if (index === columns.length - 1)
+        return fmtMoney(takeoffCategorySubtotalCents(category.items));
+      return '';
+    }),
+  );
+
+  autoTable(doc, {
+    startY,
+    head: [columns.map((column) => column.label)],
+    body,
+    theme: 'grid',
+    margin: { left: 12, right: 12, top: 24 },
+    headStyles: {
+      fillColor: [236, 239, 236],
+      textColor: [50, 50, 50],
+      fontSize: 7,
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    bodyStyles: {
+      fontSize: 7,
+      textColor: [55, 55, 55],
+      valign: 'middle',
+      cellPadding: TAKEOFF_PDF_CELL_PADDING,
+      overflow: 'hidden',
+      minCellHeight: TAKEOFF_PDF_ROW_HEIGHT,
+    },
+    columnStyles: Object.fromEntries(
+      columns.map((column, index) => [
+        index,
+        {
+          cellWidth: column.pdfWidth,
+          halign:
+            column.key === 'quantity' ||
+            column.key === 'unitCost' ||
+            column.key === 'totalCost' ||
+            column.key === 'cbm'
+              ? 'center'
+              : 'left',
+        },
+      ]),
+    ),
+    didParseCell: (hook) => {
+      if (hook.section === 'body' && hook.row.index === body.length - 1) {
+        hook.cell.styles.fontStyle = 'bold';
+        hook.cell.styles.fillColor = [249, 250, 249];
+      }
+    },
+    didDrawPage: (hook) => {
+      if (options.drawOverflowHeader && hook.pageNumber > 1) {
+        drawPdfSmallIdentityHeader(doc, project);
+        drawPdfCategoryBand(doc, category.name, 18);
+      }
+    },
+    didDrawCell: (hook) => {
+      if (hook.section !== 'body' || hook.row.index >= category.items.length) return;
+      const item = category.items[hook.row.index];
+      if (!item) return;
+      const column = columns[hook.column.index];
+      if (!column) return;
+
+      if (column.key === 'rendering') {
+        drawPdfImageFrame(
+          doc,
+          hook.cell.x + TAKEOFF_PDF_CELL_PADDING,
+          hook.cell.y + TAKEOFF_PDF_CELL_PADDING,
+          hook.cell.width - TAKEOFF_PDF_CELL_PADDING * 2,
+          hook.cell.height - TAKEOFF_PDF_CELL_PADDING * 2,
+        );
+        const rendering = assets.renderingByItemId.get(item.id);
+        if (rendering) {
+          addPdfCoverImage(
+            doc,
+            rendering,
+            hook.cell.x + TAKEOFF_PDF_CELL_PADDING,
+            hook.cell.y + TAKEOFF_PDF_CELL_PADDING,
+            hook.cell.width - TAKEOFF_PDF_CELL_PADDING * 2,
+            hook.cell.height - TAKEOFF_PDF_CELL_PADDING * 2,
+          );
+        }
+      }
+
+      if (column.key === 'swatch') {
+        const swatches = assets.swatchesByItemId.get(item.id) ?? [];
+        if (swatches.length === 0) return;
+        const frameWidth = hook.cell.width - TAKEOFF_PDF_CELL_PADDING * 2;
+        const frameHeight = hook.cell.height - TAKEOFF_PDF_CELL_PADDING * 2;
+        const gap = TAKEOFF_PDF_CELL_PADDING;
+        const swatchHeight = Math.max(
+          5,
+          Math.floor((frameHeight - gap * Math.max(0, swatches.length - 1)) / swatches.length),
+        );
+        swatches.slice(0, TAKEOFF_SWATCH_LIMIT).forEach((swatch, index) => {
+          const y = hook.cell.y + TAKEOFF_PDF_CELL_PADDING + index * (swatchHeight + gap);
+          drawPdfImageFrame(
+            doc,
+            hook.cell.x + TAKEOFF_PDF_CELL_PADDING,
+            y,
+            frameWidth,
+            swatchHeight,
+          );
+          addPdfCoverImage(
+            doc,
+            swatch,
+            hook.cell.x + TAKEOFF_PDF_CELL_PADDING,
+            y,
+            frameWidth,
+            swatchHeight,
+          );
+        });
+      }
+    },
+  });
+}
+
+function addExcelImage(
+  worksheet: Worksheet,
+  imageId: number,
+  position: {
+    tl: { col: number; row: number };
+    br: { col: number; row: number };
+  },
+) {
+  worksheet.addImage(imageId, {
+    tl: position.tl as never,
+    br: position.br as never,
+    editAs: 'oneCell',
+  });
+}
+
 export async function exportTakeoffExcel(
   project: Project,
   categories: TakeoffCategoryWithItems[],
+  userProfile?: UserProfile | null,
 ): Promise<void> {
-  const wb = XLSX.utils.book_new();
-  const projectImages = await api.images.list({ entityType: 'project', entityId: project.id });
-  const allRows = [
-    ['Project', project.name],
-    ['Prepared by', project.companyName || 'ChillDesignStudio'],
-    ['Project images', ...projectImages.slice(0, 3).map((image) => image.filename)],
-    [],
-    ['Project', 'Category', ...TAKEOFF_HEADERS],
-    ...categories.flatMap((category) =>
-      category.items.map((item) => [project.name, category.name, ...takeoffItemToRow(item)]),
-    ),
-  ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(allRows), 'All Take-Off');
+  const { Workbook } = await import('exceljs');
+  const exportCategories = filteredTakeoffCategories(categories);
+  const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
+  const columns = buildTakeoffVisibleColumns(exportCategories, assets);
 
-  for (const category of categories) {
-    const rows = category.items.map((item) => takeoffItemToRow(item));
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.aoa_to_sheet([TAKEOFF_HEADERS, ...rows]),
-      category.name.slice(0, 31),
-    );
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet('Take-Off');
+  worksheet.views = [{ state: 'frozen', ySplit: 0 }];
+
+  columns.forEach((column, index) => {
+    worksheet.getColumn(index + 1).width = column.excelWidth;
+  });
+
+  let currentRow = 1;
+  const endColumn = Math.max(columns.length, 1);
+
+  worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+  const companyCell = worksheet.getCell(currentRow, 1);
+  companyCell.value = takeoffDocumentCompany(project).toUpperCase();
+  companyCell.font = { name: 'Helvetica', size: 16, bold: true, color: { argb: 'FF1A6B4A' } };
+  companyCell.alignment = { horizontal: 'center' };
+  currentRow += 1;
+
+  worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+  const projectCell = worksheet.getCell(currentRow, 1);
+  projectCell.value = takeoffProjectLine(project);
+  projectCell.font = { name: 'Helvetica', size: 11, color: { argb: 'FF4B5563' } };
+  projectCell.alignment = { horizontal: 'center' };
+  currentRow += 1;
+
+  const preparedBy = takeoffPreparedBy(userProfile);
+  if (preparedBy) {
+    worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+    const preparedCell = worksheet.getCell(currentRow, 1);
+    preparedCell.value = `Quote prepared by ${preparedBy}`;
+    preparedCell.font = { name: 'Helvetica', size: 10, color: { argb: 'FF6B7280' } };
+    preparedCell.alignment = { horizontal: 'center' };
+    currentRow += 1;
   }
 
-  XLSX.writeFile(wb, `${safeName(project.name)}-takeoff.xlsx`);
+  if (assets.projectImages.length > 0) {
+    const slotWidth = Math.floor(endColumn / 3) || 1;
+    const imageStartRow = currentRow;
+    worksheet.getRow(imageStartRow).height = 85;
+    [0, 1, 2].forEach((slot) => {
+      const startCol = Math.min(endColumn, slot * slotWidth + 1);
+      const endColForSlot = slot === 2 ? endColumn : Math.min(endColumn, (slot + 1) * slotWidth);
+      const image = assets.projectImages[slot];
+      if (!image) return;
+      const imageId = workbook.addImage({
+        base64: image,
+        extension: 'png',
+      });
+      addExcelImage(worksheet, imageId, {
+        tl: { col: startCol - 1 + 0.12, row: imageStartRow - 1 + 0.12 },
+        br: { col: endColForSlot - 0.12, row: imageStartRow - 0.12 + 1 },
+      });
+    });
+    currentRow += 2;
+  } else {
+    currentRow += 1;
+  }
+
+  for (const category of exportCategories) {
+    worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+    const categoryCell = worksheet.getCell(currentRow, 1);
+    categoryCell.value = category.name.toUpperCase();
+    categoryCell.font = { name: 'Helvetica', size: 11, bold: true, color: { argb: 'FF1A6B4A' } };
+    categoryCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF1F5F2' },
+    };
+    currentRow += 1;
+
+    const headerRow = worksheet.getRow(currentRow);
+    columns.forEach((column, index) => {
+      const cell = headerRow.getCell(index + 1);
+      cell.value = column.label;
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF374151' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFECEFEA' },
+      };
+      cell.border = thinBorder();
+    });
+    headerRow.height = 24;
+    currentRow += 1;
+
+    for (const item of category.items) {
+      const row = worksheet.getRow(currentRow);
+      row.height = 52;
+      columns.forEach((column, index) => {
+        const cell = row.getCell(index + 1);
+        cell.value = takeoffWrappedCellValue(item, column.key);
+        cell.font = { name: 'Helvetica', size: 9, color: { argb: 'FF374151' } };
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal:
+            column.key === 'quantity' ||
+            column.key === 'unit' ||
+            column.key === 'unitCost' ||
+            column.key === 'totalCost' ||
+            column.key === 'cbm'
+              ? 'center'
+              : 'left',
+          wrapText: column.key !== 'rendering' && column.key !== 'swatch',
+          shrinkToFit: false,
+        };
+        cell.border = thinBorder();
+      });
+
+      const renderingColumn = columns.findIndex((column) => column.key === 'rendering');
+      const swatchColumn = columns.findIndex((column) => column.key === 'swatch');
+      const rendering = assets.renderingByItemId.get(item.id);
+      if (renderingColumn >= 0) {
+        if (rendering) {
+          const imageId = workbook.addImage({ base64: rendering, extension: 'png' });
+          addExcelImage(worksheet, imageId, {
+            tl: { col: renderingColumn + 0.15, row: currentRow - 1 + 0.12 },
+            br: { col: renderingColumn + 0.85, row: currentRow - 0.12 },
+          });
+        } else {
+          const cell = row.getCell(renderingColumn + 1);
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
+        }
+      }
+
+      if (swatchColumn >= 0) {
+        const swatches = assets.swatchesByItemId.get(item.id) ?? [];
+        swatches.slice(0, TAKEOFF_SWATCH_LIMIT).forEach((swatch, index) => {
+          const imageId = workbook.addImage({ base64: swatch, extension: 'png' });
+          const gap = 0.08;
+          const slotHeight = Math.max(0.14, (0.76 - gap * (swatches.length - 1)) / swatches.length);
+          const top = currentRow - 1 + 0.12 + index * (slotHeight + gap);
+          addExcelImage(worksheet, imageId, {
+            tl: { col: swatchColumn + 0.18, row: top },
+            br: { col: swatchColumn + 0.82, row: top + slotHeight },
+          });
+        });
+      }
+
+      currentRow += 1;
+    }
+
+    const subtotalRow = worksheet.getRow(currentRow);
+    columns.forEach((_column, index) => {
+      const cell = subtotalRow.getCell(index + 1);
+      if (index === Math.max(0, columns.length - 2)) {
+        cell.value = `${category.name} subtotal`;
+      } else if (index === columns.length - 1) {
+        cell.value = fmtMoney(takeoffCategorySubtotalCents(category.items));
+      } else {
+        cell.value = '';
+      }
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF1A6B4A' } };
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: index === columns.length - 1 ? 'center' : 'left',
+      };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF9FAF9' },
+      };
+      cell.border = thinBorder();
+    });
+    currentRow += 2;
+  }
+
+  worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+  const summaryTitle = worksheet.getCell(currentRow, 1);
+  summaryTitle.value = 'BUDGET SUMMARY';
+  summaryTitle.font = { name: 'Helvetica', size: 11, bold: true, color: { argb: 'FF1A6B4A' } };
+  summaryTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F2' } };
+  currentRow += 1;
+
+  exportCategories.forEach((category) => {
+    worksheet.getCell(currentRow, 1).value = category.name;
+    worksheet.getCell(currentRow, 2).value = fmtMoney(takeoffCategorySubtotalCents(category.items));
+    worksheet.getCell(currentRow, 1).border = thinBorder();
+    worksheet.getCell(currentRow, 2).border = thinBorder();
+    currentRow += 1;
+  });
+  worksheet.getCell(currentRow, 1).value = 'Grand Total';
+  worksheet.getCell(currentRow, 2).value = fmtMoney(takeoffProjectTotalCents(exportCategories));
+  worksheet.getCell(currentRow, 1).font = { name: 'Helvetica', size: 9, bold: true };
+  worksheet.getCell(currentRow, 2).font = { name: 'Helvetica', size: 9, bold: true };
+  worksheet.getCell(currentRow, 1).border = thinBorder();
+  worksheet.getCell(currentRow, 2).border = thinBorder();
+  currentRow += 1;
+  const budgetTarget = getTakeoffBudgetTarget(project);
+  if (budgetTarget !== null) {
+    worksheet.getCell(currentRow, 1).value = 'Budget Target';
+    worksheet.getCell(currentRow, 2).value = fmtMoney(budgetTarget);
+    worksheet.getCell(currentRow, 1).border = thinBorder();
+    worksheet.getCell(currentRow, 2).border = thinBorder();
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  triggerDownload(
+    new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+    `${safeName(project.name)}-takeoff.xlsx`,
+  );
 }
 
 const MATERIAL_HEADERS = ['Name', 'Material ID', 'Swatch Image', 'Description'];
@@ -471,102 +1207,64 @@ export function exportTablePdf(
 export async function exportTakeoffPdf(
   project: Project,
   categories: TakeoffCategoryWithItems[],
+  userProfile?: UserProfile | null,
+  options: TakeoffPdfOptions = {},
 ): Promise<void> {
+  const mode = options.mode ?? 'continuous';
+  const exportCategories = filteredTakeoffCategories(categories);
+  const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
+  const columns = buildTakeoffVisibleColumns(exportCategories, assets);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const projectImages = await buildProjectImageDataUrls(project.id);
 
-  doc.setFillColor(230, 230, 230);
-  doc.rect(0, 0, pageWidth, 21, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.text((project.companyName || 'ChillDesignStudio').toUpperCase(), pageWidth / 2, 7, {
-    align: 'center',
-  });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text(project.name.toUpperCase(), pageWidth / 2, 16, { align: 'center' });
-
-  let startY = 28;
-  if (projectImages.length) {
-    const imageHeight = 42;
-    const imageWidth = pageWidth / projectImages.length;
-    projectImages.forEach((image, index) => {
-      const format = image.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-      doc.addImage(image, format, index * imageWidth, 22, imageWidth, imageHeight);
+  if (mode === 'separated') {
+    drawPdfTakeoffHeaderBlock(doc, project, userProfile, assets.projectImages);
+    for (const [index, category] of exportCategories.entries()) {
+      if (index > 0 || doc.getNumberOfPages() > 0) doc.addPage();
+      drawPdfSmallIdentityHeader(doc, project);
+      drawPdfCategoryBand(doc, category.name, 18);
+      drawPdfTakeoffTable(doc, project, category, columns, assets, 24, {
+        drawOverflowHeader: true,
+      });
+    }
+    drawPdfBudgetSummaryPage(doc, project, exportCategories);
+  } else {
+    drawPdfTakeoffHeaderBlock(doc, project, userProfile, assets.projectImages);
+    let startY = assets.projectImages.length > 0 ? 80 : 40;
+    exportCategories.forEach((category, index) => {
+      const pageHeight = doc.internal.pageSize.getHeight();
+      if (startY + 18 > pageHeight - 18) {
+        doc.addPage();
+        drawPdfSmallIdentityHeader(doc, project);
+        startY = 18;
+      }
+      drawPdfCategoryBand(doc, category.name, startY);
+      drawPdfTakeoffTable(doc, project, category, columns, assets, startY + 6, {
+        drawOverflowHeader: index === 0 || doc.getCurrentPageInfo().pageNumber > 1,
+      });
+      startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
     });
-    startY = 72;
-  }
-  for (const category of categories) {
-    doc.setFillColor(255, 245, 205);
-    doc.rect(0, startY - 6, pageWidth, 10, 'F');
-    doc.setTextColor(220, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
-    doc.text(category.name.toUpperCase(), 10, startY);
-
-    autoTable(doc, {
-      startY: startY + 5,
-      head: [TAKEOFF_HEADERS],
-      body: [
-        ...category.items.map((item) => takeoffItemToRow(item)),
-        [
-          '',
-          { content: `${category.name} subtotal`, colSpan: 10, styles: { fontStyle: 'bold' } },
-          fmtMoney(takeoffCategorySubtotalCents(category.items)),
-        ],
-      ],
-      theme: 'grid',
-      headStyles: {
-        fillColor: [230, 230, 230],
-        textColor: [0, 0, 0],
-        fontSize: 6,
-        halign: 'center',
-      },
-      bodyStyles: { fontSize: 6, valign: 'middle' },
-      columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 22 },
-        3: { cellWidth: 26 },
-        4: { cellWidth: 42 },
-        5: { cellWidth: 28 },
-        6: { cellWidth: 22 },
-        7: { cellWidth: 14 },
-        8: { cellWidth: 18 },
-        9: { cellWidth: 15 },
-        10: { cellWidth: 20 },
-        11: { cellWidth: 22 },
-      },
-      margin: { left: 0, right: 0 },
-    });
-    startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
-    if (startY > 175) {
-      doc.addPage();
-      startY = 18;
-    }
+    doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+    doc.text(`Grand total: ${fmtMoney(takeoffProjectTotalCents(exportCategories))}`, 14, startY);
   }
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(`Grand total: ${fmtMoney(takeoffProjectTotalCents(categories))}`, 10, startY + 2);
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    drawPdfPageNumber(doc, page, totalPages);
+  }
+
   doc.save(`${safeName(project.name)}-takeoff.pdf`);
 }
 
-async function buildProjectImageDataUrls(projectId: string): Promise<string[]> {
-  const images = await api.images.list({ entityType: 'project', entityId: projectId });
-  const dataUrls = await Promise.all(
-    images.slice(0, 3).map(async (image) => {
-      try {
-        return await blobToDataUrl(await api.images.getContentBlob(image.id));
-      } catch {
-        return null;
-      }
-    }),
-  );
-  return dataUrls.filter((url): url is string => Boolean(url));
+function thinBorder() {
+  return {
+    top: { style: 'thin' as const, color: { argb: 'FFE5E7EB' } },
+    left: { style: 'thin' as const, color: { argb: 'FFE5E7EB' } },
+    bottom: { style: 'thin' as const, color: { argb: 'FFE5E7EB' } },
+    right: { style: 'thin' as const, color: { argb: 'FFE5E7EB' } },
+  };
 }
 
 // ─── PDF – Summary ────────────────────────────────────────────────────────────

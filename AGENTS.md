@@ -20,6 +20,8 @@
 
 - **Never put secrets in committed files.** `.env.local` is gitignored; `.env.example` is the source of truth for required vars.
 
+- **Never read from `.env.local`.** Agents must treat `.env.local` as off-limits and use `.env.example`, committed docs, or user-provided values instead.
+
 - **Money is stored and computed as integer minor units (cents).** See [/docs/money.md](/docs/money.md).
 
 - **Never call the Neon database directly from the client.** All DB access goes through the API worker. See [/docs/architecture.md](/docs/architecture.md).

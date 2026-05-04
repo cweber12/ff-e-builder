@@ -46,12 +46,16 @@ _Avoid_: Lookbook, booklet
 The quantity and cost tool for category-based design or construction scope.
 _Avoid_: Takeoff tab, takeoff room table
 
+**Export Mode**:
+The presentation format used when generating a Take-Off export, such as continuous or separated.
+_Avoid_: Print style, sheet mode
+
 **Take-Off Category**:
 A project-scoped grouping for Take-Off Items, such as Millwork, Ceiling, Flooring, or Walls.
 _Avoid_: Room, item category
 
 **Take-Off Item**:
-A category-scoped take-off line that captures product tag, plan, drawings, location, size, swatches, CBM, quantity, unit cost, and total cost.
+A category-scoped take-off line that captures product tag, plan, drawings, location, size, up to four swatches, CBM, quantity, unit cost, and total cost.
 _Avoid_: FF&E item, product only
 
 **Quantity Unit**:
@@ -71,7 +75,7 @@ A reusable project library entry for a finish, fabric, product material, or swat
 _Avoid_: Finish only, swatch only
 
 **Swatch**:
-A visual or named material reference shown on an FF&E Item or Take-Off Item.
+A visual material image reference shown on an FF&E Item or Take-Off Item.
 _Avoid_: Material when referring only to the visual sample
 
 **Rendering**:
@@ -86,9 +90,12 @@ _Avoid_: Screenshot, render URL
 - A **Take-Off Category** contains zero or more **Take-Off Items**.
 - A **Project** owns a shared **Material** library that can be accessed from both **FF&E** and **Take-Off Table** views.
 - An **FF&E Item** can use multiple **Materials**.
-- A **Take-Off Item** can show multiple **Swatches**.
+- A **Take-Off Item** can show up to four **Swatches**.
+- A **Take-Off Item** can have one optional **Rendering** and up to four optional **Swatches**.
+- A **Take-Off Item** owns its **Swatches** directly for this pass instead of selecting them from the shared **Material** library.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Take-Off Table** budgets.
+- A **Take-Off Table** export can use different **Export Modes** without changing the underlying **Take-Off Items**.
 
 ## Example Dialogue
 
@@ -102,5 +109,6 @@ _Avoid_: Screenshot, render URL
 
 - "Item" is overloaded. Use **FF&E Item** for room-scoped specification lines and **Take-Off Item** for category-scoped take-off rows.
 - "Category" is overloaded. Use **Take-Off Category** for table groupings and describe FF&E item category as an item attribute.
-- "Swatch" and "Material" overlap in the UI. The canonical library concept is **Material**; **Swatch** is the visual or named reference shown on a row.
+- "Swatch" and "Material" overlap in the UI. The canonical library concept is **Material**; **Swatch** is the visual reference shown on a row.
+- For this pass, **Take-Off Swatches** are not project-library **Materials**; they are direct image attachments owned by a **Take-Off Item**.
 - "FF&E Builder" is the historical repo name. The product shell is **ChillDesignStudio**, and **FF&E** is one tool inside it.

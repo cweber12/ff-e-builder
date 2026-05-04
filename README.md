@@ -49,7 +49,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **Brand** -- the application presents as ChillDesignStudio while retaining the existing project-first workspace.
 - **User information** -- the projects page includes editable user contact details for project documentation.
 - **Project tools** (`/projects/:id`) -- choose whether to open/create FF&E or a Take-Off Table for the selected project, then switch between tools from the project header.
-- **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, drawing/location fields, size entry, swatches, CBM, quantity units, integer-cent totals, Excel import, and CSV/Excel/PDF exports.
+- **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, up to four direct image swatches per row, drawing/location fields, size entry, CBM, quantity units, integer-cent totals, Excel import, and CSV/Excel/PDF exports.
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
 - **Project header** -- editable project name, client, company, location, and shared or individual budgets.
@@ -57,7 +57,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, browser print, direct PDF export, and per-item PDF export.
 - **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
 - **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/takeoff/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials.md](docs/materials.md).
-- **Images** -- project, room, FF&E item, material, and take-off item image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
+- **Images** -- project, room, FF&E item, material, take-off rendering, and take-off swatch image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes
 

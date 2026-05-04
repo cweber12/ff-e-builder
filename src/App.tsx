@@ -357,6 +357,8 @@ function ProjectTabActions({
   onImport: () => void;
   onTakeoffImport: () => void;
 }) {
+  const { data: userProfile } = useUserProfile();
+
   if (activePath.endsWith('/ffe/table')) {
     return (
       <div className="flex shrink-0 items-center gap-2">
@@ -395,8 +397,24 @@ function ProjectTabActions({
           label="Export"
           size="sm"
           onCsv={() => exportTakeoffCsv(project, takeoffCategoriesWithItems)}
-          onExcel={() => void exportTakeoffExcel(project, takeoffCategoriesWithItems)}
-          onPdf={() => void exportTakeoffPdf(project, takeoffCategoriesWithItems)}
+          onExcel={() => void exportTakeoffExcel(project, takeoffCategoriesWithItems, userProfile)}
+          onPdf={() => void exportTakeoffPdf(project, takeoffCategoriesWithItems, userProfile)}
+          pdfOptions={[
+            {
+              label: 'Continuous',
+              onSelect: () =>
+                void exportTakeoffPdf(project, takeoffCategoriesWithItems, userProfile, {
+                  mode: 'continuous',
+                }),
+            },
+            {
+              label: 'Separated',
+              onSelect: () =>
+                void exportTakeoffPdf(project, takeoffCategoriesWithItems, userProfile, {
+                  mode: 'separated',
+                }),
+            },
+          ]}
         />
         <Button type="button" variant="secondary" size="sm" onClick={onTakeoffImport}>
           Import from Excel

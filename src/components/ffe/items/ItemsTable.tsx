@@ -1606,7 +1606,7 @@ export function ItemsTableView({
 
   return (
     <TableViewStack className={className}>
-      <div className="flex justify-start">
+      <div className="flex justify-center">
         <Button type="button" variant="secondary" onClick={() => setAddRoomOpen(true)}>
           Add room
         </Button>

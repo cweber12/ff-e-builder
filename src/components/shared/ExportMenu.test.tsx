@@ -59,6 +59,50 @@ describe('ExportMenu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('opens nested PDF options when provided', async () => {
+    const user = userEvent.setup();
+    render(
+      <ExportMenu
+        onCsv={vi.fn()}
+        onExcel={vi.fn()}
+        onPdf={vi.fn()}
+        pdfOptions={[
+          { label: 'Continuous', onSelect: vi.fn() },
+          { label: 'Separated', onSelect: vi.fn() },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /export/i }));
+    await user.click(screen.getByRole('menuitem', { name: /export pdf/i }));
+
+    expect(screen.getByRole('menuitem', { name: /continuous/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /separated/i })).toBeInTheDocument();
+  });
+
+  it('calls nested PDF option handlers and closes the menus', async () => {
+    const user = userEvent.setup();
+    const onContinuous = vi.fn();
+    render(
+      <ExportMenu
+        onCsv={vi.fn()}
+        onExcel={vi.fn()}
+        onPdf={vi.fn()}
+        pdfOptions={[
+          { label: 'Continuous', onSelect: onContinuous },
+          { label: 'Separated', onSelect: vi.fn() },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /export/i }));
+    await user.click(screen.getByRole('menuitem', { name: /export pdf/i }));
+    await user.click(screen.getByRole('menuitem', { name: /continuous/i }));
+
+    expect(onContinuous).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
   it('closes dropdown when clicking outside', async () => {
     const user = userEvent.setup();
     render(

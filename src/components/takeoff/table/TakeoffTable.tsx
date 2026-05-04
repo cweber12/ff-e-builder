@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button, Modal } from '../../primitives';
 import { ImageFrame } from '../../shared/ImageFrame';
 import {
@@ -6,10 +6,12 @@ import {
   useCreateTakeoffItem,
   useDeleteTakeoffCategory,
   useDeleteTakeoffItem,
+  useDeleteImage,
+  useImages,
   useTakeoffWithItems,
+  useUploadImage,
   useUpdateTakeoffCategory,
   useUpdateTakeoffItem,
-  useMaterials,
 } from '../../../hooks';
 import {
   dollarsToCents,
@@ -17,8 +19,9 @@ import {
   formatMoney,
   parseUnitCostDollarsInput,
   type TakeoffItem,
-  type Material,
 } from '../../../types';
+import { ApiError } from '../../../lib/api';
+import { api } from '../../../lib/api';
 import {
   takeoffCategorySubtotalCents,
   takeoffLineTotalCents,
@@ -32,7 +35,6 @@ import {
   StickyGrandTotal,
   TableViewStack,
 } from '../../shared/TableViewWrappers';
-import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
 import { AddGroupModal } from '../../shared/AddGroupModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/cn';
@@ -67,7 +69,7 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
 
   return (
     <TableViewStack>
-      <div className="flex justify-start">
+      <div className="flex justify-center">
         <Button type="button" variant="secondary" onClick={() => setAddCategoryOpen(true)}>
           Add category
         </Button>
@@ -76,7 +78,6 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
       {categoriesWithItems.map((category) => (
         <TakeoffCategorySection
           key={category.id}
-          projectId={projectId}
           categoryId={category.id}
           categoryName={category.name}
           items={category.items}
@@ -224,7 +225,6 @@ function CategoryActionsMenu({
 }
 
 function TakeoffCategorySection({
-  projectId,
   categoryId,
   categoryName,
   items,
@@ -235,7 +235,6 @@ function TakeoffCategorySection({
   onCategoryDelete,
   onItemSave,
 }: {
-  projectId: string;
   categoryId: string;
   categoryName: string;
   items: TakeoffItem[];
@@ -344,7 +343,6 @@ function TakeoffCategorySection({
                 <TakeoffRow
                   key={item.id}
                   item={item}
-                  projectId={projectId}
                   onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                   onDelete={() => deleteItem.mutate(item.id)}
                 />
@@ -414,7 +412,6 @@ function TakeoffCategorySection({
                     <TakeoffRow
                       key={item.id}
                       item={item}
-                      projectId={projectId}
                       onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                       onDelete={() => deleteItem.mutate(item.id)}
                     />
@@ -431,12 +428,10 @@ function TakeoffCategorySection({
 
 function TakeoffRow({
   item,
-  projectId,
   onSave,
   onDelete,
 }: {
   item: TakeoffItem;
-  projectId: string;
   onSave: (patch: Omit<UpdateTakeoffItemInput, 'version'>) => void;
   onDelete: () => void;
 }) {
@@ -481,12 +476,8 @@ function TakeoffRow({
           }}
         />
       </td>
-      <td className="min-w-48 px-3 py-2">
-        <TakeoffMaterialCell
-          projectId={projectId}
-          item={item}
-          onSave={(swatches) => onSave({ swatches })}
-        />
+      <td className="min-w-36 px-3 py-2">
+        <TakeoffSwatchCell item={item} />
       </td>
       <NumberCell
         value={item.cbm}
@@ -614,146 +605,219 @@ function MoneyCell({
   );
 }
 
-function TakeoffMaterialCell({
-  projectId,
-  item,
-  onSave,
-}: {
-  projectId: string;
-  item: TakeoffItem;
-  onSave: (swatches: string[]) => void;
-}) {
+function TakeoffSwatchCell({ item }: { item: TakeoffItem }) {
   const [open, setOpen] = useState(false);
-  const materials = useMaterials(projectId);
-  const assignedMaterials = useMemo(
-    () =>
-      (materials.data ?? []).filter((material) =>
-        item.swatches.some(
-          (swatch) =>
-            swatch.toLowerCase() === material.name.toLowerCase() ||
-            swatch.toLowerCase() === material.materialId.toLowerCase(),
-        ),
-      ),
-    [item.swatches, materials.data],
-  );
+  const images = useImages('takeoff_swatch', item.id);
+  const swatches = (images.data ?? []).slice(0, 4);
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex max-w-60 flex-wrap gap-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-        aria-label="Edit take-off materials"
+        className="flex min-h-24 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 bg-white p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-label="Edit take-off swatches"
       >
-        {assignedMaterials.length > 0 ? (
-          assignedMaterials.map((material) => (
-            <span
-              key={material.id}
-              className="inline-flex max-w-full items-center gap-1 rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
-            >
-              <MaterialSwatchImage material={material} size="sm" />
-              <span className="truncate">{material.name}</span>
-            </span>
-          ))
-        ) : item.swatches.length ? (
-          item.swatches.map((swatch) => (
-            <span
-              key={swatch}
-              className="rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
-            >
-              {swatch}
-            </span>
-          ))
+        {swatches.length > 0 ? (
+          <div className="grid w-full gap-2">
+            {swatches.map((image) => (
+              <TakeoffSwatchThumbnail
+                key={image.id}
+                imageId={image.id}
+                alt={image.altText || `${item.productTag || 'Take-Off'} swatch`}
+                className="aspect-square w-full"
+              />
+            ))}
+          </div>
         ) : (
-          <span className="text-gray-400">Add materials</span>
+          <span className="text-center text-xs font-medium text-gray-400">Add swatches</span>
         )}
       </button>
-      <TakeoffMaterialModal
+      <TakeoffSwatchModal
         open={open}
-        materials={materials.data ?? []}
-        selected={item.swatches}
+        item={item}
         onClose={() => setOpen(false)}
-        onSave={(swatches) => {
-          setOpen(false);
-          onSave(swatches);
-        }}
+        legacySwatchCount={item.swatches.length}
       />
     </>
   );
 }
 
-function TakeoffMaterialModal({
+function TakeoffSwatchModal({
   open,
-  materials,
-  selected,
+  item,
   onClose,
-  onSave,
+  legacySwatchCount,
 }: {
   open: boolean;
-  materials: Material[];
-  selected: string[];
+  item: TakeoffItem;
   onClose: () => void;
-  onSave: (swatches: string[]) => void;
+  legacySwatchCount: number;
 }) {
-  const [draft, setDraft] = useState<string[]>(selected);
-
-  const toggle = (material: Material) => {
-    setDraft((current) =>
-      current.some((name) => name.toLowerCase() === material.name.toLowerCase())
-        ? current.filter((name) => name.toLowerCase() !== material.name.toLowerCase())
-        : [...current, material.name],
-    );
-  };
+  const images = useImages('takeoff_swatch', item.id);
+  const upload = useUploadImage('takeoff_swatch', item.id);
+  const deleteImage = useDeleteImage('takeoff_swatch', item.id);
+  const slots = [...(images.data ?? [])].slice(0, 4);
+  const [slotErrors, setSlotErrors] = useState<Record<number, string>>({});
 
   return (
-    <Modal open={open} onClose={onClose} title="Take-off materials" className="max-w-3xl">
+    <Modal open={open} onClose={onClose} title="Take-Off swatches" className="max-w-3xl">
       <div className="grid gap-4">
         <p className="text-sm text-gray-600">
-          Select from the shared project material library. Materials remain accessible from both
-          FF&E and Take-Off.
+          Add up to four direct swatch images for this Take-Off item.
         </p>
-        <div className="grid max-h-[28rem] gap-3 overflow-y-auto sm:grid-cols-2 md:grid-cols-3">
-          {materials.map((material) => {
-            const checked = draft.some(
-              (name) => name.toLowerCase() === material.name.toLowerCase(),
-            );
-            return (
-              <button
-                key={material.id}
-                type="button"
-                onClick={() => toggle(material)}
-                className={`grid gap-2 rounded-lg border p-3 text-left transition ${
-                  checked
-                    ? 'border-brand-500 bg-brand-50'
-                    : 'border-gray-200 bg-white hover:border-brand-400'
-                }`}
-              >
-                <ImageFrame
-                  entityType="material"
-                  entityId={material.id}
-                  alt={material.name}
-                  className="h-24 w-full rounded-md border-gray-200 shadow-none"
-                  compact
-                  disabled
-                />
-                <span className="text-sm font-semibold text-gray-950">{material.name}</span>
-                <span className="text-xs text-gray-500">
-                  {material.materialId || 'No material ID'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={() => onSave(draft)}>
-            Save materials
-          </Button>
+        {legacySwatchCount > 0 && slots.length === 0 ? (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            This row still has legacy text swatches. Upload images here to replace them in the new
+            export layout.
+          </p>
+        ) : null}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((slot) => (
+            <TakeoffSwatchSlot
+              key={slot}
+              image={slots[slot] ?? null}
+              error={slotErrors[slot] ?? null}
+              disabled={upload.isPending || deleteImage.isPending}
+              onUpload={async (file, existingImageId) => {
+                setSlotErrors((current) => ({ ...current, [slot]: '' }));
+                try {
+                  if (existingImageId) {
+                    await deleteImage.mutateAsync(existingImageId);
+                  }
+                  await upload.mutateAsync({
+                    file,
+                    altText: `${item.productTag || 'Take-Off'} swatch ${slot + 1}`,
+                  });
+                } catch (err) {
+                  const message =
+                    err instanceof ApiError
+                      ? ((err.body as { error?: string } | undefined)?.error ??
+                        err.message ??
+                        'Swatch upload failed')
+                      : err instanceof Error
+                        ? err.message
+                        : 'Swatch upload failed';
+                  setSlotErrors((current) => ({ ...current, [slot]: message }));
+                }
+              }}
+              onDelete={(imageId) => void deleteImage.mutateAsync(imageId)}
+            />
+          ))}
         </div>
       </div>
     </Modal>
+  );
+}
+
+function TakeoffSwatchSlot({
+  image,
+  error,
+  disabled,
+  onUpload,
+  onDelete,
+}: {
+  image: { id: string; altText: string } | null;
+  error: string | null;
+  disabled: boolean;
+  onUpload: (file: File, existingImageId: string | null) => void | Promise<void>;
+  onDelete: (imageId: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="grid gap-2 rounded-lg border border-gray-200 bg-white p-3">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => inputRef.current?.click()}
+        className="flex aspect-square items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-surface-muted text-sm font-medium text-gray-500 hover:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
+        aria-label={image ? 'Update swatch image' : 'Upload swatch image'}
+      >
+        {image ? (
+          <TakeoffSwatchThumbnail
+            imageId={image.id}
+            alt={image.altText || 'Take-Off swatch'}
+            className="h-full w-full"
+          />
+        ) : (
+          'Upload'
+        )}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void onUpload(file, image?.id ?? null);
+          event.currentTarget.value = '';
+        }}
+      />
+      {image ? (
+        <div className="flex justify-end">
+          <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(image.id)}>
+            Remove
+          </Button>
+        </div>
+      ) : null}
+      {error ? <p className="text-xs text-danger-600">{error}</p> : null}
+    </div>
+  );
+}
+
+function TakeoffSwatchThumbnail({
+  imageId,
+  alt,
+  className,
+}: {
+  imageId: string;
+  alt: string;
+  className?: string;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    let nextUrl: string | null = null;
+    setUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+
+    void api.images
+      .getContentBlob(imageId)
+      .then((blob: Blob) => {
+        if (ignore) return;
+        nextUrl = URL.createObjectURL(blob);
+        setUrl(nextUrl);
+      })
+      .catch(() => {
+        if (!ignore) setUrl(null);
+      });
+
+    return () => {
+      ignore = true;
+      if (nextUrl) URL.revokeObjectURL(nextUrl);
+    };
+  }, [imageId]);
+
+  return url ? (
+    <img
+      src={url}
+      alt={alt}
+      className={cn('rounded-sm bg-[#f5f5f2] object-cover object-center', className)}
+    />
+  ) : (
+    <div
+      className={cn(
+        'flex items-center justify-center rounded-sm bg-[#f5f5f2] text-[10px] font-semibold text-gray-400',
+        className,
+      )}
+    >
+      IMG
+    </div>
   );
 }
 
