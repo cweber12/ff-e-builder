@@ -10,7 +10,10 @@ type Sql = ReturnType<typeof getDb>;
  */
 export async function generateImportMaterialId(sql: Sql, projectId: string): Promise<string> {
   const rows = await sql`
-    SELECT COALESCE(MAX(CAST(material_id AS int) FILTER (WHERE material_id ~ '^[0-9]+$')), 0) AS max_id
+    SELECT COALESCE(
+      MAX(CAST(material_id AS int)) FILTER (WHERE material_id ~ '^[0-9]+$'),
+      0
+    ) AS max_id
     FROM materials
     WHERE project_id = ${projectId}
   `;
