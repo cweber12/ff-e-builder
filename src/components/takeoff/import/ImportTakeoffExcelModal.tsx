@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
-import { api, type CreateTakeoffItemInput } from '../../../lib/api';
+import { ApiError, api, type CreateTakeoffItemInput } from '../../../lib/api';
 import {
   TAKEOFF_IMPORT_EMPTY_MAP,
   autoMapTakeoffColumns,
@@ -169,6 +169,24 @@ export function ImportTakeoffExcelModal({
         categories.map((category) => [category.name.toLowerCase(), category.id]),
       );
 
+      // Imported project images should become the project's current image set.
+      if (parsed.projectImages.length > 0) {
+        const existingProjectImages = await api.images.list({
+          entityType: 'project',
+          entityId: projectId,
+        });
+
+        for (const image of existingProjectImages) {
+          try {
+            await api.images.delete(image.id);
+          } catch (err) {
+            warnings.push(
+              `Existing project image could not be removed: ${describeImportError(err)}`,
+            );
+          }
+        }
+      }
+
       for (const [index, image] of parsed.projectImages.entries()) {
         try {
           await api.images.upload({
@@ -178,8 +196,8 @@ export function ImportTakeoffExcelModal({
             altText: `Imported project image ${index + 1}`,
           });
           imagesImported += 1;
-        } catch {
-          warnings.push(`Project image ${index + 1} was skipped.`);
+        } catch (err) {
+          warnings.push(`Project image ${index + 1} was skipped: ${describeImportError(err)}`);
         }
       }
 
@@ -225,8 +243,10 @@ export function ImportTakeoffExcelModal({
                 altText: upload.altText,
               });
               imagesImported += 1;
-            } catch {
-              warnings.push(`An image on spreadsheet row ${row.rowNumber} was skipped.`);
+            } catch (err) {
+              warnings.push(
+                `An image on spreadsheet row ${row.rowNumber} was skipped: ${describeImportError(err)}`,
+              );
             }
           }
 
@@ -264,8 +284,10 @@ export function ImportTakeoffExcelModal({
                 altText: upload.altText,
               });
               imagesImported += 1;
-            } catch {
-              warnings.push(`An image URL on spreadsheet row ${row.rowNumber} was skipped.`);
+            } catch (err) {
+              warnings.push(
+                `An image URL on spreadsheet row ${row.rowNumber} was skipped: ${describeImportError(err)}`,
+              );
             }
           }
 
@@ -499,6 +521,12 @@ export function ImportTakeoffExcelModal({
       )}
     </Modal>
   );
+}
+
+function describeImportError(err: unknown): string {
+  if (err instanceof ApiError && err.message.trim().length > 0) return err.message;
+  if (err instanceof Error && err.message.trim().length > 0) return err.message;
+  return 'Upload failed';
 }
 
 function buildTakeoffItem(

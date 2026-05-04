@@ -439,7 +439,6 @@ function ProjectLayout() {
                 categories={takeoffCategoriesWithItems}
                 onClose={() => setTakeoffImportOpen(false)}
                 onSuccess={() => {
-                  setTakeoffImportOpen(false);
                   void queryClient.invalidateQueries();
                 }}
               />

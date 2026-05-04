@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(imports): when Take-Off import detects project images, replace existing project images with the imported set and surface per-image upload errors in the import result
 - fix(ui): use the same icon-only add control for landing-page project creation and Take-Off item creation
 - fix(projects): label project-card tool actions as Create or Open based on existing FF&E rooms and Take-Off categories, and refine card/dropdown styling
 - feat(projects): open FF&E or Take-Off directly from project-card tool dropdown and remove the intermediate tool chooser page
