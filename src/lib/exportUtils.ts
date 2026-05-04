@@ -230,29 +230,228 @@ export function exportTakeoffCsv(project: Project, categories: TakeoffCategoryWi
 
 // ─── Excel ────────────────────────────────────────────────────────────────────
 
-export function exportTableExcel(
+// Fetches the primary image data URL for each item in the given rooms.
+async function buildFfeItemImages(rooms: RoomWithItems[]): Promise<Map<string, string | null>> {
+  const items = rooms.flatMap((r) => r.items);
+  const entries = await Promise.all(
+    items.map(async (item) => {
+      const images = await api.images.list({ entityType: 'item', entityId: item.id });
+      const primary = images.find((img) => img.isPrimary) ?? images[0];
+      if (!primary) return [item.id, null] as const;
+      return [item.id, await imageAssetToPngDataUrl(primary)] as const;
+    }),
+  );
+  return new Map(entries);
+}
+
+const FFE_EXCEL_COLS = [
+  { key: 'image', label: 'Image', width: 16 },
+  { key: 'itemIdTag', label: 'Item ID', width: 14 },
+  { key: 'itemName', label: 'Item Name', width: 24 },
+  { key: 'category', label: 'Category', width: 16 },
+  { key: 'vendor', label: 'Vendor', width: 18 },
+  { key: 'model', label: 'Model', width: 16 },
+  { key: 'dimensions', label: 'Dimensions', width: 16 },
+  { key: 'qty', label: 'Qty', width: 8 },
+  { key: 'unitCost', label: 'Unit Cost', width: 13 },
+  { key: 'markup', label: 'Markup', width: 10 },
+  { key: 'sellPrice', label: 'Sell Price', width: 13 },
+  { key: 'lineTotal', label: 'Line Total', width: 13 },
+  { key: 'status', label: 'Status', width: 14 },
+  { key: 'leadTime', label: 'Lead Time', width: 12 },
+  { key: 'notes', label: 'Notes', width: 24 },
+] as const;
+
+type FfeExcelColKey = (typeof FFE_EXCEL_COLS)[number]['key'];
+
+const FFE_EXCEL_NUMERIC_KEYS: Set<FfeExcelColKey> = new Set([
+  'qty',
+  'unitCost',
+  'markup',
+  'sellPrice',
+  'lineTotal',
+]);
+
+const FFE_EXCEL_ROW_HEIGHT = 56;
+
+export async function exportTableExcel(
   project: Project,
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
-): void {
-  const wb = XLSX.utils.book_new();
+): Promise<void> {
+  const { Workbook } = await import('exceljs');
   const targetRooms = filterRoom ? [filterRoom] : rooms;
+  const imageMap = await buildFfeItemImages(targetRooms);
 
-  if (!filterRoom) {
-    const allRows = buildCsvRows(project, rooms);
-    const ws = XLSX.utils.aoa_to_sheet(allRows);
-    XLSX.utils.book_append_sheet(wb, ws, 'All Items');
-  }
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet('FF&E');
+  worksheet.views = [{ state: 'frozen', ySplit: 0 }];
+  worksheet.pageSetup = {
+    orientation: 'landscape',
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    margins: { left: 0.3, right: 0.3, top: 0.45, bottom: 0.45, header: 0.15, footer: 0.2 },
+  };
+
+  const endColumn = FFE_EXCEL_COLS.length;
+  FFE_EXCEL_COLS.forEach((col, i) => {
+    worksheet.getColumn(i + 1).width = col.width;
+  });
+
+  let currentRow = 1;
+
+  // ── Title rows ──
+  worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+  const companyCell = worksheet.getCell(currentRow, 1);
+  companyCell.value = (project.companyName?.trim() || project.name).toUpperCase();
+  companyCell.font = { name: 'Helvetica', size: 16, bold: true, color: { argb: 'FF1A6B4A' } };
+  companyCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  worksheet.getRow(currentRow).height = 22;
+  currentRow += 1;
+
+  worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+  const projectCell = worksheet.getCell(currentRow, 1);
+  projectCell.value = [project.name, project.projectLocation?.trim()].filter(Boolean).join(' | ');
+  projectCell.font = { name: 'Helvetica', size: 11, color: { argb: 'FF4B5563' } };
+  projectCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  worksheet.getRow(currentRow).height = 18;
+  currentRow += 2;
+
+  const lineIndex = FFE_EXCEL_COLS.findIndex((c) => c.key === 'lineTotal');
+  const nameIndex = FFE_EXCEL_COLS.findIndex((c) => c.key === 'itemName');
 
   for (const room of targetRooms) {
-    const rows = sortedItems(room).map((item) => itemToRow(item));
-    const ws = XLSX.utils.aoa_to_sheet([TABLE_HEADERS, ...rows]);
-    const sheetName = room.name.slice(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    // ── Room band ──
+    worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
+    const roomCell = worksheet.getCell(currentRow, 1);
+    roomCell.value = room.name.toUpperCase();
+    roomCell.font = { name: 'Helvetica', size: 11, bold: true, color: { argb: 'FF1A6B4A' } };
+    roomCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F2' } };
+    roomCell.alignment = { vertical: 'middle' };
+    worksheet.getRow(currentRow).height = 20;
+    currentRow += 1;
+
+    // ── Column headers ──
+    const headerRow = worksheet.getRow(currentRow);
+    FFE_EXCEL_COLS.forEach((col, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = col.label;
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF374151' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECEFEA' } };
+      cell.border = thinBorder();
+    });
+    headerRow.height = 24;
+    currentRow += 1;
+
+    // ── Item rows ──
+    for (const item of sortedItems(room)) {
+      const row = worksheet.getRow(currentRow);
+      row.height = FFE_EXCEL_ROW_HEIGHT;
+
+      const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
+      const values: Record<FfeExcelColKey, string> = {
+        image: '',
+        itemIdTag: item.itemIdTag ?? '',
+        itemName: item.itemName,
+        category: item.category ?? '',
+        vendor: item.vendor ?? '',
+        model: item.model ?? '',
+        dimensions: item.dimensions ?? '',
+        qty: String(item.qty),
+        unitCost: fmtMoney(item.unitCostCents),
+        markup: fmtPct(item.markupPct),
+        sellPrice: fmtMoney(sellPrice),
+        lineTotal: fmtMoney(sellPrice * item.qty),
+        status: item.status,
+        leadTime: item.leadTime ?? '',
+        notes: item.notes ?? '',
+      };
+
+      FFE_EXCEL_COLS.forEach((col, i) => {
+        const cell = row.getCell(i + 1);
+        cell.value = col.key === 'image' ? '' : values[col.key];
+        cell.font = { name: 'Helvetica', size: 9, color: { argb: 'FF374151' } };
+        cell.alignment = {
+          vertical: col.key === 'image' ? 'middle' : 'top',
+          horizontal: FFE_EXCEL_NUMERIC_KEYS.has(col.key) ? 'center' : 'left',
+          wrapText: col.key !== 'image',
+          shrinkToFit: false,
+        };
+        cell.border = thinBorder();
+      });
+
+      const imageDataUrl = imageMap.get(item.id);
+      if (imageDataUrl) {
+        const imageColIndex = 0; // 0-based index of 'image' column
+        const placement = excelPaddedCellPlacement(
+          imageColIndex,
+          currentRow,
+          FFE_EXCEL_COLS[imageColIndex].width,
+          FFE_EXCEL_ROW_HEIGHT,
+        );
+        await addExcelCoverImage(
+          workbook,
+          worksheet,
+          imageDataUrl,
+          placement,
+          placement.widthPx,
+          placement.heightPx,
+        );
+      }
+
+      currentRow += 1;
+    }
+
+    // ── Room subtotal ──
+    const subtotal = roomSubtotalCents(room.items);
+    const subtotalRow = worksheet.getRow(currentRow);
+    FFE_EXCEL_COLS.forEach((_col, i) => {
+      const cell = subtotalRow.getCell(i + 1);
+      if (i === nameIndex) {
+        cell.value = `${room.name} subtotal`;
+      } else if (i === lineIndex) {
+        cell.value = fmtMoney(subtotal);
+      } else {
+        cell.value = '';
+      }
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF1A6B4A' } };
+      cell.alignment = { vertical: 'middle', horizontal: i === lineIndex ? 'center' : 'left' };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAF9' } };
+      cell.border = thinBorder();
+    });
+    subtotalRow.height = 20;
+    currentRow += 2;
   }
 
+  // ── Grand total ──
+  const grandTotal = projectTotalCents(rooms);
+  const totalRow = worksheet.getRow(currentRow);
+  FFE_EXCEL_COLS.forEach((_col, i) => {
+    const cell = totalRow.getCell(i + 1);
+    if (i === nameIndex) {
+      cell.value = 'Grand Total';
+    } else if (i === lineIndex) {
+      cell.value = fmtMoney(grandTotal);
+    } else {
+      cell.value = '';
+    }
+    cell.font = { name: 'Helvetica', size: 10, bold: true, color: { argb: 'FF1A6B4A' } };
+    cell.alignment = { vertical: 'middle', horizontal: i === lineIndex ? 'center' : 'left' };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F2' } };
+    cell.border = thinBorder();
+  });
+  totalRow.height = 22;
+
+  const buffer = await workbook.xlsx.writeBuffer();
   const suffix = filterRoom ? `-${safeName(filterRoom.name)}` : '';
-  XLSX.writeFile(wb, `${safeName(project.name)}${suffix}-items.xlsx`);
+  triggerDownload(
+    new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+    `${safeName(project.name)}${suffix}-items.xlsx`,
+  );
 }
 
 export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): void {
@@ -331,6 +530,10 @@ type TakeoffExportRow = {
   rendering: string | null;
   planImage: string | null;
   swatches: string[];
+  /** Pre-cropped to exact PDF cell dimensions — populated by prepareTakeoffPdfImages */
+  pdfRendering: string | null;
+  pdfPlanImage: string | null;
+  pdfSwatches: string[];
 };
 
 type TakeoffExportCategorySection = {
@@ -456,6 +659,9 @@ function buildTakeoffExportDocument(
       rendering: assets.renderingByItemId.get(item.id) ?? null,
       planImage: assets.planByItemId.get(item.id) ?? null,
       swatches: assets.swatchesByItemId.get(item.id) ?? [],
+      pdfRendering: null,
+      pdfPlanImage: null,
+      pdfSwatches: [] as string[],
       values: Object.fromEntries(
         TAKEOFF_EXPORT_COLUMNS.map((column) => [
           column.key,
@@ -660,7 +866,7 @@ function drawPdfCategoryBand(doc: jsPDF, label: string, y: number) {
   doc.text(label.toUpperCase(), 16, y);
 }
 
-function addPdfCoverImage(
+async function addPdfCoverImage(
   doc: jsPDF,
   dataUrl: string,
   x: number,
@@ -668,18 +874,14 @@ function addPdfCoverImage(
   width: number,
   height: number,
 ) {
-  const imageProps = doc.getImageProperties(dataUrl);
-  const scale = Math.max(width / imageProps.width, height / imageProps.height);
-  const drawWidth = imageProps.width * scale;
-  const drawHeight = imageProps.height * scale;
-  const offsetX = x - (drawWidth - width) / 2;
-  const offsetY = y - (drawHeight - height) / 2;
-
-  doc.saveGraphicsState();
-  doc.rect(x, y, width, height);
-  doc.clip();
-  doc.addImage(dataUrl, 'PNG', offsetX, offsetY, drawWidth, drawHeight);
-  doc.restoreGraphicsState();
+  // Pre-crop on canvas so we can use a simple addImage call — no jsPDF clip() needed
+  const MM_TO_PX = 3.7795;
+  const cropped = await cropDataUrlToCover(
+    dataUrl,
+    Math.max(1, Math.round(width * MM_TO_PX)),
+    Math.max(1, Math.round(height * MM_TO_PX)),
+  );
+  doc.addImage(cropped, 'PNG', x, y, width, height);
 }
 
 function drawPdfImageFrame(doc: jsPDF, x: number, y: number, width: number, height: number) {
@@ -688,7 +890,7 @@ function drawPdfImageFrame(doc: jsPDF, x: number, y: number, width: number, heig
   doc.rect(x, y, width, height, 'FD');
 }
 
-function drawPdfProjectImageBand(doc: jsPDF, projectImages: string[], y: number) {
+async function drawPdfProjectImageBand(doc: jsPDF, projectImages: string[], y: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const bandWidth = pageWidth - 24;
   const gap = 3;
@@ -696,17 +898,17 @@ function drawPdfProjectImageBand(doc: jsPDF, projectImages: string[], y: number)
   const slotHeight = 42;
   const startX = 12;
 
-  [0, 1, 2].forEach((slot) => {
+  for (let slot = 0; slot < 3; slot++) {
     const x = startX + slot * (slotWidth + gap);
     const image = projectImages[slot];
     if (image) {
       drawPdfImageFrame(doc, x, y, slotWidth, slotHeight);
-      addPdfCoverImage(doc, image, x, y, slotWidth, slotHeight);
+      await addPdfCoverImage(doc, image, x, y, slotWidth, slotHeight);
     }
-  });
+  }
 }
 
-function drawPdfTakeoffHeaderBlock(doc: jsPDF, exportDoc: TakeoffExportDocument) {
+async function drawPdfTakeoffHeaderBlock(doc: jsPDF, exportDoc: TakeoffExportDocument) {
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(17);
@@ -726,8 +928,53 @@ function drawPdfTakeoffHeaderBlock(doc: jsPDF, exportDoc: TakeoffExportDocument)
   }
 
   if (exportDoc.projectImages.length > 0) {
-    drawPdfProjectImageBand(doc, exportDoc.projectImages, 38);
+    await drawPdfProjectImageBand(doc, exportDoc.projectImages, 38);
   }
+}
+
+// Pre-crops all row images to exact PDF cell pixel dimensions so didDrawCell
+// can use a simple doc.addImage call with no jsPDF clip() state manipulation.
+const TAKEOFF_PDF_MM_TO_PX = 3.7795;
+
+async function prepareTakeoffPdfImages(
+  exportDoc: TakeoffExportDocument,
+  columns: TakeoffExportColumn[],
+): Promise<void> {
+  const renderingCol = columns.find((c) => c.key === 'rendering');
+  const planCol = columns.find((c) => c.key === 'plan');
+  const swatchCol = columns.find((c) => c.key === 'swatch');
+  const cellHPx = Math.round(
+    (TAKEOFF_PDF_ROW_HEIGHT - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+  );
+
+  await Promise.all(
+    exportDoc.categories.flatMap((section) =>
+      section.rows.map(async (row) => {
+        if (renderingCol && row.rendering) {
+          const w = Math.round(
+            (renderingCol.pdfWidth - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+          );
+          row.pdfRendering = await cropDataUrlToCover(row.rendering, w, cellHPx);
+        }
+        if (planCol && row.planImage) {
+          const w = Math.round(
+            (planCol.pdfWidth - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+          );
+          row.pdfPlanImage = await cropDataUrlToCover(row.planImage, w, cellHPx);
+        }
+        if (swatchCol && row.swatches.length > 0) {
+          const swW = Math.round(
+            (swatchCol.pdfWidth - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+          );
+          const count = Math.min(row.swatches.length, TAKEOFF_SWATCH_LIMIT);
+          const swH = Math.round(cellHPx / count);
+          row.pdfSwatches = await Promise.all(
+            row.swatches.slice(0, TAKEOFF_SWATCH_LIMIT).map((s) => cropDataUrlToCover(s, swW, swH)),
+          );
+        }
+      }),
+    ),
+  );
 }
 
 function drawPdfBudgetSummaryPage(doc: jsPDF, project: Project, exportDoc: TakeoffExportDocument) {
@@ -860,44 +1107,42 @@ function drawPdfTakeoffTable(
       const column = columns[hook.column.index];
       if (!column) return;
 
+      const pad = TAKEOFF_PDF_CELL_PADDING;
+
       if (column.key === 'rendering') {
-        const frameX = hook.cell.x + TAKEOFF_PDF_CELL_PADDING;
-        const frameY = hook.cell.y + TAKEOFF_PDF_CELL_PADDING;
-        const frameWidth = hook.cell.width - TAKEOFF_PDF_CELL_PADDING * 2;
-        const frameHeight = hook.cell.height - TAKEOFF_PDF_CELL_PADDING * 2;
-        drawPdfImageFrame(doc, frameX, frameY, frameWidth, frameHeight);
-        if (row.rendering) {
-          addPdfCoverImage(doc, row.rendering, frameX, frameY, frameWidth, frameHeight);
+        const fw = hook.cell.width - pad * 2;
+        const fh = hook.cell.height - pad * 2;
+        drawPdfImageFrame(doc, hook.cell.x + pad, hook.cell.y + pad, fw, fh);
+        if (row.pdfRendering) {
+          doc.addImage(row.pdfRendering, 'PNG', hook.cell.x + pad, hook.cell.y + pad, fw, fh);
         }
       }
 
-      if (column.key === 'swatch') {
-        const swatches = row.swatches;
-        if (swatches.length === 0) return;
-        const frameWidth = hook.cell.width - TAKEOFF_PDF_CELL_PADDING * 2;
-        const frameHeight = hook.cell.height - TAKEOFF_PDF_CELL_PADDING * 2;
-        const gap = TAKEOFF_PDF_CELL_PADDING;
-        const swatchHeight = Math.max(
-          5,
-          Math.floor((frameHeight - gap * Math.max(0, swatches.length - 1)) / swatches.length),
+      if (column.key === 'plan' && row.pdfPlanImage) {
+        const fw = hook.cell.width - pad * 2;
+        const fh = hook.cell.height - pad * 2;
+        // White-out any text autotable may have drawn, then overlay the image
+        doc.setFillColor(255, 255, 255);
+        doc.rect(
+          hook.cell.x + 0.2,
+          hook.cell.y + 0.2,
+          hook.cell.width - 0.4,
+          hook.cell.height - 0.4,
+          'F',
         );
-        swatches.slice(0, TAKEOFF_SWATCH_LIMIT).forEach((swatch, index) => {
-          const y = hook.cell.y + TAKEOFF_PDF_CELL_PADDING + index * (swatchHeight + gap);
-          drawPdfImageFrame(
-            doc,
-            hook.cell.x + TAKEOFF_PDF_CELL_PADDING,
-            y,
-            frameWidth,
-            swatchHeight,
-          );
-          addPdfCoverImage(
-            doc,
-            swatch,
-            hook.cell.x + TAKEOFF_PDF_CELL_PADDING,
-            y,
-            frameWidth,
-            swatchHeight,
-          );
+        doc.addImage(row.pdfPlanImage, 'PNG', hook.cell.x + pad, hook.cell.y + pad, fw, fh);
+      }
+
+      if (column.key === 'swatch' && row.pdfSwatches.length > 0) {
+        const fw = hook.cell.width - pad * 2;
+        const fh = hook.cell.height - pad * 2;
+        const gap = pad;
+        const count = Math.min(row.pdfSwatches.length, TAKEOFF_SWATCH_LIMIT);
+        const swH = Math.max(5, (fh - gap * (count - 1)) / count);
+        row.pdfSwatches.forEach((swatch, i) => {
+          const sy = hook.cell.y + pad + i * (swH + gap);
+          drawPdfImageFrame(doc, hook.cell.x + pad, sy, fw, swH);
+          doc.addImage(swatch, 'PNG', hook.cell.x + pad, sy, fw, swH);
         });
       }
     },
@@ -1006,35 +1251,6 @@ async function cropDataUrlToCover(
   return canvas.toDataURL('image/png');
 }
 
-async function fitDataUrlToContain(
-  dataUrl: string,
-  targetWidth: number,
-  targetHeight: number,
-): Promise<string> {
-  const width = Math.max(1, Math.round(targetWidth));
-  const height = Math.max(1, Math.round(targetHeight));
-  const image = await loadImageElement(dataUrl);
-  const sourceWidth = image.naturalWidth || image.width || width;
-  const sourceHeight = image.naturalHeight || image.height || height;
-  const scale = Math.min(width / sourceWidth, height / sourceHeight);
-  const drawWidth = sourceWidth * scale;
-  const drawHeight = sourceHeight * scale;
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('Unable to prepare export image.');
-  context.clearRect(0, 0, width, height);
-  context.drawImage(
-    image,
-    (width - drawWidth) / 2,
-    (height - drawHeight) / 2,
-    drawWidth,
-    drawHeight,
-  );
-  return canvas.toDataURL('image/png');
-}
-
 async function addExcelCoverImage(
   workbook: Workbook,
   worksheet: Worksheet,
@@ -1045,24 +1261,6 @@ async function addExcelCoverImage(
 ) {
   const imageId = workbook.addImage({
     base64: await cropDataUrlToCover(dataUrl, targetWidth, targetHeight),
-    extension: 'png',
-  });
-  addExcelImage(worksheet, imageId, {
-    tl: { col: placement.box.left, row: placement.box.top },
-    br: { col: placement.box.right, row: placement.box.bottom },
-  });
-}
-
-async function addExcelContainImage(
-  workbook: Workbook,
-  worksheet: Worksheet,
-  dataUrl: string,
-  placement: ExcelImagePlacement,
-  targetWidth: number,
-  targetHeight: number,
-) {
-  const imageId = workbook.addImage({
-    base64: await fitDataUrlToContain(dataUrl, targetWidth, targetHeight),
     extension: 'png',
   });
   addExcelImage(worksheet, imageId, {
@@ -1155,14 +1353,18 @@ function excelEqualWidthSlotPlacement(
   const widthPixels = widths.map(excelColumnWidthToPixels);
   const totalWidthPx = widthPixels.reduce((sum, width) => sum + width, 0);
   const slotWidthPx = Math.floor(totalWidthPx / slotCount);
+  const isLastSlot = slot === slotCount - 1;
   return {
     box: {
       left: excelColumnAnchorAtWidth(widthPixels, slot * slotWidthPx),
       top: row - 1,
-      right: excelColumnAnchorAtWidth(widthPixels, (slot + 1) * slotWidthPx),
+      // Last slot extends to the very end of the last column so images cover full width
+      right: isLastSlot
+        ? widths.length
+        : excelColumnAnchorAtWidth(widthPixels, (slot + 1) * slotWidthPx),
       bottom: row,
     },
-    widthPx: slot === slotCount - 1 ? totalWidthPx - slotWidthPx * slot : slotWidthPx,
+    widthPx: isLastSlot ? totalWidthPx - slotWidthPx * slot : slotWidthPx,
     heightPx: excelRowHeightToPixels(rowHeight),
   };
 }
@@ -1340,7 +1542,7 @@ export async function exportTakeoffExcel(
             renderingExportColumn.excelWidth,
             TAKEOFF_EXCEL_ROW_HEIGHT,
           );
-          await addExcelContainImage(
+          await addExcelCoverImage(
             workbook,
             worksheet,
             rowData.rendering,
@@ -1362,7 +1564,7 @@ export async function exportTakeoffExcel(
             planExportColumn.excelWidth,
             TAKEOFF_EXCEL_ROW_HEIGHT,
           );
-          await addExcelContainImage(
+          await addExcelCoverImage(
             workbook,
             worksheet,
             rowData.planImage,
@@ -1548,13 +1750,38 @@ export async function exportMaterialsExcel(
 
 // ─── PDF – Table ──────────────────────────────────────────────────────────────
 
-export function exportTablePdf(
+const FFE_PDF_HEADERS = ['Image', ...TABLE_HEADERS];
+const FFE_PDF_IMAGE_COL_WIDTH = 18; // mm
+const FFE_PDF_IMAGE_COL_HEIGHT = 18; // mm minCellHeight
+const FFE_PDF_MM_TO_PX = 3.7795;
+
+export async function exportTablePdf(
   project: Project,
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
-): void {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+): Promise<void> {
   const targetRooms = filterRoom ? [filterRoom] : rooms;
+  const imageMap = await buildFfeItemImages(targetRooms);
+
+  // Pre-crop images to PDF cell dimensions
+  const cellWPx = Math.round((FFE_PDF_IMAGE_COL_WIDTH - 2) * FFE_PDF_MM_TO_PX);
+  const cellHPx = Math.round((FFE_PDF_IMAGE_COL_HEIGHT - 2) * FFE_PDF_MM_TO_PX);
+  const pdfImageMap = new Map<string, string>();
+  await Promise.all(
+    [...imageMap.entries()].map(async ([id, dataUrl]) => {
+      if (dataUrl) {
+        pdfImageMap.set(id, await cropDataUrlToCover(dataUrl, cellWPx, cellHPx));
+      }
+    }),
+  );
+
+  // Build ordered item list matching autotable row order
+  const allItems: Item[] = [];
+  for (const room of targetRooms) {
+    allItems.push(...sortedItems(room));
+  }
+
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const title = filterRoom ? `${project.name} — ${filterRoom.name}` : project.name;
 
   doc.setFontSize(14);
@@ -1568,6 +1795,7 @@ export function exportTablePdf(
 
   let startY = 26;
   let firstRoom = true;
+  let rowOffset = 0; // tracks absolute item index across rooms for didDrawCell lookup
 
   for (const room of targetRooms) {
     if (!firstRoom) {
@@ -1576,15 +1804,20 @@ export function exportTablePdf(
     }
     firstRoom = false;
 
-    const rows = sortedItems(room).map((item) => itemToRow(item));
+    const items = sortedItems(room);
+    // row 0 = 'image' column (empty string) + rest of item data
+    const rows = items.map((item) => ['', ...itemToRow(item)]);
     const subtotal = roomSubtotalCents(room.items);
+    const roomItemOffset = rowOffset;
+    rowOffset += items.length;
 
     autoTable(doc, {
       startY,
-      head: [TABLE_HEADERS],
+      head: [FFE_PDF_HEADERS],
       body: [
         ...rows,
         [
+          '',
           '',
           { content: room.name + ' subtotal', colSpan: 5, styles: { fontStyle: 'bold' as const } },
           '',
@@ -1604,8 +1837,11 @@ export function exportTablePdf(
         ],
       ],
       headStyles: { fillColor: [...BRAND] as [number, number, number], fontSize: 7 },
-      bodyStyles: { fontSize: 7 },
-      columnStyles: { 1: { cellWidth: 35 } },
+      bodyStyles: { fontSize: 7, minCellHeight: FFE_PDF_IMAGE_COL_HEIGHT },
+      columnStyles: {
+        0: { cellWidth: FFE_PDF_IMAGE_COL_WIDTH },
+        2: { cellWidth: 30 }, // Item Name
+      },
       didDrawPage: () => {
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
@@ -1615,6 +1851,23 @@ export function exportTablePdf(
           pageSize.getWidth() - 14,
           pageSize.getHeight() - 8,
           { align: 'right' },
+        );
+      },
+      didDrawCell: (hook) => {
+        if (hook.section !== 'body' || hook.column.index !== 0) return;
+        if (hook.row.index >= items.length) return;
+        const item = allItems[roomItemOffset + hook.row.index];
+        if (!item) return;
+        const img = pdfImageMap.get(item.id);
+        if (!img) return;
+        const pad = 1;
+        doc.addImage(
+          img,
+          'PNG',
+          hook.cell.x + pad,
+          hook.cell.y + pad,
+          hook.cell.width - pad * 2,
+          hook.cell.height - pad * 2,
         );
       },
       margin: { top: 14 },
@@ -1645,10 +1898,12 @@ export async function exportTakeoffPdf(
   const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
   const exportDoc = buildTakeoffExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
+  // Pre-crop all row images to exact cell dimensions before rendering
+  await prepareTakeoffPdfImages(exportDoc, columns);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
 
   if (mode === 'separated') {
-    drawPdfTakeoffHeaderBlock(doc, exportDoc);
+    await drawPdfTakeoffHeaderBlock(doc, exportDoc);
     for (const [index, section] of exportDoc.categories.entries()) {
       if (index > 0 || doc.getNumberOfPages() > 0) doc.addPage();
       drawPdfSmallIdentityHeader(doc, project);
@@ -1659,7 +1914,7 @@ export async function exportTakeoffPdf(
     }
     drawPdfBudgetSummaryPage(doc, project, exportDoc);
   } else {
-    drawPdfTakeoffHeaderBlock(doc, exportDoc);
+    await drawPdfTakeoffHeaderBlock(doc, exportDoc);
     let startY = exportDoc.projectImages.length > 0 ? 82 : 40;
     exportDoc.categories.forEach((section, index) => {
       const pageHeight = doc.internal.pageSize.getHeight();

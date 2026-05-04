@@ -1102,7 +1102,7 @@ function RoomActionsMenu({
                 type="button"
                 role="menuitem"
                 className={menuItemClassName}
-                onClick={() => runAction(() => exportTableExcel(project, rooms, room))}
+                onClick={() => runAction(() => void exportTableExcel(project, rooms, room))}
               >
                 Export Excel
               </button>
@@ -1110,7 +1110,7 @@ function RoomActionsMenu({
                 type="button"
                 role="menuitem"
                 className={menuItemClassName}
-                onClick={() => runAction(() => exportTablePdf(project, rooms, room))}
+                onClick={() => runAction(() => void exportTablePdf(project, rooms, room))}
               >
                 Export PDF
               </button>

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(exports): rewrite FF&E Excel export with ExcelJS to include a per-item image column alongside all data columns
+- fix(exports): rewrite FF&E PDF export to include a pre-cropped image column (18 mm) rendered via canvas pre-processing before autoTable
+- fix(exports): fix Take-Off PDF export where jsPDF v4 clip() corrupted graphics state making all table text invisible; replaced with canvas pre-crop + addImage
+- fix(exports): fix Take-Off Excel rendering and plan images squished by switching from contain-letterbox to cover-crop placement
+- fix(exports): fix Take-Off Excel project image not reaching full row width in equal-width slot layout
+- feat(images): allow Ctrl+V paste uploads directly into Project Images modal slots
 - feat(imports): show live progress bars with estimated time remaining during FF&E and Take-Off Excel imports
 - fix(imports): when Take-Off import detects project images, replace existing project images with the imported set and surface per-image upload errors in the import result
 - fix(ui): use the same icon-only add control for landing-page project creation and Take-Off item creation

@@ -497,8 +497,8 @@ function ProjectTabActions({
           label="Export all"
           size="sm"
           onCsv={() => exportTableCsv(project, roomsWithItems)}
-          onExcel={() => exportTableExcel(project, roomsWithItems)}
-          onPdf={() => exportTablePdf(project, roomsWithItems)}
+          onExcel={() => void exportTableExcel(project, roomsWithItems)}
+          onPdf={() => void exportTablePdf(project, roomsWithItems)}
         />
         <Button type="button" variant="secondary" size="sm" onClick={onImport}>
           Import from Excel

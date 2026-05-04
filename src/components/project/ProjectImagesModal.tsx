@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+} from 'react';
 import { api } from '../../lib/api';
 import { useDeleteImage, useImages, useSetPrimaryImage, useUploadImage } from '../../hooks';
 import type { ImageAsset, Project } from '../../types';
@@ -84,6 +90,7 @@ function ProjectImageSlot({
   onPrimary: (imageId: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -110,14 +117,57 @@ function ProjectImageSlot({
     [image, project.name],
   );
 
+  const handleFile = (file: File | null | undefined) => {
+    if (!file || disabled) return;
+    onUpload(file);
+  };
+
+  const handlePaste = (event: ClipboardEvent | ReactClipboardEvent) => {
+    if (disabled) return;
+    const pastedImage = Array.from(event.clipboardData?.items ?? [])
+      .find((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      ?.getAsFile();
+    if (!pastedImage) return;
+    event.preventDefault();
+    handleFile(pastedImage);
+  };
+
+  const enablePasteTarget = () => {
+    if (disabled || documentPasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => handlePaste(event);
+    documentPasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disablePasteTarget = () => {
+    const handler = documentPasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    documentPasteHandlerRef.current = null;
+  };
+
+  useEffect(
+    () => () => {
+      const handler = documentPasteHandlerRef.current;
+      if (handler) document.removeEventListener('paste', handler);
+    },
+    [],
+  );
+
   return (
     <div className="grid gap-2 rounded-lg border border-gray-200 bg-white p-3">
       <button
         type="button"
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
+        onPaste={handlePaste}
+        onMouseEnter={enablePasteTarget}
+        onMouseLeave={disablePasteTarget}
+        onFocus={enablePasteTarget}
+        onBlur={disablePasteTarget}
         className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-surface-muted text-sm font-medium text-gray-500 hover:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
         aria-label={label}
+        title={disabled ? label : `${label}. Click to upload or press Ctrl+V to paste`}
       >
         {url ? <img src={url} alt={label} className="h-full w-full object-cover" /> : 'Upload'}
       </button>
@@ -127,8 +177,7 @@ function ProjectImageSlot({
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="sr-only"
         onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) onUpload(file);
+          handleFile(event.target.files?.[0]);
           event.currentTarget.value = '';
         }}
       />

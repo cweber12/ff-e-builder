@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProjectImagesModal } from './ProjectImagesModal';
@@ -105,6 +105,28 @@ describe('ProjectImagesModal – full slot flow', () => {
     expect(previewRadios).toHaveLength(2);
     expect(previewRadios[0]).toBeChecked();
     expect(previewRadios[1]).not.toBeChecked();
+  });
+
+  it('uploads pasted image from project image slot', async () => {
+    render(<ProjectImagesModal open onClose={() => {}} project={PROJECT} />);
+
+    const slot = screen.getAllByRole('button', { name: /upload image for sample project/i })[0]!;
+    const file = new File(['paste'], 'paste.png', { type: 'image/png' });
+    const clipboardData = {
+      items: [
+        {
+          kind: 'file',
+          type: 'image/png',
+          getAsFile: () => file,
+        },
+      ],
+    };
+
+    fireEvent.paste(slot, { clipboardData });
+
+    await waitFor(() => {
+      expect(mockUploadMutate).toHaveBeenCalled();
+    });
   });
 
   it('shows error only on the slot that failed, not on other slots', async () => {
