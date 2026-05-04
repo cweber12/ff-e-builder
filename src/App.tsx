@@ -16,12 +16,14 @@ import { CatalogView } from './components/ffe/catalog/CatalogView';
 import { ItemsTable } from './components/ffe/items/ItemsTable';
 import { MaterialsView } from './components/materials/MaterialsView';
 import { DeleteProjectModal } from './components/project/DeleteProjectModal';
+import { EditProjectModal } from './components/project/EditProjectModal';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ImportExcelModal } from './components/ffe/import/ImportExcelModal';
 import { ImportTakeoffExcelModal } from './components/takeoff/import/ImportTakeoffExcelModal';
 import { NewProjectModal } from './components/project/NewProjectModal';
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProjectImagesModal } from './components/project/ProjectImagesModal';
+import { ProjectOptionsMenu } from './components/project/ProjectOptionsMenu';
 import { SummaryView } from './components/ffe/summary/SummaryView';
 import { TakeoffSummaryView } from './components/takeoff/summary/TakeoffSummaryView';
 import { TakeoffTable } from './components/takeoff/table/TakeoffTable';
@@ -38,10 +40,10 @@ import {
   exportTablePdf,
 } from './lib/exportUtils';
 import { recordSession } from './lib/telemetry';
-import { useProjects, useDeleteProject } from './hooks/shared/useProjects';
+import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
 import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
 import { useTakeoffWithItems } from './hooks/takeoff/useTakeoff';
-import { useUpdateUserProfile, useUserProfile } from './hooks/shared/useUserProfile';
+import { useUserProfile } from './hooks/shared/useUserProfile';
 import { Button } from './components/primitives';
 import type { Project, RoomWithItems, TakeoffCategoryWithItems } from './types';
 
@@ -92,120 +94,128 @@ function App() {
 
 function ProjectList() {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [editProject, setEditProject] = useState<Project | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
   const [imageProject, setImageProject] = useState<Project | null>(null);
   const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
   const { data: projects, isLoading } = useProjects();
+  const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+  const { data: userProfile } = useUserProfile();
+  const firstName = userProfile?.name?.trim().split(' ')[0];
 
   return (
     <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">
-              ChillDesignStudio
-            </p>
-            <h1 className="mt-1 text-3xl font-bold text-gray-950">Projects</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Manage FF&amp;E schedules, catalogs, materials, and take-off tables.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setNewProjectOpen(true)}
-            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          >
-            + New project
-          </button>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-950">
+            {firstName ? `Hi, ${firstName}` : 'Welcome'}
+          </h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Manage FF&amp;E schedules, catalogs, materials, and take-off tables.
+          </p>
         </div>
 
-        <UserInfoSection />
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          <aside className="h-fit rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-gray-950">Companies</h2>
+            <p className="mt-2 text-sm text-gray-500">Company management coming soon.</p>
+          </aside>
 
-        {isLoading ? (
-          <div className="mt-8 flex justify-center py-12">
-            <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
-          </div>
-        ) : !projects?.length ? (
-          <NoProjectsEmptyState onCreate={() => setNewProjectOpen(true)} />
-        ) : (
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {projects.map((project) => (
-              <article
-                key={project.id}
-                className="group relative rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-brand-500 hover:shadow-md focus-within:border-brand-500"
+          <section>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-xl font-semibold text-gray-950">Projects</h2>
+              <button
+                type="button"
+                onClick={() => setNewProjectOpen(true)}
+                className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
               >
-                <div className="p-3 pb-0">
-                  <ImageFrame
-                    entityType="project"
-                    entityId={project.id}
-                    alt={`${project.name} project`}
-                    className="h-36 w-full"
-                    disabled
-                  />
-                </div>
-                <Link
-                  to={`/projects/${project.id}`}
-                  className="block p-5 focus-visible:outline-none"
-                >
-                  {project.clientName && (
-                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
-                      {project.clientName}
-                    </p>
-                  )}
-                  <h2 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h2>
-                  {(project.companyName || project.projectLocation) && (
-                    <p className="mt-2 text-sm text-gray-500">
-                      {[project.companyName, project.projectLocation].filter(Boolean).join(' | ')}
-                    </p>
-                  )}
-                </Link>
-                <div className="absolute bottom-3 right-3">
-                  <button
-                    type="button"
-                    aria-label={`Open options for ${project.name}`}
-                    aria-expanded={openProjectMenuId === project.id}
-                    onClick={() =>
-                      setOpenProjectMenuId((current) =>
-                        current === project.id ? null : project.id,
-                      )
-                    }
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                + New project
+              </button>
+            </div>
+
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+              </div>
+            ) : !projects?.length ? (
+              <NoProjectsEmptyState onCreate={() => setNewProjectOpen(true)} />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {projects.map((project) => (
+                  <article
+                    key={project.id}
+                    className="group relative rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-brand-500 hover:shadow-md focus-within:border-brand-500"
                   >
-                    <MoreIcon />
-                  </button>
-                  {openProjectMenuId === project.id && (
-                    <div className="absolute bottom-full right-0 z-20 mb-1 min-w-44 rounded-md border border-gray-200 bg-white p-1 text-sm shadow-lg">
-                      <button
-                        type="button"
-                        className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"
-                        onClick={() => {
+                    <div className="p-3 pb-0">
+                      <ImageFrame
+                        entityType="project"
+                        entityId={project.id}
+                        alt={`${project.name} project`}
+                        className="h-36 w-full"
+                        disabled
+                      />
+                    </div>
+                    <Link
+                      to={`/projects/${project.id}`}
+                      className="block p-5 focus-visible:outline-none"
+                    >
+                      {project.clientName && (
+                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                          {project.clientName}
+                        </p>
+                      )}
+                      <h3 className="mt-3 text-xl font-semibold text-gray-950">{project.name}</h3>
+                      {(project.companyName || project.projectLocation) && (
+                        <p className="mt-2 text-sm text-gray-500">
+                          {[project.companyName, project.projectLocation]
+                            .filter(Boolean)
+                            .join(' | ')}
+                        </p>
+                      )}
+                    </Link>
+                    <div className="absolute bottom-3 right-3">
+                      <ProjectOptionsMenu
+                        projectName={project.name}
+                        open={openProjectMenuId === project.id}
+                        onToggle={() =>
+                          setOpenProjectMenuId((current) =>
+                            current === project.id ? null : project.id,
+                          )
+                        }
+                        onEdit={() => {
+                          setOpenProjectMenuId(null);
+                          setEditProject(project);
+                        }}
+                        onImages={() => {
                           setOpenProjectMenuId(null);
                           setImageProject(project);
                         }}
-                      >
-                        Project images
-                      </button>
-                      <button
-                        type="button"
-                        className="flex w-full rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50"
-                        onClick={() => {
+                        onDelete={() => {
                           setOpenProjectMenuId(null);
                           setPendingDelete(project);
                         }}
-                      >
-                        Delete project
-                      </button>
+                      />
                     </div>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
 
       <NewProjectModal open={newProjectOpen} onClose={() => setNewProjectOpen(false)} />
+      <EditProjectModal
+        project={editProject}
+        open={editProject !== null}
+        isSaving={updateProject.isPending}
+        onClose={() => setEditProject(null)}
+        onSave={async (projectId, patch) => {
+          await updateProject.mutateAsync({ id: projectId, patch });
+          setEditProject(null);
+        }}
+      />
       <DeleteProjectModal
         project={pendingDelete}
         onClose={() => setPendingDelete(null)}
@@ -226,11 +236,17 @@ function ProjectLayout() {
   const queryClient = useQueryClient();
   const { data: projects, isLoading: projectsLoading } = useProjects();
   const project = projects?.find((p) => p.id === id);
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
   const { categoriesWithItems: takeoffCategoriesWithItems, isLoading: takeoffLoading } =
     useTakeoffWithItems(id ?? '');
   const [importOpen, setImportOpen] = useState(false);
   const [takeoffImportOpen, setTakeoffImportOpen] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [editProject, setEditProject] = useState<Project | null>(null);
+  const [imageProject, setImageProject] = useState<Project | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
@@ -238,7 +254,23 @@ function ProjectLayout() {
   const isLoading = projectsLoading || dataLoading || takeoffLoading;
   return (
     <main className="min-h-screen bg-surface-muted">
-      <ProjectHeader project={project} />
+      <ProjectHeader
+        project={project}
+        optionsOpen={headerMenuOpen}
+        onToggleOptions={() => setHeaderMenuOpen((open) => !open)}
+        onEditProject={() => {
+          setHeaderMenuOpen(false);
+          if (project) setEditProject(project);
+        }}
+        onProjectImages={() => {
+          setHeaderMenuOpen(false);
+          if (project) setImageProject(project);
+        }}
+        onDeleteProject={() => {
+          setHeaderMenuOpen(false);
+          if (project) setPendingDelete(project);
+        }}
+      />
       {isLoading ? (
         <div className="flex justify-center py-24">
           <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
@@ -309,6 +341,29 @@ function ProjectLayout() {
                   setTakeoffImportOpen(false);
                   void queryClient.invalidateQueries();
                 }}
+              />
+              <EditProjectModal
+                project={editProject}
+                open={editProject !== null}
+                isSaving={updateProject.isPending}
+                onClose={() => setEditProject(null)}
+                onSave={async (projectId, patch) => {
+                  await updateProject.mutateAsync({ id: projectId, patch });
+                  setEditProject(null);
+                }}
+              />
+              <DeleteProjectModal
+                project={pendingDelete}
+                onClose={() => setPendingDelete(null)}
+                onConfirm={(projectId) => {
+                  deleteProject.mutate(projectId);
+                  setPendingDelete(null);
+                }}
+              />
+              <ProjectImagesModal
+                project={imageProject}
+                open={imageProject !== null}
+                onClose={() => setImageProject(null)}
               />
             </>
           )}
@@ -501,16 +556,6 @@ function ToolCard({
   );
 }
 
-function MoreIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-      <circle cx="5" cy="10" r="1.5" />
-      <circle cx="10" cy="10" r="1.5" />
-      <circle cx="15" cy="10" r="1.5" />
-    </svg>
-  );
-}
-
 function ProjectCatalogRoute() {
   const { project, roomsWithItems } = useProjectContext();
   return <CatalogView project={project} rooms={roomsWithItems} />;
@@ -562,77 +607,6 @@ function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
         </button>
       </div>
     </div>
-  );
-}
-
-function UserInfoSection() {
-  const { data: profile } = useUserProfile();
-  const updateProfile = useUpdateUserProfile();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [companyName, setCompanyName] = useState('');
-
-  useEffect(() => {
-    if (!profile) return;
-    setName(profile.name);
-    setEmail(profile.email);
-    setPhone(profile.phone);
-    setCompanyName(profile.companyName);
-  }, [profile]);
-
-  return (
-    <section className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between text-left"
-      >
-        <span>
-          <span className="block text-sm font-semibold text-gray-950">User information</span>
-          <span className="text-sm text-gray-500">
-            {[profile?.name, profile?.email, profile?.companyName].filter(Boolean).join(' | ') ||
-              'Add contact details for project documentation'}
-          </span>
-        </span>
-        <span className="text-sm font-medium text-brand-700">{open ? 'Close' : 'Edit'}</span>
-      </button>
-      {open && (
-        <form
-          className="mt-4 grid gap-3 md:grid-cols-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            updateProfile.mutate({ name, email, phone, companyName });
-          }}
-        >
-          {[
-            ['Name', name, setName],
-            ['Email', email, setEmail],
-            ['Phone', phone, setPhone],
-            ['Company', companyName, setCompanyName],
-          ].map(([label, value, setter]) => (
-            <label
-              key={label as string}
-              className="flex flex-col gap-1 text-sm font-medium text-gray-700"
-            >
-              {label as string}
-              <input
-                type={label === 'Email' ? 'email' : 'text'}
-                value={value as string}
-                onChange={(event) => (setter as (next: string) => void)(event.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-              />
-            </label>
-          ))}
-          <div className="flex items-end">
-            <Button type="submit" variant="primary" disabled={updateProfile.isPending}>
-              Save
-            </Button>
-          </div>
-        </form>
-      )}
-    </section>
   );
 }
 

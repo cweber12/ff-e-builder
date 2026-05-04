@@ -64,4 +64,24 @@ describe('ProjectHeader', () => {
     expect(screen.getByRole('link', { name: 'FF&E' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Take-Off Table' })).toBeInTheDocument();
   });
+
+  it('renders project options when handlers are provided', () => {
+    renderWithRouter(
+      <ProjectHeader
+        project={makeProject()}
+        optionsOpen
+        onToggleOptions={() => undefined}
+        onEditProject={() => undefined}
+        onProjectImages={() => undefined}
+        onDeleteProject={() => undefined}
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Open options for Living Room Reno' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Update project' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Project images' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete project' })).toBeInTheDocument();
+  });
 });

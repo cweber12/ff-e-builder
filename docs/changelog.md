@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(projects): add Project Options update flow from cards and project header
 - feat(ui): simplify the Project Header into a compact read-only identity and tool navigation bar
 - feat(imports): add image-aware Take-Off spreadsheet import with detected categories, column mapping, and skipped summary rows
 - docs(agents): forbid agents from reading `.env.local`

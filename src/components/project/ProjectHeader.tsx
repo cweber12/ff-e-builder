@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom';
 import type { Project } from '../../types';
+import { ProjectOptionsMenu } from './ProjectOptionsMenu';
 
 function SkeletonBar() {
   return (
@@ -19,9 +20,21 @@ function SkeletonBar() {
 interface ProjectHeaderProps {
   /** Undefined while the project is loading; renders skeleton. */
   project: Project | undefined;
+  optionsOpen?: boolean;
+  onToggleOptions?: () => void;
+  onEditProject?: () => void;
+  onProjectImages?: () => void;
+  onDeleteProject?: () => void;
 }
 
-export function ProjectHeader({ project }: ProjectHeaderProps) {
+export function ProjectHeader({
+  project,
+  optionsOpen = false,
+  onToggleOptions,
+  onEditProject,
+  onProjectImages,
+  onDeleteProject,
+}: ProjectHeaderProps) {
   if (!project) return <SkeletonBar />;
 
   const metadata = [
@@ -65,29 +78,43 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
           )}
         </div>
 
-        <nav aria-label="Project tools" className="flex gap-2 overflow-x-auto">
-          {(
-            [
-              [`/projects/${project.id}/ffe/table`, 'FF&E'],
-              [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
-            ] as const
-          ).map(([to, label]) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                [
-                  'whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition',
-                  isActive
-                    ? 'bg-white text-brand-700 shadow-sm'
-                    : 'text-white/75 hover:bg-white/10 hover:text-white',
-                ].join(' ')
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="flex items-center gap-2">
+          <nav aria-label="Project tools" className="flex gap-2 overflow-x-auto">
+            {(
+              [
+                [`/projects/${project.id}/ffe/table`, 'FF&E'],
+                [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
+              ] as const
+            ).map(([to, label]) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  [
+                    'whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition',
+                    isActive
+                      ? 'bg-white text-brand-700 shadow-sm'
+                      : 'text-white/75 hover:bg-white/10 hover:text-white',
+                  ].join(' ')
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+          {onToggleOptions && onEditProject && onProjectImages && onDeleteProject && (
+            <ProjectOptionsMenu
+              projectName={project.name}
+              open={optionsOpen}
+              align="bottom"
+              onToggle={onToggleOptions}
+              onEdit={onEditProject}
+              onImages={onProjectImages}
+              onDelete={onDeleteProject}
+              buttonClassName="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+            />
+          )}
+        </div>
       </div>
     </header>
   );

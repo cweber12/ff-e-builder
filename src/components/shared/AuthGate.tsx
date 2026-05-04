@@ -9,6 +9,8 @@ import {
   useAuthUser,
 } from '../../lib/auth';
 import { seedExampleProject } from '../../lib/seed';
+import { useUserProfile } from '../../hooks/shared/useUserProfile';
+import { UserProfileModal } from './UserProfileModal';
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 
@@ -73,7 +75,7 @@ export function SignInPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center gap-6 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-brand-500">FF&amp;E Builder</h1>
+        <h1 className="text-2xl font-bold text-brand-500">Chill Design Studio</h1>
         <p className="text-sm text-gray-500 text-center">
           Sign in to manage your projects and specifications.
         </p>
@@ -184,23 +186,78 @@ function getAuthErrorMessage(err: unknown): string {
   return 'Sign-in failed. Please try again.';
 }
 
-function UserChip() {
+function UserMenu() {
   const { user } = useAuthUser();
+  const navigate = useNavigate();
+  const { data: profile } = useUserProfile();
+  const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
   return (
-    <div className="flex items-center gap-2 text-sm">
-      {user?.photoURL && (
-        <img src={user.photoURL} alt="" className="h-7 w-7 rounded-full ring-2 ring-gray-200" />
-      )}
-      <span className="hidden max-w-[160px] truncate text-gray-600 sm:block">{user?.email}</span>
-      <button
-        type="button"
-        onClick={() => void signOut()}
-        className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-        aria-label="Sign out"
-      >
-        Sign out
-      </button>
-    </div>
+    <>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label="User menu"
+          aria-expanded={open}
+          aria-haspopup="true"
+          className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ring-2 ring-gray-200 transition-all hover:ring-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center bg-brand-100 text-xs font-semibold text-brand-700">
+              {((profile?.name ?? user?.email ?? '?')[0] ?? '?').toUpperCase()}
+            </span>
+          )}
+        </button>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden="true" />
+            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+              {(profile?.name || user?.email) && (
+                <p className="truncate border-b border-gray-100 px-3 py-1.5 text-xs text-gray-500">
+                  {profile?.name || user?.email}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setProfileOpen(true);
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Update profile
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/projects');
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Projects
+              </button>
+              <div className="my-1 border-t border-gray-100" />
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  void signOut();
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-danger-600 hover:bg-gray-50"
+              >
+                Sign out
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+      <UserProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+    </>
   );
 }
 
@@ -211,9 +268,9 @@ function TopBar() {
         to="/projects"
         className="text-sm font-bold tracking-tight text-brand-500 hover:text-brand-600 transition-colors"
       >
-        FF&amp;E Builder
+        Chill Design Studio
       </Link>
-      <UserChip />
+      <UserMenu />
     </header>
   );
 }

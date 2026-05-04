@@ -26,6 +26,10 @@ _Avoid_: Budget type, pricing mode
 The read-only Project identity and tool navigation area shown inside an open Project. Budget status belongs in Summary views, not in the Project Header.
 _Avoid_: Budget header, project editor
 
+**Project Options**:
+The explicit action menu for maintaining a Project after creation, including updating Project data, managing Project Images, and deleting the Project.
+_Avoid_: Inline project editing, hidden project settings
+
 ### FF&E
 
 **FF&E**:
@@ -107,6 +111,7 @@ _Avoid_: Raw upload, template-only import
 - A **Take-Off Item** owns its **Swatches** directly for this pass instead of selecting them from the shared **Material** library.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
 - A **Project Header** shows only included **Project** identity values and navigation between project tools.
+- **Project Options** are available from both Project Cards and the **Project Header** so Project data can be updated without making header fields inline-editable.
 - A **Take-Off Spreadsheet Import** can create missing **Take-Off Categories** from detected category headings or mapped category values.
 - A **Take-Off Spreadsheet Import** skips subtotal and financial summary rows instead of creating **Take-Off Items** from them.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Take-Off Table** budgets.

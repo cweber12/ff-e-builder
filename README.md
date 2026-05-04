@@ -53,7 +53,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, image-only Plan cells, up to four direct image swatches per row, drawing/location fields, size entry, CBM, quantity units, integer-cent totals, image-aware Excel import with column mapping, and CSV/Excel/PDF exports with equal-width project image bands plus cell-filling row imagery.
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
-- **Project header** -- compact read-only project identity and FF&E/Take-Off navigation; budget context lives in the Summary views.
+- **Project header** -- compact read-only project identity, FF&E/Take-Off navigation, and Project Options for updating project data, images, or deletion; budget context lives in the Summary views.
 - **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
 - **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, browser print, direct PDF export, and per-item PDF export.
 - **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
