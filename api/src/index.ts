@@ -19,7 +19,7 @@ app.use(
   '*',
   cors({
     origin: ['https://cweber12.github.io', 'http://localhost:5173'],
-    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Authorization', 'Content-Type'],
     maxAge: 86400,
   }),

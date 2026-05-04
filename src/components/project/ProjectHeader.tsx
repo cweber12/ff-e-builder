@@ -44,7 +44,7 @@ export function ProjectHeader({
   ].filter(Boolean);
 
   return (
-    <header className="no-print relative z-20 overflow-visible bg-brand-500 px-4 py-3 md:px-6">
+    <header className="no-print relative z-10 overflow-visible bg-brand-500 px-4 py-3 md:px-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <Link

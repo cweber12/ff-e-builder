@@ -263,7 +263,7 @@ function UserMenu() {
 
 function TopBar() {
   return (
-    <header className="no-print sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
       <Link
         to="/projects"
         className="text-sm font-bold tracking-tight text-brand-500 hover:text-brand-600 transition-colors"
