@@ -33,7 +33,8 @@ const emptyDraft: MaterialDraft = {
 
 export function MaterialsView({
   project,
-  tool = 'ffe',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  tool: _tool = 'ffe',
   roomsWithItems = [],
   takeoffCategoriesWithItems = [],
 }: MaterialsViewProps) {
@@ -44,7 +45,7 @@ export function MaterialsView({
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
-  const [scope, setScope] = useState<'all' | 'ffe' | 'takeoff'>(tool);
+  const [scope, setScope] = useState<'all' | 'ffe' | 'takeoff' | 'material' | 'swatch'>('all');
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingMaterial = materials.data?.find((material) => material.id === editingId);
@@ -64,7 +65,17 @@ export function MaterialsView({
       .filter((material) => {
         if (scope === 'all') return true;
         if (scope === 'ffe') return ffeIds.has(material.id);
-        return takeoffIds.has(material.id);
+        if (scope === 'takeoff') return takeoffIds.has(material.id);
+        if (scope === 'material')
+          return (
+            material.finishClassification === 'material' ||
+            material.finishClassification === 'hybrid'
+          );
+        if (scope === 'swatch')
+          return (
+            material.finishClassification === 'swatch' || material.finishClassification === 'hybrid'
+          );
+        return true;
       })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -123,14 +134,18 @@ export function MaterialsView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
-            {(['all', 'ffe', 'takeoff'] as const).map((nextScope) => (
+            {(['all', 'material', 'swatch'] as const).map((nextScope) => (
               <button
                 key={nextScope}
                 type="button"
                 className={scope === nextScope ? activeToggleClassName : toggleClassName}
                 onClick={() => setScope(nextScope)}
               >
-                {nextScope === 'all' ? 'All' : nextScope === 'ffe' ? 'FF&E' : 'Take-Off'}
+                {nextScope === 'all'
+                  ? 'All Finishes'
+                  : nextScope === 'material'
+                    ? 'Materials'
+                    : 'Swatches'}
               </button>
             ))}
           </div>

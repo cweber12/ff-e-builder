@@ -90,6 +90,18 @@ _Avoid_: Section, bucket, container
 The unified project-scoped library of reusable finish entries accessible from both FF&E and Take-Off Table views.
 _Avoid_: Material library, swatch library, swatches tab
 
+**Finish Library Sections**:
+The standard library filters used in UI: Materials, Swatches, and All Finishes.
+_Avoid_: Generic "All" when context is the Finish Library
+
+**Finish Classification**:
+The explicit classification on a Finish Library entry used to separate library sections and defaults for import workflows (Material, Swatch, or Hybrid).
+_Avoid_: Implicit type by table only
+
+**Import Material ID**:
+For spreadsheet imports, when material*id is missing, generate a plain numeric string using the next integer after the current highest numeric material_id in the Project (for example: 1, 2, 3).
+\_Avoid*: Zero-padded generated IDs
+
 **Material**:
 A Finish Library entry assigned to an FF&E Item — a finish, fabric, or product material reference used in furniture specification.
 _Avoid_: Swatch when referring to the FF&E context
@@ -120,7 +132,7 @@ _Avoid_: Raw upload, template-only import
 - A **Room** contains zero or more **FF&E Items**.
 - A **Take-Off Category** contains zero or more **Take-Off Items**.
 - A **Project** owns a **Finish Library** — a single pool of entries accessible from both **FF&E** and **Take-Off Table** views.
-- **Materials** (FF&E) and **Swatches** (Take-Off) are stored as the same entity type in the **Finish Library**; the distinction is semantic based on context of use.
+- **Materials** (FF&E) and **Swatches** (Take-Off) are stored as the same entity type in the **Finish Library** and carry a **Finish Classification** used for section filters and import defaults.
 - When a **Finish Library** entry is copied from one context to the other (e.g., a **Material** used as a **Swatch**), a new independent entry is created with identical image and text fields.
 - An **FF&E Item** can reference multiple **Materials** from the **Finish Library**.
 - A **Take-Off Item** can reference multiple **Swatches** from the **Finish Library**.

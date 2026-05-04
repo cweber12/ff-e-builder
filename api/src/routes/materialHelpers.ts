@@ -3,6 +3,40 @@ import { getDb } from '../lib/db';
 
 type Sql = ReturnType<typeof getDb>;
 
+/**
+ * Returns the next monotonic material_id for import within a project.
+ * Reads the highest existing numeric material_id, adds 1.
+ * Never backfills gaps — always max + 1.
+ */
+export async function generateImportMaterialId(sql: Sql, projectId: string): Promise<string> {
+  const rows = await sql`
+    SELECT COALESCE(MAX(CAST(material_id AS int) FILTER (WHERE material_id ~ '^[0-9]+$')), 0) AS max_id
+    FROM materials
+    WHERE project_id = ${projectId}
+  `;
+  const max = Number((rows[0] as { max_id?: number }).max_id ?? 0);
+  return String(max + 1);
+}
+
+/**
+ * Returns the next "Import N" name for import within a project.
+ * Reads the highest existing N from names matching "Import <number>", adds 1.
+ * Never backfills gaps — always max + 1.
+ */
+export async function generateImportName(sql: Sql, projectId: string): Promise<string> {
+  const rows = await sql`
+    SELECT COALESCE(
+      MAX(CAST(SUBSTRING(name FROM '^Import ([0-9]+)$') AS int))
+        FILTER (WHERE name ~ '^Import [0-9]+$'),
+      0
+    ) AS max_n
+    FROM materials
+    WHERE project_id = ${projectId}
+  `;
+  const max = Number((rows[0] as { max_n?: number }).max_n ?? 0);
+  return `Import ${max + 1}`;
+}
+
 export function normalizeSwatches(swatches: string[] | undefined, swatchHex: string | undefined) {
   const defaultSwatch = '#D9D4C8';
   const candidates = swatches?.length ? swatches : [swatchHex ?? defaultSwatch];

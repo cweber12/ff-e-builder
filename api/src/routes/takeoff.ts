@@ -16,7 +16,13 @@ import {
   getOwnedMaterialContext,
   getOwnedTakeoffItemContext,
 } from '../lib/ownership';
-import { selectMaterialById, setMaterialSwatches, normalizeSwatches } from './materialHelpers';
+import {
+  selectMaterialById,
+  setMaterialSwatches,
+  normalizeSwatches,
+  generateImportMaterialId,
+  generateImportName,
+} from './materialHelpers';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -297,20 +303,26 @@ router.post('/takeoff/items/:id/materials/new', async (c) => {
 
   const sql = getDb(c.env);
   const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
+  const classification = parsed.data.finish_classification ?? 'swatch';
+  const name = parsed.data.name.trim() || (await generateImportName(sql, itemCtx.projectId));
+  const materialId =
+    parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemCtx.projectId));
   const matRows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex, finish_classification)
     VALUES (
       ${itemCtx.projectId},
-      ${parsed.data.name},
-      ${parsed.data.material_id},
+      ${name},
+      ${materialId},
       ${parsed.data.description},
-      ${swatches[0] ?? '#D9D4C8'}
+      ${swatches[0] ?? '#D9D4C8'},
+      ${classification}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
       material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
       description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex  = EXCLUDED.swatch_hex
+      swatch_hex  = EXCLUDED.swatch_hex,
+      finish_classification = EXCLUDED.finish_classification
     RETURNING *
   `;
   const mat = matRows[0] as { id: string };

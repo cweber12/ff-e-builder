@@ -18,6 +18,8 @@ import { getDb } from '../lib/db';
 import {
   countMaterialReferences,
   forkMaterial,
+  generateImportMaterialId,
+  generateImportName,
   normalizeSwatches,
   selectMaterialById,
   setMaterialSwatches,
@@ -73,20 +75,26 @@ async function createProjectMaterial(c: AppContext) {
 
   const sql = getDb(c.env);
   const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
+  const classification = parsed.data.finish_classification ?? 'material';
+  const name = parsed.data.name.trim() || (await generateImportName(sql, projectId));
+  const materialId =
+    parsed.data.material_id.trim() || (await generateImportMaterialId(sql, projectId));
   const rows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex, finish_classification)
     VALUES (
       ${projectId},
-      ${parsed.data.name},
-      ${parsed.data.material_id},
+      ${name},
+      ${materialId},
       ${parsed.data.description},
-      ${swatches[0] ?? DEFAULT_SWATCH}
+      ${swatches[0] ?? DEFAULT_SWATCH},
+      ${classification}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
       material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
       description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex = EXCLUDED.swatch_hex
+      swatch_hex = EXCLUDED.swatch_hex,
+      finish_classification = EXCLUDED.finish_classification
     RETURNING *
   `;
   const material = rows[0] as MaterialRow;
@@ -125,7 +133,8 @@ router.patch('/materials/:id', async (c) => {
       name = COALESCE(${parsed.data.name ?? null}, name),
       material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
       description = COALESCE(${parsed.data.description ?? null}, description),
-      swatch_hex = COALESCE(${swatches?.[0] ?? null}, swatch_hex)
+      swatch_hex = COALESCE(${swatches?.[0] ?? null}, swatch_hex),
+      finish_classification = COALESCE(${parsed.data.finish_classification ?? null}, finish_classification)
     WHERE id = ${id}
     RETURNING *
   `;
@@ -202,20 +211,26 @@ router.post('/items/:itemId/materials/new', async (c) => {
 
   const sql = getDb(c.env);
   const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
+  const classification = parsed.data.finish_classification ?? 'material';
+  const name = parsed.data.name.trim() || (await generateImportName(sql, itemContext.projectId));
+  const materialId =
+    parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemContext.projectId));
   const materialRows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex, finish_classification)
     VALUES (
       ${itemContext.projectId},
-      ${parsed.data.name},
-      ${parsed.data.material_id},
+      ${name},
+      ${materialId},
       ${parsed.data.description},
-      ${swatches[0] ?? DEFAULT_SWATCH}
+      ${swatches[0] ?? DEFAULT_SWATCH},
+      ${classification}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
       material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
       description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex = EXCLUDED.swatch_hex
+      swatch_hex = EXCLUDED.swatch_hex,
+      finish_classification = EXCLUDED.finish_classification
     RETURNING *
   `;
   const material = materialRows[0] as { id: string };

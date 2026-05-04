@@ -78,6 +78,8 @@ export interface Item {
   materials?: Material[];
 }
 
+export type FinishClassification = 'material' | 'swatch' | 'hybrid';
+
 export interface Material {
   id: string;
   project_id: string;
@@ -86,6 +88,7 @@ export interface Material {
   description: string;
   swatch_hex: string;
   swatches?: string[];
+  finish_classification: FinishClassification;
   created_at: string;
   updated_at: string;
 }
@@ -223,12 +226,15 @@ export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
 const SwatchHexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 
+const finishClassifications = ['material', 'swatch', 'hybrid'] as const;
+
 export const CreateMaterialSchema = z.object({
-  name: z.string().min(1).max(255),
+  name: z.string().max(255).default(''),
   material_id: z.string().max(100).default(''),
   description: z.string().max(1000).default(''),
   swatch_hex: SwatchHexSchema.default('#D9D4C8'),
   swatches: z.array(SwatchHexSchema).max(1).optional(),
+  finish_classification: z.enum(finishClassifications).default('material'),
 });
 export type CreateMaterialInput = z.infer<typeof CreateMaterialSchema>;
 

@@ -18,6 +18,7 @@ export type ColumnMap = {
   leadTime: string | null;
   notes: string | null;
   room: string | null;
+  materials: string | null;
 };
 
 export type ParsedSpreadsheet = {
@@ -25,7 +26,7 @@ export type ParsedSpreadsheet = {
   rows: Record<string, string>[];
 };
 
-export type ImportedItem = CreateItemInput & { roomName: string | null };
+export type ImportedItem = CreateItemInput & { roomName: string | null; materialsRaw: string };
 
 function spreadsheetValueToString(value: unknown): string {
   if (value === null || value === undefined) return '';
@@ -89,6 +90,15 @@ const FIELD_ALIASES: Record<keyof ColumnMap, string[]> = {
   leadTime: ['lead time', 'delivery', 'delivery time', 'lead', 'lead time (weeks)', 'weeks'],
   notes: ['notes', 'note', 'comments', 'comment', 'description', 'remarks', 'memo'],
   room: ['room', 'space', 'area', 'location', 'zone', 'room name'],
+  materials: [
+    'material',
+    'materials',
+    'finish',
+    'finishes',
+    'swatch',
+    'swatches',
+    'finish library',
+  ],
 };
 
 // ─── Parsing ──────────────────────────────────────────────────────────────────
@@ -202,6 +212,7 @@ export function transformRow(row: Record<string, string>, mapping: ColumnMap): I
     leadTime: get('leadTime') || null,
     notes: get('notes') || null,
     roomName,
+    materialsRaw: get('materials'),
   };
 }
 

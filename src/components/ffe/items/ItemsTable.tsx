@@ -1359,6 +1359,7 @@ function RoomItemsSection({
       {materialItem && (
         <MaterialLibraryModal
           open
+          context="ffe"
           projectId={projectId}
           roomId={room.id}
           item={materialItem}

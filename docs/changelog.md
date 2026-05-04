@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): add `finish_classification` field (`material | swatch | hybrid`) to the Finish Library — migration 0009, API schemas, client types, and all create/update routes updated
+- feat(materials): Finish Library scope toggles renamed from All/FF&E/Take-Off to All Finishes/Materials/Swatches; filter uses `finish_classification` not assignment references
+- fix(imports): Replace broken `takeoff_swatch` entity type in Take-Off Excel import with material create + image upload flow so swatch images import correctly into the Finish Library
+- feat(imports): Take-Off swatch import auto-generates `material_id` (numeric max+1) and name (Import N, monotonic) when not supplied — never backfills gaps
+- feat(imports): Add optional Materials/Finishes column mapping to FF&E Excel import; comma-separated material names are created and assigned to each imported item
+- fix(ui): add missing `context="ffe"` prop to `MaterialLibraryModal` in `AddItemDrawer` and `ItemsTable`
+
 - fix(takeoff): stop auto-seeding default Take-Off categories from the API so new Take-Off Tables start empty
 - fix(takeoff): add a zero-category empty state message on the Take-Off Table while keeping the grand total visible
 - fix(takeoff): refactor Take-Off table inline cell inputs to click-to-edit pattern — border shown only when cell is empty or in edit mode, matching FF&E table UX; save on blur/Enter, cancel on Escape for all text and numeric cells

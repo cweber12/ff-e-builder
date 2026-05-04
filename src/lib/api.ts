@@ -149,6 +149,7 @@ interface RawMaterial {
   description: string;
   swatch_hex: string;
   swatches?: string[];
+  finish_classification: 'material' | 'swatch' | 'hybrid';
   created_at: string;
   updated_at: string;
 }
@@ -276,6 +277,7 @@ const mapMaterial = (r: RawMaterial): Material => ({
   description: r.description,
   swatchHex: r.swatch_hex,
   swatches: r.swatches?.length ? r.swatches : [r.swatch_hex],
+  finishClassification: r.finish_classification ?? 'material',
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -373,6 +375,7 @@ export type CreateMaterialInput = {
   description?: string;
   swatchHex?: string;
   swatches?: string[];
+  finishClassification?: 'material' | 'swatch' | 'hybrid';
 };
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
@@ -759,6 +762,7 @@ export const api = {
           description: input.description ?? '',
           swatch_hex: input.swatchHex ?? '#D9D4C8',
           swatches: input.swatches,
+          finish_classification: input.finishClassification ?? 'material',
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -792,6 +796,7 @@ export const api = {
           description: input.description ?? '',
           swatch_hex: input.swatchHex ?? '#D9D4C8',
           swatches: input.swatches,
+          finish_classification: input.finishClassification ?? 'material',
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -828,6 +833,7 @@ export const api = {
           name: input.name,
           material_id: input.materialId,
           description: input.description,
+          finish_classification: input.finishClassification ?? 'swatch',
         }),
       }).then((r) => mapMaterial(r.material)),
 

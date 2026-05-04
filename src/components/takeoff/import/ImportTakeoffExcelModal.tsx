@@ -276,12 +276,30 @@ export function ImportTakeoffExcelModal({
               entityType: 'takeoff_plan' as const,
               altText: `Imported plan image ${index + 1}`,
             })),
-            ...selectedImages(row, mapping.swatches, 4).map((image, index) => ({
-              image,
-              entityType: 'takeoff_swatch' as const,
-              altText: `Imported swatch ${index + 1}`,
-            })),
           ];
+
+          // Swatch images become material library entries
+          const swatchImages = selectedImages(row, mapping.swatches, 4);
+          for (const [index, swatchImage] of swatchImages.entries()) {
+            try {
+              const material = await api.materials.createAndAssignToTakeoffItem(item.id, {
+                name: '',
+                materialId: '',
+                finishClassification: 'swatch',
+              });
+              await api.images.upload({
+                entityType: 'material',
+                entityId: material.id,
+                file: imageToFile(swatchImage, `swatch-${material.id}-${index + 1}.png`),
+                altText: `Imported swatch ${index + 1}`,
+              });
+              imagesImported += 1;
+            } catch (err) {
+              warnings.push(
+                `Swatch image ${index + 1} on row ${row.rowNumber} was skipped: ${describeImportError(err)}`,
+              );
+            }
+          }
 
           for (const upload of rowImageUploads) {
             try {
@@ -314,13 +332,6 @@ export function ImportTakeoffExcelModal({
                 entityType: 'takeoff_plan' as const,
                 altText: `Imported plan URL ${index + 1}`,
               })),
-            ...imageUrlsFromValue(getValue(row, mapping.swatches))
-              .slice(0, Math.max(0, 4 - selectedImages(row, mapping.swatches, 4).length))
-              .map((url, index) => ({
-                url,
-                entityType: 'takeoff_swatch' as const,
-                altText: `Imported swatch URL ${index + 1}`,
-              })),
           ];
 
           for (const upload of urlUploads) {
@@ -336,6 +347,33 @@ export function ImportTakeoffExcelModal({
             } catch (err) {
               warnings.push(
                 `An image URL on spreadsheet row ${row.rowNumber} was skipped: ${describeImportError(err)}`,
+              );
+            }
+          }
+
+          // Swatch URLs become material library entries
+          const swatchUrls = imageUrlsFromValue(getValue(row, mapping.swatches)).slice(
+            0,
+            Math.max(0, 4 - swatchImages.length),
+          );
+          for (const [index, url] of swatchUrls.entries()) {
+            try {
+              const file = await imageUrlToFile(url);
+              const material = await api.materials.createAndAssignToTakeoffItem(item.id, {
+                name: '',
+                materialId: '',
+                finishClassification: 'swatch',
+              });
+              await api.images.upload({
+                entityType: 'material',
+                entityId: material.id,
+                file,
+                altText: `Imported swatch URL ${index + 1}`,
+              });
+              imagesImported += 1;
+            } catch (err) {
+              warnings.push(
+                `Swatch URL ${index + 1} on row ${row.rowNumber} was skipped: ${describeImportError(err)}`,
               );
             }
           }

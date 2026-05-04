@@ -41,6 +41,7 @@ const FIELD_LABELS: Record<keyof ColumnMap, string> = {
   leadTime: 'Lead Time',
   notes: 'Notes',
   room: 'Room',
+  materials: 'Materials / Finishes',
 };
 
 const SKIP = '__skip__';
@@ -62,6 +63,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
     leadTime: null,
     notes: null,
     room: null,
+    materials: null,
   });
   const [defaultRoomId, setDefaultRoomId] = useState<string>(rooms[0]?.id ?? '');
   const [error, setError] = useState('');
@@ -92,6 +94,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
       leadTime: null,
       notes: null,
       room: null,
+      materials: null,
     });
     setDefaultRoomId(rooms[0]?.id ?? '');
     setError('');
@@ -135,6 +138,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         leadTime: autoMap.leadTime ?? null,
         notes: autoMap.notes ?? null,
         room: autoMap.room ?? null,
+        materials: autoMap.materials ?? null,
       });
       setStep('map');
     } catch {
@@ -182,7 +186,8 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
       setProgress({ processed: 0, total: items.length, startedAt: Date.now() });
 
       for (const item of items) {
-        const { roomName, ...itemInput } = item;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { roomName, materialsRaw: _materialsRaw, ...itemInput } = item;
 
         let roomId = defaultRoomId;
 
@@ -211,7 +216,25 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         }
 
         try {
-          await api.items.create(roomId, itemInput);
+          const created = await api.items.create(roomId, itemInput);
+          // Import material entries from the materials column if mapped
+          if (mapping.materials) {
+            const materialNames = item.materialsRaw
+              .split(/[,;|]+/)
+              .map((s) => s.trim())
+              .filter(Boolean);
+            for (const matName of materialNames) {
+              try {
+                await api.materials.createAndAssignToItem(created.id, {
+                  name: matName,
+                  materialId: '',
+                  finishClassification: 'material',
+                });
+              } catch {
+                // Non-fatal: material import errors don't block item import
+              }
+            }
+          }
           imported += 1;
         } catch {
           skipped += 1;

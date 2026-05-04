@@ -70,6 +70,7 @@ const FULL_MAP: ColumnMap = {
   leadTime: 'Lead',
   notes: 'Notes',
   room: 'Room',
+  materials: null,
 };
 
 describe('transformRow', () => {

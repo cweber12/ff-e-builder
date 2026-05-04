@@ -344,6 +344,7 @@ export function AddItemDrawer({
       </form>
       <MaterialLibraryModal
         open={materialLibraryOpen}
+        context="ffe"
         projectId={projectId}
         roomId={roomId}
         priorityMaterialIds={priorityMaterialIds}
