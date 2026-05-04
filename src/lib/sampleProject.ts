@@ -681,6 +681,11 @@ export async function seedProjectSampleContent(
         safeSampleStep(
           `take-off swatch ${item.rowSeed.productTag}-${swatchIndex + 1}`,
           async () => {
+            const material = await api.materials.createAndAssignToTakeoffItem(item.itemId, {
+              name: swatchLabel,
+              materialId: '',
+              finishClassification: 'swatch',
+            });
             const file = await createPlaceholderImageFile({
               label: swatchLabel,
               subtitle: `Swatch ${swatchIndex + 1}`,
@@ -690,8 +695,8 @@ export async function seedProjectSampleContent(
               palette: paletteByIndex(item.paletteIndex + swatchIndex + 1),
             });
             await api.images.upload({
-              entityType: 'takeoff_swatch',
-              entityId: item.itemId,
+              entityType: 'material',
+              entityId: material.id,
               file,
               altText: swatchLabel,
             });
