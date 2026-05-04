@@ -568,11 +568,70 @@ function TakeoffRow({
         {formatMoney(cents(lineTotal))}
       </td>
       <td className={cn('px-3 py-2', stickyOptionsCellClassName)}>
-        <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
-          Delete
-        </Button>
+        <TakeoffItemActionsMenu
+          itemName={item.productTag || item.description || 'item'}
+          onDelete={onDelete}
+        />
       </td>
     </tr>
+  );
+}
+
+function TakeoffItemActionsMenu({
+  itemName,
+  onDelete,
+}: {
+  itemName: string;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const runAction = (action: () => void) => {
+    setOpen(false);
+    action();
+  };
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Open options for ${itemName}`}
+        title={`Open options for ${itemName}`}
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        <MoreIcon />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className={cn(menuItemClassName, 'text-danger-600')}
+            onClick={() => runAction(onDelete)}
+          >
+            Delete item
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
