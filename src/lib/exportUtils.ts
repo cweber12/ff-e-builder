@@ -14,6 +14,7 @@ import { BRAND_RGB } from './constants';
 import { api } from './api';
 import { cents, formatMoney } from '../types';
 import type {
+  CropParams,
   ImageAsset,
   Item,
   Material,
@@ -772,7 +773,22 @@ async function blobToPngDataUrl(blob: Blob): Promise<string> {
 
 async function imageAssetToPngDataUrl(image: ImageAsset): Promise<string | null> {
   try {
-    return await blobToPngDataUrl(await api.images.getContentBlob(image.id));
+    const dataUrl = await blobToPngDataUrl(await api.images.getContentBlob(image.id));
+    if (!dataUrl) return null;
+    if (
+      image.cropX !== null &&
+      image.cropY !== null &&
+      image.cropWidth !== null &&
+      image.cropHeight !== null
+    ) {
+      return cropDataUrlToRect(dataUrl, {
+        cropX: image.cropX,
+        cropY: image.cropY,
+        cropWidth: image.cropWidth,
+        cropHeight: image.cropHeight,
+      });
+    }
+    return dataUrl;
   } catch {
     return null;
   }
@@ -1211,6 +1227,30 @@ async function loadImageElement(src: string): Promise<HTMLImageElement> {
     image.onerror = () => reject(new Error('Unable to load export image.'));
     image.src = src;
   });
+}
+
+async function cropDataUrlToRect(
+  dataUrl: string,
+  params: CropParams,
+  maxOutputPx = 1600,
+): Promise<string> {
+  const image = await loadImageElement(dataUrl);
+  const srcW = image.naturalWidth || image.width;
+  const srcH = image.naturalHeight || image.height;
+  const cropX = params.cropX * srcW;
+  const cropY = params.cropY * srcH;
+  const cropW = params.cropWidth * srcW;
+  const cropH = params.cropHeight * srcH;
+  const scale = Math.min(1, maxOutputPx / Math.max(cropW, cropH));
+  const outW = Math.max(1, Math.round(cropW * scale));
+  const outH = Math.max(1, Math.round(cropH * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Unable to prepare export image.');
+  ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, outW, outH);
+  return canvas.toDataURL('image/png');
 }
 
 async function cropDataUrlToCover(

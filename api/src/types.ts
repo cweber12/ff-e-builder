@@ -160,6 +160,10 @@ export interface ImageAsset {
   byte_size: number;
   alt_text: string;
   is_primary: boolean;
+  crop_x: number | null;
+  crop_y: number | null;
+  crop_width: number | null;
+  crop_height: number | null;
   created_at: string;
   updated_at: string;
 }

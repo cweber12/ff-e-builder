@@ -1,7 +1,7 @@
 ﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import type { ImageAsset, ImageEntityType } from '../../types';
+import type { CropParams, ImageAsset, ImageEntityType } from '../../types';
 
 export const imageKeys = {
   all: ['images'] as const,
@@ -78,5 +78,21 @@ export function useSetPrimaryImage(entityType: ImageEntityType, entityId: string
       );
     },
     onError: (err) => toast.error(`Preview image update failed: ${err.message}`),
+  });
+}
+
+export function useUpdateImageCrop(entityType: ImageEntityType, entityId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ imageId, params }: { imageId: string; params: CropParams | null }) =>
+      api.images.setCrop(imageId, params),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<ImageAsset[]>(
+        imageKeys.forEntity(entityType, entityId),
+        (old) => old?.map((img) => (img.id === updated.id ? updated : img)) ?? [updated],
+      );
+    },
+    onError: (err) => toast.error(`Crop update failed: ${err.message}`),
   });
 }

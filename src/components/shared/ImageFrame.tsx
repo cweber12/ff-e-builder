@@ -12,9 +12,13 @@ import {
   isPersistedImageEntityId,
   useDeleteImage,
   useImages,
+  useUpdateImageCrop,
   useUploadImage,
 } from '../../hooks/shared/useImages';
-import type { ImageEntityType } from '../../types';
+import type { CropParams, ImageEntityType } from '../../types';
+import { CROP_ASPECT, CROPPABLE_ENTITY_TYPES } from '../../types';
+import { ImageOptionsMenu } from './ImageOptionsMenu';
+import { CropModal } from './CropModal';
 
 type ImageFrameProps = {
   entityType: ImageEntityType;
@@ -47,15 +51,18 @@ export function ImageFrame({
 }: ImageFrameProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
   const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
   const canLoad = isPersistedImageEntityId(entityId);
   const images = useImages(entityType, entityId);
   const upload = useUploadImage(entityType, entityId);
   const deleteImage = useDeleteImage(entityType, entityId);
+  const updateCrop = useUpdateImageCrop(entityType, entityId);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const primaryImage = useMemo(
     () => images.data?.find((image) => image.isPrimary) ?? images.data?.[0] ?? null,
@@ -68,7 +75,30 @@ export function ImageFrame({
     !disabled && (Boolean(primaryImage) || Boolean(fallbackUrl && onFallbackDelete));
   const isBusy = images.isLoading || imageLoading || upload.isPending || deleteImage.isPending;
   const isRoomImage = entityType === 'room';
-  const imageFitClassName = entityType === 'project' ? 'object-cover' : 'object-contain';
+
+  const cropParams: CropParams | null = useMemo(() => {
+    if (
+      primaryImage?.cropX !== null &&
+      primaryImage?.cropX !== undefined &&
+      primaryImage?.cropY !== null &&
+      primaryImage?.cropY !== undefined &&
+      primaryImage?.cropWidth !== null &&
+      primaryImage?.cropWidth !== undefined &&
+      primaryImage?.cropHeight !== null &&
+      primaryImage?.cropHeight !== undefined
+    ) {
+      return {
+        cropX: primaryImage.cropX,
+        cropY: primaryImage.cropY,
+        cropWidth: primaryImage.cropWidth,
+        cropHeight: primaryImage.cropHeight,
+      };
+    }
+    return null;
+  }, [primaryImage]);
+
+  const isCroppable = CROPPABLE_ENTITY_TYPES.has(entityType) && Boolean(primaryImage);
+  const cropAspect = CROP_ASPECT[entityType] ?? 4 / 3;
 
   useEffect(() => {
     const node = frameRef.current;
@@ -185,43 +215,66 @@ export function ImageFrame({
     }
   };
 
-  const content = (
-    <>
-      {displayUrl ? (
-        <img
-          src={displayUrl}
-          alt={primaryImage?.altText || alt}
-          className={cn('h-full w-full', imageFitClassName, 'object-center', imageClassName)}
-        />
-      ) : (
-        <div
-          className={cn(
-            'flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400',
-            !isRoomImage && 'bg-surface-muted',
-            placeholderClassName,
-          )}
-        >
-          {isBusy ? (
-            <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-          ) : placeholderContent ? (
-            placeholderContent
-          ) : (
-            <>
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'flex items-center justify-center rounded-full border border-dashed border-gray-300 bg-white text-gray-500',
-                  compact ? 'h-5 w-5 text-xs' : 'h-9 w-9 text-lg',
-                )}
-              >
-                +
-              </span>
-              {!compact && canUpload && <span className="text-xs font-medium">Upload image</span>}
-            </>
-          )}
-        </div>
+  const handleCropSave = (params: CropParams) => {
+    if (!primaryImage) return;
+    updateCrop.mutate(
+      { imageId: primaryImage.id, params },
+      { onSuccess: () => setCropModalOpen(false) },
+    );
+  };
+
+  const imageElement = displayUrl ? (
+    cropParams ? (
+      <img
+        src={displayUrl}
+        alt={primaryImage?.altText || alt}
+        className={cn('absolute', imageClassName)}
+        style={{
+          width: `${100 / cropParams.cropWidth}%`,
+          height: `${100 / cropParams.cropHeight}%`,
+          left: `${(-cropParams.cropX / cropParams.cropWidth) * 100}%`,
+          top: `${(-cropParams.cropY / cropParams.cropHeight) * 100}%`,
+        }}
+      />
+    ) : (
+      <img
+        src={displayUrl}
+        alt={primaryImage?.altText || alt}
+        className={cn(
+          'h-full w-full',
+          entityType === 'project' ? 'object-cover' : 'object-contain',
+          'object-center',
+          imageClassName,
+        )}
+      />
+    )
+  ) : (
+    <div
+      className={cn(
+        'flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400',
+        !isRoomImage && 'bg-surface-muted',
+        placeholderClassName,
       )}
-    </>
+    >
+      {isBusy ? (
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      ) : placeholderContent ? (
+        placeholderContent
+      ) : (
+        <>
+          <span
+            aria-hidden="true"
+            className={cn(
+              'flex items-center justify-center rounded-full border border-dashed border-gray-300 bg-white text-gray-500',
+              compact ? 'h-5 w-5 text-xs' : 'h-9 w-9 text-lg',
+            )}
+          >
+            +
+          </span>
+          {!compact && canUpload && <span className="text-xs font-medium">Upload image</span>}
+        </>
+      )}
+    </div>
   );
 
   return (
@@ -247,42 +300,17 @@ export function ImageFrame({
         )}
       >
         {hasImage && !disabled ? (
-          <>
-            <button
-              type="button"
-              className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              aria-label={`Open image actions for ${alt}`}
-              aria-expanded={menuOpen}
-              title={`Open image actions for ${alt}`}
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              {content}
-            </button>
-            {menuOpen && (
-              <div className="absolute left-2 top-2 z-20 min-w-28 rounded-md border border-gray-200 bg-white p-1 text-xs shadow-lg">
-                {canUpload && (
-                  <button
-                    type="button"
-                    className="flex w-full items-center rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                    onClick={() => inputRef.current?.click()}
-                    title={`Update ${alt}`}
-                  >
-                    Update
-                  </button>
-                )}
-                {canRemove && (
-                  <button
-                    type="button"
-                    className="flex w-full items-center rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500"
-                    onClick={handleRemove}
-                    title={`Remove ${alt}`}
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            )}
-          </>
+          <button
+            ref={menuAnchorRef}
+            type="button"
+            className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            aria-label={`Open image actions for ${alt}`}
+            aria-expanded={menuOpen}
+            title={`Open image actions for ${alt}`}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {imageElement}
+          </button>
         ) : canUpload ? (
           <button
             type="button"
@@ -291,10 +319,10 @@ export function ImageFrame({
             title={`Upload or paste image for ${alt}`}
             onClick={() => inputRef.current?.click()}
           >
-            {content}
+            {imageElement}
           </button>
         ) : (
-          content
+          imageElement
         )}
         {canUpload && (
           <input
@@ -309,6 +337,31 @@ export function ImageFrame({
           />
         )}
       </div>
+
+      <ImageOptionsMenu
+        anchorRef={menuAnchorRef}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        canUpdate={canUpload}
+        canCrop={isCroppable && canUpload}
+        canDelete={canRemove}
+        onUpdate={() => inputRef.current?.click()}
+        onCrop={() => setCropModalOpen(true)}
+        onDelete={handleRemove}
+      />
+
+      {cropModalOpen && displayUrl && (
+        <CropModal
+          open={cropModalOpen}
+          onClose={() => setCropModalOpen(false)}
+          imageUrl={displayUrl}
+          aspect={cropAspect}
+          initialCrop={cropParams}
+          onSave={handleCropSave}
+          isSaving={updateCrop.isPending}
+        />
+      )}
+
       {uploadError ? <p className="text-xs text-danger-600">{uploadError}</p> : null}
     </div>
   );

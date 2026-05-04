@@ -1,5 +1,6 @@
 import { getCurrentIdToken } from './auth';
 import type {
+  CropParams,
   ImageAsset,
   ImageEntityType,
   Item,
@@ -92,6 +93,10 @@ interface RawImageAsset {
   byte_size: number;
   alt_text: string;
   is_primary: boolean;
+  crop_x: number | null;
+  crop_y: number | null;
+  crop_width: number | null;
+  crop_height: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -220,6 +225,10 @@ const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   byteSize: r.byte_size,
   altText: r.alt_text,
   isPrimary: r.is_primary,
+  cropX: r.crop_x ?? null,
+  cropY: r.crop_y ?? null,
+  cropWidth: r.crop_width ?? null,
+  cropHeight: r.crop_height ?? null,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -745,6 +754,21 @@ export const api = {
     setPrimary: (imageId: string): Promise<ImageAsset> =>
       apiFetch<{ image: RawImageAsset }>(`/api/v1/images/${imageId}/primary`, {
         method: 'PATCH',
+      }).then((r) => mapImageAsset(r.image)),
+
+    setCrop: (imageId: string, params: CropParams | null): Promise<ImageAsset> =>
+      apiFetch<{ image: RawImageAsset }>(`/api/v1/images/${imageId}/crop`, {
+        method: 'PATCH',
+        body: JSON.stringify(
+          params
+            ? {
+                crop_x: params.cropX,
+                crop_y: params.cropY,
+                crop_width: params.cropWidth,
+                crop_height: params.cropHeight,
+              }
+            : { crop_x: null, crop_y: null, crop_width: null, crop_height: null },
+        ),
       }).then((r) => mapImageAsset(r.image)),
   },
   materials: {

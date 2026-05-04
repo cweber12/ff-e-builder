@@ -21,21 +21,6 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 
 ## Planned
 
-### Materials
-
-- Swatches displayed for each item's material.
-- Option to set the material for an individual item.
-
-### Material library
-
-- Library of project-specific materials with swatches and material names.
-- Add materials to the library with swatch, name, ID, and description.
-- Materials should have an image associated with them.
-- Select from the library when setting a material for an item.
-- Edit swatch and name for existing library entries.
-- Delete entries from the library.
-- Automatically add a material to the library when assigned to an item for the first time.
-
 ### Remove background from item images _(requires S3)_
 
 - Per-image option to strip the background.
@@ -52,11 +37,6 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 
 - Workflow for clients to approve or reject items.
 
-### Import from Excel — images
-
-- Import item images embedded in an Excel spreadsheet.
-  _(Basic Excel import is already complete.)_
-
 ### Company information
 
 - Set company name, address, phone number, email, and logo.
@@ -65,22 +45,10 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 
 - Set project name, client name, description, deadline, location, project image, notes, and file attachments.
 
-### Take-off table
-
-- Walls, flooring, ceiling, and paint quantities.
-- Uniform cell size; images scale to fit.
-
 ### Record item revisions and indicate in table
 
 - Revision badge in cell where revision was made (size, swatch, etc.c)
 - should open revision log for that item and indicate whether the revision impacted cost.
-
-### Project Header
-
-- text fields should not be editable.
-- project metadata should be less prominent and muted. omit empty metadata.
-- remove budget section completely
-- organize project header intuitively to improve user experience and reduce header height.
 
 ### Summary tab
 
@@ -90,3 +58,5 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 ### Cells with no values
 
 - should more clearly indicate input and popup fields.
+
+### individual image updates.

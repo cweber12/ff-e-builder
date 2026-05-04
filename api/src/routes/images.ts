@@ -347,6 +347,60 @@ router.post('/', async (c) => {
   }
 });
 
+router.patch('/:id/crop', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+
+  let image: ImageAsset;
+  try {
+    image = await getOwnedImage(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const body: unknown = await c.req.json<unknown>().catch(() => null);
+  if (!body || typeof body !== 'object') return c.json({ error: 'Invalid body' }, 400);
+
+  const { crop_x, crop_y, crop_width, crop_height } = body as Record<string, unknown>;
+  const clearing =
+    crop_x === null && crop_y === null && crop_width === null && crop_height === null;
+
+  if (!clearing) {
+    if (
+      typeof crop_x !== 'number' ||
+      crop_x < 0 ||
+      crop_x >= 1 ||
+      typeof crop_y !== 'number' ||
+      crop_y < 0 ||
+      crop_y >= 1 ||
+      typeof crop_width !== 'number' ||
+      crop_width <= 0 ||
+      crop_width > 1 ||
+      typeof crop_height !== 'number' ||
+      crop_height <= 0 ||
+      crop_height > 1
+    ) {
+      return c.json({ error: 'Invalid crop parameters' }, 400);
+    }
+  }
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    UPDATE image_assets
+    SET crop_x = ${clearing ? null : (crop_x as number)},
+        crop_y = ${clearing ? null : (crop_y as number)},
+        crop_width = ${clearing ? null : (crop_width as number)},
+        crop_height = ${clearing ? null : (crop_height as number)},
+        updated_at = now()
+    WHERE id = ${id} AND owner_uid = ${uid}
+    RETURNING *
+  `;
+
+  if (!rows[0]) return c.json({ error: 'Not found' }, 404);
+  void image;
+  return c.json({ image: imageRow(rows[0]) });
+});
+
 router.patch('/:id/primary', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');

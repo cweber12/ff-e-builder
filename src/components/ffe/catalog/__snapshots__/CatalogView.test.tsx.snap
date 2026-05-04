@@ -1,0 +1,203 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture item 1`] = `
+<article
+  aria-label="Channel Lounge Chair catalog page"
+  class="catalog-page mx-auto grid bg-white text-gray-950 shadow-xl"
+>
+  <header
+    class="catalog-header"
+  >
+    <span>
+      Ocean House
+    </span>
+    <span>
+      Harbor & Pine
+    </span>
+  </header>
+  <section
+    class="catalog-body"
+  >
+    <div
+      class="catalog-image-wrap"
+    >
+      <div
+        class="grid gap-1"
+      >
+        <div
+          class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-full w-full border-0 shadow-none"
+        >
+          <button
+            aria-expanded="false"
+            aria-label="Open image actions for Channel Lounge Chair"
+            class="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            title="Open image actions for Channel Lounge Chair"
+            type="button"
+          >
+            <img
+              alt="Channel Lounge Chair"
+              class="h-full w-full object-contain object-center catalog-image"
+              src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=1200&q=80"
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      class="catalog-details"
+    >
+      <div>
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600"
+        >
+          Living Room
+        </p>
+        <h1
+          class="mt-3 text-[28px] font-semibold leading-tight text-gray-950"
+        >
+          Channel Lounge Chair
+        </h1>
+        <span
+          class="mt-4 inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700"
+        >
+          Seating
+        </span>
+      </div>
+      <div
+        class="h-px bg-brand-500/40"
+      />
+      <dl
+        class="catalog-data-grid"
+      >
+        <div>
+          <dt>
+            Vendor
+          </dt>
+          <dd>
+            Atelier Forma
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Dimensions
+          </dt>
+          <dd>
+            32"W x 34"D x 30"H
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Materials
+          </dt>
+          <dd>
+            Boucle upholstery, white oak base
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Color
+          </dt>
+          <dd>
+            Ivory
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Designer
+          </dt>
+          <dd>
+            Mara Vale
+          </dd>
+        </div>
+      </dl>
+      <div
+        class="grid gap-2"
+      >
+        <p
+          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
+        >
+          Material library
+        </p>
+        <div
+          class="flex flex-wrap gap-2"
+        >
+          <span
+            class="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
+          >
+            <div
+              class="grid gap-1"
+            >
+              <div
+                class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-6 w-6 rounded-full shrink-0 border-gray-200 shadow-none "
+              >
+                <div
+                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
+                >
+                  <span
+                    class="text-[10px] font-semibold text-gray-400"
+                  >
+                    IMG
+                  </span>
+                </div>
+              </div>
+            </div>
+            Ivory boucle
+          </span>
+        </div>
+      </div>
+      <div
+        class="catalog-price-block"
+      >
+        <div>
+          <span>
+            Unit cost
+          </span>
+          <strong>
+            $2,450.00
+          </strong>
+        </div>
+        <div>
+          <span>
+            Markup
+          </span>
+          <strong>
+            30%
+          </strong>
+        </div>
+        <div
+          class="sell-price"
+        >
+          <span>
+            Sell price
+          </span>
+          <strong>
+            $3,185.00
+          </strong>
+        </div>
+      </div>
+      <p
+        class="catalog-notes"
+      >
+        Use performance fabric and confirm COM yardage before order.
+      </p>
+    </div>
+  </section>
+  <footer
+    class="catalog-footer"
+  >
+    <span>
+      1
+       of 
+      3
+    </span>
+    <span>
+      ocean-house
+    </span>
+    <span
+      class="font-mono text-xs text-gray-500"
+    >
+      LR-CH-01
+    </span>
+  </footer>
+</article>
+`;

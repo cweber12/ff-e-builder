@@ -16,6 +16,7 @@ vi.mock('../../hooks', () => ({
   useUploadImage: vi.fn(() => ({ mutate: mockUploadMutate, isPending: false })),
   useDeleteImage: vi.fn(() => ({ mutate: mockDeleteMutate, isPending: false })),
   useSetPrimaryImage: vi.fn(() => ({ mutate: mockPrimaryMutate, isPending: false })),
+  useUpdateImageCrop: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));
 
 vi.mock('../../lib/api', () => ({
@@ -36,6 +37,10 @@ const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   byteSize: 1024,
   altText: 'Sample Project image',
   isPrimary: false,
+  cropX: null,
+  cropY: null,
+  cropWidth: null,
+  cropHeight: null,
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',
   ...overrides,

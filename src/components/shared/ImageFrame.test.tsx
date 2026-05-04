@@ -11,6 +11,7 @@ vi.mock('../../hooks/shared/useImages', () => ({
   useImages: vi.fn(() => ({ data: [], isLoading: false })),
   useUploadImage: vi.fn(() => ({ mutate: mockUploadMutate, isPending: false })),
   useDeleteImage: vi.fn(() => ({ mutate: mockDeleteMutate, isPending: false })),
+  useUpdateImageCrop: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   isPersistedImageEntityId: vi.fn(() => true),
 }));
 
