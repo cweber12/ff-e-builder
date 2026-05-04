@@ -42,6 +42,10 @@ import { cn } from '../../../lib/cn';
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
   'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
+const stickyTotalHeaderClassName = 'sticky right-24 z-20 bg-white';
+const stickyOptionsHeaderClassName = 'sticky right-0 z-30 bg-white w-24 min-w-24';
+const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
+const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
 
 type TakeoffTableProps = {
   projectId: string;
@@ -356,8 +360,15 @@ function TakeoffCategorySection({
                   'Unit Cost',
                   'Total Cost',
                   '',
-                ].map((heading) => (
-                  <th key={heading} className="border-b border-gray-200 px-3 py-2 font-semibold">
+                ].map((heading, index) => (
+                  <th
+                    key={heading}
+                    className={cn(
+                      'border-b border-gray-200 px-3 py-2 font-semibold',
+                      index === 11 && stickyTotalHeaderClassName,
+                      index === 12 && stickyOptionsHeaderClassName,
+                    )}
+                  >
                     {heading}
                   </th>
                 ))}
@@ -422,10 +433,14 @@ function TakeoffCategorySection({
                       'Unit Cost',
                       'Total Cost',
                       '',
-                    ].map((heading) => (
+                    ].map((heading, index) => (
                       <th
                         key={heading}
-                        className="border-b border-gray-100 px-3 py-3 font-semibold"
+                        className={cn(
+                          'border-b border-gray-100 px-3 py-3 font-semibold',
+                          index === 11 && stickyTotalHeaderClassName,
+                          index === 12 && stickyOptionsHeaderClassName,
+                        )}
                       >
                         {heading}
                       </th>
@@ -533,8 +548,10 @@ function TakeoffRow({
         valueCents={item.unitCostCents}
         onSave={(unitCostCents) => onSave({ unitCostCents })}
       />
-      <td className="px-3 py-2 font-semibold text-gray-900">{formatMoney(cents(lineTotal))}</td>
-      <td className="px-3 py-2">
+      <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
+        {formatMoney(cents(lineTotal))}
+      </td>
+      <td className={cn('px-3 py-2', stickyOptionsCellClassName)}>
         <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
           Delete
         </Button>
