@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(takeoff): stop auto-seeding default Take-Off categories from the API so new Take-Off Tables start empty
+- fix(takeoff): add a zero-category empty state message on the Take-Off Table while keeping the grand total visible
+- fix(takeoff): refactor Take-Off table inline cell inputs to click-to-edit pattern — border shown only when cell is empty or in edit mode, matching FF&E table UX; save on blur/Enter, cancel on Escape for all text and numeric cells
+- fix(takeoff): harmonize Take-Off inline row input styling with FF&E-style visible bordered controls
+- fix(imports): use neutral Imported fallback category naming in Take-Off spreadsheet import instead of Millwork
 - fix(exports): rewrite FF&E Excel export with ExcelJS to include a per-item image column alongside all data columns
 - fix(exports): rewrite FF&E PDF export to include a pre-cropped image column (18 mm) rendered via canvas pre-processing before autoTable
 - fix(exports): fix Take-Off PDF export where jsPDF v4 clip() corrupted graphics state making all table text invisible; replaced with canvas pre-crop + addImage

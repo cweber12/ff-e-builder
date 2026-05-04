@@ -1154,13 +1154,17 @@ function addExcelImage(
   imageId: number,
   position: {
     tl: { col: number; row: number };
-    br: { col: number; row: number };
+    ext: { width: number; height: number };
   },
 ) {
+  // 'oneCellAnchor' with explicit ext dimensions: image is placed at tl and
+  // rendered at exactly ext.width × ext.height pixels (converted to EMUs
+  // internally by ExcelJS at 9525 EMU/px at 96 DPI). The embedded PNG retains
+  // full resolution so quality is preserved when the user resizes in Excel.
   worksheet.addImage(imageId, {
-    ...position,
-    editAs: 'oneCell',
-  } as never);
+    tl: position.tl,
+    ext: position.ext,
+  });
 }
 
 type ExcelImageBox = {
@@ -1220,6 +1224,7 @@ async function cropDataUrlToCover(
   dataUrl: string,
   targetWidth: number,
   targetHeight: number,
+  maxOutputPx = 1600,
 ): Promise<string> {
   const width = Math.max(1, Math.round(targetWidth));
   const height = Math.max(1, Math.round(targetHeight));
@@ -1242,12 +1247,18 @@ async function cropDataUrlToCover(
     cropY = (sourceHeight - cropHeight) / 2;
   }
 
+  // Output at original source resolution (for print quality), capped at maxOutputPx.
+  // targetWidth/targetHeight are used only for the aspect-ratio crop above.
+  const scale = Math.min(1, maxOutputPx / Math.max(cropWidth, cropHeight));
+  const outWidth = Math.max(1, Math.round(cropWidth * scale));
+  const outHeight = Math.max(1, Math.round(cropHeight * scale));
+
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = outWidth;
+  canvas.height = outHeight;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Unable to prepare export image.');
-  context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
+  context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, outWidth, outHeight);
   return canvas.toDataURL('image/png');
 }
 
@@ -1265,7 +1276,7 @@ async function addExcelCoverImage(
   });
   addExcelImage(worksheet, imageId, {
     tl: { col: placement.box.left, row: placement.box.top },
-    br: { col: placement.box.right, row: placement.box.bottom },
+    ext: { width: placement.widthPx, height: placement.heightPx },
   });
 }
 
@@ -1319,7 +1330,7 @@ async function addExcelCircularCoverImage(
   });
   addExcelImage(worksheet, imageId, {
     tl: { col: placement.box.left, row: placement.box.top },
-    br: { col: placement.box.right, row: placement.box.bottom },
+    ext: { width: placement.widthPx, height: placement.heightPx },
   });
 }
 
@@ -1898,8 +1909,18 @@ export async function exportTakeoffPdf(
   const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
   const exportDoc = buildTakeoffExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
-  // Pre-crop all row images to exact cell dimensions before rendering
-  await prepareTakeoffPdfImages(exportDoc, columns);
+
+  // Scale column widths so the table fills the full A3 landscape printable width.
+  // The header band already spans pageWidth − 24 mm; this makes the table match it.
+  const PDF_PAGE_WIDTH = 420; // A3 landscape
+  const PDF_MARGIN = 12;
+  const pdfAvailableWidth = PDF_PAGE_WIDTH - PDF_MARGIN * 2;
+  const pdfTotalWidth = columns.reduce((sum, col) => sum + col.pdfWidth, 0);
+  const pdfWidthScale = pdfTotalWidth > 0 ? pdfAvailableWidth / pdfTotalWidth : 1;
+  const scaledColumns = columns.map((col) => ({ ...col, pdfWidth: col.pdfWidth * pdfWidthScale }));
+
+  // Pre-crop images using the scaled cell aspect ratios so didDrawCell dimensions match.
+  await prepareTakeoffPdfImages(exportDoc, scaledColumns);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
 
   if (mode === 'separated') {
@@ -1908,7 +1929,7 @@ export async function exportTakeoffPdf(
       if (index > 0 || doc.getNumberOfPages() > 0) doc.addPage();
       drawPdfSmallIdentityHeader(doc, project);
       drawPdfCategoryBand(doc, section.category.name, 18);
-      drawPdfTakeoffTable(doc, project, section, columns, 24, {
+      drawPdfTakeoffTable(doc, project, section, scaledColumns, 24, {
         drawOverflowHeader: true,
       });
     }
@@ -1924,7 +1945,7 @@ export async function exportTakeoffPdf(
         startY = 18;
       }
       drawPdfCategoryBand(doc, section.category.name, startY);
-      drawPdfTakeoffTable(doc, project, section, columns, startY + 6, {
+      drawPdfTakeoffTable(doc, project, section, scaledColumns, startY + 6, {
         drawOverflowHeader: index === 0 || doc.getCurrentPageInfo().pageNumber > 1,
       });
       startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;

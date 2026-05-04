@@ -69,9 +69,24 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 
 - Walls, flooring, ceiling, and paint quantities.
 - Uniform cell size; images scale to fit.
-- PDF export should render Take-Off Plan Images after the PDF layout cleanup pass.
 
-### Catalog navigation
+### Record item revisions and indicate in table
 
-- Replace Previous / Next buttons with a more intuitive control.
-- Slide animation when navigating between catalog pages.
+- Revision badge in cell where revision was made (size, swatch, etc.c)
+- should open revision log for that item and indicate whether the revision impacted cost.
+
+### Project Header
+
+- text fields should not be editable.
+- project metadata should be less prominent and muted. omit empty metadata.
+- remove budget section completely
+- organize project header intuitively to improve user experience and reduce header height.
+
+### Summary tab
+
+- include 'Add expenses' where the user can add expenses for shipping and duties, assembly and installation, sales tax.
+- users should be able to add and name additional expenses that are added to budget reports.
+
+### Cells with no values
+
+- should more clearly indicate input and popup fields.

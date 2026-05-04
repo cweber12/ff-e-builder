@@ -93,7 +93,7 @@ export function ImportTakeoffExcelModal({
   const [step, setStep] = useState<Step>('upload');
   const [parsed, setParsed] = useState<ParsedTakeoffSpreadsheet | null>(null);
   const [mapping, setMapping] = useState<TakeoffImportColumnMap>(TAKEOFF_IMPORT_EMPTY_MAP);
-  const [defaultCategoryName, setDefaultCategoryName] = useState(categories[0]?.name ?? 'Millwork');
+  const [defaultCategoryName, setDefaultCategoryName] = useState(categories[0]?.name ?? 'Imported');
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -109,7 +109,7 @@ export function ImportTakeoffExcelModal({
     setStep('upload');
     setParsed(null);
     setMapping(TAKEOFF_IMPORT_EMPTY_MAP);
-    setDefaultCategoryName(categories[0]?.name ?? 'Millwork');
+    setDefaultCategoryName(categories[0]?.name ?? 'Imported');
     setError('');
     setImporting(false);
     setResult(null);
@@ -252,7 +252,7 @@ export function ImportTakeoffExcelModal({
 
       for (const row of importPlan.importableRows) {
         const categoryName =
-          getValue(row, mapping.category) || row.categoryName || defaultCategoryName || 'Millwork';
+          getValue(row, mapping.category) || row.categoryName || defaultCategoryName || 'Imported';
         let categoryId = categoryNameToId.get(categoryName.toLowerCase());
         if (!categoryId) {
           const category = await api.takeoff.createCategory(projectId, {

@@ -13,7 +13,8 @@
       "PowerShell(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Force | Where-Object { $_.PSIsContainer -eq $false } | Select-Object -ExpandProperty FullName | Select-Object -First 50)",
       "Bash(pnpm add *)",
       "Bash(pnpm typecheck *)",
-      "PowerShell(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Exclude \"node_modules\", \".git\", \"dist\", \"build\", \".next\" | Where-Object { $_.Extension -in '.ts', '.tsx', '.sql', '.json', '.md' } | Select-Object -ExpandProperty FullName | ForEach-Object { $_ -replace [regex]::Escape\\('c:\\\\Projects\\\\_current-projects\\\\ffe-builder\\\\'\\), '' } | Sort-Object)"
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Exclude \"node_modules\", \".git\", \"dist\", \"build\", \".next\" | Where-Object { $_.Extension -in '.ts', '.tsx', '.sql', '.json', '.md' } | Select-Object -ExpandProperty FullName | ForEach-Object { $_ -replace [regex]::Escape\\('c:\\\\Projects\\\\_current-projects\\\\ffe-builder\\\\'\\), '' } | Sort-Object)",
+      "Bash(npx tsc *)"
     ]
   }
 }

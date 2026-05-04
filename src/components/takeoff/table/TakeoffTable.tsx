@@ -40,6 +40,8 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/cn';
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
+const editInputClassName =
+  'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
 
 type TakeoffTableProps = {
   projectId: string;
@@ -74,6 +76,15 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
           Add category
         </Button>
       </div>
+
+      {categoriesWithItems.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
+          <p className="text-sm font-semibold text-gray-900">No Take-Off Categories yet</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Create a category to start your Take-Off Table.
+          </p>
+        </div>
+      ) : null}
 
       {categoriesWithItems.map((category) => (
         <TakeoffCategorySection
@@ -484,7 +495,12 @@ function TakeoffRow({
         <button
           type="button"
           onClick={() => setSizeOpen(true)}
-          className="min-h-9 w-40 rounded-md border border-gray-200 px-2 py-1 text-left text-sm text-gray-700 hover:border-brand-500 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className={cn(
+            'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+            item.sizeLabel
+              ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
+              : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
+          )}
         >
           {item.sizeLabel || 'Set size'}
         </button>
@@ -507,31 +523,12 @@ function TakeoffRow({
         onSave={(cbm) => onSave({ cbm })}
         className="w-24"
       />
-      <td className="px-3 py-2">
-        <div className="flex w-40 gap-2">
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={item.quantity}
-            onChange={(event) => onNumberChange(event, (quantity) => onSave({ quantity }))}
-            className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none"
-            aria-label="Quantity"
-          />
-          <select
-            value={item.quantityUnit}
-            onChange={(event) => onSave({ quantityUnit: event.target.value })}
-            className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none"
-            aria-label="Quantity unit"
-          >
-            {quantityUnits.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
-        </div>
-      </td>
+      <QuantityCell
+        quantity={item.quantity}
+        quantityUnit={item.quantityUnit}
+        onSaveQuantity={(quantity) => onSave({ quantity })}
+        onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+      />
       <MoneyCell
         valueCents={item.unitCostCents}
         onSave={(unitCostCents) => onSave({ unitCostCents })}
@@ -555,17 +552,73 @@ function EditableCell({
   onSave: (value: string) => void;
   className?: string;
 }) {
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(value);
+  }, [value, editing]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  const commit = () => {
+    if (draft !== value) onSave(draft);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(value);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    const isEmpty = !value;
+    return (
+      <td className={cn('px-3 py-2', className)}>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setEditing(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className={cn(
+            'block w-full cursor-pointer rounded px-2 py-1 text-sm',
+            isEmpty
+              ? 'border border-gray-300 text-gray-400 hover:border-brand-500'
+              : 'text-gray-700 hover:bg-brand-50',
+          )}
+        >
+          {isEmpty ? '-' : value}
+        </span>
+      </td>
+    );
+  }
+
   return (
-    <td className={`px-3 py-2 ${className ?? ''}`}>
+    <td className={cn('px-3 py-2', className)}>
       <input
+        ref={inputRef}
         type="text"
         value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={() => {
-          if (draft !== value) onSave(draft);
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancel();
+          }
         }}
-        className="w-full rounded-md border border-transparent px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:bg-white focus:outline-none"
+        className={cn('w-full', editInputClassName)}
       />
     </td>
   );
@@ -582,15 +635,69 @@ function NumberCell({
   step: string;
   className?: string;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(String(value));
+  }, [value, editing]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  const commit = () => {
+    const n = Number(draft);
+    if (Number.isFinite(n) && n >= 0 && n !== value) onSave(n);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <td className="px-3 py-2">
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setEditing(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className={cn(
+            'block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50',
+            className,
+          )}
+        >
+          {value}
+        </span>
+      </td>
+    );
+  }
+
   return (
     <td className="px-3 py-2">
       <input
+        ref={inputRef}
         type="number"
         min="0"
         step={step}
-        value={value}
-        onChange={(event) => onNumberChange(event, onSave)}
-        className={`rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none ${className ?? ''}`}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            setDraft(String(value));
+            setEditing(false);
+          }
+        }}
+        className={cn(editInputClassName, className)}
       />
     </td>
   );
@@ -603,7 +710,48 @@ function MoneyCell({
   valueCents: number;
   onSave: (value: number) => void;
 }) {
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState((valueCents / 100).toString());
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft((valueCents / 100).toString());
+  }, [valueCents, editing]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  const commit = () => {
+    const dollars = parseUnitCostDollarsInput(draft);
+    if (dollars !== undefined) {
+      const newCents = dollarsToCents(dollars);
+      if (newCents !== valueCents) onSave(newCents);
+    }
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <td className="px-3 py-2">
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setEditing(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
+        >
+          {formatMoney(cents(valueCents))}
+        </span>
+      </td>
+    );
+  }
+
   return (
     <td className="px-3 py-2">
       <div className="relative w-28">
@@ -611,17 +759,96 @@ function MoneyCell({
           $
         </span>
         <input
+          ref={inputRef}
           type="number"
           min="0"
           step="0.01"
           value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={() => {
-            const dollars = parseUnitCostDollarsInput(draft);
-            if (dollars !== undefined) onSave(dollarsToCents(dollars));
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commit();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              setDraft((valueCents / 100).toString());
+              setEditing(false);
+            }
           }}
-          className="w-full rounded-md border border-gray-300 py-1 pl-5 pr-2 text-sm focus:border-brand-500 focus:outline-none"
+          className={cn('w-full py-1 pl-5 pr-2', editInputClassName)}
         />
+      </div>
+    </td>
+  );
+}
+
+function QuantityCell({
+  quantity,
+  quantityUnit,
+  onSaveQuantity,
+  onSaveUnit,
+}: {
+  quantity: number;
+  quantityUnit: string;
+  onSaveQuantity: (value: number) => void;
+  onSaveUnit: (value: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  if (!editing) {
+    return (
+      <td className="px-3 py-2">
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setEditing(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className="block w-40 cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
+        >
+          {quantity} {quantityUnit}
+        </span>
+      </td>
+    );
+  }
+
+  return (
+    <td className="px-3 py-2">
+      <div
+        className="flex w-40 gap-2"
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            setEditing(false);
+          }
+        }}
+      >
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          defaultValue={quantity}
+          autoFocus
+          onChange={(event) => onNumberChange(event, onSaveQuantity)}
+          className={cn('w-20', editInputClassName)}
+          aria-label="Quantity"
+        />
+        <select
+          value={quantityUnit}
+          onChange={(event) => onSaveUnit(event.target.value)}
+          className={cn('w-20', editInputClassName)}
+          aria-label="Quantity unit"
+        >
+          {quantityUnits.map((unit) => (
+            <option key={unit} value={unit}>
+              {unit}
+            </option>
+          ))}
+        </select>
       </div>
     </td>
   );
