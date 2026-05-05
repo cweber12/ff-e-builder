@@ -1,12 +1,11 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import { roomKeys } from '../queryKeys';
 import type { CreateRoomInput, UpdateRoomInput } from '../../lib/api';
 import type { Room } from '../../types';
 
-export const roomKeys = {
-  forProject: (projectId: string) => ['rooms', projectId] as const,
-};
+export { roomKeys } from '../queryKeys';
 
 export function useRooms(projectId: string) {
   return useQuery({

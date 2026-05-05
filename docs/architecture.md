@@ -90,6 +90,7 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Proposal categories start empty for new projects and are created explicitly by users or imports.
 - Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.
+- React Query cache keys are centralized in `src/hooks/queryKeys.ts`; hook modules re-export their domain keys for compatibility while sharing the canonical definitions.
 
 ## 5. Data Flow
 

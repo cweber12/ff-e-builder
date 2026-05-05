@@ -1,12 +1,11 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import { userProfileKeys } from '../queryKeys';
 import type { UpsertUserProfileInput } from '../../lib/api';
 import type { UserProfile } from '../../types';
 
-export const userProfileKeys = {
-  me: ['user-profile', 'me'] as const,
-};
+export { userProfileKeys } from '../queryKeys';
 
 export function useUserProfile() {
   return useQuery({

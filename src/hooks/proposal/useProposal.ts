@@ -1,6 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import { proposalKeys } from '../queryKeys';
 import type {
   CreateProposalCategoryInput,
   CreateProposalItemInput,
@@ -9,10 +10,7 @@ import type {
 } from '../../lib/api';
 import type { ProposalCategory, ProposalCategoryWithItems, ProposalItem } from '../../types';
 
-export const proposalKeys = {
-  categories: (projectId: string) => ['proposal', projectId, 'categories'] as const,
-  items: (categoryId: string) => ['proposal', 'category', categoryId, 'items'] as const,
-};
+export { proposalKeys } from '../queryKeys';
 
 export function useProposalCategories(projectId: string) {
   return useQuery({

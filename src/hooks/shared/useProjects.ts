@@ -1,14 +1,11 @@
-﻿import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import { projectKeys } from '../queryKeys';
 import type { CreateProjectInput, UpdateProjectInput } from '../../lib/api';
 import type { Project } from '../../types';
 
-export const projectKeys = {
-  all: ['projects'] as const,
-  detail: (id: string) => ['projects', id] as const,
-  toolState: (id: string) => ['projects', 'tool-state', id] as const,
-};
+export { projectKeys } from '../queryKeys';
 
 export function useProjectToolStates(projectIds: string[]) {
   const results = useQueries({

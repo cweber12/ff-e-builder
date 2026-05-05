@@ -1,15 +1,11 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import type { CreateMaterialInput, UpdateMaterialInput } from '../../lib/api';
 import type { Material } from '../../types';
-import { itemKeys } from '../ffe/useItems';
-import { imageKeys } from '../shared/useImages';
-import { proposalKeys } from '../proposal/useProposal';
+import { imageKeys, itemKeys, materialKeys, proposalKeys } from '../queryKeys';
 
-export const materialKeys = {
-  forProject: (projectId: string) => ['materials', projectId] as const,
-};
+export { materialKeys } from '../queryKeys';
 
 export function useMaterials(projectId: string) {
   return useQuery({
@@ -41,7 +37,7 @@ export function useUpdateMaterial(projectId: string) {
       queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
         upsertMaterial(old, material),
       );
-      void queryClient.invalidateQueries({ queryKey: ['items'] });
+      void queryClient.invalidateQueries({ queryKey: itemKeys.all });
     },
     onError: (err) => toast.error(`Material update failed: ${err.message}`),
   });
@@ -56,7 +52,7 @@ export function useDeleteMaterial(projectId: string) {
         materialKeys.forProject(projectId),
         (old) => old?.filter((material) => material.id !== id) ?? [],
       );
-      void queryClient.invalidateQueries({ queryKey: ['items'] });
+      void queryClient.invalidateQueries({ queryKey: itemKeys.all });
       void queryClient.removeQueries({ queryKey: imageKeys.forEntity('material', id) });
     },
     onError: (err) => toast.error(`Material delete failed: ${err.message}`),

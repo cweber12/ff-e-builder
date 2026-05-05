@@ -1,13 +1,12 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api, ApiError } from '../../lib/api';
 import { recordItemCreated } from '../../lib/telemetry';
+import { itemKeys } from '../queryKeys';
 import type { CreateItemInput, UpdateItemInput } from '../../lib/api';
 import type { Item } from '../../types';
 
-export const itemKeys = {
-  forRoom: (roomId: string) => ['items', roomId] as const,
-};
+export { itemKeys } from '../queryKeys';
 
 export function useItems(roomId: string) {
   return useQuery({

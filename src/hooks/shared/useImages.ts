@@ -1,13 +1,10 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import { imageKeys } from '../queryKeys';
 import type { CropParams, ImageAsset, ImageEntityType } from '../../types';
 
-export const imageKeys = {
-  all: ['images'] as const,
-  forEntity: (entityType: ImageEntityType, entityId: string) =>
-    ['images', entityType, entityId] as const,
-};
+export { imageKeys } from '../queryKeys';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
