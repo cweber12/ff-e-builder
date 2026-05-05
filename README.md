@@ -80,7 +80,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   ├── components/    # Domain-aware UI components (ItemsTable, CatalogView, …)
 │   │   └── primitives/  # Generic design-system atoms (Button, Modal, Drawer, …)
 │   ├── hooks/         # Custom React hooks with barrel export (index.ts)
-│   ├── lib/           # Client-side utilities (API client, calc, export/import, …)
+│   ├── lib/           # Client-side utilities (API client, calc, export/import modules, …)
 │   ├── types/         # Shared TypeScript types with barrel export (index.ts)
 │   ├── data/          # Static fixture data (demo seed)
 │   ├── test/          # Vitest global setup

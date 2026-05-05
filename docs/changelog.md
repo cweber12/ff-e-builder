@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(exports): move shared export download, filename, money, percent, and CSV helpers into `src/lib/export/shared.ts`
+- refactor(exports): move FF&E row helpers and CSV export implementations behind dedicated `src/lib/export/` modules
+- refactor(exports): move Proposal export document preparation into `src/lib/export/proposalDocument.ts` without changing PDF or Excel rendering
 - docs(proposal): align current domain and architecture docs with the Proposal rename
 - fix(proposal): repair renamed Proposal item-material join column so category item loading no longer 500s after the Take-Off rename
 - fix(images): allow `proposal_swatch` uploads through API validation after the Proposal rename

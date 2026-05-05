@@ -1,18 +1,27 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import {
-  lineTotalCents,
-  roomSubtotalCents,
-  projectTotalCents,
-  sellPriceCents,
-  proposalCategorySubtotalCents,
-  proposalLineTotalCents,
-  proposalProjectTotalCents,
-} from './calc';
+import { roomSubtotalCents, projectTotalCents, sellPriceCents } from './calc';
 import { BRAND_RGB } from './constants';
 import { api } from './api';
-import { cents, formatMoney } from '../types';
+import { csvCell, fmtMoney, fmtPct, safeName, triggerDownload } from './export/shared';
+import {
+  TABLE_HEADERS,
+  buildStatusBreakdown,
+  buildVendorBreakdown,
+  itemToRow,
+  sortedItems,
+} from './export/ffeRows';
+import {
+  buildProposalExportDocument,
+  filteredProposalCategories,
+  proposalCompactIdentityLine,
+  type ProposalAssetBundle,
+  type ProposalExportCategorySection,
+  type ProposalExportColumn,
+  type ProposalExportColumnKey,
+  type ProposalExportDocument,
+} from './export/proposalDocument';
 import type {
   CropParams,
   ImageAsset,
@@ -20,216 +29,19 @@ import type {
   Material,
   Project,
   ProposalCategoryWithItems,
-  ProposalItem,
   UserProfile,
 } from '../types';
 import type { RoomWithItems } from '../types';
 import type { Workbook, Worksheet } from 'exceljs';
 
+export { safeName } from './export/shared';
+export { exportProposalCsv, exportSummaryCsv, exportTableCsv } from './export/csv';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const BRAND = BRAND_RGB;
 
-function triggerDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-export function safeName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
-function fmtMoney(c: number): string {
-  return formatMoney(cents(c));
-}
-
-function fmtPct(v: number): string {
-  return `${v}%`;
-}
-
-const TABLE_HEADERS = [
-  'Item ID',
-  'Item Name',
-  'Category',
-  'Vendor',
-  'Model',
-  'Dimensions',
-  'Qty',
-  'Unit Cost',
-  'Markup',
-  'Sell Price',
-  'Line Total',
-  'Status',
-  'Lead Time',
-  'Notes',
-  'Materials',
-];
-
-const TAKEOFF_HEADERS = [
-  'Rendering',
-  'Product Tag',
-  'Plan',
-  'Drawings / Location',
-  'Product Description',
-  'Size',
-  'Swatch',
-  'CBM',
-  'Quantity',
-  'Unit',
-  'Unit Cost',
-  'Total Cost',
-];
-
-function itemToRow(item: Item): string[] {
-  const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
-  const lineTotal = sellPrice * item.qty;
-  return [
-    item.itemIdTag ?? '',
-    item.itemName,
-    item.category ?? '',
-    item.vendor ?? '',
-    item.model ?? '',
-    item.dimensions ?? '',
-    String(item.qty),
-    fmtMoney(item.unitCostCents),
-    fmtPct(item.markupPct),
-    fmtMoney(sellPrice),
-    fmtMoney(lineTotal),
-    item.status,
-    item.leadTime ?? '',
-    item.notes ?? '',
-    item.materials.map((m) => (m.materialId ? `${m.name} (${m.materialId})` : m.name)).join('; '),
-  ];
-}
-
-function proposalItemToRow(item: ProposalItem): string[] {
-  return [
-    '',
-    item.productTag,
-    item.plan,
-    [item.drawings, item.location].filter(Boolean).join(' / '),
-    item.description,
-    item.sizeLabel,
-    item.materials.map((m) => m.name).join('; '),
-    String(item.cbm),
-    String(item.quantity),
-    item.quantityUnit,
-    fmtMoney(item.unitCostCents),
-    fmtMoney(proposalLineTotalCents(item)),
-  ];
-}
-
-function sortedItems(room: RoomWithItems): Item[] {
-  return [...room.items].sort(
-    (a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName),
-  );
-}
-
-function buildStatusBreakdown(items: Item[]): Map<string, { count: number; total: number }> {
-  const map = new Map<string, { count: number; total: number }>();
-  for (const item of items) {
-    const entry = map.get(item.status) ?? { count: 0, total: 0 };
-    entry.count += 1;
-    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    map.set(item.status, entry);
-  }
-  return map;
-}
-
-function buildVendorBreakdown(items: Item[]): Map<string, { count: number; total: number }> {
-  const map = new Map<string, { count: number; total: number }>();
-  for (const item of items) {
-    const vendor = item.vendor?.trim() || 'Unassigned';
-    const entry = map.get(vendor) ?? { count: 0, total: 0 };
-    entry.count += 1;
-    entry.total += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    map.set(vendor, entry);
-  }
-  return map;
-}
-
 // ─── CSV ──────────────────────────────────────────────────────────────────────
-
-function csvCell(v: string): string {
-  return `"${v.replace(/"/g, '""')}"`;
-}
-
-function buildCsvRows(
-  project: Project,
-  rooms: RoomWithItems[],
-  filterRoom?: RoomWithItems,
-): string[][] {
-  const targetRooms = filterRoom ? [filterRoom] : rooms;
-  const dataRows = targetRooms.flatMap((room) =>
-    sortedItems(room).map((item) => [project.name, room.name, ...itemToRow(item)]),
-  );
-  return [['Project', 'Room', ...TABLE_HEADERS], ...dataRows];
-}
-
-export function exportTableCsv(
-  project: Project,
-  rooms: RoomWithItems[],
-  filterRoom?: RoomWithItems,
-): void {
-  const rows = buildCsvRows(project, rooms, filterRoom);
-  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const suffix = filterRoom ? `-${safeName(filterRoom.name)}` : '';
-  triggerDownload(blob, `${safeName(project.name)}${suffix}-items.csv`);
-}
-
-export function exportSummaryCsv(project: Project, rooms: RoomWithItems[]): void {
-  const allItems = rooms.flatMap((r) => r.items);
-  const total = projectTotalCents(rooms);
-
-  const roomRows = rooms.map((r) => [
-    r.name,
-    String(r.items.length),
-    fmtMoney(roomSubtotalCents(r.items)),
-  ]);
-
-  const statusMap = buildStatusBreakdown(allItems);
-
-  const sections: string[][] = [
-    ['Summary:', project.name],
-    [],
-    ['Budget', fmtMoney(project.budgetCents)],
-    ['Actual', fmtMoney(total)],
-    [],
-    ['Rooms', 'Items', 'Subtotal'],
-    ...roomRows,
-    [],
-    ['Status', 'Items', 'Total'],
-    ...[...statusMap.entries()].map(([status, { count, total: t }]) => [
-      status,
-      String(count),
-      fmtMoney(t),
-    ]),
-  ];
-
-  const csv = sections.map((row) => row.map(csvCell).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  triggerDownload(blob, `${safeName(project.name)}-summary.csv`);
-}
-
-export function exportProposalCsv(project: Project, categories: ProposalCategoryWithItems[]): void {
-  const rows = [
-    ['Project', 'Category', ...TAKEOFF_HEADERS],
-    ...categories.flatMap((category) =>
-      category.items.map((item) => [project.name, category.name, ...proposalItemToRow(item)]),
-    ),
-  ];
-  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  triggerDownload(blob, `${safeName(project.name)}-proposal.csv`);
-}
 
 // ─── Excel ────────────────────────────────────────────────────────────────────
 
@@ -495,265 +307,11 @@ type ProposalPdfOptions = {
   mode?: ProposalPdfMode;
 };
 
-type ProposalExportColumnKey =
-  | 'rendering'
-  | 'productTag'
-  | 'plan'
-  | 'drawingsLocation'
-  | 'description'
-  | 'size'
-  | 'swatch'
-  | 'cbm'
-  | 'quantity'
-  | 'unit'
-  | 'unitCost'
-  | 'totalCost';
-
-type ProposalExportColumn = {
-  key: ProposalExportColumnKey;
-  label: string;
-  pdfWidth: number;
-  excelWidth: number;
-  alwaysVisible?: boolean;
-};
-
-type ProposalAssetBundle = {
-  projectImages: string[];
-  renderingByItemId: Map<string, string>;
-  planByItemId: Map<string, string>;
-  swatchesByItemId: Map<string, string[]>;
-};
-
-type ProposalExportRow = {
-  item: ProposalItem;
-  values: Record<ProposalExportColumnKey, string>;
-  rendering: string | null;
-  planImage: string | null;
-  swatches: string[];
-  /** Pre-cropped to exact PDF cell dimensions — populated by prepareProposalPdfImages */
-  pdfRendering: string | null;
-  pdfPlanImage: string | null;
-  pdfSwatches: string[];
-};
-
-type ProposalExportCategorySection = {
-  category: ProposalCategoryWithItems;
-  rows: ProposalExportRow[];
-  subtotalCents: number;
-  quantityTotal: number;
-};
-
-type ProposalExportDocument = {
-  companyName: string;
-  projectLine: string;
-  preparedByLine: string;
-  compactIdentityLine: string;
-  projectImages: string[];
-  columns: ProposalExportColumn[];
-  categories: ProposalExportCategorySection[];
-  grandTotalCents: number;
-  budgetTargetCents: number | null;
-};
-
-const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
-  { key: 'rendering', label: 'Rendering', pdfWidth: 28, excelWidth: 16 },
-  { key: 'productTag', label: 'Product Tag', pdfWidth: 18, excelWidth: 14, alwaysVisible: true },
-  { key: 'plan', label: 'Plan', pdfWidth: 18, excelWidth: 14 },
-  { key: 'drawingsLocation', label: 'Drawings / Location', pdfWidth: 24, excelWidth: 20 },
-  {
-    key: 'description',
-    label: 'Product Description',
-    pdfWidth: 40,
-    excelWidth: 30,
-    alwaysVisible: true,
-  },
-  { key: 'size', label: 'Size', pdfWidth: 22, excelWidth: 18 },
-  { key: 'swatch', label: 'Swatch', pdfWidth: 16, excelWidth: 12 },
-  { key: 'cbm', label: 'CBM', pdfWidth: 10, excelWidth: 9 },
-  { key: 'quantity', label: 'Quantity', pdfWidth: 12, excelWidth: 10, alwaysVisible: true },
-  { key: 'unit', label: 'Unit', pdfWidth: 12, excelWidth: 10, alwaysVisible: true },
-  { key: 'unitCost', label: 'Unit Cost', pdfWidth: 15, excelWidth: 13, alwaysVisible: true },
-  { key: 'totalCost', label: 'Total Cost', pdfWidth: 16, excelWidth: 14, alwaysVisible: true },
-];
-
 const TAKEOFF_PDF_ROW_HEIGHT = 34;
 const TAKEOFF_EXCEL_ROW_HEIGHT = 56;
 const TAKEOFF_PDF_CELL_PADDING = 1.6;
 const TAKEOFF_EXCEL_IMAGE_PADDING_PX = 2;
 const TAKEOFF_SWATCH_LIMIT = 4;
-
-function filteredProposalCategories(categories: ProposalCategoryWithItems[]) {
-  return categories.filter((category) => category.items.length > 0);
-}
-
-function proposalPreparedBy(profile?: UserProfile | null) {
-  return [profile?.name?.trim(), profile?.email?.trim()].filter(Boolean).join(' | ');
-}
-
-function proposalProjectLine(project: Project) {
-  return [project.name, project.projectLocation?.trim()].filter(Boolean).join(' | ');
-}
-
-function proposalDocumentCompany(project: Project) {
-  return project.companyName?.trim() || 'ChillDesignStudio';
-}
-
-function proposalCompactIdentityLine(project: Project) {
-  return [proposalDocumentCompany(project), project.name, project.projectLocation?.trim()]
-    .filter(Boolean)
-    .join(' | ');
-}
-
-function getProposalBudgetTarget(project: Project) {
-  const relevant =
-    project.budgetMode === 'individual'
-      ? (project.proposalBudgetCents ?? 0)
-      : (project.budgetCents ?? 0);
-  return relevant > 0 ? relevant : null;
-}
-
-function buildProposalVisibleColumns(
-  categories: ProposalCategoryWithItems[],
-  assets: ProposalAssetBundle,
-): ProposalExportColumn[] {
-  const items = categories.flatMap((category) => category.items);
-  const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
-  const hasPlanImages = items.some((item) => assets.planByItemId.has(item.id));
-  const hasSwatches = items.some((item) => (assets.swatchesByItemId.get(item.id)?.length ?? 0) > 0);
-
-  return PROPOSAL_EXPORT_COLUMNS.filter((column) => {
-    if (column.key === 'rendering') return hasRendering;
-    if (column.key === 'plan')
-      return hasPlanImages || items.some((item) => proposalColumnHasData(item, column.key));
-    if (column.key === 'swatch') return hasSwatches;
-    if (column.alwaysVisible) return true;
-    return items.some((item) => proposalColumnHasData(item, column.key));
-  });
-}
-
-function buildProposalRowValue(item: ProposalItem, key: ProposalExportColumnKey) {
-  switch (key) {
-    case 'drawingsLocation': {
-      const parts = [item.drawings.trim(), item.location.trim()].filter(Boolean);
-      if (parts.length === 2) return `${parts[0]}\n${parts[1]}`;
-      return parts[0] ?? '';
-    }
-    default:
-      return proposalWrappedCellValue(item, key);
-  }
-}
-
-function buildProposalExportDocument(
-  project: Project,
-  categories: ProposalCategoryWithItems[],
-  assets: ProposalAssetBundle,
-  userProfile?: UserProfile | null,
-): ProposalExportDocument {
-  const columns = buildProposalVisibleColumns(categories, assets);
-  const categorySections = categories.map((category) => ({
-    category,
-    subtotalCents: proposalCategorySubtotalCents(category.items),
-    quantityTotal: category.items.reduce((sum, item) => sum + item.quantity, 0),
-    rows: category.items.map((item) => ({
-      item,
-      rendering: assets.renderingByItemId.get(item.id) ?? null,
-      planImage: assets.planByItemId.get(item.id) ?? null,
-      swatches: assets.swatchesByItemId.get(item.id) ?? [],
-      pdfRendering: null,
-      pdfPlanImage: null,
-      pdfSwatches: [] as string[],
-      values: Object.fromEntries(
-        PROPOSAL_EXPORT_COLUMNS.map((column) => [
-          column.key,
-          buildProposalRowValue(item, column.key),
-        ]),
-      ) as Record<ProposalExportColumnKey, string>,
-    })),
-  }));
-
-  return {
-    companyName: proposalDocumentCompany(project),
-    projectLine: proposalProjectLine(project),
-    preparedByLine: proposalPreparedBy(userProfile),
-    compactIdentityLine: proposalCompactIdentityLine(project),
-    projectImages: assets.projectImages,
-    columns,
-    categories: categorySections,
-    grandTotalCents: proposalProjectTotalCents(categories),
-    budgetTargetCents: getProposalBudgetTarget(project),
-  };
-}
-
-function proposalColumnHasData(item: ProposalItem, key: ProposalExportColumnKey) {
-  switch (key) {
-    case 'plan':
-      return Boolean(item.plan.trim());
-    case 'drawingsLocation':
-      return Boolean(item.drawings.trim() || item.location.trim());
-    case 'description':
-      return Boolean(item.description.trim());
-    case 'size':
-      return Boolean(item.sizeLabel.trim());
-    case 'cbm':
-      return item.cbm > 0;
-    case 'quantity':
-      return true;
-    case 'unit':
-      return true;
-    case 'unitCost':
-      return true;
-    case 'totalCost':
-      return true;
-    case 'productTag':
-      return true;
-    case 'rendering':
-    case 'swatch':
-      return false;
-  }
-}
-
-function proposalCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
-  switch (key) {
-    case 'productTag':
-      return item.productTag || '';
-    case 'plan':
-      return item.plan || '';
-    case 'drawingsLocation':
-      return [item.drawings, item.location].filter(Boolean).join(' / ');
-    case 'description':
-      return item.description || '';
-    case 'size':
-      return item.sizeLabel || '';
-    case 'cbm':
-      return item.cbm > 0 ? String(item.cbm) : '';
-    case 'quantity':
-      return String(item.quantity);
-    case 'unit':
-      return item.quantityUnit || '';
-    case 'unitCost':
-      return fmtMoney(item.unitCostCents || 0);
-    case 'totalCost':
-      return fmtMoney(proposalLineTotalCents(item));
-    case 'rendering':
-    case 'swatch':
-      return '';
-  }
-}
-
-function truncateProposalText(value: string, maxChars: number) {
-  const normalized = value.trim();
-  if (normalized.length <= maxChars) return normalized;
-  return `${normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
-}
-
-function proposalWrappedCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
-  const value = proposalCellValue(item, key);
-  if (key === 'description') return truncateProposalText(value, 96);
-  if (key === 'drawingsLocation') return truncateProposalText(value, 48);
-  if (key === 'size') return truncateProposalText(value, 30);
-  if (key === 'plan') return truncateProposalText(value, 24);
-  return value;
-}
 
 async function blobToPngDataUrl(blob: Blob): Promise<string> {
   const objectUrl = URL.createObjectURL(blob);
