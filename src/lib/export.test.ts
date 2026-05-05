@@ -5,7 +5,7 @@ import {
   exportSummaryCsv,
   exportProposalCsv,
   exportMaterialsExcel,
-} from './exportUtils';
+} from './export';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,

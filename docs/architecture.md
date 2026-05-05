@@ -305,7 +305,7 @@ Focused checks are preferred while iterating, for example:
 
 ```bash
 pnpm exec vitest run src/components/ItemsTable.test.tsx
-pnpm exec vitest run src/lib/exportUtils.test.ts
+pnpm exec vitest run src/lib/export.test.ts
 ```
 
 Database migrations are applied with:
