@@ -53,7 +53,7 @@ vi.mock('../../../hooks/materials/useMaterials', () => ({
   useUpdateMaterialForProposalItem: () => ({ mutateAsync: vi.fn() }),
 }));
 
-vi.mock('../../../lib/exportUtils', () => ({
+vi.mock('../../../lib/export', () => ({
   exportTableCsv: vi.fn(),
   exportTableExcel: vi.fn(),
   exportTablePdf: vi.fn(),

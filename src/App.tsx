@@ -34,7 +34,7 @@ import {
   exportProposalCsv,
   exportProposalExcel,
   exportProposalPdf,
-} from './lib/exportUtils';
+} from './lib/export';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
 import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
 import { useProposalWithItems } from './hooks/proposal/useProposal';

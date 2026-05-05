@@ -20,11 +20,7 @@ import {
   type Project,
   type ProposalItem,
 } from '../../../types';
-import {
-  exportProposalCsv,
-  exportProposalExcel,
-  exportProposalPdf,
-} from '../../../lib/exportUtils';
+import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
 import { useUserProfile } from '../../../hooks';
 import {
   proposalCategorySubtotalCents,

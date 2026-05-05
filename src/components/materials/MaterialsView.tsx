@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/exportUtils';
+import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import { api } from '../../lib/api';
 import { useCreateMaterial, useDeleteMaterial, useMaterials, useUpdateMaterial } from '../../hooks';
 import { imageKeys } from '../../hooks/shared/useImages';

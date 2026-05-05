@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(exports): move shared export image conversion and Excel placement helpers into `src/lib/export/imageHelpers.ts`
 - refactor(exports): move Proposal export asset collection into `src/lib/export/proposalAssets.ts`
 - refactor(exports): split FF&E, Proposal, Materials, and Catalog renderers into focused `src/lib/export/` modules while keeping `exportUtils.ts` as a compatibility barrel
+- refactor(exports): add canonical `src/lib/export/index.ts` barrel while keeping `exportUtils.ts` as a compatibility re-export
+- refactor(exports): migrate app and component callers to the canonical `src/lib/export` barrel
 - test(exports): add direct shared helper, FF&E row helper, Proposal document, Proposal CSV, and Materials CSV coverage for the refactored export modules
 - docs(proposal): align current domain and architecture docs with the Proposal rename
 - fix(proposal): repair renamed Proposal item-material join column so category item loading no longer 500s after the Take-Off rename
