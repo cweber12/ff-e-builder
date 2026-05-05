@@ -5,8 +5,6 @@ import { imageKeys } from '../queryKeys';
 import { removeListItem, replaceListItem } from '../optimisticList';
 import type { CropParams, ImageAsset, ImageEntityType } from '../../types';
 
-export { imageKeys } from '../queryKeys';
-
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function isPersistedImageEntityId(entityId: string) {

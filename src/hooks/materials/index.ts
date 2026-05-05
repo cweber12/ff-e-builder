@@ -6,5 +6,10 @@ export {
   useAssignMaterial,
   useCreateAndAssignMaterial,
   useRemoveMaterialFromItem,
-  materialKeys,
+  useAssignMaterialToProposalItem,
+  useCreateAndAssignMaterialToProposalItem,
+  useRemoveMaterialFromProposalItem,
+  useUpdateMaterialForItem,
+  useUpdateMaterialForProposalItem,
 } from './useMaterials';
+export { materialKeys } from '../queryKeys';

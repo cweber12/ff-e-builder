@@ -6,8 +6,6 @@ import type { Material } from '../../types';
 import { imageKeys, itemKeys, materialKeys, proposalKeys } from '../queryKeys';
 import { appendListItem, removeListItem } from '../optimisticList';
 
-export { materialKeys } from '../queryKeys';
-
 export function useMaterials(projectId: string) {
   return useQuery({
     queryKey: materialKeys.forProject(projectId),

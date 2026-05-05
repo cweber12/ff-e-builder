@@ -13,8 +13,6 @@ import {
 import type { CreateRoomInput, UpdateRoomInput } from '../../lib/api';
 import type { Room } from '../../types';
 
-export { roomKeys } from '../queryKeys';
-
 export function useRooms(projectId: string) {
   return useQuery({
     queryKey: roomKeys.forProject(projectId),

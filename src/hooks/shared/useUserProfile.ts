@@ -5,8 +5,6 @@ import { userProfileKeys } from '../queryKeys';
 import type { UpsertUserProfileInput } from '../../lib/api';
 import type { UserProfile } from '../../types';
 
-export { userProfileKeys } from '../queryKeys';
-
 export function useUserProfile() {
   return useQuery({
     queryKey: userProfileKeys.me,

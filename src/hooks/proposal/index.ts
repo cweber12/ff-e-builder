@@ -7,5 +7,5 @@ export {
   useCreateProposalItem,
   useUpdateProposalItem,
   useDeleteProposalItem,
-  proposalKeys,
 } from './useProposal';
+export { proposalKeys } from '../queryKeys';

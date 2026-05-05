@@ -16,8 +16,6 @@ import type {
 } from '../../lib/api';
 import type { ProposalCategory, ProposalCategoryWithItems, ProposalItem } from '../../types';
 
-export { proposalKeys } from '../queryKeys';
-
 export function useProposalCategories(projectId: string) {
   return useQuery({
     queryKey: proposalKeys.categories(projectId),

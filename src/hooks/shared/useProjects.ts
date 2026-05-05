@@ -6,8 +6,6 @@ import { removeListItem, updateListItem } from '../optimisticList';
 import type { CreateProjectInput, UpdateProjectInput } from '../../lib/api';
 import type { Project } from '../../types';
 
-export { projectKeys } from '../queryKeys';
-
 export function useProjectToolStates(projectIds: string[]) {
   const results = useQueries({
     queries: projectIds.map((id) => ({

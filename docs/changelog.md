@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(hooks): reuse shared list transform helpers across Project, Proposal, and Material cache updates
 - refactor(hooks): name image cache transforms for upload, delete, primary selection, and crop updates
 - refactor(hooks): route app and component hook imports through the canonical hooks barrel
+- refactor(hooks): keep React Query keys owned by `queryKeys.ts` and complete slice barrel exports
 - refactor(exports): move shared export download, filename, money, percent, and CSV helpers into `src/lib/export/shared.ts`
 - refactor(exports): move FF&E row helpers and CSV export implementations behind dedicated `src/lib/export/` modules
 - refactor(exports): move Proposal export document preparation into `src/lib/export/proposalDocument.ts` without changing PDF or Excel rendering

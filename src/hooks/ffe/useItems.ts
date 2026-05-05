@@ -14,8 +14,6 @@ import {
 import type { CreateItemInput, UpdateItemInput } from '../../lib/api';
 import type { Item } from '../../types';
 
-export { itemKeys } from '../queryKeys';
-
 export function useItems(roomId: string) {
   return useQuery({
     queryKey: itemKeys.forRoom(roomId),
