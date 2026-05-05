@@ -15,8 +15,8 @@ import {
 import { fmtMoney, safeName, triggerDownload } from './shared';
 import { thinBorder } from './excelStyles';
 
-const TAKEOFF_EXCEL_ROW_HEIGHT = 56;
-const TAKEOFF_SWATCH_LIMIT = 4;
+const PROPOSAL_EXCEL_ROW_HEIGHT = 56;
+const PROPOSAL_SWATCH_LIMIT = 4;
 export async function exportProposalExcel(
   project: Project,
   categories: ProposalCategoryWithItems[],
@@ -24,7 +24,11 @@ export async function exportProposalExcel(
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const exportCategories = filteredProposalCategories(categories);
-  const assets = await buildProposalAssetBundle(project.id, exportCategories, TAKEOFF_SWATCH_LIMIT);
+  const assets = await buildProposalAssetBundle(
+    project.id,
+    exportCategories,
+    PROPOSAL_SWATCH_LIMIT,
+  );
   const exportDoc = buildProposalExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
 
@@ -157,7 +161,7 @@ export async function exportProposalExcel(
 
     for (const rowData of section.rows) {
       const row = worksheet.getRow(currentRow);
-      row.height = TAKEOFF_EXCEL_ROW_HEIGHT;
+      row.height = PROPOSAL_EXCEL_ROW_HEIGHT;
       columns.forEach((column, index) => {
         const cell = row.getCell(index + 1);
         cell.value = rowData.values[column.key];
@@ -188,7 +192,7 @@ export async function exportProposalExcel(
             renderingColumn,
             currentRow,
             renderingExportColumn.excelWidth,
-            TAKEOFF_EXCEL_ROW_HEIGHT,
+            PROPOSAL_EXCEL_ROW_HEIGHT,
           );
           await addExcelContainImage(workbook, worksheet, rowData.rendering, placement);
         }
@@ -203,7 +207,7 @@ export async function exportProposalExcel(
             planColumn,
             currentRow,
             planExportColumn.excelWidth,
-            TAKEOFF_EXCEL_ROW_HEIGHT,
+            PROPOSAL_EXCEL_ROW_HEIGHT,
           );
           await addExcelContainImage(workbook, worksheet, rowData.planImage, placement);
         }
@@ -220,7 +224,7 @@ export async function exportProposalExcel(
             swatchColumn,
             currentRow,
             swatchExportColumn.excelWidth,
-            TAKEOFF_EXCEL_ROW_HEIGHT,
+            PROPOSAL_EXCEL_ROW_HEIGHT,
           );
           await addExcelCircularCoverImage(workbook, worksheet, swatch, placement);
         }

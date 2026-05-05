@@ -1,8 +1,34 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { safeName, exportTableCsv, exportSummaryCsv } from './exportUtils';
-import type { Project } from '../types';
+import {
+  safeName,
+  exportTableCsv,
+  exportSummaryCsv,
+  exportProposalCsv,
+  exportMaterialsExcel,
+} from './exportUtils';
+import {
+  buildProposalExportDocument,
+  filteredProposalCategories,
+  proposalSubtotalLabelColumnIndex,
+  type ProposalAssetBundle,
+} from './export/proposalDocument';
+import type { Material, Project, ProposalCategoryWithItems, ProposalItem } from '../types';
 import type { RoomWithItems } from '../types';
 import type { Item } from '../types/item';
+
+const apiMocks = vi.hoisted(() => ({
+  imagesList: vi.fn(() => Promise.resolve([])),
+  getContentBlob: vi.fn(),
+}));
+
+vi.mock('./api', () => ({
+  api: {
+    images: {
+      list: apiMocks.imagesList,
+      getContentBlob: apiMocks.getContentBlob,
+    },
+  },
+}));
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -13,6 +39,8 @@ let downloadedFilename = '';
 beforeEach(() => {
   capturedBlobContent = '';
   downloadedFilename = '';
+  apiMocks.imagesList.mockResolvedValue([]);
+  apiMocks.getContentBlob.mockReset();
 
   // Capture blob content at construction time (avoids Blob.text() jsdom compat issues)
   vi.spyOn(globalThis, 'Blob').mockImplementation((parts?: BlobPart[]) => {
@@ -81,6 +109,76 @@ const makeRoom = (overrides: Partial<RoomWithItems> = {}): RoomWithItems => ({
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
   items: [makeItem()],
+  ...overrides,
+});
+
+const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem => ({
+  id: 'pi1',
+  categoryId: 'pc1',
+  productTag: 'P-001',
+  plan: '',
+  drawings: 'A-101',
+  location: 'Living Room',
+  description: 'Custom lounge chair',
+  sizeLabel: '30"W x 32"D x 32"H',
+  sizeMode: 'imperial',
+  sizeW: '30',
+  sizeD: '32',
+  sizeH: '32',
+  sizeUnit: 'ft/in',
+  materials: [
+    {
+      id: 'm1',
+      projectId: 'p1',
+      name: 'Walnut',
+      materialId: 'MAT-001',
+      description: '',
+      swatchHex: '#5c3a21',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    },
+  ],
+  cbm: 1.5,
+  quantity: 2,
+  quantityUnit: 'ea',
+  unitCostCents: 25000,
+  sortOrder: 0,
+  version: 1,
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+  ...overrides,
+});
+
+const makeProposalCategory = (
+  overrides: Partial<ProposalCategoryWithItems> = {},
+): ProposalCategoryWithItems => ({
+  id: 'pc1',
+  projectId: 'p1',
+  name: 'Loose Furniture',
+  sortOrder: 0,
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+  items: [makeProposalItem()],
+  ...overrides,
+});
+
+const makeMaterial = (overrides: Partial<Material> = {}): Material => ({
+  id: 'm1',
+  projectId: 'p1',
+  name: 'Walnut',
+  materialId: 'MAT-001',
+  description: 'Wood finish',
+  swatchHex: '#5c3a21',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+  ...overrides,
+});
+
+const makeProposalAssets = (overrides: Partial<ProposalAssetBundle> = {}): ProposalAssetBundle => ({
+  projectImages: [],
+  renderingByItemId: new Map(),
+  planByItemId: new Map(),
+  swatchesByItemId: new Map(),
   ...overrides,
 });
 
@@ -162,5 +260,101 @@ describe('exportSummaryCsv', () => {
     const item = makeItem({ status: 'ordered' });
     exportSummaryCsv(makeProject(), [makeRoom({ items: [item] })]);
     expect(capturedBlobContent).toContain('ordered');
+  });
+});
+
+describe('exportProposalCsv', () => {
+  it('exports proposal headers and row data', () => {
+    exportProposalCsv(makeProject(), [makeProposalCategory()]);
+
+    expect(downloadedFilename).toBe('test-project-proposal.csv');
+    expect(capturedBlobContent).toContain('Product Tag');
+    expect(capturedBlobContent).toContain('P-001');
+    expect(capturedBlobContent).toContain('Loose Furniture');
+    expect(capturedBlobContent).toContain('Walnut');
+    expect(capturedBlobContent).toContain('$500.00');
+  });
+});
+
+describe('proposal export document preparation', () => {
+  it('filters empty proposal categories before export', () => {
+    const populated = makeProposalCategory({ name: 'Populated' });
+    const empty = makeProposalCategory({ id: 'pc2', name: 'Empty', items: [] });
+
+    expect(filteredProposalCategories([empty, populated])).toEqual([populated]);
+  });
+
+  it('builds a proposal document with totals, identity lines, and visible asset columns', () => {
+    const item = makeProposalItem({ id: 'pi-with-assets', plan: 'Plan note' });
+    const category = makeProposalCategory({ items: [item] });
+    const assets = makeProposalAssets({
+      projectImages: ['data:image/png;base64,project'],
+      renderingByItemId: new Map([[item.id, 'data:image/png;base64,rendering']]),
+      planByItemId: new Map([[item.id, 'data:image/png;base64,plan']]),
+      swatchesByItemId: new Map([[item.id, ['data:image/png;base64,swatch']]]),
+    });
+
+    const document = buildProposalExportDocument(
+      makeProject({
+        companyName: 'Studio Co.',
+        projectLocation: 'Los Angeles',
+        budgetMode: 'individual',
+        proposalBudgetCents: 100000,
+      }),
+      [category],
+      assets,
+      {
+        ownerUid: 'u1',
+        name: 'Designer',
+        email: 'designer@example.com',
+        phone: '',
+        companyName: '',
+        createdAt: '',
+        updatedAt: '',
+      },
+    );
+
+    expect(document.companyName).toBe('Studio Co.');
+    expect(document.projectLine).toBe('Test Project | Los Angeles');
+    expect(document.preparedByLine).toBe('Designer | designer@example.com');
+    expect(document.budgetTargetCents).toBe(100000);
+    expect(document.grandTotalCents).toBe(50000);
+    expect(document.columns.map((column) => column.key)).toEqual([
+      'rendering',
+      'productTag',
+      'plan',
+      'drawingsLocation',
+      'description',
+      'size',
+      'swatch',
+      'cbm',
+      'quantity',
+      'unit',
+      'unitCost',
+      'totalCost',
+    ]);
+  });
+
+  it('chooses the first available subtotal label column in proposal exports', () => {
+    const document = buildProposalExportDocument(
+      makeProject(),
+      [makeProposalCategory()],
+      makeProposalAssets(),
+    );
+
+    expect(document.columns[proposalSubtotalLabelColumnIndex(document.columns)]?.key).toBe(
+      'description',
+    );
+  });
+});
+
+describe('exportMaterialsExcel', () => {
+  it('exports material rows as CSV when requested', async () => {
+    await exportMaterialsExcel(makeProject(), [makeMaterial()], 'csv');
+
+    expect(downloadedFilename).toBe('test-project-materials.csv');
+    expect(capturedBlobContent).toContain('Material ID');
+    expect(capturedBlobContent).toContain('Walnut');
+    expect(capturedBlobContent).toContain('MAT-001');
   });
 });

@@ -8,9 +8,9 @@ import {
   buildProposalExportDocument,
   filteredProposalCategories,
   proposalCompactIdentityLine,
+  proposalSubtotalLabelColumnIndex,
   type ProposalExportCategorySection,
   type ProposalExportColumn,
-  type ProposalExportColumnKey,
   type ProposalExportDocument,
 } from './proposalDocument';
 import { fmtMoney, safeName } from './shared';
@@ -22,9 +22,9 @@ type ProposalPdfOptions = {
   mode?: ProposalPdfMode;
 };
 
-const TAKEOFF_PDF_ROW_HEIGHT = 34;
-const TAKEOFF_PDF_CELL_PADDING = 1.6;
-const TAKEOFF_SWATCH_LIMIT = 4;
+const PROPOSAL_PDF_ROW_HEIGHT = 34;
+const PROPOSAL_PDF_CELL_PADDING = 1.6;
+const PROPOSAL_SWATCH_LIMIT = 4;
 
 function drawPdfPageNumber(doc: jsPDF, pageNumber: number, totalPages: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -122,7 +122,7 @@ async function drawPdfProposalHeaderBlock(doc: jsPDF, exportDoc: ProposalExportD
 
 // Pre-crops all row images to exact PDF cell pixel dimensions so didDrawCell
 // can use a simple doc.addImage call with no jsPDF clip() state manipulation.
-const TAKEOFF_PDF_MM_TO_PX = 3.7795;
+const PROPOSAL_PDF_MM_TO_PX = 3.7795;
 
 async function prepareProposalPdfImages(
   exportDoc: ProposalExportDocument,
@@ -132,7 +132,7 @@ async function prepareProposalPdfImages(
   const planCol = columns.find((c) => c.key === 'plan');
   const swatchCol = columns.find((c) => c.key === 'swatch');
   const cellHPx = Math.round(
-    (TAKEOFF_PDF_ROW_HEIGHT - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+    (PROPOSAL_PDF_ROW_HEIGHT - PROPOSAL_PDF_CELL_PADDING * 2) * PROPOSAL_PDF_MM_TO_PX,
   );
 
   await Promise.all(
@@ -140,24 +140,26 @@ async function prepareProposalPdfImages(
       section.rows.map(async (row) => {
         if (renderingCol && row.rendering) {
           const w = Math.round(
-            (renderingCol.pdfWidth - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+            (renderingCol.pdfWidth - PROPOSAL_PDF_CELL_PADDING * 2) * PROPOSAL_PDF_MM_TO_PX,
           );
           row.pdfRendering = await cropDataUrlToCover(row.rendering, w, cellHPx);
         }
         if (planCol && row.planImage) {
           const w = Math.round(
-            (planCol.pdfWidth - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+            (planCol.pdfWidth - PROPOSAL_PDF_CELL_PADDING * 2) * PROPOSAL_PDF_MM_TO_PX,
           );
           row.pdfPlanImage = await cropDataUrlToCover(row.planImage, w, cellHPx);
         }
         if (swatchCol && row.swatches.length > 0) {
           const swW = Math.round(
-            (swatchCol.pdfWidth - TAKEOFF_PDF_CELL_PADDING * 2) * TAKEOFF_PDF_MM_TO_PX,
+            (swatchCol.pdfWidth - PROPOSAL_PDF_CELL_PADDING * 2) * PROPOSAL_PDF_MM_TO_PX,
           );
-          const count = Math.min(row.swatches.length, TAKEOFF_SWATCH_LIMIT);
+          const count = Math.min(row.swatches.length, PROPOSAL_SWATCH_LIMIT);
           const swH = Math.round(cellHPx / count);
           row.pdfSwatches = await Promise.all(
-            row.swatches.slice(0, TAKEOFF_SWATCH_LIMIT).map((s) => cropDataUrlToCover(s, swW, swH)),
+            row.swatches
+              .slice(0, PROPOSAL_SWATCH_LIMIT)
+              .map((s) => cropDataUrlToCover(s, swW, swH)),
           );
         }
       }),
@@ -210,19 +212,6 @@ function drawPdfBudgetSummaryPage(doc: jsPDF, project: Project, exportDoc: Propo
   });
 }
 
-function proposalSubtotalLabelColumnIndex(columns: ProposalExportColumn[]) {
-  const preferredKeys: ProposalExportColumnKey[] = [
-    'description',
-    'drawingsLocation',
-    'productTag',
-  ];
-  for (const key of preferredKeys) {
-    const index = columns.findIndex((column) => column.key === key);
-    if (index >= 0) return index;
-  }
-  return Math.max(0, columns.length - 2);
-}
-
 function drawPdfProposalTable(
   doc: jsPDF,
   project: Project,
@@ -260,9 +249,9 @@ function drawPdfProposalTable(
       fontSize: 7.2,
       textColor: [55, 55, 55],
       valign: 'middle',
-      cellPadding: TAKEOFF_PDF_CELL_PADDING,
+      cellPadding: PROPOSAL_PDF_CELL_PADDING,
       overflow: 'linebreak',
-      minCellHeight: TAKEOFF_PDF_ROW_HEIGHT,
+      minCellHeight: PROPOSAL_PDF_ROW_HEIGHT,
     },
     columnStyles: Object.fromEntries(
       columns.map((column, index) => [
@@ -299,7 +288,7 @@ function drawPdfProposalTable(
       const column = columns[hook.column.index];
       if (!column) return;
 
-      const pad = TAKEOFF_PDF_CELL_PADDING;
+      const pad = PROPOSAL_PDF_CELL_PADDING;
 
       if (column.key === 'rendering') {
         const fw = hook.cell.width - pad * 2;
@@ -329,7 +318,7 @@ function drawPdfProposalTable(
         const fw = hook.cell.width - pad * 2;
         const fh = hook.cell.height - pad * 2;
         const gap = pad;
-        const count = Math.min(row.pdfSwatches.length, TAKEOFF_SWATCH_LIMIT);
+        const count = Math.min(row.pdfSwatches.length, PROPOSAL_SWATCH_LIMIT);
         const swH = Math.max(5, (fh - gap * (count - 1)) / count);
         row.pdfSwatches.forEach((swatch, i) => {
           const sy = hook.cell.y + pad + i * (swH + gap);
@@ -349,7 +338,11 @@ export async function exportProposalPdf(
 ): Promise<void> {
   const mode = options.mode ?? 'continuous';
   const exportCategories = filteredProposalCategories(categories);
-  const assets = await buildProposalAssetBundle(project.id, exportCategories, TAKEOFF_SWATCH_LIMIT);
+  const assets = await buildProposalAssetBundle(
+    project.id,
+    exportCategories,
+    PROPOSAL_SWATCH_LIMIT,
+  );
   const exportDoc = buildProposalExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
 
