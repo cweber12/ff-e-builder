@@ -12,7 +12,17 @@ const authMocks = vi.hoisted(() => ({
   useAuthUser: vi.fn(),
 }));
 
-vi.mock('../lib/auth', () => authMocks);
+vi.mock('../lib/auth', () => ({
+  createAccountWithEmailPassword: authMocks.createAccountWithEmailPassword,
+  getCurrentIdToken: vi.fn(() => undefined),
+  signInWithEmailPassword: authMocks.signInWithEmailPassword,
+  signInWithGoogle: authMocks.signInWithGoogle,
+  signOut: authMocks.signOut,
+}));
+
+vi.mock('../lib/auth-state', () => ({
+  useAuthUser: authMocks.useAuthUser,
+}));
 
 describe('AuthGate', () => {
   beforeEach(() => {

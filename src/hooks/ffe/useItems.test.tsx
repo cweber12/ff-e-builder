@@ -28,7 +28,13 @@ const { MockApiError, mockItemsCreate, mockItemsUpdate, mockToastError } = vi.ho
 
 vi.mock('../../lib/auth', () => ({
   auth: { currentUser: null },
+}));
+
+vi.mock('../../lib/auth-context', () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
+}));
+
+vi.mock('../../lib/auth-state', () => ({
   useAuthUser: () => ({ user: null, isLoading: false }),
 }));
 

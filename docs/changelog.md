@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(exports): add canonical `src/lib/export/index.ts` barrel while keeping `exportUtils.ts` as a compatibility re-export
 - refactor(exports): remove the `exportUtils.ts` compatibility barrel and point export coverage at `src/lib/export`
 - refactor(exports): migrate app and component callers to the canonical `src/lib/export` barrel
+- refactor(auth): split Firebase auth actions from the React auth context to satisfy React Refresh lint rules
 - test(exports): add direct shared helper, FF&E row helper, Proposal document, Proposal CSV, and Materials CSV coverage for the refactored export modules
 - docs(proposal): align current domain and architecture docs with the Proposal rename
 - fix(proposal): repair renamed Proposal item-material join column so category item loading no longer 500s after the Take-Off rename
