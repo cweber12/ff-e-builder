@@ -69,6 +69,7 @@ const TABLE_HEADERS = [
   'Status',
   'Lead Time',
   'Notes',
+  'Materials',
 ];
 
 const TAKEOFF_HEADERS = [
@@ -104,6 +105,7 @@ function itemToRow(item: Item): string[] {
     item.status,
     item.leadTime ?? '',
     item.notes ?? '',
+    item.materials.map((m) => (m.materialId ? `${m.name} (${m.materialId})` : m.name)).join('; '),
   ];
 }
 
@@ -261,6 +263,7 @@ const FFE_EXCEL_COLS = [
   { key: 'status', label: 'Status', width: 14 },
   { key: 'leadTime', label: 'Lead Time', width: 12 },
   { key: 'notes', label: 'Notes', width: 24 },
+  { key: 'materials', label: 'Materials', width: 24 },
 ] as const;
 
 type FfeExcelColKey = (typeof FFE_EXCEL_COLS)[number]['key'];
@@ -368,6 +371,9 @@ export async function exportTableExcel(
         status: item.status,
         leadTime: item.leadTime ?? '',
         notes: item.notes ?? '',
+        materials: item.materials
+          .map((m) => (m.materialId ? `${m.name} (${m.materialId})` : m.name))
+          .join('; '),
       };
 
       FFE_EXCEL_COLS.forEach((col, i) => {
