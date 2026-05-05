@@ -1,158 +1,32 @@
-import { apiFetch } from './api/transport';
 import { imagesApi } from './api/images';
 import { itemsApi } from './api/items';
 import { materialsApi } from './api/materials';
+import { proposalApi } from './api/proposal';
 import { projectsApi } from './api/projects';
 import { roomsApi } from './api/rooms';
 import { usersApi } from './api/users';
-import {
-  mapProposalCategory,
-  mapProposalItem,
-  type RawProposalCategory,
-  type RawProposalItem,
-} from './api/mappers';
-import type { ProposalCategory, ProposalItem } from '../types';
 
 // Compatibility export
 export { ApiError } from './api/transport';
 export type { ImageEntityRef, UploadImageInput } from './api/images';
 export type { CreateItemInput, UpdateItemInput } from './api/items';
 export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
+export type {
+  CreateProposalCategoryInput,
+  CreateProposalItemInput,
+  UpdateProposalCategoryInput,
+  UpdateProposalItemInput,
+} from './api/proposal';
 export type { CreateProjectInput, UpdateProjectInput } from './api/projects';
 export type { CreateRoomInput, UpdateRoomInput } from './api/rooms';
 export type { UpsertUserProfileInput } from './api/users';
-
-// Client input types
-export type CreateProposalCategoryInput = {
-  name: string;
-  sortOrder?: number;
-};
-
-export type UpdateProposalCategoryInput = {
-  name?: string;
-  sortOrder?: number;
-};
-
-export type CreateProposalItemInput = {
-  productTag?: string;
-  plan?: string;
-  drawings?: string;
-  location?: string;
-  description?: string;
-  sizeLabel?: string;
-  sizeMode?: 'imperial' | 'metric';
-  sizeW?: string;
-  sizeD?: string;
-  sizeH?: string;
-  sizeUnit?: string;
-  cbm?: number;
-  quantity?: number;
-  quantityUnit?: string;
-  unitCostCents?: number;
-  sortOrder?: number;
-};
-
-export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
-  categoryId?: string;
-  version: number;
-};
 
 // API namespace
 
 export const api = {
   projects: projectsApi,
   users: usersApi,
-
-  proposal: {
-    categories: (projectId: string): Promise<ProposalCategory[]> =>
-      apiFetch<{ categories: RawProposalCategory[] }>(
-        `/api/v1/projects/${projectId}/proposal/categories`,
-      ).then((r) => r.categories.map(mapProposalCategory)),
-
-    createCategory: (
-      projectId: string,
-      input: CreateProposalCategoryInput,
-    ): Promise<ProposalCategory> =>
-      apiFetch<{ category: RawProposalCategory }>(
-        `/api/v1/projects/${projectId}/proposal/categories`,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            name: input.name,
-            sort_order: input.sortOrder ?? 0,
-          }),
-        },
-      ).then((r) => mapProposalCategory(r.category)),
-
-    updateCategory: (id: string, patch: UpdateProposalCategoryInput): Promise<ProposalCategory> =>
-      apiFetch<{ category: RawProposalCategory }>(`/api/v1/proposal/categories/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name: patch.name,
-          sort_order: patch.sortOrder,
-        }),
-      }).then((r) => mapProposalCategory(r.category)),
-
-    deleteCategory: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/proposal/categories/${id}`, { method: 'DELETE' }),
-
-    items: (categoryId: string): Promise<ProposalItem[]> =>
-      apiFetch<{ items: RawProposalItem[] }>(
-        `/api/v1/proposal/categories/${categoryId}/items`,
-      ).then((r) => r.items.map(mapProposalItem)),
-
-    createItem: (categoryId: string, input: CreateProposalItemInput): Promise<ProposalItem> =>
-      apiFetch<{ item: RawProposalItem }>(`/api/v1/proposal/categories/${categoryId}/items`, {
-        method: 'POST',
-        body: JSON.stringify({
-          product_tag: input.productTag ?? '',
-          plan: input.plan ?? '',
-          drawings: input.drawings ?? '',
-          location: input.location ?? '',
-          description: input.description ?? '',
-          size_label: input.sizeLabel ?? '',
-          size_mode: input.sizeMode ?? 'imperial',
-          size_w: input.sizeW ?? '',
-          size_d: input.sizeD ?? '',
-          size_h: input.sizeH ?? '',
-          size_unit: input.sizeUnit ?? 'in',
-          cbm: input.cbm ?? 0,
-          quantity: input.quantity ?? 1,
-          quantity_unit: input.quantityUnit ?? 'unit',
-          unit_cost_cents: input.unitCostCents ?? 0,
-          sort_order: input.sortOrder ?? 0,
-        }),
-      }).then((r) => mapProposalItem(r.item)),
-
-    updateItem: (id: string, patch: UpdateProposalItemInput): Promise<ProposalItem> =>
-      apiFetch<{ item: RawProposalItem }>(`/api/v1/proposal/items/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          category_id: patch.categoryId,
-          product_tag: patch.productTag,
-          plan: patch.plan,
-          drawings: patch.drawings,
-          location: patch.location,
-          description: patch.description,
-          size_label: patch.sizeLabel,
-          size_mode: patch.sizeMode,
-          size_w: patch.sizeW,
-          size_d: patch.sizeD,
-          size_h: patch.sizeH,
-          size_unit: patch.sizeUnit,
-          cbm: patch.cbm,
-          quantity: patch.quantity,
-          quantity_unit: patch.quantityUnit,
-          unit_cost_cents: patch.unitCostCents,
-          sort_order: patch.sortOrder,
-          version: patch.version,
-        }),
-      }).then((r) => mapProposalItem(r.item)),
-
-    deleteItem: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
-  },
-
+  proposal: proposalApi,
   rooms: roomsApi,
   items: itemsApi,
   images: imagesApi,
