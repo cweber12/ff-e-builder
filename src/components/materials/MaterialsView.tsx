@@ -47,34 +47,53 @@ export function MaterialsView({
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
-  const [scope, setScope] = useState<'all' | 'ffe' | 'takeoff' | 'material' | 'swatch'>('all');
+  const [scope, setScope] = useState<'all' | 'ffe' | 'takeoff'>('all');
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingMaterial = materials.data?.find((material) => material.id === editingId);
   const filteredMaterials = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const ffeIds = new Set(
-      roomsWithItems.flatMap((room) =>
-        room.items.flatMap((item) => item.materials.map((material) => material.id)),
-      ),
-    );
-    const takeoffIds = new Set(
-      takeoffCategoriesWithItems.flatMap((category) =>
-        category.items.flatMap((item) => item.materials.map((material) => material.id)),
-      ),
-    );
+
+    const ffeIdsByRoom = new Map<string, Set<string>>();
+    for (const room of roomsWithItems) {
+      const ids = new Set(room.items.flatMap((item) => item.materials.map((m) => m.id)));
+      ffeIdsByRoom.set(room.id, ids);
+    }
+    const allFfeIds = new Set([...ffeIdsByRoom.values()].flatMap((s) => [...s]));
+
+    const takeoffIdsByCategory = new Map<string, Set<string>>();
+    for (const cat of takeoffCategoriesWithItems) {
+      const ids = new Set(cat.items.flatMap((item) => item.materials.map((m) => m.id)));
+      takeoffIdsByCategory.set(cat.id, ids);
+    }
+    const allTakeoffIds = new Set([...takeoffIdsByCategory.values()].flatMap((s) => [...s]));
+
     return [...(materials.data ?? [])]
       .filter((material) => {
-        if (scope === 'all') return true;
-        if (scope === 'ffe') return ffeIds.has(material.id);
-        if (scope === 'takeoff') return takeoffIds.has(material.id);
-        if (scope === 'material') return ffeIds.has(material.id);
-        if (scope === 'swatch') return takeoffIds.has(material.id);
+        if (scope === 'ffe') {
+          if (selectedRoomId) return ffeIdsByRoom.get(selectedRoomId)?.has(material.id) ?? false;
+          return allFfeIds.has(material.id);
+        }
+        if (scope === 'takeoff') {
+          if (selectedCategoryId)
+            return takeoffIdsByCategory.get(selectedCategoryId)?.has(material.id) ?? false;
+          return allTakeoffIds.has(material.id);
+        }
         return true;
       })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [materials.data, query, roomsWithItems, scope, takeoffCategoriesWithItems]);
+  }, [
+    materials.data,
+    query,
+    roomsWithItems,
+    scope,
+    selectedCategoryId,
+    selectedRoomId,
+    takeoffCategoriesWithItems,
+  ]);
 
   const resetDraft = () => {
     setDraft(emptyDraft);
@@ -131,21 +150,51 @@ export function MaterialsView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
-            {(['all', 'material', 'swatch'] as const).map((nextScope) => (
+            {(['all', 'ffe', 'takeoff'] as const).map((nextScope) => (
               <button
                 key={nextScope}
                 type="button"
                 className={scope === nextScope ? activeToggleClassName : toggleClassName}
-                onClick={() => setScope(nextScope)}
+                onClick={() => {
+                  setScope(nextScope);
+                  setSelectedRoomId('');
+                  setSelectedCategoryId('');
+                }}
               >
-                {nextScope === 'all'
-                  ? 'All Finishes'
-                  : nextScope === 'material'
-                    ? 'Materials'
-                    : 'Swatches'}
+                {nextScope === 'all' ? 'All' : nextScope === 'ffe' ? 'FF&E' : 'Take-Off'}
               </button>
             ))}
           </div>
+          {scope === 'ffe' && roomsWithItems.length > 0 && (
+            <select
+              value={selectedRoomId}
+              onChange={(e) => setSelectedRoomId(e.target.value)}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-semibold text-gray-600 focus:border-brand-500 focus:outline-none"
+              aria-label="Filter by room"
+            >
+              <option value="">All rooms</option>
+              {roomsWithItems.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {scope === 'takeoff' && takeoffCategoriesWithItems.length > 0 && (
+            <select
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-semibold text-gray-600 focus:border-brand-500 focus:outline-none"
+              aria-label="Filter by category"
+            >
+              <option value="">All categories</option>
+              {takeoffCategoriesWithItems.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          )}
           <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
             <button
               type="button"
@@ -187,9 +236,9 @@ export function MaterialsView({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search library"
+              placeholder="Search name or ID"
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none sm:w-72"
-              aria-label="Search library"
+              aria-label="Search library by name or ID"
             />
           </div>
           <div className="max-h-[42rem] overflow-auto p-4">
