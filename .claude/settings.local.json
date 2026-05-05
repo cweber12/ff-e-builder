@@ -14,7 +14,9 @@
       "Bash(pnpm add *)",
       "Bash(pnpm typecheck *)",
       "PowerShell(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Recurse -Exclude \"node_modules\", \".git\", \"dist\", \"build\", \".next\" | Where-Object { $_.Extension -in '.ts', '.tsx', '.sql', '.json', '.md' } | Select-Object -ExpandProperty FullName | ForEach-Object { $_ -replace [regex]::Escape\\('c:\\\\Projects\\\\_current-projects\\\\ffe-builder\\\\'\\), '' } | Sort-Object)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)"
     ]
   }
 }

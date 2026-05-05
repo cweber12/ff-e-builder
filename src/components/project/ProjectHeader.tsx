@@ -20,6 +20,7 @@ function SkeletonBar() {
 interface ProjectHeaderProps {
   /** Undefined while the project is loading; renders skeleton. */
   project: Project | undefined;
+  showToolNavigation?: boolean;
   optionsOpen?: boolean;
   onToggleOptions?: () => void;
   onEditProject?: () => void;
@@ -29,6 +30,7 @@ interface ProjectHeaderProps {
 
 export function ProjectHeader({
   project,
+  showToolNavigation = true,
   optionsOpen = false,
   onToggleOptions,
   onEditProject,
@@ -79,29 +81,31 @@ export function ProjectHeader({
         </div>
 
         <div className="flex items-center gap-2">
-          <nav aria-label="Project tools" className="flex gap-2 overflow-x-auto">
-            {(
-              [
-                [`/projects/${project.id}/ffe/table`, 'FF&E'],
-                [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
-              ] as const
-            ).map(([to, label]) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  [
-                    'whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition',
-                    isActive
-                      ? 'bg-white text-brand-700 shadow-sm'
-                      : 'text-white/75 hover:bg-white/10 hover:text-white',
-                  ].join(' ')
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
+          {showToolNavigation && (
+            <nav aria-label="Project tools" className="flex gap-2 overflow-x-auto">
+              {(
+                [
+                  [`/projects/${project.id}/ffe/table`, 'FF&E'],
+                  [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
+                ] as const
+              ).map(([to, label]) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    [
+                      'whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition',
+                      isActive
+                        ? 'bg-white text-brand-700 shadow-sm'
+                        : 'text-white/75 hover:bg-white/10 hover:text-white',
+                    ].join(' ')
+                  }
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+          )}
           {onToggleOptions && onEditProject && onProjectImages && onDeleteProject && (
             <ProjectOptionsMenu
               projectName={project.name}

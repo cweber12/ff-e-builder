@@ -1,4 +1,4 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+﻿import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import type { CreateProjectInput, UpdateProjectInput } from '../../lib/api';
@@ -7,7 +7,28 @@ import type { Project } from '../../types';
 export const projectKeys = {
   all: ['projects'] as const,
   detail: (id: string) => ['projects', id] as const,
+  toolState: (id: string) => ['projects', 'tool-state', id] as const,
 };
+
+export function useProjectToolStates(projectIds: string[]) {
+  const results = useQueries({
+    queries: projectIds.map((id) => ({
+      queryKey: projectKeys.toolState(id),
+      queryFn: async () => {
+        const [rooms, takeoffCategories] = await Promise.all([
+          api.rooms.list(id),
+          api.takeoff.categories(id),
+        ]);
+        return { hasFfe: rooms.length > 0, hasTakeoff: takeoffCategories.length > 0 };
+      },
+      staleTime: 60_000,
+    })),
+  });
+
+  const states = Object.fromEntries(projectIds.map((id, i) => [id, results[i]?.data ?? null]));
+
+  return { states };
+}
 
 export function useProjects() {
   return useQuery({

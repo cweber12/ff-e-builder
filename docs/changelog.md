@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ui): add missing `context="ffe"` prop to `MaterialLibraryModal` in `AddItemDrawer` and `ItemsTable`
 - fix(exports): Take-Off Excel/PDF swatch export now resolves swatch images from assigned material assets instead of removed `takeoff_swatch` image entities
 - fix(imports): resolve Take-Off swatch import 500s by correcting SQL aggregate filter syntax in import material ID generation
+- fix(takeoff): keep the sticky right-side `Total Cost`/options headers pinned at the top in expanded table mode by adding `top-0` to sticky header cells
+- fix(takeoff): restore right-side sticky behavior for `Total Cost` cells (`right-24 z-10`) and use dedicated expanded-header sticky classes so `Total Cost`/options headers stay fixed vertically while body rows scroll
 
 - fix(takeoff): stop auto-seeding default Take-Off categories from the API so new Take-Off Tables start empty
 - fix(takeoff): add a zero-category empty state message on the Take-Off Table while keeping the grand total visible

@@ -1,5 +1,6 @@
 @import '@fontsource-variable/dm-sans';
 @import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/lora';
 
 @tailwind base;
 @tailwind components;
@@ -12,15 +13,33 @@
   To retheme the app, override these variables in :root or a scoped selector.
 */
 :root {
-  /* Brand */
-  --color-brand-50: 241 245 242;
-  --color-brand-500: 26 107 74;
-  --color-brand-600: 21 90 62;
-  --color-brand-700: 15 70 49;
+  /* Brand — steel blue scale built from reference color ~#4B7FAB */
+  --color-brand-50: 236 243 249;
+  --color-brand-100: 206 222 237;
+  --color-brand-200: 158 192 220;
+  --color-brand-300: 110 159 200;
+  --color-brand-400: 80 136 185;
+  --color-brand-500: 75 127 171;
+  --color-brand-600: 58 100 138;
+  --color-brand-700: 40 71 101;
+
+  /* Neutral — cool blue-grays that harmonize with the steel blue brand */
+  --color-neutral-50: 248 249 250;
+  --color-neutral-100: 241 243 245;
+  --color-neutral-200: 224 228 232;
+  --color-neutral-300: 199 205 211;
+  --color-neutral-400: 158 167 176;
+  --color-neutral-500: 112 121 130;
+  --color-neutral-600: 80 88 97;
+  --color-neutral-700: 53 60 67;
+  --color-neutral-800: 34 39 46;
+  --color-neutral-900: 19 23 28;
+  --color-neutral-950: 10 13 17;
 
   /* Surface */
   --color-surface: 255 255 255;
   --color-surface-muted: 248 246 241;
+  --color-surface-raised: 255 255 255;
   --color-surface-inverse: 28 28 26;
 
   /* Semantic */
@@ -28,56 +47,61 @@
   --color-danger-600: 185 28 28;
   --color-success-500: 5 150 105;
   --color-warning-500: 217 119 6;
+
+  /* Shadows — warm-tinted, lower opacity than Tailwind defaults */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
 }
 
 @layer components {
-  .project-card {
-    transition:
-      border-color 180ms ease,
-      box-shadow 220ms ease,
-      transform 220ms ease;
+  /* Project list rows */
+  .project-row {
+    position: relative;
+    transition: background-color 150ms ease;
   }
 
-  .project-card:hover,
-  .project-card:focus-within {
-    transform: translateY(-2px);
-    border-color: theme('colors.brand.500');
-    box-shadow: 0 12px 20px -16px rgb(var(--color-brand-700) / 0.45);
+  .project-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: rgb(var(--color-brand-500));
+    border-radius: 0 2px 2px 0;
+    transform: scaleY(0);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .project-card-media {
-    transition:
-      transform 260ms ease,
-      filter 260ms ease;
+  .project-row:hover::before,
+  .project-row:focus-within::before {
+    transform: scaleY(1);
   }
 
-  .project-card:hover .project-card-media,
-  .project-card:focus-within .project-card-media {
-    transform: scale(1.01);
-    filter: saturate(1.03);
-  }
-
-  .project-card-action-popover {
-    border: 1px solid theme('colors.gray.200');
+  .project-action-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid rgb(var(--color-neutral-200));
     background: rgb(var(--color-surface));
-    box-shadow: none;
-  }
-
-  .project-card-action-link {
-    border: 1px solid theme('colors.gray.200');
-    background: rgb(var(--color-surface) / 0.9);
-    color: theme('colors.gray.800');
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--color-neutral-600));
+    white-space: nowrap;
     transition:
       border-color 150ms ease,
-      background-color 150ms ease,
-      color 150ms ease;
+      color 150ms ease,
+      background-color 150ms ease;
   }
 
-  .project-card-action-link:hover,
-  .project-card-action-link:focus-visible {
-    border-color: theme('colors.brand.500');
-    background: rgb(var(--color-brand-50) / 0.7);
-    color: theme('colors.brand.700');
+  .project-action-btn:hover,
+  .project-action-btn:focus-visible {
+    border-color: rgb(var(--color-brand-400));
+    color: rgb(var(--color-brand-600));
+    background: rgb(var(--color-brand-50));
     outline: none;
   }
 

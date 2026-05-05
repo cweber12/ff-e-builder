@@ -44,6 +44,8 @@ const editInputClassName =
   'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
 const stickyTotalHeaderClassName = 'sticky right-24 z-20 bg-white';
 const stickyOptionsHeaderClassName = 'sticky right-0 z-30 bg-white w-24 min-w-24';
+const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white';
+const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
 const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
 const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
 
@@ -482,7 +484,7 @@ function TakeoffCategorySection({
               className="min-w-0 overflow-auto flex-1"
             >
               <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-white text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
+                <thead className="sticky top-0 z-40 bg-white text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
                   <tr>
                     {[
                       'Rendering',
@@ -503,8 +505,8 @@ function TakeoffCategorySection({
                         key={heading}
                         className={cn(
                           'border-b border-gray-100 px-3 py-3 font-semibold',
-                          index === 11 && stickyTotalHeaderClassName,
-                          index === 12 && stickyOptionsHeaderClassName,
+                          index === 11 && stickyTotalExpandedHeaderClassName,
+                          index === 12 && stickyOptionsExpandedHeaderClassName,
                         )}
                       >
                         {heading}
