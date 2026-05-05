@@ -96,12 +96,14 @@ describe('ProjectImagesModal – full slot flow', () => {
     );
   });
 
-  it('renders Remove buttons and Preview radio for each loaded image', () => {
+  it('renders Remove buttons and Preview radio for each loaded image', async () => {
     const img1 = makeImage({ id: 'img-1', isPrimary: true, altText: 'Sample Project image' });
     const img2 = makeImage({ id: 'img-2', isPrimary: false, altText: 'Sample Project image 2' });
     mockUseImages.mockReturnValue({ data: [img1, img2], isLoading: false });
 
     render(<ProjectImagesModal open onClose={() => {}} project={PROJECT} />);
+
+    await waitForLoadedProjectImages(2);
 
     const removeButtons = screen.getAllByRole('button', { name: /remove/i });
     expect(removeButtons).toHaveLength(2);
@@ -147,6 +149,8 @@ describe('ProjectImagesModal – full slot flow', () => {
 
     const { container } = render(<ProjectImagesModal open onClose={() => {}} project={PROJECT} />);
 
+    await waitForLoadedProjectImages(1);
+
     // All three file inputs are rendered (one per slot)
     const fileInputs = container.querySelectorAll<HTMLInputElement>('input[type="file"]');
     expect(fileInputs).toHaveLength(3);
@@ -170,6 +174,8 @@ describe('ProjectImagesModal – full slot flow', () => {
 
     render(<ProjectImagesModal open onClose={() => {}} project={PROJECT} />);
 
+    await waitForLoadedProjectImages(1);
+
     await user.click(screen.getByRole('button', { name: /remove/i }));
 
     expect(mockDeleteMutate).toHaveBeenCalledWith('img-to-delete');
@@ -183,9 +189,17 @@ describe('ProjectImagesModal – full slot flow', () => {
 
     render(<ProjectImagesModal open onClose={() => {}} project={PROJECT} />);
 
+    await waitForLoadedProjectImages(2);
+
     const radios = screen.getAllByRole('radio', { name: /preview/i });
     await user.click(radios[1]!);
 
     expect(mockPrimaryMutate).toHaveBeenCalledWith('img-secondary');
   });
 });
+
+async function waitForLoadedProjectImages(count: number) {
+  await waitFor(() => {
+    expect(screen.getAllByRole('button', { name: 'Sample Project image' })).toHaveLength(count);
+  });
+}
