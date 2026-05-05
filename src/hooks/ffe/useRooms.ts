@@ -8,6 +8,7 @@ import {
   replaceListItem,
   restoreQueryList,
   snapshotQueryList,
+  updateListItem,
 } from '../optimisticList';
 import type { CreateRoomInput, UpdateRoomInput } from '../../lib/api';
 import type { Room } from '../../types';
@@ -58,9 +59,8 @@ export function useUpdateRoom(projectId: string) {
     mutationFn: ({ id, patch }: { id: string; patch: UpdateRoomInput }) =>
       api.rooms.update(id, patch),
     onSuccess: (updated) => {
-      queryClient.setQueryData<Room[]>(
-        roomKeys.forProject(projectId),
-        (old) => old?.map((r) => (r.id === updated.id ? updated : r)) ?? [],
+      queryClient.setQueryData<Room[]>(roomKeys.forProject(projectId), (old) =>
+        updateListItem(old, updated.id, () => updated),
       );
     },
     onError: (err: Error) => {

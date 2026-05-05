@@ -2,12 +2,25 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useDeleteImage, useUploadImage } from './useImages';
+import {
+  useDeleteImage,
+  useSetPrimaryImage,
+  useUpdateImageCrop,
+  useUploadImage,
+} from './useImages';
 import type { ImageAsset } from '../../types';
 
-const { mockImagesUpload, mockImagesDelete, mockToastError } = vi.hoisted(() => ({
+const {
+  mockImagesUpload,
+  mockImagesDelete,
+  mockImagesSetPrimary,
+  mockImagesSetCrop,
+  mockToastError,
+} = vi.hoisted(() => ({
   mockImagesUpload: vi.fn<() => Promise<ImageAsset>>(),
   mockImagesDelete: vi.fn<() => Promise<void>>(),
+  mockImagesSetPrimary: vi.fn<() => Promise<ImageAsset>>(),
+  mockImagesSetCrop: vi.fn<() => Promise<ImageAsset>>(),
   mockToastError: vi.fn<(msg: string) => void>(),
 }));
 
@@ -23,7 +36,8 @@ vi.mock('../../lib/api', () => ({
       list: vi.fn(),
       upload: mockImagesUpload,
       delete: mockImagesDelete,
-      setPrimary: vi.fn(),
+      setPrimary: mockImagesSetPrimary,
+      setCrop: mockImagesSetCrop,
       getContentBlob: vi.fn(),
     },
   },
@@ -145,6 +159,101 @@ describe('useDeleteImage', () => {
     await waitFor(() => {
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: ['images', 'project', '00000000-0000-0000-0000-000000000001'],
+      });
+    });
+  });
+});
+
+describe('useSetPrimaryImage', () => {
+  let qc: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    qc = createTestClient();
+    qc.setQueryData<ImageAsset[]>(
+      ['images', 'project', '00000000-0000-0000-0000-000000000001'],
+      [
+        makeImage({ id: '00000000-0000-0000-0000-000000000011', isPrimary: true }),
+        makeImage({ id: '00000000-0000-0000-0000-000000000012', isPrimary: false }),
+      ],
+    );
+  });
+
+  it('marks only the selected image as primary in cache', async () => {
+    mockImagesSetPrimary.mockResolvedValueOnce(
+      makeImage({ id: '00000000-0000-0000-0000-000000000012', isPrimary: true }),
+    );
+
+    const { result } = renderHook(
+      () => useSetPrimaryImage('project', '00000000-0000-0000-0000-000000000001'),
+      {
+        wrapper: makeWrapper(qc),
+      },
+    );
+
+    act(() => {
+      result.current.mutate('00000000-0000-0000-0000-000000000012');
+    });
+
+    await waitFor(() => {
+      const images = qc.getQueryData<ImageAsset[]>([
+        'images',
+        'project',
+        '00000000-0000-0000-0000-000000000001',
+      ]);
+      expect(images?.find((image) => image.id.endsWith('0011'))?.isPrimary).toBe(false);
+      expect(images?.find((image) => image.id.endsWith('0012'))?.isPrimary).toBe(true);
+    });
+  });
+});
+
+describe('useUpdateImageCrop', () => {
+  let qc: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    qc = createTestClient();
+    qc.setQueryData<ImageAsset[]>(
+      ['images', 'project', '00000000-0000-0000-0000-000000000001'],
+      [makeImage()],
+    );
+  });
+
+  it('replaces the updated image in cache', async () => {
+    mockImagesSetCrop.mockResolvedValueOnce(
+      makeImage({
+        cropX: 1,
+        cropY: 2,
+        cropWidth: 300,
+        cropHeight: 200,
+      }),
+    );
+
+    const { result } = renderHook(
+      () => useUpdateImageCrop('project', '00000000-0000-0000-0000-000000000001'),
+      {
+        wrapper: makeWrapper(qc),
+      },
+    );
+
+    act(() => {
+      result.current.mutate({
+        imageId: '00000000-0000-0000-0000-000000000011',
+        params: { cropX: 1, cropY: 2, cropWidth: 300, cropHeight: 200 },
+      });
+    });
+
+    await waitFor(() => {
+      const images = qc.getQueryData<ImageAsset[]>([
+        'images',
+        'project',
+        '00000000-0000-0000-0000-000000000001',
+      ]);
+      expect(images?.[0]).toMatchObject({
+        cropX: 1,
+        cropY: 2,
+        cropWidth: 300,
+        cropHeight: 200,
       });
     });
   });
