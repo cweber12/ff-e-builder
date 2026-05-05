@@ -2,7 +2,7 @@
 
 | File                               | Description                                                                               |
 | ---------------------------------- | ----------------------------------------------------------------------------------------- |
-| [../CONTEXT.md](../CONTEXT.md)     | Canonical product and domain language for Projects, FF&E, Take-Off, Materials, and Images |
+| [../CONTEXT.md](../CONTEXT.md)     | Canonical product and domain language for Projects, FF&E, Proposal, Materials, and Images |
 | [architecture.md](architecture.md) | System context, component, sequence, and ER diagrams; decision log                        |
 | [runbook.md](runbook.md)           | Deployment, rollback, log access, secret rotation, DB migrations                          |
 | [money.md](money.md)               | Integer-minor-units convention; which fields are cents; display helpers                   |

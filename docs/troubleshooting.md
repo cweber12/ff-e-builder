@@ -49,5 +49,5 @@ statement, make sure the migration runner is using the Neon `Pool` query path,
 not prepared single-statement execution.
 
 If image uploads fail after a deploy, confirm the latest image migration has
-been applied. Stale `image_assets` indexes can block valid Take-Off Rendering
+been applied. Stale `image_assets` indexes can block valid Proposal Rendering
 or Project Image inserts and surface as server-side upload failures.

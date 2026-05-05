@@ -26,7 +26,7 @@ Open [http://localhost:5173](http://localhost:5173).
 C4Context
   title ChillDesignStudio - System Context
 
-  Person(designer, "Designer", "Creates projects, FF&E schedules, take-off tables, material libraries, and exports")
+  Person(designer, "Designer", "Creates projects, FF&E schedules, proposals, material libraries, and exports")
   System(app, "ChillDesignStudio", "React SPA + Cloudflare Workers API")
   System_Ext(firebase, "Firebase Auth", "Google-managed identity provider")
   System_Ext(neon, "Neon Postgres", "Serverless relational database")
@@ -48,17 +48,17 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 
 - **Brand** -- the application presents as ChillDesignStudio while retaining the existing project-first workspace.
 - **User information** -- the projects page includes editable user contact details for project documentation.
-- **Project tools** (`/projects/:id`) -- choose whether to open/create FF&E or a Take-Off Table for the selected project, then switch between tools from the project header.
-- **Default sample content** -- every new project is preloaded with FF&E rooms/items, Take-Off categories/items, project images, item renderings, and material/swatch imagery so exports can be reviewed against realistic data immediately.
-- **Take-Off Table** (`/projects/:id/takeoff/table`) -- project take-off rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, image-only Plan cells, up to four direct image swatches per row, drawing/location fields, size entry, CBM, quantity units, integer-cent totals, image-aware Excel import with column mapping, and CSV/Excel/PDF exports with equal-width project image bands plus cell-filling row imagery.
+- **Project tools** (`/projects/:id`) -- choose whether to open/create FF&E or a Proposal for the selected project, then switch between tools from the project header.
+- **Default sample content** -- every new project is preloaded with FF&E rooms/items, Proposal categories/items, project images, item renderings, and material/swatch imagery so exports can be reviewed against realistic data immediately.
+- **Proposal** (`/projects/:id/proposal/table`) -- project proposal rows grouped by category, seeded with Millwork, Ceiling, Flooring, and Walls, with rendering uploads, image-only Plan cells, assigned Finish Library Materials for Swatch Cells, drawing/location fields, size entry, CBM, quantity units, integer-cent totals, image-aware Excel import with column mapping, and CSV/Excel/PDF exports with equal-width project image bands plus cell-filling row imagery.
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
-- **Project header** -- compact read-only project identity, FF&E/Take-Off navigation, and Project Options for updating project data, images, or deletion; budget context lives in the Summary views.
+- **Project header** -- compact read-only project identity, FF&E/Proposal navigation, and Project Options for updating project data, images, or deletion; budget context lives in the Summary views.
 - **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
 - **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, browser print, direct PDF export, and per-item PDF export.
 - **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
-- **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/takeoff/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials.md](docs/materials.md).
-- **Images** -- project, room, FF&E item, material, take-off rendering, and take-off swatch image metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
+- **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/proposal/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials.md](docs/materials.md).
+- **Images** -- project, room, FF&E item, material, Proposal Rendering, Plan Image, and Material Visual metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes
 
@@ -91,7 +91,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   └── 404.html       # GitHub Pages SPA redirect script
 ├── api/               # Cloudflare Workers API (TypeScript)
 │   └── src/
-│       ├── routes/    # Hono route handlers (projects, rooms, items, materials, takeoff, images, users)
+│       ├── routes/    # Hono route handlers (projects, rooms, items, materials, proposal, images, users)
 │       ├── middleware/ # Auth middleware (Firebase JWT verification)
 │       └── lib/       # Worker-only utilities (db, firebase-auth, ownership)
 ├── db/

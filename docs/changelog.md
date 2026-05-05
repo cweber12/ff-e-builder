@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs(proposal): align current domain and architecture docs with the Proposal rename
 - fix(proposal): repair renamed Proposal item-material join column so category item loading no longer 500s after the Take-Off rename
 - fix(images): allow `proposal_swatch` uploads through API validation after the Proposal rename
 - feat(materials): add `finish_classification` field (`material | swatch | hybrid`) to the Finish Library — migration 0009, API schemas, client types, and all create/update routes updated

@@ -6,7 +6,7 @@
 C4Context
   title ChillDesignStudio - System Context
 
-  Person(designer, "Designer / Procurement User", "Creates projects, FF&E schedules, Take-Off Tables, material libraries, and exports")
+  Person(designer, "Designer / Procurement User", "Creates projects, FF&E schedules, Proposals, material libraries, and exports")
   System(app, "ChillDesignStudio", "React SPA + Cloudflare Workers API")
   System_Ext(firebase, "Firebase Auth", "OIDC identity provider")
   System_Ext(neon, "Neon Postgres", "Serverless relational database")
@@ -30,9 +30,9 @@ C4Component
   title ChillDesignStudio - Components
 
   Container_Boundary(spa, "React SPA (Vite, TypeScript)") {
-    Component(routes, "Route Shell", "react-router-dom", "Project list, tool chooser, FF&E pages, Take-Off Table pages")
+    Component(routes, "Route Shell", "react-router-dom", "Project list, tool chooser, FF&E pages, Proposal pages")
     Component(ui, "Components", "React + Tailwind", "Tables, modals, headers, exports, imports, image frames")
-    Component(hooks, "Data Hooks", "TanStack Query", "Project, room, item, material, image, user profile, and Take-Off Table queries")
+    Component(hooks, "Data Hooks", "TanStack Query", "Project, room, item, material, image, user profile, and Proposal queries")
     Component(auth, "Auth Module", "Firebase Auth SDK", "Sign-in state and ID token access")
     Component(apiClient, "API Client", "fetch", "Maps client models to /api/v1 payloads")
   }
@@ -41,7 +41,7 @@ C4Component
     Component(router, "Router", "Hono", "Mounts route modules under /api/v1")
     Component(authMw, "Auth Middleware", "Firebase token verification", "Rejects unauthenticated API calls")
     Component(ownership, "Ownership Helpers", "SQL lookups", "Ensures resources belong to the Firebase UID")
-    Component(routeHandlers, "Route Handlers", "TypeScript", "Projects, rooms, items, materials, take-off, images, users")
+    Component(routeHandlers, "Route Handlers", "TypeScript", "Projects, rooms, items, materials, proposal, images, users")
     Component(db, "Database Client", "Neon serverless SQL template", "Hand-written SQL queries")
     Component(imageGateway, "Image Gateway", "Cloudflare R2 binding", "Uploads, primary image selection, protected downloads")
   }
@@ -64,14 +64,14 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 
 - `/signin` is public.
 - `/projects` lists projects, editable user information, and project image previews.
-- `/projects/:id` shows the tool chooser for FF&E and Take-Off Table.
+- `/projects/:id` redirects to the default project tool.
 - `/projects/:id/ffe/table` shows the editable FF&E table grouped by Room.
 - `/projects/:id/ffe/catalog` shows printable FF&E catalog pages.
 - `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
 - `/projects/:id/ffe/summary` shows FF&E budget and status summaries.
-- `/projects/:id/takeoff/table` shows the editable Take-Off Table grouped by Take-Off Category.
-- `/projects/:id/takeoff/materials` shows the shared project material library from the Take-Off tool.
-- `/projects/:id/takeoff/summary` shows Take-Off category and cost summaries.
+- `/projects/:id/proposal/table` shows the editable Proposal grouped by Proposal Category.
+- `/projects/:id/proposal/materials` redirects to the shared project material library.
+- `/projects/:id/proposal/summary` redirects to the project budget view.
 
 Legacy project routes such as `/projects/:id/table` redirect to their FF&E equivalents.
 
@@ -80,14 +80,14 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - Firebase Auth owns user identity. The client waits for auth readiness and sends the current ID token as `Authorization: Bearer <token>` on API calls.
 - The Worker auth middleware protects all `/api/v1/*` routes. `/healthz` is public.
 - The client never imports API worker code and never talks to Neon or R2 directly.
-- Route modules live under `api/src/routes/`: `projects`, `rooms`, `items`, `materials`, `takeoff`, `images`, and `users`.
+- Route modules live under `api/src/routes/`: `projects`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
-- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, `takeoff_item`, `takeoff_plan`, and `takeoff_swatch`. In domain language, the primary image attached to an FF&E Item or Take-Off Item row is a Rendering, while a Take-Off Plan Image is a separate row-level visual.
+- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering, while a Proposal Plan Image is a separate row-level visual.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
-- Take-Off categories start empty for new projects and are created explicitly by users or imports.
-- Take-Off spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.
+- Proposal categories start empty for new projects and are created explicitly by users or imports.
+- Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.
 
 ## 5. Data Flow
 
@@ -148,7 +148,7 @@ erDiagram
     text budget_mode "shared | individual"
     bigint budget_cents "integer cents"
     bigint ffe_budget_cents "integer cents"
-    bigint takeoff_budget_cents "integer cents"
+    bigint proposal_budget_cents "integer cents"
     timestamptz created_at
     timestamptz updated_at
   }
@@ -191,7 +191,7 @@ erDiagram
     timestamptz updated_at
   }
 
-  TAKEOFF_CATEGORIES {
+  PROPOSAL_CATEGORIES {
     uuid id PK
     uuid project_id FK
     text name
@@ -200,7 +200,7 @@ erDiagram
     timestamptz updated_at
   }
 
-  TAKEOFF_ITEMS {
+  PROPOSAL_ITEMS {
     uuid id PK
     uuid category_id FK
     text product_tag
@@ -258,7 +258,7 @@ erDiagram
     uuid room_id FK
     uuid item_id FK
     uuid material_id FK
-    uuid takeoff_item_id FK
+    uuid proposal_item_id FK
     text r2_key
     text filename
     text content_type
@@ -271,8 +271,8 @@ erDiagram
 
   PROJECTS ||--o{ ROOMS : contains
   ROOMS ||--o{ ITEMS : contains
-  PROJECTS ||--o{ TAKEOFF_CATEGORIES : contains
-  TAKEOFF_CATEGORIES ||--o{ TAKEOFF_ITEMS : contains
+  PROJECTS ||--o{ PROPOSAL_CATEGORIES : contains
+  PROPOSAL_CATEGORIES ||--o{ PROPOSAL_ITEMS : contains
   PROJECTS ||--o{ MATERIALS : owns
   ITEMS ||--o{ ITEM_MATERIALS : uses
   MATERIALS ||--o{ ITEM_MATERIALS : assigned_to
@@ -281,7 +281,7 @@ erDiagram
   ROOMS ||--o{ IMAGE_ASSETS : can_have
   ITEMS ||--o{ IMAGE_ASSETS : can_have
   MATERIALS ||--o{ IMAGE_ASSETS : can_have
-  TAKEOFF_ITEMS ||--o{ IMAGE_ASSETS : can_have
+  PROPOSAL_ITEMS ||--o{ IMAGE_ASSETS : can_have
 ```
 
 ## 7. Testing And Verification
@@ -337,4 +337,4 @@ Architecture decisions are recorded as ADRs in [adr/](adr/).
 | [0001](adr/0001-server-side-db-proxy.md)       | Server-side DB proxy between the client and Neon                          | Accepted |
 | [0002](adr/0002-manual-types-for-now.md)       | Hand-written TypeScript types; defer generation until schema pain is real | Accepted |
 | [0003](adr/0003-no-storybook-yet.md)           | No Storybook in v1; rely on focused tests and written design-system docs  | Accepted |
-| [0004](adr/0004-project-scoped-tool-models.md) | Keep FF&E and Take-Off as separate project-scoped data models             | Accepted |
+| [0004](adr/0004-project-scoped-tool-models.md) | Keep FF&E and Proposal as separate project-scoped data models             | Accepted |
