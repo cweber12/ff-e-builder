@@ -3,13 +3,13 @@ import { Button } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { ImageFrame } from '../../shared/ImageFrame';
 import {
-  useCreateTakeoffCategory,
-  useCreateTakeoffItem,
-  useDeleteTakeoffCategory,
-  useDeleteTakeoffItem,
-  useTakeoffWithItems,
-  useUpdateTakeoffCategory,
-  useUpdateTakeoffItem,
+  useCreateProposalCategory,
+  useCreateProposalItem,
+  useDeleteProposalCategory,
+  useDeleteProposalItem,
+  useProposalWithItems,
+  useUpdateProposalCategory,
+  useUpdateProposalItem,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -18,16 +18,20 @@ import {
   formatMoney,
   parseUnitCostDollarsInput,
   type Project,
-  type TakeoffItem,
+  type ProposalItem,
 } from '../../../types';
-import { exportTakeoffCsv, exportTakeoffExcel, exportTakeoffPdf } from '../../../lib/exportUtils';
+import {
+  exportProposalCsv,
+  exportProposalExcel,
+  exportProposalPdf,
+} from '../../../lib/exportUtils';
 import { useUserProfile } from '../../../hooks';
 import {
-  takeoffCategorySubtotalCents,
-  takeoffLineTotalCents,
-  takeoffProjectTotalCents,
+  proposalCategorySubtotalCents,
+  proposalLineTotalCents,
+  proposalProjectTotalCents,
 } from '../../../lib/calc';
-import type { UpdateTakeoffItemInput } from '../../../lib/api';
+import type { UpdateProposalItemInput } from '../../../lib/api';
 import { DimensionEditorModal } from '../../shared/DimensionEditorModal';
 import {
   GroupedTableHeader,
@@ -49,22 +53,22 @@ const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-whi
 const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
 const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
 
-type TakeoffTableProps = {
+type ProposalTableProps = {
   projectId: string;
   project?: Project;
   onImport?: (() => void) | undefined;
 };
 
-export function TakeoffTable({ projectId, project, onImport }: TakeoffTableProps) {
-  const { categoriesWithItems, isLoading } = useTakeoffWithItems(projectId);
+export function ProposalTable({ projectId, project, onImport }: ProposalTableProps) {
+  const { categoriesWithItems, isLoading } = useProposalWithItems(projectId);
   const { data: userProfile } = useUserProfile();
-  const createCategory = useCreateTakeoffCategory(projectId);
-  const updateCategory = useUpdateTakeoffCategory(projectId);
-  const deleteCategory = useDeleteTakeoffCategory(projectId);
-  const updateItem = useUpdateTakeoffItem();
+  const createCategory = useCreateProposalCategory(projectId);
+  const updateCategory = useUpdateProposalCategory(projectId);
+  const deleteCategory = useDeleteProposalCategory(projectId);
+  const updateItem = useUpdateProposalItem();
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const grandTotal = takeoffProjectTotalCents(categoriesWithItems);
+  const grandTotal = proposalProjectTotalCents(categoriesWithItems);
 
   const toggleCollapsed = (id: string) => {
     setCollapsed((current) => ({ ...current, [id]: !current[id] }));
@@ -95,21 +99,21 @@ export function TakeoffTable({ projectId, project, onImport }: TakeoffTableProps
             <ExportMenu
               label="Export"
               size="sm"
-              onCsv={() => exportTakeoffCsv(project, categoriesWithItems)}
-              onExcel={() => void exportTakeoffExcel(project, categoriesWithItems, userProfile)}
-              onPdf={() => void exportTakeoffPdf(project, categoriesWithItems, userProfile)}
+              onCsv={() => exportProposalCsv(project, categoriesWithItems)}
+              onExcel={() => void exportProposalExcel(project, categoriesWithItems, userProfile)}
+              onPdf={() => void exportProposalPdf(project, categoriesWithItems, userProfile)}
               pdfOptions={[
                 {
                   label: 'Continuous',
                   onSelect: () =>
-                    void exportTakeoffPdf(project, categoriesWithItems, userProfile, {
+                    void exportProposalPdf(project, categoriesWithItems, userProfile, {
                       mode: 'continuous',
                     }),
                 },
                 {
                   label: 'Separated',
                   onSelect: () =>
-                    void exportTakeoffPdf(project, categoriesWithItems, userProfile, {
+                    void exportProposalPdf(project, categoriesWithItems, userProfile, {
                       mode: 'separated',
                     }),
                 },
@@ -131,21 +135,21 @@ export function TakeoffTable({ projectId, project, onImport }: TakeoffTableProps
 
       {categoriesWithItems.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-semibold text-gray-900">No Take-Off Categories yet</p>
+          <p className="text-sm font-semibold text-gray-900">No Proposal Categories yet</p>
           <p className="mt-1 text-sm text-gray-500">
-            Create a category to start your Take-Off Table.
+            Create a category to start your Proposal Table.
           </p>
         </div>
       ) : null}
 
       {categoriesWithItems.map((category) => (
-        <TakeoffCategorySection
+        <ProposalCategorySection
           key={category.id}
           projectId={projectId}
           categoryId={category.id}
           categoryName={category.name}
           items={category.items}
-          subtotalCents={takeoffCategorySubtotalCents(category.items)}
+          subtotalCents={proposalCategorySubtotalCents(category.items)}
           collapsed={collapsed[category.id] ?? false}
           onToggle={() => toggleCollapsed(category.id)}
           onCategoryNameSave={(name) =>
@@ -315,7 +319,7 @@ function CategoryActionsMenu({
   );
 }
 
-function TakeoffCategorySection({
+function ProposalCategorySection({
   projectId,
   categoryId,
   categoryName,
@@ -330,16 +334,16 @@ function TakeoffCategorySection({
   projectId: string;
   categoryId: string;
   categoryName: string;
-  items: TakeoffItem[];
+  items: ProposalItem[];
   subtotalCents: number;
   collapsed: boolean;
   onToggle: () => void;
   onCategoryNameSave: (name: string) => void;
   onCategoryDelete: () => void;
-  onItemSave: (item: TakeoffItem, patch: UpdateTakeoffItemInput) => void;
+  onItemSave: (item: ProposalItem, patch: UpdateProposalItemInput) => void;
 }) {
-  const createItem = useCreateTakeoffItem(categoryId);
-  const deleteItem = useDeleteTakeoffItem(categoryId);
+  const createItem = useCreateProposalItem(categoryId);
+  const deleteItem = useDeleteProposalItem(categoryId);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const itemCount = items.length;
@@ -441,7 +445,7 @@ function TakeoffCategorySection({
             </thead>
             <tbody>
               {items.map((item) => (
-                <TakeoffRow
+                <ProposalRow
                   key={item.id}
                   projectId={projectId}
                   categoryId={categoryId}
@@ -516,7 +520,7 @@ function TakeoffCategorySection({
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <TakeoffRow
+                    <ProposalRow
                       key={item.id}
                       projectId={projectId}
                       categoryId={categoryId}
@@ -535,7 +539,7 @@ function TakeoffCategorySection({
   );
 }
 
-function TakeoffRow({
+function ProposalRow({
   projectId,
   categoryId,
   item,
@@ -544,21 +548,21 @@ function TakeoffRow({
 }: {
   projectId: string;
   categoryId: string;
-  item: TakeoffItem;
-  onSave: (patch: Omit<UpdateTakeoffItemInput, 'version'>) => void;
+  item: ProposalItem;
+  onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onDelete: () => void;
 }) {
   const [sizeOpen, setSizeOpen] = useState(false);
   const [swatchOpen, setSwatchOpen] = useState(false);
-  const lineTotal = takeoffLineTotalCents(item);
+  const lineTotal = proposalLineTotalCents(item);
 
   return (
     <tr className="border-b border-gray-100 align-top last:border-b-0">
       <td className="w-28 px-3 py-2">
         <ImageFrame
-          entityType="takeoff_item"
+          entityType="proposal_item"
           entityId={item.id}
-          alt={`${item.productTag || 'Take-off'} rendering`}
+          alt={`${item.productTag || 'Proposal'} rendering`}
           className="h-20 w-24"
           compact
         />
@@ -566,9 +570,9 @@ function TakeoffRow({
       <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
       <td className="w-28 px-3 py-2">
         <ImageFrame
-          entityType="takeoff_plan"
+          entityType="proposal_plan"
           entityId={item.id}
-          alt={`${item.productTag || 'Take-off'} plan`}
+          alt={`${item.productTag || 'Proposal'} plan`}
           className="h-20 w-24"
           compact
         />
@@ -608,7 +612,7 @@ function TakeoffRow({
         <MaterialLibraryModal
           open={swatchOpen}
           projectId={projectId}
-          context="takeoff"
+          context="proposal"
           categoryId={categoryId}
           item={item}
           onClose={() => setSwatchOpen(false)}
@@ -634,7 +638,7 @@ function TakeoffRow({
         {formatMoney(cents(lineTotal))}
       </td>
       <td className={cn('px-3 py-2', stickyOptionsCellClassName)}>
-        <TakeoffItemActionsMenu
+        <ProposalItemActionsMenu
           itemName={item.productTag || item.description || 'item'}
           onDelete={onDelete}
         />
@@ -643,7 +647,7 @@ function TakeoffRow({
   );
 }
 
-function TakeoffItemActionsMenu({
+function ProposalItemActionsMenu({
   itemName,
   onDelete,
 }: {
@@ -1018,10 +1022,10 @@ function SizeModal({
   onClose,
   onSave,
 }: {
-  item: TakeoffItem;
+  item: ProposalItem;
   open: boolean;
   onClose: () => void;
-  onSave: (patch: Omit<UpdateTakeoffItemInput, 'version'>) => void;
+  onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
 }) {
   return (
     <DimensionEditorModal

@@ -142,7 +142,7 @@ export async function getOwnedMaterialContext(
   return { projectId: row.project_id, materialId: row.material_id };
 }
 
-export async function assertTakeoffCategoryOwnership(
+export async function assertProposalCategoryOwnership(
   env: Env,
   categoryId: string,
   uid: string,
@@ -150,7 +150,7 @@ export async function assertTakeoffCategoryOwnership(
   const sql = getDb(env);
   const rows = await sql`
     SELECT 1
-    FROM takeoff_categories c
+    FROM proposal_categories c
     JOIN projects p ON c.project_id = p.id
     WHERE c.id = ${categoryId} AND p.owner_uid = ${uid}
     LIMIT 1
@@ -158,7 +158,7 @@ export async function assertTakeoffCategoryOwnership(
   if (rows.length === 0) throw new Error('not_found');
 }
 
-export async function assertTakeoffItemOwnership(
+export async function assertProposalItemOwnership(
   env: Env,
   itemId: string,
   uid: string,
@@ -166,8 +166,8 @@ export async function assertTakeoffItemOwnership(
   const sql = getDb(env);
   const rows = await sql`
     SELECT 1
-    FROM takeoff_items i
-    JOIN takeoff_categories c ON i.category_id = c.id
+    FROM proposal_items i
+    JOIN proposal_categories c ON i.category_id = c.id
     JOIN projects p ON c.project_id = p.id
     WHERE i.id = ${itemId} AND p.owner_uid = ${uid}
     LIMIT 1
@@ -175,21 +175,21 @@ export async function assertTakeoffItemOwnership(
   if (rows.length === 0) throw new Error('not_found');
 }
 
-export async function getOwnedTakeoffItemContext(
+export async function getOwnedProposalItemContext(
   env: Env,
   itemId: string,
   uid: string,
-): Promise<{ projectId: string; takeoffItemId: string }> {
+): Promise<{ projectId: string; proposalItemId: string }> {
   const sql = getDb(env);
   const rows = await sql`
-    SELECT i.id AS takeoff_item_id, c.project_id
-    FROM takeoff_items i
-    JOIN takeoff_categories c ON i.category_id = c.id
+    SELECT i.id AS proposal_item_id, c.project_id
+    FROM proposal_items i
+    JOIN proposal_categories c ON i.category_id = c.id
     JOIN projects p ON c.project_id = p.id
     WHERE i.id = ${itemId} AND p.owner_uid = ${uid}
     LIMIT 1
   `;
-  const row = rows[0] as { takeoff_item_id?: string; project_id?: string } | undefined;
-  if (!row?.takeoff_item_id || !row.project_id) throw new Error('not_found');
-  return { projectId: row.project_id, takeoffItemId: row.takeoff_item_id };
+  const row = rows[0] as { proposal_item_id?: string; project_id?: string } | undefined;
+  if (!row?.proposal_item_id || !row.project_id) throw new Error('not_found');
+  return { projectId: row.project_id, proposalItemId: row.proposal_item_id };
 }

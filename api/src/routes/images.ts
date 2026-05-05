@@ -7,7 +7,7 @@ import {
   getOwnedMaterialContext,
   getOwnedProjectContext,
   getOwnedRoomContext,
-  getOwnedTakeoffItemContext,
+  getOwnedProposalItemContext,
 } from '../lib/ownership';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -20,7 +20,7 @@ type EntityContext = {
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;
-  takeoffItemId: string | null;
+  proposalItemId: string | null;
 };
 
 function extensionForContentType(contentType: string): string {
@@ -54,17 +54,17 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
     return 'Projects can have up to 3 images';
   }
 
-  if (message.includes('take-off items can have up to 4 swatches')) {
-    return 'Take-Off items can have up to 4 swatches';
+  if (message.includes('proposal items can have up to 4 swatches')) {
+    return 'Proposal items can have up to 4 swatches';
   }
 
   if (!message.includes('duplicate key value violates unique constraint')) return null;
 
   if (entityType === 'project') return 'Projects can have only one preview image at a time';
-  if (entityType === 'item' || entityType === 'takeoff_item') {
+  if (entityType === 'item' || entityType === 'proposal_item') {
     return 'This row already has a rendering';
   }
-  if (entityType === 'takeoff_plan') return 'This row already has a plan image';
+  if (entityType === 'proposal_plan') return 'This row already has a plan image';
   if (entityType === 'room') return 'This room already has an image';
   if (entityType === 'material') return 'This material already has an image';
   return 'An image already exists for this entity';
@@ -75,7 +75,7 @@ function isProjectImageAsset(image: ImageAsset): boolean {
     image.room_id === null &&
     image.item_id === null &&
     image.material_id === null &&
-    image.takeoff_item_id === null &&
+    image.proposal_item_id === null &&
     image.entity_type === 'project'
   );
 }
@@ -93,7 +93,7 @@ async function getOwnedEntityContext(
       roomId: null,
       itemId: null,
       materialId: null,
-      takeoffItemId: null,
+      proposalItemId: null,
     };
   }
 
@@ -104,7 +104,7 @@ async function getOwnedEntityContext(
       roomId: room.roomId,
       itemId: null,
       materialId: null,
-      takeoffItemId: null,
+      proposalItemId: null,
     };
   }
 
@@ -115,18 +115,22 @@ async function getOwnedEntityContext(
       roomId: null,
       itemId: null,
       materialId: material.materialId,
-      takeoffItemId: null,
+      proposalItemId: null,
     };
   }
 
-  if (entityType === 'takeoff_item' || entityType === 'takeoff_plan') {
-    const takeoffItem = await getOwnedTakeoffItemContext(env, entityId, uid);
+  if (
+    entityType === 'proposal_item' ||
+    entityType === 'proposal_swatch' ||
+    entityType === 'proposal_plan'
+  ) {
+    const proposalItem = await getOwnedProposalItemContext(env, entityId, uid);
     return {
-      projectId: takeoffItem.projectId,
+      projectId: proposalItem.projectId,
       roomId: null,
       itemId: null,
       materialId: null,
-      takeoffItemId: takeoffItem.takeoffItemId,
+      proposalItemId: proposalItem.proposalItemId,
     };
   }
 
@@ -136,7 +140,7 @@ async function getOwnedEntityContext(
     roomId: item.roomId,
     itemId: item.itemId,
     materialId: null,
-    takeoffItemId: null,
+    proposalItemId: null,
   };
 }
 
@@ -151,11 +155,14 @@ function buildR2Key(
   if (entityType === 'project') return `${base}/project/${imageId}.${ext}`;
   if (entityType === 'room') return `${base}/rooms/${context.roomId}/${imageId}.${ext}`;
   if (entityType === 'material') return `${base}/materials/${context.materialId}/${imageId}.${ext}`;
-  if (entityType === 'takeoff_item') {
-    return `${base}/takeoff/items/${context.takeoffItemId}/${imageId}.${ext}`;
+  if (entityType === 'proposal_item') {
+    return `${base}/proposal/items/${context.proposalItemId}/${imageId}.${ext}`;
   }
-  if (entityType === 'takeoff_plan') {
-    return `${base}/takeoff/items/${context.takeoffItemId}/plan/${imageId}.${ext}`;
+  if (entityType === 'proposal_swatch') {
+    return `${base}/proposal/items/${context.proposalItemId}/swatches/${imageId}.${ext}`;
+  }
+  if (entityType === 'proposal_plan') {
+    return `${base}/proposal/items/${context.proposalItemId}/plan/${imageId}.${ext}`;
   }
   return `${base}/rooms/${context.roomId}/items/${context.itemId}/${imageId}.${ext}`;
 }
@@ -199,7 +206,7 @@ router.get('/', async (c) => {
       AND room_id IS NOT DISTINCT FROM ${context.roomId}
       AND item_id IS NOT DISTINCT FROM ${context.itemId}
       AND material_id IS NOT DISTINCT FROM ${context.materialId}
-      AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
+      AND proposal_item_id IS NOT DISTINCT FROM ${context.proposalItemId}
     ORDER BY is_primary DESC, created_at DESC
   `;
 
@@ -248,7 +255,7 @@ router.post('/', async (c) => {
       entityType: parsed.data.entity_type,
       imageId,
       materialId: context.materialId ?? '',
-      takeoffItemId: context.takeoffItemId ?? '',
+      proposalItemId: context.proposalItemId ?? '',
     },
   });
 
@@ -265,7 +272,7 @@ router.post('/', async (c) => {
           AND room_id IS NULL
           AND item_id IS NULL
           AND material_id IS NULL
-          AND takeoff_item_id IS NULL
+          AND proposal_item_id IS NULL
       `;
       const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
       projectImageCount = count;
@@ -274,13 +281,34 @@ router.post('/', async (c) => {
         return c.json({ error: 'Projects can have up to 3 images' }, 400);
       }
     }
+    if (parsed.data.entity_type === 'proposal_swatch') {
+      const existing = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM image_assets
+        WHERE owner_uid = ${uid}
+          AND project_id = ${context.projectId}
+          AND entity_type = 'proposal_swatch'
+          AND room_id IS NULL
+          AND item_id IS NULL
+          AND material_id IS NULL
+          AND proposal_item_id IS NOT DISTINCT FROM ${context.proposalItemId}
+      `;
+      const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
+      if (count >= 4) {
+        await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+        return c.json({ error: 'Proposal items can have up to 4 swatches' }, 400);
+      }
+    }
 
-    const isPrimary = parsed.data.entity_type === 'project' ? projectImageCount === 0 : true;
+    const isPrimary =
+      parsed.data.entity_type === 'project'
+        ? projectImageCount === 0
+        : parsed.data.entity_type !== 'proposal_swatch';
 
     if (parsed.data.entity_type === 'project') {
       const rows = await sql`
         INSERT INTO image_assets (
-          id, entity_type, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
+          id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
           filename, content_type, byte_size, alt_text, is_primary
         )
         VALUES (
@@ -291,7 +319,7 @@ router.post('/', async (c) => {
           ${context.roomId},
           ${context.itemId},
           ${context.materialId},
-          ${context.takeoffItemId},
+          ${context.proposalItemId},
           ${r2Key},
           ${cleanFilename(file.name)},
           ${file.type},
@@ -314,10 +342,10 @@ router.post('/', async (c) => {
           AND room_id IS NOT DISTINCT FROM ${context.roomId}
           AND item_id IS NOT DISTINCT FROM ${context.itemId}
           AND material_id IS NOT DISTINCT FROM ${context.materialId}
-          AND takeoff_item_id IS NOT DISTINCT FROM ${context.takeoffItemId}
+          AND proposal_item_id IS NOT DISTINCT FROM ${context.proposalItemId}
       )
       INSERT INTO image_assets (
-        id, entity_type, owner_uid, project_id, room_id, item_id, material_id, takeoff_item_id, r2_key,
+        id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
         filename, content_type, byte_size, alt_text, is_primary
       )
       VALUES (
@@ -328,7 +356,7 @@ router.post('/', async (c) => {
         ${context.roomId},
         ${context.itemId},
         ${context.materialId},
-        ${context.takeoffItemId},
+        ${context.proposalItemId},
         ${r2Key},
         ${cleanFilename(file.name)},
         ${file.type},
@@ -342,7 +370,10 @@ router.post('/', async (c) => {
   } catch (err) {
     await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
     const validationError = imageInsertErrorMessage(parsed.data.entity_type, err);
-    if (validationError) return c.json({ error: validationError }, 409);
+    if (validationError) {
+      const status = validationError === 'Proposal items can have up to 4 swatches' ? 400 : 409;
+      return c.json({ error: validationError }, status);
+    }
     throw err;
   }
 });
@@ -423,7 +454,7 @@ router.patch('/:id/primary', async (c) => {
         AND room_id IS NOT DISTINCT FROM ${image.room_id}
         AND item_id IS NOT DISTINCT FROM ${image.item_id}
         AND material_id IS NOT DISTINCT FROM ${image.material_id}
-        AND takeoff_item_id IS NOT DISTINCT FROM ${image.takeoff_item_id}
+        AND proposal_item_id IS NOT DISTINCT FROM ${image.proposal_item_id}
     )
     UPDATE image_assets
     SET is_primary = true
@@ -482,7 +513,7 @@ router.delete('/:id', async (c) => {
         AND room_id IS NULL
         AND item_id IS NULL
         AND material_id IS NULL
-        AND takeoff_item_id IS NULL
+        AND proposal_item_id IS NULL
       ORDER BY created_at DESC
       LIMIT 1
     `;

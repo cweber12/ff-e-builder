@@ -32,7 +32,7 @@ export interface Project {
   /** Always integer cents - see /docs/money.md */
   ffe_budget_cents: number;
   /** Always integer cents - see /docs/money.md */
-  takeoff_budget_cents: number;
+  proposal_budget_cents: number;
   created_at: string;
   updated_at: string;
 }
@@ -99,7 +99,7 @@ export interface UserProfile {
   updated_at: string;
 }
 
-export interface TakeoffCategory {
+export interface ProposalCategory {
   id: string;
   project_id: string;
   name: string;
@@ -108,7 +108,7 @@ export interface TakeoffCategory {
   updated_at: string;
 }
 
-export interface TakeoffItem {
+export interface ProposalItem {
   id: string;
   category_id: string;
   product_tag: string;
@@ -138,8 +138,9 @@ export type ImageEntityType =
   | 'room'
   | 'item'
   | 'material'
-  | 'takeoff_item'
-  | 'takeoff_plan';
+  | 'proposal_item'
+  | 'proposal_swatch'
+  | 'proposal_plan';
 
 export interface ImageAsset {
   id: string;
@@ -149,7 +150,7 @@ export interface ImageAsset {
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
-  takeoff_item_id: string | null;
+  proposal_item_id: string | null;
   r2_key: string;
   filename: string;
   content_type: string;
@@ -181,7 +182,7 @@ export const CreateProjectSchema = z.object({
   budget_mode: z.enum(budgetModes).default('shared'),
   budget_cents: z.number().int().nonnegative().default(0),
   ffe_budget_cents: z.number().int().nonnegative().default(0),
-  takeoff_budget_cents: z.number().int().nonnegative().default(0),
+  proposal_budget_cents: z.number().int().nonnegative().default(0),
 });
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
 
@@ -251,16 +252,16 @@ export const UpsertUserProfileSchema = z.object({
 });
 export type UpsertUserProfileInput = z.infer<typeof UpsertUserProfileSchema>;
 
-export const CreateTakeoffCategorySchema = z.object({
+export const CreateProposalCategorySchema = z.object({
   name: z.string().min(1).max(100),
   sort_order: z.number().int().nonnegative().default(0),
 });
-export type CreateTakeoffCategoryInput = z.infer<typeof CreateTakeoffCategorySchema>;
+export type CreateProposalCategoryInput = z.infer<typeof CreateProposalCategorySchema>;
 
-export const UpdateTakeoffCategorySchema = CreateTakeoffCategorySchema.partial();
-export type UpdateTakeoffCategoryInput = z.infer<typeof UpdateTakeoffCategorySchema>;
+export const UpdateProposalCategorySchema = CreateProposalCategorySchema.partial();
+export type UpdateProposalCategoryInput = z.infer<typeof UpdateProposalCategorySchema>;
 
-export const CreateTakeoffItemSchema = z.object({
+export const CreateProposalItemSchema = z.object({
   category_id: z.string().uuid().optional(),
   product_tag: z.string().max(100).default(''),
   plan: z.string().max(255).default(''),
@@ -279,15 +280,23 @@ export const CreateTakeoffItemSchema = z.object({
   unit_cost_cents: z.number().int().nonnegative().default(0),
   sort_order: z.number().int().nonnegative().default(0),
 });
-export type CreateTakeoffItemInput = z.infer<typeof CreateTakeoffItemSchema>;
+export type CreateProposalItemInput = z.infer<typeof CreateProposalItemSchema>;
 
-export const UpdateTakeoffItemSchema = CreateTakeoffItemSchema.partial().extend({
+export const UpdateProposalItemSchema = CreateProposalItemSchema.partial().extend({
   version: z.number().int().nonnegative(),
 });
-export type UpdateTakeoffItemInput = z.infer<typeof UpdateTakeoffItemSchema>;
+export type UpdateProposalItemInput = z.infer<typeof UpdateProposalItemSchema>;
 
 export const ImageEntitySchema = z.object({
-  entity_type: z.enum(['project', 'room', 'item', 'material', 'takeoff_item', 'takeoff_plan']),
+  entity_type: z.enum([
+    'project',
+    'room',
+    'item',
+    'material',
+    'proposal_item',
+    'proposal_swatch',
+    'proposal_plan',
+  ]),
   entity_id: z.string().uuid(),
 });
 

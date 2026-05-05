@@ -46,11 +46,11 @@ vi.mock('../../../hooks/materials/useMaterials', () => ({
   useAssignMaterial: () => ({ mutateAsync: vi.fn() }),
   useCreateAndAssignMaterial: () => ({ mutateAsync: mockCreateAndAssignMaterialMutateAsync }),
   useRemoveMaterialFromItem: () => ({ mutateAsync: vi.fn() }),
-  useAssignMaterialToTakeoffItem: () => ({ mutateAsync: vi.fn() }),
-  useCreateAndAssignMaterialToTakeoffItem: () => ({ mutateAsync: vi.fn() }),
-  useRemoveMaterialFromTakeoffItem: () => ({ mutateAsync: vi.fn() }),
+  useAssignMaterialToProposalItem: () => ({ mutateAsync: vi.fn() }),
+  useCreateAndAssignMaterialToProposalItem: () => ({ mutateAsync: vi.fn() }),
+  useRemoveMaterialFromProposalItem: () => ({ mutateAsync: vi.fn() }),
   useUpdateMaterialForItem: () => ({ mutateAsync: vi.fn() }),
-  useUpdateMaterialForTakeoffItem: () => ({ mutateAsync: vi.fn() }),
+  useUpdateMaterialForProposalItem: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock('../../../lib/exportUtils', () => ({

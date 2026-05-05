@@ -32,7 +32,7 @@ describe('ImageFrame', () => {
   it('shows an inline upload error for a rendering upload failure', () => {
     const { container } = render(
       <ImageFrame
-        entityType="takeoff_item"
+        entityType="proposal_item"
         entityId="00000000-0000-0000-0000-000000000002"
         alt="MI-1 rendering"
       />,

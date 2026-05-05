@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  TAKEOFF_IMPORT_EMPTY_MAP,
-  autoMapTakeoffColumns,
+  PROPOSAL_IMPORT_EMPTY_MAP,
+  autoMapProposalColumns,
   imageToFile,
-  isSummaryTakeoffRow,
+  isSummaryProposalRow,
   rowHasImportableContent,
-  type TakeoffParsedRow,
-} from './takeoffImportUtils';
+  type ProposalParsedRow,
+} from './proposalImportUtils';
 
-const BASE_ROW: TakeoffParsedRow = {
+const BASE_ROW: ProposalParsedRow = {
   id: '0:9',
   rowNumber: 9,
   categoryName: 'Millwork',
@@ -43,9 +43,9 @@ describe('imageToFile', () => {
   });
 });
 
-describe('autoMapTakeoffColumns', () => {
-  it('maps take-off aliases from spreadsheet headers', () => {
-    const mapping = autoMapTakeoffColumns([
+describe('autoMapProposalColumns', () => {
+  it('maps proposal aliases from spreadsheet headers', () => {
+    const mapping = autoMapProposalColumns([
       { key: 'rendering__2', label: 'RENDERING', columnNumber: 2 },
       { key: 'tag__3', label: 'PRODUCT TAG', columnNumber: 3 },
       { key: 'plan__4', label: 'PLAN', columnNumber: 4 },
@@ -70,7 +70,7 @@ describe('rowHasImportableContent', () => {
       values: { tag: 'M-101' },
     };
 
-    expect(rowHasImportableContent(row, { ...TAKEOFF_IMPORT_EMPTY_MAP, productTag: 'tag' })).toBe(
+    expect(rowHasImportableContent(row, { ...PROPOSAL_IMPORT_EMPTY_MAP, productTag: 'tag' })).toBe(
       true,
     );
   });
@@ -96,20 +96,20 @@ describe('rowHasImportableContent', () => {
     };
 
     expect(
-      rowHasImportableContent(row, { ...TAKEOFF_IMPORT_EMPTY_MAP, rendering: 'rendering' }),
+      rowHasImportableContent(row, { ...PROPOSAL_IMPORT_EMPTY_MAP, rendering: 'rendering' }),
     ).toBe(true);
   });
 });
 
-describe('isSummaryTakeoffRow', () => {
+describe('isSummaryProposalRow', () => {
   it('skips subtotal and grand total rows', () => {
-    expect(isSummaryTakeoffRow({ ...BASE_ROW, values: { label: 'TOTAL' } })).toBe(true);
-    expect(isSummaryTakeoffRow({ ...BASE_ROW, values: { label: 'GRAND TOTAL' } })).toBe(true);
+    expect(isSummaryProposalRow({ ...BASE_ROW, values: { label: 'TOTAL' } })).toBe(true);
+    expect(isSummaryProposalRow({ ...BASE_ROW, values: { label: 'GRAND TOTAL' } })).toBe(true);
   });
 
   it('keeps normal item rows', () => {
     expect(
-      isSummaryTakeoffRow({ ...BASE_ROW, values: { tag: 'RECEPTION', desc: 'Millwork' } }),
+      isSummaryProposalRow({ ...BASE_ROW, values: { tag: 'RECEPTION', desc: 'Millwork' } }),
     ).toBe(false);
   });
 });

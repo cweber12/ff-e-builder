@@ -60,9 +60,9 @@ describe('ProjectHeader', () => {
   it('renders project tool navigation', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />);
 
-    expect(screen.getByRole('link', { name: 'All projects' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'FF&E' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Take-Off Table' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Proposal' })).toBeInTheDocument();
   });
 
   it('renders project options when handlers are provided', () => {

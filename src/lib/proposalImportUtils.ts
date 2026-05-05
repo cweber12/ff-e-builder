@@ -1,7 +1,7 @@
 import type { Workbook as ExcelWorkbook, Worksheet } from 'exceljs';
 import * as XLSX from 'xlsx';
 
-export type TakeoffImportField =
+export type ProposalImportField =
   | 'category'
   | 'rendering'
   | 'productTag'
@@ -16,15 +16,15 @@ export type TakeoffImportField =
   | 'quantityUnit'
   | 'unitCost';
 
-export type TakeoffImportColumn = {
+export type ProposalImportColumn = {
   key: string;
   label: string;
   columnNumber: number;
 };
 
-export type TakeoffImportColumnMap = Record<TakeoffImportField, string | null>;
+export type ProposalImportColumnMap = Record<ProposalImportField, string | null>;
 
-export type TakeoffImportImage = {
+export type ProposalImportImage = {
   id: string;
   filename: string;
   contentType: string;
@@ -35,40 +35,40 @@ export type TakeoffImportImage = {
   columnEnd: number;
 };
 
-export type TakeoffParsedRow = {
+export type ProposalParsedRow = {
   id: string;
   rowNumber: number;
   categoryName: string;
   values: Record<string, string>;
-  imagesByColumn: Record<string, TakeoffImportImage[]>;
+  imagesByColumn: Record<string, ProposalImportImage[]>;
   images: {
-    rendering: TakeoffImportImage[];
-    plan: TakeoffImportImage[];
-    swatches: TakeoffImportImage[];
+    rendering: ProposalImportImage[];
+    plan: ProposalImportImage[];
+    swatches: ProposalImportImage[];
   };
   sourceSectionIndex: number;
   skippedReason?: string;
 };
 
-export type TakeoffImportSection = {
+export type ProposalImportSection = {
   index: number;
   categoryName: string;
   headerRowNumber: number;
   rowCount: number;
 };
 
-export type ParsedTakeoffSpreadsheet = {
+export type ParsedProposalSpreadsheet = {
   filename: string;
   sheetName: string;
   fileType: 'xlsx' | 'csv' | 'xls';
-  columns: TakeoffImportColumn[];
-  rows: TakeoffParsedRow[];
-  sections: TakeoffImportSection[];
-  projectImages: TakeoffImportImage[];
+  columns: ProposalImportColumn[];
+  rows: ProposalParsedRow[];
+  sections: ProposalImportSection[];
+  projectImages: ProposalImportImage[];
   warnings: string[];
 };
 
-const FIELD_ALIASES: Record<TakeoffImportField, string[]> = {
+const FIELD_ALIASES: Record<ProposalImportField, string[]> = {
   category: ['category', 'table category', 'section'],
   rendering: ['rendering', 'render', 'image', 'product image'],
   productTag: ['product tag', 'tag', 'product', 'item tag', 'product id'],
@@ -97,7 +97,7 @@ const SUMMARY_ROW_PATTERNS = [
   /^tax$/i,
 ];
 
-export const TAKEOFF_IMPORT_EMPTY_MAP: TakeoffImportColumnMap = {
+export const PROPOSAL_IMPORT_EMPTY_MAP: ProposalImportColumnMap = {
   category: null,
   rendering: null,
   productTag: null,
@@ -113,11 +113,11 @@ export const TAKEOFF_IMPORT_EMPTY_MAP: TakeoffImportColumnMap = {
   unitCost: null,
 };
 
-export function autoMapTakeoffColumns(columns: TakeoffImportColumn[]): TakeoffImportColumnMap {
-  const result: TakeoffImportColumnMap = { ...TAKEOFF_IMPORT_EMPTY_MAP };
+export function autoMapProposalColumns(columns: ProposalImportColumn[]): ProposalImportColumnMap {
+  const result: ProposalImportColumnMap = { ...PROPOSAL_IMPORT_EMPTY_MAP };
   const unused = new Set(columns.map((column) => column.key));
 
-  for (const field of Object.keys(FIELD_ALIASES) as TakeoffImportField[]) {
+  for (const field of Object.keys(FIELD_ALIASES) as ProposalImportField[]) {
     const match = columns.find((column) => {
       if (!unused.has(column.key)) return false;
       return FIELD_ALIASES[field].includes(normalizeLabel(column.label));
@@ -131,22 +131,22 @@ export function autoMapTakeoffColumns(columns: TakeoffImportColumn[]): TakeoffIm
   return result;
 }
 
-export async function parseTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpreadsheet> {
+export async function parseProposalSpreadsheet(file: File): Promise<ParsedProposalSpreadsheet> {
   const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-  if (extension === 'xlsx') return parseXlsxTakeoffSpreadsheet(file);
-  return parseFlatTakeoffSpreadsheet(file, extension === 'csv' ? 'csv' : 'xls');
+  if (extension === 'xlsx') return parseXlsxProposalSpreadsheet(file);
+  return parseFlatProposalSpreadsheet(file, extension === 'csv' ? 'csv' : 'xls');
 }
 
 export function rowHasImportableContent(
-  row: TakeoffParsedRow,
-  mapping: TakeoffImportColumnMap,
+  row: ProposalParsedRow,
+  mapping: ProposalImportColumnMap,
 ): boolean {
-  const hasMappedValue = (Object.keys(mapping) as TakeoffImportField[]).some((field) => {
+  const hasMappedValue = (Object.keys(mapping) as ProposalImportField[]).some((field) => {
     const columnKey = mapping[field];
     if (!columnKey) return false;
     return (row.values[columnKey] ?? '').trim().length > 0;
   });
-  const hasMappedImage = (['rendering', 'plan', 'swatches'] as TakeoffImportField[]).some(
+  const hasMappedImage = (['rendering', 'plan', 'swatches'] as ProposalImportField[]).some(
     (field) => {
       const columnKey = mapping[field];
       if (!columnKey) return false;
@@ -157,14 +157,14 @@ export function rowHasImportableContent(
   return hasMappedValue || hasMappedImage;
 }
 
-export function isSummaryTakeoffRow(row: TakeoffParsedRow): boolean {
+export function isSummaryProposalRow(row: ProposalParsedRow): boolean {
   const content = Object.values(row.values).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 
   if (!content) return false;
   return SUMMARY_ROW_PATTERNS.some((pattern) => pattern.test(content));
 }
 
-export function imageToFile(image: TakeoffImportImage, fallbackName: string): File {
+export function imageToFile(image: ProposalImportImage, fallbackName: string): File {
   const bytes = new Uint8Array(image.bytes);
   // Use the exact byte view; using bytes.buffer can include unrelated bytes
   // when the source Uint8Array is a sliced view.
@@ -172,7 +172,7 @@ export function imageToFile(image: TakeoffImportImage, fallbackName: string): Fi
   return new File([blob], image.filename || fallbackName, { type: image.contentType });
 }
 
-async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpreadsheet> {
+async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalSpreadsheet> {
   const buffer = await file.arrayBuffer();
   const ExcelJS = await import('exceljs');
   const workbook = new ExcelJS.Workbook();
@@ -180,16 +180,16 @@ async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpr
 
   const worksheet = workbook.worksheets[0];
   if (!worksheet) {
-    return emptyParsed(file, 'xlsx');
+    return emptyParsedProposal(file, 'xlsx');
   }
 
   const warnings: string[] = [];
   const rowValues = readWorksheetRows(worksheet);
   const headerRows = findHeaderRows(rowValues);
   if (headerRows.length === 0) {
-    warnings.push('No Take-Off table header row was detected.');
+    warnings.push('No Proposal header row was detected.');
     return {
-      ...emptyParsed(file, 'xlsx'),
+      ...emptyParsedProposal(file, 'xlsx'),
       sheetName: worksheet.name,
       warnings,
     };
@@ -198,8 +198,8 @@ async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpr
   const firstHeader = headerRows[0]!;
   const columns = buildColumnsFromHeader(rowValues[firstHeader] ?? []);
   const images = extractWorksheetImages(workbook, worksheet);
-  const sections: TakeoffImportSection[] = [];
-  const rows: TakeoffParsedRow[] = [];
+  const sections: ProposalImportSection[] = [];
+  const rows: ProposalParsedRow[] = [];
 
   for (let sectionIndex = 0; sectionIndex < headerRows.length; sectionIndex++) {
     const headerRowNumber = headerRows[sectionIndex]!;
@@ -207,7 +207,7 @@ async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpr
     const categoryName =
       findCategoryName(rowValues, headerRowNumber) || `Category ${sectionIndex + 1}`;
     const startRow = headerRowNumber + 1;
-    const sectionRows: TakeoffParsedRow[] = [];
+    const sectionRows: ProposalParsedRow[] = [];
 
     for (let rowNumber = startRow; rowNumber < nextHeaderRowNumber; rowNumber++) {
       const values = rowValues[rowNumber] ?? [];
@@ -216,7 +216,7 @@ async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpr
       const record = columnsToRecord(columns, values);
       const imagesByColumn = assignImagesByColumn(images, rowNumber, columns);
       const rowImages = assignRowImages(imagesByColumn, columns);
-      const parsedRow: TakeoffParsedRow = {
+      const parsedRow: ProposalParsedRow = {
         id: `${sectionIndex}:${rowNumber}`,
         rowNumber,
         categoryName,
@@ -233,7 +233,7 @@ async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpr
         rowImages.swatches.length > 0;
       if (!hasRawContent && !hasImages) continue;
 
-      if (isSummaryTakeoffRow(parsedRow)) {
+      if (isSummaryProposalRow(parsedRow)) {
         parsedRow.skippedReason = 'Summary row';
       }
 
@@ -261,17 +261,17 @@ async function parseXlsxTakeoffSpreadsheet(file: File): Promise<ParsedTakeoffSpr
   };
 }
 
-async function parseFlatTakeoffSpreadsheet(
+async function parseFlatProposalSpreadsheet(
   file: File,
   fileType: 'csv' | 'xls',
-): Promise<ParsedTakeoffSpreadsheet> {
+): Promise<ParsedProposalSpreadsheet> {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetName = workbook.SheetNames[0];
-  if (!sheetName) return emptyParsed(file, fileType);
+  if (!sheetName) return emptyParsedProposal(file, fileType);
 
   const sheet = workbook.Sheets[sheetName];
-  if (!sheet) return emptyParsed(file, fileType);
+  if (!sheet) return emptyParsedProposal(file, fileType);
 
   const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
   const rowValues: string[][] = [];
@@ -282,26 +282,26 @@ async function parseFlatTakeoffSpreadsheet(
   const headerRows = findHeaderRows(rowValues);
   if (headerRows.length === 0) {
     return {
-      ...emptyParsed(file, fileType),
+      ...emptyParsedProposal(file, fileType),
       sheetName,
-      warnings: ['No Take-Off table header row was detected.'],
+      warnings: ['No Proposal header row was detected.'],
     };
   }
 
   const columns = buildColumnsFromHeader(rowValues[headerRows[0]!] ?? []);
-  const sections: TakeoffImportSection[] = [];
-  const rows: TakeoffParsedRow[] = [];
+  const sections: ProposalImportSection[] = [];
+  const rows: ProposalParsedRow[] = [];
 
   for (let sectionIndex = 0; sectionIndex < headerRows.length; sectionIndex++) {
     const headerRowNumber = headerRows[sectionIndex]!;
     const nextHeaderRowNumber = headerRows[sectionIndex + 1] ?? rowValues.length + 1;
     const categoryName =
       findCategoryName(rowValues, headerRowNumber) || `Category ${sectionIndex + 1}`;
-    const sectionRows: TakeoffParsedRow[] = [];
+    const sectionRows: ProposalParsedRow[] = [];
 
     for (let rowNumber = headerRowNumber + 1; rowNumber < nextHeaderRowNumber; rowNumber++) {
       const record = columnsToRecord(columns, rowValues[rowNumber] ?? []);
-      const parsedRow: TakeoffParsedRow = {
+      const parsedRow: ProposalParsedRow = {
         id: `${sectionIndex}:${rowNumber}`,
         rowNumber,
         categoryName,
@@ -311,7 +311,7 @@ async function parseFlatTakeoffSpreadsheet(
         sourceSectionIndex: sectionIndex,
       };
       if (!Object.values(record).some((value) => value.trim().length > 0)) continue;
-      if (isSummaryTakeoffRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+      if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
       sectionRows.push(parsedRow);
       rows.push(parsedRow);
     }
@@ -336,7 +336,10 @@ async function parseFlatTakeoffSpreadsheet(
   };
 }
 
-function emptyParsed(file: File, fileType: 'xlsx' | 'csv' | 'xls'): ParsedTakeoffSpreadsheet {
+function emptyParsedProposal(
+  file: File,
+  fileType: 'xlsx' | 'csv' | 'xls',
+): ParsedProposalSpreadsheet {
   return {
     filename: file.name,
     sheetName: '',
@@ -411,7 +414,7 @@ function findHeaderRows(rowValues: string[][]): number[] {
   return rows;
 }
 
-function buildColumnsFromHeader(headerValues: string[]): TakeoffImportColumn[] {
+function buildColumnsFromHeader(headerValues: string[]): ProposalImportColumn[] {
   const used = new Map<string, number>();
   return headerValues.flatMap((rawLabel, index) => {
     const label = rawLabel.trim();
@@ -426,7 +429,10 @@ function buildColumnsFromHeader(headerValues: string[]): TakeoffImportColumn[] {
   });
 }
 
-function columnsToRecord(columns: TakeoffImportColumn[], values: string[]): Record<string, string> {
+function columnsToRecord(
+  columns: ProposalImportColumn[],
+  values: string[],
+): Record<string, string> {
   const record: Record<string, string> = {};
   for (const column of columns) {
     record[column.key] = values[column.columnNumber - 1]?.trim() ?? '';
@@ -449,7 +455,7 @@ function findCategoryName(rowValues: string[][], headerRowNumber: number): strin
 function extractWorksheetImages(
   workbook: ExcelWorkbook,
   worksheet: Worksheet,
-): TakeoffImportImage[] {
+): ProposalImportImage[] {
   const media = (workbook as unknown as { model?: { media?: unknown[] } }).model?.media ?? [];
   return worksheet.getImages().flatMap((image, index) => {
     const mediaEntry = media[Number(image.imageId)] as
@@ -492,12 +498,12 @@ function contentTypeForExtension(extension: string): string {
 }
 
 function assignImagesByColumn(
-  images: TakeoffImportImage[],
+  images: ProposalImportImage[],
   rowNumber: number,
-  columns: TakeoffImportColumn[],
-): Record<string, TakeoffImportImage[]> {
+  columns: ProposalImportColumn[],
+): Record<string, ProposalImportImage[]> {
   const rowImages = images.filter((image) => image.row <= rowNumber && image.rowEnd >= rowNumber);
-  const result: Record<string, TakeoffImportImage[]> = {};
+  const result: Record<string, ProposalImportImage[]> = {};
   for (const column of columns) {
     result[column.key] = largestColumnOverlap(rowImages, column);
   }
@@ -505,9 +511,9 @@ function assignImagesByColumn(
 }
 
 function assignRowImages(
-  imagesByColumn: Record<string, TakeoffImportImage[]>,
-  columns: TakeoffImportColumn[],
-): TakeoffParsedRow['images'] {
+  imagesByColumn: Record<string, ProposalImportImage[]>,
+  columns: ProposalImportColumn[],
+): ProposalParsedRow['images'] {
   const renderingColumn = findColumnByAliases(columns, FIELD_ALIASES.rendering);
   const planColumn = findColumnByAliases(columns, FIELD_ALIASES.plan);
   const swatchColumn = findColumnByAliases(columns, FIELD_ALIASES.swatches);
@@ -520,16 +526,16 @@ function assignRowImages(
 }
 
 function findColumnByAliases(
-  columns: TakeoffImportColumn[],
+  columns: ProposalImportColumn[],
   aliases: readonly string[],
-): TakeoffImportColumn | undefined {
+): ProposalImportColumn | undefined {
   return columns.find((column) => aliases.includes(normalizeLabel(column.label)));
 }
 
 function largestColumnOverlap(
-  images: TakeoffImportImage[],
-  column: TakeoffImportColumn,
-): TakeoffImportImage[] {
+  images: ProposalImportImage[],
+  column: ProposalImportColumn,
+): ProposalImportImage[] {
   return images
     .map((image) => ({
       image,
@@ -543,7 +549,7 @@ function largestColumnOverlap(
     .map((entry) => entry.image);
 }
 
-function getColumnOverlap(image: TakeoffImportImage, columnNumber: number): number {
+function getColumnOverlap(image: ProposalImportImage, columnNumber: number): number {
   const start = image.column;
   const end = Math.max(image.columnEnd, image.column + 1);
   const overlapStart = Math.max(start, columnNumber);
@@ -552,9 +558,9 @@ function getColumnOverlap(image: TakeoffImportImage, columnNumber: number): numb
 }
 
 function extractProjectImages(
-  images: TakeoffImportImage[],
+  images: ProposalImportImage[],
   firstHeaderRowNumber: number,
-): TakeoffImportImage[] {
+): ProposalImportImage[] {
   return images
     .filter((image) => image.rowEnd < firstHeaderRowNumber || image.row < firstHeaderRowNumber)
     .sort((a, b) => a.row - b.row || a.column - b.column)

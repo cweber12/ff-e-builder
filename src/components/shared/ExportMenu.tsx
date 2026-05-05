@@ -77,7 +77,7 @@ export function ExportMenu({
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-30 mt-1 min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+          className="absolute left-0 top-full z-40 mt-1 min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
         >
           <button
             type="button"
@@ -120,7 +120,7 @@ export function ExportMenu({
               {pdfOpen && (
                 <div
                   role="menu"
-                  className="absolute left-full top-0 z-40 ml-1 min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                  className="absolute left-full top-0 z-50 ml-1 min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
                 >
                   {pdfOptions.map((option) => (
                     <button

@@ -41,7 +41,7 @@ const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   roomId: null,
   itemId: null,
   materialId: null,
-  takeoffItemId: null,
+  proposalItemId: null,
   filename: 'image-1.png',
   contentType: 'image/png',
   byteSize: 123,

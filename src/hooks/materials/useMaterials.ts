@@ -5,7 +5,7 @@ import type { CreateMaterialInput, UpdateMaterialInput } from '../../lib/api';
 import type { Material } from '../../types';
 import { itemKeys } from '../ffe/useItems';
 import { imageKeys } from '../shared/useImages';
-import { takeoffKeys } from '../takeoff/useTakeoff';
+import { proposalKeys } from '../proposal/useProposal';
 
 export const materialKeys = {
   forProject: (projectId: string) => ['materials', projectId] as const,
@@ -103,42 +103,47 @@ export function useRemoveMaterialFromItem(roomId: string) {
   });
 }
 
-export function useAssignMaterialToTakeoffItem(categoryId: string, projectId: string) {
+export function useAssignMaterialToProposalItem(categoryId: string, projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ takeoffItemId, materialId }: { takeoffItemId: string; materialId: string }) =>
-      api.materials.assignToTakeoffItem(takeoffItemId, materialId),
+    mutationFn: ({ proposalItemId, materialId }: { proposalItemId: string; materialId: string }) =>
+      api.materials.assignToProposalItem(proposalItemId, materialId),
     onSuccess: (material) => {
       queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
         upsertMaterial(old, material),
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: proposalKeys.items(categoryId) }),
     onError: (err) => toast.error(`Material assignment failed: ${err.message}`),
   });
 }
 
-export function useCreateAndAssignMaterialToTakeoffItem(categoryId: string, projectId: string) {
+export function useCreateAndAssignMaterialToProposalItem(categoryId: string, projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ takeoffItemId, input }: { takeoffItemId: string; input: CreateMaterialInput }) =>
-      api.materials.createAndAssignToTakeoffItem(takeoffItemId, input),
+    mutationFn: ({
+      proposalItemId,
+      input,
+    }: {
+      proposalItemId: string;
+      input: CreateMaterialInput;
+    }) => api.materials.createAndAssignToProposalItem(proposalItemId, input),
     onSuccess: (material) => {
       queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
         upsertMaterial(old, material),
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: proposalKeys.items(categoryId) }),
     onError: (err) => toast.error(`Material assignment failed: ${err.message}`),
   });
 }
 
-export function useRemoveMaterialFromTakeoffItem(categoryId: string) {
+export function useRemoveMaterialFromProposalItem(categoryId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ takeoffItemId, materialId }: { takeoffItemId: string; materialId: string }) =>
-      api.materials.removeFromTakeoffItem(takeoffItemId, materialId),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    mutationFn: ({ proposalItemId, materialId }: { proposalItemId: string; materialId: string }) =>
+      api.materials.removeFromProposalItem(proposalItemId, materialId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: proposalKeys.items(categoryId) }),
     onError: (err) => toast.error(`Material removal failed: ${err.message}`),
   });
 }
@@ -165,24 +170,24 @@ export function useUpdateMaterialForItem(roomId: string, projectId: string) {
   });
 }
 
-export function useUpdateMaterialForTakeoffItem(categoryId: string, projectId: string) {
+export function useUpdateMaterialForProposalItem(categoryId: string, projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      takeoffItemId,
+      proposalItemId,
       materialId,
       patch,
     }: {
-      takeoffItemId: string;
+      proposalItemId: string;
       materialId: string;
       patch: UpdateMaterialInput;
-    }) => api.materials.updateForTakeoffItem(takeoffItemId, materialId, patch),
+    }) => api.materials.updateForProposalItem(proposalItemId, materialId, patch),
     onSuccess: (material) => {
       queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
         upsertMaterial(old, material),
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: takeoffKeys.items(categoryId) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: proposalKeys.items(categoryId) }),
     onError: (err) => toast.error(`Material update failed: ${err.message}`),
   });
 }

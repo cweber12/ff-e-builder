@@ -8,9 +8,9 @@ import type {
   ItemStatus,
   Material,
   Project,
+  ProposalCategory,
+  ProposalItem,
   Room,
-  TakeoffCategory,
-  TakeoffItem,
   UserProfile,
 } from '../types';
 
@@ -39,7 +39,7 @@ interface RawProject {
   budget_mode: 'shared' | 'individual';
   budget_cents: number;
   ffe_budget_cents: number;
-  takeoff_budget_cents: number;
+  proposal_budget_cents: number;
   created_at: string;
   updated_at: string;
 }
@@ -88,7 +88,7 @@ interface RawImageAsset {
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
-  takeoff_item_id: string | null;
+  proposal_item_id: string | null;
   filename: string;
   content_type: string;
   byte_size: number;
@@ -112,7 +112,7 @@ interface RawUserProfile {
   updated_at: string;
 }
 
-interface RawTakeoffCategory {
+interface RawProposalCategory {
   id: string;
   project_id: string;
   name: string;
@@ -121,7 +121,7 @@ interface RawTakeoffCategory {
   updated_at: string;
 }
 
-interface RawTakeoffItem {
+interface RawProposalItem {
   id: string;
   category_id: string;
   product_tag: string;
@@ -169,7 +169,7 @@ const mapProject = (r: RawProject): Project => ({
   budgetMode: r.budget_mode ?? 'shared',
   budgetCents: r.budget_cents,
   ffeBudgetCents: r.ffe_budget_cents ?? 0,
-  takeoffBudgetCents: r.takeoff_budget_cents ?? 0,
+  proposalBudgetCents: r.proposal_budget_cents ?? 0,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -217,7 +217,7 @@ const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   roomId: r.room_id,
   itemId: r.item_id,
   materialId: r.material_id ?? null,
-  takeoffItemId: r.takeoff_item_id ?? null,
+  proposalItemId: r.proposal_item_id ?? null,
   filename: r.filename,
   contentType: r.content_type,
   byteSize: r.byte_size,
@@ -241,7 +241,7 @@ const mapUserProfile = (r: RawUserProfile): UserProfile => ({
   updatedAt: r.updated_at,
 });
 
-const mapTakeoffCategory = (r: RawTakeoffCategory): TakeoffCategory => ({
+const mapProposalCategory = (r: RawProposalCategory): ProposalCategory => ({
   id: r.id,
   projectId: r.project_id,
   name: r.name,
@@ -250,7 +250,7 @@ const mapTakeoffCategory = (r: RawTakeoffCategory): TakeoffCategory => ({
   updatedAt: r.updated_at,
 });
 
-const mapTakeoffItem = (r: RawTakeoffItem): TakeoffItem => ({
+const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   id: r.id,
   categoryId: r.category_id,
   productTag: r.product_tag,
@@ -263,7 +263,7 @@ const mapTakeoffItem = (r: RawTakeoffItem): TakeoffItem => ({
   sizeW: r.size_w,
   sizeD: r.size_d,
   sizeH: r.size_h,
-  sizeUnit: r.size_unit as TakeoffItem['sizeUnit'],
+  sizeUnit: r.size_unit as ProposalItem['sizeUnit'],
   materials: Array.isArray(r.materials) ? r.materials.map(mapMaterial) : [],
   cbm: Number(r.cbm),
   quantity: Number(r.quantity),
@@ -296,7 +296,7 @@ export type CreateProjectInput = {
   budgetMode?: 'shared' | 'individual';
   budgetCents?: number;
   ffeBudgetCents?: number;
-  takeoffBudgetCents?: number;
+  proposalBudgetCents?: number;
 };
 
 export type UpdateProjectInput = {
@@ -307,7 +307,7 @@ export type UpdateProjectInput = {
   budgetMode?: 'shared' | 'individual';
   budgetCents?: number;
   ffeBudgetCents?: number;
-  takeoffBudgetCents?: number;
+  proposalBudgetCents?: number;
 };
 
 export type CreateRoomInput = {
@@ -389,17 +389,17 @@ export type UpsertUserProfileInput = {
   companyName?: string;
 };
 
-export type CreateTakeoffCategoryInput = {
+export type CreateProposalCategoryInput = {
   name: string;
   sortOrder?: number;
 };
 
-export type UpdateTakeoffCategoryInput = {
+export type UpdateProposalCategoryInput = {
   name?: string;
   sortOrder?: number;
 };
 
-export type CreateTakeoffItemInput = {
+export type CreateProposalItemInput = {
   productTag?: string;
   plan?: string;
   drawings?: string;
@@ -418,7 +418,7 @@ export type CreateTakeoffItemInput = {
   sortOrder?: number;
 };
 
-export type UpdateTakeoffItemInput = Partial<CreateTakeoffItemInput> & {
+export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
   categoryId?: string;
   version: number;
 };
@@ -484,7 +484,7 @@ export const api = {
           budget_mode: input.budgetMode ?? 'shared',
           budget_cents: input.budgetCents ?? 0,
           ffe_budget_cents: input.ffeBudgetCents ?? 0,
-          takeoff_budget_cents: input.takeoffBudgetCents ?? 0,
+          proposal_budget_cents: input.proposalBudgetCents ?? 0,
         }),
       }).then((r) => mapProject(r.project)),
 
@@ -499,7 +499,7 @@ export const api = {
           budget_mode: patch.budgetMode,
           budget_cents: patch.budgetCents,
           ffe_budget_cents: patch.ffeBudgetCents,
-          takeoff_budget_cents: patch.takeoffBudgetCents,
+          proposal_budget_cents: patch.proposalBudgetCents,
         }),
       }).then((r) => mapProject(r.project)),
 
@@ -524,18 +524,18 @@ export const api = {
       }).then((r) => mapUserProfile(r.profile)),
   },
 
-  takeoff: {
-    categories: (projectId: string): Promise<TakeoffCategory[]> =>
-      apiFetch<{ categories: RawTakeoffCategory[] }>(
-        `/api/v1/projects/${projectId}/takeoff/categories`,
-      ).then((r) => r.categories.map(mapTakeoffCategory)),
+  proposal: {
+    categories: (projectId: string): Promise<ProposalCategory[]> =>
+      apiFetch<{ categories: RawProposalCategory[] }>(
+        `/api/v1/projects/${projectId}/proposal/categories`,
+      ).then((r) => r.categories.map(mapProposalCategory)),
 
     createCategory: (
       projectId: string,
-      input: CreateTakeoffCategoryInput,
-    ): Promise<TakeoffCategory> =>
-      apiFetch<{ category: RawTakeoffCategory }>(
-        `/api/v1/projects/${projectId}/takeoff/categories`,
+      input: CreateProposalCategoryInput,
+    ): Promise<ProposalCategory> =>
+      apiFetch<{ category: RawProposalCategory }>(
+        `/api/v1/projects/${projectId}/proposal/categories`,
         {
           method: 'POST',
           body: JSON.stringify({
@@ -543,27 +543,27 @@ export const api = {
             sort_order: input.sortOrder ?? 0,
           }),
         },
-      ).then((r) => mapTakeoffCategory(r.category)),
+      ).then((r) => mapProposalCategory(r.category)),
 
-    updateCategory: (id: string, patch: UpdateTakeoffCategoryInput): Promise<TakeoffCategory> =>
-      apiFetch<{ category: RawTakeoffCategory }>(`/api/v1/takeoff/categories/${id}`, {
+    updateCategory: (id: string, patch: UpdateProposalCategoryInput): Promise<ProposalCategory> =>
+      apiFetch<{ category: RawProposalCategory }>(`/api/v1/proposal/categories/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           name: patch.name,
           sort_order: patch.sortOrder,
         }),
-      }).then((r) => mapTakeoffCategory(r.category)),
+      }).then((r) => mapProposalCategory(r.category)),
 
     deleteCategory: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/takeoff/categories/${id}`, { method: 'DELETE' }),
+      apiFetch<void>(`/api/v1/proposal/categories/${id}`, { method: 'DELETE' }),
 
-    items: (categoryId: string): Promise<TakeoffItem[]> =>
-      apiFetch<{ items: RawTakeoffItem[] }>(`/api/v1/takeoff/categories/${categoryId}/items`).then(
-        (r) => r.items.map(mapTakeoffItem),
-      ),
+    items: (categoryId: string): Promise<ProposalItem[]> =>
+      apiFetch<{ items: RawProposalItem[] }>(
+        `/api/v1/proposal/categories/${categoryId}/items`,
+      ).then((r) => r.items.map(mapProposalItem)),
 
-    createItem: (categoryId: string, input: CreateTakeoffItemInput): Promise<TakeoffItem> =>
-      apiFetch<{ item: RawTakeoffItem }>(`/api/v1/takeoff/categories/${categoryId}/items`, {
+    createItem: (categoryId: string, input: CreateProposalItemInput): Promise<ProposalItem> =>
+      apiFetch<{ item: RawProposalItem }>(`/api/v1/proposal/categories/${categoryId}/items`, {
         method: 'POST',
         body: JSON.stringify({
           product_tag: input.productTag ?? '',
@@ -583,10 +583,10 @@ export const api = {
           unit_cost_cents: input.unitCostCents ?? 0,
           sort_order: input.sortOrder ?? 0,
         }),
-      }).then((r) => mapTakeoffItem(r.item)),
+      }).then((r) => mapProposalItem(r.item)),
 
-    updateItem: (id: string, patch: UpdateTakeoffItemInput): Promise<TakeoffItem> =>
-      apiFetch<{ item: RawTakeoffItem }>(`/api/v1/takeoff/items/${id}`, {
+    updateItem: (id: string, patch: UpdateProposalItemInput): Promise<ProposalItem> =>
+      apiFetch<{ item: RawProposalItem }>(`/api/v1/proposal/items/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           category_id: patch.categoryId,
@@ -608,10 +608,10 @@ export const api = {
           sort_order: patch.sortOrder,
           version: patch.version,
         }),
-      }).then((r) => mapTakeoffItem(r.item)),
+      }).then((r) => mapProposalItem(r.item)),
 
     deleteItem: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/takeoff/items/${id}`, { method: 'DELETE' }),
+      apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
   },
 
   rooms: {
@@ -827,38 +827,41 @@ export const api = {
         }),
       }).then((r) => mapMaterial(r.material)),
 
-    assignToTakeoffItem: (takeoffItemId: string, materialId: string): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/takeoff/items/${takeoffItemId}/materials`, {
+    assignToProposalItem: (proposalItemId: string, materialId: string): Promise<Material> =>
+      apiFetch<{ material: RawMaterial }>(`/api/v1/proposal/items/${proposalItemId}/materials`, {
         method: 'POST',
         body: JSON.stringify({ material_id: materialId }),
       }).then((r) => mapMaterial(r.material)),
 
-    createAndAssignToTakeoffItem: (
-      takeoffItemId: string,
+    createAndAssignToProposalItem: (
+      proposalItemId: string,
       input: CreateMaterialInput,
     ): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/takeoff/items/${takeoffItemId}/materials/new`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: input.name,
-          material_id: input.materialId,
-          description: input.description,
-          swatch_hex: input.swatchHex ?? '#D9D4C8',
-        }),
-      }).then((r) => mapMaterial(r.material)),
+      apiFetch<{ material: RawMaterial }>(
+        `/api/v1/proposal/items/${proposalItemId}/materials/new`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: input.name,
+            material_id: input.materialId,
+            description: input.description,
+            swatch_hex: input.swatchHex ?? '#D9D4C8',
+          }),
+        },
+      ).then((r) => mapMaterial(r.material)),
 
-    removeFromTakeoffItem: (takeoffItemId: string, materialId: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/takeoff/items/${takeoffItemId}/materials/${materialId}`, {
+    removeFromProposalItem: (proposalItemId: string, materialId: string): Promise<void> =>
+      apiFetch<void>(`/api/v1/proposal/items/${proposalItemId}/materials/${materialId}`, {
         method: 'DELETE',
       }),
 
-    updateForTakeoffItem: (
-      takeoffItemId: string,
+    updateForProposalItem: (
+      proposalItemId: string,
       materialId: string,
       patch: UpdateMaterialInput,
     ): Promise<Material> =>
       apiFetch<{ material: RawMaterial }>(
-        `/api/v1/takeoff/items/${takeoffItemId}/materials/${materialId}`,
+        `/api/v1/proposal/items/${proposalItemId}/materials/${materialId}`,
         {
           method: 'PATCH',
           body: JSON.stringify({

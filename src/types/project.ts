@@ -24,7 +24,7 @@ export type Project = {
   /** Always integer cents — see /docs/money.md */
   budgetCents: number;
   ffeBudgetCents?: number;
-  takeoffBudgetCents?: number;
+  proposalBudgetCents?: number;
   createdAt: string;
   updatedAt: string;
 };

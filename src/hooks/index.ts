@@ -4,5 +4,5 @@ export * from './shared/useUserProfile';
 export * from './ffe/useItems';
 export * from './ffe/useRooms';
 export * from './ffe/useRoomsWithItems';
-export * from './takeoff/useTakeoff';
+export * from './proposal/useProposal';
 export * from './materials/useMaterials';

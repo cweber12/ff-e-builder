@@ -3,9 +3,9 @@ export type ImageEntityType =
   | 'room'
   | 'item'
   | 'material'
-  | 'takeoff_item'
-  | 'takeoff_swatch'
-  | 'takeoff_plan';
+  | 'proposal_item'
+  | 'proposal_swatch'
+  | 'proposal_plan';
 
 export type ImageAsset = {
   id: string;
@@ -15,7 +15,7 @@ export type ImageAsset = {
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;
-  takeoffItemId: string | null;
+  proposalItemId: string | null;
   filename: string;
   contentType: string;
   byteSize: number;
@@ -39,15 +39,15 @@ export type CropParams = {
 /** Entity types that support user-controlled crop. */
 export const CROPPABLE_ENTITY_TYPES = new Set<ImageEntityType>([
   'item',
-  'takeoff_item',
-  'takeoff_plan',
+  'proposal_item',
+  'proposal_plan',
   'project',
 ]);
 
 /** Export cell aspect ratios per croppable entity type (width / height). */
 export const CROP_ASPECT: Partial<Record<ImageEntityType, number>> = {
   item: 117 / 75,
-  takeoff_item: 117 / 75,
-  takeoff_plan: 103 / 75,
+  proposal_item: 117 / 75,
+  proposal_plan: 103 / 75,
   project: 4 / 3,
 };

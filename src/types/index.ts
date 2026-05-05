@@ -8,12 +8,12 @@ export type { Material } from './material';
 export type {
   MeasurementUnit,
   SizeMode,
-  TakeoffCategory,
-  TakeoffCategoryWithItems,
-  TakeoffItem,
-  TakeoffQuantityUnit,
+  ProposalCategory,
+  ProposalCategoryWithItems,
+  ProposalItem,
+  ProposalQuantityUnit,
   UserProfile,
-} from './takeoff';
+} from './proposal';
 export {
   ItemStatusSchema,
   editableItemPatchSchema,

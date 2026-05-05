@@ -13,21 +13,21 @@ vi.mock('../src/lib/ownership', () => ({
   getOwnedRoomContext: vi.fn(),
   getOwnedItemContext: vi.fn(),
   getOwnedMaterialContext: vi.fn(),
-  getOwnedTakeoffItemContext: vi.fn(),
+  getOwnedProposalItemContext: vi.fn(),
 }));
 
 import app from '../src/index';
 import { getDb } from '../src/lib/db';
 import { verifyFirebaseToken } from '../src/lib/firebase-auth';
-import { getOwnedProjectContext, getOwnedTakeoffItemContext } from '../src/lib/ownership';
+import { getOwnedProjectContext, getOwnedProposalItemContext } from '../src/lib/ownership';
 
 const mockVerify = vi.mocked(verifyFirebaseToken);
 const mockGetDb = vi.mocked(getDb);
 const mockGetOwnedProjectContext = vi.mocked(getOwnedProjectContext);
-const mockGetOwnedTakeoffItemContext = vi.mocked(getOwnedTakeoffItemContext);
+const mockGetOwnedProposalItemContext = vi.mocked(getOwnedProposalItemContext);
 
 const projectId = '00000000-0000-0000-0000-000000000001';
-const takeoffItemId = '00000000-0000-0000-0000-000000000002';
+const proposalItemId = '00000000-0000-0000-0000-000000000002';
 const bucketPut = vi.fn().mockResolvedValue(undefined);
 const bucketDelete = vi.fn().mockResolvedValue(undefined);
 
@@ -60,9 +60,9 @@ describe('Image uploads', () => {
     bucketDelete.mockResolvedValue(undefined);
     mockVerify.mockResolvedValue({ uid: 'user-123' });
     mockGetOwnedProjectContext.mockResolvedValue({ projectId });
-    mockGetOwnedTakeoffItemContext.mockResolvedValue({
+    mockGetOwnedProposalItemContext.mockResolvedValue({
       projectId,
-      takeoffItemId,
+      proposalItemId,
     });
   });
 
@@ -73,7 +73,7 @@ describe('Image uploads', () => {
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
 
     const res = await app.request(
-      `/api/v1/images?entity_type=takeoff_item&entity_id=${takeoffItemId}&alt_text=MI-1+rendering`,
+      `/api/v1/images?entity_type=proposal_item&entity_id=${proposalItemId}&alt_text=MI-1+rendering`,
       {
         method: 'POST',
         headers: { Authorization: 'Bearer valid-token' },
@@ -110,7 +110,7 @@ describe('Image uploads', () => {
                 room_id: null,
                 item_id: null,
                 material_id: null,
-                takeoff_item_id: null,
+                proposal_item_id: null,
                 r2_key: 'users/user-123/projects/project/project-2.png',
                 filename: 'project-2.png',
                 content_type: 'image/png',
@@ -151,7 +151,7 @@ describe('Image uploads', () => {
     });
   });
 
-  it('allows up to four take-off swatches without promoting them to rendering images', async () => {
+  it('allows up to four proposal swatches without promoting them to rendering images', async () => {
     const sql = vi.fn(
       async (strings: TemplateStringsArray, ...values: unknown[]) =>
         await Promise.resolve().then(() => {
@@ -163,18 +163,18 @@ describe('Image uploads', () => {
             return [
               {
                 id: '00000000-0000-0000-0000-000000000013',
-                entity_type: 'takeoff_swatch',
+                entity_type: 'proposal_swatch',
                 owner_uid: 'user-123',
                 project_id: projectId,
                 room_id: null,
                 item_id: null,
                 material_id: null,
-                takeoff_item_id: takeoffItemId,
-                r2_key: 'users/user-123/projects/project-1/takeoff/items/item-1/swatches/3.png',
+                proposal_item_id: proposalItemId,
+                r2_key: 'users/user-123/projects/project-1/proposal/items/item-1/swatches/3.png',
                 filename: 'swatch-4.png',
                 content_type: 'image/png',
                 byte_size: 11,
-                alt_text: 'Take-Off swatch 4',
+                alt_text: 'Proposal swatch 4',
                 is_primary: isPrimary,
                 created_at: '2026-05-03T00:00:00Z',
                 updated_at: '2026-05-03T00:00:00Z',
@@ -188,7 +188,7 @@ describe('Image uploads', () => {
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
 
     const res = await app.request(
-      `/api/v1/images?entity_type=takeoff_swatch&entity_id=${takeoffItemId}&alt_text=Take-Off+swatch+4`,
+      `/api/v1/images?entity_type=proposal_swatch&entity_id=${proposalItemId}&alt_text=Proposal+swatch+4`,
       {
         method: 'POST',
         headers: { Authorization: 'Bearer valid-token' },
@@ -200,13 +200,13 @@ describe('Image uploads', () => {
     expect(res.status).toBe(201);
     await expect(res.json()).resolves.toMatchObject({
       image: {
-        takeoff_item_id: takeoffItemId,
+        proposal_item_id: proposalItemId,
         is_primary: false,
       },
     });
   });
 
-  it('allows a take-off plan image without colliding with the rendering image role', async () => {
+  it('allows a proposal plan image without colliding with the rendering image role', async () => {
     const sql = vi.fn(
       async (strings: TemplateStringsArray) =>
         await Promise.resolve().then(() => {
@@ -216,18 +216,18 @@ describe('Image uploads', () => {
             return [
               {
                 id: '00000000-0000-0000-0000-000000000014',
-                entity_type: 'takeoff_plan',
+                entity_type: 'proposal_plan',
                 owner_uid: 'user-123',
                 project_id: projectId,
                 room_id: null,
                 item_id: null,
                 material_id: null,
-                takeoff_item_id: takeoffItemId,
-                r2_key: 'users/user-123/projects/project-1/takeoff/items/item-1/plan/1.png',
+                proposal_item_id: proposalItemId,
+                r2_key: 'users/user-123/projects/project-1/proposal/items/item-1/plan/1.png',
                 filename: 'plan.png',
                 content_type: 'image/png',
                 byte_size: 11,
-                alt_text: 'Take-Off plan',
+                alt_text: 'Proposal plan',
                 is_primary: true,
                 created_at: '2026-05-03T00:00:00Z',
                 updated_at: '2026-05-03T00:00:00Z',
@@ -241,7 +241,7 @@ describe('Image uploads', () => {
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
 
     const res = await app.request(
-      `/api/v1/images?entity_type=takeoff_plan&entity_id=${takeoffItemId}&alt_text=Take-Off+plan`,
+      `/api/v1/images?entity_type=proposal_plan&entity_id=${proposalItemId}&alt_text=Proposal+plan`,
       {
         method: 'POST',
         headers: { Authorization: 'Bearer valid-token' },
@@ -255,19 +255,19 @@ describe('Image uploads', () => {
     expect(statement).toContain('entity_type =');
     await expect(res.json()).resolves.toMatchObject({
       image: {
-        entity_type: 'takeoff_plan',
-        takeoff_item_id: takeoffItemId,
+        entity_type: 'proposal_plan',
+        proposal_item_id: proposalItemId,
         is_primary: true,
       },
     });
   });
 
-  it('rejects a fifth take-off swatch with a client error', async () => {
+  it('rejects a fifth proposal swatch with a client error', async () => {
     const sql = vi.fn().mockResolvedValueOnce([{ count: 4 }]);
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
 
     const res = await app.request(
-      `/api/v1/images?entity_type=takeoff_swatch&entity_id=${takeoffItemId}&alt_text=Take-Off+swatch+5`,
+      `/api/v1/images?entity_type=proposal_swatch&entity_id=${proposalItemId}&alt_text=Proposal+swatch+5`,
       {
         method: 'POST',
         headers: { Authorization: 'Bearer valid-token' },
@@ -278,7 +278,7 @@ describe('Image uploads', () => {
 
     expect(res.status).toBe(400);
     await expect(res.json()).resolves.toMatchObject({
-      error: 'Take-Off items can have up to 4 swatches',
+      error: 'Proposal items can have up to 4 swatches',
     });
     expect(bucketDelete).toHaveBeenCalledTimes(1);
   });
@@ -295,7 +295,7 @@ describe('Image uploads', () => {
           room_id: null,
           item_id: null,
           material_id: null,
-          takeoff_item_id: null,
+          proposal_item_id: null,
           r2_key: 'users/user-123/projects/project-1/project/1.png',
           filename: 'image-1.png',
           content_type: 'image/png',
@@ -316,7 +316,7 @@ describe('Image uploads', () => {
           room_id: null,
           item_id: null,
           material_id: null,
-          takeoff_item_id: null,
+          proposal_item_id: null,
           r2_key: 'users/user-123/projects/project-1/project/2.png',
           filename: 'image-2.png',
           content_type: 'image/png',

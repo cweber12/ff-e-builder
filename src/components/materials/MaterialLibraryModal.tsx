@@ -2,20 +2,20 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useAssignMaterial,
-  useAssignMaterialToTakeoffItem,
+  useAssignMaterialToProposalItem,
   useCreateAndAssignMaterial,
-  useCreateAndAssignMaterialToTakeoffItem,
+  useCreateAndAssignMaterialToProposalItem,
   useCreateMaterial,
   useMaterials,
   useRemoveMaterialFromItem,
-  useRemoveMaterialFromTakeoffItem,
+  useRemoveMaterialFromProposalItem,
   useUpdateMaterial,
   useUpdateMaterialForItem,
-  useUpdateMaterialForTakeoffItem,
+  useUpdateMaterialForProposalItem,
 } from '../../hooks/materials/useMaterials';
 import { imageKeys } from '../../hooks/shared/useImages';
 import { api } from '../../lib/api';
-import type { Item, Material, TakeoffItem } from '../../types';
+import type { Item, Material, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/ImageFrame';
 
@@ -25,9 +25,9 @@ type FfeContext = {
   roomId: string;
 };
 
-type TakeoffContext = {
-  context: 'takeoff';
-  item?: TakeoffItem | undefined;
+type ProposalContext = {
+  context: 'proposal';
+  item?: ProposalItem | undefined;
   categoryId: string;
 };
 
@@ -36,7 +36,7 @@ type MaterialLibraryModalProps = {
   projectId: string;
   priorityMaterialIds?: string[] | undefined;
   onClose: () => void;
-} & (FfeContext | TakeoffContext);
+} & (FfeContext | ProposalContext);
 
 export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
   const { open, onClose } = props;
@@ -55,25 +55,25 @@ type MaterialLibraryPanelProps =
   | ({
       projectId: string;
       priorityMaterialIds?: string[] | undefined;
-    } & TakeoffContext);
+    } & ProposalContext);
 
 export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const { projectId, priorityMaterialIds = [] } = props;
   const roomId = props.context === 'ffe' ? props.roomId : '';
-  const categoryId = props.context === 'takeoff' ? props.categoryId : '';
-  const activeItem: Item | TakeoffItem | undefined = props.item;
+  const categoryId = props.context === 'proposal' ? props.categoryId : '';
+  const activeItem: Item | ProposalItem | undefined = props.item;
 
   const materials = useMaterials(projectId);
   const createMaterial = useCreateMaterial(projectId);
   const updateMaterial = useUpdateMaterial(projectId);
   const assignMaterial = useAssignMaterial(roomId, projectId);
-  const assignToTakeoff = useAssignMaterialToTakeoffItem(categoryId, projectId);
+  const assignToProposal = useAssignMaterialToProposalItem(categoryId, projectId);
   const createAndAssignMaterial = useCreateAndAssignMaterial(roomId, projectId);
-  const createAndAssignToTakeoff = useCreateAndAssignMaterialToTakeoffItem(categoryId, projectId);
+  const createAndAssignToProposal = useCreateAndAssignMaterialToProposalItem(categoryId, projectId);
   const removeMaterial = useRemoveMaterialFromItem(roomId);
-  const removeFromTakeoff = useRemoveMaterialFromTakeoffItem(categoryId);
+  const removeFromProposal = useRemoveMaterialFromProposalItem(categoryId);
   const updateForItem = useUpdateMaterialForItem(roomId, projectId);
-  const updateForTakeoffItem = useUpdateMaterialForTakeoffItem(categoryId, projectId);
+  const updateForProposalItem = useUpdateMaterialForProposalItem(categoryId, projectId);
   const queryClient = useQueryClient();
 
   const [draft, setDraft] = useState({
@@ -150,8 +150,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           patch: input,
         });
       } else {
-        savedMaterial = await updateForTakeoffItem.mutateAsync({
-          takeoffItemId: activeItem.id,
+        savedMaterial = await updateForProposalItem.mutateAsync({
+          proposalItemId: activeItem.id,
           materialId: editingId,
           patch: input,
         });
@@ -162,8 +162,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       if (props.context === 'ffe') {
         savedMaterial = await createAndAssignMaterial.mutateAsync({ itemId: activeItem.id, input });
       } else {
-        savedMaterial = await createAndAssignToTakeoff.mutateAsync({
-          takeoffItemId: activeItem.id,
+        savedMaterial = await createAndAssignToProposal.mutateAsync({
+          proposalItemId: activeItem.id,
           input,
         });
       }
@@ -200,8 +200,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           materialId: material.id,
         });
       } else {
-        assigned = await assignToTakeoff.mutateAsync({
-          takeoffItemId: activeItem.id,
+        assigned = await assignToProposal.mutateAsync({
+          proposalItemId: activeItem.id,
           materialId: material.id,
         });
       }
@@ -216,8 +216,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     if (props.context === 'ffe') {
       await removeMaterial.mutateAsync({ itemId: activeItem.id, materialId: material.id });
     } else {
-      await removeFromTakeoff.mutateAsync({
-        takeoffItemId: activeItem.id,
+      await removeFromProposal.mutateAsync({
+        proposalItemId: activeItem.id,
         materialId: material.id,
       });
     }

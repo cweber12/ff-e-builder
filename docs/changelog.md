@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(proposal): repair renamed Proposal item-material join column so category item loading no longer 500s after the Take-Off rename
+- fix(images): allow `proposal_swatch` uploads through API validation after the Proposal rename
 - feat(materials): add `finish_classification` field (`material | swatch | hybrid`) to the Finish Library — migration 0009, API schemas, client types, and all create/update routes updated
 - feat(materials): Finish Library scope toggles renamed from All/FF&E/Take-Off to All Finishes/Materials/Swatches; filter uses `finish_classification` not assignment references
 - fix(imports): Replace broken `takeoff_swatch` entity type in Take-Off Excel import with material create + image upload flow so swatch images import correctly into the Finish Library

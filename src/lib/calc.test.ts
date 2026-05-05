@@ -4,11 +4,11 @@ import {
   projectTotalCents,
   roomSubtotalCents,
   sellPriceCents,
-  takeoffLineTotalCents,
-  takeoffProjectTotalCents,
+  proposalLineTotalCents,
+  proposalProjectTotalCents,
 } from './calc';
 import type { Item } from '../types/item';
-import type { TakeoffItem } from '../types/takeoff';
+import type { ProposalItem } from '../types/proposal';
 
 const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'i1',
@@ -37,7 +37,7 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   ...overrides,
 });
 
-const makeTakeoffItem = (overrides: Partial<TakeoffItem> = {}): TakeoffItem => ({
+const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem => ({
   id: 'to1',
   categoryId: 'cat1',
   productTag: 'MW-1',
@@ -63,16 +63,16 @@ const makeTakeoffItem = (overrides: Partial<TakeoffItem> = {}): TakeoffItem => (
   ...overrides,
 });
 
-describe('takeoff totals', () => {
+describe('proposal totals', () => {
   it('multiplies unit cost cents by decimal quantity', () => {
-    expect(takeoffLineTotalCents(makeTakeoffItem({ unitCostCents: 1250, quantity: 2.5 }))).toBe(
+    expect(proposalLineTotalCents(makeProposalItem({ unitCostCents: 1250, quantity: 2.5 }))).toBe(
       3125,
     );
   });
 
-  it('sums take-off categories into a project total', () => {
+  it('sums proposal categories into a project total', () => {
     expect(
-      takeoffProjectTotalCents([
+      proposalProjectTotalCents([
         {
           id: 'cat1',
           projectId: 'p1',
@@ -80,7 +80,7 @@ describe('takeoff totals', () => {
           sortOrder: 0,
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z',
-          items: [makeTakeoffItem({ unitCostCents: 2000, quantity: 3 })],
+          items: [makeProposalItem({ unitCostCents: 2000, quantity: 3 })],
         },
         {
           id: 'cat2',
@@ -89,7 +89,7 @@ describe('takeoff totals', () => {
           sortOrder: 1,
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z',
-          items: [makeTakeoffItem({ unitCostCents: 500, quantity: 12 })],
+          items: [makeProposalItem({ unitCostCents: 500, quantity: 12 })],
         },
       ]),
     ).toBe(12000);

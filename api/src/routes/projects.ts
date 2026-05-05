@@ -30,7 +30,7 @@ router.post('/', async (c) => {
   const rows = await sql`
     INSERT INTO projects (
       owner_uid, name, client_name, company_name, project_location,
-      budget_mode, budget_cents, ffe_budget_cents, takeoff_budget_cents
+      budget_mode, budget_cents, ffe_budget_cents, proposal_budget_cents
     )
     VALUES (
       ${uid},
@@ -41,7 +41,7 @@ router.post('/', async (c) => {
       ${parsed.data.budget_mode},
       ${parsed.data.budget_cents},
       ${parsed.data.ffe_budget_cents},
-      ${parsed.data.takeoff_budget_cents}
+      ${parsed.data.proposal_budget_cents}
     )
     RETURNING *
   `;
@@ -74,9 +74,9 @@ router.patch('/:id', async (c) => {
       budget_mode = COALESCE(${parsed.data.budget_mode ?? null}, budget_mode),
       budget_cents = COALESCE(${parsed.data.budget_cents ?? null}, budget_cents),
       ffe_budget_cents = COALESCE(${parsed.data.ffe_budget_cents ?? null}, ffe_budget_cents),
-      takeoff_budget_cents = COALESCE(
-        ${parsed.data.takeoff_budget_cents ?? null},
-        takeoff_budget_cents
+      proposal_budget_cents = COALESCE(
+        ${parsed.data.proposal_budget_cents ?? null},
+        proposal_budget_cents
       )
     WHERE id = ${id} AND owner_uid = ${uid}
     RETURNING *

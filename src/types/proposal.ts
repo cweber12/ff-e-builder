@@ -2,7 +2,7 @@ import type { Material } from './material';
 
 export type SizeMode = 'imperial' | 'metric';
 export type MeasurementUnit = 'ft/in' | 'mm' | 'cm' | 'm';
-export type TakeoffQuantityUnit = string;
+export type ProposalQuantityUnit = string;
 
 export type UserProfile = {
   ownerUid: string;
@@ -14,7 +14,7 @@ export type UserProfile = {
   updatedAt: string;
 };
 
-export type TakeoffCategory = {
+export type ProposalCategory = {
   id: string;
   projectId: string;
   name: string;
@@ -23,7 +23,7 @@ export type TakeoffCategory = {
   updatedAt: string;
 };
 
-export type TakeoffItem = {
+export type ProposalItem = {
   id: string;
   categoryId: string;
   productTag: string;
@@ -40,7 +40,7 @@ export type TakeoffItem = {
   materials: Material[];
   cbm: number;
   quantity: number;
-  quantityUnit: TakeoffQuantityUnit;
+  quantityUnit: ProposalQuantityUnit;
   unitCostCents: number;
   sortOrder: number;
   version: number;
@@ -48,6 +48,6 @@ export type TakeoffItem = {
   updatedAt: string;
 };
 
-export type TakeoffCategoryWithItems = TakeoffCategory & {
-  items: TakeoffItem[];
+export type ProposalCategoryWithItems = ProposalCategory & {
+  items: ProposalItem[];
 };

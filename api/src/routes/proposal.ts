@@ -3,19 +3,19 @@ import type { Env, HonoVariables } from '../types';
 import {
   AssignMaterialSchema,
   CreateAndAssignMaterialSchema,
-  CreateTakeoffCategorySchema,
-  CreateTakeoffItemSchema,
-  UpdateTakeoffCategorySchema,
-  UpdateTakeoffItemSchema,
+  CreateProposalCategorySchema,
+  CreateProposalItemSchema,
+  UpdateProposalCategorySchema,
+  UpdateProposalItemSchema,
 } from '../types';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
 import {
   assertProjectOwnership,
-  assertTakeoffCategoryOwnership,
-  assertTakeoffItemOwnership,
+  assertProposalCategoryOwnership,
+  assertProposalItemOwnership,
   getOwnedMaterialContext,
-  getOwnedTakeoffItemContext,
+  getOwnedProposalItemContext,
 } from '../lib/ownership';
 import {
   selectMaterialById,
@@ -25,7 +25,7 @@ import {
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
-router.get('/projects/:id/takeoff/categories', async (c) => {
+router.get('/projects/:id/proposal/categories', async (c) => {
   const uid = c.get('uid');
   const projectId = c.req.param('id');
 
@@ -38,18 +38,18 @@ router.get('/projects/:id/takeoff/categories', async (c) => {
   const sql = getDb(c.env);
   const rows = await sql`
     SELECT *
-    FROM takeoff_categories
+    FROM proposal_categories
     WHERE project_id = ${projectId}
     ORDER BY sort_order, created_at
   `;
   return c.json({ categories: rows });
 });
 
-router.post('/projects/:id/takeoff/categories', async (c) => {
+router.post('/projects/:id/proposal/categories', async (c) => {
   const uid = c.get('uid');
   const projectId = c.req.param('id');
   const body = await c.req.json<unknown>().catch(() => null);
-  const parsed = CreateTakeoffCategorySchema.safeParse(body);
+  const parsed = CreateProposalCategorySchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   try {
@@ -60,7 +60,7 @@ router.post('/projects/:id/takeoff/categories', async (c) => {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    INSERT INTO takeoff_categories (project_id, name, sort_order)
+    INSERT INTO proposal_categories (project_id, name, sort_order)
     VALUES (${projectId}, ${parsed.data.name}, ${parsed.data.sort_order})
     ON CONFLICT (project_id, name) DO UPDATE SET name = EXCLUDED.name
     RETURNING *
@@ -68,22 +68,22 @@ router.post('/projects/:id/takeoff/categories', async (c) => {
   return c.json({ category: rows[0] }, 201);
 });
 
-router.patch('/takeoff/categories/:id', async (c) => {
+router.patch('/proposal/categories/:id', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
   const body = await c.req.json<unknown>().catch(() => null);
-  const parsed = UpdateTakeoffCategorySchema.safeParse(body);
+  const parsed = UpdateProposalCategorySchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   try {
-    await assertTakeoffCategoryOwnership(c.env, id, uid);
+    await assertProposalCategoryOwnership(c.env, id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
 
   const sql = getDb(c.env);
   const rows = await sql`
-    UPDATE takeoff_categories
+    UPDATE proposal_categories
     SET
       name = COALESCE(${parsed.data.name ?? null}, name),
       sort_order = COALESCE(${parsed.data.sort_order ?? null}, sort_order)
@@ -94,25 +94,25 @@ router.patch('/takeoff/categories/:id', async (c) => {
   return c.json({ category: rows[0] });
 });
 
-router.delete('/takeoff/categories/:id', async (c) => {
+router.delete('/proposal/categories/:id', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
   try {
-    await assertTakeoffCategoryOwnership(c.env, id, uid);
+    await assertProposalCategoryOwnership(c.env, id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
 
   const sql = getDb(c.env);
-  await sql`DELETE FROM takeoff_categories WHERE id = ${id}`;
+  await sql`DELETE FROM proposal_categories WHERE id = ${id}`;
   return c.body(null, 204);
 });
 
-router.get('/takeoff/categories/:id/items', async (c) => {
+router.get('/proposal/categories/:id/items', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
   try {
-    await assertTakeoffCategoryOwnership(c.env, id, uid);
+    await assertProposalCategoryOwnership(c.env, id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
@@ -120,7 +120,7 @@ router.get('/takeoff/categories/:id/items', async (c) => {
   const sql = getDb(c.env);
   const rows = await sql`
     SELECT
-      ti.*,
+      pi.*,
       COALESCE(
         json_agg(
           json_build_object(
@@ -132,36 +132,36 @@ router.get('/takeoff/categories/:id/items', async (c) => {
             'swatch_hex',  m.swatch_hex,
             'created_at',  m.created_at,
             'updated_at',  m.updated_at
-          ) ORDER BY tim.sort_order
+          ) ORDER BY pim.sort_order
         ) FILTER (WHERE m.id IS NOT NULL),
         '[]'::json
       ) AS materials
-    FROM  takeoff_items ti
-    LEFT  JOIN takeoff_item_materials tim ON tim.takeoff_item_id = ti.id
-    LEFT  JOIN materials m               ON m.id = tim.material_id
-    WHERE ti.category_id = ${id}
-    GROUP BY ti.id
-    ORDER BY ti.sort_order, ti.created_at
+    FROM  proposal_items pi
+    LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id
+    LEFT  JOIN materials m                 ON m.id = pim.material_id
+    WHERE pi.category_id = ${id}
+    GROUP BY pi.id
+    ORDER BY pi.sort_order, pi.created_at
   `;
   return c.json({ items: rows });
 });
 
-router.post('/takeoff/categories/:id/items', async (c) => {
+router.post('/proposal/categories/:id/items', async (c) => {
   const uid = c.get('uid');
   const categoryId = c.req.param('id');
   const body = await c.req.json<unknown>().catch(() => null);
-  const parsed = CreateTakeoffItemSchema.safeParse(body);
+  const parsed = CreateProposalItemSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   try {
-    await assertTakeoffCategoryOwnership(c.env, categoryId, uid);
+    await assertProposalCategoryOwnership(c.env, categoryId, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
 
   const sql = getDb(c.env);
   const rows = await sql`
-    INSERT INTO takeoff_items (
+    INSERT INTO proposal_items (
       category_id, product_tag, plan, drawings, location, description,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order
@@ -190,22 +190,22 @@ router.post('/takeoff/categories/:id/items', async (c) => {
   return c.json({ item: rows[0] }, 201);
 });
 
-router.patch('/takeoff/items/:id', async (c) => {
+router.patch('/proposal/items/:id', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
   const body = await c.req.json<unknown>().catch(() => null);
-  const parsed = UpdateTakeoffItemSchema.safeParse(body);
+  const parsed = UpdateProposalItemSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   try {
-    await assertTakeoffItemOwnership(c.env, id, uid);
+    await assertProposalItemOwnership(c.env, id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
 
   const sql = getDb(c.env);
   const rows = await sql`
-    UPDATE takeoff_items
+    UPDATE proposal_items
     SET
       category_id = COALESCE(${parsed.data.category_id ?? null}, category_id),
       product_tag = COALESCE(${parsed.data.product_tag ?? null}, product_tag),
@@ -232,38 +232,38 @@ router.patch('/takeoff/items/:id', async (c) => {
   return c.json({ item: rows[0] });
 });
 
-router.delete('/takeoff/items/:id', async (c) => {
+router.delete('/proposal/items/:id', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
   try {
-    await assertTakeoffItemOwnership(c.env, id, uid);
+    await assertProposalItemOwnership(c.env, id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
 
   const sql = getDb(c.env);
-  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE takeoff_item_id = ${id}`;
+  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE proposal_item_id = ${id}`;
   await deleteR2Keys(
     c.env.IMAGES_BUCKET,
     (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
   );
-  await sql`DELETE FROM takeoff_items WHERE id = ${id}`;
+  await sql`DELETE FROM proposal_items WHERE id = ${id}`;
   return c.body(null, 204);
 });
 
-// ─── Takeoff item ↔ material library routes ───────────────────────────────
+// ─── Proposal item ↔ material library routes ─────────────────────────────
 
-router.post('/takeoff/items/:id/materials', async (c) => {
+router.post('/proposal/items/:id/materials', async (c) => {
   const uid = c.get('uid');
-  const takeoffItemId = c.req.param('id');
+  const proposalItemId = c.req.param('id');
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = AssignMaterialSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
-  let itemCtx: { projectId: string; takeoffItemId: string };
+  let itemCtx: { projectId: string; proposalItemId: string };
   let matCtx: { projectId: string; materialId: string };
   try {
-    itemCtx = await getOwnedTakeoffItemContext(c.env, takeoffItemId, uid);
+    itemCtx = await getOwnedProposalItemContext(c.env, proposalItemId, uid);
     matCtx = await getOwnedMaterialContext(c.env, parsed.data.material_id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
@@ -275,28 +275,28 @@ router.post('/takeoff/items/:id/materials', async (c) => {
   const sql = getDb(c.env);
   const maxRows = await sql`
     SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
-    FROM   takeoff_item_materials
-    WHERE  takeoff_item_id = ${takeoffItemId}
+    FROM   proposal_item_materials
+    WHERE  proposal_item_id = ${proposalItemId}
   `;
   const nextSort = Number((maxRows[0] as { next_sort?: number }).next_sort ?? 0);
   await sql`
-    INSERT INTO takeoff_item_materials (takeoff_item_id, material_id, sort_order)
-    VALUES (${takeoffItemId}, ${parsed.data.material_id}, ${nextSort})
-    ON CONFLICT (takeoff_item_id, material_id) DO NOTHING
+    INSERT INTO proposal_item_materials (proposal_item_id, material_id, sort_order)
+    VALUES (${proposalItemId}, ${parsed.data.material_id}, ${nextSort})
+    ON CONFLICT (proposal_item_id, material_id) DO NOTHING
   `;
   return c.json({ material: await selectMaterialById(sql, parsed.data.material_id) }, 201);
 });
 
-router.post('/takeoff/items/:id/materials/new', async (c) => {
+router.post('/proposal/items/:id/materials/new', async (c) => {
   const uid = c.get('uid');
-  const takeoffItemId = c.req.param('id');
+  const proposalItemId = c.req.param('id');
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = CreateAndAssignMaterialSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
-  let itemCtx: { projectId: string; takeoffItemId: string };
+  let itemCtx: { projectId: string; proposalItemId: string };
   try {
-    itemCtx = await getOwnedTakeoffItemContext(c.env, takeoffItemId, uid);
+    itemCtx = await getOwnedProposalItemContext(c.env, proposalItemId, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
@@ -324,34 +324,34 @@ router.post('/takeoff/items/:id/materials/new', async (c) => {
   const mat = matRows[0] as { id: string };
   const maxRows = await sql`
     SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
-    FROM   takeoff_item_materials
-    WHERE  takeoff_item_id = ${takeoffItemId}
+    FROM   proposal_item_materials
+    WHERE  proposal_item_id = ${proposalItemId}
   `;
   const nextSort = Number((maxRows[0] as { next_sort?: number }).next_sort ?? 0);
   await sql`
-    INSERT INTO takeoff_item_materials (takeoff_item_id, material_id, sort_order)
-    VALUES (${takeoffItemId}, ${mat.id}, ${nextSort})
-    ON CONFLICT (takeoff_item_id, material_id) DO NOTHING
+    INSERT INTO proposal_item_materials (proposal_item_id, material_id, sort_order)
+    VALUES (${proposalItemId}, ${mat.id}, ${nextSort})
+    ON CONFLICT (proposal_item_id, material_id) DO NOTHING
   `;
   return c.json({ material: await selectMaterialById(sql, mat.id) }, 201);
 });
 
-router.delete('/takeoff/items/:id/materials/:materialId', async (c) => {
+router.delete('/proposal/items/:id/materials/:materialId', async (c) => {
   const uid = c.get('uid');
-  const takeoffItemId = c.req.param('id');
+  const proposalItemId = c.req.param('id');
   const materialId = c.req.param('materialId');
   try {
-    await assertTakeoffItemOwnership(c.env, takeoffItemId, uid);
+    await assertProposalItemOwnership(c.env, proposalItemId, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
 
   const sql = getDb(c.env);
   await sql`
-    DELETE FROM takeoff_item_materials
-    WHERE  takeoff_item_id = ${takeoffItemId} AND material_id = ${materialId}
+    DELETE FROM proposal_item_materials
+    WHERE  proposal_item_id = ${proposalItemId} AND material_id = ${materialId}
   `;
   return c.body(null, 204);
 });
 
-export { router as takeoffRouter };
+export { router as proposalRouter };

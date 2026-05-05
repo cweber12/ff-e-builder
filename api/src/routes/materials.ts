@@ -10,7 +10,7 @@ import {
   assertItemOwnership,
   assertMaterialOwnership,
   assertProjectOwnership,
-  assertTakeoffItemOwnership,
+  assertProposalItemOwnership,
   getOwnedItemContext,
   getOwnedMaterialContext,
 } from '../lib/ownership';
@@ -288,16 +288,16 @@ router.patch('/items/:itemId/materials/:materialId', async (c) => {
   return c.json({ material: await selectMaterialById(sql, finalId) });
 });
 
-router.patch('/takeoff/items/:takeoffItemId/materials/:materialId', async (c) => {
+router.patch('/proposal/items/:proposalItemId/materials/:materialId', async (c) => {
   const uid = c.get('uid');
-  const takeoffItemId = c.req.param('takeoffItemId');
+  const proposalItemId = c.req.param('proposalItemId');
   const materialId = c.req.param('materialId');
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = UpdateMaterialSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   try {
-    await assertTakeoffItemOwnership(c.env, takeoffItemId, uid);
+    await assertProposalItemOwnership(c.env, proposalItemId, uid);
     await assertMaterialOwnership(c.env, materialId, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
@@ -310,9 +310,9 @@ router.patch('/takeoff/items/:takeoffItemId/materials/:materialId', async (c) =>
   if (refCount > 1) {
     finalId = await forkMaterial(sql, c.env, uid, materialId, parsed.data);
     await sql`
-      UPDATE takeoff_item_materials
+      UPDATE proposal_item_materials
       SET material_id = ${finalId}
-      WHERE takeoff_item_id = ${takeoffItemId} AND material_id = ${materialId}
+      WHERE proposal_item_id = ${proposalItemId} AND material_id = ${materialId}
     `;
   } else {
     await sql`

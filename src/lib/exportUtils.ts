@@ -6,9 +6,9 @@ import {
   roomSubtotalCents,
   projectTotalCents,
   sellPriceCents,
-  takeoffCategorySubtotalCents,
-  takeoffLineTotalCents,
-  takeoffProjectTotalCents,
+  proposalCategorySubtotalCents,
+  proposalLineTotalCents,
+  proposalProjectTotalCents,
 } from './calc';
 import { BRAND_RGB } from './constants';
 import { api } from './api';
@@ -19,8 +19,8 @@ import type {
   Item,
   Material,
   Project,
-  TakeoffCategoryWithItems,
-  TakeoffItem,
+  ProposalCategoryWithItems,
+  ProposalItem,
   UserProfile,
 } from '../types';
 import type { RoomWithItems } from '../types';
@@ -109,7 +109,7 @@ function itemToRow(item: Item): string[] {
   ];
 }
 
-function takeoffItemToRow(item: TakeoffItem): string[] {
+function proposalItemToRow(item: ProposalItem): string[] {
   return [
     '',
     item.productTag,
@@ -122,7 +122,7 @@ function takeoffItemToRow(item: TakeoffItem): string[] {
     String(item.quantity),
     item.quantityUnit,
     fmtMoney(item.unitCostCents),
-    fmtMoney(takeoffLineTotalCents(item)),
+    fmtMoney(proposalLineTotalCents(item)),
   ];
 }
 
@@ -219,16 +219,16 @@ export function exportSummaryCsv(project: Project, rooms: RoomWithItems[]): void
   triggerDownload(blob, `${safeName(project.name)}-summary.csv`);
 }
 
-export function exportTakeoffCsv(project: Project, categories: TakeoffCategoryWithItems[]): void {
+export function exportProposalCsv(project: Project, categories: ProposalCategoryWithItems[]): void {
   const rows = [
     ['Project', 'Category', ...TAKEOFF_HEADERS],
     ...categories.flatMap((category) =>
-      category.items.map((item) => [project.name, category.name, ...takeoffItemToRow(item)]),
+      category.items.map((item) => [project.name, category.name, ...proposalItemToRow(item)]),
     ),
   ];
   const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  triggerDownload(blob, `${safeName(project.name)}-takeoff.csv`);
+  triggerDownload(blob, `${safeName(project.name)}-proposal.csv`);
 }
 
 // ─── Excel ────────────────────────────────────────────────────────────────────
@@ -489,13 +489,13 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   XLSX.writeFile(wb, `${safeName(project.name)}-summary.xlsx`);
 }
 
-type TakeoffPdfMode = 'continuous' | 'separated';
+type ProposalPdfMode = 'continuous' | 'separated';
 
-type TakeoffPdfOptions = {
-  mode?: TakeoffPdfMode;
+type ProposalPdfOptions = {
+  mode?: ProposalPdfMode;
 };
 
-type TakeoffExportColumnKey =
+type ProposalExportColumnKey =
   | 'rendering'
   | 'productTag'
   | 'plan'
@@ -509,53 +509,53 @@ type TakeoffExportColumnKey =
   | 'unitCost'
   | 'totalCost';
 
-type TakeoffExportColumn = {
-  key: TakeoffExportColumnKey;
+type ProposalExportColumn = {
+  key: ProposalExportColumnKey;
   label: string;
   pdfWidth: number;
   excelWidth: number;
   alwaysVisible?: boolean;
 };
 
-type TakeoffAssetBundle = {
+type ProposalAssetBundle = {
   projectImages: string[];
   renderingByItemId: Map<string, string>;
   planByItemId: Map<string, string>;
   swatchesByItemId: Map<string, string[]>;
 };
 
-type TakeoffExportRow = {
-  item: TakeoffItem;
-  values: Record<TakeoffExportColumnKey, string>;
+type ProposalExportRow = {
+  item: ProposalItem;
+  values: Record<ProposalExportColumnKey, string>;
   rendering: string | null;
   planImage: string | null;
   swatches: string[];
-  /** Pre-cropped to exact PDF cell dimensions — populated by prepareTakeoffPdfImages */
+  /** Pre-cropped to exact PDF cell dimensions — populated by prepareProposalPdfImages */
   pdfRendering: string | null;
   pdfPlanImage: string | null;
   pdfSwatches: string[];
 };
 
-type TakeoffExportCategorySection = {
-  category: TakeoffCategoryWithItems;
-  rows: TakeoffExportRow[];
+type ProposalExportCategorySection = {
+  category: ProposalCategoryWithItems;
+  rows: ProposalExportRow[];
   subtotalCents: number;
   quantityTotal: number;
 };
 
-type TakeoffExportDocument = {
+type ProposalExportDocument = {
   companyName: string;
   projectLine: string;
   preparedByLine: string;
   compactIdentityLine: string;
   projectImages: string[];
-  columns: TakeoffExportColumn[];
-  categories: TakeoffExportCategorySection[];
+  columns: ProposalExportColumn[];
+  categories: ProposalExportCategorySection[];
   grandTotalCents: number;
   budgetTargetCents: number | null;
 };
 
-const TAKEOFF_EXPORT_COLUMNS: TakeoffExportColumn[] = [
+const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
   { key: 'rendering', label: 'Rendering', pdfWidth: 28, excelWidth: 16 },
   { key: 'productTag', label: 'Product Tag', pdfWidth: 18, excelWidth: 14, alwaysVisible: true },
   { key: 'plan', label: 'Plan', pdfWidth: 18, excelWidth: 14 },
@@ -582,56 +582,56 @@ const TAKEOFF_PDF_CELL_PADDING = 1.6;
 const TAKEOFF_EXCEL_IMAGE_PADDING_PX = 2;
 const TAKEOFF_SWATCH_LIMIT = 4;
 
-function filteredTakeoffCategories(categories: TakeoffCategoryWithItems[]) {
+function filteredProposalCategories(categories: ProposalCategoryWithItems[]) {
   return categories.filter((category) => category.items.length > 0);
 }
 
-function takeoffPreparedBy(profile?: UserProfile | null) {
+function proposalPreparedBy(profile?: UserProfile | null) {
   return [profile?.name?.trim(), profile?.email?.trim()].filter(Boolean).join(' | ');
 }
 
-function takeoffProjectLine(project: Project) {
+function proposalProjectLine(project: Project) {
   return [project.name, project.projectLocation?.trim()].filter(Boolean).join(' | ');
 }
 
-function takeoffDocumentCompany(project: Project) {
+function proposalDocumentCompany(project: Project) {
   return project.companyName?.trim() || 'ChillDesignStudio';
 }
 
-function takeoffCompactIdentityLine(project: Project) {
-  return [takeoffDocumentCompany(project), project.name, project.projectLocation?.trim()]
+function proposalCompactIdentityLine(project: Project) {
+  return [proposalDocumentCompany(project), project.name, project.projectLocation?.trim()]
     .filter(Boolean)
     .join(' | ');
 }
 
-function getTakeoffBudgetTarget(project: Project) {
+function getProposalBudgetTarget(project: Project) {
   const relevant =
     project.budgetMode === 'individual'
-      ? (project.takeoffBudgetCents ?? 0)
+      ? (project.proposalBudgetCents ?? 0)
       : (project.budgetCents ?? 0);
   return relevant > 0 ? relevant : null;
 }
 
-function buildTakeoffVisibleColumns(
-  categories: TakeoffCategoryWithItems[],
-  assets: TakeoffAssetBundle,
-): TakeoffExportColumn[] {
+function buildProposalVisibleColumns(
+  categories: ProposalCategoryWithItems[],
+  assets: ProposalAssetBundle,
+): ProposalExportColumn[] {
   const items = categories.flatMap((category) => category.items);
   const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
   const hasPlanImages = items.some((item) => assets.planByItemId.has(item.id));
   const hasSwatches = items.some((item) => (assets.swatchesByItemId.get(item.id)?.length ?? 0) > 0);
 
-  return TAKEOFF_EXPORT_COLUMNS.filter((column) => {
+  return PROPOSAL_EXPORT_COLUMNS.filter((column) => {
     if (column.key === 'rendering') return hasRendering;
     if (column.key === 'plan')
-      return hasPlanImages || items.some((item) => takeoffColumnHasData(item, column.key));
+      return hasPlanImages || items.some((item) => proposalColumnHasData(item, column.key));
     if (column.key === 'swatch') return hasSwatches;
     if (column.alwaysVisible) return true;
-    return items.some((item) => takeoffColumnHasData(item, column.key));
+    return items.some((item) => proposalColumnHasData(item, column.key));
   });
 }
 
-function buildTakeoffRowValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
+function buildProposalRowValue(item: ProposalItem, key: ProposalExportColumnKey) {
   switch (key) {
     case 'drawingsLocation': {
       const parts = [item.drawings.trim(), item.location.trim()].filter(Boolean);
@@ -639,20 +639,20 @@ function buildTakeoffRowValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
       return parts[0] ?? '';
     }
     default:
-      return takeoffWrappedCellValue(item, key);
+      return proposalWrappedCellValue(item, key);
   }
 }
 
-function buildTakeoffExportDocument(
+function buildProposalExportDocument(
   project: Project,
-  categories: TakeoffCategoryWithItems[],
-  assets: TakeoffAssetBundle,
+  categories: ProposalCategoryWithItems[],
+  assets: ProposalAssetBundle,
   userProfile?: UserProfile | null,
-): TakeoffExportDocument {
-  const columns = buildTakeoffVisibleColumns(categories, assets);
+): ProposalExportDocument {
+  const columns = buildProposalVisibleColumns(categories, assets);
   const categorySections = categories.map((category) => ({
     category,
-    subtotalCents: takeoffCategorySubtotalCents(category.items),
+    subtotalCents: proposalCategorySubtotalCents(category.items),
     quantityTotal: category.items.reduce((sum, item) => sum + item.quantity, 0),
     rows: category.items.map((item) => ({
       item,
@@ -663,28 +663,28 @@ function buildTakeoffExportDocument(
       pdfPlanImage: null,
       pdfSwatches: [] as string[],
       values: Object.fromEntries(
-        TAKEOFF_EXPORT_COLUMNS.map((column) => [
+        PROPOSAL_EXPORT_COLUMNS.map((column) => [
           column.key,
-          buildTakeoffRowValue(item, column.key),
+          buildProposalRowValue(item, column.key),
         ]),
-      ) as Record<TakeoffExportColumnKey, string>,
+      ) as Record<ProposalExportColumnKey, string>,
     })),
   }));
 
   return {
-    companyName: takeoffDocumentCompany(project),
-    projectLine: takeoffProjectLine(project),
-    preparedByLine: takeoffPreparedBy(userProfile),
-    compactIdentityLine: takeoffCompactIdentityLine(project),
+    companyName: proposalDocumentCompany(project),
+    projectLine: proposalProjectLine(project),
+    preparedByLine: proposalPreparedBy(userProfile),
+    compactIdentityLine: proposalCompactIdentityLine(project),
     projectImages: assets.projectImages,
     columns,
     categories: categorySections,
-    grandTotalCents: takeoffProjectTotalCents(categories),
-    budgetTargetCents: getTakeoffBudgetTarget(project),
+    grandTotalCents: proposalProjectTotalCents(categories),
+    budgetTargetCents: getProposalBudgetTarget(project),
   };
 }
 
-function takeoffColumnHasData(item: TakeoffItem, key: TakeoffExportColumnKey) {
+function proposalColumnHasData(item: ProposalItem, key: ProposalExportColumnKey) {
   switch (key) {
     case 'plan':
       return Boolean(item.plan.trim());
@@ -712,7 +712,7 @@ function takeoffColumnHasData(item: TakeoffItem, key: TakeoffExportColumnKey) {
   }
 }
 
-function takeoffCellValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
+function proposalCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
   switch (key) {
     case 'productTag':
       return item.productTag || '';
@@ -733,25 +733,25 @@ function takeoffCellValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
     case 'unitCost':
       return fmtMoney(item.unitCostCents || 0);
     case 'totalCost':
-      return fmtMoney(takeoffLineTotalCents(item));
+      return fmtMoney(proposalLineTotalCents(item));
     case 'rendering':
     case 'swatch':
       return '';
   }
 }
 
-function truncateTakeoffText(value: string, maxChars: number) {
+function truncateProposalText(value: string, maxChars: number) {
   const normalized = value.trim();
   if (normalized.length <= maxChars) return normalized;
   return `${normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
 }
 
-function takeoffWrappedCellValue(item: TakeoffItem, key: TakeoffExportColumnKey) {
-  const value = takeoffCellValue(item, key);
-  if (key === 'description') return truncateTakeoffText(value, 96);
-  if (key === 'drawingsLocation') return truncateTakeoffText(value, 48);
-  if (key === 'size') return truncateTakeoffText(value, 30);
-  if (key === 'plan') return truncateTakeoffText(value, 24);
+function proposalWrappedCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
+  const value = proposalCellValue(item, key);
+  if (key === 'description') return truncateProposalText(value, 96);
+  if (key === 'drawingsLocation') return truncateProposalText(value, 48);
+  if (key === 'size') return truncateProposalText(value, 30);
+  if (key === 'plan') return truncateProposalText(value, 24);
   return value;
 }
 
@@ -800,10 +800,10 @@ async function imageAssetToPngDataUrl(image: ImageAsset): Promise<string | null>
   }
 }
 
-async function buildTakeoffAssetBundle(
+async function buildProposalAssetBundle(
   projectId: string,
-  categories: TakeoffCategoryWithItems[],
-): Promise<TakeoffAssetBundle> {
+  categories: ProposalCategoryWithItems[],
+): Promise<ProposalAssetBundle> {
   const projectImages = await api.images.list({ entityType: 'project', entityId: projectId });
   const projectImageData = await Promise.all(
     projectImages.slice(0, 3).map(async (image) => imageAssetToPngDataUrl(image)),
@@ -817,8 +817,8 @@ async function buildTakeoffAssetBundle(
   await Promise.all(
     items.map(async (item) => {
       const [renderingImages, planImages] = await Promise.all([
-        api.images.list({ entityType: 'takeoff_item', entityId: item.id }),
-        api.images.list({ entityType: 'takeoff_plan', entityId: item.id }),
+        api.images.list({ entityType: 'proposal_item', entityId: item.id }),
+        api.images.list({ entityType: 'proposal_plan', entityId: item.id }),
       ]);
 
       const rendering = renderingImages[0];
@@ -880,7 +880,7 @@ function drawPdfSmallIdentityHeader(doc: jsPDF, project: Project) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
-  doc.text(takeoffCompactIdentityLine(project), pageWidth / 2, 10, { align: 'center' });
+  doc.text(proposalCompactIdentityLine(project), pageWidth / 2, 10, { align: 'center' });
 }
 
 function drawPdfCategoryBand(doc: jsPDF, label: string, y: number) {
@@ -936,7 +936,7 @@ async function drawPdfProjectImageBand(doc: jsPDF, projectImages: string[], y: n
   }
 }
 
-async function drawPdfTakeoffHeaderBlock(doc: jsPDF, exportDoc: TakeoffExportDocument) {
+async function drawPdfProposalHeaderBlock(doc: jsPDF, exportDoc: ProposalExportDocument) {
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(17);
@@ -964,9 +964,9 @@ async function drawPdfTakeoffHeaderBlock(doc: jsPDF, exportDoc: TakeoffExportDoc
 // can use a simple doc.addImage call with no jsPDF clip() state manipulation.
 const TAKEOFF_PDF_MM_TO_PX = 3.7795;
 
-async function prepareTakeoffPdfImages(
-  exportDoc: TakeoffExportDocument,
-  columns: TakeoffExportColumn[],
+async function prepareProposalPdfImages(
+  exportDoc: ProposalExportDocument,
+  columns: ProposalExportColumn[],
 ): Promise<void> {
   const renderingCol = columns.find((c) => c.key === 'rendering');
   const planCol = columns.find((c) => c.key === 'plan');
@@ -1005,7 +1005,7 @@ async function prepareTakeoffPdfImages(
   );
 }
 
-function drawPdfBudgetSummaryPage(doc: jsPDF, project: Project, exportDoc: TakeoffExportDocument) {
+function drawPdfBudgetSummaryPage(doc: jsPDF, project: Project, exportDoc: ProposalExportDocument) {
   doc.addPage();
   drawPdfSmallIdentityHeader(doc, project);
   doc.setFont('helvetica', 'bold');
@@ -1050,8 +1050,12 @@ function drawPdfBudgetSummaryPage(doc: jsPDF, project: Project, exportDoc: Takeo
   });
 }
 
-function takeoffSubtotalLabelColumnIndex(columns: TakeoffExportColumn[]) {
-  const preferredKeys: TakeoffExportColumnKey[] = ['description', 'drawingsLocation', 'productTag'];
+function proposalSubtotalLabelColumnIndex(columns: ProposalExportColumn[]) {
+  const preferredKeys: ProposalExportColumnKey[] = [
+    'description',
+    'drawingsLocation',
+    'productTag',
+  ];
   for (const key of preferredKeys) {
     const index = columns.findIndex((column) => column.key === key);
     if (index >= 0) return index;
@@ -1059,17 +1063,17 @@ function takeoffSubtotalLabelColumnIndex(columns: TakeoffExportColumn[]) {
   return Math.max(0, columns.length - 2);
 }
 
-function drawPdfTakeoffTable(
+function drawPdfProposalTable(
   doc: jsPDF,
   project: Project,
-  section: TakeoffExportCategorySection,
-  columns: TakeoffExportColumn[],
+  section: ProposalExportCategorySection,
+  columns: ProposalExportColumn[],
   startY: number,
   options: {
     drawOverflowHeader: boolean;
   },
 ) {
-  const subtotalLabelIndex = takeoffSubtotalLabelColumnIndex(columns);
+  const subtotalLabelIndex = proposalSubtotalLabelColumnIndex(columns);
   const body = section.rows.map((row) => columns.map((column) => row.values[column.key]));
   body.push(
     columns.map((_column, index) => {
@@ -1490,19 +1494,19 @@ function excelEqualWidthSlotPlacement(
   };
 }
 
-export async function exportTakeoffExcel(
+export async function exportProposalExcel(
   project: Project,
-  categories: TakeoffCategoryWithItems[],
+  categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
-  const exportCategories = filteredTakeoffCategories(categories);
-  const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
-  const exportDoc = buildTakeoffExportDocument(project, exportCategories, assets, userProfile);
+  const exportCategories = filteredProposalCategories(categories);
+  const assets = await buildProposalAssetBundle(project.id, exportCategories);
+  const exportDoc = buildProposalExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
 
   const workbook = new Workbook();
-  const worksheet = workbook.addWorksheet('Take-Off');
+  const worksheet = workbook.addWorksheet('Proposal');
   worksheet.views = [{ state: 'frozen', ySplit: 0 }];
   worksheet.pageSetup = {
     orientation: 'landscape',
@@ -1525,7 +1529,7 @@ export async function exportTakeoffExcel(
 
   let currentRow = 1;
   const endColumn = Math.max(columns.length, 1);
-  const subtotalLabelIndex = takeoffSubtotalLabelColumnIndex(columns);
+  const subtotalLabelIndex = proposalSubtotalLabelColumnIndex(columns);
 
   worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
   const companyCell = worksheet.getCell(currentRow, 1);
@@ -1782,7 +1786,7 @@ export async function exportTakeoffExcel(
     new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
-    `${safeName(project.name)}-takeoff.xlsx`,
+    `${safeName(project.name)}-proposal.xlsx`,
   );
 }
 
@@ -1994,16 +1998,16 @@ export async function exportTablePdf(
   doc.save(`${safeName(project.name)}${suffix}-items.pdf`);
 }
 
-export async function exportTakeoffPdf(
+export async function exportProposalPdf(
   project: Project,
-  categories: TakeoffCategoryWithItems[],
+  categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
-  options: TakeoffPdfOptions = {},
+  options: ProposalPdfOptions = {},
 ): Promise<void> {
   const mode = options.mode ?? 'continuous';
-  const exportCategories = filteredTakeoffCategories(categories);
-  const assets = await buildTakeoffAssetBundle(project.id, exportCategories);
-  const exportDoc = buildTakeoffExportDocument(project, exportCategories, assets, userProfile);
+  const exportCategories = filteredProposalCategories(categories);
+  const assets = await buildProposalAssetBundle(project.id, exportCategories);
+  const exportDoc = buildProposalExportDocument(project, exportCategories, assets, userProfile);
   const columns = exportDoc.columns;
 
   // Scale column widths so the table fills the full A3 landscape printable width.
@@ -2016,22 +2020,22 @@ export async function exportTakeoffPdf(
   const scaledColumns = columns.map((col) => ({ ...col, pdfWidth: col.pdfWidth * pdfWidthScale }));
 
   // Pre-crop images using the scaled cell aspect ratios so didDrawCell dimensions match.
-  await prepareTakeoffPdfImages(exportDoc, scaledColumns);
+  await prepareProposalPdfImages(exportDoc, scaledColumns);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
 
   if (mode === 'separated') {
-    await drawPdfTakeoffHeaderBlock(doc, exportDoc);
+    await drawPdfProposalHeaderBlock(doc, exportDoc);
     for (const [index, section] of exportDoc.categories.entries()) {
       if (index > 0 || doc.getNumberOfPages() > 0) doc.addPage();
       drawPdfSmallIdentityHeader(doc, project);
       drawPdfCategoryBand(doc, section.category.name, 18);
-      drawPdfTakeoffTable(doc, project, section, scaledColumns, 24, {
+      drawPdfProposalTable(doc, project, section, scaledColumns, 24, {
         drawOverflowHeader: true,
       });
     }
     drawPdfBudgetSummaryPage(doc, project, exportDoc);
   } else {
-    await drawPdfTakeoffHeaderBlock(doc, exportDoc);
+    await drawPdfProposalHeaderBlock(doc, exportDoc);
     let startY = exportDoc.projectImages.length > 0 ? 82 : 40;
     exportDoc.categories.forEach((section, index) => {
       const pageHeight = doc.internal.pageSize.getHeight();
@@ -2041,7 +2045,7 @@ export async function exportTakeoffPdf(
         startY = 18;
       }
       drawPdfCategoryBand(doc, section.category.name, startY);
-      drawPdfTakeoffTable(doc, project, section, scaledColumns, startY + 6, {
+      drawPdfProposalTable(doc, project, section, scaledColumns, startY + 6, {
         drawOverflowHeader: index === 0 || doc.getCurrentPageInfo().pageNumber > 1,
       });
       startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
@@ -2058,7 +2062,7 @@ export async function exportTakeoffPdf(
     drawPdfPageNumber(doc, page, totalPages);
   }
 
-  doc.save(`${safeName(project.name)}-takeoff.pdf`);
+  doc.save(`${safeName(project.name)}-proposal.pdf`);
 }
 
 function thinBorder() {

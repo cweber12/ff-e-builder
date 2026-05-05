@@ -1,0 +1,1 @@
+export { ProposalSummaryView } from './ProposalSummaryView';

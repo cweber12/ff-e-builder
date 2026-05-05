@@ -7,7 +7,7 @@ import { roomsRouter } from './routes/rooms';
 import { itemsRouter } from './routes/items';
 import { imagesRouter } from './routes/images';
 import { materialsRouter } from './routes/materials';
-import { takeoffRouter } from './routes/takeoff';
+import { proposalRouter } from './routes/proposal';
 import { usersRouter } from './routes/users';
 
 export const app = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -38,7 +38,7 @@ app.route('/api/v1/rooms', roomsRouter);
 app.route('/api/v1/items', itemsRouter);
 app.route('/api/v1/images', imagesRouter);
 app.route('/api/v1', materialsRouter);
-app.route('/api/v1', takeoffRouter);
+app.route('/api/v1', proposalRouter);
 app.route('/api/v1/users', usersRouter);
 
 // ─── Fallback ─────────────────────────────────────────────────────────────

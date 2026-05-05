@@ -15,31 +15,38 @@ import { AuthGate, SignInPage } from './components/shared/AuthGate';
 import { CatalogView } from './components/ffe/catalog/CatalogView';
 import { ItemsTable } from './components/ffe/items/ItemsTable';
 import { MaterialsView } from './components/materials/MaterialsView';
+import { BudgetView } from './components/project/BudgetView';
 import { DeleteProjectModal } from './components/project/DeleteProjectModal';
 import { EditProjectModal } from './components/project/EditProjectModal';
-import { ExportMenu } from './components/shared/ExportMenu';
+import { FfeBudgetModal } from './components/project/FfeBudgetModal';
+import { ProposalBudgetModal } from './components/project/ProposalBudgetModal';
 import { ImportExcelModal } from './components/ffe/import/ImportExcelModal';
-import { ImportTakeoffExcelModal } from './components/takeoff/import/ImportTakeoffExcelModal';
+import { ImportProposalExcelModal } from './components/proposal/import/ImportProposalExcelModal';
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProjectImagesModal } from './components/project/ProjectImagesModal';
-import { ProjectOptionsMenu } from './components/project/ProjectOptionsMenu';
-import { SummaryView } from './components/ffe/summary/SummaryView';
-import { TakeoffSummaryView } from './components/takeoff/summary/TakeoffSummaryView';
-import { TakeoffTable } from './components/takeoff/table/TakeoffTable';
-import { exportSummaryCsv, exportSummaryExcel, exportSummaryPdf } from './lib/exportUtils';
+import { ExportMenu } from './components/shared/ExportMenu';
+import { ProposalTable } from './components/proposal/table/ProposalTable';
 import { recordSession } from './lib/telemetry';
+import {
+  exportSummaryCsv,
+  exportSummaryExcel,
+  exportSummaryPdf,
+  exportProposalCsv,
+  exportProposalExcel,
+  exportProposalPdf,
+} from './lib/exportUtils';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
 import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
-import { useTakeoffWithItems } from './hooks/takeoff/useTakeoff';
+import { useProposalWithItems } from './hooks/proposal/useProposal';
 import { DashboardPage } from './pages/DashboardPage';
-import type { Project, RoomWithItems, TakeoffCategoryWithItems } from './types';
+import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
   project: Project;
   roomsWithItems: RoomWithItems[];
-  takeoffCategoriesWithItems: TakeoffCategoryWithItems[];
+  proposalCategoriesWithItems: ProposalCategoryWithItems[];
   onImport: () => void;
-  onTakeoffImport: () => void;
+  onProposalImport: () => void;
 };
 
 function App() {
@@ -64,16 +71,17 @@ function App() {
           <Route path="ffe" element={<ProjectToolRedirect tool="ffe" />} />
           <Route path="ffe/table" element={<ProjectTableRoute />} />
           <Route path="ffe/catalog" element={<ProjectCatalogRoute />} />
-          <Route path="ffe/materials" element={<ProjectMaterialsRoute />} />
-          <Route path="ffe/summary" element={<ProjectSummaryRoute />} />
-          <Route path="takeoff" element={<ProjectToolRedirect tool="takeoff" />} />
-          <Route path="takeoff/table" element={<ProjectTakeoffRoute />} />
-          <Route path="takeoff/materials" element={<ProjectTakeoffMaterialsRoute />} />
-          <Route path="takeoff/summary" element={<ProjectTakeoffSummaryRoute />} />
+          <Route path="ffe/materials" element={<ProjectRedirectTo target="materials" />} />
+          <Route path="ffe/summary" element={<ProjectRedirectTo target="budget" />} />
+          <Route path="proposal" element={<ProjectToolRedirect tool="proposal" />} />
+          <Route path="proposal/table" element={<ProjectProposalRoute />} />
+          <Route path="proposal/materials" element={<ProjectRedirectTo target="materials" />} />
+          <Route path="proposal/summary" element={<ProjectRedirectTo target="budget" />} />
+          <Route path="materials" element={<ProjectMaterialsRoute />} />
+          <Route path="budget" element={<ProjectBudgetRoute />} />
           <Route path="table" element={<Navigate to="ffe/table" replace />} />
           <Route path="catalog" element={<Navigate to="ffe/catalog" replace />} />
-          <Route path="materials" element={<Navigate to="ffe/materials" replace />} />
-          <Route path="summary" element={<Navigate to="ffe/summary" replace />} />
+          <Route path="summary" element={<Navigate to="budget" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
@@ -90,10 +98,10 @@ function ProjectLayout() {
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
-  const { categoriesWithItems: takeoffCategoriesWithItems, isLoading: takeoffLoading } =
-    useTakeoffWithItems(id ?? '');
+  const { categoriesWithItems: proposalCategoriesWithItems, isLoading: proposalLoading } =
+    useProposalWithItems(id ?? '');
   const [importOpen, setImportOpen] = useState(false);
-  const [takeoffImportOpen, setTakeoffImportOpen] = useState(false);
+  const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [imageProject, setImageProject] = useState<Project | null>(null);
@@ -102,10 +110,27 @@ function ProjectLayout() {
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
 
-  const isLoading = projectsLoading || dataLoading || takeoffLoading;
+  const isLoading = projectsLoading || dataLoading || proposalLoading;
   return (
     <main className="min-h-screen bg-surface-muted">
-      <ProjectHeader project={project} showToolNavigation={false} />
+      <ProjectHeader
+        project={project}
+        showToolNavigation={false}
+        optionsOpen={headerMenuOpen}
+        onToggleOptions={() => setHeaderMenuOpen((open) => !open)}
+        onEditProject={() => {
+          setHeaderMenuOpen(false);
+          if (project) setEditProject(project);
+        }}
+        onProjectImages={() => {
+          setHeaderMenuOpen(false);
+          if (project) setImageProject(project);
+        }}
+        onDeleteProject={() => {
+          setHeaderMenuOpen(false);
+          if (project) setPendingDelete(project);
+        }}
+      />
       {isLoading ? (
         <div className="flex justify-center py-24">
           <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
@@ -119,67 +144,31 @@ function ProjectLayout() {
           >
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
-                <ProjectOptionsMenu
-                  projectName={project.name}
-                  open={headerMenuOpen}
-                  align="bottom"
-                  onToggle={() => setHeaderMenuOpen((open) => !open)}
-                  onEdit={() => {
-                    setHeaderMenuOpen(false);
-                    setEditProject(project);
-                  }}
-                  onImages={() => {
-                    setHeaderMenuOpen(false);
-                    setImageProject(project);
-                  }}
-                  onDelete={() => {
-                    setHeaderMenuOpen(false);
-                    setPendingDelete(project);
-                  }}
-                />
-                <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
-                  <nav aria-label="Project tools" className="flex items-center gap-2">
-                    {(
-                      [
-                        [`/projects/${project.id}/ffe/table`, 'FF&E'],
-                        [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
-                      ] as const
-                    ).map(([to, label]) => (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        className={({ isActive }) =>
-                          [
-                            'whitespace-nowrap rounded-md border px-3 py-1.5 text-sm font-medium transition',
-                            isActive
-                              ? 'border-brand-500 bg-brand-50 text-brand-700'
-                              : 'border-gray-200 bg-white text-gray-700 hover:border-brand-500 hover:text-brand-700',
-                          ].join(' ')
-                        }
-                      >
-                        {label}
-                      </NavLink>
-                    ))}
-                  </nav>
-                  <div className="h-5 w-px shrink-0 bg-gray-200" aria-hidden="true" />
-                  <div className="flex gap-2 overflow-x-auto">
-                    {getSectionTabs(location.pathname).map(([to, label]) => (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        className={({ isActive }) =>
-                          [
-                            'border-b-2 px-3 py-3 text-sm font-medium',
-                            isActive
-                              ? 'border-brand-500 text-brand-700'
-                              : 'border-transparent text-gray-600 hover:text-brand-700',
-                          ].join(' ')
-                        }
-                      >
-                        {label}
-                      </NavLink>
-                    ))}
-                  </div>
+                <div className="flex min-w-0 gap-1 overflow-x-auto">
+                  {(
+                    [
+                      [`/projects/${project.id}/ffe/table`, 'FF&E', false],
+                      [`/projects/${project.id}/proposal/table`, 'Proposal', false],
+                      [`/projects/${project.id}/materials`, 'Materials', true],
+                      [`/projects/${project.id}/budget`, 'Budget', true],
+                    ] as const
+                  ).map(([to, label, end]) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={end}
+                      className={({ isActive }) =>
+                        [
+                          'whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors',
+                          isActive
+                            ? 'border-brand-500 text-brand-700'
+                            : 'border-transparent text-gray-600 hover:text-brand-700',
+                        ].join(' ')
+                      }
+                    >
+                      {label}
+                    </NavLink>
+                  ))}
                 </div>
               </div>
               {project && (
@@ -187,6 +176,7 @@ function ProjectLayout() {
                   activePath={location.pathname}
                   project={project}
                   roomsWithItems={roomsWithItems}
+                  proposalCategoriesWithItems={proposalCategoriesWithItems}
                 />
               )}
             </div>
@@ -197,9 +187,9 @@ function ProjectLayout() {
                 {
                   project,
                   roomsWithItems,
-                  takeoffCategoriesWithItems,
+                  proposalCategoriesWithItems,
                   onImport: () => setImportOpen(true),
-                  onTakeoffImport: () => setTakeoffImportOpen(true),
+                  onProposalImport: () => setProposalImportOpen(true),
                 } satisfies ProjectContext
               }
             />
@@ -216,11 +206,11 @@ function ProjectLayout() {
                   void queryClient.invalidateQueries();
                 }}
               />
-              <ImportTakeoffExcelModal
-                open={takeoffImportOpen}
+              <ImportProposalExcelModal
+                open={proposalImportOpen}
                 projectId={project.id}
-                categories={takeoffCategoriesWithItems}
-                onClose={() => setTakeoffImportOpen(false)}
+                categories={proposalCategoriesWithItems}
+                onClose={() => setProposalImportOpen(false)}
                 onSuccess={() => {
                   void queryClient.invalidateQueries();
                 }}
@@ -260,51 +250,89 @@ function ProjectTabActions({
   activePath,
   project,
   roomsWithItems,
+  proposalCategoriesWithItems,
 }: {
   activePath: string;
   project: Project;
   roomsWithItems: RoomWithItems[];
+  proposalCategoriesWithItems: ProposalCategoryWithItems[];
 }) {
-  if (activePath.endsWith('/ffe/table')) {
-    return <div className="min-h-8" />;
-  }
-
-  if (activePath.endsWith('/ffe/summary')) {
+  if (activePath.endsWith('/budget')) {
     return (
-      <div className="flex shrink-0 items-center gap-2">
-        <ExportMenu
-          label="Export"
-          size="sm"
-          onCsv={() => exportSummaryCsv(project, roomsWithItems)}
-          onExcel={() => exportSummaryExcel(project, roomsWithItems)}
-          onPdf={() => exportSummaryPdf(project, roomsWithItems)}
-        />
-      </div>
+      <BudgetPageActions
+        project={project}
+        roomsWithItems={roomsWithItems}
+        proposalCategoriesWithItems={proposalCategoriesWithItems}
+      />
     );
-  }
-
-  if (activePath.endsWith('/takeoff/table')) {
-    return <div className="min-h-8" />;
   }
 
   return <div className="min-h-8" />;
 }
 
-function getSectionTabs(pathname: string): [string, string][] {
-  if (pathname.includes('/takeoff')) {
-    return [
-      ['takeoff/table', 'Table'],
-      ['takeoff/materials', 'Materials'],
-      ['takeoff/summary', 'Summary'],
-    ];
-  }
+function BudgetPageActions({
+  project,
+  roomsWithItems,
+  proposalCategoriesWithItems,
+}: {
+  project: Project;
+  roomsWithItems: RoomWithItems[];
+  proposalCategoriesWithItems: ProposalCategoryWithItems[];
+}) {
+  const [ffeOpen, setFfeOpen] = useState(false);
+  const [proposalOpen, setProposalOpen] = useState(false);
 
-  return [
-    ['ffe/table', 'Table'],
-    ['ffe/catalog', 'Catalog'],
-    ['ffe/materials', 'Materials'],
-    ['ffe/summary', 'Summary'],
-  ];
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setFfeOpen(true)}
+        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        FF&amp;E Budget
+      </button>
+      <button
+        type="button"
+        onClick={() => setProposalOpen(true)}
+        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Proposal Budget
+      </button>
+      <ExportMenu
+        label="Export"
+        size="sm"
+        onCsv={() => {
+          exportSummaryCsv(project, roomsWithItems);
+          exportProposalCsv(project, proposalCategoriesWithItems);
+        }}
+        onExcel={() => {
+          void exportSummaryExcel(project, roomsWithItems);
+          void exportProposalExcel(project, proposalCategoriesWithItems);
+        }}
+        onPdf={() => {
+          exportSummaryPdf(project, roomsWithItems);
+          void exportProposalPdf(project, proposalCategoriesWithItems);
+        }}
+      />
+      <FfeBudgetModal
+        open={ffeOpen}
+        onClose={() => setFfeOpen(false)}
+        project={project}
+        roomsWithItems={roomsWithItems}
+      />
+      <ProposalBudgetModal
+        open={proposalOpen}
+        onClose={() => setProposalOpen(false)}
+        project={project}
+        categories={proposalCategoriesWithItems}
+      />
+    </div>
+  );
+}
+
+function ProjectRedirectTo({ target }: { target: string }) {
+  const { id } = useParams();
+  return <Navigate to={`/projects/${id}/${target}`} replace />;
 }
 
 function ProjectTableRoute() {
@@ -319,31 +347,14 @@ function ProjectTableRoute() {
   );
 }
 
-function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'takeoff' }) {
+function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'proposal' }) {
   const { id } = useParams();
   return <Navigate to={`/projects/${id}/${tool}/table`} replace />;
 }
 
-function ProjectTakeoffRoute() {
-  const { project, onTakeoffImport } = useProjectContext();
-  return <TakeoffTable projectId={project.id} project={project} onImport={onTakeoffImport} />;
-}
-
-function ProjectTakeoffMaterialsRoute() {
-  const { project, roomsWithItems, takeoffCategoriesWithItems } = useProjectContext();
-  return (
-    <MaterialsView
-      project={project}
-      tool="takeoff"
-      roomsWithItems={roomsWithItems}
-      takeoffCategoriesWithItems={takeoffCategoriesWithItems}
-    />
-  );
-}
-
-function ProjectTakeoffSummaryRoute() {
-  const { project, takeoffCategoriesWithItems } = useProjectContext();
-  return <TakeoffSummaryView project={project} categories={takeoffCategoriesWithItems} />;
+function ProjectProposalRoute() {
+  const { project, onProposalImport } = useProjectContext();
+  return <ProposalTable projectId={project.id} project={project} onImport={onProposalImport} />;
 }
 
 function ProjectCatalogRoute() {
@@ -351,19 +362,24 @@ function ProjectCatalogRoute() {
   return <CatalogView project={project} rooms={roomsWithItems} />;
 }
 
-function ProjectSummaryRoute() {
-  const { project, roomsWithItems } = useProjectContext();
-  return <SummaryView project={project} roomsWithItems={roomsWithItems} />;
-}
-
 function ProjectMaterialsRoute() {
-  const { project, roomsWithItems, takeoffCategoriesWithItems } = useProjectContext();
+  const { project, roomsWithItems, proposalCategoriesWithItems } = useProjectContext();
   return (
     <MaterialsView
       project={project}
-      tool="ffe"
       roomsWithItems={roomsWithItems}
-      takeoffCategoriesWithItems={takeoffCategoriesWithItems}
+      proposalCategoriesWithItems={proposalCategoriesWithItems}
+    />
+  );
+}
+
+function ProjectBudgetRoute() {
+  const { project, roomsWithItems, proposalCategoriesWithItems } = useProjectContext();
+  return (
+    <BudgetView
+      project={project}
+      roomsWithItems={roomsWithItems}
+      proposalCategoriesWithItems={proposalCategoriesWithItems}
     />
   );
 }

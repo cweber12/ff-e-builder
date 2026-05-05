@@ -4,7 +4,7 @@ import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/exportUtils'
 import { api } from '../../lib/api';
 import { useCreateMaterial, useDeleteMaterial, useMaterials, useUpdateMaterial } from '../../hooks';
 import { imageKeys } from '../../hooks/shared/useImages';
-import type { Material, Project, RoomWithItems, TakeoffCategoryWithItems } from '../../types';
+import type { Material, Project, RoomWithItems, ProposalCategoryWithItems } from '../../types';
 import { Button } from '../primitives';
 import { ImageFrame } from '../shared/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
@@ -12,9 +12,9 @@ import { MaterialForm, MaterialSwatchImage } from './MaterialLibraryModal';
 
 type MaterialsViewProps = {
   project: Project;
-  tool?: 'ffe' | 'takeoff';
+  tool?: 'ffe' | 'proposal';
   roomsWithItems?: RoomWithItems[];
-  takeoffCategoriesWithItems?: TakeoffCategoryWithItems[];
+  proposalCategoriesWithItems?: ProposalCategoryWithItems[];
 };
 
 type MaterialDraft = {
@@ -38,7 +38,7 @@ export function MaterialsView({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   tool: _tool = 'ffe',
   roomsWithItems = [],
-  takeoffCategoriesWithItems = [],
+  proposalCategoriesWithItems = [],
 }: MaterialsViewProps) {
   const materials = useMaterials(project.id);
   const createMaterial = useCreateMaterial(project.id);
@@ -47,7 +47,7 @@ export function MaterialsView({
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
-  const [scope, setScope] = useState<'all' | 'ffe' | 'takeoff'>('all');
+  const [scope, setScope] = useState<'all' | 'ffe' | 'proposal'>('all');
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
@@ -63,12 +63,12 @@ export function MaterialsView({
     }
     const allFfeIds = new Set([...ffeIdsByRoom.values()].flatMap((s) => [...s]));
 
-    const takeoffIdsByCategory = new Map<string, Set<string>>();
-    for (const cat of takeoffCategoriesWithItems) {
+    const proposalIdsByCategory = new Map<string, Set<string>>();
+    for (const cat of proposalCategoriesWithItems) {
       const ids = new Set(cat.items.flatMap((item) => item.materials.map((m) => m.id)));
-      takeoffIdsByCategory.set(cat.id, ids);
+      proposalIdsByCategory.set(cat.id, ids);
     }
-    const allTakeoffIds = new Set([...takeoffIdsByCategory.values()].flatMap((s) => [...s]));
+    const allProposalIds = new Set([...proposalIdsByCategory.values()].flatMap((s) => [...s]));
 
     return [...(materials.data ?? [])]
       .filter((material) => {
@@ -76,10 +76,10 @@ export function MaterialsView({
           if (selectedRoomId) return ffeIdsByRoom.get(selectedRoomId)?.has(material.id) ?? false;
           return allFfeIds.has(material.id);
         }
-        if (scope === 'takeoff') {
+        if (scope === 'proposal') {
           if (selectedCategoryId)
-            return takeoffIdsByCategory.get(selectedCategoryId)?.has(material.id) ?? false;
-          return allTakeoffIds.has(material.id);
+            return proposalIdsByCategory.get(selectedCategoryId)?.has(material.id) ?? false;
+          return allProposalIds.has(material.id);
         }
         return true;
       })
@@ -92,7 +92,7 @@ export function MaterialsView({
     scope,
     selectedCategoryId,
     selectedRoomId,
-    takeoffCategoriesWithItems,
+    proposalCategoriesWithItems,
   ]);
 
   const resetDraft = () => {
@@ -150,7 +150,7 @@ export function MaterialsView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
-            {(['all', 'ffe', 'takeoff'] as const).map((nextScope) => (
+            {(['all', 'ffe', 'proposal'] as const).map((nextScope) => (
               <button
                 key={nextScope}
                 type="button"
@@ -161,7 +161,7 @@ export function MaterialsView({
                   setSelectedCategoryId('');
                 }}
               >
-                {nextScope === 'all' ? 'All' : nextScope === 'ffe' ? 'FF&E' : 'Take-Off'}
+                {nextScope === 'all' ? 'All' : nextScope === 'ffe' ? 'FF&E' : 'Proposal'}
               </button>
             ))}
           </div>
@@ -180,7 +180,7 @@ export function MaterialsView({
               ))}
             </select>
           )}
-          {scope === 'takeoff' && takeoffCategoriesWithItems.length > 0 && (
+          {scope === 'proposal' && proposalCategoriesWithItems.length > 0 && (
             <select
               value={selectedCategoryId}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
@@ -188,7 +188,7 @@ export function MaterialsView({
               aria-label="Filter by category"
             >
               <option value="">All categories</option>
-              {takeoffCategoriesWithItems.map((cat) => (
+              {proposalCategoriesWithItems.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>

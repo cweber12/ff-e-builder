@@ -1,15 +1,15 @@
-﻿import { takeoffCategorySubtotalCents, takeoffProjectTotalCents } from '../../../lib/calc';
-import { cents, formatMoney, type Project, type TakeoffCategoryWithItems } from '../../../types';
+import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/calc';
+import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../../types';
 
-type TakeoffSummaryViewProps = {
+type ProposalSummaryViewProps = {
   project: Project;
-  categories: TakeoffCategoryWithItems[];
+  categories: ProposalCategoryWithItems[];
 };
 
-export function TakeoffSummaryView({ project, categories }: TakeoffSummaryViewProps) {
-  const actualCents = takeoffProjectTotalCents(categories);
+export function ProposalSummaryView({ project, categories }: ProposalSummaryViewProps) {
+  const actualCents = proposalProjectTotalCents(categories);
   const budgetCents =
-    project.budgetMode === 'individual' ? (project.takeoffBudgetCents ?? 0) : project.budgetCents;
+    project.budgetMode === 'individual' ? (project.proposalBudgetCents ?? 0) : project.budgetCents;
   const budgetPercent =
     budgetCents > 0 ? Math.min(Math.round((actualCents / budgetCents) * 100), 100) : 0;
   const budgetTone =
@@ -24,7 +24,7 @@ export function TakeoffSummaryView({ project, categories }: TakeoffSummaryViewPr
       <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-950">Take-off budget vs actual</h2>
+            <h2 className="text-lg font-semibold text-gray-950">Proposal budget vs actual</h2>
             <p className="mt-1 text-sm text-gray-600">
               {formatMoney(cents(actualCents))} actual against {formatMoney(cents(budgetCents))}{' '}
               budget
@@ -68,7 +68,7 @@ export function TakeoffSummaryView({ project, categories }: TakeoffSummaryViewPr
                   {category.items.reduce((sum, item) => sum + item.quantity, 0)}
                 </td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-950">
-                  {formatMoney(cents(takeoffCategorySubtotalCents(category.items)))}
+                  {formatMoney(cents(proposalCategorySubtotalCents(category.items)))}
                 </td>
               </tr>
             ))}

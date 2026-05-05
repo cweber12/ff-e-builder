@@ -31,7 +31,7 @@ const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   roomId: null,
   itemId: null,
   materialId: null,
-  takeoffItemId: null,
+  proposalItemId: null,
   filename: 'image.png',
   contentType: 'image/png',
   byteSize: 1024,
@@ -56,7 +56,7 @@ const PROJECT = {
   budgetMode: 'shared' as const,
   budgetCents: 0,
   ffeBudgetCents: 0,
-  takeoffBudgetCents: 0,
+  proposalBudgetCents: 0,
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',
 };

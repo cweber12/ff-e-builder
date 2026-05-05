@@ -190,10 +190,10 @@ export function DashboardPage() {
                       {toolStates[project.id]?.hasFfe === false ? '+ FF&E' : 'FF&E'}
                     </Link>
                     <Link
-                      to={`/projects/${project.id}/takeoff/table`}
+                      to={`/projects/${project.id}/proposal/table`}
                       className="project-action-btn"
                     >
-                      {toolStates[project.id]?.hasTakeoff === false ? '+ Take-Off' : 'Take-Off'}
+                      {toolStates[project.id]?.hasProposal === false ? '+ Proposal' : 'Proposal'}
                     </Link>
                     <ProjectOptionsMenu
                       projectName={project.name}
@@ -309,7 +309,7 @@ function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
         <div>
           <h2 className="font-display text-xl font-semibold text-neutral-800">No projects yet</h2>
           <p className="mt-1.5 text-sm text-neutral-400">
-            Create your first project to start building FF&amp;E and take-off deliverables.
+            Create your first project to start building FF&amp;E and proposal deliverables.
           </p>
         </div>
         <button

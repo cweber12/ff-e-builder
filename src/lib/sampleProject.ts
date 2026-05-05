@@ -23,7 +23,7 @@ type PlaceholderImageSpec = {
   subtitle?: string;
 };
 
-type TakeoffRowSeed = {
+type ProposalRowSeed = {
   productTag: string;
   plan: string;
   drawings: string;
@@ -227,11 +227,11 @@ const materialSeeds = [
   },
 ] as const;
 
-const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
+const proposalCategorySeeds: Array<{ name: string; rows: ProposalRowSeed[] }> = [
   {
     name: 'Millwork',
     rows: [
-      makeTakeoffRow(
+      makeProposalRow(
         'MIL',
         1,
         'Reception Base Cabinet',
@@ -244,7 +244,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         198000,
         1,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'MIL',
         2,
         'Banquette Millwork',
@@ -257,7 +257,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         164000,
         2,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'MIL',
         3,
         'Display Shelving',
@@ -270,7 +270,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         132000,
         3,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'MIL',
         4,
         'Bar Back Cabinet',
@@ -288,7 +288,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
   {
     name: 'Ceiling',
     rows: [
-      makeTakeoffRow(
+      makeProposalRow(
         'CLG',
         1,
         'Wood Slat Ceiling',
@@ -301,7 +301,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         2800,
         1,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'CLG',
         2,
         'Feature Cove',
@@ -314,7 +314,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         3400,
         2,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'CLG',
         3,
         'Cloud Panel',
@@ -327,7 +327,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         2600,
         3,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'CLG',
         4,
         'Gypsum Ceiling Drop',
@@ -345,7 +345,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
   {
     name: 'Flooring',
     rows: [
-      makeTakeoffRow(
+      makeProposalRow(
         'FLR',
         1,
         'Large Format Stone',
@@ -358,7 +358,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         2200,
         1,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'FLR',
         2,
         'Inset Carpet Field',
@@ -371,7 +371,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         1600,
         2,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'FLR',
         3,
         'Wood Threshold',
@@ -384,7 +384,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         1800,
         3,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'FLR',
         4,
         'Stone Base Border',
@@ -402,7 +402,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
   {
     name: 'Walls',
     rows: [
-      makeTakeoffRow(
+      makeProposalRow(
         'WAL',
         1,
         'Wood Veneer Cladding',
@@ -415,7 +415,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         3100,
         1,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'WAL',
         2,
         'Upholstered Panel',
@@ -428,7 +428,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         2650,
         2,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'WAL',
         3,
         'Stone Slab Surround',
@@ -441,7 +441,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
         4200,
         3,
       ),
-      makeTakeoffRow(
+      makeProposalRow(
         'WAL',
         4,
         'Mirror Panel System',
@@ -458,7 +458,7 @@ const takeoffCategorySeeds: Array<{ name: string; rows: TakeoffRowSeed[] }> = [
   },
 ];
 
-function makeTakeoffRow(
+function makeProposalRow(
   prefix: string,
   index: number,
   description: string,
@@ -470,7 +470,7 @@ function makeTakeoffRow(
   quantityUnit: string,
   unitCostCents: number,
   swatchCount: number,
-): TakeoffRowSeed {
+): ProposalRowSeed {
   return {
     productTag: `${prefix}-${String(index).padStart(3, '0')}`,
     plan: `P-${200 + index}`,
@@ -561,23 +561,23 @@ export async function seedProjectSampleContent(
     }
   }
 
-  const takeoffCategories = await api.takeoff.categories(project.id);
-  const takeoffCategoryMap = new Map(
-    takeoffCategories.map((category) => [category.name, category.id]),
+  const proposalCategories = await api.proposal.categories(project.id);
+  const proposalCategoryMap = new Map(
+    proposalCategories.map((category) => [category.name, category.id]),
   );
 
-  const createdTakeoffItems: Array<{
+  const createdProposalItems: Array<{
     itemId: string;
     categoryName: string;
-    rowSeed: TakeoffRowSeed;
+    rowSeed: ProposalRowSeed;
     paletteIndex: number;
   }> = [];
 
-  for (const categorySeed of takeoffCategorySeeds) {
-    const categoryId = takeoffCategoryMap.get(categorySeed.name);
+  for (const categorySeed of proposalCategorySeeds) {
+    const categoryId = proposalCategoryMap.get(categorySeed.name);
     if (!categoryId) continue;
     for (const [rowIndex, rowSeed] of categorySeed.rows.entries()) {
-      const item = await api.takeoff.createItem(categoryId, {
+      const item = await api.proposal.createItem(categoryId, {
         productTag: rowSeed.productTag,
         plan: rowSeed.plan,
         drawings: rowSeed.drawings,
@@ -595,7 +595,7 @@ export async function seedProjectSampleContent(
         unitCostCents: rowSeed.unitCostCents,
         sortOrder: rowIndex,
       });
-      createdTakeoffItems.push({
+      createdProposalItems.push({
         itemId: item.id,
         categoryName: categorySeed.name,
         rowSeed,
@@ -658,8 +658,8 @@ export async function seedProjectSampleContent(
         });
       }),
     ),
-    ...createdTakeoffItems.map((item) =>
-      safeSampleStep(`take-off rendering ${item.rowSeed.productTag}`, async () => {
+    ...createdProposalItems.map((item) =>
+      safeSampleStep(`proposal rendering ${item.rowSeed.productTag}`, async () => {
         const file = await createPlaceholderImageFile({
           label: item.rowSeed.renderingLabel,
           subtitle: item.categoryName,
@@ -669,19 +669,19 @@ export async function seedProjectSampleContent(
           palette: paletteByIndex(item.paletteIndex),
         });
         await api.images.upload({
-          entityType: 'takeoff_item',
+          entityType: 'proposal_item',
           entityId: item.itemId,
           file,
           altText: `${item.rowSeed.description} rendering`,
         });
       }),
     ),
-    ...createdTakeoffItems.flatMap((item) =>
+    ...createdProposalItems.flatMap((item) =>
       item.rowSeed.swatchLabels.map((swatchLabel, swatchIndex) =>
         safeSampleStep(
-          `take-off swatch ${item.rowSeed.productTag}-${swatchIndex + 1}`,
+          `proposal swatch ${item.rowSeed.productTag}-${swatchIndex + 1}`,
           async () => {
-            const material = await api.materials.createAndAssignToTakeoffItem(item.itemId, {
+            const material = await api.materials.createAndAssignToProposalItem(item.itemId, {
               name: swatchLabel,
               materialId: '',
             });

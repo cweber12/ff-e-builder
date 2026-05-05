@@ -49,7 +49,7 @@ export async function countMaterialReferences(sql: Sql, materialId: string): Pro
   const rows = await sql`
     SELECT (
       (SELECT COUNT(*) FROM item_materials          WHERE material_id = ${materialId}) +
-      (SELECT COUNT(*) FROM takeoff_item_materials  WHERE material_id = ${materialId})
+      (SELECT COUNT(*) FROM proposal_item_materials  WHERE material_id = ${materialId})
     )::int AS total
   `;
   return Number((rows[0] as { total?: number } | undefined)?.total ?? 0);
@@ -137,13 +137,13 @@ export async function forkMaterial(
           entityType: 'material',
           imageId: newImgId,
           materialId: newMat.id,
-          takeoffItemId: '',
+          proposalItemId: '',
         },
       });
       await sql`
         INSERT INTO image_assets (
           id, entity_type, owner_uid, project_id,
-          room_id, item_id, material_id, takeoff_item_id,
+          room_id, item_id, material_id, proposal_item_id,
           r2_key, filename, content_type, byte_size, alt_text, is_primary
         ) VALUES (
           ${newImgId}, 'material', ${uid}, ${cur.project_id},

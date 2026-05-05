@@ -39,12 +39,6 @@ export function ProjectHeader({
 }: ProjectHeaderProps) {
   if (!project) return <SkeletonBar />;
 
-  const metadata = [
-    project.clientName,
-    project.companyName ? `Company: ${project.companyName}` : '',
-    project.projectLocation ? `Location: ${project.projectLocation}` : '',
-  ].filter(Boolean);
-
   return (
     <header className="no-print relative z-10 overflow-visible bg-brand-500 px-4 py-3 md:px-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -66,18 +60,25 @@ export function ProjectHeader({
                 clipRule="evenodd"
               />
             </svg>
-            All projects
+            Dashboard
           </Link>
-          <h2 className="truncate text-xl font-semibold leading-tight text-white">
-            {project.name}
-          </h2>
-          {metadata.length > 0 && (
-            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/65">
-              {metadata.map((entry) => (
-                <span key={entry}>{entry}</span>
-              ))}
-            </p>
-          )}
+          <div className="flex items-center gap-2">
+            {onToggleOptions && onEditProject && onProjectImages && onDeleteProject && (
+              <ProjectOptionsMenu
+                projectName={project.name}
+                open={optionsOpen}
+                align="bottom"
+                onToggle={onToggleOptions}
+                onEdit={onEditProject}
+                onImages={onProjectImages}
+                onDelete={onDeleteProject}
+                buttonClassName="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+              />
+            )}
+            <h2 className="truncate text-xl font-semibold leading-tight text-white">
+              {project.name}
+            </h2>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -86,7 +87,7 @@ export function ProjectHeader({
               {(
                 [
                   [`/projects/${project.id}/ffe/table`, 'FF&E'],
-                  [`/projects/${project.id}/takeoff/table`, 'Take-Off Table'],
+                  [`/projects/${project.id}/proposal/table`, 'Proposal'],
                 ] as const
               ).map(([to, label]) => (
                 <NavLink
@@ -105,18 +106,6 @@ export function ProjectHeader({
                 </NavLink>
               ))}
             </nav>
-          )}
-          {onToggleOptions && onEditProject && onProjectImages && onDeleteProject && (
-            <ProjectOptionsMenu
-              projectName={project.name}
-              open={optionsOpen}
-              align="bottom"
-              onToggle={onToggleOptions}
-              onEdit={onEditProject}
-              onImages={onProjectImages}
-              onDelete={onDeleteProject}
-              buttonClassName="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-            />
           )}
         </div>
       </div>

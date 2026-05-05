@@ -7,27 +7,27 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react';
-import { ApiError, api, type CreateTakeoffItemInput } from '../../../lib/api';
+import { ApiError, api, type CreateProposalItemInput } from '../../../lib/api';
 import {
-  TAKEOFF_IMPORT_EMPTY_MAP,
-  autoMapTakeoffColumns,
+  PROPOSAL_IMPORT_EMPTY_MAP,
+  autoMapProposalColumns,
   imageToFile,
-  isSummaryTakeoffRow,
-  parseTakeoffSpreadsheet,
+  isSummaryProposalRow,
+  parseProposalSpreadsheet,
   rowHasImportableContent,
-  type ParsedTakeoffSpreadsheet,
-  type TakeoffImportColumnMap,
-  type TakeoffImportField,
-  type TakeoffImportImage,
-  type TakeoffParsedRow,
-} from '../../../lib/takeoffImportUtils';
-import type { TakeoffCategoryWithItems } from '../../../types';
+  type ParsedProposalSpreadsheet,
+  type ProposalImportColumnMap,
+  type ProposalImportField,
+  type ProposalImportImage,
+  type ProposalParsedRow,
+} from '../../../lib/proposalImportUtils';
+import type { ProposalCategoryWithItems } from '../../../types';
 import { Button, Modal } from '../../primitives';
 
 type Props = {
   open: boolean;
   projectId: string;
-  categories: TakeoffCategoryWithItems[];
+  categories: ProposalCategoryWithItems[];
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -49,7 +49,7 @@ type ImportProgress = {
 
 const SKIP = '__skip__';
 
-const FIELD_LABELS: Record<TakeoffImportField, string> = {
+const FIELD_LABELS: Record<ProposalImportField, string> = {
   category: 'Category',
   rendering: 'Rendering Image',
   productTag: 'Product Tag',
@@ -65,7 +65,7 @@ const FIELD_LABELS: Record<TakeoffImportField, string> = {
   unitCost: 'Unit Cost',
 };
 
-const FIELD_ORDER: TakeoffImportField[] = [
+const FIELD_ORDER: ProposalImportField[] = [
   'category',
   'rendering',
   'productTag',
@@ -81,9 +81,9 @@ const FIELD_ORDER: TakeoffImportField[] = [
   'unitCost',
 ];
 
-const IMAGE_FIELDS = new Set<TakeoffImportField>(['rendering', 'plan', 'swatches']);
+const IMAGE_FIELDS = new Set<ProposalImportField>(['rendering', 'plan', 'swatches']);
 
-export function ImportTakeoffExcelModal({
+export function ImportProposalExcelModal({
   open,
   projectId,
   categories,
@@ -91,8 +91,8 @@ export function ImportTakeoffExcelModal({
   onSuccess,
 }: Props) {
   const [step, setStep] = useState<Step>('upload');
-  const [parsed, setParsed] = useState<ParsedTakeoffSpreadsheet | null>(null);
-  const [mapping, setMapping] = useState<TakeoffImportColumnMap>(TAKEOFF_IMPORT_EMPTY_MAP);
+  const [parsed, setParsed] = useState<ParsedProposalSpreadsheet | null>(null);
+  const [mapping, setMapping] = useState<ProposalImportColumnMap>(PROPOSAL_IMPORT_EMPTY_MAP);
   const [defaultCategoryName, setDefaultCategoryName] = useState(categories[0]?.name ?? 'Imported');
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
@@ -108,7 +108,7 @@ export function ImportTakeoffExcelModal({
   const reset = () => {
     setStep('upload');
     setParsed(null);
-    setMapping(TAKEOFF_IMPORT_EMPTY_MAP);
+    setMapping(PROPOSAL_IMPORT_EMPTY_MAP);
     setDefaultCategoryName(categories[0]?.name ?? 'Imported');
     setError('');
     setImporting(false);
@@ -130,13 +130,13 @@ export function ImportTakeoffExcelModal({
   const handleFile = useCallback(async (file: File) => {
     setError('');
     try {
-      const data = await parseTakeoffSpreadsheet(file);
+      const data = await parseProposalSpreadsheet(file);
       if (data.columns.length === 0) {
-        setError('No Take-Off table headers were found in this file.');
+        setError('No Proposal table headers were found in this file.');
         return;
       }
       setParsed(data);
-      setMapping(autoMapTakeoffColumns(data.columns));
+      setMapping(autoMapProposalColumns(data.columns));
       setStep('map');
     } catch {
       setError('Failed to parse the file. Make sure it is a valid .xlsx, .xls, or .csv file.');
@@ -157,17 +157,17 @@ export function ImportTakeoffExcelModal({
     if (file) void handleFile(file);
   };
 
-  const setField = (field: TakeoffImportField, value: string) => {
+  const setField = (field: ProposalImportField, value: string) => {
     setMapping((prev) => ({ ...prev, [field]: value === SKIP ? null : value }));
   };
 
   const importPlan = useMemo(() => {
-    if (!parsed) return { importableRows: [], skippedRows: [] as TakeoffParsedRow[] };
-    const importableRows: TakeoffParsedRow[] = [];
-    const skippedRows: TakeoffParsedRow[] = [];
+    if (!parsed) return { importableRows: [], skippedRows: [] as ProposalParsedRow[] };
+    const importableRows: ProposalParsedRow[] = [];
+    const skippedRows: ProposalParsedRow[] = [];
 
     for (const row of parsed.rows) {
-      if (row.skippedReason || isSummaryTakeoffRow(row)) {
+      if (row.skippedReason || isSummaryProposalRow(row)) {
         skippedRows.push({ ...row, skippedReason: row.skippedReason ?? 'Summary row' });
         continue;
       }
@@ -255,7 +255,7 @@ export function ImportTakeoffExcelModal({
           getValue(row, mapping.category) || row.categoryName || defaultCategoryName || 'Imported';
         let categoryId = categoryNameToId.get(categoryName.toLowerCase());
         if (!categoryId) {
-          const category = await api.takeoff.createCategory(projectId, {
+          const category = await api.proposal.createCategory(projectId, {
             name: categoryName,
             sortOrder: categoryNameToId.size,
           });
@@ -264,16 +264,16 @@ export function ImportTakeoffExcelModal({
         }
 
         try {
-          const item = await api.takeoff.createItem(categoryId, buildTakeoffItem(row, mapping));
+          const item = await api.proposal.createItem(categoryId, buildProposalItem(row, mapping));
           const rowImageUploads = [
             ...selectedImages(row, mapping.rendering, 1).map((image, index) => ({
               image,
-              entityType: 'takeoff_item' as const,
+              entityType: 'proposal_item' as const,
               altText: `Imported rendering ${index + 1}`,
             })),
             ...selectedImages(row, mapping.plan, 1).map((image, index) => ({
               image,
-              entityType: 'takeoff_plan' as const,
+              entityType: 'proposal_plan' as const,
               altText: `Imported plan image ${index + 1}`,
             })),
           ];
@@ -282,7 +282,7 @@ export function ImportTakeoffExcelModal({
           const swatchImages = selectedImages(row, mapping.swatches, 4);
           for (const [index, swatchImage] of swatchImages.entries()) {
             try {
-              const material = await api.materials.createAndAssignToTakeoffItem(item.id, {
+              const material = await api.materials.createAndAssignToProposalItem(item.id, {
                 name: '',
                 materialId: '',
               });
@@ -321,14 +321,14 @@ export function ImportTakeoffExcelModal({
               .slice(0, selectedImages(row, mapping.rendering, 1).length > 0 ? 0 : 1)
               .map((url, index) => ({
                 url,
-                entityType: 'takeoff_item' as const,
+                entityType: 'proposal_item' as const,
                 altText: `Imported rendering URL ${index + 1}`,
               })),
             ...imageUrlsFromValue(getValue(row, mapping.plan))
               .slice(0, selectedImages(row, mapping.plan, 1).length > 0 ? 0 : 1)
               .map((url, index) => ({
                 url,
-                entityType: 'takeoff_plan' as const,
+                entityType: 'proposal_plan' as const,
                 altText: `Imported plan URL ${index + 1}`,
               })),
           ];
@@ -358,7 +358,7 @@ export function ImportTakeoffExcelModal({
           for (const [index, url] of swatchUrls.entries()) {
             try {
               const file = await imageUrlToFile(url);
-              const material = await api.materials.createAndAssignToTakeoffItem(item.id, {
+              const material = await api.materials.createAndAssignToProposalItem(item.id, {
                 name: '',
                 materialId: '',
               });
@@ -401,7 +401,7 @@ export function ImportTakeoffExcelModal({
     <Modal
       open={open}
       onClose={handleClose}
-      title="Import take-off from Excel"
+      title="Import proposal from Excel"
       className="max-w-5xl"
     >
       {result ? (
@@ -429,7 +429,7 @@ export function ImportTakeoffExcelModal({
       ) : step === 'upload' ? (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-600">
-            Upload a Take-Off spreadsheet. You will review detected tables, map spreadsheet columns,
+            Upload a Proposal spreadsheet. You will review detected tables, map spreadsheet columns,
             and preview the rows before importing.
           </p>
           <div
@@ -492,7 +492,7 @@ export function ImportTakeoffExcelModal({
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-surface-muted text-xs uppercase tracking-wide text-gray-500">
                 <tr>
-                  <th className="px-3 py-2 text-left">Take-Off Field</th>
+                  <th className="px-3 py-2 text-left">Proposal Field</th>
                   <th className="px-3 py-2 text-left">Spreadsheet Column</th>
                 </tr>
               </thead>
@@ -639,7 +639,7 @@ function ImportProgressBar({ progress, nowMs }: { progress: ImportProgress; nowM
           className="h-full rounded-full bg-brand-500 transition-all duration-300"
           style={{ width: `${percent}%` }}
           role="progressbar"
-          aria-label="Take-Off import progress"
+          aria-label="Proposal import progress"
           aria-valuemin={0}
           aria-valuemax={progress.total}
           aria-valuenow={progress.processed}
@@ -663,10 +663,10 @@ function describeImportError(err: unknown): string {
   return 'Upload failed';
 }
 
-function buildTakeoffItem(
-  row: TakeoffParsedRow,
-  mapping: TakeoffImportColumnMap,
-): CreateTakeoffItemInput {
+function buildProposalItem(
+  row: ProposalParsedRow,
+  mapping: ProposalImportColumnMap,
+): CreateProposalItemInput {
   return {
     productTag: getValue(row, mapping.productTag),
     plan: getValue(row, mapping.plan),
@@ -681,28 +681,28 @@ function buildTakeoffItem(
   };
 }
 
-function getValue(row: TakeoffParsedRow, columnKey: string | null): string {
+function getValue(row: ProposalParsedRow, columnKey: string | null): string {
   if (!columnKey) return '';
   return (row.values[columnKey] ?? '').trim();
 }
 
 function selectedImages(
-  row: TakeoffParsedRow,
+  row: ProposalParsedRow,
   columnKey: string | null,
   limit: number,
-): TakeoffImportImage[] {
+): ProposalImportImage[] {
   if (!columnKey) return [];
   return (row.imagesByColumn[columnKey] ?? []).slice(0, limit);
 }
 
-function hasImagesForColumn(parsed: ParsedTakeoffSpreadsheet | null, columnKey: string): boolean {
+function hasImagesForColumn(parsed: ParsedProposalSpreadsheet | null, columnKey: string): boolean {
   return parsed?.rows.some((row) => (row.imagesByColumn[columnKey] ?? []).length > 0) ?? false;
 }
 
 function imagePreviewLabel(
-  row: TakeoffParsedRow,
+  row: ProposalParsedRow,
   columnKey: string | null,
-  field: TakeoffImportField,
+  field: ProposalImportField,
 ): string {
   const imageCount = selectedImages(row, columnKey, field === 'swatches' ? 4 : 1).length;
   const text = getValue(row, columnKey);

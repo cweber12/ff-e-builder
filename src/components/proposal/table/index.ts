@@ -1,0 +1,1 @@
+export { ProposalTable } from './ProposalTable';

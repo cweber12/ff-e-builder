@@ -15,11 +15,11 @@ export function useProjectToolStates(projectIds: string[]) {
     queries: projectIds.map((id) => ({
       queryKey: projectKeys.toolState(id),
       queryFn: async () => {
-        const [rooms, takeoffCategories] = await Promise.all([
+        const [rooms, proposalCategories] = await Promise.all([
           api.rooms.list(id),
-          api.takeoff.categories(id),
+          api.proposal.categories(id),
         ]);
-        return { hasFfe: rooms.length > 0, hasTakeoff: takeoffCategories.length > 0 };
+        return { hasFfe: rooms.length > 0, hasProposal: proposalCategories.length > 0 };
       },
       staleTime: 60_000,
     })),
