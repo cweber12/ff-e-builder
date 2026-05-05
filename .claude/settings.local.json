@@ -21,7 +21,9 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(xargs grep -l \"cron\\\\|schedule\\\\|cleanup\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Projects\\\\_current-projects\\\\ffe-builder\\\\app\\\\src\" -Recurse -File)",
-      "Bash(pnpm --filter ./app tsc --noEmit)"
+      "Bash(pnpm --filter ./app tsc --noEmit)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

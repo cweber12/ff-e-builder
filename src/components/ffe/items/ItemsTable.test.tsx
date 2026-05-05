@@ -46,6 +46,11 @@ vi.mock('../../../hooks/materials/useMaterials', () => ({
   useAssignMaterial: () => ({ mutateAsync: vi.fn() }),
   useCreateAndAssignMaterial: () => ({ mutateAsync: mockCreateAndAssignMaterialMutateAsync }),
   useRemoveMaterialFromItem: () => ({ mutateAsync: vi.fn() }),
+  useAssignMaterialToTakeoffItem: () => ({ mutateAsync: vi.fn() }),
+  useCreateAndAssignMaterialToTakeoffItem: () => ({ mutateAsync: vi.fn() }),
+  useRemoveMaterialFromTakeoffItem: () => ({ mutateAsync: vi.fn() }),
+  useUpdateMaterialForItem: () => ({ mutateAsync: vi.fn() }),
+  useUpdateMaterialForTakeoffItem: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock('../../../lib/exportUtils', () => ({
@@ -402,7 +407,7 @@ describe('ItemsTable', () => {
     renderTable();
 
     await user.click(screen.getAllByRole('button', { name: 'Edit item materials' })[0]!);
-    const dialog = screen.getByRole('dialog', { name: 'Material library' });
+    const dialog = screen.getByRole('dialog', { name: 'Finish Library' });
     await user.type(within(dialog).getByLabelText('Name'), 'Ivory boucle');
     await user.type(within(dialog).getByLabelText('ID'), 'FAB-001');
     await user.click(within(dialog).getByRole('button', { name: 'Add and assign' }));
@@ -413,6 +418,7 @@ describe('ItemsTable', () => {
         name: 'Ivory boucle',
         materialId: 'FAB-001',
         description: '',
+        swatchHex: '#D9D4C8',
       },
     });
   });
@@ -449,7 +455,7 @@ describe('ItemsTable', () => {
 
     await user.click(within(drawer).getByRole('button', { name: 'Add material' }));
 
-    expect(screen.getByRole('dialog', { name: 'Material library' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Finish Library' })).toBeInTheDocument();
   });
 
   it('keeps the drawer open and validates before adding an item', async () => {

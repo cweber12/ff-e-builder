@@ -134,10 +134,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                   class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
                 >
                   <span
-                    class="text-[10px] font-semibold text-gray-400"
-                  >
-                    IMG
-                  </span>
+                    aria-hidden="true"
+                    class="h-full w-full rounded-full"
+                    style="background-color: rgb(232, 226, 214);"
+                  />
                 </div>
               </div>
             </div>

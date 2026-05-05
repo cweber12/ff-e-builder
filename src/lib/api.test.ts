@@ -10,6 +10,10 @@ vi.mock('./auth', () => ({
   getCurrentIdToken: () => mockAuth.currentUser?.getIdToken(false),
 }));
 
+vi.mock('./compress-image', () => ({
+  compressImage: (file: File) => Promise.resolve(file),
+}));
+
 // Import AFTER mocks are set up
 import { api, ApiError } from './api';
 
