@@ -1,22 +1,20 @@
 import { compressImage } from './compress-image';
 import { apiFetch, apiFetchResponse } from './api/transport';
+import { projectsApi } from './api/projects';
+import { usersApi } from './api/users';
 import {
   mapImageAsset,
   mapItem,
   mapMaterial,
-  mapProject,
   mapProposalCategory,
   mapProposalItem,
   mapRoom,
-  mapUserProfile,
   type RawImageAsset,
   type RawItem,
   type RawMaterial,
-  type RawProject,
   type RawProposalCategory,
   type RawProposalItem,
   type RawRoom,
-  type RawUserProfile,
 } from './api/mappers';
 import type {
   CropParams,
@@ -25,39 +23,17 @@ import type {
   Item,
   ItemStatus,
   Material,
-  Project,
   ProposalCategory,
   ProposalItem,
   Room,
-  UserProfile,
 } from '../types';
 
 // Compatibility export
 export { ApiError } from './api/transport';
+export type { CreateProjectInput, UpdateProjectInput } from './api/projects';
+export type { UpsertUserProfileInput } from './api/users';
 
 // Client input types
-export type CreateProjectInput = {
-  name: string;
-  clientName?: string;
-  companyName?: string;
-  projectLocation?: string;
-  budgetMode?: 'shared' | 'individual';
-  budgetCents?: number;
-  ffeBudgetCents?: number;
-  proposalBudgetCents?: number;
-};
-
-export type UpdateProjectInput = {
-  name?: string;
-  clientName?: string;
-  companyName?: string;
-  projectLocation?: string;
-  budgetMode?: 'shared' | 'individual';
-  budgetCents?: number;
-  ffeBudgetCents?: number;
-  proposalBudgetCents?: number;
-};
-
 export type CreateRoomInput = {
   name: string;
   sortOrder?: number;
@@ -130,13 +106,6 @@ export type CreateMaterialInput = {
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 
-export type UpsertUserProfileInput = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  companyName?: string;
-};
-
 export type CreateProposalCategoryInput = {
   name: string;
   sortOrder?: number;
@@ -170,65 +139,12 @@ export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
   categoryId?: string;
   version: number;
 };
+
 // API namespace
 
 export const api = {
-  projects: {
-    list: (): Promise<Project[]> =>
-      apiFetch<{ projects: RawProject[] }>('/api/v1/projects').then((r) =>
-        r.projects.map(mapProject),
-      ),
-
-    create: (input: CreateProjectInput): Promise<Project> =>
-      apiFetch<{ project: RawProject }>('/api/v1/projects', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: input.name,
-          client_name: input.clientName ?? '',
-          company_name: input.companyName ?? '',
-          project_location: input.projectLocation ?? '',
-          budget_mode: input.budgetMode ?? 'shared',
-          budget_cents: input.budgetCents ?? 0,
-          ffe_budget_cents: input.ffeBudgetCents ?? 0,
-          proposal_budget_cents: input.proposalBudgetCents ?? 0,
-        }),
-      }).then((r) => mapProject(r.project)),
-
-    update: (id: string, patch: UpdateProjectInput): Promise<Project> =>
-      apiFetch<{ project: RawProject }>(`/api/v1/projects/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name: patch.name,
-          client_name: patch.clientName,
-          company_name: patch.companyName,
-          project_location: patch.projectLocation,
-          budget_mode: patch.budgetMode,
-          budget_cents: patch.budgetCents,
-          ffe_budget_cents: patch.ffeBudgetCents,
-          proposal_budget_cents: patch.proposalBudgetCents,
-        }),
-      }).then((r) => mapProject(r.project)),
-
-    delete: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/projects/${id}`, { method: 'DELETE' }),
-  },
-  users: {
-    me: (): Promise<UserProfile> =>
-      apiFetch<{ profile: RawUserProfile }>('/api/v1/users/me').then((r) =>
-        mapUserProfile(r.profile),
-      ),
-
-    updateMe: (input: UpsertUserProfileInput): Promise<UserProfile> =>
-      apiFetch<{ profile: RawUserProfile }>('/api/v1/users/me', {
-        method: 'PUT',
-        body: JSON.stringify({
-          name: input.name ?? '',
-          email: input.email ?? '',
-          phone: input.phone ?? '',
-          company_name: input.companyName ?? '',
-        }),
-      }).then((r) => mapUserProfile(r.profile)),
-  },
+  projects: projectsApi,
+  users: usersApi,
 
   proposal: {
     categories: (projectId: string): Promise<ProposalCategory[]> =>

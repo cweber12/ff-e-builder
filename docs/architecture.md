@@ -80,6 +80,7 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - Firebase Auth owns user identity. The client waits for auth readiness and sends the current ID token as `Authorization: Bearer <token>` on API calls.
 - The Worker auth middleware protects all `/api/v1/*` routes. `/healthz` is public.
 - The client never imports API worker code and never talks to Neon or R2 directly.
+- The frontend API client is exposed through `src/lib/api.ts`; domain namespaces are implemented in `src/lib/api/` and re-exported through the facade so hooks can keep importing from `src/lib/api`.
 - Route modules live under `api/src/routes/`: `projects`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).

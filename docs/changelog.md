@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - refactor(api): move shared API transport, auth headers, and `ApiError` into `src/lib/api/transport.ts`
 - refactor(api): move raw worker response contracts and client mappers into `src/lib/api/mappers.ts`
+- refactor(api): move project and user API namespaces into focused client modules behind the existing API facade
 - refactor(exports): move shared export download, filename, money, percent, and CSV helpers into `src/lib/export/shared.ts`
 - refactor(exports): move FF&E row helpers and CSV export implementations behind dedicated `src/lib/export/` modules
 - refactor(exports): move Proposal export document preparation into `src/lib/export/proposalDocument.ts` without changing PDF or Excel rendering
