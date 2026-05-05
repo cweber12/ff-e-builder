@@ -1,28 +1,21 @@
-import { compressImage } from './compress-image';
-import { apiFetch, apiFetchResponse } from './api/transport';
+import { apiFetch } from './api/transport';
+import { imagesApi } from './api/images';
 import { itemsApi } from './api/items';
 import { materialsApi } from './api/materials';
 import { projectsApi } from './api/projects';
 import { roomsApi } from './api/rooms';
 import { usersApi } from './api/users';
 import {
-  mapImageAsset,
   mapProposalCategory,
   mapProposalItem,
-  type RawImageAsset,
   type RawProposalCategory,
   type RawProposalItem,
 } from './api/mappers';
-import type {
-  CropParams,
-  ImageAsset,
-  ImageEntityType,
-  ProposalCategory,
-  ProposalItem,
-} from '../types';
+import type { ProposalCategory, ProposalItem } from '../types';
 
 // Compatibility export
 export { ApiError } from './api/transport';
+export type { ImageEntityRef, UploadImageInput } from './api/images';
 export type { CreateItemInput, UpdateItemInput } from './api/items';
 export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
 export type { CreateProjectInput, UpdateProjectInput } from './api/projects';
@@ -30,16 +23,6 @@ export type { CreateRoomInput, UpdateRoomInput } from './api/rooms';
 export type { UpsertUserProfileInput } from './api/users';
 
 // Client input types
-export type ImageEntityRef = {
-  entityType: ImageEntityType;
-  entityId: string;
-};
-
-export type UploadImageInput = ImageEntityRef & {
-  file: File;
-  altText?: string;
-};
-
 export type CreateProposalCategoryInput = {
   name: string;
   sortOrder?: number;
@@ -172,66 +155,6 @@ export const api = {
 
   rooms: roomsApi,
   items: itemsApi,
-
-  images: {
-    list: ({ entityType, entityId }: ImageEntityRef): Promise<ImageAsset[]> => {
-      const params = new URLSearchParams({
-        entity_type: entityType,
-        entity_id: entityId,
-      });
-      return apiFetch<{ images: RawImageAsset[] }>(`/api/v1/images?${params}`).then((r) =>
-        r.images.map(mapImageAsset),
-      );
-    },
-
-    upload: async ({
-      entityType,
-      entityId,
-      file,
-      altText = '',
-    }: UploadImageInput): Promise<ImageAsset> => {
-      const compressed = await compressImage(file);
-      const params = new URLSearchParams({
-        entity_type: entityType,
-        entity_id: entityId,
-        alt_text: altText,
-      });
-      const body = new FormData();
-      body.append('file', compressed);
-
-      return apiFetch<{ image: RawImageAsset }>(`/api/v1/images?${params}`, {
-        method: 'POST',
-        body,
-      }).then((r) => mapImageAsset(r.image));
-    },
-
-    getContentBlob: async (imageId: string): Promise<Blob> => {
-      const response = await apiFetchResponse(`/api/v1/images/${imageId}/content`);
-      return response.blob();
-    },
-
-    delete: (imageId: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/images/${imageId}`, { method: 'DELETE' }),
-
-    setPrimary: (imageId: string): Promise<ImageAsset> =>
-      apiFetch<{ image: RawImageAsset }>(`/api/v1/images/${imageId}/primary`, {
-        method: 'PATCH',
-      }).then((r) => mapImageAsset(r.image)),
-
-    setCrop: (imageId: string, params: CropParams | null): Promise<ImageAsset> =>
-      apiFetch<{ image: RawImageAsset }>(`/api/v1/images/${imageId}/crop`, {
-        method: 'PATCH',
-        body: JSON.stringify(
-          params
-            ? {
-                crop_x: params.cropX,
-                crop_y: params.cropY,
-                crop_width: params.cropWidth,
-                crop_height: params.cropHeight,
-              }
-            : { crop_x: null, crop_y: null, crop_width: null, crop_height: null },
-        ),
-      }).then((r) => mapImageAsset(r.image)),
-  },
+  images: imagesApi,
   materials: materialsApi,
 };
