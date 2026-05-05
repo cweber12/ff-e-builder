@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProjects } from '../../hooks/shared/useProjects';
+import { useProjects } from '../../hooks';
 import { cn } from '../../lib/cn';
 
 interface ProjectSwitcherProps {

@@ -9,7 +9,7 @@ import {
   useAuthUser,
 } from '../../lib/auth';
 import { seedExampleProject } from '../../lib/seed';
-import { useUserProfile } from '../../hooks/shared/useUserProfile';
+import { useUserProfile } from '../../hooks';
 import { UserProfileModal } from './UserProfileModal';
 
 // ─── Sub-components ───────────────────────────────────────────────────────

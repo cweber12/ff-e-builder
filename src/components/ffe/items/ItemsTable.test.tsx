@@ -25,20 +25,14 @@ const {
   mockCreateAndAssignMaterialMutateAsync: vi.fn(),
 }));
 
-vi.mock('../../../hooks/ffe/useItems', () => ({
+vi.mock('../../../hooks', () => ({
   useUpdateItem: () => ({ mutateAsync: mockUpdateMutateAsync }),
   useCreateItem: () => ({ mutateAsync: mockCreateItemMutateAsync }),
   useDeleteItem: () => ({ mutateAsync: mockDeleteItemMutateAsync }),
   useMoveItem: () => ({ mutateAsync: mockMoveItemMutateAsync }),
-}));
-
-vi.mock('../../../hooks/ffe/useRooms', () => ({
   useCreateRoom: () => ({ mutateAsync: mockCreateRoomMutateAsync }),
   useDeleteRoom: () => ({ mutateAsync: mockDeleteRoomMutateAsync }),
   useUpdateRoom: () => ({ mutateAsync: vi.fn() }),
-}));
-
-vi.mock('../../../hooks/materials/useMaterials', () => ({
   useMaterials: () => ({ data: [], isLoading: false }),
   useCreateMaterial: () => ({ mutateAsync: vi.fn() }),
   useUpdateMaterial: () => ({ mutateAsync: vi.fn() }),
@@ -51,6 +45,11 @@ vi.mock('../../../hooks/materials/useMaterials', () => ({
   useRemoveMaterialFromProposalItem: () => ({ mutateAsync: vi.fn() }),
   useUpdateMaterialForItem: () => ({ mutateAsync: vi.fn() }),
   useUpdateMaterialForProposalItem: () => ({ mutateAsync: vi.fn() }),
+  useImages: () => ({ data: [], isLoading: false }),
+  useUploadImage: () => ({ mutate: vi.fn(), isPending: false }),
+  useDeleteImage: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateImageCrop: () => ({ mutate: vi.fn(), isPending: false }),
+  isPersistedImageEntityId: () => true,
 }));
 
 vi.mock('../../../lib/export', () => ({

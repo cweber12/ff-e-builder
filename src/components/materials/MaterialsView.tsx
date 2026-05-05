@@ -2,8 +2,13 @@ import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import { api } from '../../lib/api';
-import { useCreateMaterial, useDeleteMaterial, useMaterials, useUpdateMaterial } from '../../hooks';
-import { imageKeys } from '../../hooks/shared/useImages';
+import {
+  imageKeys,
+  useCreateMaterial,
+  useDeleteMaterial,
+  useMaterials,
+  useUpdateMaterial,
+} from '../../hooks';
 import type { Material, Project, RoomWithItems, ProposalCategoryWithItems } from '../../types';
 import { Button } from '../primitives';
 import { ImageFrame } from '../shared/ImageFrame';

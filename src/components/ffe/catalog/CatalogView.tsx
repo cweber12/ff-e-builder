@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../../../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
-import { useUpdateItem } from '../../../hooks/ffe/useItems';
+import { useUpdateItem } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
 import { ImageFrame } from '../../shared/ImageFrame';

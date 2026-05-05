@@ -11,8 +11,8 @@ import {
   useUpdateProject,
   useDeleteProject,
   useProjectToolStates,
-} from '../hooks/shared/useProjects';
-import { useUserProfile } from '../hooks/shared/useUserProfile';
+  useUserProfile,
+} from '../hooks';
 import type { Project } from '../types';
 
 export function DashboardPage() {

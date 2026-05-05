@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  imageKeys,
   useAssignMaterial,
   useAssignMaterialToProposalItem,
   useCreateAndAssignMaterial,
@@ -12,8 +13,7 @@ import {
   useUpdateMaterial,
   useUpdateMaterialForItem,
   useUpdateMaterialForProposalItem,
-} from '../../hooks/materials/useMaterials';
-import { imageKeys } from '../../hooks/shared/useImages';
+} from '../../hooks';
 import { api } from '../../lib/api';
 import type { Item, Material, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';

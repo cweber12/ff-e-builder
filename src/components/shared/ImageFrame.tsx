@@ -14,7 +14,7 @@ import {
   useImages,
   useUpdateImageCrop,
   useUploadImage,
-} from '../../hooks/shared/useImages';
+} from '../../hooks';
 import type { CropParams, ImageEntityType } from '../../types';
 import { CROP_ASPECT, CROPPABLE_ENTITY_TYPES } from '../../types';
 import { ImageOptionsMenu } from './ImageOptionsMenu';

@@ -35,9 +35,13 @@ import {
   exportProposalExcel,
   exportProposalPdf,
 } from './lib/export';
-import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
-import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
-import { useProposalWithItems } from './hooks/proposal/useProposal';
+import {
+  useProjects,
+  useUpdateProject,
+  useDeleteProject,
+  useRoomsWithItems,
+  useProposalWithItems,
+} from './hooks';
 import { DashboardPage } from './pages/DashboardPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 

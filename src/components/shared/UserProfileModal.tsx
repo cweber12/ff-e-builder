@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useUpdateUserProfile, useUserProfile } from '../../hooks/shared/useUserProfile';
+import { useUpdateUserProfile, useUserProfile } from '../../hooks';
 import { Button, Modal } from '../primitives';
 
 export function UserProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {

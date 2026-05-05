@@ -7,7 +7,7 @@ const { mockUploadMutate, mockDeleteMutate } = vi.hoisted(() => ({
   mockDeleteMutate: vi.fn(),
 }));
 
-vi.mock('../../hooks/shared/useImages', () => ({
+vi.mock('../../hooks', () => ({
   useImages: vi.fn(() => ({ data: [], isLoading: false })),
   useUploadImage: vi.fn(() => ({ mutate: mockUploadMutate, isPending: false })),
   useDeleteImage: vi.fn(() => ({ mutate: mockDeleteMutate, isPending: false })),
