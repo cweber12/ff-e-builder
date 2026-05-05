@@ -9,6 +9,7 @@ import {
   UpdateTakeoffItemSchema,
 } from '../types';
 import { getDb } from '../lib/db';
+import { deleteR2Keys } from '../lib/r2';
 import {
   assertProjectOwnership,
   assertTakeoffCategoryOwnership,
@@ -256,6 +257,11 @@ router.delete('/takeoff/items/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE takeoff_item_id = ${id}`;
+  await deleteR2Keys(
+    c.env.IMAGES_BUCKET,
+    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
+  );
   await sql`DELETE FROM takeoff_items WHERE id = ${id}`;
   return c.body(null, 204);
 });

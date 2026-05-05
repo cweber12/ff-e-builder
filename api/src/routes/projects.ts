@@ -3,6 +3,7 @@ import type { Env, HonoVariables } from '../types';
 import { CreateProjectSchema, UpdateProjectSchema, CreateRoomSchema } from '../types';
 import { assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
+import { deleteR2Keys } from '../lib/r2';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -96,6 +97,11 @@ router.delete('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE project_id = ${id}`;
+  await deleteR2Keys(
+    c.env.IMAGES_BUCKET,
+    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
+  );
   await sql`DELETE FROM projects WHERE id = ${id} AND owner_uid = ${uid}`;
   return c.body(null, 204);
 });

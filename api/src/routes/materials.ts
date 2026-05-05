@@ -15,6 +15,7 @@ import {
   getOwnedMaterialContext,
 } from '../lib/ownership';
 import { getDb } from '../lib/db';
+import { deleteR2Keys } from '../lib/r2';
 import {
   countMaterialReferences,
   forkMaterial,
@@ -154,6 +155,11 @@ router.delete('/materials/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE material_id = ${id}`;
+  await deleteR2Keys(
+    c.env.IMAGES_BUCKET,
+    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
+  );
   await sql`DELETE FROM materials WHERE id = ${id}`;
   return c.body(null, 204);
 });

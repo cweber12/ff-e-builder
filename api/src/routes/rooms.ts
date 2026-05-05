@@ -3,6 +3,7 @@ import type { Env, HonoVariables } from '../types';
 import { UpdateRoomSchema, CreateItemSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
+import { deleteR2Keys } from '../lib/r2';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -46,6 +47,13 @@ router.delete('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  // room_id is stored on both room images and item images (items carry their room's id)
+  // so this single query covers the full cascade scope
+  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE room_id = ${id}`;
+  await deleteR2Keys(
+    c.env.IMAGES_BUCKET,
+    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
+  );
   await sql`DELETE FROM rooms WHERE id = ${id}`;
   return c.body(null, 204);
 });
