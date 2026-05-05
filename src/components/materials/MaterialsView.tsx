@@ -22,6 +22,7 @@ type MaterialDraft = {
   materialId: string;
   description: string;
   swatchFile: File | null;
+  swatchHex: string;
 };
 
 const emptyDraft: MaterialDraft = {
@@ -29,6 +30,7 @@ const emptyDraft: MaterialDraft = {
   materialId: '',
   description: '',
   swatchFile: null,
+  swatchHex: '#D9D4C8',
 };
 
 export function MaterialsView({
@@ -86,6 +88,7 @@ export function MaterialsView({
       materialId: material.materialId,
       description: material.description,
       swatchFile: null,
+      swatchHex: material.swatchHex || '#D9D4C8',
     });
   };
 
@@ -94,6 +97,7 @@ export function MaterialsView({
       name: draft.name.trim(),
       materialId: draft.materialId.trim(),
       description: draft.description.trim(),
+      ...(draft.swatchHex ? { swatchHex: draft.swatchHex } : {}),
     };
     if (!input.name) return;
     let savedMaterial: Material;

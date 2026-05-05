@@ -81,6 +81,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     materialId: '',
     description: '',
     swatchFile: null as File | null,
+    swatchHex: '#D9D4C8',
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingAssigned, setEditingAssigned] = useState(false);
@@ -113,7 +114,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   }, [assignedIds, materials.data, pendingAssignmentId, priorityIds, searchQuery]);
 
   const resetDraft = () => {
-    setDraft({ name: '', materialId: '', description: '', swatchFile: null });
+    setDraft({ name: '', materialId: '', description: '', swatchFile: null, swatchHex: '#D9D4C8' });
     setEditingId(null);
     setEditingAssigned(false);
   };
@@ -126,6 +127,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       materialId: material.materialId,
       description: material.description,
       swatchFile: null,
+      swatchHex: material.swatchHex || '#D9D4C8',
     });
   };
 
@@ -134,6 +136,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       name: draft.name.trim(),
       materialId: draft.materialId.trim(),
       description: draft.description.trim(),
+      ...(draft.swatchHex ? { swatchHex: draft.swatchHex } : {}),
     };
     if (!input.name) return;
     let savedMaterial: Material;
@@ -336,6 +339,7 @@ type MaterialDraft = {
   materialId: string;
   description: string;
   swatchFile: File | null;
+  swatchHex: string;
 };
 
 export function MaterialForm({
@@ -387,22 +391,44 @@ export function MaterialForm({
             className={inputClassName}
           />
         </label>
-        <label className="grid gap-2 text-sm font-medium text-gray-700">
-          Swatch image
+        <div className="grid gap-2 text-sm font-medium text-gray-700">
+          <span>Swatch</span>
           <div className="grid gap-2">
             <div className="flex items-center gap-3">
               <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-white">
                 {previewUrl ? (
                   <img src={previewUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-400">
-                    Image
-                  </span>
+                  <span
+                    className="h-full w-full rounded-full"
+                    style={{ backgroundColor: draft.swatchHex }}
+                  />
                 )}
               </span>
-              <span className="min-w-0 text-xs font-normal text-gray-500">
-                {draft.swatchFile?.name ?? 'Upload the material swatch image.'}
-              </span>
+              <div className="min-w-0 grid gap-1.5">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-normal text-gray-600 shrink-0">Color</label>
+                  <input
+                    type="color"
+                    value={draft.swatchHex || '#D9D4C8'}
+                    onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
+                    className="h-7 w-10 cursor-pointer rounded border border-gray-300 bg-white p-0.5"
+                    aria-label="Swatch color"
+                  />
+                  <input
+                    type="text"
+                    value={draft.swatchHex || ''}
+                    onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
+                    placeholder="#D9D4C8"
+                    maxLength={7}
+                    className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-normal text-gray-950 focus:border-brand-500 focus:outline-none"
+                    aria-label="Swatch hex value"
+                  />
+                </div>
+                <p className="text-xs font-normal text-gray-500">
+                  {draft.swatchFile ? draft.swatchFile.name : 'Image overrides color if uploaded.'}
+                </p>
+              </div>
             </div>
             <input
               type="file"
@@ -414,7 +440,7 @@ export function MaterialForm({
               aria-label="Swatch image"
             />
           </div>
-        </label>
+        </div>
         <label className="grid gap-1 text-sm font-medium text-gray-700">
           Description
           <textarea
@@ -548,6 +574,15 @@ export function MaterialSwatchImage({
   className?: string | undefined;
 }) {
   const frameClassName = size === 'sm' ? 'h-6 w-6 rounded-full' : 'h-10 w-10 rounded-full';
+  const hexPlaceholder = material.swatchHex ? (
+    <span
+      className="h-full w-full rounded-full"
+      style={{ backgroundColor: material.swatchHex }}
+      aria-hidden="true"
+    />
+  ) : (
+    <span className="text-[10px] font-semibold text-gray-400">IMG</span>
+  );
   return (
     <ImageFrame
       entityType="material"
@@ -556,7 +591,7 @@ export function MaterialSwatchImage({
       className={`${frameClassName} shrink-0 border-gray-200 shadow-none ${className}`}
       imageClassName="object-cover"
       placeholderClassName="bg-white"
-      placeholderContent={<span className="text-[10px] font-semibold text-gray-400">IMG</span>}
+      placeholderContent={hexPlaceholder}
       compact
       disabled
     />
