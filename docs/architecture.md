@@ -81,6 +81,7 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - The Worker auth middleware protects all `/api/v1/*` routes. `/healthz` is public.
 - The client never imports API worker code and never talks to Neon or R2 directly.
 - The frontend API client is exposed through `src/lib/api.ts`; domain namespaces are incrementally implemented in `src/lib/api/` and re-exported through the facade so hooks can keep importing from `src/lib/api`.
+- API client tests live alongside the focused `src/lib/api/` modules, with facade-level transport/auth coverage kept in `src/lib/api.test.ts`.
 - Route modules live under `api/src/routes/`: `projects`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
