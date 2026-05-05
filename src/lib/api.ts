@@ -135,7 +135,6 @@ interface RawTakeoffItem {
   size_d: string;
   size_h: string;
   size_unit: string;
-  swatches: string[];
   materials?: RawMaterial[];
   cbm: string;
   quantity: string;
@@ -154,8 +153,6 @@ interface RawMaterial {
   material_id: string;
   description: string;
   swatch_hex: string;
-  swatches?: string[];
-  finish_classification: 'material' | 'swatch' | 'hybrid';
   created_at: string;
   updated_at: string;
 }
@@ -267,7 +264,6 @@ const mapTakeoffItem = (r: RawTakeoffItem): TakeoffItem => ({
   sizeD: r.size_d,
   sizeH: r.size_h,
   sizeUnit: r.size_unit as TakeoffItem['sizeUnit'],
-  swatches: Array.isArray(r.swatches) ? r.swatches : [],
   materials: Array.isArray(r.materials) ? r.materials.map(mapMaterial) : [],
   cbm: Number(r.cbm),
   quantity: Number(r.quantity),
@@ -286,8 +282,6 @@ const mapMaterial = (r: RawMaterial): Material => ({
   materialId: r.material_id,
   description: r.description,
   swatchHex: r.swatch_hex,
-  swatches: r.swatches?.length ? r.swatches : [r.swatch_hex],
-  finishClassification: r.finish_classification ?? 'material',
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -384,8 +378,6 @@ export type CreateMaterialInput = {
   materialId?: string;
   description?: string;
   swatchHex?: string;
-  swatches?: string[];
-  finishClassification?: 'material' | 'swatch' | 'hybrid';
 };
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
@@ -419,7 +411,6 @@ export type CreateTakeoffItemInput = {
   sizeD?: string;
   sizeH?: string;
   sizeUnit?: string;
-  swatches?: string[];
   cbm?: number;
   quantity?: number;
   quantityUnit?: string;
@@ -586,7 +577,6 @@ export const api = {
           size_d: input.sizeD ?? '',
           size_h: input.sizeH ?? '',
           size_unit: input.sizeUnit ?? 'in',
-          swatches: input.swatches ?? [],
           cbm: input.cbm ?? 0,
           quantity: input.quantity ?? 1,
           quantity_unit: input.quantityUnit ?? 'unit',
@@ -611,7 +601,6 @@ export const api = {
           size_d: patch.sizeD,
           size_h: patch.sizeH,
           size_unit: patch.sizeUnit,
-          swatches: patch.swatches,
           cbm: patch.cbm,
           quantity: patch.quantity,
           quantity_unit: patch.quantityUnit,
@@ -787,8 +776,6 @@ export const api = {
           material_id: input.materialId ?? '',
           description: input.description ?? '',
           swatch_hex: input.swatchHex ?? '#D9D4C8',
-          swatches: input.swatches,
-          finish_classification: input.finishClassification ?? 'material',
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -800,7 +787,6 @@ export const api = {
           material_id: patch.materialId,
           description: patch.description,
           swatch_hex: patch.swatchHex,
-          swatches: patch.swatches,
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -821,8 +807,6 @@ export const api = {
           material_id: input.materialId ?? '',
           description: input.description ?? '',
           swatch_hex: input.swatchHex ?? '#D9D4C8',
-          swatches: input.swatches,
-          finish_classification: input.finishClassification ?? 'material',
         }),
       }).then((r) => mapMaterial(r.material)),
 
@@ -859,7 +843,7 @@ export const api = {
           name: input.name,
           material_id: input.materialId,
           description: input.description,
-          finish_classification: input.finishClassification ?? 'swatch',
+          swatch_hex: input.swatchHex ?? '#D9D4C8',
         }),
       }).then((r) => mapMaterial(r.material)),
 

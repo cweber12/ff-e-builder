@@ -37,7 +37,6 @@ export type TakeoffItem = {
   sizeD: string;
   sizeH: string;
   sizeUnit: MeasurementUnit;
-  swatches: string[];
   materials: Material[];
   cbm: number;
   quantity: number;

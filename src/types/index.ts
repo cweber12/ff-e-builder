@@ -4,7 +4,7 @@ export type { Room, RoomWithItems } from './room';
 export type { Item, ItemStatus } from './item';
 export type { ImageAsset, ImageEntityType, CropParams } from './image';
 export { CROPPABLE_ENTITY_TYPES, CROP_ASPECT } from './image';
-export type { FinishClassification, Material } from './material';
+export type { Material } from './material';
 export type {
   MeasurementUnit,
   SizeMode,

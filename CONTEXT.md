@@ -90,25 +90,25 @@ _Avoid_: Section, bucket, container
 The unified project-scoped library of reusable finish entries accessible from both FF&E and Take-Off Table views.
 _Avoid_: Material library, swatch library, swatches tab
 
-**Finish Library Sections**:
-The standard library filters used in UI: Materials, Swatches, and All Finishes.
-_Avoid_: Generic "All" when context is the Finish Library
-
-**Finish Classification**:
-The explicit classification on a Finish Library entry used to separate library sections and defaults for import workflows (Material, Swatch, or Hybrid).
-_Avoid_: Implicit type by table only
+**Finish Library Filters**:
+The filters available in the Finish Library UI: All, Used in FF&E, Used in Take-Off. When "Used in FF&E" is active, a secondary Room dropdown narrows to materials assigned within a specific Room. When "Used in Take-Off" is active, a secondary Category dropdown narrows to materials assigned within a specific Take-Off Category. A material ID search field is always available.
+_Avoid_: Materials tab, Swatches tab, classification-based sections
 
 **Import Material ID**:
 For spreadsheet imports, when material*id is missing, generate a plain numeric string using the next integer after the current highest numeric material_id in the Project (for example: 1, 2, 3).
 \_Avoid*: Zero-padded generated IDs
 
 **Material**:
-A Finish Library entry assigned to an FF&E Item — a finish, fabric, or product material reference used in furniture specification.
-_Avoid_: Swatch when referring to the FF&E context
+A Finish Library entry — a finish, fabric, surface, or product material reference. A Material has a name, an optional ID, an optional description, and a visual which is either an uploaded image or a hex color. Image takes precedence over hex color when both are set. There is no type distinction between a material used in FF&E and one used in Take-Off; the same entry can be assigned to items in either tool.
+_Avoid_: Swatch as a separate entity type; Finish Classification as a user-facing concept
 
-**Swatch**:
-A Finish Library entry assigned to a Take-Off Item — a surface finish or wall/ceiling material reference used in take-off scope.
-_Avoid_: Material when referring to the Take-Off context
+**Material Visual**:
+The rendered representation of a Material — either the uploaded image (if present) or a solid block rendered from the Material's hex color. Used as a swatch image in Take-Off exports and as an image + ID pair in FF&E exports.
+_Avoid_: Swatch color, swatch image (when the distinction is about source, not rendering)
+
+**Swatch Cell**:
+The export column in the Take-Off Table that renders each assigned Material's visual as an image-only block. No name or ID is shown in the Swatch Cell.
+_Avoid_: Materials column when referring to the Take-Off export presentation
 
 **Rendering**:
 The primary image attached to an FF&E Item or Take-Off Item row.
@@ -131,19 +131,17 @@ _Avoid_: Raw upload, template-only import
 - A **Company** can define one active **Company Theme** used as the default for document exports.
 - A **Room** contains zero or more **FF&E Items**.
 - A **Take-Off Category** contains zero or more **Take-Off Items**.
-- A **Project** owns a **Finish Library** — a single pool of entries accessible from both **FF&E** and **Take-Off Table** views.
-- **Materials** (FF&E) and **Swatches** (Take-Off) are stored as the same entity type in the **Finish Library** and carry a **Finish Classification** used for section filters and import defaults.
-- When a **Finish Library** entry is copied from one context to the other (e.g., a **Material** used as a **Swatch**), a new independent entry is created with identical image and text fields.
+- A **Project** owns a **Finish Library** — a single pool of **Materials** accessible from both **FF&E** and **Take-Off Table** views.
+- All **Finish Library** entries are **Materials**. There is no separate Swatch type; the same **Material** can be assigned to FF&E Items, Take-Off Items, or both without any re-classification.
 - An **FF&E Item** can reference multiple **Materials** from the **Finish Library**.
-- A **Take-Off Item** can reference multiple **Swatches** from the **Finish Library**.
-- A **Take-Off Item** can have one optional **Rendering**, one optional **Plan Image**, and zero or more **Swatches** from the **Finish Library**.
+- A **Take-Off Item** can reference multiple **Materials** from the **Finish Library**.
 - Editing a **Finish Library** entry from an item context uses copy-on-write semantics: if the entry is shared across multiple items, a new entry is forked; if it is used exclusively by one item, the entry is updated in place.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
 - A **Project Header** shows only included **Project** identity values and navigation between project tools.
 - **Project Options** are available from both Project Cards and the **Project Header** so Project data can be updated without making header fields inline-editable.
 - A **Take-Off Spreadsheet Import** can create missing **Take-Off Categories** from detected category headings or mapped category values.
 - A **Take-Off Spreadsheet Import** skips subtotal and financial summary rows instead of creating **Take-Off Items** from them.
-- A **Take-Off Spreadsheet Import** migrates embedded swatch images into the **Finish Library** as **Swatches** assigned to the imported **Take-Off Items**.
+- A **Take-Off Spreadsheet Import** migrates embedded swatch images into the **Finish Library** as **Materials** assigned to the imported **Take-Off Items**.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Take-Off Table** budgets.
 - A **Take-Off Table** export can use different **Export Modes** without changing the underlying **Take-Off Items**.
 
@@ -159,5 +157,5 @@ _Avoid_: Raw upload, template-only import
 
 - "Item" is overloaded. Use **FF&E Item** for room-scoped specification lines and **Take-Off Item** for category-scoped take-off rows.
 - "Category" is overloaded. Use **Take-Off Category** for table groupings and describe FF&E item category as an item attribute.
-- "Swatch" and "Material" name the same underlying entity type with different semantic roles. Use **Material** for FF&E context and **Swatch** for Take-Off context; both are **Finish Library** entries.
+- "Swatch" is no longer a separate entity type. All Finish Library entries are **Materials**. "Swatch Cell" remains valid as a rendering term for the Take-Off export column — but it describes the column format, not the entry type.
 - "FF&E Builder" is the historical repo name. The product shell is **ChillDesignStudio**, and **FF&E** is one tool inside it.

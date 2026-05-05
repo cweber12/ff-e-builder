@@ -19,8 +19,6 @@ import {
 } from '../lib/ownership';
 import {
   selectMaterialById,
-  setMaterialSwatches,
-  normalizeSwatches,
   generateImportMaterialId,
   generateImportName,
 } from './materialHelpers';
@@ -132,15 +130,6 @@ router.get('/takeoff/categories/:id/items', async (c) => {
             'material_id', m.material_id,
             'description', m.description,
             'swatch_hex',  m.swatch_hex,
-            'swatches', COALESCE(
-              (
-                SELECT array_agg(ms.swatch_hex ORDER BY ms.sort_order)
-                FROM material_swatches ms
-                WHERE ms.material_id = m.id
-              ),
-              ARRAY[m.swatch_hex]
-            ),
-            'finish_classification', m.finish_classification,
             'created_at',  m.created_at,
             'updated_at',  m.updated_at
           ) ORDER BY tim.sort_order
@@ -174,7 +163,7 @@ router.post('/takeoff/categories/:id/items', async (c) => {
   const rows = await sql`
     INSERT INTO takeoff_items (
       category_id, product_tag, plan, drawings, location, description,
-      size_label, size_mode, size_w, size_d, size_h, size_unit, swatches,
+      size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order
     )
     VALUES (
@@ -190,7 +179,6 @@ router.post('/takeoff/categories/:id/items', async (c) => {
       ${parsed.data.size_d},
       ${parsed.data.size_h},
       ${parsed.data.size_unit},
-      ${JSON.stringify(parsed.data.swatches)}::jsonb,
       ${parsed.data.cbm},
       ${parsed.data.quantity},
       ${parsed.data.quantity_unit},
@@ -216,8 +204,6 @@ router.patch('/takeoff/items/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const swatchesJson =
-    parsed.data.swatches === undefined ? null : JSON.stringify(parsed.data.swatches);
   const rows = await sql`
     UPDATE takeoff_items
     SET
@@ -233,7 +219,6 @@ router.patch('/takeoff/items/:id', async (c) => {
       size_d = COALESCE(${parsed.data.size_d ?? null}, size_d),
       size_h = COALESCE(${parsed.data.size_h ?? null}, size_h),
       size_unit = COALESCE(${parsed.data.size_unit ?? null}, size_unit),
-      swatches = COALESCE(${swatchesJson}::jsonb, swatches),
       cbm = COALESCE(${parsed.data.cbm ?? null}, cbm),
       quantity = COALESCE(${parsed.data.quantity ?? null}, quantity),
       quantity_unit = COALESCE(${parsed.data.quantity_unit ?? null}, quantity_unit),
@@ -317,31 +302,26 @@ router.post('/takeoff/items/:id/materials/new', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
-  const classification = parsed.data.finish_classification ?? 'swatch';
   const name = parsed.data.name.trim() || (await generateImportName(sql, itemCtx.projectId));
   const materialId =
     parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemCtx.projectId));
   const matRows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex, finish_classification)
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
     VALUES (
       ${itemCtx.projectId},
       ${name},
       ${materialId},
       ${parsed.data.description},
-      ${swatches[0] ?? '#D9D4C8'},
-      ${classification}
+      ${parsed.data.swatch_hex ?? '#D9D4C8'}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
       material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
       description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex  = EXCLUDED.swatch_hex,
-      finish_classification = EXCLUDED.finish_classification
+      swatch_hex  = EXCLUDED.swatch_hex
     RETURNING *
   `;
   const mat = matRows[0] as { id: string };
-  await setMaterialSwatches(sql, mat.id, swatches);
   const maxRows = await sql`
     SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
     FROM   takeoff_item_materials

@@ -51,7 +51,6 @@ const makeTakeoffItem = (overrides: Partial<TakeoffItem> = {}): TakeoffItem => (
   sizeD: '',
   sizeH: '',
   sizeUnit: 'ft/in',
-  swatches: [],
   materials: [],
   cbm: 0,
   quantity: 1,

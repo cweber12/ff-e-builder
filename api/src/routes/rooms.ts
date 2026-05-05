@@ -82,14 +82,6 @@ router.get('/:id/items', async (c) => {
             'material_id', m.material_id,
             'description', m.description,
             'swatch_hex', m.swatch_hex,
-            'swatches', COALESCE(
-              (
-                SELECT array_agg(ms.swatch_hex ORDER BY ms.sort_order)
-                FROM material_swatches ms
-                WHERE ms.material_id = m.id
-              ),
-              ARRAY[m.swatch_hex]
-            ),
             'created_at', m.created_at,
             'updated_at', m.updated_at
           )

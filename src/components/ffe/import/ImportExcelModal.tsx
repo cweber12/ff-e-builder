@@ -228,7 +228,6 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
                 await api.materials.createAndAssignToItem(created.id, {
                   name: matName,
                   materialId: '',
-                  finishClassification: 'material',
                 });
               } catch {
                 // Non-fatal: material import errors don't block item import

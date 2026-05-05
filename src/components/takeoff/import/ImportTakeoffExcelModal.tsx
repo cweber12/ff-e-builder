@@ -285,7 +285,6 @@ export function ImportTakeoffExcelModal({
               const material = await api.materials.createAndAssignToTakeoffItem(item.id, {
                 name: '',
                 materialId: '',
-                finishClassification: 'swatch',
               });
               await api.images.upload({
                 entityType: 'material',
@@ -362,7 +361,6 @@ export function ImportTakeoffExcelModal({
               const material = await api.materials.createAndAssignToTakeoffItem(item.id, {
                 name: '',
                 materialId: '',
-                finishClassification: 'swatch',
               });
               await api.images.upload({
                 entityType: 'material',
@@ -676,7 +674,6 @@ function buildTakeoffItem(
     location: getValue(row, mapping.location),
     description: getValue(row, mapping.description),
     sizeLabel: getValue(row, mapping.sizeLabel),
-    swatches: splitList(getValue(row, mapping.swatches)),
     cbm: parseNumber(getValue(row, mapping.cbm)),
     quantity: parseNumber(getValue(row, mapping.quantity), 1),
     quantityUnit: getValue(row, mapping.quantityUnit) || 'unit',
@@ -711,13 +708,6 @@ function imagePreviewLabel(
   const text = getValue(row, columnKey);
   if (imageCount > 0) return `${imageCount} image${imageCount !== 1 ? 's' : ''}`;
   return text;
-}
-
-function splitList(value: string) {
-  return value
-    .split(/[;,]/)
-    .map((entry) => entry.trim())
-    .filter(Boolean);
 }
 
 function parseNumber(value: string, fallback = 0) {

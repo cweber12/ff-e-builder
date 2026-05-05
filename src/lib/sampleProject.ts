@@ -684,7 +684,6 @@ export async function seedProjectSampleContent(
             const material = await api.materials.createAndAssignToTakeoffItem(item.itemId, {
               name: swatchLabel,
               materialId: '',
-              finishClassification: 'swatch',
             });
             const file = await createPlaceholderImageFile({
               label: swatchLabel,

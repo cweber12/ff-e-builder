@@ -115,7 +115,7 @@ function takeoffItemToRow(item: TakeoffItem): string[] {
     [item.drawings, item.location].filter(Boolean).join(' / '),
     item.description,
     item.sizeLabel,
-    item.swatches.join('; '),
+    item.materials.map((m) => m.name).join('; '),
     String(item.cbm),
     String(item.quantity),
     item.quantityUnit,

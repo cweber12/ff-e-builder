@@ -40,35 +40,8 @@ export async function generateImportName(sql: Sql, projectId: string): Promise<s
   return `Import ${max + 1}`;
 }
 
-export function normalizeSwatches(swatches: string[] | undefined, swatchHex: string | undefined) {
-  const defaultSwatch = '#D9D4C8';
-  const candidates = swatches?.length ? swatches : [swatchHex ?? defaultSwatch];
-  return candidates.filter((s, i) => candidates.indexOf(s) === i).slice(0, 1);
-}
-
-export async function setMaterialSwatches(sql: Sql, materialId: string, swatches: string[]) {
-  await sql`DELETE FROM material_swatches WHERE material_id = ${materialId}`;
-  for (const [index, swatch] of swatches.entries()) {
-    await sql`
-      INSERT INTO material_swatches (material_id, swatch_hex, sort_order)
-      VALUES (${materialId}, ${swatch}, ${index})
-    `;
-  }
-}
-
 export async function selectMaterialById(sql: Sql, materialId: string) {
-  const rows = await sql`
-    SELECT
-      m.*,
-      COALESCE(
-        array_agg(ms.swatch_hex ORDER BY ms.sort_order) FILTER (WHERE ms.id IS NOT NULL),
-        ARRAY[m.swatch_hex]
-      ) AS swatches
-    FROM materials m
-    LEFT JOIN material_swatches ms ON ms.material_id = m.id
-    WHERE m.id = ${materialId}
-    GROUP BY m.id
-  `;
+  const rows = await sql`SELECT * FROM materials WHERE id = ${materialId}`;
   return rows[0];
 }
 
@@ -132,14 +105,6 @@ export async function forkMaterial(
     RETURNING *
   `;
   const newMat = newRows[0] as { id: string };
-
-  // Copy hex swatches
-  await sql`
-    INSERT INTO material_swatches (material_id, swatch_hex, sort_order)
-    SELECT ${newMat.id}, swatch_hex, sort_order
-    FROM   material_swatches
-    WHERE  material_id = ${materialId}
-  `;
 
   // Copy primary image via R2 streaming copy
   const imgRows = await sql`

@@ -21,9 +21,7 @@ import {
   forkMaterial,
   generateImportMaterialId,
   generateImportName,
-  normalizeSwatches,
   selectMaterialById,
-  setMaterialSwatches,
 } from './materialHelpers';
 
 const DEFAULT_SWATCH = '#D9D4C8';
@@ -45,17 +43,9 @@ async function listProjectMaterials(c: AppContext) {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    SELECT
-      m.*,
-      COALESCE(
-        array_agg(ms.swatch_hex ORDER BY ms.sort_order) FILTER (WHERE ms.id IS NOT NULL),
-        ARRAY[m.swatch_hex]
-      ) AS swatches
-    FROM materials m
-    LEFT JOIN material_swatches ms ON ms.material_id = m.id
-    WHERE m.project_id = ${projectId}
-    GROUP BY m.id
-    ORDER BY lower(m.name), m.created_at
+    SELECT * FROM materials
+    WHERE project_id = ${projectId}
+    ORDER BY lower(name), created_at
   `;
   return c.json({ materials: rows });
 }
@@ -75,31 +65,26 @@ async function createProjectMaterial(c: AppContext) {
   }
 
   const sql = getDb(c.env);
-  const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
-  const classification = parsed.data.finish_classification ?? 'material';
   const name = parsed.data.name.trim() || (await generateImportName(sql, projectId));
   const materialId =
     parsed.data.material_id.trim() || (await generateImportMaterialId(sql, projectId));
   const rows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex, finish_classification)
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
     VALUES (
       ${projectId},
       ${name},
       ${materialId},
       ${parsed.data.description},
-      ${swatches[0] ?? DEFAULT_SWATCH},
-      ${classification}
+      ${parsed.data.swatch_hex ?? DEFAULT_SWATCH}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
       material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
       description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex = EXCLUDED.swatch_hex,
-      finish_classification = EXCLUDED.finish_classification
+      swatch_hex = EXCLUDED.swatch_hex
     RETURNING *
   `;
   const material = rows[0] as MaterialRow;
-  await setMaterialSwatches(sql, material.id, swatches);
   return c.json({ material: await selectMaterialById(sql, material.id) }, 201);
 }
 
@@ -122,25 +107,17 @@ router.patch('/materials/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const currentRows = await sql`SELECT swatch_hex FROM materials WHERE id = ${id}`;
-  const currentSwatch = (currentRows[0] as { swatch_hex?: string } | undefined)?.swatch_hex;
-  const swatches =
-    parsed.data.swatches !== undefined || parsed.data.swatch_hex !== undefined
-      ? normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex ?? currentSwatch)
-      : undefined;
   const rows = await sql`
     UPDATE materials
     SET
       name = COALESCE(${parsed.data.name ?? null}, name),
       material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
       description = COALESCE(${parsed.data.description ?? null}, description),
-      swatch_hex = COALESCE(${swatches?.[0] ?? null}, swatch_hex),
-      finish_classification = COALESCE(${parsed.data.finish_classification ?? null}, finish_classification)
+      swatch_hex = COALESCE(${parsed.data.swatch_hex ?? null}, swatch_hex)
     WHERE id = ${id}
     RETURNING *
   `;
   if (!rows[0]) return c.json({ error: 'Not found' }, 404);
-  if (swatches) await setMaterialSwatches(sql, id, swatches);
   return c.json({ material: await selectMaterialById(sql, id) });
 });
 
@@ -216,31 +193,26 @@ router.post('/items/:itemId/materials/new', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const swatches = normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex);
-  const classification = parsed.data.finish_classification ?? 'material';
   const name = parsed.data.name.trim() || (await generateImportName(sql, itemContext.projectId));
   const materialId =
     parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemContext.projectId));
   const materialRows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex, finish_classification)
+    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
     VALUES (
       ${itemContext.projectId},
       ${name},
       ${materialId},
       ${parsed.data.description},
-      ${swatches[0] ?? DEFAULT_SWATCH},
-      ${classification}
+      ${parsed.data.swatch_hex ?? DEFAULT_SWATCH}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
       material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
       description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex = EXCLUDED.swatch_hex,
-      finish_classification = EXCLUDED.finish_classification
+      swatch_hex = EXCLUDED.swatch_hex
     RETURNING *
   `;
   const material = materialRows[0] as { id: string };
-  await setMaterialSwatches(sql, material.id, swatches);
   const maxRows = await sql`
     SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort_order
     FROM item_materials
@@ -304,19 +276,14 @@ router.patch('/items/:itemId/materials/:materialId', async (c) => {
       WHERE item_id = ${itemId} AND material_id = ${materialId}
     `;
   } else {
-    const swatches =
-      parsed.data.swatches !== undefined || parsed.data.swatch_hex !== undefined
-        ? normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex)
-        : undefined;
     await sql`
       UPDATE materials SET
         name        = COALESCE(${parsed.data.name ?? null}, name),
         material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
         description = COALESCE(${parsed.data.description ?? null}, description),
-        swatch_hex  = COALESCE(${swatches?.[0] ?? null}, swatch_hex)
+        swatch_hex  = COALESCE(${parsed.data.swatch_hex ?? null}, swatch_hex)
       WHERE id = ${materialId}
     `;
-    if (swatches) await setMaterialSwatches(sql, materialId, swatches);
   }
   return c.json({ material: await selectMaterialById(sql, finalId) });
 });
@@ -348,19 +315,14 @@ router.patch('/takeoff/items/:takeoffItemId/materials/:materialId', async (c) =>
       WHERE takeoff_item_id = ${takeoffItemId} AND material_id = ${materialId}
     `;
   } else {
-    const swatches =
-      parsed.data.swatches !== undefined || parsed.data.swatch_hex !== undefined
-        ? normalizeSwatches(parsed.data.swatches, parsed.data.swatch_hex)
-        : undefined;
     await sql`
       UPDATE materials SET
         name        = COALESCE(${parsed.data.name ?? null}, name),
         material_id = COALESCE(${parsed.data.material_id ?? null}, material_id),
         description = COALESCE(${parsed.data.description ?? null}, description),
-        swatch_hex  = COALESCE(${swatches?.[0] ?? null}, swatch_hex)
+        swatch_hex  = COALESCE(${parsed.data.swatch_hex ?? null}, swatch_hex)
       WHERE id = ${materialId}
     `;
-    if (swatches) await setMaterialSwatches(sql, materialId, swatches);
   }
   return c.json({ material: await selectMaterialById(sql, finalId) });
 });

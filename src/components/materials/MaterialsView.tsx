@@ -66,15 +66,8 @@ export function MaterialsView({
         if (scope === 'all') return true;
         if (scope === 'ffe') return ffeIds.has(material.id);
         if (scope === 'takeoff') return takeoffIds.has(material.id);
-        if (scope === 'material')
-          return (
-            material.finishClassification === 'material' ||
-            material.finishClassification === 'hybrid'
-          );
-        if (scope === 'swatch')
-          return (
-            material.finishClassification === 'swatch' || material.finishClassification === 'hybrid'
-          );
+        if (scope === 'material') return ffeIds.has(material.id);
+        if (scope === 'swatch') return takeoffIds.has(material.id);
         return true;
       })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
