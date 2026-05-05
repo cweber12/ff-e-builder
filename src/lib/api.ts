@@ -1,92 +1,36 @@
 import { compressImage } from './compress-image';
 import { apiFetch, apiFetchResponse } from './api/transport';
+import { itemsApi } from './api/items';
 import { projectsApi } from './api/projects';
+import { roomsApi } from './api/rooms';
 import { usersApi } from './api/users';
 import {
   mapImageAsset,
-  mapItem,
   mapMaterial,
   mapProposalCategory,
   mapProposalItem,
-  mapRoom,
   type RawImageAsset,
-  type RawItem,
   type RawMaterial,
   type RawProposalCategory,
   type RawProposalItem,
-  type RawRoom,
 } from './api/mappers';
 import type {
   CropParams,
   ImageAsset,
   ImageEntityType,
-  Item,
-  ItemStatus,
   Material,
   ProposalCategory,
   ProposalItem,
-  Room,
 } from '../types';
 
 // Compatibility export
 export { ApiError } from './api/transport';
+export type { CreateItemInput, UpdateItemInput } from './api/items';
 export type { CreateProjectInput, UpdateProjectInput } from './api/projects';
+export type { CreateRoomInput, UpdateRoomInput } from './api/rooms';
 export type { UpsertUserProfileInput } from './api/users';
 
 // Client input types
-export type CreateRoomInput = {
-  name: string;
-  sortOrder?: number;
-};
-
-export type UpdateRoomInput = {
-  name?: string;
-  sortOrder?: number;
-};
-
-export type CreateItemInput = {
-  itemName: string;
-  category?: string | null;
-  vendor?: string | null;
-  model?: string | null;
-  itemIdTag?: string | null;
-  dimensions?: string | null;
-  seatHeight?: string | null;
-  finishes?: string | null;
-  notes?: string | null;
-  qty?: number;
-  unitCostCents?: number;
-  markupPct?: number;
-  leadTime?: string | null;
-  status?: ItemStatus;
-  imageUrl?: string | null;
-  linkUrl?: string | null;
-  sortOrder?: number;
-};
-
-export type UpdateItemInput = {
-  roomId?: string;
-  itemName?: string;
-  category?: string | null;
-  vendor?: string | null;
-  model?: string | null;
-  itemIdTag?: string | null;
-  dimensions?: string | null;
-  seatHeight?: string | null;
-  finishes?: string | null;
-  notes?: string | null;
-  qty?: number;
-  unitCostCents?: number;
-  markupPct?: number;
-  leadTime?: string | null;
-  status?: ItemStatus;
-  imageUrl?: string | null;
-  linkUrl?: string | null;
-  sortOrder?: number;
-  /** Required for optimistic concurrency - must match the current DB version */
-  version: number;
-};
-
 export type ImageEntityRef = {
   entityType: ImageEntityType;
   entityId: string;
@@ -236,93 +180,8 @@ export const api = {
       apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
   },
 
-  rooms: {
-    list: (projectId: string): Promise<Room[]> =>
-      apiFetch<{ rooms: RawRoom[] }>(`/api/v1/projects/${projectId}/rooms`).then((r) =>
-        r.rooms.map(mapRoom),
-      ),
-
-    create: (projectId: string, input: CreateRoomInput): Promise<Room> =>
-      apiFetch<{ room: RawRoom }>(`/api/v1/projects/${projectId}/rooms`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: input.name,
-          sort_order: input.sortOrder ?? 0,
-        }),
-      }).then((r) => mapRoom(r.room)),
-
-    update: (id: string, patch: UpdateRoomInput): Promise<Room> =>
-      apiFetch<{ room: RawRoom }>(`/api/v1/rooms/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name: patch.name,
-          sort_order: patch.sortOrder,
-        }),
-      }).then((r) => mapRoom(r.room)),
-
-    delete: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/rooms/${id}`, { method: 'DELETE' }),
-  },
-
-  items: {
-    list: (roomId: string): Promise<Item[]> =>
-      apiFetch<{ items: RawItem[] }>(`/api/v1/rooms/${roomId}/items`).then((r) =>
-        r.items.map(mapItem),
-      ),
-
-    create: (roomId: string, input: CreateItemInput): Promise<Item> =>
-      apiFetch<{ item: RawItem }>(`/api/v1/rooms/${roomId}/items`, {
-        method: 'POST',
-        body: JSON.stringify({
-          item_name: input.itemName,
-          category: input.category,
-          vendor: input.vendor,
-          model: input.model,
-          item_id_tag: input.itemIdTag,
-          dimensions: input.dimensions,
-          seat_height: input.seatHeight,
-          finishes: input.finishes,
-          notes: input.notes,
-          qty: input.qty,
-          unit_cost_cents: input.unitCostCents,
-          markup_pct: input.markupPct,
-          lead_time: input.leadTime,
-          status: input.status,
-          image_url: input.imageUrl,
-          link_url: input.linkUrl,
-          sort_order: input.sortOrder,
-        }),
-      }).then((r) => mapItem(r.item)),
-
-    update: (id: string, patch: UpdateItemInput): Promise<Item> =>
-      apiFetch<{ item: RawItem }>(`/api/v1/items/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          item_name: patch.itemName,
-          room_id: patch.roomId,
-          category: patch.category,
-          vendor: patch.vendor,
-          model: patch.model,
-          item_id_tag: patch.itemIdTag,
-          dimensions: patch.dimensions,
-          seat_height: patch.seatHeight,
-          finishes: patch.finishes,
-          notes: patch.notes,
-          qty: patch.qty,
-          unit_cost_cents: patch.unitCostCents,
-          markup_pct: patch.markupPct,
-          lead_time: patch.leadTime,
-          status: patch.status,
-          image_url: patch.imageUrl,
-          link_url: patch.linkUrl,
-          sort_order: patch.sortOrder,
-          version: patch.version,
-        }),
-      }).then((r) => mapItem(r.item)),
-
-    delete: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/items/${id}`, { method: 'DELETE' }),
-  },
+  rooms: roomsApi,
+  items: itemsApi,
 
   images: {
     list: ({ entityType, entityId }: ImageEntityRef): Promise<ImageAsset[]> => {
