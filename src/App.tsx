@@ -28,30 +28,21 @@ import { SummaryView } from './components/ffe/summary/SummaryView';
 import { TakeoffSummaryView } from './components/takeoff/summary/TakeoffSummaryView';
 import { TakeoffTable } from './components/takeoff/table/TakeoffTable';
 import { ImageFrame } from './components/shared/ImageFrame';
-import {
-  exportSummaryCsv,
-  exportSummaryExcel,
-  exportSummaryPdf,
-  exportTakeoffCsv,
-  exportTakeoffExcel,
-  exportTakeoffPdf,
-  exportTableCsv,
-  exportTableExcel,
-  exportTablePdf,
-} from './lib/exportUtils';
+import { exportSummaryCsv, exportSummaryExcel, exportSummaryPdf } from './lib/exportUtils';
 import { api } from './lib/api';
 import { recordSession } from './lib/telemetry';
 import { useProjects, useUpdateProject, useDeleteProject } from './hooks/shared/useProjects';
 import { useRoomsWithItems } from './hooks/ffe/useRoomsWithItems';
 import { useTakeoffWithItems } from './hooks/takeoff/useTakeoff';
 import { useUserProfile } from './hooks/shared/useUserProfile';
-import { Button } from './components/primitives';
 import type { Project, RoomWithItems, TakeoffCategoryWithItems } from './types';
 
 type ProjectContext = {
   project: Project;
   roomsWithItems: RoomWithItems[];
   takeoffCategoriesWithItems: TakeoffCategoryWithItems[];
+  onImport: () => void;
+  onTakeoffImport: () => void;
 };
 
 function App() {
@@ -407,9 +398,6 @@ function ProjectLayout() {
                   activePath={location.pathname}
                   project={project}
                   roomsWithItems={roomsWithItems}
-                  takeoffCategoriesWithItems={takeoffCategoriesWithItems}
-                  onImport={() => setImportOpen(true)}
-                  onTakeoffImport={() => setTakeoffImportOpen(true)}
                 />
               )}
             </div>
@@ -417,7 +405,13 @@ function ProjectLayout() {
           <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
             <Outlet
               context={
-                { project, roomsWithItems, takeoffCategoriesWithItems } satisfies ProjectContext
+                {
+                  project,
+                  roomsWithItems,
+                  takeoffCategoriesWithItems,
+                  onImport: () => setImportOpen(true),
+                  onTakeoffImport: () => setTakeoffImportOpen(true),
+                } satisfies ProjectContext
               }
             />
           </section>
@@ -477,34 +471,13 @@ function ProjectTabActions({
   activePath,
   project,
   roomsWithItems,
-  takeoffCategoriesWithItems,
-  onImport,
-  onTakeoffImport,
 }: {
   activePath: string;
   project: Project;
   roomsWithItems: RoomWithItems[];
-  takeoffCategoriesWithItems: TakeoffCategoryWithItems[];
-  onImport: () => void;
-  onTakeoffImport: () => void;
 }) {
-  const { data: userProfile } = useUserProfile();
-
   if (activePath.endsWith('/ffe/table')) {
-    return (
-      <div className="flex shrink-0 items-center gap-2">
-        <ExportMenu
-          label="Export all"
-          size="sm"
-          onCsv={() => exportTableCsv(project, roomsWithItems)}
-          onExcel={() => void exportTableExcel(project, roomsWithItems)}
-          onPdf={() => void exportTablePdf(project, roomsWithItems)}
-        />
-        <Button type="button" variant="secondary" size="sm" onClick={onImport}>
-          Import from Excel
-        </Button>
-      </div>
-    );
+    return <div className="min-h-8" />;
   }
 
   if (activePath.endsWith('/ffe/summary')) {
@@ -522,36 +495,7 @@ function ProjectTabActions({
   }
 
   if (activePath.endsWith('/takeoff/table')) {
-    return (
-      <div className="flex shrink-0 items-center gap-2">
-        <ExportMenu
-          label="Export"
-          size="sm"
-          onCsv={() => exportTakeoffCsv(project, takeoffCategoriesWithItems)}
-          onExcel={() => void exportTakeoffExcel(project, takeoffCategoriesWithItems, userProfile)}
-          onPdf={() => void exportTakeoffPdf(project, takeoffCategoriesWithItems, userProfile)}
-          pdfOptions={[
-            {
-              label: 'Continuous',
-              onSelect: () =>
-                void exportTakeoffPdf(project, takeoffCategoriesWithItems, userProfile, {
-                  mode: 'continuous',
-                }),
-            },
-            {
-              label: 'Separated',
-              onSelect: () =>
-                void exportTakeoffPdf(project, takeoffCategoriesWithItems, userProfile, {
-                  mode: 'separated',
-                }),
-            },
-          ]}
-        />
-        <Button type="button" variant="secondary" size="sm" onClick={onTakeoffImport}>
-          Import from Excel
-        </Button>
-      </div>
-    );
+    return <div className="min-h-8" />;
   }
 
   return <div className="min-h-8" />;
@@ -575,8 +519,15 @@ function getSectionTabs(pathname: string): [string, string][] {
 }
 
 function ProjectTableRoute() {
-  const { project, roomsWithItems } = useProjectContext();
-  return <ItemsTable projectId={project.id} project={project} roomsWithItems={roomsWithItems} />;
+  const { project, roomsWithItems, onImport } = useProjectContext();
+  return (
+    <ItemsTable
+      projectId={project.id}
+      project={project}
+      roomsWithItems={roomsWithItems}
+      onImport={onImport}
+    />
+  );
 }
 
 function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'takeoff' }) {
@@ -585,8 +536,8 @@ function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'takeoff' }) {
 }
 
 function ProjectTakeoffRoute() {
-  const { project } = useProjectContext();
-  return <TakeoffTable projectId={project.id} />;
+  const { project, onTakeoffImport } = useProjectContext();
+  return <TakeoffTable projectId={project.id} project={project} onImport={onTakeoffImport} />;
 }
 
 function ProjectTakeoffMaterialsRoute() {

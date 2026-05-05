@@ -74,6 +74,7 @@ import {
   TableViewStack,
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
+import { ExportMenu } from '../../shared/ExportMenu';
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
@@ -82,6 +83,7 @@ type ItemsTableProps = {
   isLoading?: boolean | undefined;
   error?: Error | null;
   onReload?: (() => void) | undefined;
+  onImport?: (() => void) | undefined;
   className?: string | undefined;
 };
 
@@ -432,6 +434,20 @@ function PlusIcon() {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M10 12.5V4.5m0 0L7 7.5m3-3 3 3M4.5 13.5v1a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -1563,6 +1579,7 @@ export function ItemsTableView({
   isLoading = false,
   error = null,
   onReload,
+  onImport,
   className,
 }: {
   roomsWithItems: RoomWithItems[];
@@ -1571,6 +1588,7 @@ export function ItemsTableView({
   isLoading?: boolean | undefined;
   error?: Error | null;
   onReload?: (() => void) | undefined;
+  onImport?: (() => void) | undefined;
   className?: string | undefined;
 }) {
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
@@ -1607,10 +1625,32 @@ export function ItemsTableView({
 
   return (
     <TableViewStack className={className}>
-      <div className="flex justify-center">
-        <Button type="button" variant="secondary" onClick={() => setAddRoomOpen(true)}>
+      <div className="flex items-center justify-between gap-2">
+        <Button type="button" variant="secondary" size="sm" onClick={() => setAddRoomOpen(true)}>
+          <PlusIcon />
           Add room
         </Button>
+        <div className="flex items-center gap-2">
+          {project && (
+            <ExportMenu
+              label="Export"
+              size="sm"
+              onCsv={() => exportTableCsv(project, sortedRooms)}
+              onExcel={() => void exportTableExcel(project, sortedRooms)}
+              onPdf={() => void exportTablePdf(project, sortedRooms)}
+            />
+          )}
+          {onImport && (
+            <button
+              type="button"
+              onClick={onImport}
+              className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            >
+              <UploadIcon />
+              Import
+            </button>
+          )}
+        </div>
       </div>
 
       {sortedRooms.map((room) => (
@@ -1682,6 +1722,7 @@ export function ItemsTable(props: ItemsTableProps) {
         isLoading={props.isLoading}
         error={props.error ?? null}
         onReload={props.onReload ?? reload}
+        onImport={props.onImport}
         className={props.className}
       />
     </ItemsRenderErrorBoundary>

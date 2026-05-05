@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../primitives';
+import { ExportMenu } from '../../shared/ExportMenu';
 import { ImageFrame } from '../../shared/ImageFrame';
 import {
   useCreateTakeoffCategory,
@@ -16,8 +17,11 @@ import {
   cents,
   formatMoney,
   parseUnitCostDollarsInput,
+  type Project,
   type TakeoffItem,
 } from '../../../types';
+import { exportTakeoffCsv, exportTakeoffExcel, exportTakeoffPdf } from '../../../lib/exportUtils';
+import { useUserProfile } from '../../../hooks';
 import {
   takeoffCategorySubtotalCents,
   takeoffLineTotalCents,
@@ -45,10 +49,13 @@ const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
 
 type TakeoffTableProps = {
   projectId: string;
+  project?: Project;
+  onImport?: (() => void) | undefined;
 };
 
-export function TakeoffTable({ projectId }: TakeoffTableProps) {
+export function TakeoffTable({ projectId, project, onImport }: TakeoffTableProps) {
   const { categoriesWithItems, isLoading } = useTakeoffWithItems(projectId);
+  const { data: userProfile } = useUserProfile();
   const createCategory = useCreateTakeoffCategory(projectId);
   const updateCategory = useUpdateTakeoffCategory(projectId);
   const deleteCategory = useDeleteTakeoffCategory(projectId);
@@ -71,10 +78,53 @@ export function TakeoffTable({ projectId }: TakeoffTableProps) {
 
   return (
     <TableViewStack>
-      <div className="flex justify-center">
-        <Button type="button" variant="secondary" onClick={() => setAddCategoryOpen(true)}>
+      <div className="flex items-center justify-between gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => setAddCategoryOpen(true)}
+        >
+          <PlusIcon />
           Add category
         </Button>
+        <div className="flex items-center gap-2">
+          {project && (
+            <ExportMenu
+              label="Export"
+              size="sm"
+              onCsv={() => exportTakeoffCsv(project, categoriesWithItems)}
+              onExcel={() => void exportTakeoffExcel(project, categoriesWithItems, userProfile)}
+              onPdf={() => void exportTakeoffPdf(project, categoriesWithItems, userProfile)}
+              pdfOptions={[
+                {
+                  label: 'Continuous',
+                  onSelect: () =>
+                    void exportTakeoffPdf(project, categoriesWithItems, userProfile, {
+                      mode: 'continuous',
+                    }),
+                },
+                {
+                  label: 'Separated',
+                  onSelect: () =>
+                    void exportTakeoffPdf(project, categoriesWithItems, userProfile, {
+                      mode: 'separated',
+                    }),
+                },
+              ]}
+            />
+          )}
+          {onImport && (
+            <button
+              type="button"
+              onClick={onImport}
+              className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            >
+              <UploadIcon />
+              Import
+            </button>
+          )}
+        </div>
       </div>
 
       {categoriesWithItems.length === 0 ? (
@@ -159,6 +209,20 @@ function PlusIcon() {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M10 12.5V4.5m0 0L7 7.5m3-3 3 3M4.5 13.5v1a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
