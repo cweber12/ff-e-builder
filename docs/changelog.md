@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(api): move material library and assignment API operations into a focused client module behind the existing API facade
 - refactor(api): move image metadata, upload, blob download, primary, and crop operations into a focused client module
 - refactor(api): move Proposal category and item operations into a focused client module behind the existing API facade
+- test(api): split API client coverage into focused module-level test files with shared transport test setup
 - refactor(exports): move shared export download, filename, money, percent, and CSV helpers into `src/lib/export/shared.ts`
 - refactor(exports): move FF&E row helpers and CSV export implementations behind dedicated `src/lib/export/` modules
 - refactor(exports): move Proposal export document preparation into `src/lib/export/proposalDocument.ts` without changing PDF or Excel rendering
