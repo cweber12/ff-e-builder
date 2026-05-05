@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { appendListItem, removeListItem, replaceListItem, updateListItem } from './optimisticList';
+import {
+  appendListItem,
+  appendUniqueListItem,
+  removeListItem,
+  replaceListItem,
+  updateListItem,
+} from './optimisticList';
 
 describe('optimistic list helpers', () => {
   it('applies append, replace, update, and remove transforms', () => {
@@ -12,6 +18,10 @@ describe('optimistic list helpers', () => {
       ...initial,
       { id: 'c', name: 'Gamma', count: 3 },
     ]);
+
+    expect(appendUniqueListItem(initial, { id: 'b', name: 'Duplicate Beta', count: 99 })).toBe(
+      initial,
+    );
 
     expect(replaceListItem(initial, 'b', { id: 'b', name: 'Beta Prime', count: 20 })).toEqual([
       initial[0],

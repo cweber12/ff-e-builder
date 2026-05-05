@@ -24,6 +24,10 @@ export function appendListItem<T>(old: T[] | undefined, item: T): T[] {
   return [...(old ?? []), item];
 }
 
+export function appendUniqueListItem<T extends Identifiable>(old: T[] | undefined, item: T): T[] {
+  return old?.some((candidate) => candidate.id === item.id) ? old : appendListItem(old, item);
+}
+
 export function replaceListItem<T extends Identifiable>(
   old: T[] | undefined,
   id: string | undefined,

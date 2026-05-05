@@ -2,6 +2,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import { projectKeys } from '../queryKeys';
+import { removeListItem, updateListItem } from '../optimisticList';
 import type { CreateProjectInput, UpdateProjectInput } from '../../lib/api';
 import type { Project } from '../../types';
 
@@ -48,9 +49,8 @@ export function useUpdateProject() {
     mutationFn: ({ id, patch }: { id: string; patch: UpdateProjectInput }) =>
       api.projects.update(id, patch),
     onSuccess: (updated) => {
-      queryClient.setQueryData<Project[]>(
-        projectKeys.all,
-        (old) => old?.map((p) => (p.id === updated.id ? updated : p)) ?? [],
+      queryClient.setQueryData<Project[]>(projectKeys.all, (old) =>
+        updateListItem(old, updated.id, () => updated),
       );
     },
     onError: (err) => toast.error(`Save failed: ${err.message}`),
@@ -62,10 +62,7 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (id: string) => api.projects.delete(id),
     onSuccess: (_data, id) => {
-      queryClient.setQueryData<Project[]>(
-        projectKeys.all,
-        (old) => old?.filter((p) => p.id !== id) ?? [],
-      );
+      queryClient.setQueryData<Project[]>(projectKeys.all, (old) => removeListItem(old, id));
     },
     onError: (err) => toast.error(`Delete failed: ${err.message}`),
   });

@@ -2,6 +2,12 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import { proposalKeys } from '../queryKeys';
+import {
+  appendListItem,
+  appendUniqueListItem,
+  removeListItem,
+  updateListItem,
+} from '../optimisticList';
 import type {
   CreateProposalCategoryInput,
   CreateProposalItemInput,
@@ -52,7 +58,7 @@ export function useCreateProposalCategory(projectId: string) {
       api.proposal.createCategory(projectId, input),
     onSuccess: (category) => {
       queryClient.setQueryData<ProposalCategory[]>(proposalKeys.categories(projectId), (old) =>
-        old?.some((c) => c.id === category.id) ? old : [...(old ?? []), category],
+        appendUniqueListItem(old, category),
       );
     },
     onError: (err) => toast.error(`Category save failed: ${err.message}`),
@@ -65,10 +71,8 @@ export function useUpdateProposalCategory(projectId: string) {
     mutationFn: ({ id, patch }: { id: string; patch: UpdateProposalCategoryInput }) =>
       api.proposal.updateCategory(id, patch),
     onSuccess: (category) => {
-      queryClient.setQueryData<ProposalCategory[]>(
-        proposalKeys.categories(projectId),
-        (old) =>
-          old?.map((candidate) => (candidate.id === category.id ? category : candidate)) ?? [],
+      queryClient.setQueryData<ProposalCategory[]>(proposalKeys.categories(projectId), (old) =>
+        updateListItem(old, category.id, () => category),
       );
     },
     onError: (err) => toast.error(`Category save failed: ${err.message}`),
@@ -80,9 +84,8 @@ export function useDeleteProposalCategory(projectId: string) {
   return useMutation({
     mutationFn: (id: string) => api.proposal.deleteCategory(id),
     onSuccess: (_data, id) => {
-      queryClient.setQueryData<ProposalCategory[]>(
-        proposalKeys.categories(projectId),
-        (old) => old?.filter((category) => category.id !== id) ?? [],
+      queryClient.setQueryData<ProposalCategory[]>(proposalKeys.categories(projectId), (old) =>
+        removeListItem(old, id),
       );
     },
     onError: (err) => toast.error(`Category delete failed: ${err.message}`),
@@ -94,10 +97,9 @@ export function useCreateProposalItem(categoryId: string) {
   return useMutation({
     mutationFn: (input: CreateProposalItemInput) => api.proposal.createItem(categoryId, input),
     onSuccess: (item) => {
-      queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(categoryId), (old) => [
-        ...(old ?? []),
-        item,
-      ]);
+      queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(categoryId), (old) =>
+        appendListItem(old, item),
+      );
     },
     onError: (err) => toast.error(`Proposal item save failed: ${err.message}`),
   });
@@ -109,9 +111,8 @@ export function useUpdateProposalItem() {
     mutationFn: ({ id, patch }: { id: string; patch: UpdateProposalItemInput }) =>
       api.proposal.updateItem(id, patch),
     onSuccess: (item) => {
-      queryClient.setQueryData<ProposalItem[]>(
-        proposalKeys.items(item.categoryId),
-        (old) => old?.map((candidate) => (candidate.id === item.id ? item : candidate)) ?? [],
+      queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(item.categoryId), (old) =>
+        updateListItem(old, item.id, () => item),
       );
     },
     onError: (err) => toast.error(`Proposal item save failed: ${err.message}`),
@@ -123,9 +124,8 @@ export function useDeleteProposalItem(categoryId: string) {
   return useMutation({
     mutationFn: (id: string) => api.proposal.deleteItem(id),
     onSuccess: (_data, id) => {
-      queryClient.setQueryData<ProposalItem[]>(
-        proposalKeys.items(categoryId),
-        (old) => old?.filter((item) => item.id !== id) ?? [],
+      queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(categoryId), (old) =>
+        removeListItem(old, id),
       );
     },
     onError: (err) => toast.error(`Proposal item delete failed: ${err.message}`),

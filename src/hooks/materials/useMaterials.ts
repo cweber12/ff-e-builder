@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 import type { CreateMaterialInput, UpdateMaterialInput } from '../../lib/api';
 import type { Material } from '../../types';
 import { imageKeys, itemKeys, materialKeys, proposalKeys } from '../queryKeys';
+import { appendListItem, removeListItem } from '../optimisticList';
 
 export { materialKeys } from '../queryKeys';
 
@@ -48,9 +49,8 @@ export function useDeleteMaterial(projectId: string) {
   return useMutation({
     mutationFn: (id: string) => api.materials.delete(id),
     onSuccess: (_data, id) => {
-      queryClient.setQueryData<Material[]>(
-        materialKeys.forProject(projectId),
-        (old) => old?.filter((material) => material.id !== id) ?? [],
+      queryClient.setQueryData<Material[]>(materialKeys.forProject(projectId), (old) =>
+        removeListItem(old, id),
       );
       void queryClient.invalidateQueries({ queryKey: itemKeys.all });
       void queryClient.removeQueries({ queryKey: imageKeys.forEntity('material', id) });
@@ -189,6 +189,6 @@ export function useUpdateMaterialForProposalItem(categoryId: string, projectId: 
 }
 
 function upsertMaterial(old: Material[] | undefined, material: Material): Material[] {
-  const next = [material, ...(old ?? []).filter((candidate) => candidate.id !== material.id)];
+  const next = appendListItem(removeListItem(old, material.id), material);
   return next.sort((a, b) => a.name.localeCompare(b.name));
 }
