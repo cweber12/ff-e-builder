@@ -1,16 +1,15 @@
 import { compressImage } from './compress-image';
 import { apiFetch, apiFetchResponse } from './api/transport';
 import { itemsApi } from './api/items';
+import { materialsApi } from './api/materials';
 import { projectsApi } from './api/projects';
 import { roomsApi } from './api/rooms';
 import { usersApi } from './api/users';
 import {
   mapImageAsset,
-  mapMaterial,
   mapProposalCategory,
   mapProposalItem,
   type RawImageAsset,
-  type RawMaterial,
   type RawProposalCategory,
   type RawProposalItem,
 } from './api/mappers';
@@ -18,7 +17,6 @@ import type {
   CropParams,
   ImageAsset,
   ImageEntityType,
-  Material,
   ProposalCategory,
   ProposalItem,
 } from '../types';
@@ -26,6 +24,7 @@ import type {
 // Compatibility export
 export { ApiError } from './api/transport';
 export type { CreateItemInput, UpdateItemInput } from './api/items';
+export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
 export type { CreateProjectInput, UpdateProjectInput } from './api/projects';
 export type { CreateRoomInput, UpdateRoomInput } from './api/rooms';
 export type { UpsertUserProfileInput } from './api/users';
@@ -40,15 +39,6 @@ export type UploadImageInput = ImageEntityRef & {
   file: File;
   altText?: string;
 };
-
-export type CreateMaterialInput = {
-  name: string;
-  materialId?: string;
-  description?: string;
-  swatchHex?: string;
-};
-
-export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 
 export type CreateProposalCategoryInput = {
   name: string;
@@ -243,114 +233,5 @@ export const api = {
         ),
       }).then((r) => mapImageAsset(r.image)),
   },
-  materials: {
-    list: (projectId: string): Promise<Material[]> =>
-      apiFetch<{ materials: RawMaterial[] }>(`/api/v1/projects/${projectId}/materials`).then((r) =>
-        r.materials.map(mapMaterial),
-      ),
-
-    create: (projectId: string, input: CreateMaterialInput): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/projects/${projectId}/materials`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: input.name,
-          material_id: input.materialId ?? '',
-          description: input.description ?? '',
-          swatch_hex: input.swatchHex ?? '#D9D4C8',
-        }),
-      }).then((r) => mapMaterial(r.material)),
-
-    update: (id: string, patch: UpdateMaterialInput): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/materials/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name: patch.name,
-          material_id: patch.materialId,
-          description: patch.description,
-          swatch_hex: patch.swatchHex,
-        }),
-      }).then((r) => mapMaterial(r.material)),
-
-    delete: (id: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/materials/${id}`, { method: 'DELETE' }),
-
-    assignToItem: (itemId: string, materialId: string): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials`, {
-        method: 'POST',
-        body: JSON.stringify({ material_id: materialId }),
-      }).then((r) => mapMaterial(r.material)),
-
-    createAndAssignToItem: (itemId: string, input: CreateMaterialInput): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials/new`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: input.name,
-          material_id: input.materialId ?? '',
-          description: input.description ?? '',
-          swatch_hex: input.swatchHex ?? '#D9D4C8',
-        }),
-      }).then((r) => mapMaterial(r.material)),
-
-    removeFromItem: (itemId: string, materialId: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/items/${itemId}/materials/${materialId}`, { method: 'DELETE' }),
-
-    updateForItem: (
-      itemId: string,
-      materialId: string,
-      patch: UpdateMaterialInput,
-    ): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials/${materialId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name: patch.name,
-          material_id: patch.materialId,
-          description: patch.description,
-        }),
-      }).then((r) => mapMaterial(r.material)),
-
-    assignToProposalItem: (proposalItemId: string, materialId: string): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(`/api/v1/proposal/items/${proposalItemId}/materials`, {
-        method: 'POST',
-        body: JSON.stringify({ material_id: materialId }),
-      }).then((r) => mapMaterial(r.material)),
-
-    createAndAssignToProposalItem: (
-      proposalItemId: string,
-      input: CreateMaterialInput,
-    ): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(
-        `/api/v1/proposal/items/${proposalItemId}/materials/new`,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            name: input.name,
-            material_id: input.materialId,
-            description: input.description,
-            swatch_hex: input.swatchHex ?? '#D9D4C8',
-          }),
-        },
-      ).then((r) => mapMaterial(r.material)),
-
-    removeFromProposalItem: (proposalItemId: string, materialId: string): Promise<void> =>
-      apiFetch<void>(`/api/v1/proposal/items/${proposalItemId}/materials/${materialId}`, {
-        method: 'DELETE',
-      }),
-
-    updateForProposalItem: (
-      proposalItemId: string,
-      materialId: string,
-      patch: UpdateMaterialInput,
-    ): Promise<Material> =>
-      apiFetch<{ material: RawMaterial }>(
-        `/api/v1/proposal/items/${proposalItemId}/materials/${materialId}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({
-            name: patch.name,
-            material_id: patch.materialId,
-            description: patch.description,
-          }),
-        },
-      ).then((r) => mapMaterial(r.material)),
-  },
+  materials: materialsApi,
 };
