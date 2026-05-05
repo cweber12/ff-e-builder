@@ -97,6 +97,19 @@ export function proposalCompactIdentityLine(project: Project) {
     .join(' | ');
 }
 
+export function proposalSubtotalLabelColumnIndex(columns: ProposalExportColumn[]) {
+  const preferredKeys: ProposalExportColumnKey[] = [
+    'description',
+    'drawingsLocation',
+    'productTag',
+  ];
+  for (const key of preferredKeys) {
+    const index = columns.findIndex((column) => column.key === key);
+    if (index >= 0) return index;
+  }
+  return Math.max(0, columns.length - 2);
+}
+
 export function buildProposalExportDocument(
   project: Project,
   categories: ProposalCategoryWithItems[],
