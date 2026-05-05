@@ -2,6 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import { roomKeys } from '../queryKeys';
+import {
+  appendListItem,
+  removeListItem,
+  replaceListItem,
+  restoreQueryList,
+  snapshotQueryList,
+} from '../optimisticList';
 import type { CreateRoomInput, UpdateRoomInput } from '../../lib/api';
 import type { Room } from '../../types';
 
@@ -20,8 +27,8 @@ export function useCreateRoom(projectId: string) {
   return useMutation({
     mutationFn: (input: CreateRoomInput) => api.rooms.create(projectId, input),
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: roomKeys.forProject(projectId) });
-      const previous = queryClient.getQueryData<Room[]>(roomKeys.forProject(projectId));
+      const queryKey = roomKeys.forProject(projectId);
+      const previous = await snapshotQueryList<Room>(queryClient, queryKey);
       const optimisticRoom: Room = {
         id: `optimistic-${crypto.randomUUID()}`,
         projectId,
@@ -30,21 +37,15 @@ export function useCreateRoom(projectId: string) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      queryClient.setQueryData<Room[]>(roomKeys.forProject(projectId), (old) => [
-        ...(old ?? []),
-        optimisticRoom,
-      ]);
+      queryClient.setQueryData<Room[]>(queryKey, (old) => appendListItem(old, optimisticRoom));
       return { previous, optimisticId: optimisticRoom.id };
     },
     onError: (_err, _input, ctx) => {
-      if (ctx?.previous !== undefined) {
-        queryClient.setQueryData(roomKeys.forProject(projectId), ctx.previous);
-      }
+      restoreQueryList(queryClient, roomKeys.forProject(projectId), ctx?.previous);
     },
     onSuccess: (created, _input, ctx) => {
-      queryClient.setQueryData<Room[]>(
-        roomKeys.forProject(projectId),
-        (old) => old?.map((room) => (room.id === ctx?.optimisticId ? created : room)) ?? [created],
+      queryClient.setQueryData<Room[]>(roomKeys.forProject(projectId), (old) =>
+        replaceListItem(old, ctx?.optimisticId, created),
       );
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: roomKeys.forProject(projectId) }),
@@ -73,18 +74,13 @@ export function useDeleteRoom(projectId: string) {
   return useMutation({
     mutationFn: (id: string) => api.rooms.delete(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: roomKeys.forProject(projectId) });
-      const previous = queryClient.getQueryData<Room[]>(roomKeys.forProject(projectId));
-      queryClient.setQueryData<Room[]>(
-        roomKeys.forProject(projectId),
-        (old) => old?.filter((r) => r.id !== id) ?? [],
-      );
+      const queryKey = roomKeys.forProject(projectId);
+      const previous = await snapshotQueryList<Room>(queryClient, queryKey);
+      queryClient.setQueryData<Room[]>(queryKey, (old) => removeListItem(old, id));
       return { previous };
     },
     onError: (err, _id, ctx) => {
-      if (ctx?.previous !== undefined) {
-        queryClient.setQueryData(roomKeys.forProject(projectId), ctx.previous);
-      }
+      restoreQueryList(queryClient, roomKeys.forProject(projectId), ctx?.previous);
       toast.error(`Delete failed: ${err.message}`);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: roomKeys.forProject(projectId) }),

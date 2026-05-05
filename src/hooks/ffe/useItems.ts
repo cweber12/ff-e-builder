@@ -3,6 +3,14 @@ import { toast } from 'sonner';
 import { api, ApiError } from '../../lib/api';
 import { recordItemCreated } from '../../lib/telemetry';
 import { itemKeys } from '../queryKeys';
+import {
+  appendListItem,
+  removeListItem,
+  replaceListItem,
+  restoreQueryList,
+  snapshotQueryList,
+  updateListItem,
+} from '../optimisticList';
 import type { CreateItemInput, UpdateItemInput } from '../../lib/api';
 import type { Item } from '../../types';
 
@@ -21,8 +29,8 @@ export function useCreateItem(roomId: string) {
   return useMutation({
     mutationFn: (input: CreateItemInput) => api.items.create(roomId, input),
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: itemKeys.forRoom(roomId) });
-      const previous = queryClient.getQueryData<Item[]>(itemKeys.forRoom(roomId));
+      const queryKey = itemKeys.forRoom(roomId);
+      const previous = await snapshotQueryList<Item>(queryClient, queryKey);
       const optimisticItem: Item = {
         id: `optimistic-${crypto.randomUUID()}`,
         roomId,
@@ -48,22 +56,16 @@ export function useCreateItem(roomId: string) {
         updatedAt: new Date().toISOString(),
         materials: [],
       };
-      queryClient.setQueryData<Item[]>(itemKeys.forRoom(roomId), (old) => [
-        ...(old ?? []),
-        optimisticItem,
-      ]);
+      queryClient.setQueryData<Item[]>(queryKey, (old) => appendListItem(old, optimisticItem));
       return { previous, optimisticId: optimisticItem.id };
     },
     onError: (_err, _input, ctx) => {
-      if (ctx?.previous !== undefined) {
-        queryClient.setQueryData(itemKeys.forRoom(roomId), ctx.previous);
-      }
+      restoreQueryList(queryClient, itemKeys.forRoom(roomId), ctx?.previous);
     },
     onSuccess: (created, _input, ctx) => {
       recordItemCreated();
-      queryClient.setQueryData<Item[]>(
-        itemKeys.forRoom(roomId),
-        (old) => old?.map((item) => (item.id === ctx?.optimisticId ? created : item)) ?? [created],
+      queryClient.setQueryData<Item[]>(itemKeys.forRoom(roomId), (old) =>
+        replaceListItem(old, ctx?.optimisticId, created),
       );
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(roomId) }),
@@ -78,35 +80,22 @@ export function useUpdateItem(roomId: string) {
       api.items.update(id, patch),
 
     onMutate: async ({ id, patch }) => {
-      // Cancel any in-flight refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: itemKeys.forRoom(roomId) });
+      const queryKey = itemKeys.forRoom(roomId);
+      const previous = await snapshotQueryList<Item>(queryClient, queryKey);
 
-      // Snapshot the current value for rollback
-      const previous = queryClient.getQueryData<Item[]>(itemKeys.forRoom(roomId));
-
-      // Optimistically apply the update
-      queryClient.setQueryData<Item[]>(
-        itemKeys.forRoom(roomId),
-        (old) =>
-          old?.map((i) =>
-            i.id === id
-              ? {
-                  ...i,
-                  ...patch,
-                  roomId: patch.roomId ?? i.roomId,
-                }
-              : i,
-          ) ?? [],
+      queryClient.setQueryData<Item[]>(queryKey, (old) =>
+        updateListItem(old, id, (item) => ({
+          ...item,
+          ...patch,
+          roomId: patch.roomId ?? item.roomId,
+        })),
       );
 
       return { previous };
     },
 
     onError: (err, _variables, ctx) => {
-      // Roll back to the snapshot
-      if (ctx?.previous !== undefined) {
-        queryClient.setQueryData(itemKeys.forRoom(roomId), ctx.previous);
-      }
+      restoreQueryList(queryClient, itemKeys.forRoom(roomId), ctx?.previous);
 
       if (err instanceof ApiError && err.status === 409) {
         toast.error('This item changed in another tab - reloading');
@@ -125,18 +114,13 @@ export function useDeleteItem(roomId: string) {
   return useMutation({
     mutationFn: (id: string) => api.items.delete(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: itemKeys.forRoom(roomId) });
-      const previous = queryClient.getQueryData<Item[]>(itemKeys.forRoom(roomId));
-      queryClient.setQueryData<Item[]>(
-        itemKeys.forRoom(roomId),
-        (old) => old?.filter((i) => i.id !== id) ?? [],
-      );
+      const queryKey = itemKeys.forRoom(roomId);
+      const previous = await snapshotQueryList<Item>(queryClient, queryKey);
+      queryClient.setQueryData<Item[]>(queryKey, (old) => removeListItem(old, id));
       return { previous };
     },
     onError: (err, _id, ctx) => {
-      if (ctx?.previous !== undefined) {
-        queryClient.setQueryData(itemKeys.forRoom(roomId), ctx.previous);
-      }
+      restoreQueryList(queryClient, itemKeys.forRoom(roomId), ctx?.previous);
       toast.error(`Delete failed: ${err.message}`);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(roomId) }),
@@ -158,33 +142,25 @@ export function useMoveItem() {
       version: number;
     }) => api.items.update(id, { roomId: toRoomId, version }),
     onMutate: async ({ id, fromRoomId, toRoomId }) => {
-      await queryClient.cancelQueries({ queryKey: itemKeys.forRoom(fromRoomId) });
-      await queryClient.cancelQueries({ queryKey: itemKeys.forRoom(toRoomId) });
-      const previousFrom = queryClient.getQueryData<Item[]>(itemKeys.forRoom(fromRoomId));
-      const previousTo = queryClient.getQueryData<Item[]>(itemKeys.forRoom(toRoomId));
+      const fromQueryKey = itemKeys.forRoom(fromRoomId);
+      const toQueryKey = itemKeys.forRoom(toRoomId);
+      const previousFrom = await snapshotQueryList<Item>(queryClient, fromQueryKey);
+      const previousTo = await snapshotQueryList<Item>(queryClient, toQueryKey);
       const itemToMove = previousFrom?.find((item) => item.id === id);
 
-      queryClient.setQueryData<Item[]>(
-        itemKeys.forRoom(fromRoomId),
-        (old) => old?.filter((item) => item.id !== id) ?? [],
-      );
+      queryClient.setQueryData<Item[]>(fromQueryKey, (old) => removeListItem(old, id));
 
       if (itemToMove) {
-        queryClient.setQueryData<Item[]>(itemKeys.forRoom(toRoomId), (old) => [
-          ...(old ?? []),
-          { ...itemToMove, roomId: toRoomId },
-        ]);
+        queryClient.setQueryData<Item[]>(toQueryKey, (old) =>
+          appendListItem(old, { ...itemToMove, roomId: toRoomId }),
+        );
       }
 
       return { previousFrom, previousTo };
     },
     onError: (_err, variables, ctx) => {
-      if (ctx?.previousFrom !== undefined) {
-        queryClient.setQueryData(itemKeys.forRoom(variables.fromRoomId), ctx.previousFrom);
-      }
-      if (ctx?.previousTo !== undefined) {
-        queryClient.setQueryData(itemKeys.forRoom(variables.toRoomId), ctx.previousTo);
-      }
+      restoreQueryList(queryClient, itemKeys.forRoom(variables.fromRoomId), ctx?.previousFrom);
+      restoreQueryList(queryClient, itemKeys.forRoom(variables.toRoomId), ctx?.previousTo);
     },
     onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(variables.fromRoomId) });

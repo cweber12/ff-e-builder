@@ -79,7 +79,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 ├── src/               # React + Vite front-end (TypeScript)
 │   ├── components/    # Domain-aware UI components (ItemsTable, CatalogView, …)
 │   │   └── primitives/  # Generic design-system atoms (Button, Modal, Drawer, …)
-│   ├── hooks/         # Custom React hooks and shared query keys with barrel export (index.ts)
+│   ├── hooks/         # Custom React hooks, query keys, and optimistic cache helpers with barrel export (index.ts)
 │   ├── lib/           # Client-side utilities (API client modules/tests, calc, export/import modules, …)
 │   ├── types/         # Shared TypeScript types with barrel export (index.ts)
 │   ├── data/          # Static fixture data (demo seed)

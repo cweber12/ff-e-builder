@@ -91,6 +91,7 @@ Legacy project routes such as `/projects/:id/table` redirect to their FF&E equiv
 - Proposal categories start empty for new projects and are created explicitly by users or imports.
 - Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.
 - React Query cache keys are centralized in `src/hooks/queryKeys.ts`; hook modules re-export their domain keys for compatibility while sharing the canonical definitions.
+- Optimistic list mutation helpers live in `src/hooks/optimisticList.ts` so FF&E room/item hooks share snapshot, rollback, and list transform behavior.
 
 ## 5. Data Flow
 
