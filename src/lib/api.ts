@@ -1,4 +1,5 @@
 import { getCurrentIdToken } from './auth';
+import { compressImage } from './compress-image';
 import type {
   CropParams,
   ImageAsset,
@@ -723,19 +724,20 @@ export const api = {
       );
     },
 
-    upload: ({
+    upload: async ({
       entityType,
       entityId,
       file,
       altText = '',
     }: UploadImageInput): Promise<ImageAsset> => {
+      const compressed = await compressImage(file);
       const params = new URLSearchParams({
         entity_type: entityType,
         entity_id: entityId,
         alt_text: altText,
       });
       const body = new FormData();
-      body.append('file', file);
+      body.append('file', compressed);
 
       return apiFetch<{ image: RawImageAsset }>(`/api/v1/images?${params}`, {
         method: 'POST',
