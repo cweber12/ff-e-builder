@@ -34,6 +34,10 @@ _Avoid_: Budget type, pricing mode
 The read-only Project identity and tool navigation area shown inside an open Project. Budget status belongs in Summary views, not in the Project Header.
 _Avoid_: Budget header, project editor
 
+**Project Snapshot**:
+The read-first landing page for an open Project that summarizes FF&E, Proposal, Finish Library, Budget, and attention-needed signals before the user drills into a specific tool.
+_Avoid_: Dashboard, summary tab, tool chooser
+
 **Project Options**:
 The explicit action menu for maintaining a Project after creation, including updating Project data, managing Project Images, and deleting the Project.
 _Avoid_: Inline project editing, hidden project settings
@@ -137,6 +141,7 @@ _Avoid_: Raw upload, template-only import
 - A **Proposal Item** can reference multiple **Materials** from the **Finish Library**.
 - Editing a **Finish Library** entry from an item context uses copy-on-write semantics: if the entry is shared across multiple items, a new entry is forked; if it is used exclusively by one item, the entry is updated in place.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
+- A **Project Snapshot** is the default open-project view and links users into FF&E, Proposal, Finish Library, and Budget detail pages.
 - A **Project Header** shows only included **Project** identity values and navigation between project tools.
 - **Project Options** are available from both Project Cards and the **Project Header** so Project data can be updated without making header fields inline-editable.
 - A **Proposal Spreadsheet Import** can create missing **Proposal Categories** from detected category headings or mapped category values.
