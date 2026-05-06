@@ -115,6 +115,7 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
             <ExportMenu
               label="Export"
               size="sm"
+              disabled={categoriesWithItems.every((c) => c.items.length === 0)}
               onCsv={() => exportProposalCsv(project, categoriesWithItems)}
               onExcel={() => void exportProposalExcel(project, categoriesWithItems, userProfile)}
               onPdf={() => void exportProposalPdf(project, categoriesWithItems, userProfile)}

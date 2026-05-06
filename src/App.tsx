@@ -301,6 +301,7 @@ function FfeTabActions({
   roomsWithItems: RoomWithItems[];
 }) {
   const isCatalog = activePath.includes('/ffe/catalog');
+  const hasItems = roomsWithItems.some((r) => r.items.length > 0);
   return (
     <div className="flex items-center gap-2">
       <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
@@ -321,12 +322,14 @@ function FfeTabActions({
         <ExportMenu
           label="Export"
           size="sm"
+          disabled={!hasItems}
           onPdf={() => exportCatalogPdf(project, roomsWithItems)}
         />
       ) : (
         <ExportMenu
           label="Export"
           size="sm"
+          disabled={!hasItems}
           onCsv={() => exportTableCsv(project, roomsWithItems)}
           onExcel={() => void exportTableExcel(project, roomsWithItems)}
           onPdf={() => void exportTablePdf(project, roomsWithItems)}
