@@ -52,45 +52,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         <p
           class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
         >
-          Materials
-        </p>
-        <div
-          class="flex flex-wrap gap-4"
-        >
-          <div
-            class="flex flex-col items-center gap-1"
-          >
-            <div
-              class="grid gap-1"
-            >
-              <div
-                class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-20 w-20 rounded-full shrink-0 border-gray-200 shadow-none "
-              >
-                <div
-                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
-                >
-                  <span
-                    aria-hidden="true"
-                    class="h-full w-full rounded-full"
-                    style="background-color: rgb(232, 226, 214);"
-                  />
-                </div>
-              </div>
-            </div>
-            <span
-              class="max-w-[80px] text-center text-[10px] font-medium leading-tight text-gray-600"
-            >
-              Ivory boucle
-            </span>
-          </div>
-        </div>
-      </div>
-      <div
-        class="grid gap-2"
-      >
-        <p
-          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
-        >
           Options
         </p>
         <div
@@ -130,6 +91,45 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           </div>
         </div>
       </div>
+      <div
+        class="grid gap-2"
+      >
+        <p
+          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
+        >
+          Materials
+        </p>
+        <div
+          class="flex flex-wrap gap-4"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <div
+              class="grid gap-1"
+            >
+              <div
+                class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-20 w-20 rounded-full shrink-0 border-gray-200 shadow-none "
+              >
+                <div
+                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="h-full w-full rounded-full"
+                    style="background-color: rgb(232, 226, 214);"
+                  />
+                </div>
+              </div>
+            </div>
+            <span
+              class="max-w-[80px] text-center text-[10px] font-medium leading-tight text-gray-600"
+            >
+              Ivory boucle
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
     <div
       class="catalog-details"
@@ -144,45 +144,45 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           class="mt-3 flex items-baseline gap-2"
         >
           <span
-            class="shrink-0 font-mono text-sm font-medium text-gray-400"
+            class="shrink-0 font-mono text-xl font-bold tracking-wide text-gray-900"
           >
             LR-CH-01
           </span>
-          <span
+          <div
             aria-label="Item name for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors min-w-0 flex-1"
+            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 min-w-0 flex-1"
             role="button"
             tabindex="0"
           >
             <h1
-              class="text-[28px] font-semibold leading-tight text-gray-950"
+              class="text-xl font-medium leading-tight text-gray-700"
             >
               Channel Lounge Chair
             </h1>
-          </span>
+          </div>
         </div>
         <div
-          class="mt-4"
+          class="mt-2"
         >
-          <span
-            aria-label="Category for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+          <div
+            aria-label="Dimensions for Channel Lounge Chair"
+            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50"
             role="button"
             tabindex="0"
           >
             <span
-              class="inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700"
+              class="text-sm text-gray-600"
             >
-              Seating
+              32"W x 34"D x 30"H
             </span>
-          </span>
+          </div>
         </div>
         <div
           class="mt-4"
         >
-          <span
+          <div
             aria-label="Description for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors block"
+            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 block"
             role="button"
             tabindex="0"
           >
@@ -191,46 +191,12 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             >
               Sculpted lounge chair with a channeled seat and relaxed residential scale.
             </p>
-          </span>
+          </div>
         </div>
       </div>
       <div
         class="h-px bg-brand-500/40"
       />
-      <dl
-        class="catalog-data-grid"
-      >
-        <div>
-          <dt>
-            Dimensions
-          </dt>
-          <dd>
-            <span
-              aria-label="Dimensions for Channel Lounge Chair"
-              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
-              role="button"
-              tabindex="0"
-            >
-              32"W x 34"D x 30"H
-            </span>
-          </dd>
-        </div>
-        <div>
-          <dt>
-            Lead Time
-          </dt>
-          <dd>
-            <span
-              aria-label="Lead time for Channel Lounge Chair"
-              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
-              role="button"
-              tabindex="0"
-            >
-              10 weeks
-            </span>
-          </dd>
-        </div>
-      </dl>
       <div
         class="catalog-price-block"
       >
@@ -243,18 +209,22 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           </strong>
         </div>
       </div>
-      <span
-        aria-label="Notes for Channel Lounge Chair"
-        class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors block"
-        role="button"
-        tabindex="0"
+      <div
+        class="flex-1 min-h-0"
       >
-        <p
-          class="catalog-notes"
+        <div
+          aria-label="Notes for Channel Lounge Chair"
+          class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 block h-full w-full"
+          role="button"
+          tabindex="0"
         >
-          Use performance fabric and confirm COM yardage before order.
-        </p>
-      </span>
+          <p
+            class="catalog-notes h-full overflow-y-auto whitespace-pre-wrap"
+          >
+            Use performance fabric and confirm COM yardage before order.
+          </p>
+        </div>
+      </div>
       <section
         class="catalog-approval"
       >
@@ -313,9 +283,9 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
     <span>
       ocean-house
     </span>
-    <span
+    <div
       aria-label="Item ID for Channel Lounge Chair"
-      class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors justify-self-end"
+      class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 justify-self-end"
       role="button"
       tabindex="0"
     >
@@ -324,7 +294,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       >
         LR-CH-01
       </span>
-    </span>
+    </div>
   </footer>
 </article>
 `;

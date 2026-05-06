@@ -6,6 +6,7 @@ import {
   exportProposalCsv,
   exportMaterialsExcel,
 } from './export';
+import { buildCatalogPdfPageModel } from './export/catalogPdf';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,
@@ -352,5 +353,50 @@ describe('exportMaterialsExcel', () => {
     expect(capturedBlobContent).toContain('Material ID');
     expect(capturedBlobContent).toContain('Walnut');
     expect(capturedBlobContent).toContain('MAT-001');
+  });
+});
+
+describe('catalog PDF page model', () => {
+  it('omits blank strings, empty options, and zero cost values', () => {
+    const model = buildCatalogPdfPageModel(
+      makeItem({
+        itemIdTag: '   ',
+        dimensions: '',
+        description: '  ',
+        notes: '\n',
+        unitCostCents: 0,
+      }),
+      [{ dataUrl: null }, { dataUrl: '   ' }],
+    );
+
+    expect(model.itemIdTag).toBeNull();
+    expect(model.dimensions).toBeNull();
+    expect(model.description).toBeNull();
+    expect(model.notes).toBeNull();
+    expect(model.unitCostCents).toBeNull();
+    expect(model.optionCount).toBe(0);
+  });
+
+  it('preserves populated catalog values that should render in the PDF', () => {
+    const material = makeMaterial({ name: 'Ivory boucle' });
+    const model = buildCatalogPdfPageModel(
+      makeItem({
+        itemIdTag: 'LR-CH-01',
+        dimensions: '32"W x 34"D x 30"H',
+        description: 'Sculpted lounge chair',
+        notes: 'Confirm COM yardage.',
+        unitCostCents: 245000,
+        materials: [material],
+      }),
+      [{ dataUrl: 'data:image/png;base64,option-1' }, { dataUrl: null }],
+    );
+
+    expect(model.itemIdTag).toBe('LR-CH-01');
+    expect(model.dimensions).toBe('32"W x 34"D x 30"H');
+    expect(model.description).toBe('Sculpted lounge chair');
+    expect(model.notes).toBe('Confirm COM yardage.');
+    expect(model.unitCostCents).toBe(245000);
+    expect(model.optionCount).toBe(1);
+    expect(model.materials).toEqual([material]);
   });
 });
