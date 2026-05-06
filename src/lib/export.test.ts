@@ -6,7 +6,7 @@ import {
   exportProposalCsv,
   exportMaterialsExcel,
 } from './export';
-import { buildCatalogPdfPageModel } from './export/catalogPdf';
+import { buildCatalogPdfPageModel, pickCatalogPdfOptionLayout } from './export/catalogPdf';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,
@@ -398,5 +398,13 @@ describe('catalog PDF page model', () => {
     expect(model.unitCostCents).toBe(245000);
     expect(model.optionCount).toBe(1);
     expect(model.materials).toEqual([material]);
+  });
+
+  it('stacks two option images when there is enough vertical space', () => {
+    expect(pickCatalogPdfOptionLayout(2, [], 90)).toBe('stacked');
+  });
+
+  it('falls back to a two-up row when stacked options would crowd remaining content', () => {
+    expect(pickCatalogPdfOptionLayout(2, [makeMaterial()], 60)).toBe('row');
   });
 });

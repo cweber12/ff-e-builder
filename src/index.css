@@ -130,6 +130,7 @@
     display: grid;
     grid-template-columns: 55% 1fr;
     gap: 36px;
+    min-height: 0;
     padding: 48px 0 32px;
   }
 
@@ -231,17 +232,48 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .catalog-left-support {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .catalog-option-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .catalog-option-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex: 1 1 auto;
     gap: 12px;
+    min-height: 0;
+  }
+
+  .catalog-option-grid-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .catalog-option-grid-stacked {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
   }
 
   .catalog-option-card {
     position: relative;
-    min-height: 118px;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
     border: 1px solid theme('colors.gray.200');
     background: theme('colors.brand.50');
@@ -274,7 +306,7 @@
   .catalog-option-empty {
     display: flex;
     height: 100%;
-    min-height: 118px;
+    min-height: 0;
     align-items: center;
     justify-content: center;
     color: theme('colors.gray.400');
@@ -335,6 +367,52 @@
 
   .catalog-price-block .sell-price strong {
     font-size: 24px;
+  }
+
+  .catalog-materials-block {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .catalog-materials-grid {
+    --catalog-material-swatch-size: 80px;
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 12px;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: 6px;
+  }
+
+  .catalog-material-card {
+    display: flex;
+    width: var(--catalog-material-swatch-size);
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .catalog-materials-block
+    .relative.overflow-hidden.rounded-md.border.border-gray-200.bg-surface-muted.shadow-sm {
+    width: var(--catalog-material-swatch-size);
+    height: var(--catalog-material-swatch-size);
+  }
+
+  .catalog-materials-block-compact .catalog-materials-grid {
+    gap: 8px;
+  }
+
+  .catalog-materials-block-compact .catalog-material-card span {
+    max-width: calc(var(--catalog-material-swatch-size) + 8px);
+    font-size: 9px;
   }
 
   .catalog-notes {

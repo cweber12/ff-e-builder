@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- fix(exports): rebuild the FF&E catalog PDF to mirror the committed catalog page layout more closely and omit blank or zero-value fields from export pages
+- fix(exports): rebuild the FF&E catalog PDF to mirror the committed catalog page layout more closely, prefer stacked full-width option images when space allows, and omit blank or zero-value fields from export pages
 
 - refactor(hooks): extend `useUploadImage` to accept optional entity params at mutation time; route `MaterialsView` and `MaterialLibraryModal` swatch uploads through the hook so `imageKeys` no longer leaks onto the public hooks barrel
 

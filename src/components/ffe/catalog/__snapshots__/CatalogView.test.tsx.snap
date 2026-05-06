@@ -47,86 +47,90 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         </div>
       </div>
       <div
-        class="grid gap-2"
+        class="catalog-left-support"
       >
-        <p
-          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
-        >
-          Options
-        </p>
         <div
-          class="catalog-option-grid"
+          class="catalog-option-section"
         >
-          <div
-            class="catalog-option-card"
+          <p
+            class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
           >
-            <button
-              class="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
-              type="button"
-            >
-              Option 
-              1
-            </button>
-            <input
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              class="sr-only"
-              type="file"
-            />
-          </div>
+            Options
+          </p>
           <div
-            class="catalog-option-card"
-          >
-            <button
-              class="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
-              type="button"
-            >
-              Option 
-              2
-            </button>
-            <input
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              class="sr-only"
-              type="file"
-            />
-          </div>
-        </div>
-      </div>
-      <div
-        class="grid gap-2"
-      >
-        <p
-          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
-        >
-          Materials
-        </p>
-        <div
-          class="flex flex-wrap gap-4"
-        >
-          <div
-            class="flex flex-col items-center gap-1"
+            class="catalog-option-grid catalog-option-grid-stacked"
           >
             <div
-              class="grid gap-1"
+              class="catalog-option-card"
+            >
+              <button
+                class="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
+                type="button"
+              >
+                Option 
+                1
+              </button>
+              <input
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                class="sr-only"
+                type="file"
+              />
+            </div>
+            <div
+              class="catalog-option-card"
+            >
+              <button
+                class="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
+                type="button"
+              >
+                Option 
+                2
+              </button>
+              <input
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                class="sr-only"
+                type="file"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="catalog-materials-block "
+        >
+          <p
+            class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
+          >
+            Materials
+          </p>
+          <div
+            class="catalog-materials-grid"
+          >
+            <div
+              class="catalog-material-card"
             >
               <div
-                class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-20 w-20 rounded-full shrink-0 border-gray-200 shadow-none "
+                class="grid gap-1"
               >
                 <div
-                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
+                  class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-20 w-20 rounded-full shrink-0 border-gray-200 shadow-none "
                 >
-                  <span
-                    aria-hidden="true"
-                    class="h-full w-full rounded-full"
-                    style="background-color: rgb(232, 226, 214);"
-                  />
+                  <div
+                    class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
+                  >
+                    <span
+                      aria-hidden="true"
+                      class="h-full w-full rounded-full"
+                      style="background-color: rgb(232, 226, 214);"
+                    />
+                  </div>
                 </div>
               </div>
+              <span
+                class="max-w-[80px] text-center text-[10px] font-medium leading-tight text-gray-600"
+              >
+                Ivory boucle
+              </span>
             </div>
-            <span
-              class="max-w-[80px] text-center text-[10px] font-medium leading-tight text-gray-600"
-            >
-              Ivory boucle
-            </span>
           </div>
         </div>
       </div>

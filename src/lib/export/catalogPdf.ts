@@ -15,7 +15,8 @@ const BODY_BOTTOM_GAP = 4;
 const COLUMN_GAP = 9;
 const LEFT_COLUMN_W = 96;
 const OPTION_GAP = 3.5;
-const OPTION_CARD_H = 28;
+const OPTION_CARD_ROW_H = 28;
+const OPTION_CARD_STACKED_H = 28;
 const MAIN_IMAGE_H = 76;
 const MATERIAL_SWATCH_SIZE = 14;
 const MATERIALS_PER_ROW = 4;
@@ -57,6 +58,8 @@ export type CatalogPdfPageModel = {
   materials: Material[];
 };
 
+type CatalogPdfOptionLayout = 'stacked' | 'row';
+
 function sortedEntries(rooms: RoomWithItems[]): CatalogItemEntry[] {
   return [...rooms]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
@@ -92,6 +95,79 @@ export function buildCatalogPdfPageModel(
         compactText(material.swatchHex) !== null,
     ),
   };
+}
+
+function optionLabelHeight() {
+  return 4;
+}
+
+function containedImageArea(
+  wrapperWidth: number,
+  wrapperHeight: number,
+  aspectRatio: number | null | undefined,
+) {
+  if (!aspectRatio || wrapperWidth <= 0 || wrapperHeight <= 0) return 0;
+  const imageWidthFromHeight = wrapperHeight * aspectRatio;
+  if (imageWidthFromHeight <= wrapperWidth) {
+    return imageWidthFromHeight * wrapperHeight;
+  }
+  const imageHeightFromWidth = wrapperWidth / aspectRatio;
+  return wrapperWidth * imageHeightFromWidth;
+}
+
+function optionAspectRatios(options: CatalogOptionAsset[]) {
+  return options.map((option) => {
+    if (!option.dataUrl) return null;
+    const imageProperties = new jsPDF().getImageProperties(option.dataUrl);
+    return imageProperties.height > 0 ? imageProperties.width / imageProperties.height : null;
+  });
+}
+
+function optionCardsHeight(optionCount: number, layout: CatalogPdfOptionLayout) {
+  if (optionCount <= 0) return 0;
+  if (layout === 'stacked') {
+    return (
+      optionLabelHeight() + optionCount * OPTION_CARD_STACKED_H + (optionCount - 1) * OPTION_GAP
+    );
+  }
+  return optionLabelHeight() + OPTION_CARD_ROW_H;
+}
+
+function materialsBlockHeight(materials: Material[]) {
+  if (materials.length === 0) return 0;
+  const visibleMaterials = materials.slice(0, MAX_MATERIALS);
+  return 5 + Math.ceil(visibleMaterials.length / MATERIALS_PER_ROW) * 19 + 4;
+}
+
+export function pickCatalogPdfOptionLayout(
+  optionCount: number,
+  materials: Material[],
+  availableHeight: number,
+  aspectRatios: Array<number | null> = [],
+) {
+  if (optionCount <= 1) return 'stacked';
+  const stackedHeight = optionCardsHeight(optionCount, 'stacked');
+  const totalHeightWithMaterials =
+    stackedHeight + (materials.length > 0 ? OPTION_GAP + materialsBlockHeight(materials) : 0);
+  const fitsStacked = totalHeightWithMaterials <= availableHeight;
+  const stackedWrapperHeight = Math.max(
+    1,
+    (OPTION_CARD_STACKED_H * optionCount + OPTION_GAP * (optionCount - 1)) / optionCount,
+  );
+  let stackedScore = 0;
+  for (const ratio of aspectRatios.slice(0, optionCount)) {
+    stackedScore += containedImageArea(LEFT_COLUMN_W, stackedWrapperHeight, ratio);
+  }
+  let rowScore = 0;
+  for (const ratio of aspectRatios.slice(0, optionCount)) {
+    rowScore += containedImageArea(
+      (LEFT_COLUMN_W - OPTION_GAP * (optionCount - 1)) / optionCount,
+      OPTION_CARD_ROW_H,
+      ratio,
+    );
+  }
+  if (rowScore > stackedScore * 1.08) return 'row';
+  return fitsStacked ? 'stacked' : 'row';
 }
 
 async function fallbackUrlToPngDataUrl(url: string | null): Promise<string | null> {
@@ -274,28 +350,45 @@ function drawOptionCards(
   x: number,
   y: number,
   width: number,
+  layout: CatalogPdfOptionLayout,
 ) {
   const visibleOptions = options.filter((option) => option.dataUrl).slice(0, MAX_OPTION_IMAGES);
   if (visibleOptions.length === 0) return y;
 
   drawSectionLabel(doc, 'Options', x, y);
   const cardsY = y + 4;
-  const cardWidth =
-    visibleOptions.length === 1
-      ? width
-      : (width - OPTION_GAP * (visibleOptions.length - 1)) / visibleOptions.length;
+
+  if (layout === 'stacked' || visibleOptions.length === 1) {
+    visibleOptions.forEach((option, index) => {
+      const cardY = cardsY + index * (OPTION_CARD_STACKED_H + OPTION_GAP);
+      doc.setFillColor(IMAGE_BG[0], IMAGE_BG[1], IMAGE_BG[2]);
+      doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+      doc.rect(x, cardY, width, OPTION_CARD_STACKED_H, 'FD');
+      if (option.dataUrl)
+        addContainedImage(doc, option.dataUrl, x, cardY, width, OPTION_CARD_STACKED_H, 2);
+      drawOptionSelectionMark(doc, x + width - 4, cardY + 4, option.isPrimary);
+    });
+
+    return (
+      cardsY +
+      visibleOptions.length * OPTION_CARD_STACKED_H +
+      (visibleOptions.length - 1) * OPTION_GAP
+    );
+  }
+
+  const cardWidth = (width - OPTION_GAP * (visibleOptions.length - 1)) / visibleOptions.length;
 
   visibleOptions.forEach((option, index) => {
     const cardX = x + index * (cardWidth + OPTION_GAP);
     doc.setFillColor(IMAGE_BG[0], IMAGE_BG[1], IMAGE_BG[2]);
     doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-    doc.rect(cardX, cardsY, cardWidth, OPTION_CARD_H, 'FD');
+    doc.rect(cardX, cardsY, cardWidth, OPTION_CARD_ROW_H, 'FD');
     if (option.dataUrl)
-      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_H, 2);
+      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_ROW_H, 2);
     drawOptionSelectionMark(doc, cardX + cardWidth - 4, cardsY + 4, option.isPrimary);
   });
 
-  return cardsY + OPTION_CARD_H;
+  return cardsY + OPTION_CARD_ROW_H;
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -461,6 +554,14 @@ function drawCatalogPage(
   const leftWidth = LEFT_COLUMN_W;
   const model = buildCatalogPdfPageModel(entry.item, assets.options);
   const clientName = compactText(project.clientName);
+  const leftAvailableHeight = footerRuleY - BODY_BOTTOM_GAP - (BODY_TOP_Y + MAIN_IMAGE_H + 7);
+  const aspectRatios = optionAspectRatios(assets.options.filter((option) => option.dataUrl));
+  const optionLayout = pickCatalogPdfOptionLayout(
+    model.optionCount,
+    model.materials,
+    leftAvailableHeight,
+    aspectRatios,
+  );
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
@@ -482,7 +583,7 @@ function drawCatalogPage(
     drawImagePlaceholder(doc, initials(entry.item.itemName), leftX, leftY, leftWidth, MAIN_IMAGE_H);
   }
   leftY += MAIN_IMAGE_H + 7;
-  leftY = drawOptionCards(doc, assets.options, leftX, leftY, leftWidth);
+  leftY = drawOptionCards(doc, assets.options, leftX, leftY, leftWidth, optionLayout);
   if (model.optionCount > 0) leftY += 7;
   drawMaterials(doc, model.materials, leftX, leftY, leftWidth);
 
