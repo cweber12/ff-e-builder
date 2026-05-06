@@ -25,7 +25,7 @@ export function CropModal({
 }: CropModalProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [pendingParams, setPendingParams] = useState<CropParams | null>(null);
+  const [pendingParams, setPendingParams] = useState<CropParams | null>(initialCrop ?? null);
 
   const initialCroppedAreaPercentages = initialCrop
     ? {

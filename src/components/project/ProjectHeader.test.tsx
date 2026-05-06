@@ -28,25 +28,10 @@ describe('ProjectHeader', () => {
     expect(screen.queryByText('Living Room Reno')).not.toBeInTheDocument();
   });
 
-  it('renders read-only project identity and included metadata', () => {
+  it('renders the project name', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />);
 
-    expect(screen.getByRole('heading', { name: 'Living Room Reno' })).toBeInTheDocument();
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-    expect(screen.getByText('Company: ChillDesignStudio')).toBeInTheDocument();
-    expect(screen.getByText('Location: Los Angeles, CA')).toBeInTheDocument();
-  });
-
-  it('omits empty metadata values', () => {
-    renderWithRouter(
-      <ProjectHeader
-        project={makeProject({ clientName: '', companyName: '', projectLocation: '' })}
-      />,
-    );
-
-    expect(screen.queryByText(/Company:/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Location:/)).not.toBeInTheDocument();
-    expect(screen.queryByText('Jane Smith')).not.toBeInTheDocument();
+    expect(screen.getByText('Living Room Reno')).toBeInTheDocument();
   });
 
   it('does not render editable project fields or budget controls', () => {

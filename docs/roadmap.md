@@ -12,11 +12,6 @@ Feature backlog for FF&E Builder. Items are roughly ordered by priority within e
 - Use a web crawler to fetch the product image and description.
 - Display the product image and description in the item console.
 
-### Add item — quantity
-
-- Arrow buttons to increment/decrement quantity.
-- Quantity must not go below 1.
-
 ---
 
 ## Planned

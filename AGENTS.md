@@ -10,7 +10,7 @@
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
-- **Never commit automatically.** After every change, output a commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_.
+- **Never commit automatically.** After every change, run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` and confirm all four pass before outputting a commit message. Output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
@@ -90,9 +90,13 @@ Every feature is done when **all** of the following are true:
 - [ ] **Types updated** — TypeScript interfaces/types reflect the change
 - [ ] **Tests added/updated** — unit or integration tests cover the new behavior
 - [ ] **Docs updated** — `/README.md`, `/docs/`, and any sub-folder README touched if relevant
-- [ ] **Lint passes** — `pnpm lint` exits 0
-- [ ] **Build passes** — `pnpm build` exits 0
+- [ ] **`pnpm typecheck` passes** — no TypeScript errors
+- [ ] **`pnpm lint` passes** — exits 0
+- [ ] **`pnpm test` passes** — all tests green
+- [ ] **`pnpm build` passes** — exits 0
 - [ ] **Commit message drafted** — conventional-commits format with a body explaining the _why_
+
+> Run all four checks in sequence: `pnpm typecheck && pnpm lint && pnpm test && pnpm build`. Only draft the commit message after all four pass.
 
 ---
 

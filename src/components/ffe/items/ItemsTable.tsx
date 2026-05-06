@@ -75,6 +75,7 @@ import {
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
 import { ExportMenu } from '../../shared/ExportMenu';
+import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
@@ -506,7 +507,7 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         alt={row.original.itemName}
         fallbackUrl={row.original.imageUrl}
         onFallbackDelete={() => saveValidatedPatch(onSave, row.original, { imageUrl: null })}
-        className="h-12 w-12"
+        className="h-12 aspect-[117/75]"
         compact
       />
     ),
@@ -876,7 +877,13 @@ function DeleteRoomModal({
   );
 }
 
-function SortableItemRow({ row }: { row: Row<Item> }) {
+function SortableItemRow({
+  row,
+  onItemClick,
+}: {
+  row: Row<Item>;
+  onItemClick?: (item: Item) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.original.id,
   });
@@ -903,12 +910,39 @@ function SortableItemRow({ row }: { row: Row<Item> }) {
             >
               <GripIcon />
             </button>
+          ) : cell.column.id === 'actions' ? (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                aria-label={`View details for ${row.original.itemName}`}
+                title="View details"
+                onClick={() => onItemClick?.(row.original)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                <EyeIcon />
+              </button>
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </div>
           ) : (
             flexRender(cell.column.columnDef.cell, cell.getContext())
           )}
         </td>
       ))}
     </tr>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
   );
 }
 
@@ -941,7 +975,7 @@ function MobileItemCards({
                 alt={item.itemName}
                 fallbackUrl={item.imageUrl}
                 onFallbackDelete={() => saveValidatedPatch(onSave, item, { imageUrl: null })}
-                className="h-14 w-14 shrink-0"
+                className="h-14 aspect-[117/75] shrink-0"
                 compact
               />
               <div className="min-w-0">
@@ -1179,6 +1213,7 @@ function RoomItemsSection({
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
+  const [detailItem, setDetailItem] = useState<Item | null>(null);
   const isMobile = useIsMobileViewport();
   const sortedItems = useMemo(
     () =>
@@ -1473,7 +1508,11 @@ function RoomItemsSection({
                       strategy={verticalListSortingStrategy}
                     >
                       {table.getRowModel().rows.map((row) => (
-                        <SortableItemRow key={row.original.id} row={row} />
+                        <SortableItemRow
+                          key={row.original.id}
+                          row={row}
+                          onItemClick={(item) => setDetailItem(item)}
+                        />
                       ))}
                     </SortableContext>
                   )}
@@ -1556,7 +1595,11 @@ function RoomItemsSection({
                           strategy={verticalListSortingStrategy}
                         >
                           {table.getRowModel().rows.map((row) => (
-                            <SortableItemRow key={row.original.id} row={row} />
+                            <SortableItemRow
+                              key={row.original.id}
+                              row={row}
+                              onItemClick={(item) => setDetailItem(item)}
+                            />
                           ))}
                         </SortableContext>
                       )}
@@ -1567,6 +1610,14 @@ function RoomItemsSection({
             </div>
           </div>
         </div>
+      )}
+
+      {detailItem && (
+        <FfeItemDetailPanel
+          item={detailItem}
+          roomName={room.name}
+          onClose={() => setDetailItem(null)}
+        />
       )}
     </GroupedTableSection>
   );

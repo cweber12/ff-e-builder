@@ -35,7 +35,7 @@ C4Context
 
   Rel(designer, app, "Uses", "HTTPS")
   Rel(app, firebase, "Authenticates via", "Firebase SDK / REST")
-  Rel(app, cf, "API calls to Workers", "HTTPS /api/*")
+  Rel(app, cf, "API calls to Workers", "HTTPS /api/v1/*")
   Rel(cf, neon, "Queries via", "Neon serverless driver")
   Rel(cf, r2, "Stores private images", "R2 binding")
 ```

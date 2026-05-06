@@ -51,7 +51,7 @@ missing from Firebase Authorized domains.
 
 ### Catalog print checks
 
-The catalog route is `/projects/:id/catalog`. It uses regular browser printing,
+The catalog route is `/projects/:id/ffe/catalog`. It uses regular browser printing,
 not a print library. Validate the print path before a release:
 
 1. Open the catalog in Chrome.
@@ -81,8 +81,7 @@ not a print library. Validate the print path before a release:
    ```
 5. Deploy the Worker:
    ```bash
-   cd api
-   wrangler deploy
+   pnpm --filter ffe-api deploy
    ```
 6. Push to `main`; GitHub Actions deploys the frontend to Pages.
 
@@ -102,15 +101,14 @@ Smoke checklist:
 ### API Worker (Cloudflare)
 
 ```bash
-cd api
-pnpm deploy          # runs: wrangler deploy
+pnpm --filter ffe-api deploy
 ```
 
 Prerequisites before first deploy:
 
 1. Worker secrets must be set (see **Set Worker secrets** below).
 2. Run the initial DB migration against the production Neon branch (see **Run a migration**).
-3. The Cloudflare account must have the Worker created (`wrangler deploy` creates it on first run).
+3. The Cloudflare account must have the Worker created (the deploy script creates it on first run).
 
 ---
 
@@ -180,9 +178,11 @@ wrangler secret list
 ### Locally
 
 ```bash
-# Load your Neon connection string (never commit .env.local)
-source .env.local   # or: dotenv -e .env.local -- pnpm migrate
-
+# Set NEON_DATABASE_URL in your shell (do not commit secrets)
+# PowerShell:
+#   $env:NEON_DATABASE_URL="postgres://..."
+# Bash:
+#   export NEON_DATABASE_URL="postgres://..."
 pnpm migrate
 # Applies any .sql files in /db/migrations/ not yet in the _migrations table.
 ```
@@ -190,7 +190,7 @@ pnpm migrate
 ### In CI / on deploy
 
 1. Set `NEON_DATABASE_URL` as a GitHub Actions secret.
-2. Add a migration step to the deploy workflow **before** `wrangler deploy`:
+2. Add a migration step to the deploy workflow before the API deploy step:
 
 ```yaml
 - name: Run DB migrations
@@ -219,28 +219,5 @@ pnpm migrate
    wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
    ```
 5. Delete the old key in the Firebase console.
-6. Redeploy (`pnpm deploy`) so the Worker picks up the new secrets.
+6. Redeploy (`pnpm --filter ffe-api deploy`) so the Worker picks up the new secrets.
 7. **Delete the downloaded JSON file** — never commit it.
-
----
-
-## Run a DB migration
-
-```bash
-pnpm db:generate   # generate SQL from schema changes (Drizzle Kit)
-pnpm db:migrate    # apply pending migrations against NEON_DATABASE_URL
-```
-
-- `NEON_DATABASE_URL` must be set in your local `.env.local` (for dev) or in the
-  Worker environment (for production).
-- Migrations are applied once; they are not idempotent unless written that way.
-- Always review generated SQL in `/db/migrations/` before running against production.
-- Never apply migrations from the client (React/Vite) side.
-
----
-
-## Check migration status
-
-```bash
-pnpm db:studio     # opens Drizzle Studio at http://localhost:4983
-```

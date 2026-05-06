@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { Button } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
+import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ImageFrame } from '../../shared/ImageFrame';
 import {
   useCreateProposalCategory,
@@ -64,6 +65,8 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
   const updateItem = useUpdateProposalItem();
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [selectedItem, setSelectedItem] = useState<ProposalItem | null>(null);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>(undefined);
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
 
   const toggleCollapsed = (id: string) => {
@@ -153,6 +156,10 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           }
           onCategoryDelete={() => deleteCategory.mutate(category.id)}
           onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch })}
+          onItemClick={(item) => {
+            setSelectedItem(item);
+            setSelectedCategoryName(category.name);
+          }}
         />
       ))}
 
@@ -166,6 +173,14 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           await createCategory.mutateAsync({ name, sortOrder: categoriesWithItems.length });
         }}
       />
+
+      {selectedItem && (
+        <ProposalItemDetailPanel
+          item={selectedItem}
+          categoryName={selectedCategoryName}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
     </TableViewStack>
   );
 }
@@ -269,7 +284,7 @@ function CategoryActionsMenu({
 
   useEffect(() => {
     if (!open) return;
-    const handler = (event: MouseEvent) => {
+    const handler = (event: globalThis.MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
       }
@@ -326,6 +341,7 @@ function ProposalCategorySection({
   onCategoryNameSave,
   onCategoryDelete,
   onItemSave,
+  onItemClick,
 }: {
   projectId: string;
   categoryId: string;
@@ -337,6 +353,7 @@ function ProposalCategorySection({
   onCategoryNameSave: (name: string) => void;
   onCategoryDelete: () => void;
   onItemSave: (item: ProposalItem, patch: UpdateProposalItemInput) => void;
+  onItemClick: (item: ProposalItem) => void;
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -448,6 +465,7 @@ function ProposalCategorySection({
                   item={item}
                   onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                   onDelete={() => deleteItem.mutate(item.id)}
+                  onRowClick={() => onItemClick(item)}
                 />
               ))}
             </tbody>
@@ -523,6 +541,7 @@ function ProposalCategorySection({
                       item={item}
                       onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                       onDelete={() => deleteItem.mutate(item.id)}
+                      onRowClick={() => onItemClick(item)}
                     />
                   ))}
                 </tbody>
@@ -541,35 +560,41 @@ function ProposalRow({
   item,
   onSave,
   onDelete,
+  onRowClick,
 }: {
   projectId: string;
   categoryId: string;
   item: ProposalItem;
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onDelete: () => void;
+  onRowClick: () => void;
 }) {
   const [sizeOpen, setSizeOpen] = useState(false);
   const [swatchOpen, setSwatchOpen] = useState(false);
   const lineTotal = proposalLineTotalCents(item);
+  const stopProp = (e: MouseEvent) => e.stopPropagation();
 
   return (
-    <tr className="border-b border-gray-100 align-top last:border-b-0">
-      <td className="w-28 px-3 py-2">
+    <tr
+      className="cursor-pointer border-b border-gray-100 align-top last:border-b-0 hover:bg-brand-50/30"
+      onClick={onRowClick}
+    >
+      <td className="w-28 px-3 py-2" onClick={stopProp}>
         <ImageFrame
           entityType="proposal_item"
           entityId={item.id}
           alt={`${item.productTag || 'Proposal'} rendering`}
-          className="h-20 w-24"
+          className="h-20 aspect-[117/75]"
           compact
         />
       </td>
       <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
-      <td className="w-28 px-3 py-2">
+      <td className="w-28 px-3 py-2" onClick={stopProp}>
         <ImageFrame
           entityType="proposal_plan"
           entityId={item.id}
           alt={`${item.productTag || 'Proposal'} plan`}
-          className="h-20 w-24"
+          className="h-20 aspect-[103/75]"
           compact
         />
       </td>
@@ -580,7 +605,7 @@ function ProposalRow({
         onSave={(description) => onSave({ description })}
         className="min-w-64"
       />
-      <td className="px-3 py-2">
+      <td className="px-3 py-2" onClick={stopProp}>
         <button
           type="button"
           onClick={() => setSizeOpen(true)}
@@ -603,7 +628,7 @@ function ProposalRow({
           }}
         />
       </td>
-      <td className="min-w-36 px-3 py-2">
+      <td className="min-w-36 px-3 py-2" onClick={stopProp}>
         <MaterialBadges materials={item.materials} onOpen={() => setSwatchOpen(true)} />
         <MaterialLibraryModal
           open={swatchOpen}
@@ -633,7 +658,19 @@ function ProposalRow({
       <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
         {formatMoney(cents(lineTotal))}
       </td>
-      <td className={cn('px-3 py-2', stickyOptionsCellClassName)}>
+      <td
+        className={cn('flex items-center gap-1 px-3 py-2', stickyOptionsCellClassName)}
+        onClick={stopProp}
+      >
+        <button
+          type="button"
+          aria-label={`View details for ${item.productTag || item.description || 'item'}`}
+          title="View details"
+          onClick={onRowClick}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          <EyeIcon />
+        </button>
         <ProposalItemActionsMenu
           itemName={item.productTag || item.description || 'item'}
           onDelete={onDelete}
@@ -655,7 +692,7 @@ function ProposalItemActionsMenu({
 
   useEffect(() => {
     if (!open) return;
-    const handler = (event: MouseEvent) => {
+    const handler = (event: globalThis.MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
       }
@@ -735,7 +772,7 @@ function EditableCell({
   if (!editing) {
     const isEmpty = !value;
     return (
-      <td className={cn('px-3 py-2', className)}>
+      <td className={cn('px-3 py-2', className)} onClick={(e) => e.stopPropagation()}>
         <span
           role="button"
           tabIndex={0}
@@ -760,7 +797,7 @@ function EditableCell({
   }
 
   return (
-    <td className={cn('px-3 py-2', className)}>
+    <td className={cn('px-3 py-2', className)} onClick={(e) => e.stopPropagation()}>
       <input
         ref={inputRef}
         type="text"
@@ -813,7 +850,7 @@ function NumberCell({
 
   if (!editing) {
     return (
-      <td className="px-3 py-2">
+      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <span
           role="button"
           tabIndex={0}
@@ -836,7 +873,7 @@ function NumberCell({
   }
 
   return (
-    <td className="px-3 py-2">
+    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
       <input
         ref={inputRef}
         type="number"
@@ -891,7 +928,7 @@ function MoneyCell({
 
   if (!editing) {
     return (
-      <td className="px-3 py-2">
+      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <span
           role="button"
           tabIndex={0}
@@ -911,7 +948,7 @@ function MoneyCell({
   }
 
   return (
-    <td className="px-3 py-2">
+    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
       <div className="relative w-28">
         <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-gray-400">
           $
@@ -956,7 +993,7 @@ function QuantityCell({
 
   if (!editing) {
     return (
-      <td className="px-3 py-2">
+      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <span
           role="button"
           tabIndex={0}
@@ -976,7 +1013,7 @@ function QuantityCell({
   }
 
   return (
-    <td className="px-3 py-2">
+    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
       <div
         className="flex w-40 gap-2"
         onBlur={(e) => {
@@ -1052,4 +1089,18 @@ function SizeModal({
 function onNumberChange(event: ChangeEvent<HTMLInputElement>, onSave: (value: number) => void) {
   const value = Number(event.target.value);
   if (Number.isFinite(value) && value >= 0) onSave(value);
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
 }

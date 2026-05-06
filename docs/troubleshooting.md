@@ -26,8 +26,7 @@ https://cweber12.github.io
 Then redeploy:
 
 ```bash
-cd api
-wrangler deploy
+pnpm --filter ffe-api deploy
 ```
 
 ## Expired or missing token

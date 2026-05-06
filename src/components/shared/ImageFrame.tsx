@@ -224,30 +224,16 @@ export function ImageFrame({
   };
 
   const imageElement = displayUrl ? (
-    cropParams ? (
-      <img
-        src={displayUrl}
-        alt={primaryImage?.altText || alt}
-        className={cn('absolute', imageClassName)}
-        style={{
-          width: `${100 / cropParams.cropWidth}%`,
-          height: `${100 / cropParams.cropHeight}%`,
-          left: `${(-cropParams.cropX / cropParams.cropWidth) * 100}%`,
-          top: `${(-cropParams.cropY / cropParams.cropHeight) * 100}%`,
-        }}
-      />
-    ) : (
-      <img
-        src={displayUrl}
-        alt={primaryImage?.altText || alt}
-        className={cn(
-          'h-full w-full',
-          entityType === 'project' ? 'object-cover' : 'object-contain',
-          'object-center',
-          imageClassName,
-        )}
-      />
-    )
+    <img
+      src={displayUrl}
+      alt={primaryImage?.altText || alt}
+      className={cn(
+        'h-full w-full',
+        entityType === 'project' ? 'object-cover' : 'object-contain',
+        'object-center',
+        imageClassName,
+      )}
+    />
   ) : (
     <div
       className={cn(

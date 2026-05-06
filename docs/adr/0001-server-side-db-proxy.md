@@ -1,10 +1,10 @@
 # ADR-0001: Server-side DB Proxy (Cloudflare Worker)
 
-| Field | Value |
-|---|---|
-| Date | 2026-04-30 |
-| Status | Accepted |
-| Deciders | @cweber12 |
+| Field    | Value      |
+| -------- | ---------- |
+| Date     | 2026-04-30 |
+| Status   | Accepted   |
+| Deciders | @cweber12  |
 
 ---
 
@@ -27,7 +27,7 @@ server-side component is therefore already required for auth verification.
 
 ## Decision
 
-All database access goes through a **Cloudflare Workers API** (`/api/*`). The React
+All database access goes through a **Cloudflare Workers API** (`/api/v1/*`). The React
 SPA never imports the Neon driver and never holds database credentials. The Worker
 verifies the user's Firebase ID token on every request, enforces authorization rules
 in application code, and is the only component that holds `NEON_DATABASE_URL`.
@@ -35,6 +35,7 @@ in application code, and is the only component that holds `NEON_DATABASE_URL`.
 ## Consequences
 
 ### Positive
+
 - Database credentials are never exposed to the browser or the client bundle.
 - Auth token verification happens server-side, where the Firebase Admin SDK can run.
 - A single enforcement point for authorization logic makes security audits easier.
@@ -42,6 +43,7 @@ in application code, and is the only component that holds `NEON_DATABASE_URL`.
 - The API surface (Hono routes) is independently testable.
 
 ### Negative / Trade-offs
+
 - Every DB operation has an additional network hop (SPA → Worker → Neon).
   Neon's serverless driver mitigates cold-start latency, and Cloudflare Workers have
   sub-millisecond startup, so practical latency impact is small.
@@ -49,13 +51,14 @@ in application code, and is the only component that holds `NEON_DATABASE_URL`.
 - Local development requires running the Worker locally (via `wrangler dev`).
 
 ### Neutral
+
 - The Neon driver and Drizzle ORM become Worker-only dependencies, not present in
   the Vite bundle. Bundle size is smaller as a result.
 
 ## Alternatives considered
 
-| Alternative | Why rejected |
-|---|---|
-| Direct browser → Neon via WebSocket driver | Exposes DB credentials in the client bundle; unacceptable security risk |
-| Supabase PostgREST / auto-generated API | Vendor lock-in; less control over auth integration and query structure |
-| PlanetScale / Turso / other serverless DB | Neon was already chosen for its Postgres compatibility and branching; switching adds migration cost with no clear benefit |
+| Alternative                                | Why rejected                                                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Direct browser → Neon via WebSocket driver | Exposes DB credentials in the client bundle; unacceptable security risk                                                   |
+| Supabase PostgREST / auto-generated API    | Vendor lock-in; less control over auth integration and query structure                                                    |
+| PlanetScale / Turso / other serverless DB  | Neon was already chosen for its Postgres compatibility and branching; switching adds migration cost with no clear benefit |

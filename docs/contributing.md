@@ -2,14 +2,14 @@
 
 ## Branching strategy
 
-| Branch | Purpose |
-|---|---|
-| `main` | Production-ready code; protected, requires PR |
-| `dev` | Integration branch for feature branches |
-| `feat/<slug>` | New features |
-| `fix/<slug>` | Bug fixes |
-| `chore/<slug>` | Tooling, deps, config |
-| `docs/<slug>` | Documentation-only changes |
+| Branch         | Purpose                                       |
+| -------------- | --------------------------------------------- |
+| `main`         | Production-ready code; protected, requires PR |
+| `dev`          | Integration branch for feature branches       |
+| `feat/<slug>`  | New features                                  |
+| `fix/<slug>`   | Bug fixes                                     |
+| `chore/<slug>` | Tooling, deps, config                         |
+| `docs/<slug>`  | Documentation-only changes                    |
 
 All work branches off `dev`. PRs target `dev`. `dev` is merged to `main` for releases.
 
@@ -63,12 +63,12 @@ getIdToken(true) to force-refresh, and retries once.
 
 ## How to add a migration
 
-1. Edit `db/schema.ts` with your schema changes.
-2. Run `pnpm db:generate` — Drizzle Kit writes a new SQL file to `db/migrations/`.
-3. Review the generated SQL carefully.
-4. Run `pnpm db:migrate` against your dev database.
-5. Commit both `db/schema.ts` and the new migration file in the same commit.
-6. Never hand-edit generated migration files unless you know exactly what you are doing.
+1. Create `db/migrations/<NNNN>_<description>.sql` using the next sequential number.
+2. Write explicit SQL for the schema/data change (`IF NOT EXISTS` / `CREATE OR REPLACE` where appropriate).
+3. Set `NEON_DATABASE_URL` in your shell.
+4. Run `pnpm migrate` from the repo root.
+5. Verify the app/API behavior that depends on the migration.
+6. Commit the new migration file in the same PR as the related code changes.
 
 ---
 

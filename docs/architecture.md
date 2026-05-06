@@ -73,7 +73,7 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 - `/projects/:id/proposal/materials` redirects to the shared project material library.
 - `/projects/:id/proposal/summary` redirects to the project budget view.
 
-Legacy project routes such as `/projects/:id/table` redirect to their FF&E equivalents.
+Legacy project routes continue to redirect to their current FF&E equivalents for compatibility.
 
 ## 4. API, Auth, And Storage Conventions
 

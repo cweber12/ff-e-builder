@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(crop): remove crop CSS transform from browser image display; crop now only affects export
+- fix(crop): initialize CropModal pendingParams from existing crop so re-save without interaction works
+- fix(images): set aspect-[117/75] on FFE item table cell image frames to match Excel export cell proportions
+- fix(images): set aspect-[117/75] / aspect-[103/75] on proposal table rendering / plan cell image frames
+- fix(images): set aspect-[117/75] on ProposalItemDetailPanel rendering frame; plan frame uses same ratio
+- feat(ui): ProposalItemDetailPanel plan image supports scroll-to-zoom and drag-to-pan with cursor-aware zoom, percent indicator, and Reset button; rendering and plan display at identical size
+- refactor(ui): FfeItemDetailPanel layout now mirrors ProposalItemDetailPanel — single image on top, metadata below; materials moved into metadata scroll area
+
+- docs: normalize agent/docs command guidance (`pnpm migrate`, `pnpm --filter ffe-api deploy`) and API/route path examples (`/api/v1/*`, `/projects/:id/ffe/*`); legacy "Take-Off" terms below refer to the current Proposal surface
 - refactor(api): move shared API transport, auth headers, and `ApiError` into `src/lib/api/transport.ts`
 - refactor(api): move raw worker response contracts and client mappers into `src/lib/api/mappers.ts`
 - refactor(api): move project and user API namespaces into focused client modules behind the existing API facade

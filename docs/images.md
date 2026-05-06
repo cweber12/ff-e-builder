@@ -65,9 +65,9 @@ and render object URLs, revoking those URLs when components unmount.
 The shared image frame is used for:
 
 - project cards on `/projects`
-- room image frames beside each room table on `/projects/:id/table`
+- room image frames beside each room table on `/projects/:id/ffe/table`
 - item thumbnails before the item ID on the table view
-- catalog item image slots on `/projects/:id/catalog`
+- catalog item image slots on `/projects/:id/ffe/catalog`
 - material cards in the project material library
 - Proposal Rendering cells on `/projects/:id/proposal/table`
 - Proposal Plan cells on `/projects/:id/proposal/table`
@@ -103,7 +103,7 @@ image through an authenticated blob request rather than a public URL.
 4. Deploy the Worker after the database migration is applied:
 
    ```bash
-   pnpm --dir api deploy
+    pnpm --filter ffe-api deploy
    ```
 
 ## Manual Neon Step
