@@ -8,4 +8,3 @@ export {
   useUpdateProposalItem,
   useDeleteProposalItem,
 } from './useProposal';
-export { proposalKeys } from '../queryKeys';

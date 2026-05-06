@@ -12,4 +12,3 @@ export {
   useUpdateMaterialForItem,
   useUpdateMaterialForProposalItem,
 } from './useMaterials';
-export { materialKeys } from '../queryKeys';
