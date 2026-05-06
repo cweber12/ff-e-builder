@@ -74,7 +74,6 @@ import {
   TableViewStack,
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
-import { ExportMenu } from '../../shared/ExportMenu';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 
 type ItemsTableProps = {
@@ -1720,15 +1719,6 @@ export function ItemsTableView({
           Add room
         </Button>
         <div className="flex items-center gap-2">
-          {project && (
-            <ExportMenu
-              label="Export"
-              size="sm"
-              onCsv={() => exportTableCsv(project, sortedRooms)}
-              onExcel={() => void exportTableExcel(project, sortedRooms)}
-              onPdf={() => void exportTablePdf(project, sortedRooms)}
-            />
-          )}
           {onImport && (
             <button
               type="button"

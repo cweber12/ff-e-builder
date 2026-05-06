@@ -31,6 +31,10 @@ import {
   exportSummaryCsv,
   exportSummaryExcel,
   exportSummaryPdf,
+  exportTableCsv,
+  exportTableExcel,
+  exportTablePdf,
+  exportCatalogPdf,
   exportProposalCsv,
   exportProposalExcel,
   exportProposalPdf,
@@ -43,7 +47,7 @@ import {
   useProposalWithItems,
 } from './hooks';
 import { DashboardPage } from './pages/DashboardPage';
-import { ProjectSnapshotPage } from './pages/ProjectSnapshotPage';
+import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
@@ -72,8 +76,8 @@ function App() {
       >
         <Route path="/projects" element={<DashboardPage />} />
         <Route path="/projects/:id" element={<ProjectLayout />}>
-          <Route index element={<Navigate to="snapshot" replace />} />
-          <Route path="snapshot" element={<ProjectSnapshotRoute />} />
+          <Route index element={<ProjectOverviewRoute />} />
+          <Route path="snapshot" element={<Navigate to=".." replace />} />
           <Route path="ffe" element={<ProjectToolRedirect tool="ffe" />} />
           <Route path="ffe/table" element={<ProjectTableRoute />} />
           <Route path="ffe/catalog" element={<ProjectCatalogRoute />} />
@@ -153,7 +157,6 @@ function ProjectLayout() {
                 <div className="flex min-w-0 gap-1 overflow-x-auto">
                   {(
                     [
-                      [`/projects/${project.id}/snapshot`, 'Snapshot', true],
                       [`/projects/${project.id}/ffe`, 'FF&E', false],
                       [`/projects/${project.id}/proposal/table`, 'Proposal', false],
                       [`/projects/${project.id}/materials`, 'Materials', true],
@@ -275,7 +278,9 @@ function ProjectTabActions({
   }
 
   if (activePath.includes(`/projects/${project.id}/ffe/`)) {
-    return <FfeTabActions project={project} activePath={activePath} />;
+    return (
+      <FfeTabActions project={project} activePath={activePath} roomsWithItems={roomsWithItems} />
+    );
   }
 
   return <div className="min-h-8" />;
@@ -286,7 +291,15 @@ const ffeToggleClassName =
 const ffeToggleActiveClassName =
   'rounded bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
-function FfeTabActions({ project, activePath }: { project: Project; activePath: string }) {
+function FfeTabActions({
+  project,
+  activePath,
+  roomsWithItems,
+}: {
+  project: Project;
+  activePath: string;
+  roomsWithItems: RoomWithItems[];
+}) {
   const isCatalog = activePath.includes('/ffe/catalog');
   return (
     <div className="flex items-center gap-2">
@@ -304,6 +317,21 @@ function FfeTabActions({ project, activePath }: { project: Project; activePath: 
           Table
         </Link>
       </div>
+      {isCatalog ? (
+        <ExportMenu
+          label="Export"
+          size="sm"
+          onPdf={() => exportCatalogPdf(project, roomsWithItems)}
+        />
+      ) : (
+        <ExportMenu
+          label="Export"
+          size="sm"
+          onCsv={() => exportTableCsv(project, roomsWithItems)}
+          onExcel={() => void exportTableExcel(project, roomsWithItems)}
+          onPdf={() => void exportTablePdf(project, roomsWithItems)}
+        />
+      )}
     </div>
   );
 }
@@ -385,15 +413,9 @@ function ProjectTableRoute() {
   );
 }
 
-function ProjectSnapshotRoute() {
-  const { project, roomsWithItems, proposalCategoriesWithItems } = useProjectContext();
-  return (
-    <ProjectSnapshotPage
-      project={project}
-      roomsWithItems={roomsWithItems}
-      proposalCategoriesWithItems={proposalCategoriesWithItems}
-    />
-  );
+function ProjectOverviewRoute() {
+  const { project } = useProjectContext();
+  return <ProjectOverviewPage project={project} />;
 }
 
 function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'proposal' }) {

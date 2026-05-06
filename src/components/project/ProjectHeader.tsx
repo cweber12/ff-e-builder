@@ -75,9 +75,12 @@ export function ProjectHeader({
                 buttonClassName="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
               />
             )}
-            <h2 className="truncate text-xl font-semibold leading-tight text-white">
+            <Link
+              to={`/projects/${project.id}`}
+              className="truncate text-xl font-semibold leading-tight text-white hover:underline"
+            >
               {project.name}
-            </h2>
+            </Link>
           </div>
         </div>
 

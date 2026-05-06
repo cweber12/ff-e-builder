@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 type ExportMenuProps = {
   label?: string;
-  onCsv: () => void;
-  onExcel: () => void;
+  onCsv?: () => void;
+  onExcel?: () => void;
   onPdf: () => void;
   pdfOptions?: Array<{
     label: string;
@@ -79,30 +79,34 @@ export function ExportMenu({
           role="menu"
           className="absolute left-0 top-full z-40 mt-1 min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
         >
-          <button
-            type="button"
-            role="menuitem"
-            className={optionBtn}
-            onClick={() => {
-              setOpen(false);
-              onCsv();
-            }}
-          >
-            <CsvIcon />
-            Export CSV
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={optionBtn}
-            onClick={() => {
-              setOpen(false);
-              onExcel();
-            }}
-          >
-            <ExcelIcon />
-            Export Excel
-          </button>
+          {onCsv && (
+            <button
+              type="button"
+              role="menuitem"
+              className={optionBtn}
+              onClick={() => {
+                setOpen(false);
+                onCsv();
+              }}
+            >
+              <CsvIcon />
+              Export CSV
+            </button>
+          )}
+          {onExcel && (
+            <button
+              type="button"
+              role="menuitem"
+              className={optionBtn}
+              onClick={() => {
+                setOpen(false);
+                onExcel();
+              }}
+            >
+              <ExcelIcon />
+              Export Excel
+            </button>
+          )}
           {pdfOptions?.length ? (
             <div className="relative">
               <button

@@ -34,7 +34,7 @@ export function ProjectImagesModal({ project, open, onClose }: ProjectImagesModa
   );
 }
 
-function ProjectImagesPanel({ project }: { project: Project }) {
+export function ProjectImagesPanel({ project }: { project: Project }) {
   const images = useImages('project', project.id);
   const upload = useUploadImage('project', project.id);
   const deleteImage = useDeleteImage('project', project.id);
