@@ -3,12 +3,6 @@ export {
   useCreateMaterial,
   useUpdateMaterial,
   useDeleteMaterial,
-  useAssignMaterial,
-  useCreateAndAssignMaterial,
-  useRemoveMaterialFromItem,
-  useAssignMaterialToProposalItem,
-  useCreateAndAssignMaterialToProposalItem,
-  useRemoveMaterialFromProposalItem,
-  useUpdateMaterialForItem,
-  useUpdateMaterialForProposalItem,
+  useItemMaterialActions,
 } from './useMaterials';
+export type { MaterialContext } from './useMaterials';

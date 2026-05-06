@@ -1,20 +1,11 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import {
-  imageKeys,
-  useAssignMaterial,
-  useAssignMaterialToProposalItem,
-  useCreateAndAssignMaterial,
-  useCreateAndAssignMaterialToProposalItem,
   useCreateMaterial,
+  useItemMaterialActions,
   useMaterials,
-  useRemoveMaterialFromItem,
-  useRemoveMaterialFromProposalItem,
   useUpdateMaterial,
-  useUpdateMaterialForItem,
-  useUpdateMaterialForProposalItem,
+  useUploadImage,
 } from '../../hooks';
-import { api } from '../../lib/api';
 import type { Item, Material, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/ImageFrame';
@@ -66,15 +57,12 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const materials = useMaterials(projectId);
   const createMaterial = useCreateMaterial(projectId);
   const updateMaterial = useUpdateMaterial(projectId);
-  const assignMaterial = useAssignMaterial(roomId, projectId);
-  const assignToProposal = useAssignMaterialToProposalItem(categoryId, projectId);
-  const createAndAssignMaterial = useCreateAndAssignMaterial(roomId, projectId);
-  const createAndAssignToProposal = useCreateAndAssignMaterialToProposalItem(categoryId, projectId);
-  const removeMaterial = useRemoveMaterialFromItem(roomId);
-  const removeFromProposal = useRemoveMaterialFromProposalItem(categoryId);
-  const updateForItem = useUpdateMaterialForItem(roomId, projectId);
-  const updateForProposalItem = useUpdateMaterialForProposalItem(categoryId, projectId);
-  const queryClient = useQueryClient();
+  const materialActions = useItemMaterialActions(
+    props.context === 'ffe'
+      ? { kind: 'ffe', itemGroupId: roomId, projectId }
+      : { kind: 'proposal', itemGroupId: categoryId, projectId },
+  );
+  const uploadImage = useUploadImage();
 
   const [draft, setDraft] = useState({
     name: '',
@@ -143,30 +131,18 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
 
     if (editingId && editingAssigned && activeItem) {
       // Scoped update: fork-if-shared
-      if (props.context === 'ffe') {
-        savedMaterial = await updateForItem.mutateAsync({
-          itemId: activeItem.id,
-          materialId: editingId,
-          patch: input,
-        });
-      } else {
-        savedMaterial = await updateForProposalItem.mutateAsync({
-          proposalItemId: activeItem.id,
-          materialId: editingId,
-          patch: input,
-        });
-      }
+      savedMaterial = await materialActions.update.mutateAsync({
+        itemId: activeItem.id,
+        materialId: editingId,
+        patch: input,
+      });
     } else if (editingId) {
       savedMaterial = await updateMaterial.mutateAsync({ id: editingId, patch: input });
     } else if (activeItem) {
-      if (props.context === 'ffe') {
-        savedMaterial = await createAndAssignMaterial.mutateAsync({ itemId: activeItem.id, input });
-      } else {
-        savedMaterial = await createAndAssignToProposal.mutateAsync({
-          proposalItemId: activeItem.id,
-          input,
-        });
-      }
+      savedMaterial = await materialActions.createAndAssign.mutateAsync({
+        itemId: activeItem.id,
+        input,
+      });
       setAddedMaterialName(savedMaterial.name);
       setRemovedMaterialName(null);
     } else {
@@ -174,14 +150,11 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     }
 
     if (draft.swatchFile) {
-      await api.images.upload({
+      await uploadImage.mutateAsync({
         entityType: 'material',
         entityId: savedMaterial.id,
         file: draft.swatchFile,
         altText: savedMaterial.name,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: imageKeys.forEntity('material', savedMaterial.id),
       });
     }
     resetDraft();
@@ -193,18 +166,10 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     setRemovedMaterialName(null);
     setPendingAssignmentId(material.id);
     try {
-      let assigned: Material;
-      if (props.context === 'ffe') {
-        assigned = await assignMaterial.mutateAsync({
-          itemId: activeItem.id,
-          materialId: material.id,
-        });
-      } else {
-        assigned = await assignToProposal.mutateAsync({
-          proposalItemId: activeItem.id,
-          materialId: material.id,
-        });
-      }
+      const assigned = await materialActions.assign.mutateAsync({
+        itemId: activeItem.id,
+        materialId: material.id,
+      });
       setAddedMaterialName(assigned.name);
     } finally {
       setPendingAssignmentId(null);
@@ -213,14 +178,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
 
   const removeAssignedMaterial = async (material: Material) => {
     if (!activeItem) return;
-    if (props.context === 'ffe') {
-      await removeMaterial.mutateAsync({ itemId: activeItem.id, materialId: material.id });
-    } else {
-      await removeFromProposal.mutateAsync({
-        proposalItemId: activeItem.id,
-        materialId: material.id,
-      });
-    }
+    await materialActions.remove.mutateAsync({ itemId: activeItem.id, materialId: material.id });
     setAddedMaterialName(null);
     setRemovedMaterialName(material.name);
   };

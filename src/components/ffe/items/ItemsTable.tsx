@@ -30,8 +30,7 @@ import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../l
 import { emptyToNull } from '../../../lib/textUtils';
 import { getSortOrderPatches } from '../../../lib/itemSort';
 import {
-  useAssignMaterial,
-  useCreateAndAssignMaterial,
+  useItemMaterialActions,
   useCreateItem,
   useDeleteItem,
   useCreateRoom,
@@ -1200,8 +1199,7 @@ function RoomItemsSection({
   const deleteItem = useDeleteItem(room.id);
   const moveItem = useMoveItem();
   const projectMaterials = useMaterials(projectId);
-  const assignMaterial = useAssignMaterial(room.id, projectId);
-  const createAndAssignMaterial = useCreateAndAssignMaterial(room.id, projectId);
+  const materialActions = useItemMaterialActions({ kind: 'ffe', itemGroupId: room.id, projectId });
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
@@ -1390,8 +1388,8 @@ function RoomItemsSection({
           await assignMaterialsToItem(
             createdItem.id,
             materials,
-            assignMaterial.mutateAsync,
-            createAndAssignMaterial.mutateAsync,
+            materialActions.assign.mutateAsync,
+            materialActions.createAndAssign.mutateAsync,
           );
         }}
       />

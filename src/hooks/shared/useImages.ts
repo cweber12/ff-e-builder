@@ -42,19 +42,31 @@ export function useImages(entityType: ImageEntityType, entityId: string) {
   });
 }
 
-export function useUploadImage(entityType: ImageEntityType, entityId: string) {
+export function useUploadImage(defaultEntityType?: ImageEntityType, defaultEntityId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ file, altText }: { file: File; altText?: string }) =>
+    mutationFn: ({
+      file,
+      altText,
+      entityType,
+      entityId,
+    }: {
+      file: File;
+      altText?: string;
+      entityType?: ImageEntityType;
+      entityId?: string;
+    }) =>
       api.images.upload({
-        entityType,
-        entityId,
+        entityType: entityType ?? defaultEntityType!,
+        entityId: entityId ?? defaultEntityId!,
         file,
         ...(altText !== undefined ? { altText } : {}),
       }),
-    onSuccess: (image) => {
-      queryClient.setQueryData<ImageAsset[]>(imageKeys.forEntity(entityType, entityId), (old) =>
+    onSuccess: (image, variables) => {
+      const resolvedType = variables.entityType ?? defaultEntityType!;
+      const resolvedId = variables.entityId ?? defaultEntityId!;
+      queryClient.setQueryData<ImageAsset[]>(imageKeys.forEntity(resolvedType, resolvedId), (old) =>
         insertUploadedPrimaryImage(old, image),
       );
     },

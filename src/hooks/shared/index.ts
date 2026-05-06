@@ -14,5 +14,3 @@ export {
   useDeleteProject,
 } from './useProjects';
 export { useUserProfile, useUpdateUserProfile } from './useUserProfile';
-// imageKeys is used by MaterialsView and MaterialLibraryModal via the hooks barrel
-export { imageKeys } from '../queryKeys';

@@ -1,4 +1,4 @@
-﻿import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
@@ -37,14 +37,12 @@ vi.mock('../../../hooks', () => ({
   useCreateMaterial: () => ({ mutateAsync: vi.fn() }),
   useUpdateMaterial: () => ({ mutateAsync: vi.fn() }),
   useDeleteMaterial: () => ({ mutateAsync: vi.fn() }),
-  useAssignMaterial: () => ({ mutateAsync: vi.fn() }),
-  useCreateAndAssignMaterial: () => ({ mutateAsync: mockCreateAndAssignMaterialMutateAsync }),
-  useRemoveMaterialFromItem: () => ({ mutateAsync: vi.fn() }),
-  useAssignMaterialToProposalItem: () => ({ mutateAsync: vi.fn() }),
-  useCreateAndAssignMaterialToProposalItem: () => ({ mutateAsync: vi.fn() }),
-  useRemoveMaterialFromProposalItem: () => ({ mutateAsync: vi.fn() }),
-  useUpdateMaterialForItem: () => ({ mutateAsync: vi.fn() }),
-  useUpdateMaterialForProposalItem: () => ({ mutateAsync: vi.fn() }),
+  useItemMaterialActions: () => ({
+    assign: { mutateAsync: vi.fn() },
+    createAndAssign: { mutateAsync: mockCreateAndAssignMaterialMutateAsync },
+    remove: { mutateAsync: vi.fn() },
+    update: { mutateAsync: vi.fn() },
+  }),
   useImages: () => ({ data: [], isLoading: false }),
   useUploadImage: () => ({ mutate: vi.fn(), isPending: false }),
   useDeleteImage: () => ({ mutate: vi.fn(), isPending: false }),

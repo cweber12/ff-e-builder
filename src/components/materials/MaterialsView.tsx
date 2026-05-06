@@ -1,13 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
-import { api } from '../../lib/api';
 import {
-  imageKeys,
   useCreateMaterial,
   useDeleteMaterial,
   useMaterials,
   useUpdateMaterial,
+  useUploadImage,
 } from '../../hooks';
 import type { Material, Project, RoomWithItems, ProposalCategoryWithItems } from '../../types';
 import { Button } from '../primitives';
@@ -49,7 +47,7 @@ export function MaterialsView({
   const createMaterial = useCreateMaterial(project.id);
   const updateMaterial = useUpdateMaterial(project.id);
   const deleteMaterial = useDeleteMaterial(project.id);
-  const queryClient = useQueryClient();
+  const uploadImage = useUploadImage();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<'all' | 'ffe' | 'proposal'>('all');
@@ -131,14 +129,11 @@ export function MaterialsView({
       savedMaterial = await createMaterial.mutateAsync(input);
     }
     if (draft.swatchFile) {
-      await api.images.upload({
+      await uploadImage.mutateAsync({
         entityType: 'material',
         entityId: savedMaterial.id,
         file: draft.swatchFile,
         altText: savedMaterial.name,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: imageKeys.forEntity('material', savedMaterial.id),
       });
     }
     resetDraft();
