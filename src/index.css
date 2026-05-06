@@ -134,8 +134,13 @@
   }
 
   .catalog-image-wrap {
-    max-height: 320px;
+    height: 320px;
+    overflow: hidden;
     background: theme('colors.brand.50');
+  }
+
+  .catalog-image-wrap > div {
+    height: 100%;
   }
 
   .catalog-image {
@@ -221,9 +226,15 @@
     gap: 24px;
   }
 
+  .catalog-left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
   .catalog-option-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 

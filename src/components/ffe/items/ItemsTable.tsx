@@ -541,13 +541,13 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   },
   {
     accessorKey: 'description',
-    header: 'Description',
+    header: 'Product Description',
     cell: ({ row }) => (
       <EditableTextCell
         item={row.original}
         value={row.original.description}
         field="description"
-        label="Description"
+        label="Product Description"
         onSave={onSave}
       />
     ),
@@ -949,7 +949,13 @@ function SortableItemRow({
       className={cn('hover:bg-brand-50/40', isDragging && 'bg-brand-50 shadow-md')}
     >
       {row.getVisibleCells().map((cell) => (
-        <td key={cell.id} className="whitespace-nowrap px-3 py-3 text-gray-700">
+        <td
+          key={cell.id}
+          className={cn(
+            'px-3 py-3 text-gray-700',
+            cell.column.id === 'description' ? 'min-w-64 whitespace-normal' : 'whitespace-nowrap',
+          )}
+        >
           {cell.column.id === 'drag' ? (
             <button
               type="button"

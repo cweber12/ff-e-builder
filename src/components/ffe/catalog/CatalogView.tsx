@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../../../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
-import { useImages, useSetPrimaryImage, useUpdateItem } from '../../../hooks';
+import {
+  useDeleteImage,
+  useImages,
+  useSetPrimaryImage,
+  useUpdateItem,
+  useUploadImage,
+} from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { ImageFrame } from '../../shared/ImageFrame';
+import { ImageOptionsMenu } from '../../shared/ImageOptionsMenu';
 import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
 import { api } from '../../../lib/api';
 import { emptyToNull } from '../../../lib/textUtils';
@@ -131,12 +138,6 @@ function CatalogNav({
     <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-gray-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <Link
-            to="/"
-            className="text-xs font-semibold uppercase tracking-wide text-brand-600 hover:text-brand-700"
-          >
-            FF&amp;E Builder
-          </Link>
           <p className="mt-1 truncate text-sm font-semibold text-gray-950">
             {currentEntry?.item.itemName ?? 'Catalog'}
           </p>
@@ -334,23 +335,45 @@ export function CatalogPage({
       </header>
 
       <section className="catalog-body">
-        <div className="catalog-image-wrap">
-          <ImageFrame
-            entityType="item"
-            entityId={item.id}
-            alt={item.itemName}
-            fallbackUrl={item.imageUrl}
-            onFallbackDelete={async () => {
-              await updateItem.mutateAsync({
-                id: item.id,
-                patch: { imageUrl: null, version: item.version },
-              });
-            }}
-            className="h-full w-full border-0 shadow-none"
-            imageClassName="catalog-image"
-            placeholderClassName="catalog-placeholder"
-            placeholderContent={<span>{initials(item.itemName)}</span>}
-          />
+        <div className="catalog-left-column">
+          <div className="catalog-image-wrap">
+            <ImageFrame
+              entityType="item"
+              entityId={item.id}
+              alt={item.itemName}
+              fallbackUrl={item.imageUrl}
+              onFallbackDelete={async () => {
+                await updateItem.mutateAsync({
+                  id: item.id,
+                  patch: { imageUrl: null, version: item.version },
+                });
+              }}
+              className="h-full w-full border-0 shadow-none"
+              imageClassName="catalog-image"
+              placeholderClassName="catalog-placeholder"
+              placeholderContent={<span>{initials(item.itemName)}</span>}
+            />
+          </div>
+
+          {item.materials.length > 0 && (
+            <div className="grid gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">
+                Materials
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {item.materials.map((material) => (
+                  <div key={material.id} className="flex flex-col items-center gap-1">
+                    <MaterialSwatchImage material={material} size="lg" />
+                    <span className="max-w-[80px] text-center text-[10px] font-medium leading-tight text-gray-600">
+                      {material.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
         </div>
 
         <div className="catalog-details">
@@ -422,9 +445,9 @@ export function CatalogPage({
               onSave={(value) => saveField('dimensions', value)}
             />
             <DataPoint
-              label="Materials"
+              label="Finishes"
               value={item.finishes}
-              ariaLabel={`Materials for ${item.itemName}`}
+              ariaLabel={`Finishes for ${item.itemName}`}
               onSave={(value) => saveField('finishes', value)}
             />
             <DataPoint label="Color" value={item.color ?? null} />
@@ -436,27 +459,6 @@ export function CatalogPage({
               onSave={(value) => saveField('leadTime', value)}
             />
           </dl>
-
-          <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
-
-          {item.materials.length > 0 && (
-            <div className="grid gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">
-                Material library
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {item.materials.map((material) => (
-                  <span
-                    key={material.id}
-                    className="inline-flex items-center gap-2 rounded-pill border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700"
-                  >
-                    <MaterialSwatchImage material={material} size="sm" />
-                    {material.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="catalog-price-block">
             <div>
@@ -545,14 +547,17 @@ function DataPoint({
 function CatalogOptionRenderings({ itemId, itemName }: { itemId: string; itemName: string }) {
   const images = useImages('item_option', itemId);
   const setPrimary = useSetPrimaryImage('item_option', itemId);
+  const upload = useUploadImage('item_option', itemId);
+  const deleteImage = useDeleteImage('item_option', itemId);
   const optionImages = useMemo(
     () =>
       [...(images.data ?? [])]
         .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-        .slice(0, 3),
+        .slice(0, 2),
     [images.data],
   );
-  const slots = Array.from({ length: 3 }, (_, index) => optionImages[index] ?? null);
+  const slots = Array.from({ length: 2 }, (_, index) => optionImages[index] ?? null);
+  const isBusy = upload.isPending || deleteImage.isPending;
 
   return (
     <div className="grid gap-2">
@@ -564,7 +569,10 @@ function CatalogOptionRenderings({ itemId, itemName }: { itemId: string; itemNam
             image={image}
             itemName={itemName}
             index={index}
+            disabled={isBusy}
             onSelect={(imageId) => setPrimary.mutate(imageId)}
+            onUpload={(file) => upload.mutate({ file, altText: `${itemName} option ${index + 1}` })}
+            onDelete={(imageId) => deleteImage.mutate(imageId)}
           />
         ))}
       </div>
@@ -576,14 +584,24 @@ function CatalogOptionCard({
   image,
   itemName,
   index,
+  disabled,
   onSelect,
+  onUpload,
+  onDelete,
 }: {
   image: ImageAsset | null;
   itemName: string;
   index: number;
+  disabled?: boolean;
   onSelect: (imageId: string) => void;
+  onUpload: (file: File) => void;
+  onDelete: (imageId: string) => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -613,27 +631,108 @@ function CatalogOptionCard({
     };
   }, [image]);
 
+  useEffect(
+    () => () => {
+      const handler = documentPasteHandlerRef.current;
+      if (handler) document.removeEventListener('paste', handler);
+    },
+    [],
+  );
+
+  const handleFile = (file: File | null | undefined) => {
+    if (!file || disabled) return;
+    onUpload(file);
+  };
+
+  const enablePaste = () => {
+    if (disabled || documentPasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => {
+      const file = Array.from(event.clipboardData?.items ?? [])
+        .find((item) => item.kind === 'file' && item.type.startsWith('image/'))
+        ?.getAsFile();
+      if (!file) return;
+      event.preventDefault();
+      handleFile(file);
+    };
+    documentPasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disablePaste = () => {
+    const handler = documentPasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    documentPasteHandlerRef.current = null;
+  };
+
   return (
-    <div className="catalog-option-card">
-      <label className="catalog-option-check">
-        <input
-          type="checkbox"
-          checked={Boolean(image?.isPrimary)}
-          disabled={!image}
-          onChange={() => {
-            if (image && !image.isPrimary) onSelect(image.id);
+    <div className="catalog-option-card" onMouseEnter={enablePaste} onMouseLeave={disablePaste}>
+      {image && (
+        <label className="catalog-option-check">
+          <input
+            type="checkbox"
+            checked={Boolean(image.isPrimary)}
+            onChange={() => {
+              if (!image.isPrimary) onSelect(image.id);
+            }}
+          />
+        </label>
+      )}
+      {previewUrl ? (
+        <button
+          ref={menuAnchorRef}
+          type="button"
+          disabled={disabled}
+          aria-label={`Image options for ${itemName} option ${index + 1}`}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}
+          className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          <img
+            src={previewUrl}
+            alt={`${itemName} option ${index + 1}`}
+            className="h-full w-full object-contain object-center"
+          />
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+          className="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
+        >
+          Option {index + 1}
+        </button>
+      )}
+
+      {image && (
+        <ImageOptionsMenu
+          anchorRef={menuAnchorRef}
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          canUpdate={!disabled}
+          canDelete={!disabled}
+          onUpdate={() => {
+            setMenuOpen(false);
+            inputRef.current?.click();
+          }}
+          onDelete={() => {
+            setMenuOpen(false);
+            onDelete(image.id);
           }}
         />
-      </label>
-      {previewUrl ? (
-        <img
-          src={previewUrl}
-          alt={`${itemName} option ${index + 1}`}
-          className="h-full w-full object-contain object-center"
-        />
-      ) : (
-        <div className="catalog-option-empty">Option {index + 1}</div>
       )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="sr-only"
+        onChange={(event) => {
+          handleFile(event.target.files?.[0]);
+          event.currentTarget.value = '';
+        }}
+      />
     </div>
   );
 }

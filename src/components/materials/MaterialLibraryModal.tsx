@@ -570,10 +570,15 @@ export function MaterialSwatchImage({
   className = '',
 }: {
   material: Material;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   className?: string | undefined;
 }) {
-  const frameClassName = size === 'sm' ? 'h-6 w-6 rounded-full' : 'h-10 w-10 rounded-full';
+  const frameClassName =
+    size === 'sm'
+      ? 'h-6 w-6 rounded-full'
+      : size === 'lg'
+        ? 'h-20 w-20 rounded-full'
+        : 'h-10 w-10 rounded-full';
   const hexPlaceholder = material.swatchHex ? (
     <span
       className="h-full w-full rounded-full"
