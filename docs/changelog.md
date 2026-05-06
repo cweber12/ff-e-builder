@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(proposal): widen Proposal table rendering and plan columns so image previews do not overlap adjacent cells
 - fix(crop): remove crop CSS transform from browser image display; crop now only affects export
 - fix(crop): initialize CropModal pendingParams from existing crop so re-save without interaction works
 - fix(images): set aspect-[117/75] on FFE item table cell image frames to match Excel export cell proportions

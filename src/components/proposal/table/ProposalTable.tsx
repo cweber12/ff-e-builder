@@ -49,6 +49,21 @@ const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white'
 const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
 const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
 const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
+const proposalTableHeadings = [
+  { label: 'Rendering', className: 'w-40 min-w-40' },
+  { label: 'Product Tag', className: 'min-w-36' },
+  { label: 'Plan', className: 'w-36 min-w-36' },
+  { label: 'Drawings', className: 'min-w-36' },
+  { label: 'Location', className: 'min-w-36' },
+  { label: 'Product Description', className: 'min-w-64' },
+  { label: 'Size', className: 'w-44 min-w-44' },
+  { label: 'Swatch', className: 'min-w-36' },
+  { label: 'CBM', className: 'w-24 min-w-24' },
+  { label: 'Quantity', className: 'w-44 min-w-44' },
+  { label: 'Unit Cost', className: 'w-32 min-w-32' },
+  { label: 'Total Cost', className: 'w-32 min-w-32' },
+  { label: '', className: 'w-24 min-w-24' },
+] as const;
 
 type ProposalTableProps = {
   projectId: string;
@@ -428,30 +443,17 @@ function ProposalCategorySection({
           <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
             <thead className="bg-white text-xs uppercase tracking-wide text-gray-500">
               <tr>
-                {[
-                  'Rendering',
-                  'Product Tag',
-                  'Plan',
-                  'Drawings',
-                  'Location',
-                  'Product Description',
-                  'Size',
-                  'Swatch',
-                  'CBM',
-                  'Quantity',
-                  'Unit Cost',
-                  'Total Cost',
-                  '',
-                ].map((heading, index) => (
+                {proposalTableHeadings.map((heading, index) => (
                   <th
-                    key={heading}
+                    key={`${heading.label}-${index}`}
                     className={cn(
                       'border-b border-gray-200 px-3 py-2 font-semibold',
+                      heading.className,
                       index === 11 && stickyTotalHeaderClassName,
                       index === 12 && stickyOptionsHeaderClassName,
                     )}
                   >
-                    {heading}
+                    {heading.label}
                   </th>
                 ))}
               </tr>
@@ -504,30 +506,17 @@ function ProposalCategorySection({
               <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
                 <thead className="sticky top-0 z-40 bg-white text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
                   <tr>
-                    {[
-                      'Rendering',
-                      'Product Tag',
-                      'Plan',
-                      'Drawings',
-                      'Location',
-                      'Product Description',
-                      'Size',
-                      'Swatch',
-                      'CBM',
-                      'Quantity',
-                      'Unit Cost',
-                      'Total Cost',
-                      '',
-                    ].map((heading, index) => (
+                    {proposalTableHeadings.map((heading, index) => (
                       <th
-                        key={heading}
+                        key={`${heading.label}-${index}`}
                         className={cn(
                           'border-b border-gray-100 px-3 py-3 font-semibold',
+                          heading.className,
                           index === 11 && stickyTotalExpandedHeaderClassName,
                           index === 12 && stickyOptionsExpandedHeaderClassName,
                         )}
                       >
-                        {heading}
+                        {heading.label}
                       </th>
                     ))}
                   </tr>
@@ -579,22 +568,22 @@ function ProposalRow({
       className="cursor-pointer border-b border-gray-100 align-top last:border-b-0 hover:bg-brand-50/30"
       onClick={onRowClick}
     >
-      <td className="w-28 px-3 py-2" onClick={stopProp}>
+      <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
         <ImageFrame
           entityType="proposal_item"
           entityId={item.id}
           alt={`${item.productTag || 'Proposal'} rendering`}
-          className="h-20 aspect-[117/75]"
+          className="h-20 w-[125px] max-w-full"
           compact
         />
       </td>
       <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
-      <td className="w-28 px-3 py-2" onClick={stopProp}>
+      <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
         <ImageFrame
           entityType="proposal_plan"
           entityId={item.id}
           alt={`${item.productTag || 'Proposal'} plan`}
-          className="h-20 aspect-[103/75]"
+          className="h-20 w-[110px] max-w-full"
           compact
         />
       </td>
