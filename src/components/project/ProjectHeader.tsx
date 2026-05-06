@@ -86,6 +86,7 @@ export function ProjectHeader({
             <nav aria-label="Project tools" className="flex gap-2 overflow-x-auto">
               {(
                 [
+                  [`/projects/${project.id}/snapshot`, 'Snapshot'],
                   [`/projects/${project.id}/ffe/table`, 'FF&E'],
                   [`/projects/${project.id}/proposal/table`, 'Proposal'],
                 ] as const

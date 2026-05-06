@@ -6,13 +6,7 @@ import { NewProjectModal } from '../components/project/NewProjectModal';
 import { ProjectImagesModal } from '../components/project/ProjectImagesModal';
 import { ProjectOptionsMenu } from '../components/project/ProjectOptionsMenu';
 import { ImageFrame } from '../components/shared/ImageFrame';
-import {
-  useProjects,
-  useUpdateProject,
-  useDeleteProject,
-  useProjectToolStates,
-  useUserProfile,
-} from '../hooks';
+import { useProjects, useUpdateProject, useDeleteProject, useUserProfile } from '../hooks';
 import type { Project } from '../types';
 
 export function DashboardPage() {
@@ -27,8 +21,6 @@ export function DashboardPage() {
   const deleteProject = useDeleteProject();
   const { data: userProfile } = useUserProfile();
   const firstName = userProfile?.name?.trim().split(' ')[0];
-  const projectIds = projects?.map((p) => p.id) ?? [];
-  const { states: toolStates } = useProjectToolStates(projectIds);
 
   const sortedProjects = useMemo(() => {
     if (!projects) return [];
@@ -49,7 +41,6 @@ export function DashboardPage() {
   return (
     <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
       <div className="mx-auto max-w-4xl space-y-8">
-        {/* Header */}
         <header className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
@@ -69,7 +60,6 @@ export function DashboardPage() {
           </button>
         </header>
 
-        {/* Companies */}
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
             Companies
@@ -100,7 +90,6 @@ export function DashboardPage() {
           )}
         </section>
 
-        {/* Projects */}
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
@@ -148,53 +137,47 @@ export function DashboardPage() {
                     openProjectMenuId === project.id ? 'bg-neutral-50' : 'hover:bg-neutral-50',
                   ].join(' ')}
                 >
-                  {/* Thumbnail */}
-                  <div className="flex-shrink-0 overflow-hidden rounded-lg">
-                    <ImageFrame
-                      entityType="project"
-                      entityId={project.id}
-                      alt={project.name}
-                      className="h-16 w-24 object-cover"
-                      disabled
-                    />
-                  </div>
+                  <Link
+                    to={`/projects/${project.id}/snapshot`}
+                    className="flex min-w-0 flex-1 items-center gap-4 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                    aria-label={`Open ${project.name} snapshot`}
+                  >
+                    <div className="flex-shrink-0 overflow-hidden rounded-lg">
+                      <ImageFrame
+                        entityType="project"
+                        entityId={project.id}
+                        alt={project.name}
+                        className="h-16 w-24 object-cover"
+                        disabled
+                      />
+                    </div>
 
-                  {/* Metadata */}
-                  <div className="min-w-0 flex-1">
-                    {project.clientName && (
-                      <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
-                        {project.clientName}
+                    <div className="min-w-0 flex-1">
+                      {project.clientName && (
+                        <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
+                          {project.clientName}
+                        </p>
+                      )}
+                      <h3 className="font-display mt-0.5 truncate text-lg font-semibold leading-snug text-neutral-900">
+                        {project.name}
+                      </h3>
+                      <p className="mt-0.5 truncate text-sm text-neutral-400">
+                        {[
+                          project.companyName,
+                          project.projectLocation,
+                          `Updated ${formatRelativeDate(project.updatedAt)}`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </p>
-                    )}
-                    <h3 className="font-display mt-0.5 truncate text-lg font-semibold leading-snug text-neutral-900">
-                      {project.name}
-                    </h3>
-                    <p className="mt-0.5 truncate text-sm text-neutral-400">
-                      {[
-                        project.companyName,
-                        project.projectLocation,
-                        `Updated ${formatRelativeDate(project.updatedAt)}`,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </p>
-                  </div>
+                    </div>
+                  </Link>
 
-                  {/* Actions */}
                   <div
                     className="flex flex-shrink-0 items-center gap-2"
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
-                    <Link to={`/projects/${project.id}/ffe/table`} className="project-action-btn">
-                      {toolStates[project.id]?.hasFfe === false ? '+ FF&E' : 'FF&E'}
-                    </Link>
-                    <Link
-                      to={`/projects/${project.id}/proposal/table`}
-                      className="project-action-btn"
-                    >
-                      {toolStates[project.id]?.hasProposal === false ? '+ Proposal' : 'Proposal'}
-                    </Link>
                     <ProjectOptionsMenu
                       projectName={project.name}
                       open={openProjectMenuId === project.id}
@@ -288,7 +271,6 @@ function ProjectListSkeleton() {
           </div>
           <div className="flex gap-2">
             <div className="h-7 w-14 animate-pulse rounded-md bg-neutral-100" />
-            <div className="h-7 w-18 animate-pulse rounded-md bg-neutral-100" />
           </div>
         </div>
       ))}

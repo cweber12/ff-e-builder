@@ -46,6 +46,7 @@ describe('ProjectHeader', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />);
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Snapshot' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'FF&E' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Proposal' })).toBeInTheDocument();
   });

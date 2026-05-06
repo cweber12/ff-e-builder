@@ -43,6 +43,7 @@ import {
   useProposalWithItems,
 } from './hooks';
 import { DashboardPage } from './pages/DashboardPage';
+import { ProjectSnapshotPage } from './pages/ProjectSnapshotPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
@@ -71,7 +72,8 @@ function App() {
       >
         <Route path="/projects" element={<DashboardPage />} />
         <Route path="/projects/:id" element={<ProjectLayout />}>
-          <Route index element={<ProjectToolRedirect tool="ffe" />} />
+          <Route index element={<Navigate to="snapshot" replace />} />
+          <Route path="snapshot" element={<ProjectSnapshotRoute />} />
           <Route path="ffe" element={<ProjectToolRedirect tool="ffe" />} />
           <Route path="ffe/table" element={<ProjectTableRoute />} />
           <Route path="ffe/catalog" element={<ProjectCatalogRoute />} />
@@ -151,6 +153,7 @@ function ProjectLayout() {
                 <div className="flex min-w-0 gap-1 overflow-x-auto">
                   {(
                     [
+                      [`/projects/${project.id}/snapshot`, 'Snapshot', true],
                       [`/projects/${project.id}/ffe/table`, 'FF&E', false],
                       [`/projects/${project.id}/proposal/table`, 'Proposal', false],
                       [`/projects/${project.id}/materials`, 'Materials', true],
@@ -347,6 +350,17 @@ function ProjectTableRoute() {
       project={project}
       roomsWithItems={roomsWithItems}
       onImport={onImport}
+    />
+  );
+}
+
+function ProjectSnapshotRoute() {
+  const { project, roomsWithItems, proposalCategoriesWithItems } = useProjectContext();
+  return (
+    <ProjectSnapshotPage
+      project={project}
+      roomsWithItems={roomsWithItems}
+      proposalCategoriesWithItems={proposalCategoriesWithItems}
     />
   );
 }

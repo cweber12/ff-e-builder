@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(projects): route dashboard project cards and `/projects/:id` to the new Project Snapshot landing page with a first-class Snapshot tab
 - fix(proposal): widen Proposal table rendering and plan columns so image previews do not overlap adjacent cells
 - fix(crop): remove crop CSS transform from browser image display; crop now only affects export
 - fix(crop): initialize CropModal pendingParams from existing crop so re-save without interaction works

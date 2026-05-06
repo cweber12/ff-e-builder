@@ -30,7 +30,7 @@ C4Component
   title ChillDesignStudio - Components
 
   Container_Boundary(spa, "React SPA (Vite, TypeScript)") {
-    Component(routes, "Route Shell", "react-router-dom", "Project list, tool chooser, FF&E pages, Proposal pages")
+    Component(routes, "Route Shell", "react-router-dom", "Project list, Project Snapshot, FF&E pages, Proposal pages")
     Component(ui, "Components", "React + Tailwind", "Tables, modals, headers, exports, imports, image frames")
     Component(hooks, "Data Hooks", "TanStack Query", "Project, room, item, material, image, user profile, and Proposal queries")
     Component(auth, "Auth Module", "Firebase Auth SDK", "Sign-in state and ID token access")
@@ -64,7 +64,8 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 
 - `/signin` is public.
 - `/projects` lists projects, editable user information, and project image previews.
-- `/projects/:id` redirects to the default project tool.
+- `/projects/:id` redirects to `/projects/:id/snapshot`.
+- `/projects/:id/snapshot` shows the read-first Project Snapshot landing page for the open Project.
 - `/projects/:id/ffe/table` shows the editable FF&E table grouped by Room.
 - `/projects/:id/ffe/catalog` shows printable FF&E catalog pages.
 - `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
