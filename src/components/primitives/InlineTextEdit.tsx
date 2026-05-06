@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { cn } from '../../lib/cn';
 
 interface InlineTextEditProps {
@@ -9,6 +9,8 @@ interface InlineTextEditProps {
   placeholder?: string;
   className?: string;
   inputClassName?: string;
+  multiline?: boolean;
+  rows?: number;
   'aria-label'?: string;
 }
 
@@ -21,13 +23,15 @@ export function InlineTextEdit({
   placeholder = 'Click to edit',
   className,
   inputClassName,
+  multiline = false,
+  rows = 4,
   'aria-label': ariaLabel,
 }: InlineTextEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   // Keep draft in sync when external value changes while not editing
   useEffect(() => {
@@ -67,12 +71,15 @@ export function InlineTextEdit({
   };
 
   useEffect(() => {
-    if (editing) inputRef.current?.select();
-  }, [editing]);
+    if (editing) {
+      inputRef.current?.focus();
+      if (!multiline) inputRef.current?.select();
+    }
+  }, [editing, multiline]);
 
   if (!editing) {
     return (
-      <span
+      <div
         role="button"
         tabIndex={0}
         aria-label={ariaLabel ?? `Edit ${value}`}
@@ -84,43 +91,73 @@ export function InlineTextEdit({
           }
         }}
         className={cn(
-          'cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors',
+          'cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50',
           className,
         )}
       >
         {renderDisplay
           ? renderDisplay(value)
           : value || <span className="text-gray-400">{placeholder}</span>}
-      </span>
+      </div>
     );
   }
 
   return (
-    <span className="relative inline-flex flex-col gap-1">
-      <input
-        ref={inputRef}
-        type="text"
-        value={draft}
-        aria-label={ariaLabel}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => void commit()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            void commit();
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            cancel();
-          }
-        }}
-        className={cn(
-          'rounded border px-2 py-0.5 text-inherit bg-surface focus:outline-none',
-          saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
-          saveState === 'error' && 'border-danger-500',
-          saveState === 'idle' && 'border-gray-300 focus:border-brand-500',
-          inputClassName,
-        )}
-      />
+    <div className={cn('relative flex flex-col gap-1', className)}>
+      {multiline ? (
+        <textarea
+          ref={inputRef as RefObject<HTMLTextAreaElement>}
+          value={draft}
+          rows={rows}
+          aria-label={ariaLabel}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => void commit()}
+          onKeyDown={(e) => {
+            if (
+              (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ||
+              (e.key === 'Enter' && e.shiftKey)
+            ) {
+              e.preventDefault();
+              void commit();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancel();
+            }
+          }}
+          className={cn(
+            'rounded border px-2 py-1 text-inherit bg-surface focus:outline-none',
+            saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
+            saveState === 'error' && 'border-danger-500',
+            saveState === 'idle' && 'border-gray-300 focus:border-brand-500',
+            inputClassName,
+          )}
+        />
+      ) : (
+        <input
+          ref={inputRef as RefObject<HTMLInputElement>}
+          type="text"
+          value={draft}
+          aria-label={ariaLabel}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => void commit()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              void commit();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancel();
+            }
+          }}
+          className={cn(
+            'rounded border px-2 py-0.5 text-inherit bg-surface focus:outline-none',
+            saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
+            saveState === 'error' && 'border-danger-500',
+            saveState === 'idle' && 'border-gray-300 focus:border-brand-500',
+            inputClassName,
+          )}
+        />
+      )}
       {saveState === 'error' && (
         <span
           role="tooltip"
@@ -129,6 +166,6 @@ export function InlineTextEdit({
           {errorMsg}
         </span>
       )}
-    </span>
+    </div>
   );
 }

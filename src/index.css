@@ -224,6 +224,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-height: 0;
   }
 
   .catalog-left-column {
@@ -337,6 +338,7 @@
   }
 
   .catalog-notes {
+    margin: 0;
     border-left: 2px solid theme('colors.brand.500');
     padding-left: 14px;
     font-size: 14px;
@@ -346,7 +348,6 @@
   }
 
   .catalog-approval {
-    margin-top: auto;
     align-self: flex-end;
     width: min(100%, 320px);
     border: 1px solid theme('colors.gray.200');

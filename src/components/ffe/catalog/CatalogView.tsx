@@ -350,6 +350,7 @@ export function CatalogPage({
             />
           </div>
 
+          <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
           {item.materials.length > 0 && (
             <div className="grid gap-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">
@@ -367,8 +368,6 @@ export function CatalogPage({
               </div>
             </div>
           )}
-
-          <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
         </div>
 
         <div className="catalog-details">
@@ -377,32 +376,39 @@ export function CatalogPage({
               {room.name}
             </p>
             <div className="mt-3 flex items-baseline gap-2">
-              {item.itemIdTag && (
-                <span className="shrink-0 font-mono text-sm font-medium text-gray-400">
+              {item.itemIdTag ? (
+                <span className="shrink-0 font-mono text-xl font-bold tracking-wide text-gray-900">
                   {item.itemIdTag}
+                </span>
+              ) : (
+                <span className="shrink-0 font-mono text-sm font-semibold tracking-wide text-gray-400">
+                  No ID
                 </span>
               )}
               <InlineTextEdit
                 value={item.itemName}
                 aria-label={`Item name for ${item.itemName}`}
                 className="min-w-0 flex-1"
-                inputClassName="w-full text-[28px] font-semibold leading-tight text-gray-950"
+                inputClassName="w-full text-xl font-medium leading-tight text-gray-700"
                 onSave={(value) => saveField('itemName', value, true)}
                 renderDisplay={(value) => (
-                  <h1 className="text-[28px] font-semibold leading-tight text-gray-950">{value}</h1>
+                  <h1 className="text-xl font-medium leading-tight text-gray-700">{value}</h1>
                 )}
               />
             </div>
-            <div className="mt-4">
+            <div className="mt-2">
               <InlineTextEdit
-                value={item.category ?? ''}
-                aria-label={`Category for ${item.itemName}`}
-                onSave={(value) => saveField('category', value)}
-                renderDisplay={(value) => (
-                  <span className="inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700">
-                    {value.trim() || 'Uncategorized'}
-                  </span>
-                )}
+                value={item.dimensions ?? ''}
+                aria-label={`Dimensions for ${item.itemName}`}
+                inputClassName="text-sm text-gray-600"
+                onSave={(value) => saveField('dimensions', value)}
+                renderDisplay={(value) =>
+                  value.trim() ? (
+                    <span className="text-sm text-gray-600">{value}</span>
+                  ) : (
+                    <span className="text-sm italic text-gray-400">Click to add dimensions</span>
+                  )
+                }
               />
             </div>
             <div className="mt-4">
@@ -425,21 +431,6 @@ export function CatalogPage({
 
           <div className="h-px bg-brand-500/40" />
 
-          <dl className="catalog-data-grid">
-            <DataPoint
-              label="Dimensions"
-              value={item.dimensions}
-              ariaLabel={`Dimensions for ${item.itemName}`}
-              onSave={(value) => saveField('dimensions', value)}
-            />
-            <DataPoint
-              label="Lead Time"
-              value={item.leadTime}
-              ariaLabel={`Lead time for ${item.itemName}`}
-              onSave={(value) => saveField('leadTime', value)}
-            />
-          </dl>
-
           {item.unitCostCents > 0 && (
             <div className="catalog-price-block">
               <div>
@@ -449,20 +440,26 @@ export function CatalogPage({
             </div>
           )}
 
-          <InlineTextEdit
-            value={item.notes ?? ''}
-            aria-label={`Notes for ${item.itemName}`}
-            className="block"
-            inputClassName="w-full text-sm text-gray-600"
-            onSave={(value) => saveField('notes', value)}
-            renderDisplay={(value) =>
-              value.trim() ? (
-                <p className="catalog-notes">{value}</p>
-              ) : (
-                <p className="catalog-notes italic text-gray-400">Click to add notes</p>
-              )
-            }
-          />
+          <div className="flex-1 min-h-0">
+            <InlineTextEdit
+              value={item.notes ?? ''}
+              aria-label={`Notes for ${item.itemName}`}
+              className="block h-full w-full"
+              multiline
+              rows={5}
+              inputClassName="h-full min-h-24 w-full resize-none overflow-y-auto text-sm leading-6 text-gray-600"
+              onSave={(value) => saveField('notes', value)}
+              renderDisplay={(value) =>
+                value.trim() ? (
+                  <p className="catalog-notes h-full overflow-y-auto whitespace-pre-wrap">
+                    {value}
+                  </p>
+                ) : (
+                  <p className="catalog-notes italic text-gray-400">Click to add notes</p>
+                )
+              }
+            />
+          </div>
 
           <CatalogApprovalSection />
         </div>
@@ -485,36 +482,6 @@ export function CatalogPage({
         />
       </footer>
     </article>
-  );
-}
-
-function DataPoint({
-  label,
-  value,
-  onSave,
-  ariaLabel,
-}: {
-  label: string;
-  value: string | null;
-  onSave?: ((value: string) => Promise<void>) | undefined;
-  ariaLabel?: string | undefined;
-}) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>
-        {onSave ? (
-          <InlineTextEdit
-            value={value ?? ''}
-            {...(ariaLabel ? { 'aria-label': ariaLabel } : {})}
-            onSave={onSave}
-            renderDisplay={(displayValue) => displayValue.trim() || '-'}
-          />
-        ) : (
-          value?.trim() || '-'
-        )}
-      </dd>
-    </div>
   );
 }
 
