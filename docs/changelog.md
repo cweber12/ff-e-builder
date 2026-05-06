@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- feat(rooms): DeleteRoomModal now offers "Delete room and all items" alongside "Move items to another room" — DB cascade handles item deletion automatically
+- feat(ffe): catalog view is now the default when clicking the FF&E tab; catalog/table toggle added to the tab bar matching the materials library pattern "Delete room and all items" alongside "Move items to another room" — DB cascade handles item deletion automatically
 - feat(proposal): DeleteCategoryModal added to ProposalTable with "Move items to another category" and "Delete category and all items" options; previously deletion fired immediately with no confirmation
 - feat(projects): route dashboard project cards and `/projects/:id` to the new Project Snapshot landing page with a first-class Snapshot tab
 - fix(proposal): widen Proposal table rendering and plan columns so image previews do not overlap adjacent cells

@@ -154,7 +154,7 @@ function ProjectLayout() {
                   {(
                     [
                       [`/projects/${project.id}/snapshot`, 'Snapshot', true],
-                      [`/projects/${project.id}/ffe/table`, 'FF&E', false],
+                      [`/projects/${project.id}/ffe`, 'FF&E', false],
                       [`/projects/${project.id}/proposal/table`, 'Proposal', false],
                       [`/projects/${project.id}/materials`, 'Materials', true],
                       [`/projects/${project.id}/budget`, 'Budget', true],
@@ -274,7 +274,38 @@ function ProjectTabActions({
     );
   }
 
+  if (activePath.includes(`/projects/${project.id}/ffe/`)) {
+    return <FfeTabActions project={project} activePath={activePath} />;
+  }
+
   return <div className="min-h-8" />;
+}
+
+const ffeToggleClassName =
+  'rounded px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+const ffeToggleActiveClassName =
+  'rounded bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+
+function FfeTabActions({ project, activePath }: { project: Project; activePath: string }) {
+  const isCatalog = activePath.includes('/ffe/catalog');
+  return (
+    <div className="flex items-center gap-2">
+      <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
+        <Link
+          to={`/projects/${project.id}/ffe/catalog`}
+          className={isCatalog ? ffeToggleActiveClassName : ffeToggleClassName}
+        >
+          Catalog
+        </Link>
+        <Link
+          to={`/projects/${project.id}/ffe/table`}
+          className={!isCatalog ? ffeToggleActiveClassName : ffeToggleClassName}
+        >
+          Table
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 function BudgetPageActions({
@@ -367,7 +398,8 @@ function ProjectSnapshotRoute() {
 
 function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'proposal' }) {
   const { id } = useParams();
-  return <Navigate to={`/projects/${id}/${tool}/table`} replace />;
+  const target = tool === 'ffe' ? 'ffe/catalog' : 'proposal/table';
+  return <Navigate to={`/projects/${id}/${target}`} replace />;
 }
 
 function ProjectProposalRoute() {
