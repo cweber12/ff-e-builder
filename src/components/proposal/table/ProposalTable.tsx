@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
-import { Button } from '../../primitives';
+import { Button, Modal } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ImageFrame } from '../../shared/ImageFrame';
@@ -20,6 +20,7 @@ import {
   parseUnitCostDollarsInput,
   type Project,
   type ProposalItem,
+  type ProposalCategoryWithItems,
 } from '../../../types';
 import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
 import { useUserProfile } from '../../../hooks';
@@ -82,6 +83,7 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [selectedItem, setSelectedItem] = useState<ProposalItem | null>(null);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>(undefined);
+  const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
 
   const toggleCollapsed = (id: string) => {
@@ -169,7 +171,7 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           onCategoryNameSave={(name) =>
             updateCategory.mutate({ id: category.id, patch: { name: name.trim() } })
           }
-          onCategoryDelete={() => deleteCategory.mutate(category.id)}
+          onCategoryDelete={() => setCategoryToDelete(category)}
           onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch })}
           onItemClick={(item) => {
             setSelectedItem(item);
@@ -196,7 +198,142 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           onClose={() => setSelectedItem(null)}
         />
       )}
+
+      <DeleteCategoryModal
+        open={categoryToDelete !== null}
+        category={categoryToDelete}
+        allCategories={categoriesWithItems}
+        onClose={() => setCategoryToDelete(null)}
+        onConfirm={async (targetCategoryId) => {
+          if (!categoryToDelete) return;
+          if (categoryToDelete.items.length && targetCategoryId) {
+            await Promise.all(
+              categoryToDelete.items.map((item) =>
+                updateItem.mutateAsync({
+                  id: item.id,
+                  patch: { categoryId: targetCategoryId, version: item.version },
+                }),
+              ),
+            );
+          }
+          await deleteCategory.mutateAsync(categoryToDelete.id);
+          setCategoryToDelete(null);
+        }}
+      />
     </TableViewStack>
+  );
+}
+
+function DeleteCategoryModal({
+  category,
+  allCategories,
+  open,
+  onClose,
+  onConfirm,
+}: {
+  category: ProposalCategoryWithItems | null;
+  allCategories: ProposalCategoryWithItems[];
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (targetCategoryId: string | null) => Promise<void> | void;
+}) {
+  const [targetCategoryId, setTargetCategoryId] = useState('');
+  const [deleteAll, setDeleteAll] = useState(false);
+  const otherCategories = allCategories.filter((c) => c.id !== category?.id);
+  const itemCount = category?.items.length ?? 0;
+  const hasItems = itemCount > 0;
+  const canDelete = !hasItems || deleteAll || targetCategoryId.length > 0;
+
+  useEffect(() => {
+    if (open) {
+      setTargetCategoryId('');
+      setDeleteAll(false);
+    }
+  }, [open, category?.id]);
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={category ? `Delete ${category.name}?` : 'Delete category'}
+    >
+      <div className="flex flex-col gap-4">
+        {hasItems ? (
+          <>
+            <p className="text-sm text-gray-600">
+              <strong>{category?.name}</strong> has {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              . Choose what to do with them before deleting.
+            </p>
+            <div className="flex flex-col gap-2">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50/30">
+                <input
+                  type="radio"
+                  name="delete-category-action"
+                  className="mt-0.5 accent-brand-500"
+                  checked={!deleteAll}
+                  onChange={() => setDeleteAll(false)}
+                />
+                <span className="text-sm font-medium text-gray-800">
+                  Move items to another category
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
+                <input
+                  type="radio"
+                  name="delete-category-action"
+                  className="mt-0.5 accent-brand-500"
+                  checked={deleteAll}
+                  onChange={() => setDeleteAll(true)}
+                />
+                <span className="text-sm font-medium text-gray-800">
+                  Delete category and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                </span>
+              </label>
+            </div>
+            {!deleteAll && (
+              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                Move items to...
+                <select
+                  value={targetCategoryId}
+                  onChange={(event) => setTargetCategoryId(event.target.value)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+                >
+                  <option value="">Choose a category</option>
+                  {otherCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-gray-600">This category is empty and can be deleted.</p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={!canDelete}
+            onClick={() => {
+              void Promise.resolve(
+                onConfirm(hasItems && !deleteAll ? targetCategoryId : null),
+              ).then(() => {
+                setTargetCategoryId('');
+                setDeleteAll(false);
+                onClose();
+              });
+            }}
+          >
+            Delete category
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

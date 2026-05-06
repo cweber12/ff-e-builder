@@ -311,6 +311,7 @@ describe('proposal export document preparation', () => {
         companyName: '',
         createdAt: '',
         updatedAt: '',
+        authorized: true,
       },
     );
 

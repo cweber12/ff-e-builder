@@ -92,6 +92,7 @@ describe('proposal export document', () => {
         companyName: '',
         createdAt: '',
         updatedAt: '',
+        authorized: true,
       },
     );
 

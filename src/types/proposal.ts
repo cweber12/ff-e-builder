@@ -12,6 +12,7 @@ export type UserProfile = {
   companyName: string;
   createdAt: string;
   updatedAt: string;
+  authorized: boolean;
 };
 
 export type ProposalCategory = {

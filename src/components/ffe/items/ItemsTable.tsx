@@ -820,39 +820,74 @@ function DeleteRoomModal({
   onConfirm: (targetRoomId: string | null) => Promise<void> | void;
 }) {
   const [targetRoomId, setTargetRoomId] = useState('');
+  const [deleteAll, setDeleteAll] = useState(false);
   const otherRooms = rooms.filter((candidate) => candidate.id !== room?.id);
   const itemCount = room?.items.length ?? 0;
-  const needsTarget = itemCount > 0;
-  const canDelete = !needsTarget || targetRoomId.length > 0;
+  const hasItems = itemCount > 0;
+  const canDelete = !hasItems || deleteAll || targetRoomId.length > 0;
 
   useEffect(() => {
-    if (open) setTargetRoomId('');
+    if (open) {
+      setTargetRoomId('');
+      setDeleteAll(false);
+    }
   }, [open, room?.id]);
 
   return (
     <Modal open={open} onClose={onClose} title={room ? `Delete ${room.name}?` : 'Delete room'}>
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-gray-600">
-          {needsTarget
-            ? `${room?.name} has ${itemCount} ${itemCount === 1 ? 'item' : 'items'}. Choose another room before deleting it.`
-            : 'This room is empty and can be deleted.'}
-        </p>
-        {needsTarget && (
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-            Move items to...
-            <select
-              value={targetRoomId}
-              onChange={(event) => setTargetRoomId(event.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
-            >
-              <option value="">Choose a room</option>
-              {otherRooms.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {candidate.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        {hasItems ? (
+          <>
+            <p className="text-sm text-gray-600">
+              <strong>{room?.name}</strong> has {itemCount} {itemCount === 1 ? 'item' : 'items'}.
+              Choose what to do with them before deleting.
+            </p>
+            <div className="flex flex-col gap-2">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50/30">
+                <input
+                  type="radio"
+                  name="delete-room-action"
+                  className="mt-0.5 accent-brand-500"
+                  checked={!deleteAll}
+                  onChange={() => setDeleteAll(false)}
+                />
+                <span className="text-sm font-medium text-gray-800">
+                  Move items to another room
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
+                <input
+                  type="radio"
+                  name="delete-room-action"
+                  className="mt-0.5 accent-brand-500"
+                  checked={deleteAll}
+                  onChange={() => setDeleteAll(true)}
+                />
+                <span className="text-sm font-medium text-gray-800">
+                  Delete room and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                </span>
+              </label>
+            </div>
+            {!deleteAll && (
+              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                Move items to...
+                <select
+                  value={targetRoomId}
+                  onChange={(event) => setTargetRoomId(event.target.value)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+                >
+                  <option value="">Choose a room</option>
+                  {otherRooms.map((candidate) => (
+                    <option key={candidate.id} value={candidate.id}>
+                      {candidate.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-gray-600">This room is empty and can be deleted.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
@@ -863,10 +898,13 @@ function DeleteRoomModal({
             variant="danger"
             disabled={!canDelete}
             onClick={() => {
-              void Promise.resolve(onConfirm(needsTarget ? targetRoomId : null)).then(() => {
-                setTargetRoomId('');
-                onClose();
-              });
+              void Promise.resolve(onConfirm(hasItems && !deleteAll ? targetRoomId : null)).then(
+                () => {
+                  setTargetRoomId('');
+                  setDeleteAll(false);
+                  onClose();
+                },
+              );
             }}
           >
             Delete room

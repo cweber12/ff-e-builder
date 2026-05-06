@@ -2,11 +2,30 @@ import { Hono } from 'hono';
 import type { Env, HonoVariables } from '../types';
 import { UpsertUserProfileSchema } from '../types';
 import { getDb } from '../lib/db';
+import { requireAuthorized } from '../middleware/requireAuthorized';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
+// GET /me — available to all authenticated users; skips Neon for unauthorized ones.
 router.get('/me', async (c) => {
   const uid = c.get('uid');
+  const isAuthorized = c.get('isAuthorized');
+
+  if (!isAuthorized) {
+    return c.json({
+      authorized: false,
+      profile: {
+        owner_uid: uid,
+        name: '',
+        email: c.get('email') ?? '',
+        phone: '',
+        company_name: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    });
+  }
+
   const sql = getDb(c.env);
   const rows = await sql`
     SELECT *
@@ -16,6 +35,7 @@ router.get('/me', async (c) => {
   `;
 
   return c.json({
+    authorized: true,
     profile:
       rows[0] ??
       ({
@@ -30,7 +50,8 @@ router.get('/me', async (c) => {
   });
 });
 
-router.put('/me', async (c) => {
+// PUT /me — authorized users only.
+router.put('/me', requireAuthorized, async (c) => {
   const uid = c.get('uid');
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = UpsertUserProfileSchema.safeParse(body);
@@ -54,7 +75,7 @@ router.put('/me', async (c) => {
     RETURNING *
   `;
 
-  return c.json({ profile: rows[0] });
+  return c.json({ authorized: true, profile: rows[0] });
 });
 
 export { router as usersRouter };

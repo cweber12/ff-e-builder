@@ -137,21 +137,24 @@ export function DashboardPage() {
                     openProjectMenuId === project.id ? 'bg-neutral-50' : 'hover:bg-neutral-50',
                   ].join(' ')}
                 >
+                  <div
+                    className="flex-shrink-0 overflow-hidden rounded-lg"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <ImageFrame
+                      entityType="project"
+                      entityId={project.id}
+                      alt={project.name}
+                      className="h-16 w-24 object-cover"
+                    />
+                  </div>
+
                   <Link
                     to={`/projects/${project.id}/snapshot`}
                     className="flex min-w-0 flex-1 items-center gap-4 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                     aria-label={`Open ${project.name} snapshot`}
                   >
-                    <div className="flex-shrink-0 overflow-hidden rounded-lg">
-                      <ImageFrame
-                        entityType="project"
-                        entityId={project.id}
-                        alt={project.name}
-                        className="h-16 w-24 object-cover"
-                        disabled
-                      />
-                    </div>
-
                     <div className="min-w-0 flex-1">
                       {project.clientName && (
                         <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
