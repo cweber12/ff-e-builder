@@ -39,3 +39,6 @@ playwright-report/
 
 # Agent worktrees
 .claude/worktrees/
+
+# Authorized emails
+.authorized-emails

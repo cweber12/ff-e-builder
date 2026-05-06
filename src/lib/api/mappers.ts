@@ -212,7 +212,7 @@ export const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   updatedAt: r.updated_at,
 });
 
-export const mapUserProfile = (r: RawUserProfile): UserProfile => ({
+export const mapUserProfile = (r: RawUserProfile, authorized = false): UserProfile => ({
   ownerUid: r.owner_uid,
   name: r.name,
   email: r.email,
@@ -220,6 +220,7 @@ export const mapUserProfile = (r: RawUserProfile): UserProfile => ({
   companyName: r.company_name,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  authorized,
 });
 
 export const mapProposalCategory = (r: RawProposalCategory): ProposalCategory => ({

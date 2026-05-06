@@ -1,0 +1,6 @@
+# Copy to .dev.vars (git-ignored) and fill in real values for local development.
+NEON_DATABASE_URL=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+FIREBASE_ADMIN_PRIVATE_KEY=
+# Comma-separated emails that have full Neon/R2 access.
+AUTHORIZED_EMAILS=your@email.com

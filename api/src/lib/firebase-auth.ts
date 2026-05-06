@@ -19,6 +19,7 @@ interface TokenClaims {
   sub: string;
   exp: number;
   iat: number;
+  email?: string;
 }
 
 function b64urlToBuffer(b64url: string): ArrayBuffer {
@@ -50,7 +51,10 @@ async function fetchMatchingJwk(kid: string): Promise<JWK> {
  * edge runtime, which does not support all Node.js APIs that firebase-admin
  * requires.
  */
-export async function verifyFirebaseToken(token: string, env: Env): Promise<{ uid: string }> {
+export async function verifyFirebaseToken(
+  token: string,
+  env: Env,
+): Promise<{ uid: string; email: string | null }> {
   const parts = token.split('.');
   if (parts.length !== 3) throw new Error('Malformed JWT');
   const [headerB64, payloadB64, sigB64] = parts as [string, string, string];
@@ -85,5 +89,5 @@ export async function verifyFirebaseToken(token: string, env: Env): Promise<{ ui
   );
 
   if (!valid) throw new Error('Invalid signature');
-  return { uid: claims.sub };
+  return { uid: claims.sub, email: claims.email ?? null };
 }

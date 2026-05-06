@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env, HonoVariables } from './types';
 import { authMiddleware } from './middleware/auth';
+import { requireAuthorized } from './middleware/requireAuthorized';
 import { projectsRouter } from './routes/projects';
 import { roomsRouter } from './routes/rooms';
 import { itemsRouter } from './routes/items';
@@ -30,6 +31,14 @@ app.get('/healthz', (c) => c.json({ ok: true }));
 
 // ─── Auth middleware (all /api/v1/* routes) ───────────────────────────────
 app.use('/api/v1/*', authMiddleware);
+
+// ─── Authorization guard (all Neon/R2 routes — users router handles its own) ──
+app.use('/api/v1/projects/*', requireAuthorized);
+app.use('/api/v1/rooms/*', requireAuthorized);
+app.use('/api/v1/items/*', requireAuthorized);
+app.use('/api/v1/images/*', requireAuthorized);
+app.use('/api/v1/materials/*', requireAuthorized);
+app.use('/api/v1/proposal/*', requireAuthorized);
 
 // ─── Routes ───────────────────────────────────────────────────────────────
 app.route('/api/v1/projects', projectsRouter);

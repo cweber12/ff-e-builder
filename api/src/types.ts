@@ -9,12 +9,18 @@ export interface Env {
   /** Neon serverless connection string — Worker secret */
   NEON_DATABASE_URL: string;
   IMAGES_BUCKET: R2Bucket;
+  /** Comma-separated list of authorized emails — Worker secret */
+  AUTHORIZED_EMAILS?: string;
 }
 
 // ─── Hono context variables ────────────────────────────────────────────────
 export interface HonoVariables {
   /** Firebase UID of the authenticated user */
   uid: string;
+  /** Email from the Firebase ID token (null if provider omits it) */
+  email: string | null;
+  /** Whether the authenticated user is on the authorized email allowlist */
+  isAuthorized: boolean;
 }
 
 // ─── Database entity types ─────────────────────────────────────────────────

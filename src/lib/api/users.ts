@@ -11,12 +11,12 @@ export type UpsertUserProfileInput = {
 
 export const usersApi = {
   me: (): Promise<UserProfile> =>
-    apiFetch<{ profile: RawUserProfile }>('/api/v1/users/me').then((r) =>
-      mapUserProfile(r.profile),
+    apiFetch<{ profile: RawUserProfile; authorized: boolean }>('/api/v1/users/me').then((r) =>
+      mapUserProfile(r.profile, r.authorized),
     ),
 
   updateMe: (input: UpsertUserProfileInput): Promise<UserProfile> =>
-    apiFetch<{ profile: RawUserProfile }>('/api/v1/users/me', {
+    apiFetch<{ profile: RawUserProfile; authorized: boolean }>('/api/v1/users/me', {
       method: 'PUT',
       body: JSON.stringify({
         name: input.name ?? '',
@@ -24,5 +24,5 @@ export const usersApi = {
         phone: input.phone ?? '',
         company_name: input.companyName ?? '',
       }),
-    }).then((r) => mapUserProfile(r.profile)),
+    }).then((r) => mapUserProfile(r.profile, r.authorized)),
 };

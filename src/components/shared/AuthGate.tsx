@@ -11,6 +11,7 @@ import { useAuthUser } from '../../lib/auth-state';
 import { seedExampleProject } from '../../lib/seed';
 import { useUserProfile } from '../../hooks';
 import { UserProfileModal } from './UserProfileModal';
+import { DemoPage } from '../../pages/DemoPage';
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 
@@ -275,6 +276,46 @@ function TopBar() {
   );
 }
 
+// ─── Demo layout (unauthorized users) ─────────────────────────────────────
+
+function DemoLayout() {
+  return (
+    <>
+      <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+        <span className="text-sm font-bold tracking-tight text-brand-500">Chill Design Studio</span>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          Sign out
+        </button>
+      </header>
+      <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-800">
+        Demo mode — your account is not yet authorized. Contact the studio administrator to request
+        access.
+      </div>
+      <DemoPage />
+    </>
+  );
+}
+
+// ─── Authorization check (runs after Firebase auth is confirmed) ───────────
+
+function AuthorizedGate({ children }: { children: ReactNode }) {
+  const { data: profile, isLoading } = useUserProfile();
+
+  if (isLoading || !profile) return <FullScreenSpinner />;
+  if (!profile.authorized) return <DemoLayout />;
+
+  return (
+    <>
+      <TopBar />
+      {children}
+    </>
+  );
+}
+
 // ─── Gate ─────────────────────────────────────────────────────────────────
 
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -286,10 +327,5 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (isLoading) return <FullScreenSpinner />;
   if (!user) return <Navigate to="/signin" state={{ from: location.pathname }} replace />;
 
-  return (
-    <>
-      <TopBar />
-      {children}
-    </>
-  );
+  return <AuthorizedGate>{children}</AuthorizedGate>;
 }

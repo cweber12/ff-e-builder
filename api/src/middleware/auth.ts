@@ -6,7 +6,7 @@ import { verifyFirebaseToken } from '../lib/firebase-auth';
  * Hono middleware that verifies a Firebase ID token from the
  * `Authorization: Bearer <token>` header.
  *
- * On success: sets `c.var.uid` to the authenticated user's Firebase UID.
+ * On success: sets `c.var.uid`, `c.var.email`, and `c.var.isAuthorized`.
  * On failure: returns 401 Unauthorized.
  */
 export const authMiddleware: MiddlewareHandler<{
@@ -20,8 +20,19 @@ export const authMiddleware: MiddlewareHandler<{
 
   const token = header.slice(7);
   try {
-    const { uid } = await verifyFirebaseToken(token, c.env);
+    const { uid, email } = await verifyFirebaseToken(token, c.env);
+
+    const raw = c.env.AUTHORIZED_EMAILS ?? '';
+    const allowlist = raw
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAuthorized =
+      allowlist.length > 0 && email !== null && allowlist.includes(email.toLowerCase());
+
     c.set('uid', uid);
+    c.set('email', email);
+    c.set('isAuthorized', isAuthorized);
     await next();
   } catch {
     return c.json({ error: 'Unauthorized' }, 401);

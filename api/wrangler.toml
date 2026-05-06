@@ -14,3 +14,4 @@ FIREBASE_PROJECT_ID = "ffe-tool-auth"
 #   NEON_DATABASE_URL
 #   FIREBASE_ADMIN_CLIENT_EMAIL
 #   FIREBASE_ADMIN_PRIVATE_KEY
+#   AUTHORIZED_EMAILS  — comma-separated list, e.g. "alice@example.com,bob@example.com"
