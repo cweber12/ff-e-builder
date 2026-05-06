@@ -30,26 +30,18 @@ export const itemUnitCostCentsSchema = z
   .number()
   .int('Unit cost must resolve to whole cents')
   .min(0, 'Unit cost must be 0 or greater');
-export const itemMarkupPctSchema = z
-  .number()
-  .min(0, 'Markup must be 0 or greater')
-  .max(999.99, 'Markup must be 999.99 or less');
 
 export const editableItemPatchSchema = z.object({
   roomId: z.string().min(1).optional(),
   itemName: itemNameSchema.optional(),
   description: nullableText(4000).optional(),
   category: nullableText(100).optional(),
-  vendor: nullableText(255).optional(),
-  model: nullableText(255).optional(),
   itemIdTag: nullableText(100).optional(),
   dimensions: nullableText(100).optional(),
   seatHeight: nullableText(100).optional(),
-  finishes: nullableText(255).optional(),
   notes: nullableText(2000).optional(),
   qty: itemQtySchema.optional(),
   unitCostCents: itemUnitCostCentsSchema.optional(),
-  markupPct: itemMarkupPctSchema.optional(),
   leadTime: nullableText(100).optional(),
   status: ItemStatusSchema.optional(),
   imageUrl: nullableText(2048).optional(),
@@ -61,7 +53,6 @@ export const itemFormSchema = z.object({
   description: z.string().trim().max(4000).default(''),
   category: z.string().trim().max(100).default(''),
   itemIdTag: z.string().trim().max(100).default(''),
-  vendor: z.string().trim().max(255).default(''),
   dimensions: z.string().trim().max(100).default(''),
   seatHeight: z.string().trim().max(100).default(''),
   qty: z.string().refine((value) => parseQtyInput(value) !== undefined, {
@@ -70,10 +61,6 @@ export const itemFormSchema = z.object({
   unitCost: z.string().refine((value) => parseUnitCostDollarsInput(value) !== undefined, {
     message: 'Unit cost must be 0 or greater with max 2 decimals',
   }),
-  markupPct: z.string().refine((value) => parseMarkupPctInput(value) !== undefined, {
-    message: 'Markup must be between 0 and 999.99',
-  }),
-  finishes: z.string().trim().max(255).default(''),
   notes: z.string().trim().default(''),
   imageUrl: optionalUrlInput('image').default(''),
   linkUrl: optionalUrlInput('link').default(''),
@@ -95,13 +82,6 @@ export function parseUnitCostDollarsInput(raw: string): number | undefined {
   if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return undefined;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-export function parseMarkupPctInput(raw: string): number | undefined {
-  const normalized = normalizeDecimalInput(raw);
-  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return undefined;
-  const parsed = Number(normalized);
-  return itemMarkupPctSchema.safeParse(parsed).success ? parsed : undefined;
 }
 
 export function unitCostDollarsToCents(dollars: number): number {

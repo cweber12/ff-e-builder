@@ -80,16 +80,12 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   itemName: 'Test Chair',
   description: null,
   category: 'Seating',
-  vendor: 'Herman Miller',
-  model: 'Aeron',
   itemIdTag: 'LR-001',
   dimensions: '26"W',
   seatHeight: null,
-  finishes: null,
   notes: null,
   qty: 2,
   unitCostCents: 50000,
-  markupPct: 25,
   leadTime: '8 weeks',
   status: 'pending',
   imageUrl: null,
@@ -225,15 +221,13 @@ describe('exportTableCsv', () => {
   it('creates a CSV blob with correct headers', () => {
     exportTableCsv(makeProject(), [makeRoom()]);
     expect(capturedBlobContent).toContain('Item Name');
-    expect(capturedBlobContent).toContain('Vendor');
     expect(capturedBlobContent).toContain('Unit Cost');
   });
 
   it('includes item data in CSV rows', () => {
-    const item = makeItem({ itemName: 'Lounge Sofa', vendor: 'Knoll' });
+    const item = makeItem({ itemName: 'Lounge Sofa' });
     exportTableCsv(makeProject(), [makeRoom({ items: [item] })]);
     expect(capturedBlobContent).toContain('Lounge Sofa');
-    expect(capturedBlobContent).toContain('Knoll');
   });
 
   it('handles empty rooms gracefully', () => {

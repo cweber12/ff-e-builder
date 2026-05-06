@@ -7,13 +7,10 @@ import { itemStatuses } from '../types';
 export type ColumnMap = {
   itemName: string | null;
   category: string | null;
-  vendor: string | null;
-  model: string | null;
   itemIdTag: string | null;
   dimensions: string | null;
   qty: string | null;
   unitCostDollars: string | null;
-  markupPct: string | null;
   status: string | null;
   leadTime: string | null;
   notes: string | null;
@@ -50,8 +47,6 @@ const FIELD_ALIASES: Record<keyof ColumnMap, string[]> = {
     'title',
   ],
   category: ['category', 'type', 'item type', 'product type', 'classification'],
-  vendor: ['vendor', 'manufacturer', 'brand', 'supplier', 'source', 'make'],
-  model: ['model', 'model number', 'model #', 'sku', 'part number', 'part #', 'product number'],
   itemIdTag: [
     'id',
     'item id',
@@ -76,15 +71,6 @@ const FIELD_ALIASES: Record<keyof ColumnMap, string[]> = {
     'cost ($)',
     'price ($)',
     'unit cost ($)',
-  ],
-  markupPct: [
-    'markup',
-    'markup %',
-    'markup percent',
-    'margin',
-    'margin %',
-    'markup pct',
-    'mark up',
   ],
   status: ['status', 'order status', 'procurement status', 'state'],
   leadTime: ['lead time', 'delivery', 'delivery time', 'lead', 'lead time (weeks)', 'weeks'],
@@ -160,12 +146,6 @@ function parseMoneyString(raw: string): number {
   return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : 0;
 }
 
-function parseNumberString(raw: string): number {
-  const cleaned = raw.replace(/[,%\s]/g, '');
-  const parsed = parseFloat(cleaned);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-}
-
 function parseIntString(raw: string): number {
   const parsed = parseInt(raw.replace(/[,\s]/g, ''), 10);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 1;
@@ -193,7 +173,6 @@ export function transformRow(row: Record<string, string>, mapping: ColumnMap): I
   if (!itemName) return null;
 
   const unitCostRaw = get('unitCostDollars');
-  const markupRaw = get('markupPct');
   const qtyRaw = get('qty');
   const statusRaw = get('status');
   const roomName = get('room') || null;
@@ -201,13 +180,10 @@ export function transformRow(row: Record<string, string>, mapping: ColumnMap): I
   return {
     itemName,
     category: get('category') || null,
-    vendor: get('vendor') || null,
-    model: get('model') || null,
     itemIdTag: get('itemIdTag') || null,
     dimensions: get('dimensions') || null,
     qty: qtyRaw ? parseIntString(qtyRaw) : 1,
     unitCostCents: unitCostRaw ? parseMoneyString(unitCostRaw) : 0,
-    markupPct: markupRaw ? parseNumberString(markupRaw) : 0,
     status: statusRaw ? (normalizeStatus(statusRaw) ?? 'pending') : 'pending',
     leadTime: get('leadTime') || null,
     notes: get('notes') || null,

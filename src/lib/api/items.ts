@@ -6,16 +6,12 @@ export type CreateItemInput = {
   itemName: string;
   description?: string | null;
   category?: string | null;
-  vendor?: string | null;
-  model?: string | null;
   itemIdTag?: string | null;
   dimensions?: string | null;
   seatHeight?: string | null;
-  finishes?: string | null;
   notes?: string | null;
   qty?: number;
   unitCostCents?: number;
-  markupPct?: number;
   leadTime?: string | null;
   status?: ItemStatus;
   imageUrl?: string | null;
@@ -28,16 +24,12 @@ export type UpdateItemInput = {
   itemName?: string;
   description?: string | null;
   category?: string | null;
-  vendor?: string | null;
-  model?: string | null;
   itemIdTag?: string | null;
   dimensions?: string | null;
   seatHeight?: string | null;
-  finishes?: string | null;
   notes?: string | null;
   qty?: number;
   unitCostCents?: number;
-  markupPct?: number;
   leadTime?: string | null;
   status?: ItemStatus;
   imageUrl?: string | null;
@@ -60,16 +52,12 @@ export const itemsApi = {
         item_name: input.itemName,
         description: input.description,
         category: input.category,
-        vendor: input.vendor,
-        model: input.model,
         item_id_tag: input.itemIdTag,
         dimensions: input.dimensions,
         seat_height: input.seatHeight,
-        finishes: input.finishes,
         notes: input.notes,
         qty: input.qty,
         unit_cost_cents: input.unitCostCents,
-        markup_pct: input.markupPct,
         lead_time: input.leadTime,
         status: input.status,
         image_url: input.imageUrl,
@@ -86,16 +74,12 @@ export const itemsApi = {
         room_id: patch.roomId,
         description: patch.description,
         category: patch.category,
-        vendor: patch.vendor,
-        model: patch.model,
         item_id_tag: patch.itemIdTag,
         dimensions: patch.dimensions,
         seat_height: patch.seatHeight,
-        finishes: patch.finishes,
         notes: patch.notes,
         qty: patch.qty,
         unit_cost_cents: patch.unitCostCents,
-        markup_pct: patch.markupPct,
         lead_time: patch.leadTime,
         status: patch.status,
         image_url: patch.imageUrl,

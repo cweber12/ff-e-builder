@@ -47,7 +47,6 @@ import {
   editableItemPatchSchema,
   formatMoney,
   itemStatuses,
-  parseMarkupPctInput,
   parseQtyInput,
   parseUnitCostDollarsInput,
   unitCostDollarsToCents,
@@ -116,12 +115,6 @@ class ItemsRenderErrorBoundary extends Component<ErrorBoundaryProps, ErrorBounda
     return this.props.children;
   }
 }
-
-const formatPercent = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
 
 type EditableItemPatch = Omit<UpdateItemInput, 'version'>;
 
@@ -566,32 +559,6 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
     ),
   },
   {
-    accessorKey: 'vendor',
-    header: 'Vendor',
-    cell: ({ row }) => (
-      <EditableTextCell
-        item={row.original}
-        value={row.original.vendor}
-        field="vendor"
-        label="Vendor"
-        onSave={onSave}
-      />
-    ),
-  },
-  {
-    accessorKey: 'model',
-    header: 'Model',
-    cell: ({ row }) => (
-      <EditableTextCell
-        item={row.original}
-        value={row.original.model}
-        field="model"
-        label="Model"
-        onSave={onSave}
-      />
-    ),
-  },
-  {
     accessorKey: 'dimensions',
     header: 'Dimensions',
     cell: ({ row }) => <EditableDimensionsCell item={row.original} onSave={onSave} />,
@@ -637,26 +604,13 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
     ),
   },
   {
-    accessorKey: 'markupPct',
-    header: 'Markup',
-    cell: ({ row }) => (
-      <InlineNumberEdit
-        value={row.original.markupPct}
-        aria-label={`Markup for ${row.original.itemName}`}
-        parser={parseMarkupPctInput}
-        formatter={(value) => `${formatPercent(value)}%`}
-        onSave={(markupPct) => saveValidatedPatch(onSave, row.original, { markupPct })}
-      />
-    ),
-  },
-  {
     id: 'lineTotal',
     header: 'Total',
     cell: ({ row }) => {
       const item = row.original;
       return (
         <span className="font-medium tabular-nums">
-          {formatMoney(cents(lineTotalCents(item.unitCostCents, item.markupPct, item.qty)))}
+          {formatMoney(cents(lineTotalCents(item.unitCostCents, item.qty)))}
         </span>
       );
     },
@@ -1068,15 +1022,6 @@ function MobileItemCards({
                 onSave={onSave}
               />
             </MobileField>
-            <MobileField label="Vendor">
-              <EditableTextCell
-                item={item}
-                value={item.vendor}
-                field="vendor"
-                label="Vendor"
-                onSave={onSave}
-              />
-            </MobileField>
             <MobileField label="Materials">
               <MaterialBadges
                 materials={item.materials}
@@ -1105,18 +1050,9 @@ function MobileItemCards({
                 }
               />
             </MobileField>
-            <MobileField label="Markup">
-              <InlineNumberEdit
-                value={item.markupPct}
-                aria-label={`Markup for ${item.itemName}`}
-                parser={parseMarkupPctInput}
-                formatter={(value) => `${formatPercent(value)}%`}
-                onSave={(markupPct) => saveValidatedPatch(onSave, item, { markupPct })}
-              />
-            </MobileField>
             <MobileField label="Total">
               <span className="font-semibold tabular-nums">
-                {formatMoney(cents(lineTotalCents(item.unitCostCents, item.markupPct, item.qty)))}
+                {formatMoney(cents(lineTotalCents(item.unitCostCents, item.qty)))}
               </span>
             </MobileField>
           </div>
@@ -1312,16 +1248,12 @@ function RoomItemsSection({
         itemName: item.itemName,
         description: item.description,
         category: item.category,
-        vendor: item.vendor,
-        model: item.model,
         itemIdTag: item.itemIdTag,
         dimensions: item.dimensions,
         seatHeight: item.seatHeight,
-        finishes: item.finishes,
         notes: item.notes,
         qty: item.qty,
         unitCostCents: item.unitCostCents,
-        markupPct: item.markupPct,
         leadTime: item.leadTime,
         status: item.status,
         imageUrl: item.imageUrl,

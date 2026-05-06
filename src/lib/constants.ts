@@ -1,1 +1,1 @@
-export const BRAND_RGB: [number, number, number] = [26, 107, 74];
+export const BRAND_RGB: [number, number, number] = [75, 127, 171];

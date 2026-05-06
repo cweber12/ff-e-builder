@@ -1,12 +1,7 @@
 import type { Item, Project, Room } from '../types';
 
-export type CatalogItem = Item & {
-  color: string | null;
-  designer: string | null;
-};
-
 export type CatalogRoom = Room & {
-  items: CatalogItem[];
+  items: Item[];
 };
 
 export const catalogProjectFixture: Project = {
@@ -34,16 +29,12 @@ export const catalogRoomsFixture: CatalogRoom[] = [
         itemName: 'Channel Lounge Chair',
         description: 'Sculpted lounge chair with a channeled seat and relaxed residential scale.',
         category: 'Seating',
-        vendor: 'Atelier Forma',
-        model: 'Channel 32',
         itemIdTag: 'LR-CH-01',
         dimensions: '32"W x 34"D x 30"H',
         seatHeight: '17"',
-        finishes: 'Boucle upholstery, white oak base',
         notes: 'Use performance fabric and confirm COM yardage before order.',
         qty: 2,
         unitCostCents: 245_000,
-        markupPct: 30,
         leadTime: '10 weeks',
         status: 'approved',
         imageUrl:
@@ -65,8 +56,6 @@ export const catalogRoomsFixture: CatalogRoom[] = [
             updatedAt: '2026-01-08T00:00:00Z',
           },
         ],
-        color: 'Ivory',
-        designer: 'Mara Vale',
       },
       {
         id: 'item-floor-lamp',
@@ -74,16 +63,12 @@ export const catalogRoomsFixture: CatalogRoom[] = [
         itemName: 'Arc Floor Lamp',
         description: 'Overscaled floor lamp with a sweeping arm and softly diffused linen shade.',
         category: 'Lighting',
-        vendor: 'Northline Studio',
-        model: 'Arc 72',
         itemIdTag: 'LR-LT-02',
         dimensions: '18"W x 72"H',
         seatHeight: null,
-        finishes: 'Brushed brass, linen shade',
         notes: 'Confirm dimmer compatibility with electrical plan.',
         qty: 1,
         unitCostCents: 98_500,
-        markupPct: 25,
         leadTime: '8 weeks',
         status: 'ordered',
         imageUrl: null,
@@ -93,8 +78,6 @@ export const catalogRoomsFixture: CatalogRoom[] = [
         createdAt: '2026-01-01T00:00:00Z',
         updatedAt: '2026-01-08T00:00:00Z',
         materials: [],
-        color: 'Warm brass',
-        designer: 'Northline Studio',
       },
     ],
   },
@@ -112,16 +95,12 @@ export const catalogRoomsFixture: CatalogRoom[] = [
         itemName: 'Plinth Dining Table',
         description: 'Monolithic travertine dining table sized for statement entertaining moments.',
         category: 'Tables',
-        vendor: 'Stone & Field',
-        model: 'Plinth 96',
         itemIdTag: 'DR-TB-01',
         dimensions: '96"W x 42"D x 30"H',
         seatHeight: null,
-        finishes: 'Travertine slab, honed sealer',
         notes: 'White glove delivery required. Verify elevator clearance.',
         qty: 1,
         unitCostCents: 675_000,
-        markupPct: 30,
         leadTime: '14 weeks',
         status: 'pending',
         imageUrl:
@@ -132,8 +111,6 @@ export const catalogRoomsFixture: CatalogRoom[] = [
         createdAt: '2026-01-01T00:00:00Z',
         updatedAt: '2026-01-08T00:00:00Z',
         materials: [],
-        color: 'Warm ivory stone',
-        designer: 'Elena Voss',
       },
     ],
   },

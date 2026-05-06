@@ -79,16 +79,12 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   itemName: 'Lounge Chair',
   description: null,
   category: 'Seating',
-  vendor: 'Muuto',
-  model: 'Fiber',
   itemIdTag: 'CH-01',
   dimensions: '28 x 30 x 31',
   seatHeight: '18',
-  finishes: 'Oak, ivory textile',
   notes: 'COM approved',
   qty: 2,
   unitCostCents: 123_456,
-  markupPct: 20,
   leadTime: '8 weeks',
   status: 'approved',
   imageUrl: null,
@@ -110,7 +106,6 @@ const fixture: RoomWithItems[] = [
         roomId: 'room-1',
         itemName: 'Lounge Chair',
         unitCostCents: 123_456,
-        markupPct: 20,
         qty: 2,
       }),
       makeItem({
@@ -120,7 +115,6 @@ const fixture: RoomWithItems[] = [
         category: 'Lighting',
         itemIdTag: 'LT-01',
         unitCostCents: 45_000,
-        markupPct: 10,
         qty: 1,
         status: 'ordered',
         sortOrder: 1,
@@ -137,7 +131,6 @@ const fixture: RoomWithItems[] = [
         category: 'Casegoods',
         itemIdTag: 'TB-01',
         unitCostCents: 250_000,
-        markupPct: 30,
         qty: 1,
         status: 'pending',
       }),
@@ -355,16 +348,12 @@ describe('ItemsTable', () => {
     await user.type(within(drawer).getByLabelText('Item name'), 'Side Table');
     await user.type(within(drawer).getByLabelText('Category'), 'Casegoods');
     await user.type(within(drawer).getByLabelText('Item ID/tag'), 'TB-02');
-    await user.type(within(drawer).getByLabelText('Vendor/manufacturer'), 'HAY');
     await user.type(within(drawer).getByLabelText('Dimensions'), '20 x 20 x 24');
     await user.type(within(drawer).getByLabelText('Seat height'), 'n/a');
     await user.clear(within(drawer).getByLabelText('Qty'));
     await user.type(within(drawer).getByLabelText('Qty'), '3');
     await user.clear(within(drawer).getByLabelText('Unit cost'));
     await user.type(within(drawer).getByLabelText('Unit cost'), '250.50');
-    await user.clear(within(drawer).getByLabelText('Markup %'));
-    await user.type(within(drawer).getByLabelText('Markup %'), '15.5');
-    await user.type(within(drawer).getByLabelText('Finishes'), 'Walnut');
     await user.type(within(drawer).getByLabelText('Notes'), 'Match sample finish');
     await user.type(within(drawer).getByLabelText('Image URL'), 'https://example.com/image.jpg');
     await user.type(within(drawer).getByLabelText('Link URL'), 'https://example.com/spec');
@@ -375,13 +364,10 @@ describe('ItemsTable', () => {
       description: null,
       category: 'Casegoods',
       itemIdTag: 'TB-02',
-      vendor: 'HAY',
       dimensions: '20 x 20 x 24',
       seatHeight: 'n/a',
       qty: 3,
       unitCostCents: 25050,
-      markupPct: 15.5,
-      finishes: 'Walnut',
       notes: 'Match sample finish',
       imageUrl: 'https://example.com/image.jpg',
       linkUrl: 'https://example.com/spec',
@@ -506,15 +492,11 @@ describe('ItemsTable', () => {
       expect.objectContaining({
         itemName: 'Lounge Chair',
         category: 'Seating',
-        vendor: 'Muuto',
-        model: 'Fiber',
         itemIdTag: 'CH-01',
         dimensions: '28 x 30 x 31',
         seatHeight: '18',
         qty: 2,
         unitCostCents: 123456,
-        markupPct: 20,
-        finishes: 'Oak, ivory textile',
         notes: 'COM approved',
         sortOrder: 2,
       }),

@@ -78,9 +78,7 @@ export async function exportTablePdf(
         [
           '',
           '',
-          { content: room.name + ' subtotal', colSpan: 5, styles: { fontStyle: 'bold' as const } },
-          '',
-          '',
+          { content: room.name + ' subtotal', colSpan: 3, styles: { fontStyle: 'bold' as const } },
           '',
           '',
           {
@@ -90,6 +88,7 @@ export async function exportTablePdf(
               textColor: [...BRAND] as [number, number, number],
             },
           },
+          '',
           '',
           '',
           '',

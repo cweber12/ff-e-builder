@@ -36,7 +36,6 @@ export function FfeBudgetModal({ open, onClose, project, roomsWithItems }: Props
         ? 'bg-warning-500'
         : 'bg-success-500';
   const statusBreakdown = getStatusBreakdown(roomsWithItems.flatMap((r) => r.items));
-  const vendorRows = getVendorBreakdown(roomsWithItems.flatMap((r) => r.items));
 
   return (
     <Modal open={open} onClose={onClose} title="FF&E Budget" className="max-w-4xl">
@@ -90,74 +89,40 @@ export function FfeBudgetModal({ open, onClose, project, roomsWithItems }: Props
             })}
           </section>
 
-          {/* Rooms + Vendors */}
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-100 px-4 py-2.5">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Rooms
-                </h3>
-              </div>
-              <table className="w-full text-sm">
-                <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
-                  <tr>
-                    <th className="px-4 py-2">Room</th>
-                    <th className="px-4 py-2 text-right">Items</th>
-                    <th className="px-4 py-2 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {roomsWithItems.map((room) => (
-                    <tr key={room.id}>
-                      <td className="px-4 py-2 font-medium text-gray-950">{room.name}</td>
-                      <td className="px-4 py-2 text-right tabular-nums text-gray-600">
-                        {room.items.length}
-                      </td>
-                      <td className="px-4 py-2 text-right font-medium tabular-nums text-gray-950">
-                        {formatMoney(cents(roomSubtotalCents(room.items)))}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-brand-50/50">
-                    <td className="px-4 py-2 font-semibold text-gray-950">Total</td>
-                    <td className="px-4 py-2" />
-                    <td className="px-4 py-2 text-right font-bold tabular-nums text-brand-700">
-                      {formatMoney(cents(actualCents))}
+          {/* Rooms */}
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-4 py-2.5">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Rooms</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
+                <tr>
+                  <th className="px-4 py-2">Room</th>
+                  <th className="px-4 py-2 text-right">Items</th>
+                  <th className="px-4 py-2 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {roomsWithItems.map((room) => (
+                  <tr key={room.id}>
+                    <td className="px-4 py-2 font-medium text-gray-950">{room.name}</td>
+                    <td className="px-4 py-2 text-right tabular-nums text-gray-600">
+                      {room.items.length}
+                    </td>
+                    <td className="px-4 py-2 text-right font-medium tabular-nums text-gray-950">
+                      {formatMoney(cents(roomSubtotalCents(room.items)))}
                     </td>
                   </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-100 px-4 py-2.5">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Vendors
-                </h3>
-              </div>
-              <table className="w-full text-sm">
-                <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
-                  <tr>
-                    <th className="px-4 py-2">Vendor</th>
-                    <th className="px-4 py-2 text-right">Items</th>
-                    <th className="px-4 py-2 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {vendorRows.map((row) => (
-                    <tr key={row.vendor}>
-                      <td className="px-4 py-2 font-medium text-gray-950">{row.vendor}</td>
-                      <td className="px-4 py-2 text-right tabular-nums text-gray-600">
-                        {row.count}
-                      </td>
-                      <td className="px-4 py-2 text-right font-medium tabular-nums text-gray-950">
-                        {formatMoney(cents(row.totalCents))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+                <tr className="bg-brand-50/50">
+                  <td className="px-4 py-2 font-semibold text-gray-950">Total</td>
+                  <td className="px-4 py-2" />
+                  <td className="px-4 py-2 text-right font-bold tabular-nums text-brand-700">
+                    {formatMoney(cents(actualCents))}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </section>
         </div>
 
@@ -182,19 +147,7 @@ function getStatusBreakdown(items: Item[]) {
   ) as Record<(typeof itemStatuses)[number], { count: number; totalCents: number }>;
   for (const item of items) {
     base[item.status].count += 1;
-    base[item.status].totalCents += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
+    base[item.status].totalCents += lineTotalCents(item.unitCostCents, item.qty);
   }
   return base;
-}
-
-function getVendorBreakdown(items: Item[]) {
-  const rows = new Map<string, { vendor: string; count: number; totalCents: number }>();
-  for (const item of items) {
-    const vendor = item.vendor?.trim() || 'Unassigned';
-    const cur = rows.get(vendor) ?? { vendor, count: 0, totalCents: 0 };
-    cur.count += 1;
-    cur.totalCents += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    rows.set(vendor, cur);
-  }
-  return [...rows.values()].sort((a, b) => b.totalCents - a.totalCents);
 }

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sellPriceCents } from '../../../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
@@ -21,7 +20,7 @@ import { emptyToNull } from '../../../lib/textUtils';
 import type { ImageAsset } from '../../../types';
 
 type CatalogEntry = {
-  item: Item & { color?: string | null; designer?: string | null };
+  item: Item;
   room: RoomWithItems;
 };
 
@@ -29,10 +28,7 @@ type EditableCatalogField =
   | 'itemName'
   | 'description'
   | 'category'
-  | 'vendor'
-  | 'model'
   | 'dimensions'
-  | 'finishes'
   | 'leadTime'
   | 'notes'
   | 'itemIdTag';
@@ -311,7 +307,6 @@ export function CatalogPage({
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
-  const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
   const projectSlug = slugify(project.name);
   const saveField = (field: EditableCatalogField, value: string, required = false) =>
     updateItem
@@ -381,11 +376,16 @@ export function CatalogPage({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
               {room.name}
             </p>
-            <div className="mt-3">
+            <div className="mt-3 flex items-baseline gap-2">
+              {item.itemIdTag && (
+                <span className="shrink-0 font-mono text-sm font-medium text-gray-400">
+                  {item.itemIdTag}
+                </span>
+              )}
               <InlineTextEdit
                 value={item.itemName}
                 aria-label={`Item name for ${item.itemName}`}
-                className="block"
+                className="min-w-0 flex-1"
                 inputClassName="w-full text-[28px] font-semibold leading-tight text-gray-950"
                 onSave={(value) => saveField('itemName', value, true)}
                 renderDisplay={(value) => (
@@ -427,31 +427,11 @@ export function CatalogPage({
 
           <dl className="catalog-data-grid">
             <DataPoint
-              label="Vendor"
-              value={item.vendor}
-              ariaLabel={`Vendor for ${item.itemName}`}
-              onSave={(value) => saveField('vendor', value)}
-            />
-            <DataPoint
-              label="Model"
-              value={item.model}
-              ariaLabel={`Model for ${item.itemName}`}
-              onSave={(value) => saveField('model', value)}
-            />
-            <DataPoint
               label="Dimensions"
               value={item.dimensions}
               ariaLabel={`Dimensions for ${item.itemName}`}
               onSave={(value) => saveField('dimensions', value)}
             />
-            <DataPoint
-              label="Finishes"
-              value={item.finishes}
-              ariaLabel={`Finishes for ${item.itemName}`}
-              onSave={(value) => saveField('finishes', value)}
-            />
-            <DataPoint label="Color" value={item.color ?? null} />
-            <DataPoint label="Designer" value={item.designer ?? null} />
             <DataPoint
               label="Lead Time"
               value={item.leadTime}
@@ -460,20 +440,14 @@ export function CatalogPage({
             />
           </dl>
 
-          <div className="catalog-price-block">
-            <div>
-              <span>Unit cost</span>
-              <strong>{formatMoney(cents(item.unitCostCents))}</strong>
+          {item.unitCostCents > 0 && (
+            <div className="catalog-price-block">
+              <div>
+                <span>Unit cost</span>
+                <strong>{formatMoney(cents(item.unitCostCents))}</strong>
+              </div>
             </div>
-            <div>
-              <span>Markup</span>
-              <strong>{formatPercent(item.markupPct)}</strong>
-            </div>
-            <div className="sell-price">
-              <span>Sell price</span>
-              <strong>{formatMoney(cents(sellPrice))}</strong>
-            </div>
-          </div>
+          )}
 
           <InlineTextEdit
             value={item.notes ?? ''}
@@ -796,10 +770,4 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
-}
-
-function formatPercent(value: number) {
-  return `${new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
-  }).format(value)}%`;
 }

@@ -64,16 +64,12 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   itemName: 'Original Name',
   description: null,
   category: null,
-  vendor: null,
-  model: null,
   itemIdTag: null,
   dimensions: null,
   seatHeight: null,
-  finishes: null,
   notes: null,
   qty: 1,
   unitCostCents: 10000,
-  markupPct: 0,
   leadTime: null,
   status: 'pending',
   imageUrl: null,
@@ -210,7 +206,6 @@ describe('useCreateItem', () => {
         itemName: 'New Side Table',
         qty: 2,
         unitCostCents: 12_500,
-        markupPct: 15,
       });
     });
 
@@ -221,7 +216,6 @@ describe('useCreateItem', () => {
       expect(optimistic?.itemName).toBe('New Side Table');
       expect(optimistic?.qty).toBe(2);
       expect(optimistic?.unitCostCents).toBe(12_500);
-      expect(optimistic?.markupPct).toBe(15);
     });
 
     act(() => {

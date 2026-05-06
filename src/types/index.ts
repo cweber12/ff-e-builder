@@ -19,7 +19,6 @@ export {
   editableItemPatchSchema,
   itemFormSchema,
   itemStatuses,
-  parseMarkupPctInput,
   parseQtyInput,
   parseUnitCostDollarsInput,
   unitCostDollarsToCents,

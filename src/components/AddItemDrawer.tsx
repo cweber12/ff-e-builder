@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import type { CreateItemInput, CreateMaterialInput } from '../lib/api';
 import {
   itemFormSchema,
-  parseMarkupPctInput,
   parseQtyInput,
   parseUnitCostDollarsInput,
   unitCostDollarsToCents,
@@ -37,13 +36,10 @@ const defaultValues: ItemFormValues = {
   description: '',
   category: '',
   itemIdTag: '',
-  vendor: '',
   dimensions: '',
   seatHeight: '',
   qty: '1',
   unitCost: '0',
-  markupPct: '0',
-  finishes: '',
   notes: '',
   imageUrl: '',
   linkUrl: '',
@@ -161,7 +157,6 @@ export function AddItemDrawer({
   const submit = handleSubmit(async (values) => {
     const qty = parseQtyInput(values.qty) ?? 1;
     const unitCostDollars = parseUnitCostDollarsInput(values.unitCost) ?? 0;
-    const markupPct = parseMarkupPctInput(values.markupPct) ?? 0;
 
     await onSubmit(
       {
@@ -169,13 +164,10 @@ export function AddItemDrawer({
         description: emptyToNull(values.description),
         category: emptyToNull(values.category),
         itemIdTag: emptyToNull(values.itemIdTag),
-        vendor: emptyToNull(values.vendor),
         dimensions: emptyToNull(values.dimensions),
         seatHeight: emptyToNull(values.seatHeight),
         qty,
         unitCostCents: unitCostDollarsToCents(unitCostDollars),
-        markupPct,
-        finishes: emptyToNull(values.finishes),
         notes: emptyToNull(values.notes),
         imageUrl: emptyToNull(values.imageUrl),
         linkUrl: emptyToNull(values.linkUrl),
@@ -225,10 +217,6 @@ export function AddItemDrawer({
           <input {...register('itemIdTag')} className={inputClassName} />
         </Field>
 
-        <Field label="Vendor/manufacturer" error={errors.vendor?.message}>
-          <input {...register('vendor')} className={inputClassName} />
-        </Field>
-
         <div className="grid grid-cols-2 gap-3">
           <Field label="Dimensions" error={errors.dimensions?.message}>
             <input {...register('dimensions')} className={inputClassName} />
@@ -238,7 +226,7 @@ export function AddItemDrawer({
           </Field>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Field label="Qty" error={errors.qty?.message}>
             <input
               {...register('qty')}
@@ -252,14 +240,7 @@ export function AddItemDrawer({
           <Field label="Unit cost" error={errors.unitCost?.message}>
             <input {...register('unitCost')} inputMode="decimal" className={inputClassName} />
           </Field>
-          <Field label="Markup %" error={errors.markupPct?.message}>
-            <input {...register('markupPct')} inputMode="decimal" className={inputClassName} />
-          </Field>
         </div>
-
-        <Field label="Finishes" error={errors.finishes?.message}>
-          <textarea {...register('finishes')} rows={3} className={inputClassName} />
-        </Field>
 
         <Field label="Materials">
           <div className="flex flex-wrap gap-2">

@@ -6,19 +6,17 @@ import type { ColumnMap } from './importUtils';
 
 describe('autoMapColumns', () => {
   it('maps exact field names', () => {
-    const result = autoMapColumns(['item name', 'category', 'vendor', 'qty', 'notes']);
+    const result = autoMapColumns(['item name', 'category', 'qty', 'notes']);
     expect(result.itemName).toBe('item name');
     expect(result.category).toBe('category');
-    expect(result.vendor).toBe('vendor');
     expect(result.qty).toBe('qty');
     expect(result.notes).toBe('notes');
   });
 
   it('maps common aliases', () => {
-    const result = autoMapColumns(['name', 'type', 'manufacturer', 'units', 'comments']);
+    const result = autoMapColumns(['name', 'type', 'units', 'comments']);
     expect(result.itemName).toBe('name');
     expect(result.category).toBe('type');
-    expect(result.vendor).toBe('manufacturer');
     expect(result.qty).toBe('units');
     expect(result.notes).toBe('comments');
   });
@@ -31,8 +29,7 @@ describe('autoMapColumns', () => {
   });
 
   it('maps markup column', () => {
-    const result = autoMapColumns(['markup %', 'lead time']);
-    expect(result.markupPct).toBe('markup %');
+    const result = autoMapColumns(['lead time']);
     expect(result.leadTime).toBe('lead time');
   });
 
@@ -42,10 +39,9 @@ describe('autoMapColumns', () => {
   });
 
   it('is case insensitive', () => {
-    const result = autoMapColumns(['ITEM NAME', 'Category', 'VENDOR']);
+    const result = autoMapColumns(['ITEM NAME', 'Category']);
     expect(result.itemName).toBe('ITEM NAME');
     expect(result.category).toBe('Category');
-    expect(result.vendor).toBe('VENDOR');
   });
 
   it('maps room column', () => {
@@ -59,13 +55,10 @@ describe('autoMapColumns', () => {
 const FULL_MAP: ColumnMap = {
   itemName: 'Item',
   category: 'Category',
-  vendor: 'Vendor',
-  model: 'Model',
   itemIdTag: 'ID',
   dimensions: 'Dimensions',
   qty: 'Qty',
   unitCostDollars: 'Cost',
-  markupPct: 'Markup',
   status: 'Status',
   leadTime: 'Lead',
   notes: 'Notes',
@@ -78,13 +71,10 @@ describe('transformRow', () => {
     const row = {
       Item: 'Lounge Sofa',
       Category: 'Seating',
-      Vendor: 'Herman Miller',
-      Model: 'Striad',
       ID: 'LR-001',
       Dimensions: '96"W',
       Qty: '2',
       Cost: '$3,200.00',
-      Markup: '30',
       Status: 'approved',
       Lead: '12 weeks',
       Notes: 'COM fabric',
@@ -94,9 +84,7 @@ describe('transformRow', () => {
     expect(result).not.toBeNull();
     expect(result!.itemName).toBe('Lounge Sofa');
     expect(result!.category).toBe('Seating');
-    expect(result!.vendor).toBe('Herman Miller');
     expect(result!.unitCostCents).toBe(320000);
-    expect(result!.markupPct).toBe(30);
     expect(result!.qty).toBe(2);
     expect(result!.status).toBe('approved');
     expect(result!.roomName).toBe('Living Room');
@@ -143,11 +131,10 @@ describe('transformRow', () => {
   });
 
   it('sets null for skipped optional fields', () => {
-    const map: ColumnMap = { ...FULL_MAP, category: null, vendor: null };
+    const map: ColumnMap = { ...FULL_MAP, category: null };
     const row = { Item: 'Chair' };
     const result = transformRow(row, map);
     expect(result!.category).toBeNull();
-    expect(result!.vendor).toBeNull();
   });
 
   it('sets roomName to null when room column not mapped', () => {

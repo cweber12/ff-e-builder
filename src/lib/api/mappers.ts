@@ -41,17 +41,12 @@ export interface RawItem {
   item_name: string;
   description: string | null;
   category: string | null;
-  vendor: string | null;
-  model: string | null;
   item_id_tag: string | null;
   dimensions: string | null;
   seat_height: string | null;
-  finishes: string | null;
   notes: string | null;
   qty: number;
   unit_cost_cents: number;
-  /** Postgres numeric(5,2) is returned as a string */
-  markup_pct: string;
   lead_time: string | null;
   status: ItemStatus;
   image_url: string | null;
@@ -171,16 +166,12 @@ export const mapItem = (r: RawItem): Item => ({
   itemName: r.item_name,
   description: r.description,
   category: r.category,
-  vendor: r.vendor,
-  model: r.model,
   itemIdTag: r.item_id_tag,
   dimensions: r.dimensions,
   seatHeight: r.seat_height,
-  finishes: r.finishes,
   notes: r.notes,
   qty: r.qty,
   unitCostCents: r.unit_cost_cents,
-  markupPct: parseFloat(r.markup_pct),
   leadTime: r.lead_time,
   status: r.status,
   imageUrl: r.image_url,

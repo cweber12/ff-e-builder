@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildStatusBreakdown, buildVendorBreakdown, itemToRow, sortedItems } from './ffeRows';
+import { buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
 import type { Item, RoomWithItems } from '../../types';
 
 const makeItem = (overrides: Partial<Item> = {}): Item => ({
@@ -8,16 +8,12 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   itemName: 'Lounge Chair',
   description: null,
   category: 'Seating',
-  vendor: 'Vendor A',
-  model: 'Model 1',
   itemIdTag: 'LC-001',
   dimensions: '30"W x 32"D',
   seatHeight: null,
-  finishes: null,
   notes: 'Install carefully',
   qty: 2,
   unitCostCents: 50000,
-  markupPct: 25,
   leadTime: '8 weeks',
   status: 'pending',
   imageUrl: null,
@@ -57,14 +53,10 @@ describe('FF&E export row helpers', () => {
       'LC-001',
       'Lounge Chair',
       'Seating',
-      'Vendor A',
-      'Model 1',
       '30"W x 32"D',
       '2',
       '$500.00',
-      '25%',
-      '$625.00',
-      '$1,250.00',
+      '$1,000.00',
       'pending',
       '8 weeks',
       'Install carefully',
@@ -84,22 +76,12 @@ describe('FF&E export row helpers', () => {
     ]);
   });
 
-  it('builds status totals with markup included', () => {
+  it('builds status totals', () => {
     const breakdown = buildStatusBreakdown([
-      makeItem({ status: 'pending', qty: 2, unitCostCents: 50000, markupPct: 25 }),
-      makeItem({ id: 'i2', status: 'pending', qty: 1, unitCostCents: 10000, markupPct: 0 }),
+      makeItem({ status: 'pending', qty: 2, unitCostCents: 50000 }),
+      makeItem({ id: 'i2', status: 'pending', qty: 1, unitCostCents: 10000 }),
     ]);
 
-    expect(breakdown.get('pending')).toEqual({ count: 2, total: 135000 });
-  });
-
-  it('groups blank vendors as unassigned', () => {
-    const breakdown = buildVendorBreakdown([
-      makeItem({ vendor: 'Vendor A' }),
-      makeItem({ id: 'i2', vendor: '  ', qty: 1, unitCostCents: 10000, markupPct: 0 }),
-    ]);
-
-    expect(breakdown.get('Vendor A')?.count).toBe(1);
-    expect(breakdown.get('Unassigned')).toEqual({ count: 1, total: 10000 });
+    expect(breakdown.get('pending')).toEqual({ count: 2, total: 110000 });
   });
 });

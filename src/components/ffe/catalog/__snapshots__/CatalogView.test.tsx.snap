@@ -141,11 +141,16 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           Living Room
         </p>
         <div
-          class="mt-3"
+          class="mt-3 flex items-baseline gap-2"
         >
           <span
+            class="shrink-0 font-mono text-sm font-medium text-gray-400"
+          >
+            LR-CH-01
+          </span>
+          <span
             aria-label="Item name for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors block"
+            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors min-w-0 flex-1"
             role="button"
             tabindex="0"
           >
@@ -197,36 +202,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       >
         <div>
           <dt>
-            Vendor
-          </dt>
-          <dd>
-            <span
-              aria-label="Vendor for Channel Lounge Chair"
-              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
-              role="button"
-              tabindex="0"
-            >
-              Atelier Forma
-            </span>
-          </dd>
-        </div>
-        <div>
-          <dt>
-            Model
-          </dt>
-          <dd>
-            <span
-              aria-label="Model for Channel Lounge Chair"
-              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
-              role="button"
-              tabindex="0"
-            >
-              Channel 32
-            </span>
-          </dd>
-        </div>
-        <div>
-          <dt>
             Dimensions
           </dt>
           <dd>
@@ -238,37 +213,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             >
               32"W x 34"D x 30"H
             </span>
-          </dd>
-        </div>
-        <div>
-          <dt>
-            Finishes
-          </dt>
-          <dd>
-            <span
-              aria-label="Finishes for Channel Lounge Chair"
-              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
-              role="button"
-              tabindex="0"
-            >
-              Boucle upholstery, white oak base
-            </span>
-          </dd>
-        </div>
-        <div>
-          <dt>
-            Color
-          </dt>
-          <dd>
-            Ivory
-          </dd>
-        </div>
-        <div>
-          <dt>
-            Designer
-          </dt>
-          <dd>
-            Mara Vale
           </dd>
         </div>
         <div>
@@ -296,24 +240,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           </span>
           <strong>
             $2,450.00
-          </strong>
-        </div>
-        <div>
-          <span>
-            Markup
-          </span>
-          <strong>
-            30%
-          </strong>
-        </div>
-        <div
-          class="sell-price"
-        >
-          <span>
-            Sell price
-          </span>
-          <strong>
-            $3,185.00
           </strong>
         </div>
       </div>

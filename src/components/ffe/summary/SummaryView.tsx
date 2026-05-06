@@ -19,7 +19,6 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
         ? 'bg-warning-500'
         : 'bg-success-500';
   const statusBreakdown = getStatusBreakdown(roomsWithItems.flatMap((room) => room.items));
-  const vendorRows = getVendorBreakdown(roomsWithItems.flatMap((room) => room.items));
 
   return (
     <div className="space-y-6">
@@ -59,67 +58,39 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
         })}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-4 py-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Rooms</h2>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-4 py-3">Room</th>
-                <th className="px-4 py-3 text-right">Item count</th>
-                <th className="px-4 py-3 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {roomsWithItems.map((room) => (
-                <tr key={room.id}>
-                  <td className="px-4 py-3 font-medium text-gray-950">{room.name}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-gray-700">
-                    {room.items.length}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-950">
-                    {formatMoney(cents(roomSubtotalCents(room.items)))}
-                  </td>
-                </tr>
-              ))}
-              <tr className="bg-brand-50/50">
-                <td className="px-4 py-3 font-semibold text-gray-950">Grand total</td>
-                <td className="px-4 py-3" />
-                <td className="px-4 py-3 text-right font-bold tabular-nums text-brand-700">
-                  {formatMoney(cents(actualCents))}
+      <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Rooms</h2>
+        </div>
+        <table className="w-full text-sm">
+          <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
+            <tr>
+              <th className="px-4 py-3">Room</th>
+              <th className="px-4 py-3 text-right">Item count</th>
+              <th className="px-4 py-3 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {roomsWithItems.map((room) => (
+              <tr key={room.id}>
+                <td className="px-4 py-3 font-medium text-gray-950">{room.name}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                  {room.items.length}
+                </td>
+                <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-950">
+                  {formatMoney(cents(roomSubtotalCents(room.items)))}
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-4 py-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Vendors</h2>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-4 py-3">Vendor</th>
-                <th className="px-4 py-3 text-right">Items</th>
-                <th className="px-4 py-3 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {vendorRows.map((row) => (
-                <tr key={row.vendor}>
-                  <td className="px-4 py-3 font-medium text-gray-950">{row.vendor}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-gray-700">{row.count}</td>
-                  <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-950">
-                    {formatMoney(cents(row.totalCents))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+            <tr className="bg-brand-50/50">
+              <td className="px-4 py-3 font-semibold text-gray-950">Grand total</td>
+              <td className="px-4 py-3" />
+              <td className="px-4 py-3 text-right font-bold tabular-nums text-brand-700">
+                {formatMoney(cents(actualCents))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </div>
   );
@@ -132,22 +103,8 @@ function getStatusBreakdown(items: Item[]) {
 
   for (const item of items) {
     base[item.status].count += 1;
-    base[item.status].totalCents += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
+    base[item.status].totalCents += lineTotalCents(item.unitCostCents, item.qty);
   }
 
   return base;
-}
-
-function getVendorBreakdown(items: Item[]) {
-  const rows = new Map<string, { vendor: string; count: number; totalCents: number }>();
-
-  for (const item of items) {
-    const vendor = item.vendor?.trim() || 'Unassigned';
-    const current = rows.get(vendor) ?? { vendor, count: 0, totalCents: 0 };
-    current.count += 1;
-    current.totalCents += lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
-    rows.set(vendor, current);
-  }
-
-  return [...rows.values()].sort((a, b) => b.totalCents - a.totalCents);
 }

@@ -45,8 +45,8 @@ function drawPdfSmallIdentityHeader(doc: jsPDF, project: Project) {
 
 function drawPdfCategoryBand(doc: jsPDF, label: string, y: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setFillColor(243, 246, 244);
-  doc.setDrawColor(225, 231, 228);
+  doc.setFillColor(236, 243, 249);
+  doc.setDrawColor(210, 225, 240);
   doc.roundedRect(12, y - 6, pageWidth - 24, 10, 2, 2, 'FD');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
@@ -73,7 +73,7 @@ async function addPdfCoverImage(
 }
 
 function drawPdfImageFrame(doc: jsPDF, x: number, y: number, width: number, height: number) {
-  doc.setFillColor(245, 245, 242);
+  doc.setFillColor(245, 248, 252);
   doc.setDrawColor(220, 220, 220);
   doc.rect(x, y, width, height, 'FD');
 }

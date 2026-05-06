@@ -1,23 +1,25 @@
 import * as XLSX from 'xlsx';
-import { projectTotalCents, roomSubtotalCents, sellPriceCents } from '../calc';
+import { projectTotalCents, roomSubtotalCents } from '../calc';
 import type { Project, RoomWithItems } from '../../types';
 import { addExcelContainImage, excelPaddedCellPlacement } from './imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';
-import { buildStatusBreakdown, buildVendorBreakdown, sortedItems } from './ffeRows';
-import { fmtMoney, fmtPct, safeName, triggerDownload } from './shared';
+import { buildStatusBreakdown, sortedItems } from './ffeRows';
+import { fmtMoney, safeName, triggerDownload } from './shared';
 import { thinBorder } from './excelStyles';
+
+const BRAND_ARGB = 'FF4B7FAB';
+const BRAND_FILL_ARGB = 'FFE8F0F7';
+const BAND_FILL_ARGB = 'FFECF3F9';
+const SUBTOTAL_FILL_ARGB = 'FFF5F9FC';
+
 const FFE_EXCEL_COLS = [
   { key: 'image', label: 'Image', width: 16 },
   { key: 'itemIdTag', label: 'Item ID', width: 14 },
   { key: 'itemName', label: 'Item Name', width: 24 },
   { key: 'category', label: 'Category', width: 16 },
-  { key: 'vendor', label: 'Vendor', width: 18 },
-  { key: 'model', label: 'Model', width: 16 },
   { key: 'dimensions', label: 'Dimensions', width: 16 },
   { key: 'qty', label: 'Qty', width: 8 },
   { key: 'unitCost', label: 'Unit Cost', width: 13 },
-  { key: 'markup', label: 'Markup', width: 10 },
-  { key: 'sellPrice', label: 'Sell Price', width: 13 },
   { key: 'lineTotal', label: 'Line Total', width: 13 },
   { key: 'status', label: 'Status', width: 14 },
   { key: 'leadTime', label: 'Lead Time', width: 12 },
@@ -27,13 +29,7 @@ const FFE_EXCEL_COLS = [
 
 type FfeExcelColKey = (typeof FFE_EXCEL_COLS)[number]['key'];
 
-const FFE_EXCEL_NUMERIC_KEYS: Set<FfeExcelColKey> = new Set([
-  'qty',
-  'unitCost',
-  'markup',
-  'sellPrice',
-  'lineTotal',
-]);
+const FFE_EXCEL_NUMERIC_KEYS: Set<FfeExcelColKey> = new Set(['qty', 'unitCost', 'lineTotal']);
 
 const FFE_EXCEL_ROW_HEIGHT = 56;
 
@@ -68,7 +64,7 @@ export async function exportTableExcel(
   worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
   const companyCell = worksheet.getCell(currentRow, 1);
   companyCell.value = (project.companyName?.trim() || project.name).toUpperCase();
-  companyCell.font = { name: 'Helvetica', size: 16, bold: true, color: { argb: 'FF1A6B4A' } };
+  companyCell.font = { name: 'Helvetica', size: 16, bold: true, color: { argb: BRAND_ARGB } };
   companyCell.alignment = { horizontal: 'center', vertical: 'middle' };
   worksheet.getRow(currentRow).height = 22;
   currentRow += 1;
@@ -89,8 +85,8 @@ export async function exportTableExcel(
     worksheet.mergeCells(currentRow, 1, currentRow, endColumn);
     const roomCell = worksheet.getCell(currentRow, 1);
     roomCell.value = room.name.toUpperCase();
-    roomCell.font = { name: 'Helvetica', size: 11, bold: true, color: { argb: 'FF1A6B4A' } };
-    roomCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F2' } };
+    roomCell.font = { name: 'Helvetica', size: 11, bold: true, color: { argb: BRAND_ARGB } };
+    roomCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND_FILL_ARGB } };
     roomCell.alignment = { vertical: 'middle' };
     worksheet.getRow(currentRow).height = 20;
     currentRow += 1;
@@ -102,7 +98,7 @@ export async function exportTableExcel(
       cell.value = col.label;
       cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF374151' } };
       cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECEFEA' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_FILL_ARGB } };
       cell.border = thinBorder();
     });
     headerRow.height = 24;
@@ -113,20 +109,15 @@ export async function exportTableExcel(
       const row = worksheet.getRow(currentRow);
       row.height = FFE_EXCEL_ROW_HEIGHT;
 
-      const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
       const values: Record<FfeExcelColKey, string> = {
         image: '',
         itemIdTag: item.itemIdTag ?? '',
         itemName: item.itemName,
         category: item.category ?? '',
-        vendor: item.vendor ?? '',
-        model: item.model ?? '',
         dimensions: item.dimensions ?? '',
         qty: String(item.qty),
         unitCost: fmtMoney(item.unitCostCents),
-        markup: fmtPct(item.markupPct),
-        sellPrice: fmtMoney(sellPrice),
-        lineTotal: fmtMoney(sellPrice * item.qty),
+        lineTotal: fmtMoney(item.unitCostCents * item.qty),
         status: item.status,
         leadTime: item.leadTime ?? '',
         notes: item.notes ?? '',
@@ -175,9 +166,9 @@ export async function exportTableExcel(
       } else {
         cell.value = '';
       }
-      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF1A6B4A' } };
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: BRAND_ARGB } };
       cell.alignment = { vertical: 'middle', horizontal: i === lineIndex ? 'center' : 'left' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAF9' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SUBTOTAL_FILL_ARGB } };
       cell.border = thinBorder();
     });
     subtotalRow.height = 20;
@@ -196,9 +187,9 @@ export async function exportTableExcel(
     } else {
       cell.value = '';
     }
-    cell.font = { name: 'Helvetica', size: 10, bold: true, color: { argb: 'FF1A6B4A' } };
+    cell.font = { name: 'Helvetica', size: 10, bold: true, color: { argb: BRAND_ARGB } };
     cell.alignment = { vertical: 'middle', horizontal: i === lineIndex ? 'center' : 'left' };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F2' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND_FILL_ARGB } };
     cell.border = thinBorder();
   });
   totalRow.height = 22;
@@ -237,13 +228,6 @@ export function exportSummaryExcel(project: Project, rooms: RoomWithItems[]): vo
   ]);
   const statusWs = XLSX.utils.aoa_to_sheet([['Status', 'Items', 'Total'], ...statusRows]);
   XLSX.utils.book_append_sheet(wb, statusWs, 'Status');
-
-  const vendorMap = buildVendorBreakdown(allItems);
-  const vendorRows = [...vendorMap.entries()]
-    .sort((a, b) => b[1].total - a[1].total)
-    .map(([vendor, { count, total: t }]) => [vendor, count, fmtMoney(t)]);
-  const vendorWs = XLSX.utils.aoa_to_sheet([['Vendor', 'Items', 'Total'], ...vendorRows]);
-  XLSX.utils.book_append_sheet(wb, vendorWs, 'Vendors');
 
   XLSX.writeFile(wb, `${safeName(project.name)}-summary.xlsx`);
 }

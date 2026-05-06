@@ -14,7 +14,7 @@ type Props = {
 };
 
 export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
-  const total = lineTotalCents(item.unitCostCents, item.markupPct, item.qty);
+  const total = lineTotalCents(item.unitCostCents, item.qty);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -72,11 +72,8 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
               <MetaField label="Description" value={item.description} />
               <MetaField label="Item ID" value={item.itemIdTag} />
               <MetaField label="Category" value={item.category} />
-              <MetaField label="Vendor" value={item.vendor} />
-              <MetaField label="Model" value={item.model} />
               <MetaField label="Dimensions" value={item.dimensions} />
               <MetaField label="Seat Height" value={item.seatHeight} />
-              <MetaField label="Finishes" value={item.finishes} />
               <MetaField label="Lead Time" value={item.leadTime} />
               <MetaField label="Notes" value={item.notes} />
 
@@ -105,7 +102,7 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
               )}
 
               <div className="border-t border-gray-100 pt-4">
-                <dl className="grid grid-cols-3 gap-4">
+                <dl className="grid grid-cols-2 gap-4">
                   <div>
                     <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
                       Quantity
@@ -119,12 +116,6 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                     <dd className="mt-1 text-sm text-gray-900">
                       {formatMoney(cents(item.unitCostCents))}
                     </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Markup
-                    </dt>
-                    <dd className="mt-1 text-sm text-gray-900">{item.markupPct}%</dd>
                   </div>
                 </dl>
                 <div className="mt-4 rounded-lg bg-brand-50 px-4 py-3">
