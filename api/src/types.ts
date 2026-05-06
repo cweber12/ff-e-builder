@@ -56,6 +56,7 @@ export interface Item {
   id: string;
   room_id: string;
   item_name: string;
+  description: string | null;
   category: string | null;
   vendor: string | null;
   model: string | null;
@@ -143,6 +144,7 @@ export type ImageEntityType =
   | 'project'
   | 'room'
   | 'item'
+  | 'item_option'
   | 'material'
   | 'proposal_item'
   | 'proposal_swatch'
@@ -207,6 +209,7 @@ export type UpdateRoomInput = z.infer<typeof UpdateRoomSchema>;
 export const CreateItemSchema = z.object({
   room_id: z.string().uuid().optional(),
   item_name: z.string().min(1).max(255),
+  description: z.string().max(4000).nullable().default(null),
   category: z.string().max(100).nullable().default(null),
   vendor: z.string().max(255).nullable().default(null),
   model: z.string().max(255).nullable().default(null),
@@ -298,6 +301,7 @@ export const ImageEntitySchema = z.object({
     'project',
     'room',
     'item',
+    'item_option',
     'material',
     'proposal_item',
     'proposal_swatch',

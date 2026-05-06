@@ -38,6 +38,7 @@ export const itemMarkupPctSchema = z
 export const editableItemPatchSchema = z.object({
   roomId: z.string().min(1).optional(),
   itemName: itemNameSchema.optional(),
+  description: nullableText(4000).optional(),
   category: nullableText(100).optional(),
   vendor: nullableText(255).optional(),
   model: nullableText(255).optional(),
@@ -57,6 +58,7 @@ export const editableItemPatchSchema = z.object({
 
 export const itemFormSchema = z.object({
   itemName: itemNameSchema,
+  description: z.string().trim().max(4000).default(''),
   category: z.string().trim().max(100).default(''),
   itemIdTag: z.string().trim().max(100).default(''),
   vendor: z.string().trim().max(255).default(''),

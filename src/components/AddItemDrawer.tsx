@@ -34,6 +34,7 @@ interface AddItemDrawerProps {
 
 const defaultValues: ItemFormValues = {
   itemName: '',
+  description: '',
   category: '',
   itemIdTag: '',
   vendor: '',
@@ -165,6 +166,7 @@ export function AddItemDrawer({
     await onSubmit(
       {
         itemName: values.itemName.trim(),
+        description: emptyToNull(values.description),
         category: emptyToNull(values.category),
         itemIdTag: emptyToNull(values.itemIdTag),
         vendor: emptyToNull(values.vendor),
@@ -188,6 +190,10 @@ export function AddItemDrawer({
       <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
         <Field label="Item name" error={errors.itemName?.message}>
           <input {...register('itemName')} className={inputClassName} />
+        </Field>
+
+        <Field label="Description" error={errors.description?.message}>
+          <textarea {...register('description')} rows={3} className={inputClassName} />
         </Field>
 
         <Field label="Category" error={errors.category?.message}>

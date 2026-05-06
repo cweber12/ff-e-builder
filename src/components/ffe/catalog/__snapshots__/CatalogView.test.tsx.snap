@@ -52,16 +52,54 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         >
           Living Room
         </p>
-        <h1
-          class="mt-3 text-[28px] font-semibold leading-tight text-gray-950"
+        <div
+          class="mt-3"
         >
-          Channel Lounge Chair
-        </h1>
-        <span
-          class="mt-4 inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700"
+          <span
+            aria-label="Item name for Channel Lounge Chair"
+            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors block"
+            role="button"
+            tabindex="0"
+          >
+            <h1
+              class="text-[28px] font-semibold leading-tight text-gray-950"
+            >
+              Channel Lounge Chair
+            </h1>
+          </span>
+        </div>
+        <div
+          class="mt-4"
         >
-          Seating
-        </span>
+          <span
+            aria-label="Category for Channel Lounge Chair"
+            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700"
+            >
+              Seating
+            </span>
+          </span>
+        </div>
+        <div
+          class="mt-4"
+        >
+          <span
+            aria-label="Description for Channel Lounge Chair"
+            class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors block"
+            role="button"
+            tabindex="0"
+          >
+            <p
+              class="text-sm leading-6 text-gray-600"
+            >
+              Sculpted lounge chair with a channeled seat and relaxed residential scale.
+            </p>
+          </span>
+        </div>
       </div>
       <div
         class="h-px bg-brand-500/40"
@@ -74,7 +112,29 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             Vendor
           </dt>
           <dd>
-            Atelier Forma
+            <span
+              aria-label="Vendor for Channel Lounge Chair"
+              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+              role="button"
+              tabindex="0"
+            >
+              Atelier Forma
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Model
+          </dt>
+          <dd>
+            <span
+              aria-label="Model for Channel Lounge Chair"
+              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+              role="button"
+              tabindex="0"
+            >
+              Channel 32
+            </span>
           </dd>
         </div>
         <div>
@@ -82,7 +142,14 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             Dimensions
           </dt>
           <dd>
-            32"W x 34"D x 30"H
+            <span
+              aria-label="Dimensions for Channel Lounge Chair"
+              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+              role="button"
+              tabindex="0"
+            >
+              32"W x 34"D x 30"H
+            </span>
           </dd>
         </div>
         <div>
@@ -90,7 +157,14 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             Materials
           </dt>
           <dd>
-            Boucle upholstery, white oak base
+            <span
+              aria-label="Materials for Channel Lounge Chair"
+              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+              role="button"
+              tabindex="0"
+            >
+              Boucle upholstery, white oak base
+            </span>
           </dd>
         </div>
         <div>
@@ -109,7 +183,89 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             Mara Vale
           </dd>
         </div>
+        <div>
+          <dt>
+            Lead Time
+          </dt>
+          <dd>
+            <span
+              aria-label="Lead time for Channel Lounge Chair"
+              class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors"
+              role="button"
+              tabindex="0"
+            >
+              10 weeks
+            </span>
+          </dd>
+        </div>
       </dl>
+      <div
+        class="grid gap-2"
+      >
+        <p
+          class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500"
+        >
+          Options
+        </p>
+        <div
+          class="catalog-option-grid"
+        >
+          <div
+            class="catalog-option-card"
+          >
+            <label
+              class="catalog-option-check"
+            >
+              <input
+                disabled=""
+                type="checkbox"
+              />
+            </label>
+            <div
+              class="catalog-option-empty"
+            >
+              Option 
+              1
+            </div>
+          </div>
+          <div
+            class="catalog-option-card"
+          >
+            <label
+              class="catalog-option-check"
+            >
+              <input
+                disabled=""
+                type="checkbox"
+              />
+            </label>
+            <div
+              class="catalog-option-empty"
+            >
+              Option 
+              2
+            </div>
+          </div>
+          <div
+            class="catalog-option-card"
+          >
+            <label
+              class="catalog-option-check"
+            >
+              <input
+                disabled=""
+                type="checkbox"
+              />
+            </label>
+            <div
+              class="catalog-option-empty"
+            >
+              Option 
+              3
+            </div>
+          </div>
+        </div>
+      </div>
       <div
         class="grid gap-2"
       >
@@ -175,11 +331,63 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           </strong>
         </div>
       </div>
-      <p
-        class="catalog-notes"
+      <span
+        aria-label="Notes for Channel Lounge Chair"
+        class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors block"
+        role="button"
+        tabindex="0"
       >
-        Use performance fabric and confirm COM yardage before order.
-      </p>
+        <p
+          class="catalog-notes"
+        >
+          Use performance fabric and confirm COM yardage before order.
+        </p>
+      </span>
+      <section
+        class="catalog-approval"
+      >
+        <p
+          class="catalog-approval-title"
+        >
+          Customer approval
+        </p>
+        <div
+          class="catalog-approval-grid"
+        >
+          <div>
+            <span>
+              Signature
+            </span>
+            <div
+              class="catalog-approval-line"
+            />
+          </div>
+          <div>
+            <span>
+              Date
+            </span>
+            <div
+              class="catalog-approval-line"
+            />
+          </div>
+        </div>
+        <div
+          class="catalog-approval-checks"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Approved w/ changes
+          </label>
+          <label>
+            <input
+              type="checkbox"
+            />
+            Approved w/o changes
+          </label>
+        </div>
+      </section>
     </div>
   </section>
   <footer
@@ -194,9 +402,16 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       ocean-house
     </span>
     <span
-      class="font-mono text-xs text-gray-500"
+      aria-label="Item ID for Channel Lounge Chair"
+      class="cursor-pointer rounded px-1 -mx-1 hover:bg-brand-50 transition-colors justify-self-end"
+      role="button"
+      tabindex="0"
     >
-      LR-CH-01
+      <span
+        class="font-mono text-xs text-gray-500"
+      >
+        LR-CH-01
+      </span>
     </span>
   </footer>
 </article>

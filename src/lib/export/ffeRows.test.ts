@@ -6,6 +6,7 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'i1',
   roomId: 'r1',
   itemName: 'Lounge Chair',
+  description: null,
   category: 'Seating',
   vendor: 'Vendor A',
   model: 'Model 1',

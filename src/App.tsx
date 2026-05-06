@@ -323,7 +323,7 @@ function FfeTabActions({
           label="Export"
           size="sm"
           disabled={!hasItems}
-          onPdf={() => exportCatalogPdf(project, roomsWithItems)}
+          onPdf={() => void exportCatalogPdf(project, roomsWithItems)}
         />
       ) : (
         <ExportMenu

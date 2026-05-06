@@ -118,13 +118,14 @@ router.post('/:id/items', async (c) => {
   const sql = getDb(c.env);
   const rows = await sql`
     INSERT INTO items (
-      room_id, item_name, category, vendor, model, item_id_tag,
+      room_id, item_name, description, category, vendor, model, item_id_tag,
       dimensions, seat_height, finishes, notes, qty, unit_cost_cents,
       markup_pct, lead_time, status, image_url, link_url, sort_order
     )
     VALUES (
       ${roomId},
       ${parsed.data.item_name},
+      ${parsed.data.description},
       ${parsed.data.category},
       ${parsed.data.vendor},
       ${parsed.data.model},

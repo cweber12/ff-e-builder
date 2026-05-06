@@ -15,7 +15,8 @@ Image metadata is normalized in `image_assets`:
 - `material_id` is populated for material library images.
 - `proposal_item_id` is populated for Proposal Renderings, Plan Images, and swatches.
 - `entity_type` identifies the image role, including `proposal_item` for Rendering,
-  `proposal_plan` for Plan Image, and `proposal_swatch` for Swatch.
+  `proposal_plan` for Plan Image, `proposal_swatch` for Swatch, and `item_option`
+  for alternate FF&E option renderings.
 - `r2_key` points to the private object in R2.
 
 The R2 object key shape is:
@@ -24,6 +25,7 @@ The R2 object key shape is:
 users/{uid}/projects/{projectId}/project/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/items/{itemId}/{imageId}.{ext}
+users/{uid}/projects/{projectId}/rooms/{roomId}/items/{itemId}/{imageId}.{ext}   # item_option uses the same item-scoped path
 users/{uid}/projects/{projectId}/materials/{materialId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/proposal/items/{proposalItemId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/proposal/items/{proposalItemId}/plan/{imageId}.{ext}
@@ -34,6 +36,8 @@ Project entities may store up to three images. One image is marked `is_primary`
 and is used as the project card preview.
 Proposal Items may store one primary Rendering, one primary Plan Image,
 and up to four direct swatch images.
+FF&E Items may store one primary Rendering and up to three `item_option` renderings,
+with one option marked as the current selection.
 
 ## API
 
@@ -44,6 +48,7 @@ existence.
 - `GET /api/v1/images?entity_type=project&entity_id={projectId}`
 - `GET /api/v1/images?entity_type=room&entity_id={roomId}`
 - `GET /api/v1/images?entity_type=item&entity_id={itemId}`
+- `GET /api/v1/images?entity_type=item_option&entity_id={itemId}`
 - `GET /api/v1/images?entity_type=material&entity_id={materialId}`
 - `GET /api/v1/images?entity_type=proposal_item&entity_id={proposalItemId}`
 - `GET /api/v1/images?entity_type=proposal_plan&entity_id={proposalItemId}`
@@ -74,6 +79,8 @@ The shared image frame is used for:
 
 Empty frames open the local file picker. Existing frames render the protected R2
 image through an authenticated blob request rather than a public URL.
+FF&E item option renderings are managed from the item detail panel and displayed
+on catalog pages with a selected-option checkbox.
 
 ## Manual Cloudflare Steps
 

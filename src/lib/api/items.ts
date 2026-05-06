@@ -4,6 +4,7 @@ import type { Item, ItemStatus } from '../../types';
 
 export type CreateItemInput = {
   itemName: string;
+  description?: string | null;
   category?: string | null;
   vendor?: string | null;
   model?: string | null;
@@ -25,6 +26,7 @@ export type CreateItemInput = {
 export type UpdateItemInput = {
   roomId?: string;
   itemName?: string;
+  description?: string | null;
   category?: string | null;
   vendor?: string | null;
   model?: string | null;
@@ -56,6 +58,7 @@ export const itemsApi = {
       method: 'POST',
       body: JSON.stringify({
         item_name: input.itemName,
+        description: input.description,
         category: input.category,
         vendor: input.vendor,
         model: input.model,
@@ -81,6 +84,7 @@ export const itemsApi = {
       body: JSON.stringify({
         item_name: patch.itemName,
         room_id: patch.roomId,
+        description: patch.description,
         category: patch.category,
         vendor: patch.vendor,
         model: patch.model,

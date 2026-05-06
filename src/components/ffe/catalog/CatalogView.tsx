@@ -3,16 +3,32 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sellPriceCents } from '../../../lib/calc';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
-import { useUpdateItem } from '../../../hooks';
+import { useImages, useSetPrimaryImage, useUpdateItem } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
+import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { ImageFrame } from '../../shared/ImageFrame';
 import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
+import { api } from '../../../lib/api';
+import { emptyToNull } from '../../../lib/textUtils';
+import type { ImageAsset } from '../../../types';
 
 type CatalogEntry = {
   item: Item & { color?: string | null; designer?: string | null };
   room: RoomWithItems;
 };
+
+type EditableCatalogField =
+  | 'itemName'
+  | 'description'
+  | 'category'
+  | 'vendor'
+  | 'model'
+  | 'dimensions'
+  | 'finishes'
+  | 'leadTime'
+  | 'notes'
+  | 'itemIdTag';
 
 type CatalogViewProps = {
   project: Project;
@@ -246,7 +262,7 @@ function CatalogActionsMenu({
             type="button"
             role="menuitem"
             className={catalogMenuItemClassName}
-            onClick={() => runAction(() => exportCatalogPdf(project, rooms))}
+            onClick={() => runAction(() => void exportCatalogPdf(project, rooms))}
           >
             Export PDF
           </button>
@@ -255,7 +271,9 @@ function CatalogActionsMenu({
               type="button"
               role="menuitem"
               className={catalogMenuItemClassName}
-              onClick={() => runAction(() => exportCatalogItemPdf(project, rooms, currentItemId))}
+              onClick={() =>
+                runAction(() => void exportCatalogItemPdf(project, rooms, currentItemId))
+              }
             >
               Export this item
             </button>
@@ -294,6 +312,16 @@ export function CatalogPage({
   const updateItem = useUpdateItem(item.roomId);
   const sellPrice = sellPriceCents(item.unitCostCents, item.markupPct);
   const projectSlug = slugify(project.name);
+  const saveField = (field: EditableCatalogField, value: string, required = false) =>
+    updateItem
+      .mutateAsync({
+        id: item.id,
+        patch: {
+          [field]: required ? value.trim() : emptyToNull(value),
+          version: item.version,
+        },
+      })
+      .then(() => undefined);
 
   return (
     <article
@@ -330,23 +358,86 @@ export function CatalogPage({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
               {room.name}
             </p>
-            <h1 className="mt-3 text-[28px] font-semibold leading-tight text-gray-950">
-              {item.itemName}
-            </h1>
-            <span className="mt-4 inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700">
-              {item.category ?? 'Uncategorized'}
-            </span>
+            <div className="mt-3">
+              <InlineTextEdit
+                value={item.itemName}
+                aria-label={`Item name for ${item.itemName}`}
+                className="block"
+                inputClassName="w-full text-[28px] font-semibold leading-tight text-gray-950"
+                onSave={(value) => saveField('itemName', value, true)}
+                renderDisplay={(value) => (
+                  <h1 className="text-[28px] font-semibold leading-tight text-gray-950">{value}</h1>
+                )}
+              />
+            </div>
+            <div className="mt-4">
+              <InlineTextEdit
+                value={item.category ?? ''}
+                aria-label={`Category for ${item.itemName}`}
+                onSave={(value) => saveField('category', value)}
+                renderDisplay={(value) => (
+                  <span className="inline-flex rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700">
+                    {value.trim() || 'Uncategorized'}
+                  </span>
+                )}
+              />
+            </div>
+            <div className="mt-4">
+              <InlineTextEdit
+                value={item.description ?? ''}
+                aria-label={`Description for ${item.itemName}`}
+                className="block"
+                inputClassName="w-full text-sm text-gray-600"
+                onSave={(value) => saveField('description', value)}
+                renderDisplay={(value) =>
+                  value.trim() ? (
+                    <p className="text-sm leading-6 text-gray-600">{value}</p>
+                  ) : (
+                    <p className="text-sm italic text-gray-400">Click to add a description</p>
+                  )
+                }
+              />
+            </div>
           </div>
 
           <div className="h-px bg-brand-500/40" />
 
           <dl className="catalog-data-grid">
-            <DataPoint label="Vendor" value={item.vendor} />
-            <DataPoint label="Dimensions" value={item.dimensions} />
-            <DataPoint label="Materials" value={item.finishes} />
+            <DataPoint
+              label="Vendor"
+              value={item.vendor}
+              ariaLabel={`Vendor for ${item.itemName}`}
+              onSave={(value) => saveField('vendor', value)}
+            />
+            <DataPoint
+              label="Model"
+              value={item.model}
+              ariaLabel={`Model for ${item.itemName}`}
+              onSave={(value) => saveField('model', value)}
+            />
+            <DataPoint
+              label="Dimensions"
+              value={item.dimensions}
+              ariaLabel={`Dimensions for ${item.itemName}`}
+              onSave={(value) => saveField('dimensions', value)}
+            />
+            <DataPoint
+              label="Materials"
+              value={item.finishes}
+              ariaLabel={`Materials for ${item.itemName}`}
+              onSave={(value) => saveField('finishes', value)}
+            />
             <DataPoint label="Color" value={item.color ?? null} />
             <DataPoint label="Designer" value={item.designer ?? null} />
+            <DataPoint
+              label="Lead Time"
+              value={item.leadTime}
+              ariaLabel={`Lead time for ${item.itemName}`}
+              onSave={(value) => saveField('leadTime', value)}
+            />
           </dl>
+
+          <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
 
           {item.materials.length > 0 && (
             <div className="grid gap-2">
@@ -382,7 +473,22 @@ export function CatalogPage({
             </div>
           </div>
 
-          {item.notes && <p className="catalog-notes">{item.notes}</p>}
+          <InlineTextEdit
+            value={item.notes ?? ''}
+            aria-label={`Notes for ${item.itemName}`}
+            className="block"
+            inputClassName="w-full text-sm text-gray-600"
+            onSave={(value) => saveField('notes', value)}
+            renderDisplay={(value) =>
+              value.trim() ? (
+                <p className="catalog-notes">{value}</p>
+              ) : (
+                <p className="catalog-notes italic text-gray-400">Click to add notes</p>
+              )
+            }
+          />
+
+          <CatalogApprovalSection />
         </div>
       </section>
 
@@ -391,18 +497,172 @@ export function CatalogPage({
           {pageNumber} of {pageCount}
         </span>
         <span>{projectSlug}</span>
-        <span className="font-mono text-xs text-gray-500">{item.itemIdTag}</span>
+        <InlineTextEdit
+          value={item.itemIdTag ?? ''}
+          aria-label={`Item ID for ${item.itemName}`}
+          className="justify-self-end"
+          inputClassName="w-28 text-right font-mono text-xs text-gray-500"
+          onSave={(value) => saveField('itemIdTag', value)}
+          renderDisplay={(value) => (
+            <span className="font-mono text-xs text-gray-500">{value.trim() || '-'}</span>
+          )}
+        />
       </footer>
     </article>
   );
 }
 
-function DataPoint({ label, value }: { label: string; value: string | null }) {
+function DataPoint({
+  label,
+  value,
+  onSave,
+  ariaLabel,
+}: {
+  label: string;
+  value: string | null;
+  onSave?: ((value: string) => Promise<void>) | undefined;
+  ariaLabel?: string | undefined;
+}) {
   return (
     <div>
       <dt>{label}</dt>
-      <dd>{value?.trim() || '-'}</dd>
+      <dd>
+        {onSave ? (
+          <InlineTextEdit
+            value={value ?? ''}
+            {...(ariaLabel ? { 'aria-label': ariaLabel } : {})}
+            onSave={onSave}
+            renderDisplay={(displayValue) => displayValue.trim() || '-'}
+          />
+        ) : (
+          value?.trim() || '-'
+        )}
+      </dd>
     </div>
+  );
+}
+
+function CatalogOptionRenderings({ itemId, itemName }: { itemId: string; itemName: string }) {
+  const images = useImages('item_option', itemId);
+  const setPrimary = useSetPrimaryImage('item_option', itemId);
+  const optionImages = useMemo(
+    () =>
+      [...(images.data ?? [])]
+        .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+        .slice(0, 3),
+    [images.data],
+  );
+  const slots = Array.from({ length: 3 }, (_, index) => optionImages[index] ?? null);
+
+  return (
+    <div className="grid gap-2">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">Options</p>
+      <div className="catalog-option-grid">
+        {slots.map((image, index) => (
+          <CatalogOptionCard
+            key={image?.id ?? `catalog-option-${index}`}
+            image={image}
+            itemName={itemName}
+            index={index}
+            onSelect={(imageId) => setPrimary.mutate(imageId)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CatalogOptionCard({
+  image,
+  itemName,
+  index,
+  onSelect,
+}: {
+  image: ImageAsset | null;
+  itemName: string;
+  index: number;
+  onSelect: (imageId: string) => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    let nextUrl: string | null = null;
+
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+
+    if (!image) return undefined;
+
+    void api.images
+      .getContentBlob(image.id)
+      .then((blob) => {
+        if (ignore) return;
+        nextUrl = URL.createObjectURL(blob);
+        setPreviewUrl(nextUrl);
+      })
+      .catch(() => {
+        if (!ignore) setPreviewUrl(null);
+      });
+
+    return () => {
+      ignore = true;
+      if (nextUrl) URL.revokeObjectURL(nextUrl);
+    };
+  }, [image]);
+
+  return (
+    <div className="catalog-option-card">
+      <label className="catalog-option-check">
+        <input
+          type="checkbox"
+          checked={Boolean(image?.isPrimary)}
+          disabled={!image}
+          onChange={() => {
+            if (image && !image.isPrimary) onSelect(image.id);
+          }}
+        />
+      </label>
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt={`${itemName} option ${index + 1}`}
+          className="h-full w-full object-contain object-center"
+        />
+      ) : (
+        <div className="catalog-option-empty">Option {index + 1}</div>
+      )}
+    </div>
+  );
+}
+
+function CatalogApprovalSection() {
+  return (
+    <section className="catalog-approval">
+      <p className="catalog-approval-title">Customer approval</p>
+      <div className="catalog-approval-grid">
+        <div>
+          <span>Signature</span>
+          <div className="catalog-approval-line" />
+        </div>
+        <div>
+          <span>Date</span>
+          <div className="catalog-approval-line" />
+        </div>
+      </div>
+      <div className="catalog-approval-checks">
+        <label>
+          <input type="checkbox" />
+          Approved w/ changes
+        </label>
+        <label>
+          <input type="checkbox" />
+          Approved w/o changes
+        </label>
+      </div>
+    </section>
   );
 }
 

@@ -12,6 +12,7 @@ describe('itemsApi', () => {
           id: 'item-1',
           room_id: 'room-2',
           item_name: 'Lounge Chair',
+          description: 'Curved upholstered lounge chair',
           category: 'Seating',
           vendor: null,
           model: null,
@@ -38,6 +39,7 @@ describe('itemsApi', () => {
     const item = await itemsApi.update('item-1', {
       roomId: 'room-2',
       itemName: 'Lounge Chair',
+      description: 'Curved upholstered lounge chair',
       qty: 2,
       unitCostCents: 125000,
       markupPct: 20,
@@ -55,6 +57,7 @@ describe('itemsApi', () => {
     expect(JSON.parse(init?.body as string)).toMatchObject({
       item_name: 'Lounge Chair',
       room_id: 'room-2',
+      description: 'Curved upholstered lounge chair',
       qty: 2,
       unit_cost_cents: 125000,
       markup_pct: 20,
@@ -66,6 +69,7 @@ describe('itemsApi', () => {
       id: 'item-1',
       roomId: 'room-2',
       itemName: 'Lounge Chair',
+      description: 'Curved upholstered lounge chair',
       markupPct: 20,
       version: 8,
     });

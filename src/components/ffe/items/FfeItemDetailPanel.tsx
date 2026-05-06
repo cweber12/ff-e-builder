@@ -5,6 +5,7 @@ import { StatusBadge } from '../../primitives/StatusBadge';
 import { cents, formatMoney } from '../../../types';
 import { lineTotalCents } from '../../../lib/calc';
 import type { Item } from '../../../types';
+import { ItemOptionImagesPanel } from './ItemOptionImagesPanel';
 
 type Props = {
   item: Item;
@@ -51,7 +52,7 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
 
         <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
           <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-gray-100 p-4">
-            <ImageSection label="Image">
+            <ImageSection label="Rendering">
               <ImageFrame
                 entityType="item"
                 entityId={item.id}
@@ -61,10 +62,14 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                 disabled
               />
             </ImageSection>
+            <ImageSection label="Options">
+              <ItemOptionImagesPanel itemId={item.id} itemName={item.itemName} />
+            </ImageSection>
           </div>
 
           <div className="flex-1 overflow-y-auto p-5">
             <div className="space-y-4">
+              <MetaField label="Description" value={item.description} />
               <MetaField label="Item ID" value={item.itemIdTag} />
               <MetaField label="Category" value={item.category} />
               <MetaField label="Vendor" value={item.vendor} />

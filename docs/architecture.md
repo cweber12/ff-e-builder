@@ -67,7 +67,7 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 - `/projects/:id` redirects to `/projects/:id/snapshot`.
 - `/projects/:id/snapshot` shows the read-first Project Snapshot landing page for the open Project.
 - `/projects/:id/ffe/table` shows the editable FF&E table grouped by Room.
-- `/projects/:id/ffe/catalog` shows printable FF&E catalog pages.
+- `/projects/:id/ffe/catalog` shows printable FF&E catalog pages with inline item-text editing, option renderings, and customer approval markup.
 - `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
 - `/projects/:id/ffe/summary` shows FF&E budget and status summaries.
 - `/projects/:id/proposal/table` shows the editable Proposal grouped by Proposal Category.
@@ -87,7 +87,7 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
-- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering, while a Proposal Plan Image is a separate row-level visual.
+- R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `item_option`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering; `item_option` stores up to three alternate FF&E option renderings with one current selection.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Proposal categories start empty for new projects and are created explicitly by users or imports.
 - Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.

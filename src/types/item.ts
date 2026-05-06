@@ -7,6 +7,7 @@ export type Item = {
   id: string;
   roomId: string;
   itemName: string;
+  description: string | null;
   category: string | null;
   vendor: string | null;
   model: string | null;

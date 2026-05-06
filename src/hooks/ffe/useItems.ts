@@ -33,6 +33,7 @@ export function useCreateItem(roomId: string) {
         id: `optimistic-${crypto.randomUUID()}`,
         roomId,
         itemName: input.itemName,
+        description: input.description ?? null,
         category: input.category ?? null,
         vendor: input.vendor ?? null,
         model: input.model ?? null,

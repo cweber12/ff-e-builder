@@ -15,11 +15,13 @@ function insertUploadedPrimaryImage(
   old: ImageAsset[] | undefined,
   image: ImageAsset,
 ): ImageAsset[] {
+  const remaining = (old ?? []).filter((candidate) => candidate.id !== image.id);
   return [
     image,
-    ...(old ?? [])
-      .filter((candidate) => candidate.id !== image.id)
-      .map((candidate) => ({ ...candidate, isPrimary: false })),
+    ...remaining.map((candidate) => ({
+      ...candidate,
+      isPrimary: image.isPrimary ? false : candidate.isPrimary,
+    })),
   ];
 }
 

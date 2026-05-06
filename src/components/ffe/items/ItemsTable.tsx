@@ -498,7 +498,7 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   },
   {
     id: 'image',
-    header: '',
+    header: 'Rendering',
     cell: ({ row }) => (
       <ImageFrame
         entityType="item"
@@ -536,6 +536,19 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         onSave={onSave}
         required
         displayClassName="font-medium text-gray-950"
+      />
+    ),
+  },
+  {
+    accessorKey: 'description',
+    header: 'Description',
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.description}
+        field="description"
+        label="Description"
+        onSave={onSave}
       />
     ),
   },
@@ -1291,6 +1304,7 @@ function RoomItemsSection({
     async (item: Item) => {
       await createItem.mutateAsync({
         itemName: item.itemName,
+        description: item.description,
         category: item.category,
         vendor: item.vendor,
         model: item.model,

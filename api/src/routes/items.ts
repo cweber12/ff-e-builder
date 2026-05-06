@@ -30,6 +30,7 @@ router.patch('/:id', async (c) => {
     SET
       item_name       = COALESCE(${parsed.data.item_name ?? null}, item_name),
       room_id         = COALESCE(${parsed.data.room_id ?? null}, room_id),
+      description     = COALESCE(${parsed.data.description ?? null}, description),
       category        = COALESCE(${parsed.data.category ?? null}, category),
       vendor          = COALESCE(${parsed.data.vendor ?? null}, vendor),
       model           = COALESCE(${parsed.data.model ?? null}, model),

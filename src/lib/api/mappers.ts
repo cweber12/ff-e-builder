@@ -39,6 +39,7 @@ export interface RawItem {
   id: string;
   room_id: string;
   item_name: string;
+  description: string | null;
   category: string | null;
   vendor: string | null;
   model: string | null;
@@ -168,6 +169,7 @@ export const mapItem = (r: RawItem): Item => ({
   id: r.id,
   roomId: r.room_id,
   itemName: r.item_name,
+  description: r.description,
   category: r.category,
   vendor: r.vendor,
   model: r.model,

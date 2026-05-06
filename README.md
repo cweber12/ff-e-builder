@@ -54,8 +54,8 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
 - **Project header** -- compact read-only project identity, project-section navigation, and Project Options for updating project data, images, or deletion.
-- **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
-- **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with A4 page proportions, grouped navigation, browser print, direct PDF export, and per-item PDF export.
+- **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, a dedicated Rendering column, item descriptions, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
+- **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with click-to-edit item text, main Rendering plus up to three selectable option renderings, browser print, direct PDF export, and per-item PDF export with editable customer-approval/signature fields.
 - **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
 - **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/proposal/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials.md](docs/materials.md).
 - **Images** -- project, room, FF&E item, material, Proposal Rendering, Plan Image, and Material Visual metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).

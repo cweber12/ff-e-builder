@@ -48,6 +48,7 @@ vi.mock('../../../hooks', () => ({
   useImages: () => ({ data: [], isLoading: false }),
   useUploadImage: () => ({ mutate: vi.fn(), isPending: false }),
   useDeleteImage: () => ({ mutate: vi.fn(), isPending: false }),
+  useSetPrimaryImage: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateImageCrop: () => ({ mutate: vi.fn(), isPending: false }),
   isPersistedImageEntityId: () => true,
 }));
@@ -76,6 +77,7 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'item-1',
   roomId: 'room-1',
   itemName: 'Lounge Chair',
+  description: null,
   category: 'Seating',
   vendor: 'Muuto',
   model: 'Fiber',
@@ -370,6 +372,7 @@ describe('ItemsTable', () => {
 
     expect(mockCreateItemMutateAsync).toHaveBeenCalledWith({
       itemName: 'Side Table',
+      description: null,
       category: 'Casegoods',
       itemIdTag: 'TB-02',
       vendor: 'HAY',

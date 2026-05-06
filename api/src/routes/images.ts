@@ -58,12 +58,17 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
     return 'Proposal items can have up to 4 swatches';
   }
 
+  if (message.includes('ff&e items can have up to 3 option renderings')) {
+    return 'FF&E items can have up to 3 option renderings';
+  }
+
   if (!message.includes('duplicate key value violates unique constraint')) return null;
 
   if (entityType === 'project') return 'Projects can have only one preview image at a time';
   if (entityType === 'item' || entityType === 'proposal_item') {
     return 'This row already has a rendering';
   }
+  if (entityType === 'item_option') return 'This item option is already selected';
   if (entityType === 'proposal_plan') return 'This row already has a plan image';
   if (entityType === 'room') return 'This room already has an image';
   if (entityType === 'material') return 'This material already has an image';
@@ -78,6 +83,10 @@ function isProjectImageAsset(image: ImageAsset): boolean {
     image.proposal_item_id === null &&
     image.entity_type === 'project'
   );
+}
+
+function promotesNextPrimaryOnDelete(image: ImageAsset): boolean {
+  return isProjectImageAsset(image) || image.entity_type === 'item_option';
 }
 
 async function getOwnedEntityContext(
@@ -299,13 +308,47 @@ router.post('/', async (c) => {
         return c.json({ error: 'Proposal items can have up to 4 swatches' }, 400);
       }
     }
+    if (parsed.data.entity_type === 'item_option') {
+      const existing = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM image_assets
+        WHERE owner_uid = ${uid}
+          AND project_id = ${context.projectId}
+          AND entity_type = 'item_option'
+          AND room_id IS NOT DISTINCT FROM ${context.roomId}
+          AND item_id IS NOT DISTINCT FROM ${context.itemId}
+          AND material_id IS NULL
+          AND proposal_item_id IS NULL
+      `;
+      const count = (existing[0] as { count?: number } | undefined)?.count ?? 0;
+      if (count >= 3) {
+        await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+        return c.json({ error: 'FF&E items can have up to 3 option renderings' }, 400);
+      }
+    }
 
     const isPrimary =
       parsed.data.entity_type === 'project'
         ? projectImageCount === 0
-        : parsed.data.entity_type !== 'proposal_swatch';
+        : parsed.data.entity_type === 'item_option'
+          ? (
+              (
+                await sql`
+                SELECT COUNT(*)::int AS count
+                FROM image_assets
+                WHERE owner_uid = ${uid}
+                  AND project_id = ${context.projectId}
+                  AND entity_type = 'item_option'
+                  AND room_id IS NOT DISTINCT FROM ${context.roomId}
+                  AND item_id IS NOT DISTINCT FROM ${context.itemId}
+                  AND material_id IS NULL
+                  AND proposal_item_id IS NULL
+              `
+              )[0] as { count?: number } | undefined
+            )?.count === 0
+          : parsed.data.entity_type !== 'proposal_swatch';
 
-    if (parsed.data.entity_type === 'project') {
+    if (parsed.data.entity_type === 'project' || parsed.data.entity_type === 'item_option') {
       const rows = await sql`
         INSERT INTO image_assets (
           id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
@@ -371,7 +414,11 @@ router.post('/', async (c) => {
     await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
     const validationError = imageInsertErrorMessage(parsed.data.entity_type, err);
     if (validationError) {
-      const status = validationError === 'Proposal items can have up to 4 swatches' ? 400 : 409;
+      const status =
+        validationError === 'Proposal items can have up to 4 swatches' ||
+        validationError === 'FF&E items can have up to 3 option renderings'
+          ? 400
+          : 409;
       return c.json({ error: validationError }, status);
     }
     throw err;
@@ -503,17 +550,17 @@ router.delete('/:id', async (c) => {
   const sql = getDb(c.env);
   await sql`DELETE FROM image_assets WHERE id = ${id} AND owner_uid = ${uid}`;
 
-  if (image.is_primary && isProjectImageAsset(image)) {
+  if (image.is_primary && promotesNextPrimaryOnDelete(image)) {
     const nextRows = await sql`
       SELECT *
       FROM image_assets
       WHERE owner_uid = ${uid}
         AND project_id = ${image.project_id}
-        AND entity_type = 'project'
-        AND room_id IS NULL
-        AND item_id IS NULL
-        AND material_id IS NULL
-        AND proposal_item_id IS NULL
+        AND entity_type = ${image.entity_type}
+        AND room_id IS NOT DISTINCT FROM ${image.room_id}
+        AND item_id IS NOT DISTINCT FROM ${image.item_id}
+        AND material_id IS NOT DISTINCT FROM ${image.material_id}
+        AND proposal_item_id IS NOT DISTINCT FROM ${image.proposal_item_id}
       ORDER BY created_at DESC
       LIMIT 1
     `;

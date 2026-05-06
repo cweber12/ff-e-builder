@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(ffe): add item descriptions, rename the FF&E table image column to Rendering, support up to three selectable item option renderings, and add editable catalog approval/signature PDF fields
 - feat(ffe): catalog view is now the default when clicking the FF&E tab; catalog/table toggle added to the tab bar matching the materials library pattern "Delete room and all items" alongside "Move items to another room" — DB cascade handles item deletion automatically
 - feat(proposal): DeleteCategoryModal added to ProposalTable with "Move items to another category" and "Delete category and all items" options; previously deletion fired immediately with no confirmation
 - feat(projects): route dashboard project cards and `/projects/:id` to the new Project Snapshot landing page with a first-class Snapshot tab

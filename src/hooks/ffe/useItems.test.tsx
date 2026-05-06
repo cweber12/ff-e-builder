@@ -62,6 +62,7 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'item-1',
   roomId: 'room-1',
   itemName: 'Original Name',
+  description: null,
   category: null,
   vendor: null,
   model: null,

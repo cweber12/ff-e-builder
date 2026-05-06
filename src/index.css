@@ -221,6 +221,57 @@
     gap: 24px;
   }
 
+  .catalog-option-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .catalog-option-card {
+    position: relative;
+    min-height: 118px;
+    overflow: hidden;
+    border: 1px solid theme('colors.gray.200');
+    background: theme('colors.brand.50');
+  }
+
+  .catalog-option-card img {
+    height: 100%;
+    width: 100%;
+  }
+
+  .catalog-option-check {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.92);
+    padding: 6px;
+    box-shadow: 0 8px 20px rgb(15 23 42 / 0.1);
+  }
+
+  .catalog-option-check input {
+    height: 14px;
+    width: 14px;
+  }
+
+  .catalog-option-empty {
+    display: flex;
+    height: 100%;
+    min-height: 118px;
+    align-items: center;
+    justify-content: center;
+    color: theme('colors.gray.400');
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .catalog-data-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -283,6 +334,55 @@
     color: theme('colors.gray.600');
   }
 
+  .catalog-approval {
+    margin-top: auto;
+    align-self: flex-end;
+    width: min(100%, 320px);
+    border: 1px solid theme('colors.gray.200');
+    border-radius: 16px;
+    padding: 16px;
+    background: theme('colors.gray.50');
+  }
+
+  .catalog-approval-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: theme('colors.gray.500');
+  }
+
+  .catalog-approval-grid {
+    display: grid;
+    grid-template-columns: 1fr 112px;
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  .catalog-approval-grid span,
+  .catalog-approval-checks label {
+    font-size: 11px;
+    font-weight: 600;
+    color: theme('colors.gray.600');
+  }
+
+  .catalog-approval-line {
+    height: 28px;
+    border-bottom: 1px solid theme('colors.gray.400');
+  }
+
+  .catalog-approval-checks {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .catalog-approval-checks label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .catalog-footer {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -318,6 +418,11 @@
     grid-template-columns: 1fr;
     gap: 24px;
     padding: 28px 0 24px;
+  }
+
+  .catalog-option-grid,
+  .catalog-approval-grid {
+    grid-template-columns: 1fr;
   }
 
   .catalog-image-wrap,

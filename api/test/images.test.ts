@@ -19,15 +19,21 @@ vi.mock('../src/lib/ownership', () => ({
 import app from '../src/index';
 import { getDb } from '../src/lib/db';
 import { verifyFirebaseToken } from '../src/lib/firebase-auth';
-import { getOwnedProjectContext, getOwnedProposalItemContext } from '../src/lib/ownership';
+import {
+  getOwnedItemContext,
+  getOwnedProjectContext,
+  getOwnedProposalItemContext,
+} from '../src/lib/ownership';
 
 const mockVerify = vi.mocked(verifyFirebaseToken);
 const mockGetDb = vi.mocked(getDb);
+const mockGetOwnedItemContext = vi.mocked(getOwnedItemContext);
 const mockGetOwnedProjectContext = vi.mocked(getOwnedProjectContext);
 const mockGetOwnedProposalItemContext = vi.mocked(getOwnedProposalItemContext);
 
 const projectId = '00000000-0000-0000-0000-000000000001';
 const proposalItemId = '00000000-0000-0000-0000-000000000002';
+const itemId = '00000000-0000-0000-0000-000000000003';
 const bucketPut = vi.fn().mockResolvedValue(undefined);
 const bucketDelete = vi.fn().mockResolvedValue(undefined);
 
@@ -60,6 +66,11 @@ describe('Image uploads', () => {
     bucketDelete.mockResolvedValue(undefined);
     mockVerify.mockResolvedValue({ uid: 'user-123' });
     mockGetOwnedProjectContext.mockResolvedValue({ projectId });
+    mockGetOwnedItemContext.mockResolvedValue({
+      projectId,
+      roomId: '00000000-0000-0000-0000-000000000004',
+      itemId,
+    });
     mockGetOwnedProposalItemContext.mockResolvedValue({
       projectId,
       proposalItemId,
@@ -279,6 +290,27 @@ describe('Image uploads', () => {
     expect(res.status).toBe(400);
     await expect(res.json()).resolves.toMatchObject({
       error: 'Proposal items can have up to 4 swatches',
+    });
+    expect(bucketDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a fourth FF&E item option rendering with a client error', async () => {
+    const sql = vi.fn().mockResolvedValueOnce([{ count: 3 }]);
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      `/api/v1/images?entity_type=item_option&entity_id=${itemId}&alt_text=Option+4`,
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+        body: multipartImageBody('option-4.png'),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'FF&E items can have up to 3 option renderings',
     });
     expect(bucketDelete).toHaveBeenCalledTimes(1);
   });
