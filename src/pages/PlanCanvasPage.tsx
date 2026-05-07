@@ -118,7 +118,7 @@ function sectionForTool(tool: ToolId) {
   if (tool === 'calibrate') return 'calibration';
   if (tool === 'length') return 'length';
   if (tool === 'rectangle' || tool === 'crop') return 'items';
-  return 'tool';
+  return 'calibration';
 }
 
 export function PlanCanvasPage({
@@ -191,7 +191,7 @@ export function PlanCanvasPage({
     return result;
   }, [measurementItemsByKey, measurements]);
 
-  const isCalibrated = calibration !== null || selectedPlan?.calibrationStatus === 'calibrated';
+  const isCalibrated = calibration != null;
   const selectedLengthLine =
     lengthLines.find((candidate) => candidate.id === selectedLengthLineId) ?? null;
   const selectedMeasurement =
@@ -1283,31 +1283,6 @@ export function PlanCanvasPage({
                 </>
               ) : null}
             </section>
-
-            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setOpenSection('tool')}
-                className="flex w-full items-center justify-between gap-3 text-left"
-              >
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  Active Tool
-                </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                  {openSection === 'tool' ? 'Hide' : 'Show'}
-                </span>
-              </button>
-              {openSection === 'tool' ? (
-                <>
-                  <p className="mt-3 text-sm font-semibold text-neutral-900">
-                    {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.label}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-neutral-500">
-                    {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.description}
-                  </p>
-                </>
-              ) : null}
-            </section>
           </div>
         </aside>
       </div>
@@ -1362,6 +1337,7 @@ function PlanViewport({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isInteracting, setIsInteracting] = useState(false);
   const panDragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
   const shapeStart = useRef<ImagePoint | null>(null);
   const zoomRef = useRef(zoom);
   const offsetRef = useRef(offset);
@@ -1616,6 +1592,7 @@ function PlanViewport({
 
     if (activeTool === 'pan') {
       panDragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
+      setIsPanning(true);
     }
   };
 
@@ -1669,6 +1646,7 @@ function PlanViewport({
     panDragStart.current = null;
     shapeStart.current = null;
     setIsInteracting(false);
+    setIsPanning(false);
   };
 
   const showReset = zoom > 1.01 || rotation !== 0 || offset.x !== 0 || offset.y !== 0;
@@ -1688,7 +1666,7 @@ function PlanViewport({
               (activeTool === 'crop' && selectedMeasurementRect !== null)
               ? 'crosshair'
               : activeTool === 'pan'
-                ? panDragStart.current
+                ? isPanning
                   ? 'grabbing'
                   : 'grab'
                 : 'default'

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- chore(plans): add explicit Pan tool to left icon rail, float zoom/rotate/reset controls inside the canvas overlay, truncate long plan names in the header to 20 ch with title tooltip, and remove card-within-card styling from sidebar list items
+- chore(plans): remove low-value "Active Tool" sidebar section; use single-source `isCalibrated` derived from calibration query only; fix pan-cursor grabbing state with a boolean flag
 
 - feat(plans): add FF&E `item_plan` image support so measured plan crops can publish into a dedicated FF&E detail-panel plan image surface without colliding with the main rendering
 - fix(plans): shrink the opened-plan viewport toolbar, keep the plan canvas filling the available window height, and convert the right sidebar into a one-open-section accordion while keeping the plan selector always visible
