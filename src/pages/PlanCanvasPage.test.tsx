@@ -337,11 +337,9 @@ describe('PlanCanvasPage', () => {
     renderPlanCanvasPage('plan-2');
 
     expect(screen.getByText('Saved scale')).toBeInTheDocument();
-    expect(screen.getAllByText(/12 ft/i)).toHaveLength(2);
+    expect(screen.getByText(/12 ft/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Length Line' })).toBeEnabled();
-    expect(screen.getByText('Banquette wall')).toBeInTheDocument();
     expect(screen.getByText('Measured Items')).toBeInTheDocument();
-    expect(screen.getByText('A-101')).toBeInTheDocument();
   });
 
   it('shows crop guidance for a selected measured item on calibrated plans', () => {

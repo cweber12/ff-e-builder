@@ -108,6 +108,10 @@ const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
   m: 1000,
 };
 
+function sectionForTool(tool: ToolId) {
+  return tool === 'calibrate' ? 'calibration' : tool === 'length' ? 'length' : 'items';
+}
+
 export function PlanCanvasPage({
   project,
   planId,
@@ -131,7 +135,7 @@ export function PlanCanvasPage({
   });
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
   const [selectedMeasurementTargetKey, setSelectedMeasurementTargetKey] = useState('');
-  const [measuredItemsOpen, setMeasuredItemsOpen] = useState(true);
+  const [openSection, setOpenSection] = useState<string>('calibration');
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
 
   const selectedPlan = useMemo(
@@ -195,6 +199,10 @@ export function PlanCanvasPage({
   }, [isCalibrated, selectedPlan]);
 
   useEffect(() => {
+    setOpenSection(sectionForTool(activeTool));
+  }, [activeTool]);
+
+  useEffect(() => {
     setCalibrationDraft(null);
     setLengthLineDraft(null);
     setMeasurementDraft(null);
@@ -204,6 +212,7 @@ export function PlanCanvasPage({
     setSelectedMeasurementId(null);
     setSelectedMeasurementTargetKey('');
     setLengthLineLabelInput('');
+    setOpenSection(sectionForTool('calibrate'));
   }, [selectedPlanId]);
 
   useEffect(() => {
@@ -678,275 +687,295 @@ export function PlanCanvasPage({
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+              <button
+                type="button"
+                onClick={() => setOpenSection('calibration')}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
                   Calibration
-                </p>
-                {calibrationLoading ? (
-                  <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">
-                    Loading
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-3 text-sm font-medium text-neutral-800">
-                {isCalibrated ? 'Calibrated' : 'Needs calibration'}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-neutral-500">
-                {activeTool === 'calibrate'
-                  ? 'Draw a reference line directly on the plan, then enter the documented full-size length.'
-                  : 'Saved calibration is reused for all line and rectangle measurements on this plan.'}
-              </p>
-
-              {calibration ? (
-                <div className="mt-4 grid gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 text-sm text-emerald-900">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-semibold">Saved scale</span>
-                    <span className="text-xs uppercase tracking-[0.18em] text-emerald-700">
-                      {formatDisplayNumber(calibration.realWorldLength)} {calibration.unit}
-                    </span>
-                  </div>
-                  <div className="text-xs leading-5 text-emerald-800">
-                    {formatDisplayNumber(calibration.pixelsPerUnit)} px per {calibration.unit}
-                  </div>
-                </div>
-              ) : null}
-
-              {activeTool === 'calibrate' ? (
-                <div className="mt-4 space-y-3">
-                  <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
-                    {calibrationDraft
-                      ? 'Reference line captured. Enter the documented full-size length below to save or replace this plan calibration.'
-                      : calibration
-                        ? 'Draw a new line on the plan if you want to replace the saved calibration.'
-                        : 'No reference line yet. Draw directly on the plan to start calibration.'}
-                  </div>
-
-                  {calibrationDraft ? (
-                    <>
-                      <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="font-semibold">Reference line</span>
-                          <span>{formatDisplayNumber(calibrationPixelLength ?? 0)} px</span>
-                        </div>
-                      </div>
-
-                      <label className="block">
-                        <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                          Real-world length
-                        </span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={calibrationLengthInput}
-                          onChange={(event) => setCalibrationLengthInput(event.target.value)}
-                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                          Unit
-                        </span>
-                        <select
-                          value={calibrationUnit}
-                          onChange={(event) =>
-                            setCalibrationUnit(event.target.value as PlanMeasurementUnit)
-                          }
-                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                        >
-                          {UNIT_OPTIONS.map((unit) => (
-                            <option key={unit} value={unit}>
-                              {unit}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={() => void handleSaveCalibration()}
-                          disabled={!canSaveCalibration}
-                        >
-                          {setCalibration.isPending ? 'Saving…' : 'Save calibration'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setCalibrationDraft(null)}
-                          disabled={setCalibration.isPending}
-                        >
-                          Clear line
-                        </Button>
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              ) : null}
-            </section>
-
-            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  Length Lines
-                </p>
-                <span className="rounded-full bg-neutral-100 px-2 py-1 text-[11px] font-medium text-neutral-500">
-                  {lengthLines.length}
                 </span>
-              </div>
+                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                  {calibrationLoading
+                    ? 'Loading…'
+                    : openSection === 'calibration'
+                      ? 'Hide'
+                      : 'Show'}
+                </span>
+              </button>
+              {openSection === 'calibration' ? (
+                <>
+                  <p className="mt-3 text-sm font-medium text-neutral-800">
+                    {isCalibrated ? 'Calibrated' : 'Needs calibration'}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-neutral-500">
+                    {activeTool === 'calibrate'
+                      ? 'Draw a reference line directly on the plan, then enter the documented full-size length.'
+                      : 'Saved calibration is reused for all line and rectangle measurements on this plan.'}
+                  </p>
 
-              {activeTool === 'length' ? (
-                <div className="mt-4 space-y-3">
-                  <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
-                    {lengthLineDraft
-                      ? selectedLengthLine
-                        ? 'Replacement span captured. Save to update the selected line.'
-                        : 'Span captured. Save it to create a reusable Length Line.'
-                      : 'Draw a span directly on the plan to capture a measured line.'}
-                  </div>
-
-                  {lengthLineDraft ? (
-                    <>
-                      <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="font-semibold">Draft span</span>
-                          <span>{formatDisplayNumber(lengthLinePixelLength ?? 0)} px</span>
-                        </div>
-                        <div className="mt-2 text-xs text-brand-800">
-                          {draftLengthInPlanUnits !== null && calibration
-                            ? `${formatDisplayNumber(draftLengthInPlanUnits)} ${calibration.unit}`
-                            : 'Waiting for calibration'}
-                        </div>
-                      </div>
-
-                      <label className="block">
-                        <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                          Label
+                  {calibration ? (
+                    <div className="mt-4 grid gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 text-sm text-emerald-900">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-semibold">Saved scale</span>
+                        <span className="text-xs uppercase tracking-[0.18em] text-emerald-700">
+                          {formatDisplayNumber(calibration.realWorldLength)} {calibration.unit}
                         </span>
-                        <input
-                          type="text"
-                          value={lengthLineLabelInput}
-                          onChange={(event) => setLengthLineLabelInput(event.target.value)}
-                          placeholder="Optional note"
-                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                        />
-                      </label>
-
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={() => void handleSaveLengthLine()}
-                          disabled={!canSaveLengthLine}
-                        >
-                          {createLengthLine.isPending || updateLengthLine.isPending
-                            ? 'Saving…'
-                            : selectedLengthLine
-                              ? 'Update line'
-                              : 'Save line'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setLengthLineDraft(null)}
-                          disabled={createLengthLine.isPending || updateLengthLine.isPending}
-                        >
-                          Clear draft
-                        </Button>
                       </div>
-                    </>
+                      <div className="text-xs leading-5 text-emerald-800">
+                        {formatDisplayNumber(calibration.pixelsPerUnit)} px per {calibration.unit}
+                      </div>
+                    </div>
                   ) : null}
-                </div>
-              ) : null}
 
-              <div className="mt-4 space-y-2">
-                {lengthLinesLoading ? (
-                  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
-                    Loading saved Length Lines…
-                  </div>
-                ) : lengthLines.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-500">
-                    No saved Length Lines yet.
-                  </div>
-                ) : (
-                  lengthLines.map((line) => {
-                    const active = line.id === selectedLengthLineId;
-                    const displayLength =
-                      calibration && line.measuredLengthBase !== null
-                        ? convertBaseToPlanUnits(line.measuredLengthBase, calibration.unit)
-                        : null;
-                    return (
-                      <button
-                        key={line.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedLengthLineId(line.id);
-                          setActiveTool('length');
-                          setLengthLineDraft(null);
-                          setLengthLineLabelInput(line.label ?? '');
-                        }}
-                        className={[
-                          'block w-full rounded-2xl border px-3 py-3 text-left transition',
-                          active
-                            ? 'border-brand-500 bg-brand-50'
-                            : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
-                        ].join(' ')}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-neutral-900">
-                              {line.label?.trim() || `Length Line ${line.id.slice(0, 4)}`}
-                            </p>
-                            <p className="mt-1 text-xs text-neutral-500">
-                              {displayLength !== null && calibration
-                                ? `${formatDisplayNumber(displayLength)} ${calibration.unit}`
-                                : 'Measured span'}
-                            </p>
+                  {activeTool === 'calibrate' ? (
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                        {calibrationDraft
+                          ? 'Reference line captured. Enter the documented full-size length below to save or replace this plan calibration.'
+                          : calibration
+                            ? 'Draw a new line on the plan if you want to replace the saved calibration.'
+                            : 'No reference line yet. Draw directly on the plan to start calibration.'}
+                      </div>
+
+                      {calibrationDraft ? (
+                        <>
+                          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="font-semibold">Reference line</span>
+                              <span>{formatDisplayNumber(calibrationPixelLength ?? 0)} px</span>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
 
-              {selectedLengthLine ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedLengthLineId(null);
-                      setLengthLineDraft(null);
-                      setLengthLineLabelInput('');
-                    }}
-                  >
-                    Clear selection
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={() => void handleDeleteLengthLine()}
-                    disabled={deleteLengthLine.isPending}
-                  >
-                    {deleteLengthLine.isPending ? 'Deleting…' : 'Delete line'}
-                  </Button>
-                </div>
+                          <label className="block">
+                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                              Real-world length
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={calibrationLengthInput}
+                              onChange={(event) => setCalibrationLengthInput(event.target.value)}
+                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                            />
+                          </label>
+
+                          <label className="block">
+                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                              Unit
+                            </span>
+                            <select
+                              value={calibrationUnit}
+                              onChange={(event) =>
+                                setCalibrationUnit(event.target.value as PlanMeasurementUnit)
+                              }
+                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                            >
+                              {UNIT_OPTIONS.map((unit) => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={() => void handleSaveCalibration()}
+                              disabled={!canSaveCalibration}
+                            >
+                              {setCalibration.isPending ? 'Saving…' : 'Save calibration'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCalibrationDraft(null)}
+                              disabled={setCalibration.isPending}
+                            >
+                              Clear line
+                            </Button>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
               ) : null}
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
               <button
                 type="button"
-                onClick={() => setMeasuredItemsOpen((open) => !open)}
+                onClick={() => setOpenSection('length')}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+                  Length Lines
+                </span>
+                <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                  <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
+                    {lengthLines.length}
+                  </span>
+                  <span>{openSection === 'length' ? 'Hide' : 'Show'}</span>
+                </span>
+              </button>
+              {openSection === 'length' ? (
+                <>
+                  {activeTool === 'length' ? (
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                        {lengthLineDraft
+                          ? selectedLengthLine
+                            ? 'Replacement span captured. Save to update the selected line.'
+                            : 'Span captured. Save it to create a reusable Length Line.'
+                          : 'Draw a span directly on the plan to capture a measured line.'}
+                      </div>
+
+                      {lengthLineDraft ? (
+                        <>
+                          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="font-semibold">Draft span</span>
+                              <span>{formatDisplayNumber(lengthLinePixelLength ?? 0)} px</span>
+                            </div>
+                            <div className="mt-2 text-xs text-brand-800">
+                              {draftLengthInPlanUnits !== null && calibration
+                                ? `${formatDisplayNumber(draftLengthInPlanUnits)} ${calibration.unit}`
+                                : 'Waiting for calibration'}
+                            </div>
+                          </div>
+
+                          <label className="block">
+                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                              Label
+                            </span>
+                            <input
+                              type="text"
+                              value={lengthLineLabelInput}
+                              onChange={(event) => setLengthLineLabelInput(event.target.value)}
+                              placeholder="Optional note"
+                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                            />
+                          </label>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={() => void handleSaveLengthLine()}
+                              disabled={!canSaveLengthLine}
+                            >
+                              {createLengthLine.isPending || updateLengthLine.isPending
+                                ? 'Saving…'
+                                : selectedLengthLine
+                                  ? 'Update line'
+                                  : 'Save line'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setLengthLineDraft(null)}
+                              disabled={createLengthLine.isPending || updateLengthLine.isPending}
+                            >
+                              Clear draft
+                            </Button>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 space-y-2">
+                    {lengthLinesLoading ? (
+                      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
+                        Loading saved Length Lines…
+                      </div>
+                    ) : lengthLines.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-500">
+                        No saved Length Lines yet.
+                      </div>
+                    ) : (
+                      lengthLines.map((line) => {
+                        const active = line.id === selectedLengthLineId;
+                        const displayLength =
+                          calibration && line.measuredLengthBase !== null
+                            ? convertBaseToPlanUnits(line.measuredLengthBase, calibration.unit)
+                            : null;
+                        return (
+                          <button
+                            key={line.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedLengthLineId(line.id);
+                              setActiveTool('length');
+                              setLengthLineDraft(null);
+                              setLengthLineLabelInput(line.label ?? '');
+                            }}
+                            className={[
+                              'block w-full rounded-2xl border px-3 py-3 text-left transition',
+                              active
+                                ? 'border-brand-500 bg-brand-50'
+                                : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
+                            ].join(' ')}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-neutral-900">
+                                  {line.label?.trim() || `Length Line ${line.id.slice(0, 4)}`}
+                                </p>
+                                <p className="mt-1 text-xs text-neutral-500">
+                                  {displayLength !== null && calibration
+                                    ? `${formatDisplayNumber(displayLength)} ${calibration.unit}`
+                                    : 'Measured span'}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {selectedLengthLine ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedLengthLineId(null);
+                          setLengthLineDraft(null);
+                          setLengthLineLabelInput('');
+                        }}
+                      >
+                        Clear selection
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        size="sm"
+                        onClick={() => void handleDeleteLengthLine()}
+                        disabled={deleteLengthLine.isPending}
+                      >
+                        {deleteLengthLine.isPending ? 'Deleting…' : 'Delete line'}
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+            </section>
+
+            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setOpenSection('items')}
                 className="flex w-full items-center justify-between gap-3 text-left"
               >
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
@@ -956,11 +985,11 @@ export function PlanCanvasPage({
                   <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
                     {measurements.length}
                   </span>
-                  <span>{measuredItemsOpen ? 'Hide' : 'Show'}</span>
+                  <span>{openSection === 'items' ? 'Hide' : 'Show'}</span>
                 </span>
               </button>
 
-              {measuredItemsOpen ? (
+              {openSection === 'items' ? (
                 <>
                   {activeTool === 'rectangle' ? (
                     <div className="mt-4 space-y-3">
@@ -1242,15 +1271,28 @@ export function PlanCanvasPage({
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                Active Tool
-              </p>
-              <p className="mt-3 text-sm font-semibold text-neutral-900">
-                {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.label}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-neutral-500">
-                {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.description}
-              </p>
+              <button
+                type="button"
+                onClick={() => setOpenSection('tool')}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+                  Active Tool
+                </span>
+                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                  {openSection === 'tool' ? 'Hide' : 'Show'}
+                </span>
+              </button>
+              {openSection === 'tool' ? (
+                <>
+                  <p className="mt-3 text-sm font-semibold text-neutral-900">
+                    {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.label}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-neutral-500">
+                    {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.description}
+                  </p>
+                </>
+              ) : null}
             </section>
           </div>
         </aside>
@@ -1618,8 +1660,8 @@ function PlanViewport({
   const draftCropRect = cropDraft ? normalizeRectDraft(cropDraft) : null;
 
   return (
-    <div className="grid h-full min-h-0 gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/5 bg-white/72 px-4 py-3 shadow-sm backdrop-blur">
+    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-black/5 bg-white/72 px-3 py-2 shadow-sm backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -1662,7 +1704,7 @@ function PlanViewport({
 
       <div
         ref={containerRef}
-        className="relative min-h-0 flex-1 overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
+        className="relative min-h-0 h-full overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
         style={{
           cursor: imageUrl
             ? activeTool === 'calibrate' ||

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(plans): shrink the opened-plan viewport toolbar, keep the plan canvas filling the available window height, and convert the right sidebar into a one-open-section accordion while keeping the plan selector always visible
 - feat(plans): let proposal measurements save their selected Measured Plan crop into the existing Proposal Plan image surface by replacing/uploading a `proposal_plan` asset and applying percentage crop params
 - feat(plans): add per-measurement crop framing to the full-window Plans workspace, persist crop rectangles through the existing measurement API, and render saved/draft crop overlays inside measured item highlights
 - feat(plans): convert the opened plan view into a full-window fixed-height workspace, replace the text tool rail with icon controls, add measured-item selection/highlight overlays, and persist item-linked rectangle measurements
