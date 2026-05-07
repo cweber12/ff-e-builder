@@ -11,12 +11,13 @@ Image metadata is normalized in `image_assets`:
 - `owner_uid` scopes every image to the Firebase user.
 - `project_id` is always populated.
 - `room_id` is populated for room and item images.
-- `item_id` is populated for item images.
+- `item_id` is populated for item renderings, FF&E plan images, and item option images.
 - `material_id` is populated for material library images.
 - `proposal_item_id` is populated for Proposal Renderings, Plan Images, and swatches.
 - `entity_type` identifies the image role, including `proposal_item` for Rendering,
-  `proposal_plan` for Plan Image, `proposal_swatch` for Swatch, and `item_option`
-  for alternate FF&E option renderings.
+  `proposal_plan` for Proposal Plan Image, `item_plan` for FF&E Plan Image,
+  `proposal_swatch` for Swatch, and `item_option` for alternate FF&E option
+  renderings.
 - `r2_key` points to the private object in R2.
 
 Measured Plan source images are stored separately on `measured_plans` because they are
@@ -36,6 +37,7 @@ The R2 object key shape is:
 users/{uid}/projects/{projectId}/project/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/items/{itemId}/{imageId}.{ext}
+users/{uid}/projects/{projectId}/rooms/{roomId}/items/{itemId}/plan/{imageId}.{ext}
 users/{uid}/projects/{projectId}/rooms/{roomId}/items/{itemId}/{imageId}.{ext}   # item_option uses the same item-scoped path
 users/{uid}/projects/{projectId}/materials/{materialId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/proposal/items/{proposalItemId}/{imageId}.{ext}
@@ -48,8 +50,8 @@ Project entities may store up to three images. One image is marked `is_primary`
 and is used as the project card preview.
 Proposal Items may store one primary Rendering, one primary Plan Image,
 and up to four direct swatch images.
-FF&E Items may store one primary Rendering and up to three `item_option` renderings,
-with one option marked as the current selection.
+FF&E Items may store one primary Rendering, one primary `item_plan`, and up to
+three `item_option` renderings, with one option marked as the current selection.
 Measured Plans store one source image each and expose simple `Uncalibrated` /
 `Calibrated` status through the Plans library.
 
@@ -62,6 +64,7 @@ existence.
 - `GET /api/v1/images?entity_type=project&entity_id={projectId}`
 - `GET /api/v1/images?entity_type=room&entity_id={roomId}`
 - `GET /api/v1/images?entity_type=item&entity_id={itemId}`
+- `GET /api/v1/images?entity_type=item_plan&entity_id={itemId}`
 - `GET /api/v1/images?entity_type=item_option&entity_id={itemId}`
 - `GET /api/v1/images?entity_type=material&entity_id={materialId}`
 - `GET /api/v1/images?entity_type=proposal_item&entity_id={proposalItemId}`
@@ -93,6 +96,7 @@ The shared image frame is used for:
 - project cards on `/projects`
 - room image frames beside each room table on `/projects/:id/ffe/table`
 - item thumbnails before the item ID on the table view
+- FF&E item Plan frames in the item detail panel
 - catalog item image slots on `/projects/:id/ffe/catalog`
 - material cards in the project material library
 - Proposal Rendering cells on `/projects/:id/proposal/table`

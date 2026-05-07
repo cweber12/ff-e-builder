@@ -68,6 +68,7 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
   if (entityType === 'item' || entityType === 'proposal_item') {
     return 'This row already has a rendering';
   }
+  if (entityType === 'item_plan') return 'This item already has a plan image';
   if (entityType === 'item_option') return 'This item option is already selected';
   if (entityType === 'proposal_plan') return 'This row already has a plan image';
   if (entityType === 'room') return 'This room already has an image';
@@ -143,6 +144,17 @@ async function getOwnedEntityContext(
     };
   }
 
+  if (entityType === 'item_plan') {
+    const item = await getOwnedItemContext(env, entityId, uid);
+    return {
+      projectId: item.projectId,
+      roomId: item.roomId,
+      itemId: item.itemId,
+      materialId: null,
+      proposalItemId: null,
+    };
+  }
+
   const item = await getOwnedItemContext(env, entityId, uid);
   return {
     projectId: item.projectId,
@@ -172,6 +184,9 @@ function buildR2Key(
   }
   if (entityType === 'proposal_plan') {
     return `${base}/proposal/items/${context.proposalItemId}/plan/${imageId}.${ext}`;
+  }
+  if (entityType === 'item_plan') {
+    return `${base}/rooms/${context.roomId}/items/${context.itemId}/plan/${imageId}.${ext}`;
   }
   return `${base}/rooms/${context.roomId}/items/${context.itemId}/${imageId}.${ext}`;
 }

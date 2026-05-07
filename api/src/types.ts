@@ -207,6 +207,7 @@ export type ImageEntityType =
   | 'project'
   | 'room'
   | 'item'
+  | 'item_plan'
   | 'item_option'
   | 'material'
   | 'proposal_item'
@@ -409,6 +410,7 @@ export const ImageEntitySchema = z.object({
     'project',
     'room',
     'item',
+    'item_plan',
     'item_option',
     'material',
     'proposal_item',

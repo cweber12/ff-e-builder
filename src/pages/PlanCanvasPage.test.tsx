@@ -180,10 +180,10 @@ vi.mock('../hooks', () => ({
               rectHeight: 180,
               horizontalSpanBase: 3657.6,
               verticalSpanBase: 2743.2,
-              cropX: null,
-              cropY: null,
-              cropWidth: null,
-              cropHeight: null,
+              cropX: 120,
+              cropY: 140,
+              cropWidth: 160,
+              cropHeight: 100,
               createdAt: '2026-05-06T00:00:00Z',
               updatedAt: '2026-05-06T00:00:00Z',
             },
@@ -350,9 +350,21 @@ describe('PlanCanvasPage', () => {
 
     expect(screen.getByText('Selected area')).toBeInTheDocument();
     expect(
-      screen.getByText(/Draw a crop rectangle inside the selected measured area/i),
+      screen.getByText(/A saved crop already exists for this measured item/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save crop' })).toBeDisabled();
+  });
+
+  it('shows FF&E plan-image save action for measured FF&E crops', () => {
+    renderPlanCanvasPage('plan-2');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
+    fireEvent.click(screen.getByRole('button', { name: /A-101/ }));
+
+    expect(screen.getByRole('button', { name: 'Save as plan image' })).toBeDisabled();
+    expect(
+      screen.getByText(/This saves the selected crop as the FF&E item's Plan image/i),
+    ).toBeInTheDocument();
   });
 
   it('shows proposal plan-image save action for measured proposal crops', () => {

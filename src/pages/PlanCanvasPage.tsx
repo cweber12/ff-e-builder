@@ -334,7 +334,7 @@ export function PlanCanvasPage({
         } satisfies CropParams)
       : null;
   const canSavePlanImage =
-    selectedMeasurement?.targetKind === 'proposal' &&
+    selectedMeasurement !== null &&
     savedCropParams !== null &&
     planNaturalSize.width > 0 &&
     planNaturalSize.height > 0 &&
@@ -490,7 +490,6 @@ export function PlanCanvasPage({
   const handleSavePlanImage = async () => {
     if (
       !selectedMeasurement ||
-      selectedMeasurement.targetKind !== 'proposal' ||
       !savedCropParams ||
       !selectedPlan ||
       planNaturalSize.width <= 0 ||
@@ -501,8 +500,9 @@ export function PlanCanvasPage({
 
     setIsSavingPlanImage(true);
     try {
+      const entityType = selectedMeasurement.targetKind === 'ffe' ? 'item_plan' : 'proposal_plan';
       const existingImages = await api.images.list({
-        entityType: 'proposal_plan',
+        entityType,
         entityId: selectedMeasurement.targetItemId,
       });
 
@@ -518,7 +518,7 @@ export function PlanCanvasPage({
       });
 
       const uploadedImage = await api.images.upload({
-        entityType: 'proposal_plan',
+        entityType,
         entityId: selectedMeasurement.targetItemId,
         file: uploadFile,
         altText: `${selectedMeasurement.targetTagSnapshot} plan image`,
@@ -531,10 +531,9 @@ export function PlanCanvasPage({
         cropHeight: savedCropParams.cropHeight / planNaturalSize.height,
       });
 
-      queryClient.setQueryData(
-        imageKeys.forEntity('proposal_plan', selectedMeasurement.targetItemId),
-        [croppedImage],
-      );
+      queryClient.setQueryData(imageKeys.forEntity(entityType, selectedMeasurement.targetItemId), [
+        croppedImage,
+      ]);
     } finally {
       setIsSavingPlanImage(false);
     }
@@ -1166,7 +1165,7 @@ export function PlanCanvasPage({
                         >
                           Remove saved crop
                         </Button>
-                        {selectedMeasurement?.targetKind === 'proposal' ? (
+                        {selectedMeasurement ? (
                           <Button
                             type="button"
                             variant="secondary"
@@ -1178,10 +1177,13 @@ export function PlanCanvasPage({
                           </Button>
                         ) : null}
                       </div>
-                      {selectedMeasurement?.targetKind === 'proposal' ? (
+                      {selectedMeasurement ? (
                         <p className="text-xs leading-5 text-neutral-500">
-                          This saves the selected crop as the Proposal item&apos;s Plan image so it
-                          appears in the Proposal table and detail panel.
+                          This saves the selected crop as the{' '}
+                          {selectedMeasurement.targetKind === 'proposal'
+                            ? 'Proposal item'
+                            : 'FF&E item'}
+                          &apos;s Plan image so it appears in the matching detail surface.
                         </p>
                       ) : null}
                     </div>

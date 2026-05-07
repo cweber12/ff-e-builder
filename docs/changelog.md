@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): add FF&E `item_plan` image support so measured plan crops can publish into a dedicated FF&E detail-panel plan image surface without colliding with the main rendering
 - fix(plans): shrink the opened-plan viewport toolbar, keep the plan canvas filling the available window height, and convert the right sidebar into a one-open-section accordion while keeping the plan selector always visible
 - feat(plans): let proposal measurements save their selected Measured Plan crop into the existing Proposal Plan image surface by replacing/uploading a `proposal_plan` asset and applying percentage crop params
 - feat(plans): add per-measurement crop framing to the full-window Plans workspace, persist crop rectangles through the existing measurement API, and render saved/draft crop overlays inside measured item highlights

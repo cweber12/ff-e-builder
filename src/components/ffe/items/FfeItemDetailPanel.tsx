@@ -62,6 +62,15 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                 disabled
               />
             </ImageSection>
+            <ImageSection label="Plan">
+              <ImageFrame
+                entityType="item_plan"
+                entityId={item.id}
+                alt={`${item.itemName} plan`}
+                className="w-full aspect-[103/75] rounded-lg"
+                disabled
+              />
+            </ImageSection>
             <ImageSection label="Options">
               <ItemOptionImagesPanel itemId={item.id} itemName={item.itemName} />
             </ImageSection>
