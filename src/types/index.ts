@@ -1,5 +1,14 @@
 export type { BudgetMode, Cents, Project } from './project';
 export { cents, dollarsToCents, formatMoney } from './project';
+export type {
+  CalibrationStatus,
+  LengthLine,
+  Measurement,
+  MeasurementTargetKind,
+  MeasuredPlan,
+  PlanCalibration,
+  PlanMeasurementUnit,
+} from './plan';
 export type { Room, RoomWithItems } from './room';
 export type { Item, ItemStatus } from './item';
 export type { ImageAsset, ImageEntityType, CropParams } from './image';

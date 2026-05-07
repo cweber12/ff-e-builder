@@ -65,6 +65,7 @@ export function ProjectHeader({
           <div className="flex items-center gap-2">
             {onToggleOptions && onEditProject && onProjectImages && onDeleteProject && (
               <ProjectOptionsMenu
+                projectId={project.id}
                 projectName={project.name}
                 open={optionsOpen}
                 align="bottom"
@@ -92,6 +93,7 @@ export function ProjectHeader({
                   [`/projects/${project.id}/snapshot`, 'Snapshot'],
                   [`/projects/${project.id}/ffe/table`, 'FF&E'],
                   [`/projects/${project.id}/proposal/table`, 'Proposal'],
+                  [`/projects/${project.id}/plans`, 'Plans'],
                 ] as const
               ).map(([to, label]) => (
                 <NavLink

@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom';
+
 type ProjectOptionsMenuProps = {
+  projectId?: string;
   projectName: string;
   open: boolean;
   onToggle: () => void;
@@ -10,6 +13,7 @@ type ProjectOptionsMenuProps = {
 };
 
 export function ProjectOptionsMenu({
+  projectId,
   projectName,
   open,
   onToggle,
@@ -37,6 +41,14 @@ export function ProjectOptionsMenu({
             align === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
           ].join(' ')}
         >
+          {projectId ? (
+            <Link
+              to={`/projects/${projectId}/plans`}
+              className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"
+            >
+              Plans
+            </Link>
+          ) : null}
           <button
             type="button"
             className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"

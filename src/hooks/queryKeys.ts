@@ -6,6 +6,10 @@ export const projectKeys = {
   toolState: (id: string) => ['projects', 'tool-state', id] as const,
 };
 
+export const planKeys = {
+  forProject: (projectId: string) => ['plans', projectId] as const,
+};
+
 export const userProfileKeys = {
   me: ['user-profile', 'me'] as const,
 };

@@ -1,0 +1,295 @@
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '../components/primitives';
+import { useCreateMeasuredPlan, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
+import { api } from '../lib/api';
+import type { MeasuredPlan, Project } from '../types';
+
+type PlansPageProps = {
+  project: Project;
+};
+
+export function PlansPage({ project }: PlansPageProps) {
+  const { data: plans, isLoading } = useMeasuredPlans(project.id);
+  const createPlan = useCreateMeasuredPlan(project.id);
+  const deletePlan = useDeleteMeasuredPlan(project.id);
+
+  const [name, setName] = useState('');
+  const [sheetReference, setSheetReference] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+
+  const selectedFilename = useMemo(() => file?.name ?? 'No image selected', [file]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!file) return;
+
+    await createPlan.mutateAsync({
+      name: name.trim(),
+      sheetReference: sheetReference.trim(),
+      file,
+    });
+
+    setName('');
+    setSheetReference('');
+    setFile(null);
+    event.currentTarget.reset();
+  }
+
+  function handleFileChange(nextFile: File | null) {
+    setFile(nextFile);
+    if (!nextFile || name.trim().length > 0) return;
+
+    const baseName = nextFile.name
+      .replace(/\.[^.]+$/, '')
+      .replace(/[_-]+/g, ' ')
+      .trim();
+    setName(baseName.length > 0 ? baseName : nextFile.name);
+  }
+
+  async function handleDelete(plan: MeasuredPlan) {
+    const message =
+      plan.measurementCount > 0
+        ? `Delete "${plan.name}"? ${plan.measurementCount} saved measurement${plan.measurementCount === 1 ? '' : 's'} reference this plan.`
+        : `Delete "${plan.name}"?`;
+
+    if (!window.confirm(message)) return;
+    await deletePlan.mutateAsync(plan);
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-8 py-2">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-500">
+                Plans
+              </p>
+              <h2 className="mt-1 font-display text-2xl font-semibold text-neutral-900">
+                Architectural plan library
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500">
+                Store original plan sheets here before calibration and measurement. Each Measured
+                Plan keeps its own scale context so later slices can measure from the correct source
+                drawing.
+              </p>
+            </div>
+            <div className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-500">
+              {plans?.length ?? 0} measured plan{(plans?.length ?? 0) === 1 ? '' : 's'}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            {isLoading ? (
+              <PlanGridSkeleton />
+            ) : plans?.length ? (
+              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {plans.map((plan) => (
+                  <MeasuredPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    projectId={project.id}
+                    onDelete={() => void handleDelete(plan)}
+                    deleting={deletePlan.isPending && deletePlan.variables?.id === plan.id}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 px-6 py-12 text-center">
+                <h3 className="font-display text-lg font-semibold text-neutral-800">
+                  No plans uploaded yet
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-neutral-500">
+                  Upload the first architectural image for this project to start building the Plans
+                  workspace.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-400">
+            Upload
+          </p>
+          <h3 className="mt-2 font-display text-xl font-semibold text-neutral-900">
+            Add a Measured Plan
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-neutral-500">
+            Slice 1 captures the source plan image and library metadata. Calibration, measurement,
+            and crop tools will land on this foundation next.
+          </p>
+
+          <form className="mt-6 space-y-4" onSubmit={(event) => void handleSubmit(event)}>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-neutral-700">Plan name</span>
+              <input
+                required
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                placeholder="Level 1 Furniture Plan"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-neutral-700">
+                Sheet reference
+              </span>
+              <input
+                value={sheetReference}
+                onChange={(event) => setSheetReference(event.target.value)}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                placeholder="A1.1"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-neutral-700">Plan image</span>
+              <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4">
+                <input
+                  required
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={(event) => handleFileChange(event.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-neutral-600 file:mr-4 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+                />
+                <p className="mt-3 text-xs text-neutral-500">{selectedFilename}</p>
+              </div>
+            </label>
+
+            <Button type="submit" className="w-full" disabled={createPlan.isPending || !file}>
+              {createPlan.isPending ? 'Uploading plan…' : 'Upload plan'}
+            </Button>
+          </form>
+        </aside>
+      </section>
+    </div>
+  );
+}
+
+function MeasuredPlanCard({
+  plan,
+  projectId,
+  deleting,
+  onDelete,
+}: {
+  plan: MeasuredPlan;
+  projectId: string;
+  deleting: boolean;
+  onDelete: () => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let disposed = false;
+    let currentObjectUrl: string | null = null;
+
+    async function loadPreview() {
+      setLoading(true);
+      try {
+        const blob = await api.plans.downloadContent(projectId, plan.id);
+        if (disposed) return;
+        currentObjectUrl = URL.createObjectURL(blob);
+        setPreviewUrl(currentObjectUrl);
+      } catch {
+        if (!disposed) setPreviewUrl(null);
+      } finally {
+        if (!disposed) setLoading(false);
+      }
+    }
+
+    void loadPreview();
+
+    return () => {
+      disposed = true;
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+    };
+  }, [plan.id, projectId]);
+
+  return (
+    <article className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="aspect-[4/3] bg-neutral-100">
+        {previewUrl ? (
+          <img src={previewUrl} alt={plan.name} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+            {loading ? 'Loading preview…' : 'Preview unavailable'}
+          </div>
+        )}
+      </div>
+      <div className="space-y-4 p-4">
+        <div className="space-y-1">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-display text-lg font-semibold text-neutral-900">{plan.name}</h3>
+              <p className="text-sm text-neutral-500">
+                {plan.sheetReference || 'No sheet reference'}
+              </p>
+            </div>
+            <span
+              className={[
+                'rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
+                plan.calibrationStatus === 'calibrated'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-amber-50 text-amber-700',
+              ].join(' ')}
+            >
+              {plan.calibrationStatus}
+            </span>
+          </div>
+          <p className="text-xs text-neutral-400">
+            {formatBytes(plan.imageByteSize)} · {plan.measurementCount} measurement
+            {plan.measurementCount === 1 ? '' : 's'}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-neutral-100 pt-3">
+          <div className="text-xs text-neutral-400">
+            Added {new Date(plan.createdAt).toLocaleDateString('en-US')}
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/projects/${projectId}/plans/${plan.id}`}
+              className="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-brand-700 transition hover:bg-brand-50"
+            >
+              Open
+            </Link>
+            <Button type="button" variant="ghost" size="sm" onClick={onDelete} disabled={deleting}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function PlanGridSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
+        >
+          <div className="aspect-[4/3] animate-pulse bg-neutral-100" />
+          <div className="space-y-3 p-4">
+            <div className="h-5 w-2/3 animate-pulse rounded bg-neutral-100" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-neutral-100" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-neutral-100" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

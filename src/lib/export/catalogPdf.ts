@@ -8,20 +8,21 @@ import { fmtMoney, safeName } from './shared';
 const BRAND = BRAND_RGB;
 const PAGE_PADDING = 13;
 const CONTENT_W = 210 - PAGE_PADDING * 2;
-const HEADER_TEXT_Y = PAGE_PADDING + 3.5;
-const HEADER_RULE_Y = PAGE_PADDING + 9;
-const TOP_SECTION_Y = HEADER_RULE_Y + 6;
+const HEADER_TEXT_Y = PAGE_PADDING + 5;
+const HEADER_RULE_Y = PAGE_PADDING + 13;
+const TOP_SECTION_Y = HEADER_RULE_Y + 7;
 const SECTION_GAP = 7;
-const COLUMN_GAP = 8;
+const COLUMN_GAP = 5;
 const FOOTER_RULE_Y = 287;
 const FOOTER_TEXT_Y = FOOTER_RULE_Y + 5;
 const MAX_OPTION_IMAGES = 2;
 const MAX_MATERIALS = 8;
 const APPROVAL_HEIGHT = 23;
-const SECOND_SECTION_PANEL_HEIGHT = 74;
-const OPTION_CARD_HEIGHT = 34;
-const OPTION_CARD_GAP = 6;
-const MATERIAL_SWATCH_SIZE = 10;
+const SECOND_SECTION_H = 74;
+const OPTION_CARD_AR = 1.45;
+const OPTION_CARD_GAP = 5;
+const MATERIAL_SWATCH_SIZE = 16;
+const MATERIAL_ROW_H = 22;
 const MATERIALS_PER_ROW = 5;
 
 const LIGHT_BORDER: [number, number, number] = [229, 231, 235];
@@ -238,19 +239,6 @@ function drawSectionLabel(doc: jsPDF, label: string, x: number, y: number) {
   doc.text(label.toUpperCase(), x, y);
 }
 
-function drawPanel(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  background: [number, number, number],
-) {
-  doc.setFillColor(background[0], background[1], background[2]);
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.roundedRect(x, y, width, height, 4, 4, 'FD');
-}
-
 function drawImagePlaceholder(
   doc: jsPDF,
   label: string,
@@ -259,11 +247,16 @@ function drawImagePlaceholder(
   width: number,
   height: number,
 ) {
-  drawPanel(doc, x, y, width, height, PANEL_BG);
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  const radius = Math.min(width * 0.28, height * 0.32);
+  doc.setFillColor(225, 239, 252);
+  doc.setDrawColor(225, 239, 252);
+  doc.circle(cx, cy, radius, 'FD');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
+  doc.setFontSize(15);
   doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(label, x + width / 2, y + height / 2 + 2, { align: 'center' });
+  doc.text(label, cx, cy + 1.8, { align: 'center' });
 }
 
 function drawWrappedText(
@@ -326,17 +319,10 @@ function drawTopSection(
     currentY += dimensions.height + 2;
   }
 
-  if (model.description) {
-    const description = drawWrappedText(doc, model.description, x, currentY, width, 9, LIGHT_TEXT, {
-      maxLines: 4,
-    });
-    currentY += description.height;
-  }
-
   return currentY;
 }
 
-function drawNotesAndCost(
+function drawNotesPanel(
   doc: jsPDF,
   model: CatalogPdfPageModel,
   x: number,
@@ -344,32 +330,44 @@ function drawNotesAndCost(
   width: number,
   height: number,
 ) {
-  const innerX = x + 5;
-  const innerY = y + 6;
-  const innerWidth = width - 10;
+  let currentY = y;
 
+  // Cost row pinned to bottom — always drawn when present
   let reservedBottom = 0;
   if (model.unitCostCents !== null) {
-    reservedBottom = 14;
+    reservedBottom = 13;
     const dividerY = y + height - reservedBottom;
     doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-    doc.line(x + 4, dividerY, x + width - 4, dividerY);
+    doc.line(x, dividerY, x + width, dividerY);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-    doc.text('Unit cost', innerX, dividerY + 5.5);
+    doc.text('Unit cost', x, dividerY + 5);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-    doc.text(fmtMoney(model.unitCostCents), x + width - 5, dividerY + 5.5, { align: 'right' });
+    doc.text(fmtMoney(model.unitCostCents), x + width, dividerY + 5, { align: 'right' });
   }
 
+  // Description at top of right column — no label (matches HTML)
+  if (model.description) {
+    const desc = drawWrappedText(doc, model.description, x, currentY, width, 9, LIGHT_TEXT, {
+      maxLines: 4,
+    });
+    currentY += desc.height + (model.notes ? 5 : 0);
+  }
+
+  // "Notes" label + text — omit entirely when no notes (per spec: "if no notes, omit in pdf")
   if (!model.notes) return;
 
-  const maxLines = Math.max(1, Math.floor((height - reservedBottom - 10) / lineHeight(9, 1.55)));
-  drawWrappedText(doc, model.notes, innerX, innerY, innerWidth, 9, LIGHT_TEXT, {
-    maxLines,
-  });
+  drawSectionLabel(doc, 'Notes', x, currentY);
+  currentY += 5;
+
+  const maxLines = Math.max(
+    1,
+    Math.floor((y + height - reservedBottom - currentY) / lineHeight(9, 1.65)),
+  );
+  drawWrappedText(doc, model.notes, x, currentY, width, 9, LIGHT_TEXT, { maxLines });
 }
 
 function drawOptionSelectionMark(doc: jsPDF, x: number, y: number, isPrimary: boolean) {
@@ -394,23 +392,17 @@ function drawOptionsStrip(
   const visibleOptions = options.filter((option) => option.dataUrl).slice(0, MAX_OPTION_IMAGES);
   if (visibleOptions.length === 0) return y;
 
-  drawSectionLabel(doc, 'Options', x, y);
-  const cardsY = y + 4.5;
-  const layout = pickCatalogPdfOptionLayout(visibleOptions.length, [], OPTION_CARD_HEIGHT);
+  const cardsY = y;
+  const layout = pickCatalogPdfOptionLayout(visibleOptions.length, [], 0);
+
+  const OPTION_LABEL_GAP = 5;
 
   if (layout === 'stacked') {
-    const cardWidth = Math.min(120, width * 0.72);
+    const cardWidth = Math.min(width * 0.72, width);
+    const cardHeight = cardWidth / OPTION_CARD_AR;
     const cardX = x + (width - cardWidth) / 2;
     if (visibleOptions[0]?.dataUrl) {
-      addContainedImage(
-        doc,
-        visibleOptions[0].dataUrl,
-        cardX,
-        cardsY,
-        cardWidth,
-        OPTION_CARD_HEIGHT,
-        0,
-      );
+      addContainedImage(doc, visibleOptions[0].dataUrl, cardX, cardsY, cardWidth, cardHeight, 0);
     }
     drawOptionSelectionMark(
       doc,
@@ -418,19 +410,30 @@ function drawOptionsStrip(
       cardsY + 4,
       visibleOptions[0]?.isPrimary ?? false,
     );
-    return cardsY + OPTION_CARD_HEIGHT;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
+    doc.text('OPTION 1', x + width / 2, cardsY + cardHeight + 4, { align: 'center' });
+    return cardsY + cardHeight + OPTION_LABEL_GAP;
   }
 
   const cardWidth = (width - OPTION_CARD_GAP) / 2;
+  const cardHeight = cardWidth / OPTION_CARD_AR;
   visibleOptions.forEach((option, index) => {
     const cardX = x + index * (cardWidth + OPTION_CARD_GAP);
     if (option.dataUrl) {
-      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, 0);
+      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, cardHeight, 0);
     }
     drawOptionSelectionMark(doc, cardX + cardWidth - 4, cardsY + 4, option.isPrimary);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
+    doc.text(`OPTION ${index + 1}`, cardX + cardWidth / 2, cardsY + cardHeight + 4, {
+      align: 'center',
+    });
   });
 
-  return cardsY + OPTION_CARD_HEIGHT;
+  return cardsY + cardHeight + OPTION_LABEL_GAP;
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -468,7 +471,7 @@ function drawMaterialsStrip(
     const column = index % columns;
     const row = Math.floor(index / columns);
     const centerX = x + column * itemWidth + itemWidth / 2;
-    const rowY = startY + row * 18;
+    const rowY = startY + row * MATERIAL_ROW_H;
     const swatchX = centerX - MATERIAL_SWATCH_SIZE / 2;
     const swatchY = rowY;
 
@@ -476,7 +479,7 @@ function drawMaterialsStrip(
     if (imageDataUrl) {
       doc.setFillColor(PANEL_BG[0], PANEL_BG[1], PANEL_BG[2]);
       doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-      doc.roundedRect(swatchX, swatchY, MATERIAL_SWATCH_SIZE, MATERIAL_SWATCH_SIZE, 2, 2, 'FD');
+      doc.rect(swatchX, swatchY, MATERIAL_SWATCH_SIZE, MATERIAL_SWATCH_SIZE, 'FD');
       addContainedImage(
         doc,
         imageDataUrl,
@@ -504,11 +507,13 @@ function drawMaterialsStrip(
     });
   });
 
-  return startY + Math.ceil(visibleMaterials.length / columns) * 18;
+  return startY + Math.ceil(visibleMaterials.length / columns) * MATERIAL_ROW_H;
 }
 
 function drawApprovalBand(doc: jsPDF, itemId: string, x: number, y: number, width: number) {
-  drawPanel(doc, x, y, width, APPROVAL_HEIGHT, APPROVAL_BG);
+  doc.setFillColor(APPROVAL_BG[0], APPROVAL_BG[1], APPROVAL_BG[2]);
+  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+  doc.rect(x, y, width, APPROVAL_HEIGHT, 'FD');
   drawSectionLabel(doc, 'Client Approval', x + 4, y + 5.3);
 
   const signatureW = width * 0.5;
@@ -577,25 +582,15 @@ function drawCatalogPage(
     TOP_SECTION_Y,
     CONTENT_W,
   );
-  const secondSectionY = topSectionBottomY + SECTION_GAP;
-  const secondSectionLabelY = secondSectionY;
-  const panelY = secondSectionLabelY + 4.5;
-  const leftRatio = 0.42;
-  const leftWidth = (CONTENT_W - COLUMN_GAP) * leftRatio;
+  const panelY = topSectionBottomY + SECTION_GAP;
+  // Column ratio matches HTML: 1fr rendering / 1.65fr notes = 1/2.65 ≈ 0.377
+  const leftWidth = (CONTENT_W - COLUMN_GAP) * (1 / 2.65);
   const rightWidth = CONTENT_W - COLUMN_GAP - leftWidth;
   const rightX = PAGE_PADDING + leftWidth + COLUMN_GAP;
 
-  drawSectionLabel(doc, 'Rendering', PAGE_PADDING, secondSectionLabelY);
+  // Rendering — no label (HTML rendering panel has no section label)
   if (assets.rendering) {
-    addContainedImage(
-      doc,
-      assets.rendering,
-      PAGE_PADDING,
-      panelY,
-      leftWidth,
-      SECOND_SECTION_PANEL_HEIGHT,
-      3,
-    );
+    addContainedImage(doc, assets.rendering, PAGE_PADDING, panelY, leftWidth, SECOND_SECTION_H, 0);
   } else {
     drawImagePlaceholder(
       doc,
@@ -603,39 +598,30 @@ function drawCatalogPage(
       PAGE_PADDING,
       panelY,
       leftWidth,
-      SECOND_SECTION_PANEL_HEIGHT,
+      SECOND_SECTION_H,
     );
   }
 
-  drawSectionLabel(doc, 'Notes', rightX, secondSectionLabelY);
-  drawNotesAndCost(doc, model, rightX, panelY, rightWidth, SECOND_SECTION_PANEL_HEIGHT);
+  // Notes panel — description, "Notes" label, notes text, cost (matches HTML right column)
+  drawNotesPanel(doc, model, rightX, panelY, rightWidth, SECOND_SECTION_H);
 
-  const thirdSectionY = panelY + SECOND_SECTION_PANEL_HEIGHT + SECTION_GAP;
-  let thirdSectionBottomY = thirdSectionY;
+  const thirdSectionY = panelY + SECOND_SECTION_H + SECTION_GAP;
+  let materialsStartY = thirdSectionY;
   if (model.optionCount > 0) {
-    thirdSectionBottomY = drawOptionsStrip(
-      doc,
-      assets.options,
-      PAGE_PADDING,
-      thirdSectionY,
-      CONTENT_W,
-    );
+    materialsStartY = drawOptionsStrip(doc, assets.options, PAGE_PADDING, thirdSectionY, CONTENT_W);
   }
   if (model.materials.length > 0) {
-    thirdSectionBottomY = drawMaterialsStrip(
+    drawMaterialsStrip(
       doc,
       model.materials,
       assets.materialImages,
       PAGE_PADDING,
-      thirdSectionBottomY + (model.optionCount > 0 ? 6 : 0),
+      materialsStartY + (model.optionCount > 0 ? 6 : 0),
       CONTENT_W,
     );
   }
 
-  const approvalY = Math.min(
-    thirdSectionBottomY + SECTION_GAP,
-    FOOTER_RULE_Y - APPROVAL_HEIGHT - 6,
-  );
+  const approvalY = FOOTER_RULE_Y - APPROVAL_HEIGHT - SECTION_GAP;
   drawApprovalBand(doc, entry.item.id, PAGE_PADDING, approvalY, CONTENT_W);
 
   doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);

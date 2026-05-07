@@ -73,6 +73,8 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 - `/projects/:id/proposal/table` shows the editable Proposal grouped by Proposal Category.
 - `/projects/:id/proposal/materials` redirects to the shared project material library.
 - `/projects/:id/proposal/summary` redirects to the project budget view.
+- `/projects/:id/plans` shows the project-level Measured Plan library for architectural source images and calibration readiness.
+- `/projects/:id/plans/:planId` opens a project-scoped plan workspace shell for protected-image viewing, plan switching, and future calibration/measurement tools.
 
 Legacy project routes continue to redirect to their current FF&E equivalents for compatibility.
 
@@ -83,11 +85,13 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - The client never imports API worker code and never talks to Neon or R2 directly.
 - The frontend API client is exposed through `src/lib/api.ts`; domain namespaces are incrementally implemented in `src/lib/api/` and re-exported through the facade so hooks can keep importing from `src/lib/api`.
 - API client tests live alongside the focused `src/lib/api/` modules, with facade-level transport/auth coverage kept in `src/lib/api.test.ts`.
-- Route modules live under `api/src/routes/`: `projects`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
+- Route modules live under `api/src/routes/`: `projects`, `plans`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
+- Project-level Measured Plan source-image metadata lives in Neon `measured_plans`; the source image bytes also live in the private R2 bucket `ffe-images`.
 - R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `item_option`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering; `item_option` stores up to three alternate FF&E option renderings with one current selection.
+- Measured Plan source images are not stored in `image_assets`; they are uploaded through `/api/v1/projects/:id/plans`, persisted on `measured_plans`, and stored in R2 under `users/{uid}/projects/{projectId}/plans/{planId}.{ext}`.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Proposal categories start empty for new projects and are created explicitly by users or imports.
 - Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.

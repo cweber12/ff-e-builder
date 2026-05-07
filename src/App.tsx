@@ -47,7 +47,9 @@ import {
   useProposalWithItems,
 } from './hooks';
 import { DashboardPage } from './pages/DashboardPage';
+import { PlanCanvasPage } from './pages/PlanCanvasPage';
 import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
+import { PlansPage } from './pages/PlansPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
@@ -87,6 +89,8 @@ function App() {
           <Route path="proposal/table" element={<ProjectProposalRoute />} />
           <Route path="proposal/materials" element={<ProjectRedirectTo target="materials" />} />
           <Route path="proposal/summary" element={<ProjectRedirectTo target="budget" />} />
+          <Route path="plans" element={<ProjectPlansRoute />} />
+          <Route path="plans/:planId" element={<ProjectPlanCanvasRoute />} />
           <Route path="materials" element={<ProjectMaterialsRoute />} />
           <Route path="budget" element={<ProjectBudgetRoute />} />
           <Route path="table" element={<Navigate to="ffe/table" replace />} />
@@ -159,6 +163,7 @@ function ProjectLayout() {
                     [
                       [`/projects/${project.id}/ffe`, 'FF&E', false],
                       [`/projects/${project.id}/proposal/table`, 'Proposal', false],
+                      [`/projects/${project.id}/plans`, 'Plans', true],
                       [`/projects/${project.id}/materials`, 'Materials', true],
                       [`/projects/${project.id}/budget`, 'Budget', true],
                     ] as const
@@ -457,6 +462,17 @@ function ProjectBudgetRoute() {
       proposalCategoriesWithItems={proposalCategoriesWithItems}
     />
   );
+}
+
+function ProjectPlansRoute() {
+  const { project } = useProjectContext();
+  return <PlansPage project={project} />;
+}
+
+function ProjectPlanCanvasRoute() {
+  const { project } = useProjectContext();
+  const { planId = '' } = useParams();
+  return <PlanCanvasPage project={project} planId={planId} />;
 }
 
 function useProjectContext() {

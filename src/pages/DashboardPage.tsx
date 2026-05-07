@@ -182,6 +182,7 @@ export function DashboardPage() {
                     onKeyDown={(e) => e.stopPropagation()}
                   >
                     <ProjectOptionsMenu
+                      projectId={project.id}
                       projectName={project.name}
                       open={openProjectMenuId === project.id}
                       onToggle={() =>

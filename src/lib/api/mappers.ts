@@ -1,9 +1,11 @@
 import type {
+  CalibrationStatus,
   ImageAsset,
   ImageEntityType,
   Item,
   ItemStatus,
   Material,
+  MeasuredPlan,
   Project,
   ProposalCategory,
   ProposalItem,
@@ -135,6 +137,21 @@ export interface RawMaterial {
   updated_at: string;
 }
 
+export interface RawMeasuredPlan {
+  id: string;
+  project_id: string;
+  owner_uid: string;
+  name: string;
+  sheet_reference: string;
+  image_filename: string;
+  image_content_type: string;
+  image_byte_size: number;
+  calibration_status: CalibrationStatus;
+  measurement_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Response mappers
 export const mapProject = (r: RawProject): Project => ({
   id: r.id,
@@ -257,6 +274,21 @@ export const mapMaterial = (r: RawMaterial): Material => ({
   materialId: r.material_id,
   description: r.description,
   swatchHex: r.swatch_hex,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export const mapMeasuredPlan = (r: RawMeasuredPlan): MeasuredPlan => ({
+  id: r.id,
+  projectId: r.project_id,
+  ownerUid: r.owner_uid,
+  name: r.name,
+  sheetReference: r.sheet_reference ?? '',
+  imageFilename: r.image_filename,
+  imageContentType: r.image_content_type,
+  imageByteSize: r.image_byte_size,
+  calibrationStatus: r.calibration_status,
+  measurementCount: r.measurement_count,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

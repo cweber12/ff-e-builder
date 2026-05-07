@@ -19,6 +19,17 @@ Image metadata is normalized in `image_assets`:
   for alternate FF&E option renderings.
 - `r2_key` points to the private object in R2.
 
+Measured Plan source images are stored separately on `measured_plans` because they are
+project-level drawing documents rather than row/entity images. Each Measured Plan row
+stores:
+
+- `owner_uid`
+- `project_id`
+- `name`
+- optional `sheet_reference`
+- `image_r2_key`
+- source image filename/content type/byte size metadata
+
 The R2 object key shape is:
 
 ```text
@@ -30,6 +41,7 @@ users/{uid}/projects/{projectId}/materials/{materialId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/proposal/items/{proposalItemId}/{imageId}.{ext}
 users/{uid}/projects/{projectId}/proposal/items/{proposalItemId}/plan/{imageId}.{ext}
 users/{uid}/projects/{projectId}/proposal/items/{proposalItemId}/swatches/{imageId}.{ext}
+users/{uid}/projects/{projectId}/plans/{planId}.{ext}
 ```
 
 Project entities may store up to three images. One image is marked `is_primary`
@@ -38,6 +50,8 @@ Proposal Items may store one primary Rendering, one primary Plan Image,
 and up to four direct swatch images.
 FF&E Items may store one primary Rendering and up to three `item_option` renderings,
 with one option marked as the current selection.
+Measured Plans store one source image each and expose simple `Uncalibrated` /
+`Calibrated` status through the Plans library.
 
 ## API
 
@@ -60,6 +74,13 @@ existence.
 - `PATCH /api/v1/images/{imageId}/primary`
 - `GET /api/v1/images/{imageId}/content`
 - `DELETE /api/v1/images/{imageId}`
+- `GET /api/v1/projects/{projectId}/plans`
+- `POST /api/v1/projects/{projectId}/plans`
+  - multipart form fields: `name`, optional `sheet_reference`, and `file`
+  - allowed types: JPEG, PNG, WebP, GIF
+  - max size: 10 MB
+- `GET /api/v1/projects/{projectId}/plans/{planId}/content`
+- `DELETE /api/v1/projects/{projectId}/plans/{planId}`
 
 Downloads are served by the Worker from R2 with `private, max-age=3600` cache
 headers. The frontend should fetch image blobs with the authenticated API client
@@ -81,6 +102,8 @@ Empty frames open the local file picker. Existing frames render the protected R2
 image through an authenticated blob request rather than a public URL.
 FF&E item option renderings are managed from the item detail panel and displayed
 on catalog pages with a selected-option checkbox.
+Measured Plan library cards on `/projects/:id/plans` also render protected blob
+previews through the authenticated API client.
 
 ## Manual Cloudflare Steps
 

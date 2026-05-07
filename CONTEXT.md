@@ -14,6 +14,18 @@ _Avoid_: Job, file, board
 A project-level visual used to represent the Project in the project list and exports.
 _Avoid_: Cover URL, thumbnail only
 
+**Measured Plan**:
+A project-level architectural drawing uploaded at original scale for use in the Measure tool. A Measured Plan is the source image used to calibrate scale, take measurements, and derive cropped item-attached plan images.
+_Avoid_: Project Image, rendering, item plan crop
+
+**Measurement**:
+A saved rectangular measurement taken from a Measured Plan and attached to one FF&E Item or Proposal Item by user-facing item tag. A Measurement stores the measured rectangle, calibrated dimensions, and the derived highlight/crop relationship used to produce the item-level Plan Image.
+_Avoid_: Temporary selection, crop only, annotation when referring to the persisted measurement record
+
+**Measurement Crop**:
+The adjustable presentation crop derived from a Measurement rectangle and used to save the final item-level Plan Image. A Measurement Crop starts from the measured rectangle but can be reframed without changing the canonical measured geometry.
+_Avoid_: Measurement rectangle when referring to the saved presentation framing
+
 **User Profile**:
 The preparer contact information used across project documentation.
 _Avoid_: Account, auth user
@@ -33,6 +45,18 @@ _Avoid_: Budget type, pricing mode
 **Project Header**:
 The read-only Project identity and tool navigation area shown inside an open Project. Budget status belongs in Summary views, not in the Project Header.
 _Avoid_: Budget header, project editor
+
+**Plans**:
+The project-level tool for managing uploaded architectural drawings, opening a Measured Plan, calibrating scale, taking measurements, and deriving item-attached Plan Images.
+_Avoid_: Measure as the name of the top-level tool, Project Images when referring to architectural drawings
+
+**Length Line**:
+An optional measurement drawn on a Measured Plan to calibrate scale or capture a standalone linear reference. Length Lines can remain unattached to any item.
+_Avoid_: Rectangle Measurement when referring to a single linear span
+
+**Rectangle Measurement**:
+A rectangular Measurement on a Measured Plan that captures two measured sides, orientation metadata, and a highlight area intended for attachment to one FF&E Item or Proposal Item.
+_Avoid_: Crop only, width/depth inference when referring to the canonical measured geometry
 
 **Project Snapshot**:
 The read-first landing page for an open Project that summarizes FF&E, Proposal, Finish Library, Budget, and attention-needed signals before the user drills into a specific tool.
@@ -119,8 +143,12 @@ The primary image attached to an FF&E Item or Proposal Item row.
 _Avoid_: Screenshot, render URL
 
 **Plan Image**:
-A plan visual attached directly to a Proposal Item. In Proposal, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
-_Avoid_: Rendering, Swatch, drawing when referring to the Plan cell image
+A measured or imported plan visual attached directly to an FF&E Item or Proposal Item. In Proposal, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
+_Avoid_: Rendering, Swatch, Measured Plan when referring to the item-level derived image
+
+**Plan Calibration**:
+The shared scale definition for one Measured Plan. Plan Calibration is established from a known-length line on that Measured Plan, includes the unit context for that plan, and is reused by every Measurement taken from it.
+_Avoid_: Per-item scale, temporary ruler state
 
 **Proposal Spreadsheet Import**:
 The workflow that turns an external Proposal spreadsheet into Project Images, Proposal Categories, Proposal Items, Renderings, Plan Images, and Swatches. Header rows may appear below presentation content, single-cell headings can become Proposal Categories, and unmapped spreadsheet data is omitted.
@@ -141,12 +169,46 @@ _Avoid_: Raw upload, template-only import
 - A **Proposal Item** can reference multiple **Materials** from the **Finish Library**.
 - Editing a **Finish Library** entry from an item context uses copy-on-write semantics: if the entry is shared across multiple items, a new entry is forked; if it is used exclusively by one item, the entry is updated in place.
 - A **Project** can have up to three **Project Images**, with one selected as the preview image.
+- A **Project** can have one or more **Measured Plans** used by the Measure tool as source drawings for calibrated item measurements.
 - A **Project Snapshot** is the default open-project view and links users into FF&E, Proposal, Finish Library, and Budget detail pages.
+- A **Project** can contain a **Plans** workspace with multiple **Measured Plans**.
 - A **Project Header** shows only included **Project** identity values and navigation between project tools.
+- **Plans** is a first-class Project tool in the Project Header navigation.
 - **Project Options** are available from both Project Cards and the **Project Header** so Project data can be updated without making header fields inline-editable.
 - A **Proposal Spreadsheet Import** can create missing **Proposal Categories** from detected category headings or mapped category values.
 - A **Proposal Spreadsheet Import** skips subtotal and financial summary rows instead of creating **Proposal Items** from them.
 - A **Proposal Spreadsheet Import** migrates embedded swatch images into the **Finish Library** as **Materials** assigned to the imported **Proposal Items**.
+- A **Measured Plan** can produce derived **Plan Images** attached to either **FF&E Items** or **Proposal Items** after a user confirms the measured item association.
+- A **Measured Plan** owns one shared **Plan Calibration**, and all **Measurements** taken from that plan reuse that calibration.
+- A **Measurement** belongs to exactly one **Measured Plan** and attaches to exactly one **FF&E Item** or **Proposal Item** via the resolved user-facing item tag.
+- A **Measurement** is the canonical geometry for a measured area; a separate **Measurement Crop** can be adjusted before saving the derived **Plan Image**.
+- A **Measured Plan** can have at most one active **Measurement** per attached item. Remeasuring the same item on the same plan replaces the existing Measurement and regenerates the derived Plan Image.
+- A **Plans** workspace defaults to a library of **Measured Plans** with lightweight status and opens into plan-specific measurement work.
+- **Project Options** can provide an upload shortcut into **Plans**, but do not replace the first-class Plans tool.
+- A **Measured Plan** has lightweight identity fields: name, optional sheet reference, uploaded image, calibration status, and measurement count.
+- The Plans library shows calibration status as `Uncalibrated` or `Calibrated`, with measurement count surfaced separately.
+- A **Length Line** can be saved without item attachment as a calibration or reference measurement.
+- A saved **Length Line** on a Measured Plan can be promoted into that plan’s **Plan Calibration**.
+- A saved **Rectangle Measurement** requires explicit item attachment and is the canonical source for the derived item-level **Plan Image**.
+- A **Rectangle Measurement** stores two measured sides plus orientation metadata without inferring semantic item dimensions like width or depth.
+- A **Measurement** is the authoritative measured record for item geometry in the Plans domain, while existing item dimension fields remain separate presentation/spec text.
+- A **Plan Calibration** in v1 is established by drawing a line on the Measured Plan and entering the real-world length for that line; abstract architectural scale notation is not the primary calibration path.
+- Unit context belongs to the **Plan Calibration** of each **Measured Plan**; different Measured Plans in the same Project can use different calibrated scales and unit interpretations.
+- Deleting a **Measured Plan** requires confirmation when items have Measurements associated with that plan.
+- An opened **Measured Plan** includes a lightweight side list of saved Measurements with canvas selection.
+- A saved **Rectangle Measurement** can be edited directly on the canvas, updating that Measurement rather than forcing a brand-new record.
+- Changing a **Plan Calibration** requires confirmation when dependent Measurements exist and recomputes their measured values from the same image-space geometry.
+- Changing a **Plan Calibration** does not immediately regenerate derived **Plan Images**; those update when each affected Measurement is next re-saved through the crop flow.
+- In v1, calibrated Measured Plans and saved Measurements are immediately usable; there is no separate publish/finalize workflow.
+- In v1, a **Measured Plan** image is not replaced in place. Users create a new Measured Plan instead.
+- In v1, item surfaces can show a lightweight indicator that a Measurement or Plan Image exists, but measurement editing remains inside **Plans**.
+- In v1, **Measured Plan** uploads accept image files only.
+- The item-side Measurement/Plan Image indicator deep-links into **Plans** with the relevant **Measured Plan** and **Measurement** selected.
+- In v1, an opened **Measured Plan** supports non-destructive display rotation.
+- In v1, zoom and pan in the Plans workspace are session-local UI state and do not persist when reopening a plan.
+- In v1, **Measurements** keep only current authoritative state; there is no revision history.
+- In v1, **Length Lines** are saved current-state records on a Measured Plan, individually deletable, with no history.
+- A **Measured Plan** can exist in the Plans library while still `Uncalibrated`.
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Proposal** budgets.
 - A **Proposal** export can use different **Export Modes** without changing the underlying **Proposal Items**.
 

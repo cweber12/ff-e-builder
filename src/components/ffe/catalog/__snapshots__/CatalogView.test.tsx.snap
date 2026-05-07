@@ -64,22 +64,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         </span>
       </div>
     </div>
-    <div
-      class="catalog-description-row"
-    >
-      <div
-        aria-label="Description for Channel Lounge Chair"
-        class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 block"
-        role="button"
-        tabindex="0"
-      >
-        <p
-          class="catalog-description-summary"
-        >
-          Sculpted lounge chair with a channeled seat and relaxed residential scale.
-        </p>
-      </div>
-    </div>
   </section>
   <section
     class="catalog-second-section"
@@ -88,18 +72,13 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       class="catalog-rendering-panel"
     >
       <div
-        class="catalog-section-label"
-      >
-        Rendering
-      </div>
-      <div
         class="catalog-rendering-frame"
       >
         <div
           class="grid gap-1"
         >
           <div
-            class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm h-full w-full border-0 shadow-none"
+            class="relative overflow-hidden rounded-md border border-gray-200 bg-surface-muted shadow-sm border-0 shadow-none"
           >
             <button
               aria-expanded="false"
@@ -121,6 +100,22 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
     <div
       class="catalog-notes-panel"
     >
+      <div
+        class="catalog-description-row"
+      >
+        <div
+          aria-label="Description for Channel Lounge Chair"
+          class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 block"
+          role="button"
+          tabindex="0"
+        >
+          <p
+            class="catalog-description-summary"
+          >
+            Sculpted lounge chair with a channeled seat and relaxed residential scale.
+          </p>
+        </div>
+      </div>
       <div
         class="catalog-section-label"
       >
@@ -160,47 +155,30 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
     <div
       class="catalog-options-strip"
     >
-      <div
-        class="catalog-section-label"
+      <button
+        class="no-print catalog-add-option-btn"
+        type="button"
       >
-        Options
-      </div>
-      <div
-        class="catalog-option-grid"
-      >
-        <div
-          class="catalog-option-card"
+        <svg
+          aria-hidden="true"
+          class="h-3.5 w-3.5"
+          fill="none"
+          viewBox="0 0 16 16"
         >
-          <button
-            class="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
-            type="button"
-          >
-            Option 
-            1
-          </button>
-          <input
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            class="sr-only"
-            type="file"
+          <path
+            d="M8 3v10M3 8h10"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-width="1.8"
           />
-        </div>
-        <div
-          class="catalog-option-card"
-        >
-          <button
-            class="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
-            type="button"
-          >
-            Option 
-            2
-          </button>
-          <input
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            class="sr-only"
-            type="file"
-          />
-        </div>
-      </div>
+        </svg>
+        Add option
+      </button>
+      <input
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        class="sr-only"
+        type="file"
+      />
     </div>
     <div
       class="catalog-materials-strip"
@@ -245,48 +223,50 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
   <section
     class="catalog-approval-band"
   >
-    <p
-      class="catalog-section-label"
+    <div
+      class="catalog-section-label catalog-approval-label"
     >
-      Customer approval
-    </p>
+      Client Approval
+    </div>
     <div
       class="catalog-approval-row"
     >
       <div
         class="catalog-approval-field"
       >
-        <span>
-          Signature
-        </span>
         <div
           class="catalog-approval-line"
         />
+        <span>
+          Authorized Signature
+        </span>
       </div>
       <div
         class="catalog-approval-field catalog-approval-date"
       >
-        <span>
-          Date
-        </span>
         <div
           class="catalog-approval-line"
         />
+        <span>
+          Date
+        </span>
       </div>
       <div
         class="catalog-approval-checks"
       >
         <label>
           <input
+            class="catalog-approval-check-input"
             type="checkbox"
           />
-          Approved w/ changes
+          Approved with revisions
         </label>
         <label>
           <input
+            class="catalog-approval-check-input"
             type="checkbox"
           />
-          Approved w/o changes
+          Approved as presented
         </label>
       </div>
     </div>

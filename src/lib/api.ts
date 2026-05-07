@@ -1,6 +1,7 @@
 import { imagesApi } from './api/images';
 import { itemsApi } from './api/items';
 import { materialsApi } from './api/materials';
+import { plansApi } from './api/plans';
 import { proposalApi } from './api/proposal';
 import { projectsApi } from './api/projects';
 import { roomsApi } from './api/rooms';
@@ -11,6 +12,7 @@ export { ApiError } from './api/transport';
 export type { ImageEntityRef, UploadImageInput } from './api/images';
 export type { CreateItemInput, UpdateItemInput } from './api/items';
 export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
+export type { CreateMeasuredPlanInput } from './api/plans';
 export type {
   CreateProposalCategoryInput,
   CreateProposalItemInput,
@@ -31,4 +33,5 @@ export const api = {
   items: itemsApi,
   images: imagesApi,
   materials: materialsApi,
+  plans: plansApi,
 };

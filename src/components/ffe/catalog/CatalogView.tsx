@@ -404,7 +404,7 @@ export function CatalogPage({
                   patch: { imageUrl: null, version: item.version },
                 });
               }}
-              className="h-full w-full border-0 shadow-none"
+              className="border-0 shadow-none"
               imageClassName="catalog-image"
               placeholderClassName="catalog-placeholder"
               placeholderContent={<span>{initials(item.itemName)}</span>}
@@ -447,7 +447,17 @@ export function CatalogPage({
                     {value}
                   </p>
                 ) : (
-                  <p className="catalog-notes italic text-gray-400">Click to add notes</p>
+                  <span className="no-print catalog-add-notes-btn">
+                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+                      <path
+                        d="M8 3v10M3 8h10"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Add notes
+                  </span>
                 )
               }
             />
@@ -530,24 +540,55 @@ function CatalogOptionRenderings({
   onAdd: (file: File) => void;
 }) {
   const addInputRef = useRef<HTMLInputElement>(null);
+  const addPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
   const canAddMore = optionImages.length < 2;
+
+  useEffect(
+    () => () => {
+      const handler = addPasteHandlerRef.current;
+      if (handler) document.removeEventListener('paste', handler);
+    },
+    [],
+  );
+
+  const enableAddPaste = () => {
+    if (!canAddMore || isBusy || addPasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => {
+      const file = Array.from(event.clipboardData?.items ?? [])
+        .find((item) => item.kind === 'file' && item.type.startsWith('image/'))
+        ?.getAsFile();
+      if (!file) return;
+      event.preventDefault();
+      onAdd(file);
+    };
+    addPasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disableAddPaste = () => {
+    const handler = addPasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    addPasteHandlerRef.current = null;
+  };
 
   return (
     <div className="catalog-options-strip">
-      <div className="catalog-section-label">Options</div>
       {optionImages.length > 0 && (
         <div className="catalog-option-grid">
           {optionImages.map((image, index) => (
-            <CatalogOptionCard
-              key={image.id}
-              image={image}
-              itemName={itemName}
-              index={index}
-              disabled={isBusy}
-              onSelect={onSelect}
-              onUpload={(file) => onUpload(file, index)}
-              onDelete={onDelete}
-            />
+            <div key={image.id} className="catalog-option-slot">
+              <CatalogOptionCard
+                image={image}
+                itemName={itemName}
+                index={index}
+                disabled={isBusy}
+                onSelect={onSelect}
+                onUpload={(file) => onUpload(file, index)}
+                onDelete={onDelete}
+              />
+              <p className="catalog-option-label">Option {index + 1}</p>
+            </div>
           ))}
         </div>
       )}
@@ -558,6 +599,8 @@ function CatalogOptionRenderings({
             className="no-print catalog-add-option-btn"
             disabled={isBusy}
             onClick={() => addInputRef.current?.click()}
+            onMouseEnter={enableAddPaste}
+            onMouseLeave={disableAddPaste}
           >
             <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
               <path

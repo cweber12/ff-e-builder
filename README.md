@@ -54,11 +54,12 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 - **Project images** -- project cards support up to three private project images, managed from the card options menu, with one selected preview image.
 
 - **Project header** -- compact read-only project identity, project-section navigation, and Project Options for updating project data, images, or deletion.
+- **Plans** (`/projects/:id/plans`, `/projects/:id/plans/:planId`) -- project-level architectural plan library plus an opened-plan workspace shell with protected image viewing, plan selection, tool rail scaffolding, and session-only zoom/pan/rotation controls for upcoming calibration and measurement flows.
 - **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, a dedicated Rendering column, item descriptions, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
 - **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with click-to-edit item text, main Rendering plus up to three selectable option renderings, browser print, direct PDF export, and per-item PDF export with editable customer-approval/signature fields.
 - **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
 - **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/proposal/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials.md](docs/materials.md).
-- **Images** -- project, room, FF&E item, material, Proposal Rendering, Plan Image, and Material Visual metadata is stored in Neon; image bytes live in the private Cloudflare R2 `ffe-images` bucket behind the API Worker. See [docs/images.md](docs/images.md).
+- **Images** -- project, room, FF&E item, material, Proposal Rendering, Plan Image, Material Visual, and Measured Plan source images are stored privately behind the API Worker. Shared entity images use Neon `image_assets`; Measured Plan source-image metadata lives on `measured_plans`; image bytes live in the private Cloudflare R2 `ffe-images` bucket. See [docs/images.md](docs/images.md).
 
 ## Frontend deploy notes
 
@@ -91,7 +92,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   └── 404.html       # GitHub Pages SPA redirect script
 ├── api/               # Cloudflare Workers API (TypeScript)
 │   └── src/
-│       ├── routes/    # Hono route handlers (projects, rooms, items, materials, proposal, images, users)
+│       ├── routes/    # Hono route handlers (projects, plans, rooms, items, materials, proposal, images, users)
 │       ├── middleware/ # Auth middleware (Firebase JWT verification)
 │       └── lib/       # Worker-only utilities (db, firebase-auth, ownership)
 ├── db/
