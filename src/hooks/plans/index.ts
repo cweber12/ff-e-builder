@@ -4,8 +4,12 @@ export {
   useDeleteMeasuredPlan,
   usePlanCalibration,
   usePlanLengthLines,
+  usePlanMeasurements,
   useSetPlanCalibration,
   useCreatePlanLengthLine,
+  useCreatePlanMeasurement,
   useUpdatePlanLengthLine,
+  useUpdatePlanMeasurement,
   useDeletePlanLengthLine,
+  useDeletePlanMeasurement,
 } from './usePlans';

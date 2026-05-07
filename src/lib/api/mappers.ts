@@ -5,6 +5,7 @@ import type {
   Item,
   ItemStatus,
   LengthLine,
+  Measurement,
   PlanCalibration,
   Material,
   MeasuredPlan,
@@ -181,6 +182,26 @@ export interface RawLengthLine {
   updated_at: string;
 }
 
+export interface RawMeasurement {
+  id: string;
+  measured_plan_id: string;
+  target_kind: Measurement['targetKind'];
+  target_item_id: string;
+  target_tag_snapshot: string;
+  rect_x: number;
+  rect_y: number;
+  rect_width: number;
+  rect_height: number;
+  horizontal_span_base: string;
+  vertical_span_base: string;
+  crop_x: number | null;
+  crop_y: number | null;
+  crop_width: number | null;
+  crop_height: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // Response mappers
 export const mapProject = (r: RawProject): Project => ({
   id: r.id,
@@ -345,6 +366,26 @@ export const mapLengthLine = (r: RawLengthLine): LengthLine => ({
   endY: r.end_y,
   measuredLengthBase: r.measured_length_base === null ? null : Number(r.measured_length_base),
   label: r.label,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export const mapMeasurement = (r: RawMeasurement): Measurement => ({
+  id: r.id,
+  measuredPlanId: r.measured_plan_id,
+  targetKind: r.target_kind,
+  targetItemId: r.target_item_id,
+  targetTagSnapshot: r.target_tag_snapshot,
+  rectX: r.rect_x,
+  rectY: r.rect_y,
+  rectWidth: r.rect_width,
+  rectHeight: r.rect_height,
+  horizontalSpanBase: Number(r.horizontal_span_base),
+  verticalSpanBase: Number(r.vertical_span_base),
+  cropX: r.crop_x,
+  cropY: r.crop_y,
+  cropWidth: r.crop_width,
+  cropHeight: r.crop_height,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

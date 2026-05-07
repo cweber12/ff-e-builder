@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): convert the opened plan view into a full-window fixed-height workspace, replace the text tool rail with icon controls, add measured-item selection/highlight overlays, and persist item-linked rectangle measurements
 - feat(plans): add persisted Length Line measurement CRUD, canvas overlays, and a reusable measured-span sidebar on top of saved plan calibration
 - feat(plans): persist per-plan calibration lines with raw-pixel geometry, add calibration read/write worker + client APIs, and make the opened plan workspace save and render reference-line scale overlays
 - feat(plans): add the opened-plan workspace shell with a dedicated `plans/:planId` route, protected source-image canvas, plan selector, calibration-aware tool rail, and session-only zoom/pan/rotation controls

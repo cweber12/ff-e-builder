@@ -12,6 +12,8 @@ export const planKeys = {
     ['plans', projectId, planId, 'calibration'] as const,
   lengthLines: (projectId: string, planId: string) =>
     ['plans', projectId, planId, 'length-lines'] as const,
+  measurements: (projectId: string, planId: string) =>
+    ['plans', projectId, planId, 'measurements'] as const,
 };
 
 export const userProfileKeys = {

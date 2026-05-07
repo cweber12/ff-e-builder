@@ -5,33 +5,50 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/primitives';
 import {
   useCreatePlanLengthLine,
+  useCreatePlanMeasurement,
   useDeletePlanLengthLine,
+  useDeletePlanMeasurement,
   useMeasuredPlans,
   usePlanCalibration,
   usePlanLengthLines,
+  usePlanMeasurements,
   useSetPlanCalibration,
   useUpdatePlanLengthLine,
+  useUpdatePlanMeasurement,
 } from '../hooks';
 import { api } from '../lib/api';
 import type {
   LengthLine,
+  Measurement,
   MeasuredPlan,
   PlanCalibration,
   PlanMeasurementUnit,
   Project,
+  ProposalCategoryWithItems,
+  RoomWithItems,
 } from '../types';
 
 type PlanCanvasPageProps = {
   project: Project;
   planId: string;
+  roomsWithItems: RoomWithItems[];
+  proposalCategoriesWithItems: ProposalCategoryWithItems[];
 };
 
 type LineDraft = {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+};
+
+type RectDraft = {
   startX: number;
   startY: number;
   endX: number;
@@ -43,16 +60,49 @@ type ImagePoint = {
   y: number;
 };
 
-const TOOL_DEFINITIONS = [
-  { id: 'calibrate', label: 'Calibrate', description: 'Set the plan scale from a reference line.' },
-  { id: 'length', label: 'Length Line', description: 'Measure and save linear spans on the plan.' },
+type ToolId = 'calibrate' | 'length' | 'rectangle' | 'crop';
+
+type MeasurementItemRef = {
+  key: string;
+  targetKind: Measurement['targetKind'];
+  targetItemId: string;
+  targetTagSnapshot: string;
+  primaryLabel: string;
+  secondaryLabel: string;
+  containerLabel: string;
+};
+
+const TOOL_DEFINITIONS: Array<{
+  id: ToolId;
+  label: string;
+  description: string;
+  icon: ReactNode;
+}> = [
+  {
+    id: 'calibrate',
+    label: 'Calibrate',
+    description: 'Set the plan scale from a reference line.',
+    icon: <CalibrateIcon />,
+  },
+  {
+    id: 'length',
+    label: 'Length Line',
+    description: 'Measure and save linear spans on the plan.',
+    icon: <LengthLineIcon />,
+  },
   {
     id: 'rectangle',
     label: 'Rectangle',
-    description: 'Capture an item footprint before attach + crop.',
+    description: 'Capture an item footprint and associate it with an item.',
+    icon: <RectangleIcon />,
   },
-  { id: 'crop', label: 'Crop', description: 'Refine the derived plan image framing.' },
-] as const;
+  {
+    id: 'crop',
+    label: 'Crop',
+    description: 'Refine the derived plan image framing.',
+    icon: <CropIcon />,
+  },
+];
 
 const UNIT_OPTIONS: PlanMeasurementUnit[] = ['ft', 'in', 'm', 'cm', 'mm'];
 const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
@@ -63,9 +113,12 @@ const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
   m: 1000,
 };
 
-type ToolId = (typeof TOOL_DEFINITIONS)[number]['id'];
-
-export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
+export function PlanCanvasPage({
+  project,
+  planId,
+  roomsWithItems,
+  proposalCategoriesWithItems,
+}: PlanCanvasPageProps) {
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
   const [activeTool, setActiveTool] = useState<ToolId>('calibrate');
   const [calibrationDraft, setCalibrationDraft] = useState<LineDraft | null>(null);
@@ -74,6 +127,10 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   const [lengthLineDraft, setLengthLineDraft] = useState<LineDraft | null>(null);
   const [selectedLengthLineId, setSelectedLengthLineId] = useState<string | null>(null);
   const [lengthLineLabelInput, setLengthLineLabelInput] = useState('');
+  const [measurementDraft, setMeasurementDraft] = useState<RectDraft | null>(null);
+  const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
+  const [selectedMeasurementTargetKey, setSelectedMeasurementTargetKey] = useState('');
+  const [measuredItemsOpen, setMeasuredItemsOpen] = useState(true);
 
   const selectedPlan = useMemo(
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
@@ -89,14 +146,44 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     project.id,
     selectedPlanId,
   );
+  const { data: measurements = [], isLoading: measurementsLoading } = usePlanMeasurements(
+    project.id,
+    selectedPlanId,
+  );
   const setCalibration = useSetPlanCalibration(project.id, selectedPlanId);
   const createLengthLine = useCreatePlanLengthLine(project.id, selectedPlanId);
   const updateLengthLine = useUpdatePlanLengthLine(project.id, selectedPlanId);
   const deleteLengthLine = useDeletePlanLengthLine(project.id, selectedPlanId);
+  const createMeasurement = useCreatePlanMeasurement(project.id, selectedPlanId);
+  const updateMeasurement = useUpdatePlanMeasurement(project.id, selectedPlanId);
+  const deleteMeasurement = useDeletePlanMeasurement(project.id, selectedPlanId);
+
+  const measurementItems = useMemo(
+    () => buildMeasurementItems(roomsWithItems, proposalCategoriesWithItems),
+    [proposalCategoriesWithItems, roomsWithItems],
+  );
+  const measurementItemsByKey = useMemo(
+    () => new Map(measurementItems.map((item) => [item.key, item])),
+    [measurementItems],
+  );
+  const measurementItemsByMeasurementId = useMemo(() => {
+    const result = new Map<string, MeasurementItemRef>();
+    for (const measurement of measurements) {
+      const key = `${measurement.targetKind}:${measurement.targetItemId}`;
+      const item = measurementItemsByKey.get(key);
+      if (item) result.set(measurement.id, item);
+    }
+    return result;
+  }, [measurementItemsByKey, measurements]);
 
   const isCalibrated = calibration !== null || selectedPlan?.calibrationStatus === 'calibrated';
   const selectedLengthLine =
     lengthLines.find((candidate) => candidate.id === selectedLengthLineId) ?? null;
+  const selectedMeasurement =
+    measurements.find((candidate) => candidate.id === selectedMeasurementId) ?? null;
+  const selectedMeasurementItem = selectedMeasurement
+    ? (measurementItemsByMeasurementId.get(selectedMeasurement.id) ?? null)
+    : null;
 
   useEffect(() => {
     if (!selectedPlan) return;
@@ -108,7 +195,10 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   useEffect(() => {
     setCalibrationDraft(null);
     setLengthLineDraft(null);
+    setMeasurementDraft(null);
     setSelectedLengthLineId(null);
+    setSelectedMeasurementId(null);
+    setSelectedMeasurementTargetKey('');
     setLengthLineLabelInput('');
   }, [selectedPlanId]);
 
@@ -123,6 +213,11 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     setLengthLineLabelInput(selectedLengthLine?.label ?? '');
   }, [lengthLineDraft, selectedLengthLine]);
 
+  useEffect(() => {
+    if (!selectedMeasurementItem || measurementDraft) return;
+    setSelectedMeasurementTargetKey(selectedMeasurementItem.key);
+  }, [measurementDraft, selectedMeasurementItem]);
+
   const calibrationPixelLength = useMemo(
     () => (calibrationDraft ? getLineLength(calibrationDraft) : null),
     [calibrationDraft],
@@ -130,6 +225,10 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   const lengthLinePixelLength = useMemo(
     () => (lengthLineDraft ? getLineLength(lengthLineDraft) : null),
     [lengthLineDraft],
+  );
+  const normalizedMeasurementDraft = useMemo(
+    () => (measurementDraft ? normalizeRectDraft(measurementDraft) : null),
+    [measurementDraft],
   );
 
   const calibrationLengthValue = Number(calibrationLengthInput);
@@ -141,22 +240,51 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     calibrationLengthValue > 0 &&
     !setCalibration.isPending;
 
-  const measuredLengthInPlanUnits =
+  const draftLengthInPlanUnits =
     calibration && lengthLinePixelLength !== null
       ? lengthLinePixelLength / calibration.pixelsPerUnit
       : null;
-  const measuredLengthBase =
-    calibration && measuredLengthInPlanUnits !== null
-      ? convertPlanUnitsToBase(measuredLengthInPlanUnits, calibration.unit)
+  const draftLengthBase =
+    calibration && draftLengthInPlanUnits !== null
+      ? convertPlanUnitsToBase(draftLengthInPlanUnits, calibration.unit)
       : null;
   const canSaveLengthLine =
     calibration !== null &&
     lengthLineDraft !== null &&
     lengthLinePixelLength !== null &&
     lengthLinePixelLength > 0 &&
-    measuredLengthBase !== null &&
+    draftLengthBase !== null &&
     !createLengthLine.isPending &&
     !updateLengthLine.isPending;
+
+  const draftMeasurementWidthPlanUnits =
+    calibration && normalizedMeasurementDraft
+      ? normalizedMeasurementDraft.width / calibration.pixelsPerUnit
+      : null;
+  const draftMeasurementHeightPlanUnits =
+    calibration && normalizedMeasurementDraft
+      ? normalizedMeasurementDraft.height / calibration.pixelsPerUnit
+      : null;
+  const draftMeasurementWidthBase =
+    calibration && draftMeasurementWidthPlanUnits !== null
+      ? convertPlanUnitsToBase(draftMeasurementWidthPlanUnits, calibration.unit)
+      : null;
+  const draftMeasurementHeightBase =
+    calibration && draftMeasurementHeightPlanUnits !== null
+      ? convertPlanUnitsToBase(draftMeasurementHeightPlanUnits, calibration.unit)
+      : null;
+  const selectedMeasurementTarget =
+    selectedMeasurementTargetKey.length > 0
+      ? (measurementItemsByKey.get(selectedMeasurementTargetKey) ?? null)
+      : null;
+  const canSaveMeasurement =
+    calibration !== null &&
+    normalizedMeasurementDraft !== null &&
+    draftMeasurementWidthBase !== null &&
+    draftMeasurementHeightBase !== null &&
+    selectedMeasurementTarget !== null &&
+    !createMeasurement.isPending &&
+    !updateMeasurement.isPending;
 
   const handleSaveCalibration = async () => {
     if (!canSaveCalibration || !calibrationDraft || calibrationPixelLength === null) return;
@@ -173,14 +301,14 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   };
 
   const handleSaveLengthLine = async () => {
-    if (!canSaveLengthLine || !lengthLineDraft || measuredLengthBase === null) return;
+    if (!canSaveLengthLine || !lengthLineDraft || draftLengthBase === null) return;
 
     const input = {
       startX: lengthLineDraft.startX,
       startY: lengthLineDraft.startY,
       endX: lengthLineDraft.endX,
       endY: lengthLineDraft.endY,
-      measuredLengthBase,
+      measuredLengthBase: draftLengthBase,
       label: lengthLineLabelInput.trim() || null,
     };
 
@@ -203,6 +331,55 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     setLengthLineLabelInput('');
   };
 
+  const handleSaveMeasurement = async () => {
+    if (
+      !canSaveMeasurement ||
+      !normalizedMeasurementDraft ||
+      !selectedMeasurementTarget ||
+      draftMeasurementWidthBase === null ||
+      draftMeasurementHeightBase === null
+    ) {
+      return;
+    }
+
+    const input = {
+      targetKind: selectedMeasurementTarget.targetKind,
+      targetItemId: selectedMeasurementTarget.targetItemId,
+      targetTagSnapshot: selectedMeasurementTarget.targetTagSnapshot,
+      rectX: normalizedMeasurementDraft.x,
+      rectY: normalizedMeasurementDraft.y,
+      rectWidth: normalizedMeasurementDraft.width,
+      rectHeight: normalizedMeasurementDraft.height,
+      horizontalSpanBase: draftMeasurementWidthBase,
+      verticalSpanBase: draftMeasurementHeightBase,
+      cropX: null,
+      cropY: null,
+      cropWidth: null,
+      cropHeight: null,
+    };
+
+    if (selectedMeasurementId) {
+      const updated = await updateMeasurement.mutateAsync({
+        measurementId: selectedMeasurementId,
+        input,
+      });
+      setSelectedMeasurementId(updated.id);
+    } else {
+      const created = await createMeasurement.mutateAsync(input);
+      setSelectedMeasurementId(created.id);
+    }
+
+    setMeasurementDraft(null);
+  };
+
+  const handleDeleteMeasurement = async () => {
+    if (!selectedMeasurement) return;
+    await deleteMeasurement.mutateAsync(selectedMeasurement);
+    setSelectedMeasurementId(null);
+    setMeasurementDraft(null);
+    setSelectedMeasurementTargetKey('');
+  };
+
   if (isLoading) {
     return <PlanCanvasSkeleton />;
   }
@@ -222,8 +399,8 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   }
 
   return (
-    <div className="-mx-4 flex min-h-[calc(100vh-185px)] flex-col bg-[#f3f1ea] md:-mx-6">
-      <header className="border-b border-black/5 bg-white/85 px-4 py-3 backdrop-blur md:px-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f3f1ea]">
+      <header className="border-b border-black/5 bg-white/88 px-4 py-3 backdrop-blur md:px-6">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
             <Link
@@ -249,24 +426,16 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
               </span>
             </div>
             <p className="mt-2 text-sm text-neutral-500">
-              Saved calibration now powers reusable Length Line measurements. Draw spans directly on
-              the protected plan image, save them, and reuse the recorded geometry later.
+              This workspace is now fixed-height and full-window so plan geometry stays visually
+              stable while you measure. Use the icon rail to calibrate, save line spans, or link a
+              measured rectangle to an item.
             </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="ghost" size="sm" disabled>
-              Upload replacement
-            </Button>
-            <Button type="button" variant="secondary" size="sm" disabled>
-              Save workspace
-            </Button>
           </div>
         </div>
       </header>
 
-      <div className="grid flex-1 gap-0 xl:grid-cols-[96px_minmax(0,1fr)_360px]">
-        <aside className="border-r border-black/5 bg-white/72 p-3 backdrop-blur">
+      <div className="grid min-h-0 flex-1 gap-0 xl:grid-cols-[84px_minmax(0,1fr)_380px]">
+        <aside className="overflow-y-auto border-r border-black/5 bg-white/72 p-3 backdrop-blur">
           <div className="flex flex-col gap-2">
             {TOOL_DEFINITIONS.map((tool) => {
               const disabled = tool.id !== 'calibrate' && !isCalibrated;
@@ -275,28 +444,28 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                 <button
                   key={tool.id}
                   type="button"
+                  aria-label={tool.label}
+                  title={`${tool.label}: ${tool.description}`}
                   disabled={disabled}
                   onClick={() => setActiveTool(tool.id)}
                   className={[
-                    'rounded-2xl border px-3 py-3 text-left transition',
+                    'flex h-14 w-14 items-center justify-center rounded-2xl border transition',
                     active
                       ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm'
                       : 'border-neutral-200 bg-white text-neutral-600 hover:border-brand-200 hover:text-brand-700',
                     disabled &&
                       'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400',
                   ].join(' ')}
-                  title={tool.description}
                 >
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.18em]">
-                    {tool.label}
-                  </span>
+                  <span className="sr-only">{tool.label}</span>
+                  {tool.icon}
                 </button>
               );
             })}
           </div>
         </aside>
 
-        <main className="min-w-0 p-4 md:p-6">
+        <main className="min-h-0 overflow-hidden p-4 md:p-6">
           <PlanViewport
             projectId={project.id}
             plan={selectedPlan}
@@ -308,10 +477,14 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
             selectedLengthLineId={selectedLengthLineId}
             lengthLineDraft={lengthLineDraft}
             onLengthLineDraftChange={setLengthLineDraft}
+            measurements={measurements}
+            selectedMeasurementId={selectedMeasurementId}
+            measurementDraft={measurementDraft}
+            onMeasurementDraftChange={setMeasurementDraft}
           />
         </main>
 
-        <aside className="border-l border-black/5 bg-white/72 p-4 backdrop-blur md:p-5">
+        <aside className="overflow-y-auto border-l border-black/5 bg-white/72 p-4 backdrop-blur md:p-5">
           <div className="space-y-5">
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
@@ -361,14 +534,13 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                   </span>
                 ) : null}
               </div>
-
               <p className="mt-3 text-sm font-medium text-neutral-800">
                 {isCalibrated ? 'Calibrated' : 'Needs calibration'}
               </p>
               <p className="mt-2 text-sm leading-6 text-neutral-500">
                 {activeTool === 'calibrate'
-                  ? 'Click and drag on the plan to mark a reference line, then enter the documented full-size length.'
-                  : 'Saved calibration is reused to convert every Length Line into a normalized measured value.'}
+                  ? 'Draw a reference line directly on the plan, then enter the documented full-size length.'
+                  : 'Saved calibration is reused for all line and rectangle measurements on this plan.'}
               </p>
 
               {calibration ? (
@@ -473,22 +645,14 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                 </span>
               </div>
 
-              <p className="mt-3 text-sm leading-6 text-neutral-500">
-                {activeTool === 'length'
-                  ? 'Draw a line directly on the plan to save a measured span. Selecting an existing row lets you replace or delete it.'
-                  : 'Switch to the Length Line tool to create reusable measured spans from this plan.'}
-              </p>
-
-              {activeTool === 'length' && calibration ? (
+              {activeTool === 'length' ? (
                 <div className="mt-4 space-y-3">
                   <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
                     {lengthLineDraft
                       ? selectedLengthLine
                         ? 'Replacement span captured. Save to update the selected line.'
                         : 'Span captured. Save it to create a reusable Length Line.'
-                      : selectedLengthLine
-                        ? 'Selected line loaded. Draw again on the plan if you want to replace its geometry.'
-                        : 'No draft line yet. Draw directly on the plan to capture a measured span.'}
+                      : 'Draw a span directly on the plan to capture a measured line.'}
                   </div>
 
                   {lengthLineDraft ? (
@@ -499,8 +663,8 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                           <span>{formatDisplayNumber(lengthLinePixelLength ?? 0)} px</span>
                         </div>
                         <div className="mt-2 text-xs text-brand-800">
-                          {measuredLengthInPlanUnits !== null
-                            ? `${formatDisplayNumber(measuredLengthInPlanUnits)} ${calibration.unit}`
+                          {draftLengthInPlanUnits !== null && calibration
+                            ? `${formatDisplayNumber(draftLengthInPlanUnits)} ${calibration.unit}`
                             : 'Waiting for calibration'}
                         </div>
                       </div>
@@ -563,7 +727,6 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                       calibration && line.measuredLengthBase !== null
                         ? convertBaseToPlanUnits(line.measuredLengthBase, calibration.unit)
                         : null;
-
                     return (
                       <button
                         key={line.id}
@@ -592,9 +755,6 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                                 : 'Measured span'}
                             </p>
                           </div>
-                          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                            {formatDisplayNumber(getLineLength(line))} px
-                          </span>
                         </div>
                       </button>
                     );
@@ -630,6 +790,183 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setMeasuredItemsOpen((open) => !open)}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+                  Measured Items
+                </span>
+                <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                  <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
+                    {measurements.length}
+                  </span>
+                  <span>{measuredItemsOpen ? 'Hide' : 'Show'}</span>
+                </span>
+              </button>
+
+              {measuredItemsOpen ? (
+                <>
+                  {activeTool === 'rectangle' ? (
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                        {measurementDraft
+                          ? selectedMeasurement
+                            ? 'Replacement rectangle captured. Choose the item and save to update.'
+                            : 'Rectangle captured. Choose the item and save to create a measured area.'
+                          : 'Draw a rectangle directly on the plan, then associate it with an item below.'}
+                      </div>
+
+                      {normalizedMeasurementDraft ? (
+                        <>
+                          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="font-semibold">Draft area</span>
+                              <span>
+                                {formatDisplayNumber(normalizedMeasurementDraft.width)} ×{' '}
+                                {formatDisplayNumber(normalizedMeasurementDraft.height)} px
+                              </span>
+                            </div>
+                            {calibration ? (
+                              <div className="mt-2 text-xs text-brand-800">
+                                {draftMeasurementWidthPlanUnits !== null &&
+                                draftMeasurementHeightPlanUnits !== null
+                                  ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits)} ${calibration.unit} × ${formatDisplayNumber(draftMeasurementHeightPlanUnits)} ${calibration.unit}`
+                                  : 'Waiting for calibration'}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <label className="block">
+                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                              Associate with item
+                            </span>
+                            <select
+                              value={selectedMeasurementTargetKey}
+                              onChange={(event) =>
+                                setSelectedMeasurementTargetKey(event.target.value)
+                              }
+                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                            >
+                              <option value="">Select an item</option>
+                              {measurementItems.map((item) => (
+                                <option key={item.key} value={item.key}>
+                                  {`${item.primaryLabel} — ${item.secondaryLabel} (${item.containerLabel})`}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={() => void handleSaveMeasurement()}
+                              disabled={!canSaveMeasurement}
+                            >
+                              {createMeasurement.isPending || updateMeasurement.isPending
+                                ? 'Saving…'
+                                : selectedMeasurement
+                                  ? 'Update measurement'
+                                  : 'Save measurement'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setMeasurementDraft(null)}
+                              disabled={createMeasurement.isPending || updateMeasurement.isPending}
+                            >
+                              Clear draft
+                            </Button>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 space-y-2">
+                    {measurementsLoading ? (
+                      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
+                        Loading measured items…
+                      </div>
+                    ) : measurements.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-500">
+                        No measured items yet.
+                      </div>
+                    ) : (
+                      measurements.map((measurement) => {
+                        const item = measurementItemsByMeasurementId.get(measurement.id);
+                        const active = measurement.id === selectedMeasurementId;
+                        return (
+                          <button
+                            key={measurement.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMeasurementId(measurement.id);
+                              setActiveTool('rectangle');
+                              setMeasurementDraft(null);
+                              if (item) setSelectedMeasurementTargetKey(item.key);
+                            }}
+                            className={[
+                              'block w-full rounded-2xl border px-3 py-3 text-left transition',
+                              active
+                                ? 'border-brand-500 bg-brand-50'
+                                : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
+                            ].join(' ')}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-neutral-900">
+                                  {item?.primaryLabel ?? measurement.targetTagSnapshot}
+                                </p>
+                                <p className="mt-1 text-xs text-neutral-500">
+                                  {item
+                                    ? `${item.secondaryLabel} • ${item.containerLabel}`
+                                    : measurement.targetKind === 'ffe'
+                                      ? 'FF&E item'
+                                      : 'Proposal item'}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {selectedMeasurement ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedMeasurementId(null);
+                          setMeasurementDraft(null);
+                          setSelectedMeasurementTargetKey('');
+                        }}
+                      >
+                        Clear selection
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        size="sm"
+                        onClick={() => void handleDeleteMeasurement()}
+                        disabled={deleteMeasurement.isPending}
+                      >
+                        {deleteMeasurement.isPending ? 'Deleting…' : 'Delete measurement'}
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+            </section>
+
+            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
                 Active Tool
               </p>
@@ -658,6 +995,10 @@ function PlanViewport({
   selectedLengthLineId,
   lengthLineDraft,
   onLengthLineDraftChange,
+  measurements,
+  selectedMeasurementId,
+  measurementDraft,
+  onMeasurementDraftChange,
 }: {
   projectId: string;
   plan: MeasuredPlan;
@@ -669,6 +1010,10 @@ function PlanViewport({
   selectedLengthLineId: string | null;
   lengthLineDraft: LineDraft | null;
   onLengthLineDraftChange: (draft: LineDraft | null) => void;
+  measurements: Measurement[];
+  selectedMeasurementId: string | null;
+  measurementDraft: RectDraft | null;
+  onMeasurementDraftChange: (draft: RectDraft | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -678,8 +1023,9 @@ function PlanViewport({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isInteracting, setIsInteracting] = useState(false);
   const panDragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
-  const lineDrawStart = useRef<ImagePoint | null>(null);
+  const shapeStart = useRef<ImagePoint | null>(null);
   const zoomRef = useRef(zoom);
   const offsetRef = useRef(offset);
   zoomRef.current = zoom;
@@ -758,9 +1104,6 @@ function PlanViewport({
   ]);
 
   const effectiveScale = fitScale * zoom;
-  const isCalibrating = activeTool === 'calibrate';
-  const isLengthMeasuring = activeTool === 'length';
-  const isDrawingLine = isCalibrating || isLengthMeasuring;
 
   const clampOffset = useCallback(
     (nextZoom: number, nextOffsetX: number, nextOffsetY: number) => {
@@ -850,6 +1193,7 @@ function PlanViewport({
     const onWheel = (event: WheelEvent) => {
       if (!imageUrl) return;
       event.preventDefault();
+      setIsInteracting(true);
 
       const rect = element.getBoundingClientRect();
       const cursorX = event.clientX - rect.left - rect.width / 2;
@@ -863,6 +1207,10 @@ function PlanViewport({
 
       setZoom(nextZoom);
       setOffset(clampOffset(nextZoom, nextOffsetX, nextOffsetY));
+      window.clearTimeout((onWheel as typeof onWheel & { timeout?: number }).timeout);
+      (onWheel as typeof onWheel & { timeout?: number }).timeout = window.setTimeout(() => {
+        setIsInteracting(false);
+      }, 80);
     };
 
     element.addEventListener('wheel', onWheel, { passive: false });
@@ -872,20 +1220,29 @@ function PlanViewport({
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!imageUrl || event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
+    setIsInteracting(true);
 
-    if (isDrawingLine) {
+    if (activeTool === 'calibrate' || activeTool === 'length' || activeTool === 'rectangle') {
       const point = imagePointFromClient(event.clientX, event.clientY);
       if (!point) return;
-      lineDrawStart.current = point;
-      if (isCalibrating) {
+      shapeStart.current = point;
+
+      if (activeTool === 'calibrate') {
         onCalibrationDraftChange({
           startX: point.x,
           startY: point.y,
           endX: point.x,
           endY: point.y,
         });
-      } else {
+      } else if (activeTool === 'length') {
         onLengthLineDraftChange({
+          startX: point.x,
+          startY: point.y,
+          endX: point.x,
+          endY: point.y,
+        });
+      } else {
+        onMeasurementDraftChange({
           startX: point.x,
           startY: point.y,
           endX: point.x,
@@ -899,19 +1256,31 @@ function PlanViewport({
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (lineDrawStart.current && isDrawingLine) {
+    if (shapeStart.current) {
       const point = imagePointFromClient(event.clientX, event.clientY, true);
       if (!point) return;
-      const nextDraft = {
-        startX: lineDrawStart.current.x,
-        startY: lineDrawStart.current.y,
-        endX: point.x,
-        endY: point.y,
-      };
-      if (isCalibrating) {
-        onCalibrationDraftChange(nextDraft);
-      } else {
-        onLengthLineDraftChange(nextDraft);
+
+      if (activeTool === 'calibrate') {
+        onCalibrationDraftChange({
+          startX: shapeStart.current.x,
+          startY: shapeStart.current.y,
+          endX: point.x,
+          endY: point.y,
+        });
+      } else if (activeTool === 'length') {
+        onLengthLineDraftChange({
+          startX: shapeStart.current.x,
+          startY: shapeStart.current.y,
+          endX: point.x,
+          endY: point.y,
+        });
+      } else if (activeTool === 'rectangle') {
+        onMeasurementDraftChange({
+          startX: shapeStart.current.x,
+          startY: shapeStart.current.y,
+          endX: point.x,
+          endY: point.y,
+        });
       }
       return;
     }
@@ -926,45 +1295,15 @@ function PlanViewport({
 
   const handlePointerUp = () => {
     panDragStart.current = null;
-    lineDrawStart.current = null;
+    shapeStart.current = null;
+    setIsInteracting(false);
   };
 
   const showReset = zoom > 1.01 || rotation !== 0 || offset.x !== 0 || offset.y !== 0;
-  const savedCalibrationLine = calibration
-    ? {
-        startX: calibration.startX,
-        startY: calibration.startY,
-        endX: calibration.endX,
-        endY: calibration.endY,
-      }
-    : null;
-
-  const savedCalibrationPoints = savedCalibrationLine
-    ? {
-        start: viewportPointFromImage({
-          x: savedCalibrationLine.startX,
-          y: savedCalibrationLine.startY,
-        }),
-        end: viewportPointFromImage({ x: savedCalibrationLine.endX, y: savedCalibrationLine.endY }),
-      }
-    : null;
-
-  const draftCalibrationPoints = calibrationDraft
-    ? {
-        start: viewportPointFromImage({ x: calibrationDraft.startX, y: calibrationDraft.startY }),
-        end: viewportPointFromImage({ x: calibrationDraft.endX, y: calibrationDraft.endY }),
-      }
-    : null;
-
-  const draftLengthPoints = lengthLineDraft
-    ? {
-        start: viewportPointFromImage({ x: lengthLineDraft.startX, y: lengthLineDraft.startY }),
-        end: viewportPointFromImage({ x: lengthLineDraft.endX, y: lengthLineDraft.endY }),
-      }
-    : null;
+  const draftMeasurementRect = measurementDraft ? normalizeRectDraft(measurementDraft) : null;
 
   return (
-    <div className="grid h-full gap-4">
+    <div className="grid h-full min-h-0 gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/5 bg-white/72 px-4 py-3 shadow-sm backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -1008,10 +1347,10 @@ function PlanViewport({
 
       <div
         ref={containerRef}
-        className="relative min-h-[58vh] overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
+        className="relative min-h-0 flex-1 overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
         style={{
           cursor: imageUrl
-            ? isDrawingLine
+            ? activeTool === 'calibrate' || activeTool === 'length' || activeTool === 'rectangle'
               ? 'crosshair'
               : panDragStart.current
                 ? 'grabbing'
@@ -1058,75 +1397,165 @@ function PlanViewport({
                 height: naturalSize.height || undefined,
                 transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${effectiveScale})`,
                 transformOrigin: 'center center',
-                transition:
-                  panDragStart.current || lineDrawStart.current
-                    ? 'none'
-                    : 'transform 0.08s ease-out',
+                transition: isInteracting ? 'none' : 'transform 0.08s ease-out',
               }}
             />
 
             <svg className="pointer-events-none absolute inset-0 h-full w-full">
-              {savedCalibrationPoints ? (
+              {calibration ? (
                 <LineOverlay
-                  start={savedCalibrationPoints.start}
-                  end={savedCalibrationPoints.end}
+                  start={viewportPointFromImage({ x: calibration.startX, y: calibration.startY })}
+                  end={viewportPointFromImage({ x: calibration.endX, y: calibration.endY })}
                   strokeClassName="stroke-emerald-500"
                   dotClassName="fill-emerald-500"
                 />
               ) : null}
 
-              {lengthLines.map((line) => {
-                const points = {
-                  start: viewportPointFromImage({ x: line.startX, y: line.startY }),
-                  end: viewportPointFromImage({ x: line.endX, y: line.endY }),
-                };
-                const active = line.id === selectedLengthLineId;
-                return (
-                  <LineOverlay
-                    key={line.id}
-                    start={points.start}
-                    end={points.end}
-                    strokeClassName={active ? 'stroke-brand-700' : 'stroke-[#8b6f47]'}
-                    dotClassName={active ? 'fill-brand-700' : 'fill-[#8b6f47]'}
-                    label={line.label?.trim() || undefined}
-                  />
-                );
-              })}
-
-              {draftCalibrationPoints ? (
+              {lengthLines.map((line) => (
                 <LineOverlay
-                  start={draftCalibrationPoints.start}
-                  end={draftCalibrationPoints.end}
+                  key={line.id}
+                  start={viewportPointFromImage({ x: line.startX, y: line.startY })}
+                  end={viewportPointFromImage({ x: line.endX, y: line.endY })}
+                  strokeClassName={
+                    line.id === selectedLengthLineId ? 'stroke-brand-700' : 'stroke-[#8b6f47]'
+                  }
+                  dotClassName={
+                    line.id === selectedLengthLineId ? 'fill-brand-700' : 'fill-[#8b6f47]'
+                  }
+                  label={line.label?.trim() || undefined}
+                />
+              ))}
+
+              {measurements.map((measurement) => (
+                <RectOverlay
+                  key={measurement.id}
+                  points={buildRectPolygonPoints(measurement).map(viewportPointFromImage)}
+                  active={measurement.id === selectedMeasurementId}
+                />
+              ))}
+
+              {calibrationDraft ? (
+                <LineOverlay
+                  start={viewportPointFromImage({
+                    x: calibrationDraft.startX,
+                    y: calibrationDraft.startY,
+                  })}
+                  end={viewportPointFromImage({
+                    x: calibrationDraft.endX,
+                    y: calibrationDraft.endY,
+                  })}
                   strokeClassName="stroke-brand-600"
                   dotClassName="fill-brand-600"
                   dashed
                 />
               ) : null}
 
-              {draftLengthPoints ? (
+              {lengthLineDraft ? (
                 <LineOverlay
-                  start={draftLengthPoints.start}
-                  end={draftLengthPoints.end}
+                  start={viewportPointFromImage({
+                    x: lengthLineDraft.startX,
+                    y: lengthLineDraft.startY,
+                  })}
+                  end={viewportPointFromImage({ x: lengthLineDraft.endX, y: lengthLineDraft.endY })}
                   strokeClassName="stroke-[#c17a00]"
                   dotClassName="fill-[#c17a00]"
                   dashed
-                  label={selectedLengthLineId ? 'Replacement' : 'Draft'}
+                  label="Draft"
+                />
+              ) : null}
+
+              {draftMeasurementRect ? (
+                <RectOverlay
+                  points={buildRectPolygonPoints(draftMeasurementRect).map(viewportPointFromImage)}
+                  active
+                  dashed
                 />
               ) : null}
             </svg>
 
             <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
-              {isCalibrating
+              {activeTool === 'calibrate'
                 ? 'Draw calibration line • scroll to zoom • double-click to reset'
-                : isLengthMeasuring
+                : activeTool === 'length'
                   ? 'Draw measured line • scroll to zoom • double-click to reset'
-                  : 'Scroll to zoom • drag to pan • double-click to reset'}
+                  : activeTool === 'rectangle'
+                    ? 'Draw measured area • scroll to zoom • double-click to reset'
+                    : 'Scroll to zoom • drag to pan • double-click to reset'}
             </div>
           </>
         ) : null}
       </div>
     </div>
   );
+}
+
+function buildMeasurementItems(
+  roomsWithItems: RoomWithItems[],
+  proposalCategoriesWithItems: ProposalCategoryWithItems[],
+) {
+  const items: MeasurementItemRef[] = [];
+
+  for (const room of roomsWithItems) {
+    for (const item of room.items) {
+      items.push({
+        key: `ffe:${item.id}`,
+        targetKind: 'ffe',
+        targetItemId: item.id,
+        targetTagSnapshot: item.itemIdTag?.trim() || item.itemName,
+        primaryLabel: item.itemIdTag?.trim() || item.itemName,
+        secondaryLabel: item.itemName,
+        containerLabel: room.name,
+      });
+    }
+  }
+
+  for (const category of proposalCategoriesWithItems) {
+    for (const item of category.items) {
+      items.push({
+        key: `proposal:${item.id}`,
+        targetKind: 'proposal',
+        targetItemId: item.id,
+        targetTagSnapshot: item.productTag?.trim() || item.description || 'Proposal item',
+        primaryLabel: item.productTag?.trim() || item.description || 'Proposal item',
+        secondaryLabel: item.description || item.location || 'Proposal item',
+        containerLabel: category.name,
+      });
+    }
+  }
+
+  return items.sort((a, b) => a.primaryLabel.localeCompare(b.primaryLabel));
+}
+
+function normalizeRectDraft(rect: RectDraft) {
+  return {
+    x: Math.min(rect.startX, rect.endX),
+    y: Math.min(rect.startY, rect.endY),
+    width: Math.abs(rect.endX - rect.startX),
+    height: Math.abs(rect.endY - rect.startY),
+  };
+}
+
+function buildRectPolygonPoints(rect: {
+  rectX?: number;
+  rectY?: number;
+  rectWidth?: number;
+  rectHeight?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+}) {
+  const x = rect.rectX ?? rect.x ?? 0;
+  const y = rect.rectY ?? rect.y ?? 0;
+  const width = rect.rectWidth ?? rect.width ?? 0;
+  const height = rect.rectHeight ?? rect.height ?? 0;
+
+  return [
+    { x, y },
+    { x: x + width, y },
+    { x: x + width, y: y + height },
+    { x, y: y + height },
+  ];
 }
 
 function LineOverlay({
@@ -1188,6 +1617,29 @@ function LineOverlay({
   );
 }
 
+function RectOverlay({
+  points,
+  active,
+  dashed = false,
+}: {
+  points: ImagePoint[];
+  active: boolean;
+  dashed?: boolean;
+}) {
+  const pointsAttr = points.map((point) => `${point.x},${point.y}`).join(' ');
+
+  return (
+    <polygon
+      points={pointsAttr}
+      fill={active ? 'rgba(201, 151, 35, 0.16)' : 'rgba(82, 82, 91, 0.08)'}
+      stroke={active ? '#c99723' : '#71717a'}
+      strokeWidth={active ? 3.5 : 2}
+      strokeDasharray={dashed ? '10 8' : undefined}
+      strokeLinejoin="round"
+    />
+  );
+}
+
 function getLineLength(line: Pick<LineDraft, 'startX' | 'startY' | 'endX' | 'endY'>) {
   return Math.hypot(line.endX - line.startX, line.endY - line.startY);
 }
@@ -1206,20 +1658,68 @@ function formatDisplayNumber(value: number) {
   return value.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
 }
 
+function ToolbarIcon({ children }: { children: ReactNode }) {
+  return <span className="h-5 w-5">{children}</span>;
+}
+
+function CalibrateIcon() {
+  return (
+    <ToolbarIcon>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M3 15 15 3" />
+        <circle cx="4" cy="16" r="2" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="4" r="2" fill="currentColor" stroke="none" />
+      </svg>
+    </ToolbarIcon>
+  );
+}
+
+function LengthLineIcon() {
+  return (
+    <ToolbarIcon>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M3 10h14" />
+        <path d="M5 7v6M9 8.5v3M13 8.5v3M17 7v6" />
+      </svg>
+    </ToolbarIcon>
+  );
+}
+
+function RectangleIcon() {
+  return (
+    <ToolbarIcon>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <rect x="4" y="5" width="12" height="10" rx="1.5" />
+      </svg>
+    </ToolbarIcon>
+  );
+}
+
+function CropIcon() {
+  return (
+    <ToolbarIcon>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M6 3v11a2 2 0 0 0 2 2h9" />
+        <path d="M3 6h11a2 2 0 0 1 2 2v9" />
+      </svg>
+    </ToolbarIcon>
+  );
+}
+
 function PlanCanvasSkeleton() {
   return (
-    <div className="-mx-4 grid min-h-[calc(100vh-185px)] gap-0 bg-[#f3f1ea] md:-mx-6 xl:grid-cols-[96px_minmax(0,1fr)_360px]">
-      <div className="border-r border-black/5 bg-white/72 p-3">
+    <div className="grid h-full min-h-0 gap-0 bg-[#f3f1ea] xl:grid-cols-[84px_minmax(0,1fr)_380px]">
+      <div className="overflow-hidden border-r border-black/5 bg-white/72 p-3">
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-16 animate-pulse rounded-2xl bg-white" />
+            <div key={index} className="h-14 w-14 animate-pulse rounded-2xl bg-white" />
           ))}
         </div>
       </div>
       <div className="p-6">
         <div className="h-full min-h-[70vh] animate-pulse rounded-[28px] bg-white/70" />
       </div>
-      <div className="border-l border-black/5 bg-white/72 p-4">
+      <div className="overflow-hidden border-l border-black/5 bg-white/72 p-4">
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="h-28 animate-pulse rounded-2xl bg-white" />

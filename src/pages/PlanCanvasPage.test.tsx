@@ -18,6 +18,78 @@ const project = {
   updatedAt: '2026-05-06T00:00:00Z',
 };
 
+const roomsWithItems = [
+  {
+    id: 'room-1',
+    projectId: 'project-1',
+    name: 'Lobby',
+    sortOrder: 0,
+    createdAt: '2026-05-01T00:00:00Z',
+    updatedAt: '2026-05-01T00:00:00Z',
+    items: [
+      {
+        id: 'item-1',
+        roomId: 'room-1',
+        itemName: 'Banquette',
+        description: null,
+        category: null,
+        itemIdTag: 'A-101',
+        dimensions: null,
+        seatHeight: null,
+        notes: null,
+        qty: 1,
+        unitCostCents: 0,
+        leadTime: null,
+        status: 'pending' as const,
+        imageUrl: null,
+        linkUrl: null,
+        sortOrder: 0,
+        version: 1,
+        createdAt: '2026-05-01T00:00:00Z',
+        updatedAt: '2026-05-01T00:00:00Z',
+        materials: [],
+      },
+    ],
+  },
+];
+
+const proposalCategoriesWithItems = [
+  {
+    id: 'proposal-category-1',
+    projectId: 'project-1',
+    name: 'Millwork',
+    sortOrder: 0,
+    createdAt: '2026-05-01T00:00:00Z',
+    updatedAt: '2026-05-01T00:00:00Z',
+    items: [
+      {
+        id: 'proposal-item-1',
+        categoryId: 'proposal-category-1',
+        productTag: 'P-42',
+        plan: '',
+        drawings: '',
+        location: '',
+        description: 'Reception millwork',
+        sizeLabel: '',
+        sizeMode: 'imperial' as const,
+        sizeW: '',
+        sizeD: '',
+        sizeH: '',
+        sizeUnit: 'ft/in' as const,
+        materials: [],
+        cbm: 0,
+        quantity: 1,
+        quantityUnit: 'unit',
+        unitCostCents: 0,
+        sortOrder: 0,
+        version: 1,
+        createdAt: '2026-05-01T00:00:00Z',
+        updatedAt: '2026-05-01T00:00:00Z',
+      },
+    ],
+  },
+];
+
 vi.mock('../hooks', () => ({
   useMeasuredPlans: vi.fn(() => ({
     data: [
@@ -91,6 +163,33 @@ vi.mock('../hooks', () => ({
         : [],
     isLoading: false,
   })),
+  usePlanMeasurements: vi.fn((_projectId: string, planId: string) => ({
+    data:
+      planId === 'plan-2'
+        ? [
+            {
+              id: 'measurement-1',
+              measuredPlanId: 'plan-2',
+              targetKind: 'ffe',
+              targetItemId: 'item-1',
+              targetTagSnapshot: 'A-101',
+              rectX: 100,
+              rectY: 120,
+              rectWidth: 240,
+              rectHeight: 180,
+              horizontalSpanBase: 3657.6,
+              verticalSpanBase: 2743.2,
+              cropX: null,
+              cropY: null,
+              cropWidth: null,
+              cropHeight: null,
+              createdAt: '2026-05-06T00:00:00Z',
+              updatedAt: '2026-05-06T00:00:00Z',
+            },
+          ]
+        : [],
+    isLoading: false,
+  })),
   useSetPlanCalibration: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
@@ -104,6 +203,18 @@ vi.mock('../hooks', () => ({
     isPending: false,
   })),
   useDeletePlanLengthLine: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useCreatePlanMeasurement: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useUpdatePlanMeasurement: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useDeletePlanMeasurement: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
   })),
@@ -121,7 +232,12 @@ describe('PlanCanvasPage', () => {
   it('renders the workspace shell and disables downstream tools when uncalibrated', () => {
     render(
       <MemoryRouter>
-        <PlanCanvasPage project={project} planId="plan-1" />
+        <PlanCanvasPage
+          project={project}
+          planId="plan-1"
+          roomsWithItems={roomsWithItems}
+          proposalCategoriesWithItems={proposalCategoriesWithItems}
+        />
       </MemoryRouter>,
     );
 
@@ -140,7 +256,12 @@ describe('PlanCanvasPage', () => {
   it('shows saved calibration details for calibrated plans', () => {
     render(
       <MemoryRouter>
-        <PlanCanvasPage project={project} planId="plan-2" />
+        <PlanCanvasPage
+          project={project}
+          planId="plan-2"
+          roomsWithItems={roomsWithItems}
+          proposalCategoriesWithItems={proposalCategoriesWithItems}
+        />
       </MemoryRouter>,
     );
 
@@ -148,5 +269,7 @@ describe('PlanCanvasPage', () => {
     expect(screen.getAllByText(/12 ft/i)).toHaveLength(2);
     expect(screen.getByRole('button', { name: 'Length Line' })).toBeEnabled();
     expect(screen.getByText('Banquette wall')).toBeInTheDocument();
+    expect(screen.getByText('Measured Items')).toBeInTheDocument();
+    expect(screen.getByText('A-101')).toBeInTheDocument();
   });
 });

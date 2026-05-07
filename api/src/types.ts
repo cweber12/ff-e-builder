@@ -384,6 +384,23 @@ export const UpsertLengthLineSchema = z.object({
 });
 export type UpsertLengthLineInput = z.infer<typeof UpsertLengthLineSchema>;
 
+export const UpsertMeasurementSchema = z.object({
+  target_kind: z.enum(['ffe', 'proposal']),
+  target_item_id: z.string().uuid(),
+  target_tag_snapshot: z.string().min(1).max(255),
+  rect_x: z.number().min(0),
+  rect_y: z.number().min(0),
+  rect_width: z.number().positive(),
+  rect_height: z.number().positive(),
+  horizontal_span_base: z.number().nonnegative(),
+  vertical_span_base: z.number().nonnegative(),
+  crop_x: z.number().min(0).max(1).nullable().default(null),
+  crop_y: z.number().min(0).max(1).nullable().default(null),
+  crop_width: z.number().positive().max(1).nullable().default(null),
+  crop_height: z.number().positive().max(1).nullable().default(null),
+});
+export type UpsertMeasurementInput = z.infer<typeof UpsertMeasurementSchema>;
+
 export const CalibrationStatusSchema = z.enum(calibrationStatuses);
 export type CalibrationStatusInput = z.infer<typeof CalibrationStatusSchema>;
 

@@ -2,12 +2,20 @@ import { apiFetch, apiFetchResponse } from './transport';
 import {
   mapLengthLine,
   mapMeasuredPlan,
+  mapMeasurement,
   mapPlanCalibration,
   type RawLengthLine,
   type RawMeasuredPlan,
+  type RawMeasurement,
   type RawPlanCalibration,
 } from './mappers';
-import type { LengthLine, MeasuredPlan, PlanCalibration, PlanMeasurementUnit } from '../../types';
+import type {
+  LengthLine,
+  Measurement,
+  MeasuredPlan,
+  PlanCalibration,
+  PlanMeasurementUnit,
+} from '../../types';
 
 export type CreateMeasuredPlanInput = {
   name: string;
@@ -32,6 +40,22 @@ export type UpsertPlanLengthLineInput = {
   endY: number;
   measuredLengthBase: number | null;
   label?: string | null;
+};
+
+export type UpsertPlanMeasurementInput = {
+  targetKind: Measurement['targetKind'];
+  targetItemId: string;
+  targetTagSnapshot: string;
+  rectX: number;
+  rectY: number;
+  rectWidth: number;
+  rectHeight: number;
+  horizontalSpanBase: number;
+  verticalSpanBase: number;
+  cropX?: number | null;
+  cropY?: number | null;
+  cropWidth?: number | null;
+  cropHeight?: number | null;
 };
 
 export const plansApi = {
@@ -131,6 +155,71 @@ export const plansApi = {
 
   deleteLengthLine: (projectId: string, planId: string, lineId: string): Promise<void> =>
     apiFetch<void>(`/api/v1/projects/${projectId}/plans/${planId}/length-lines/${lineId}`, {
+      method: 'DELETE',
+    }),
+
+  listMeasurements: (projectId: string, planId: string): Promise<Measurement[]> =>
+    apiFetch<{ measurements: RawMeasurement[] }>(
+      `/api/v1/projects/${projectId}/plans/${planId}/measurements`,
+    ).then((r) => r.measurements.map(mapMeasurement)),
+
+  createMeasurement: (
+    projectId: string,
+    planId: string,
+    input: UpsertPlanMeasurementInput,
+  ): Promise<Measurement> =>
+    apiFetch<{ measurement: RawMeasurement }>(
+      `/api/v1/projects/${projectId}/plans/${planId}/measurements`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          target_kind: input.targetKind,
+          target_item_id: input.targetItemId,
+          target_tag_snapshot: input.targetTagSnapshot,
+          rect_x: input.rectX,
+          rect_y: input.rectY,
+          rect_width: input.rectWidth,
+          rect_height: input.rectHeight,
+          horizontal_span_base: input.horizontalSpanBase,
+          vertical_span_base: input.verticalSpanBase,
+          crop_x: input.cropX ?? null,
+          crop_y: input.cropY ?? null,
+          crop_width: input.cropWidth ?? null,
+          crop_height: input.cropHeight ?? null,
+        }),
+      },
+    ).then((r) => mapMeasurement(r.measurement)),
+
+  updateMeasurement: (
+    projectId: string,
+    planId: string,
+    measurementId: string,
+    input: UpsertPlanMeasurementInput,
+  ): Promise<Measurement> =>
+    apiFetch<{ measurement: RawMeasurement }>(
+      `/api/v1/projects/${projectId}/plans/${planId}/measurements/${measurementId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          target_kind: input.targetKind,
+          target_item_id: input.targetItemId,
+          target_tag_snapshot: input.targetTagSnapshot,
+          rect_x: input.rectX,
+          rect_y: input.rectY,
+          rect_width: input.rectWidth,
+          rect_height: input.rectHeight,
+          horizontal_span_base: input.horizontalSpanBase,
+          vertical_span_base: input.verticalSpanBase,
+          crop_x: input.cropX ?? null,
+          crop_y: input.cropY ?? null,
+          crop_width: input.cropWidth ?? null,
+          crop_height: input.cropHeight ?? null,
+        }),
+      },
+    ).then((r) => mapMeasurement(r.measurement)),
+
+  deleteMeasurement: (projectId: string, planId: string, measurementId: string): Promise<void> =>
+    apiFetch<void>(`/api/v1/projects/${projectId}/plans/${planId}/measurements/${measurementId}`, {
       method: 'DELETE',
     }),
 

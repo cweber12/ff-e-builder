@@ -12,6 +12,8 @@
 
 - **Never run `pnpm typecheck`, `pnpm lint`, `pnpm test`, or `pnpm build` yourself.** After completing a change, output the command `pnpm typecheck && pnpm lint && pnpm test && pnpm build` as a copy-pasteable prompt for the user or a cheap delegated model to run. Wait for the output to be reported before proceeding. Only draft the commit message after the user confirms all four pass.
 
+- **Before any repo-wide search or verification run, pause and hand off to a cheap model.** If you need pattern discovery across the repo (`rg`, broad grep/search, “find all usages”) or need tests/typecheck/lint/build output, do not run it yourself. Instead, output a cheap-model prompt that says exactly what to inspect or run and exactly what format to return. Wait for the returned results before proceeding.
+
 - **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
@@ -143,3 +145,14 @@ Return: full terminal output
 ```
 
 The user pastes this to the cheap model, then pastes the output back. The heavy model resumes from the reported result.
+
+For repo-wide search or context gathering, use this format:
+
+```text
+TASK FOR CHEAP MODEL:
+Scope: <files or directories>
+Find: <pattern / question to answer>
+Return format:
+- <bullet or JSON format required>
+- Include exact file paths and line numbers when relevant
+```

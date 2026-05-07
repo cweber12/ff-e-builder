@@ -16,6 +16,7 @@ export type {
   CreateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
   UpsertPlanLengthLineInput,
+  UpsertPlanMeasurementInput,
 } from './api/plans';
 export type {
   CreateProposalCategoryInput,

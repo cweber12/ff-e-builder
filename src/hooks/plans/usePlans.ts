@@ -7,8 +7,9 @@ import type {
   CreateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
   UpsertPlanLengthLineInput,
+  UpsertPlanMeasurementInput,
 } from '../../lib/api';
-import type { LengthLine, MeasuredPlan, PlanCalibration } from '../../types';
+import type { LengthLine, Measurement, MeasuredPlan, PlanCalibration } from '../../types';
 
 export function useMeasuredPlans(projectId: string) {
   return useQuery({
@@ -126,5 +127,76 @@ export function useDeletePlanLengthLine(projectId: string, planId: string) {
       );
     },
     onError: (err) => toast.error(`Length Line delete failed: ${err.message}`),
+  });
+}
+
+export function usePlanMeasurements(projectId: string, planId: string) {
+  return useQuery({
+    queryKey: planKeys.measurements(projectId, planId),
+    queryFn: () => api.plans.listMeasurements(projectId, planId),
+    enabled: projectId.length > 0 && planId.length > 0,
+  });
+}
+
+export function useCreatePlanMeasurement(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpsertPlanMeasurementInput) =>
+      api.plans.createMeasurement(projectId, planId, input),
+    onSuccess: (measurement) => {
+      queryClient.setQueryData<Measurement[]>(planKeys.measurements(projectId, planId), (old) => [
+        measurement,
+        ...(old ?? []),
+      ]);
+      queryClient.setQueryData<MeasuredPlan[]>(planKeys.forProject(projectId), (old) =>
+        (old ?? []).map((plan) =>
+          plan.id === planId ? { ...plan, measurementCount: plan.measurementCount + 1 } : plan,
+        ),
+      );
+    },
+    onError: (err) => toast.error(`Measurement save failed: ${err.message}`),
+  });
+}
+
+export function useUpdatePlanMeasurement(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      measurementId,
+      input,
+    }: {
+      measurementId: string;
+      input: UpsertPlanMeasurementInput;
+    }) => api.plans.updateMeasurement(projectId, planId, measurementId, input),
+    onSuccess: (measurement) => {
+      queryClient.setQueryData<Measurement[]>(planKeys.measurements(projectId, planId), (old) =>
+        (old ?? []).map((candidate) => (candidate.id === measurement.id ? measurement : candidate)),
+      );
+    },
+    onError: (err) => toast.error(`Measurement update failed: ${err.message}`),
+  });
+}
+
+export function useDeletePlanMeasurement(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (measurement: Measurement) =>
+      api.plans.deleteMeasurement(projectId, planId, measurement.id),
+    onSuccess: (_data, measurement) => {
+      queryClient.setQueryData<Measurement[]>(planKeys.measurements(projectId, planId), (old) =>
+        removeListItem(old, measurement.id),
+      );
+      queryClient.setQueryData<MeasuredPlan[]>(planKeys.forProject(projectId), (old) =>
+        (old ?? []).map((plan) =>
+          plan.id === planId
+            ? { ...plan, measurementCount: Math.max(0, plan.measurementCount - 1) }
+            : plan,
+        ),
+      );
+    },
+    onError: (err) => toast.error(`Measurement delete failed: ${err.message}`),
   });
 }

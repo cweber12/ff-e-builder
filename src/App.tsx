@@ -120,13 +120,14 @@ function ProjectLayout() {
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [imageProject, setImageProject] = useState<Project | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
+  const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
 
   const isLoading = projectsLoading || dataLoading || proposalLoading;
   return (
-    <main className="min-h-screen bg-surface-muted">
+    <main className="flex min-h-screen flex-col bg-surface-muted">
       <ProjectHeader
         project={project}
         showToolNavigation={false}
@@ -196,19 +197,35 @@ function ProjectLayout() {
               )}
             </div>
           </nav>
-          <section className="project-content mx-auto max-w-7xl px-4 py-6 md:px-6">
-            <Outlet
-              context={
-                {
-                  project,
-                  roomsWithItems,
-                  proposalCategoriesWithItems,
-                  onImport: () => setImportOpen(true),
-                  onProposalImport: () => setProposalImportOpen(true),
-                } satisfies ProjectContext
-              }
-            />
-          </section>
+          {isPlanCanvasRoute ? (
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <Outlet
+                context={
+                  {
+                    project,
+                    roomsWithItems,
+                    proposalCategoriesWithItems,
+                    onImport: () => setImportOpen(true),
+                    onProposalImport: () => setProposalImportOpen(true),
+                  } satisfies ProjectContext
+                }
+              />
+            </div>
+          ) : (
+            <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
+              <Outlet
+                context={
+                  {
+                    project,
+                    roomsWithItems,
+                    proposalCategoriesWithItems,
+                    onImport: () => setImportOpen(true),
+                    onProposalImport: () => setProposalImportOpen(true),
+                  } satisfies ProjectContext
+                }
+              />
+            </section>
+          )}
           {project && (
             <>
               <ImportExcelModal
@@ -470,9 +487,16 @@ function ProjectPlansRoute() {
 }
 
 function ProjectPlanCanvasRoute() {
-  const { project } = useProjectContext();
+  const { project, roomsWithItems, proposalCategoriesWithItems } = useProjectContext();
   const { planId = '' } = useParams();
-  return <PlanCanvasPage project={project} planId={planId} />;
+  return (
+    <PlanCanvasPage
+      project={project}
+      planId={planId}
+      roomsWithItems={roomsWithItems}
+      proposalCategoriesWithItems={proposalCategoriesWithItems}
+    />
+  );
 }
 
 function useProjectContext() {

@@ -4,12 +4,14 @@ import type {
   Env,
   HonoVariables,
   LengthLine,
+  Measurement,
   MeasuredPlan,
   PlanCalibration,
 } from '../types';
 import {
   CreateMeasuredPlanSchema,
   UpdatePlanCalibrationSchema,
+  UpsertMeasurementSchema,
   UpsertLengthLineSchema,
 } from '../types';
 import { assertProjectOwnership } from '../lib/ownership';
@@ -89,6 +91,28 @@ async function getOwnedLengthLine(
   `;
 
   return (rows[0] as LengthLine | undefined) ?? null;
+}
+
+async function getOwnedMeasurement(
+  env: Env,
+  uid: string,
+  projectId: string,
+  planId: string,
+  measurementId: string,
+): Promise<Measurement | null> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT m.*
+    FROM measurements m
+    INNER JOIN measured_plans mp ON mp.id = m.measured_plan_id
+    WHERE m.id = ${measurementId}
+      AND m.measured_plan_id = ${planId}
+      AND mp.project_id = ${projectId}
+      AND mp.owner_uid = ${uid}
+    LIMIT 1
+  `;
+
+  return (rows[0] as Measurement | undefined) ?? null;
 }
 
 router.get('/:id/plans', async (c) => {
@@ -413,6 +437,142 @@ router.delete('/:projectId/plans/:planId/length-lines/:lineId', async (c) => {
   await sql`
     DELETE FROM length_lines
     WHERE id = ${lineId}
+      AND measured_plan_id = ${planId}
+  `;
+
+  return c.body(null, 204);
+});
+
+router.get('/:projectId/plans/:planId/measurements', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    SELECT *
+    FROM measurements
+    WHERE measured_plan_id = ${planId}
+    ORDER BY created_at DESC
+  `;
+
+  return c.json({ measurements: rows as Measurement[] });
+});
+
+router.post('/:projectId/plans/:planId/measurements', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json<unknown>().catch(() => null);
+  if (!body) return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const parsed = UpsertMeasurementSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const measurementId = crypto.randomUUID();
+  const rows = await sql`
+    INSERT INTO measurements (
+      id,
+      measured_plan_id,
+      target_kind,
+      target_item_id,
+      target_tag_snapshot,
+      rect_x,
+      rect_y,
+      rect_width,
+      rect_height,
+      horizontal_span_base,
+      vertical_span_base,
+      crop_x,
+      crop_y,
+      crop_width,
+      crop_height
+    )
+    VALUES (
+      ${measurementId},
+      ${planId},
+      ${parsed.data.target_kind},
+      ${parsed.data.target_item_id},
+      ${parsed.data.target_tag_snapshot},
+      ${parsed.data.rect_x},
+      ${parsed.data.rect_y},
+      ${parsed.data.rect_width},
+      ${parsed.data.rect_height},
+      ${parsed.data.horizontal_span_base},
+      ${parsed.data.vertical_span_base},
+      ${parsed.data.crop_x},
+      ${parsed.data.crop_y},
+      ${parsed.data.crop_width},
+      ${parsed.data.crop_height}
+    )
+    RETURNING *
+  `;
+
+  return c.json({ measurement: rows[0] as Measurement }, 201);
+});
+
+router.patch('/:projectId/plans/:planId/measurements/:measurementId', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+  const measurementId = c.req.param('measurementId');
+
+  const measurement = await getOwnedMeasurement(c.env, uid, projectId, planId, measurementId);
+  if (!measurement) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json<unknown>().catch(() => null);
+  if (!body) return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const parsed = UpsertMeasurementSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    UPDATE measurements
+    SET
+      target_kind = ${parsed.data.target_kind},
+      target_item_id = ${parsed.data.target_item_id},
+      target_tag_snapshot = ${parsed.data.target_tag_snapshot},
+      rect_x = ${parsed.data.rect_x},
+      rect_y = ${parsed.data.rect_y},
+      rect_width = ${parsed.data.rect_width},
+      rect_height = ${parsed.data.rect_height},
+      horizontal_span_base = ${parsed.data.horizontal_span_base},
+      vertical_span_base = ${parsed.data.vertical_span_base},
+      crop_x = ${parsed.data.crop_x},
+      crop_y = ${parsed.data.crop_y},
+      crop_width = ${parsed.data.crop_width},
+      crop_height = ${parsed.data.crop_height},
+      updated_at = now()
+    WHERE id = ${measurementId}
+      AND measured_plan_id = ${planId}
+    RETURNING *
+  `;
+
+  return c.json({ measurement: rows[0] as Measurement });
+});
+
+router.delete('/:projectId/plans/:planId/measurements/:measurementId', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+  const measurementId = c.req.param('measurementId');
+
+  const measurement = await getOwnedMeasurement(c.env, uid, projectId, planId, measurementId);
+  if (!measurement) return c.json({ error: 'Not found' }, 404);
+
+  const sql = getDb(c.env);
+  await sql`
+    DELETE FROM measurements
+    WHERE id = ${measurementId}
       AND measured_plan_id = ${planId}
   `;
 
