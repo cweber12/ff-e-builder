@@ -170,6 +170,7 @@
   .catalog-item-name {
     min-width: 0;
     margin: 0;
+    font-family: 'Lora Variable', serif;
     font-size: 30px;
     font-weight: 600;
     line-height: 1.05;
@@ -289,11 +290,15 @@
 
   .catalog-second-section {
     display: grid;
-    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
     gap: 18px;
     align-items: stretch;
     max-height: 360px;
-    min-height: 320px;
+    min-height: 220px;
+  }
+
+  .catalog-page--two-options .catalog-second-section {
+    grid-template-columns: 1fr 1fr;
   }
 
   .catalog-rendering-panel,
@@ -309,22 +314,10 @@
     min-height: 0;
     flex: 1 1 auto;
     overflow: hidden;
-    border: 1px solid theme('colors.gray.200');
-    border-radius: 18px;
-  }
-
-  .catalog-rendering-frame {
-    padding: 18px;
-    background: theme('colors.gray.50');
   }
 
   .catalog-rendering-frame > div {
     height: 100%;
-  }
-
-  .catalog-notes-content {
-    padding: 16px 18px;
-    background: white;
   }
 
   .catalog-notes {
@@ -383,14 +376,39 @@
     aspect-ratio: 1.45;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid theme('colors.gray.200');
-    border-radius: 16px;
-    background: theme('colors.brand.50');
   }
 
   .catalog-option-card img {
     height: 100%;
     width: 100%;
+  }
+
+  .catalog-add-option-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1.5px dashed theme('colors.brand.300');
+    background: theme('colors.brand.50');
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: theme('colors.brand.600');
+    cursor: pointer;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .catalog-add-option-btn:hover:not(:disabled) {
+    border-color: theme('colors.brand.500');
+    background: rgb(var(--color-brand-100));
+  }
+
+  .catalog-add-option-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .catalog-option-check {
@@ -461,34 +479,39 @@
 
   .catalog-approval-band {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     border: 1px solid theme('colors.gray.200');
-    border-radius: 18px;
+    border-radius: 12px;
     background: theme('colors.gray.50');
-    padding: 16px 18px;
+    padding: 14px 18px;
+  }
+
+  .catalog-approval-label {
+    margin-bottom: 2px;
   }
 
   .catalog-approval-row {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(120px, 0.55fr) minmax(0, 0.95fr);
     gap: 18px;
-    align-items: start;
+    align-items: end;
   }
 
   .catalog-approval-field {
     display: grid;
-    gap: 8px;
+    gap: 6px;
   }
 
-  .catalog-approval-field span,
-  .catalog-approval-checks label {
-    font-size: 11px;
+  .catalog-approval-field span {
+    font-size: 10px;
     font-weight: 600;
-    color: theme('colors.gray.600');
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: theme('colors.gray.500');
   }
 
   .catalog-approval-line {
-    height: 28px;
+    height: 32px;
     border-bottom: 1px solid theme('colors.gray.400');
   }
 
@@ -498,14 +521,48 @@
 
   .catalog-approval-checks {
     display: grid;
-    gap: 8px;
-    padding-top: 1px;
+    gap: 10px;
+    padding-bottom: 4px;
   }
 
   .catalog-approval-checks label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
+    font-size: 11px;
+    font-weight: 500;
+    color: theme('colors.gray.700');
+    cursor: default;
+  }
+
+  .catalog-approval-check-input {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid theme('colors.gray.500');
+    border-radius: 3px;
+    background: white;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    cursor: pointer;
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .catalog-approval-check-input:checked {
+    border-color: theme('colors.brand.600');
+    background-color: theme('colors.brand.600');
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 7l3.5 3.5 5.5-6' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+  }
+
+  .catalog-approval-check-input:focus-visible {
+    outline: 2px solid theme('colors.brand.500');
+    outline-offset: 2px;
   }
 
   .catalog-footer {

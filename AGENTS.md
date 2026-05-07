@@ -10,7 +10,7 @@
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
-- **Never commit automatically.** After every change, run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` and confirm all four pass before outputting a commit message. Output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_.
+- **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not run `pnpm typecheck`, `pnpm lint`, `pnpm test`, or `pnpm build` — provide the check command as a prompt for the user or a delegated model to run, then wait for any errors to be reported before proceeding.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
@@ -96,7 +96,7 @@ Every feature is done when **all** of the following are true:
 - [ ] **`pnpm build` passes** — exits 0
 - [ ] **Commit message drafted** — conventional-commits format with a body explaining the _why_
 
-> Run all four checks in sequence: `pnpm typecheck && pnpm lint && pnpm test && pnpm build`. Only draft the commit message after all four pass.
+> Provide the check command `pnpm typecheck && pnpm lint && pnpm test && pnpm build` as a prompt for the user or a delegated lighter model to run. Do not execute it yourself. Only draft the commit message after the user confirms all four pass.
 
 ---
 

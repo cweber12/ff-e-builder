@@ -394,7 +394,6 @@ function drawOptionsStrip(
   if (layout === 'stacked') {
     const cardWidth = Math.min(84, width * 0.56);
     const cardX = x + (width - cardWidth) / 2;
-    drawPanel(doc, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, PANEL_BG);
     if (visibleOptions[0]?.dataUrl) {
       addContainedImage(
         doc,
@@ -403,7 +402,7 @@ function drawOptionsStrip(
         cardsY,
         cardWidth,
         OPTION_CARD_HEIGHT,
-        2,
+        0,
       );
     }
     drawOptionSelectionMark(
@@ -418,9 +417,8 @@ function drawOptionsStrip(
   const cardWidth = (width - OPTION_CARD_GAP) / 2;
   visibleOptions.forEach((option, index) => {
     const cardX = x + index * (cardWidth + OPTION_CARD_GAP);
-    drawPanel(doc, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, PANEL_BG);
     if (option.dataUrl) {
-      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, 2);
+      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, 0);
     }
     drawOptionSelectionMark(doc, cardX + cardWidth - 4, cardsY + 4, option.isPrimary);
   });
@@ -484,34 +482,36 @@ function drawMaterialsStrip(
 
 function drawApprovalBand(doc: jsPDF, itemId: string, x: number, y: number, width: number) {
   drawPanel(doc, x, y, width, APPROVAL_HEIGHT, APPROVAL_BG);
-  drawSectionLabel(doc, 'Customer approval', x + 4, y + 5.3);
+  drawSectionLabel(doc, 'Client Approval', x + 4, y + 5.3);
 
-  const contentY = y + 10;
   const signatureW = width * 0.5;
   const dateW = width * 0.16;
   const checksX = x + signatureW + dateW + 14;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.2);
-  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text('Signature', x + 4, contentY);
-  doc.text('Date', x + signatureW + 8, contentY);
-
+  // Lines first, labels below
+  const lineY = y + 14;
   doc.setDrawColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.line(x + 4, y + 17, x + signatureW, y + 17);
-  doc.line(x + signatureW + 8, y + 17, x + signatureW + dateW, y + 17);
+  doc.line(x + 4, lineY, x + signatureW, lineY);
+  doc.line(x + signatureW + 8, lineY, x + signatureW + dateW, lineY);
 
-  addTextField(doc, `${itemId}-approval-signature`, x + 4, y + 11.5, signatureW - 4, 5);
-  addTextField(doc, `${itemId}-approval-date`, x + signatureW + 8, y + 11.5, dateW - 8, 5);
+  const labelY = lineY + 3.5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
+  doc.text('Authorized Signature', x + 4, labelY);
+  doc.text('Date', x + signatureW + 8, labelY);
 
-  addCheckboxField(doc, `${itemId}-approval-with-changes`, checksX, y + 12.2, 3.5, false);
-  addCheckboxField(doc, `${itemId}-approval-without-changes`, checksX, y + 17.5, 3.5, false);
+  addTextField(doc, `${itemId}-approval-signature`, x + 4, y + 8, signatureW - 4, 6);
+  addTextField(doc, `${itemId}-approval-date`, x + signatureW + 8, y + 8, dateW - 8, 6);
+
+  addCheckboxField(doc, `${itemId}-approval-with-revisions`, checksX, y + 8.5, 3.5, false);
+  addCheckboxField(doc, `${itemId}-approval-as-presented`, checksX, y + 14.5, 3.5, false);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.8);
   doc.setTextColor(75, 85, 99);
-  doc.text('Approved w/ changes', checksX + 5, y + 14.8);
-  doc.text('Approved w/o changes', checksX + 5, y + 20.1);
+  doc.text('Approved with revisions', checksX + 5, y + 11.5);
+  doc.text('Approved as presented', checksX + 5, y + 17.5);
 }
 
 function drawCatalogPage(
@@ -553,7 +553,8 @@ function drawCatalogPage(
   const secondSectionY = topSectionBottomY + SECTION_GAP;
   const secondSectionLabelY = secondSectionY;
   const panelY = secondSectionLabelY + 4.5;
-  const leftWidth = (CONTENT_W - COLUMN_GAP) * 0.62;
+  const leftRatio = model.optionCount === 2 ? 0.5 : 0.62;
+  const leftWidth = (CONTENT_W - COLUMN_GAP) * leftRatio;
   const rightWidth = CONTENT_W - COLUMN_GAP - leftWidth;
   const rightX = PAGE_PADDING + leftWidth + COLUMN_GAP;
 

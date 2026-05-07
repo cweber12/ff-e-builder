@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '../../../lib/cn';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
@@ -307,6 +308,21 @@ export function CatalogPage({
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
+
+  const optionImagesQuery = useImages('item_option', item.id);
+  const optionImages = useMemo(
+    () =>
+      [...(optionImagesQuery.data ?? [])]
+        .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+        .slice(0, 2),
+    [optionImagesQuery.data],
+  );
+  const setPrimary = useSetPrimaryImage('item_option', item.id);
+  const upload = useUploadImage('item_option', item.id);
+  const deleteImage = useDeleteImage('item_option', item.id);
+  const optionCount = optionImages.length;
+  const isBusy = upload.isPending || deleteImage.isPending;
+
   const projectSlug = slugify(project.name);
   const saveField = (field: EditableCatalogField, value: string, required = false) =>
     updateItem
@@ -319,9 +335,15 @@ export function CatalogPage({
       })
       .then(() => undefined);
 
+  const hasMaterials = item.materials.length > 0;
+  const hasThirdSection = optionCount > 0 || hasMaterials;
+
   return (
     <article
-      className="catalog-page mx-auto grid bg-white text-gray-950 shadow-xl"
+      className={cn(
+        'catalog-page mx-auto grid bg-white text-gray-950 shadow-xl',
+        optionCount === 2 && 'catalog-page--two-options',
+      )}
       aria-label={`${item.itemName} catalog page`}
     >
       <header className="catalog-header">
@@ -366,30 +388,10 @@ export function CatalogPage({
             }
           />
         </div>
-
-        <div className="catalog-description-row">
-          <InlineTextEdit
-            value={item.description ?? ''}
-            aria-label={`Description for ${item.itemName}`}
-            className="block"
-            inputClassName="w-full text-sm text-gray-600"
-            onSave={(value) => saveField('description', value)}
-            renderDisplay={(value) =>
-              value.trim() ? (
-                <p className="catalog-description-summary">{value}</p>
-              ) : (
-                <p className="catalog-description-summary text-gray-400 italic">
-                  Click to add a description
-                </p>
-              )
-            }
-          />
-        </div>
       </section>
 
       <section className="catalog-second-section">
         <div className="catalog-rendering-panel">
-          <div className="catalog-section-label">Rendering</div>
           <div className="catalog-rendering-frame">
             <ImageFrame
               entityType="item"
@@ -411,6 +413,24 @@ export function CatalogPage({
         </div>
 
         <div className="catalog-notes-panel">
+          <div className="catalog-description-row">
+            <InlineTextEdit
+              value={item.description ?? ''}
+              aria-label={`Description for ${item.itemName}`}
+              className="block"
+              inputClassName="w-full text-sm text-gray-600"
+              onSave={(value) => saveField('description', value)}
+              renderDisplay={(value) =>
+                value.trim() ? (
+                  <p className="catalog-description-summary">{value}</p>
+                ) : (
+                  <p className="catalog-description-summary text-gray-400 italic">
+                    Click to add a description
+                  </p>
+                )
+              }
+            />
+          </div>
           <div className="catalog-section-label">Notes</div>
           <div className="catalog-notes-content">
             <InlineTextEdit
@@ -441,9 +461,21 @@ export function CatalogPage({
         </div>
       </section>
 
-      <section className="catalog-third-section">
-        <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
-        {item.materials.length > 0 ? (
+      <section className={cn('catalog-third-section', !hasThirdSection && 'no-print')}>
+        <CatalogOptionRenderings
+          optionImages={optionImages}
+          itemName={item.itemName}
+          isBusy={isBusy}
+          onSelect={(imageId) => setPrimary.mutate(imageId)}
+          onUpload={(file, index) =>
+            upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
+          }
+          onDelete={(imageId) => deleteImage.mutate(imageId)}
+          onAdd={(file) =>
+            upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
+          }
+        />
+        {hasMaterials && (
           <div className="catalog-materials-strip">
             <div className="catalog-section-label">Materials</div>
             <div className="catalog-materials-grid">
@@ -455,7 +487,7 @@ export function CatalogPage({
               ))}
             </div>
           </div>
-        ) : null}
+        )}
       </section>
 
       <CatalogApprovalSection />
@@ -480,38 +512,76 @@ export function CatalogPage({
   );
 }
 
-function CatalogOptionRenderings({ itemId, itemName }: { itemId: string; itemName: string }) {
-  const optionImagesQuery = useImages('item_option', itemId);
-  const optionImages = useMemo(
-    () =>
-      [...(optionImagesQuery.data ?? [])]
-        .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-        .slice(0, 2),
-    [optionImagesQuery.data],
-  );
-  const setPrimary = useSetPrimaryImage('item_option', itemId);
-  const upload = useUploadImage('item_option', itemId);
-  const deleteImage = useDeleteImage('item_option', itemId);
-  const slots = Array.from({ length: 2 }, (_, index) => optionImages[index] ?? null);
-  const isBusy = upload.isPending || deleteImage.isPending;
+function CatalogOptionRenderings({
+  optionImages,
+  itemName,
+  isBusy,
+  onSelect,
+  onUpload,
+  onDelete,
+  onAdd,
+}: {
+  optionImages: ImageAsset[];
+  itemName: string;
+  isBusy: boolean;
+  onSelect: (imageId: string) => void;
+  onUpload: (file: File, index: number) => void;
+  onDelete: (imageId: string) => void;
+  onAdd: (file: File) => void;
+}) {
+  const addInputRef = useRef<HTMLInputElement>(null);
+  const canAddMore = optionImages.length < 2;
 
   return (
     <div className="catalog-options-strip">
       <div className="catalog-section-label">Options</div>
-      <div className="catalog-option-grid">
-        {slots.map((image, index) => (
-          <CatalogOptionCard
-            key={image?.id ?? `catalog-option-${index}`}
-            image={image}
-            itemName={itemName}
-            index={index}
+      {optionImages.length > 0 && (
+        <div className="catalog-option-grid">
+          {optionImages.map((image, index) => (
+            <CatalogOptionCard
+              key={image.id}
+              image={image}
+              itemName={itemName}
+              index={index}
+              disabled={isBusy}
+              onSelect={onSelect}
+              onUpload={(file) => onUpload(file, index)}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
+      {canAddMore && (
+        <>
+          <button
+            type="button"
+            className="no-print catalog-add-option-btn"
             disabled={isBusy}
-            onSelect={(imageId) => setPrimary.mutate(imageId)}
-            onUpload={(file) => upload.mutate({ file, altText: `${itemName} option ${index + 1}` })}
-            onDelete={(imageId) => deleteImage.mutate(imageId)}
+            onClick={() => addInputRef.current?.click()}
+          >
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+              <path
+                d="M8 3v10M3 8h10"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+            Add option
+          </button>
+          <input
+            ref={addInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file && !isBusy) onAdd(file);
+              event.currentTarget.value = '';
+            }}
           />
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -525,7 +595,7 @@ function CatalogOptionCard({
   onUpload,
   onDelete,
 }: {
-  image: ImageAsset | null;
+  image: ImageAsset;
   itemName: string;
   index: number;
   disabled?: boolean;
@@ -548,8 +618,6 @@ function CatalogOptionCard({
       return null;
     });
 
-    if (!image) return undefined;
-
     void api.images
       .getContentBlob(image.id)
       .then((blob) => {
@@ -558,16 +626,14 @@ function CatalogOptionCard({
         setPreviewUrl(nextUrl);
       })
       .catch(() => {
-        if (!ignore) {
-          setPreviewUrl(null);
-        }
+        if (!ignore) setPreviewUrl(null);
       });
 
     return () => {
       ignore = true;
       if (nextUrl) URL.revokeObjectURL(nextUrl);
     };
-  }, [image]);
+  }, [image.id]);
 
   useEffect(
     () => () => {
@@ -605,17 +671,15 @@ function CatalogOptionCard({
 
   return (
     <div className="catalog-option-card" onMouseEnter={enablePaste} onMouseLeave={disablePaste}>
-      {image && (
-        <label className="catalog-option-check">
-          <input
-            type="checkbox"
-            checked={Boolean(image.isPrimary)}
-            onChange={() => {
-              if (!image.isPrimary) onSelect(image.id);
-            }}
-          />
-        </label>
-      )}
+      <label className="catalog-option-check">
+        <input
+          type="checkbox"
+          checked={Boolean(image.isPrimary)}
+          onChange={() => {
+            if (!image.isPrimary) onSelect(image.id);
+          }}
+        />
+      </label>
       {previewUrl ? (
         <button
           ref={menuAnchorRef}
@@ -633,33 +697,26 @@ function CatalogOptionCard({
           />
         </button>
       ) : (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => inputRef.current?.click()}
-          className="catalog-option-empty w-full cursor-pointer hover:bg-brand-100 disabled:cursor-wait"
-        >
-          Option {index + 1}
-        </button>
+        <div className="catalog-option-empty">
+          <span className="text-xs text-gray-300">Loading…</span>
+        </div>
       )}
 
-      {image && (
-        <ImageOptionsMenu
-          anchorRef={menuAnchorRef}
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          canUpdate={!disabled}
-          canDelete={!disabled}
-          onUpdate={() => {
-            setMenuOpen(false);
-            inputRef.current?.click();
-          }}
-          onDelete={() => {
-            setMenuOpen(false);
-            onDelete(image.id);
-          }}
-        />
-      )}
+      <ImageOptionsMenu
+        anchorRef={menuAnchorRef}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        canUpdate={!disabled}
+        canDelete={!disabled}
+        onUpdate={() => {
+          setMenuOpen(false);
+          inputRef.current?.click();
+        }}
+        onDelete={() => {
+          setMenuOpen(false);
+          onDelete(image.id);
+        }}
+      />
 
       <input
         ref={inputRef}
@@ -678,24 +735,24 @@ function CatalogOptionCard({
 function CatalogApprovalSection() {
   return (
     <section className="catalog-approval-band">
-      <p className="catalog-section-label">Customer approval</p>
+      <div className="catalog-section-label catalog-approval-label">Client Approval</div>
       <div className="catalog-approval-row">
         <div className="catalog-approval-field">
-          <span>Signature</span>
           <div className="catalog-approval-line" />
+          <span>Authorized Signature</span>
         </div>
         <div className="catalog-approval-field catalog-approval-date">
-          <span>Date</span>
           <div className="catalog-approval-line" />
+          <span>Date</span>
         </div>
         <div className="catalog-approval-checks">
           <label>
-            <input type="checkbox" />
-            Approved w/ changes
+            <input type="checkbox" className="catalog-approval-check-input" />
+            Approved with revisions
           </label>
           <label>
-            <input type="checkbox" />
-            Approved w/o changes
+            <input type="checkbox" className="catalog-approval-check-input" />
+            Approved as presented
           </label>
         </div>
       </div>
