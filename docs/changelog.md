@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): add canvas click-to-select for measured areas plus temporary Space+drag pan in the fullscreen measurement workspace without changing active tool mode
+
 - feat(plans): true fullscreen measurement workspace — project header and tab bar hidden on `plans/:planId`; shell locked to viewport; exit/minimize via "Plans Library" breadcrumb in the workspace header
 
 - feat(plans): add FF&E `item_plan` image support so measured plan crops can publish into a dedicated FF&E detail-panel plan image surface without colliding with the main rendering

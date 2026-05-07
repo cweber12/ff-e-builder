@@ -31,6 +31,7 @@ import {
   getLineLength,
   measurementToRectBounds,
   normalizeRectDraft,
+  pointInRect,
   type ImagePoint,
   type LineDraft,
   type RectDraft,
@@ -654,6 +655,14 @@ export function PlanCanvasPage({
             onMeasurementDraftChange={setMeasurementDraft}
             cropDraft={cropDraft}
             onCropDraftChange={setCropDraft}
+            onMeasurementSelect={(measurementId) => {
+              const item = measurementItemsByMeasurementId.get(measurementId);
+              setSelectedMeasurementId(measurementId);
+              setMeasurementDraft(null);
+              setCropDraft(null);
+              if (item) setSelectedMeasurementTargetKey(item.key);
+              setOpenSection('items');
+            }}
             onNaturalSizeChange={setPlanNaturalSize}
           />
         </main>
@@ -1307,6 +1316,7 @@ function PlanViewport({
   onMeasurementDraftChange,
   cropDraft,
   onCropDraftChange,
+  onMeasurementSelect,
   onNaturalSizeChange,
 }: {
   projectId: string;
@@ -1325,6 +1335,7 @@ function PlanViewport({
   onMeasurementDraftChange: (draft: RectDraft | null) => void;
   cropDraft: RectDraft | null;
   onCropDraftChange: (draft: RectDraft | null) => void;
+  onMeasurementSelect: (measurementId: string) => void;
   onNaturalSizeChange: (size: { width: number; height: number }) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1338,6 +1349,9 @@ function PlanViewport({
   const [isInteracting, setIsInteracting] = useState(false);
   const panDragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const pointerStart = useRef<{ clientX: number; clientY: number } | null>(null);
+  const movedSincePointerDown = useRef(false);
   const shapeStart = useRef<ImagePoint | null>(null);
   const zoomRef = useRef(zoom);
   const offsetRef = useRef(offset);
@@ -1348,6 +1362,46 @@ function PlanViewport({
   const selectedMeasurementRect = selectedMeasurement
     ? measurementToRectBounds(selectedMeasurement)
     : null;
+
+  const isInputLikeElement = useCallback((target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' || isInputLikeElement(event.target)) return;
+      event.preventDefault();
+      setIsSpacePressed(true);
+    };
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code !== 'Space') return;
+      setIsSpacePressed(false);
+      if (activeTool !== 'pan') {
+        panDragStart.current = null;
+        setIsPanning(false);
+      }
+    };
+
+    const onWindowBlur = () => {
+      setIsSpacePressed(false);
+      if (activeTool !== 'pan') {
+        panDragStart.current = null;
+        setIsPanning(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onWindowBlur);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onWindowBlur);
+    };
+  }, [activeTool, isInputLikeElement]);
 
   useEffect(() => {
     let disposed = false;
@@ -1543,6 +1597,15 @@ function PlanViewport({
     if (!imageUrl || event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsInteracting(true);
+    pointerStart.current = { clientX: event.clientX, clientY: event.clientY };
+    movedSincePointerDown.current = false;
+
+    const canPan = activeTool === 'pan' || isSpacePressed;
+    if (canPan) {
+      panDragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
+      setIsPanning(true);
+      return;
+    }
 
     if (
       activeTool === 'calibrate' ||
@@ -1589,14 +1652,17 @@ function PlanViewport({
       }
       return;
     }
-
-    if (activeTool === 'pan') {
-      panDragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
-      setIsPanning(true);
-    }
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (pointerStart.current) {
+      const deltaX = event.clientX - pointerStart.current.clientX;
+      const deltaY = event.clientY - pointerStart.current.clientY;
+      if (Math.hypot(deltaX, deltaY) >= 3) {
+        movedSincePointerDown.current = true;
+      }
+    }
+
     if (shapeStart.current) {
       const point = imagePointFromClient(event.clientX, event.clientY, true);
       if (!point) return;
@@ -1642,8 +1708,35 @@ function PlanViewport({
     );
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const shouldAttemptSelect =
+      !shapeStart.current && !movedSincePointerDown.current && !isSpacePressed && imageUrl;
+
+    if (shouldAttemptSelect) {
+      const point = imagePointFromClient(event.clientX, event.clientY);
+      if (point) {
+        for (let index = measurements.length - 1; index >= 0; index -= 1) {
+          const measurement = measurements[index];
+          if (measurement && pointInRect(point, measurementToRectBounds(measurement))) {
+            onMeasurementSelect(measurement.id);
+            break;
+          }
+        }
+      }
+    }
+
     panDragStart.current = null;
+    pointerStart.current = null;
+    movedSincePointerDown.current = false;
+    shapeStart.current = null;
+    setIsInteracting(false);
+    setIsPanning(false);
+  };
+
+  const handlePointerCancel = () => {
+    panDragStart.current = null;
+    pointerStart.current = null;
+    movedSincePointerDown.current = false;
     shapeStart.current = null;
     setIsInteracting(false);
     setIsPanning(false);
@@ -1665,7 +1758,7 @@ function PlanViewport({
               activeTool === 'rectangle' ||
               (activeTool === 'crop' && selectedMeasurementRect !== null)
               ? 'crosshair'
-              : activeTool === 'pan'
+              : activeTool === 'pan' || isSpacePressed
                 ? isPanning
                   ? 'grabbing'
                   : 'grab'
@@ -1675,7 +1768,7 @@ function PlanViewport({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         onDoubleClick={resetView}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.42),transparent_54%),linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0))]" />
@@ -1822,16 +1915,16 @@ function PlanViewport({
 
             <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
               {activeTool === 'calibrate'
-                ? 'Draw calibration line • scroll to zoom • double-click to reset'
+                ? 'Draw calibration line • hold Space + drag to pan • scroll to zoom • double-click to reset'
                 : activeTool === 'length'
-                  ? 'Draw measured line • scroll to zoom • double-click to reset'
+                  ? 'Draw measured line • hold Space + drag to pan • scroll to zoom • double-click to reset'
                   : activeTool === 'rectangle'
-                    ? 'Draw measured area • scroll to zoom • double-click to reset'
+                    ? 'Draw measured area • click existing area to select • hold Space + drag to pan • scroll to zoom • double-click to reset'
                     : activeTool === 'crop'
                       ? selectedMeasurementRect
-                        ? 'Draw crop inside the selected measured area • scroll to zoom • double-click to reset'
-                        : 'Select a measured item first • scroll to zoom • double-click to reset'
-                      : 'Drag to pan • scroll to zoom • double-click to reset'}
+                        ? 'Draw crop inside the selected measured area • click existing area to re-select • hold Space + drag to pan • scroll to zoom • double-click to reset'
+                        : 'Select a measured item first • click a measured area to select • hold Space + drag to pan • scroll to zoom • double-click to reset'
+                      : 'Drag to pan • click measured areas to select • scroll to zoom • double-click to reset'}
             </div>
 
             <div className="pointer-events-none absolute right-3 top-3 flex flex-col gap-1.5">

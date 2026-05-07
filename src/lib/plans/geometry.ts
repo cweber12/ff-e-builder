@@ -68,3 +68,12 @@ export function clampPointToRect(point: ImagePoint, rect: RectBounds): ImagePoin
     y: Math.max(rect.y, Math.min(rect.y + rect.height, point.y)),
   };
 }
+
+export function pointInRect(point: ImagePoint, rect: RectBounds): boolean {
+  return (
+    point.x >= rect.x &&
+    point.x <= rect.x + rect.width &&
+    point.y >= rect.y &&
+    point.y <= rect.y + rect.height
+  );
+}
