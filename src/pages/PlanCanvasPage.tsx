@@ -55,7 +55,7 @@ type PlanCanvasPageProps = {
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
 };
 
-type ToolId = 'calibrate' | 'length' | 'rectangle' | 'crop';
+type ToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
 
 type MeasurementItemRef = {
   key: string;
@@ -97,6 +97,12 @@ const TOOL_DEFINITIONS: Array<{
     description: 'Refine the derived plan image framing.',
     icon: <CropIcon />,
   },
+  {
+    id: 'pan',
+    label: 'Pan',
+    description: 'Drag to move around the plan at any zoom level.',
+    icon: <PanIcon />,
+  },
 ];
 
 const UNIT_OPTIONS: PlanMeasurementUnit[] = ['ft', 'in', 'm', 'cm', 'mm'];
@@ -109,7 +115,10 @@ const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
 };
 
 function sectionForTool(tool: ToolId) {
-  return tool === 'calibrate' ? 'calibration' : tool === 'length' ? 'length' : 'items';
+  if (tool === 'calibrate') return 'calibration';
+  if (tool === 'length') return 'length';
+  if (tool === 'rectangle' || tool === 'crop') return 'items';
+  return 'tool';
 }
 
 export function PlanCanvasPage({
@@ -569,7 +578,10 @@ export function PlanCanvasPage({
               Plans Library
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-2xl font-semibold text-neutral-900">
+              <h1
+                className="max-w-[20ch] truncate font-display text-2xl font-semibold text-neutral-900"
+                title={selectedPlan.name}
+              >
                 {selectedPlan.name}
               </h1>
               <span className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
@@ -597,7 +609,7 @@ export function PlanCanvasPage({
         <aside className="overflow-y-auto border-r border-black/5 bg-white/72 p-3 backdrop-blur">
           <div className="flex flex-col gap-2">
             {TOOL_DEFINITIONS.map((tool) => {
-              const disabled = tool.id !== 'calibrate' && !isCalibrated;
+              const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
               const active = activeTool === tool.id;
               return (
                 <button
@@ -660,10 +672,10 @@ export function PlanCanvasPage({
                       key={plan.id}
                       to={`/projects/${project.id}/plans/${plan.id}`}
                       className={[
-                        'block rounded-2xl border px-3 py-3 transition',
+                        'block rounded-xl px-3 py-2 transition',
                         active
-                          ? 'border-brand-500 bg-brand-50'
-                          : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
+                          ? 'bg-brand-50 ring-1 ring-inset ring-brand-300'
+                          : 'hover:bg-neutral-50',
                       ].join(' ')}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -918,10 +930,10 @@ export function PlanCanvasPage({
                               setLengthLineLabelInput(line.label ?? '');
                             }}
                             className={[
-                              'block w-full rounded-2xl border px-3 py-3 text-left transition',
+                              'block w-full rounded-xl px-3 py-2 text-left transition',
                               active
-                                ? 'border-brand-500 bg-brand-50'
-                                : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
+                                ? 'bg-brand-50 ring-1 ring-inset ring-brand-300'
+                                : 'hover:bg-neutral-50',
                             ].join(' ')}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -1216,10 +1228,10 @@ export function PlanCanvasPage({
                               if (item) setSelectedMeasurementTargetKey(item.key);
                             }}
                             className={[
-                              'block w-full rounded-2xl border px-3 py-3 text-left transition',
+                              'block w-full rounded-xl px-3 py-2 text-left transition',
                               active
-                                ? 'border-brand-500 bg-brand-50'
-                                : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
+                                ? 'bg-brand-50 ring-1 ring-inset ring-brand-300'
+                                : 'hover:bg-neutral-50',
                             ].join(' ')}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -1602,7 +1614,9 @@ function PlanViewport({
       return;
     }
 
-    panDragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
+    if (activeTool === 'pan') {
+      panDragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
+    }
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -1662,51 +1676,10 @@ function PlanViewport({
   const draftCropRect = cropDraft ? normalizeRectDraft(cropDraft) : null;
 
   return (
-    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-black/5 bg-white/72 px-3 py-2 shadow-sm backdrop-blur">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setZoom((current) => Math.min(5, current * 1.15))}
-          >
-            Zoom in
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setZoom((current) => {
-                const nextZoom = Math.max(1, current / 1.15);
-                setOffset((currentOffset) =>
-                  clampOffset(nextZoom, currentOffset.x, currentOffset.y),
-                );
-                return nextZoom;
-              });
-            }}
-          >
-            Zoom out
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={rotateClockwise}>
-            Rotate 90°
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={resetView} disabled={!showReset}>
-            Reset view
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-          <span>{Math.round(zoom * 100)}%</span>
-          <span>{rotation}°</span>
-          <span>{plan.imageFilename}</span>
-        </div>
-      </div>
-
+    <div className="h-full min-h-0">
       <div
         ref={containerRef}
-        className="relative min-h-0 h-full overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
+        className="relative h-full overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
         style={{
           cursor: imageUrl
             ? activeTool === 'calibrate' ||
@@ -1714,9 +1687,11 @@ function PlanViewport({
               activeTool === 'rectangle' ||
               (activeTool === 'crop' && selectedMeasurementRect !== null)
               ? 'crosshair'
-              : panDragStart.current
-                ? 'grabbing'
-                : 'grab'
+              : activeTool === 'pan'
+                ? panDragStart.current
+                  ? 'grabbing'
+                  : 'grab'
+                : 'default'
             : 'default',
         }}
         onPointerDown={handlePointerDown}
@@ -1878,7 +1853,57 @@ function PlanViewport({
                       ? selectedMeasurementRect
                         ? 'Draw crop inside the selected measured area • scroll to zoom • double-click to reset'
                         : 'Select a measured item first • scroll to zoom • double-click to reset'
-                      : 'Scroll to zoom • drag to pan • double-click to reset'}
+                      : 'Drag to pan • scroll to zoom • double-click to reset'}
+            </div>
+
+            <div className="pointer-events-none absolute right-3 top-3 flex flex-col gap-1.5">
+              <button
+                type="button"
+                title="Zoom in"
+                onClick={() => setZoom((current) => Math.min(5, current * 1.15))}
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+              >
+                <ViewControlIcon type="zoom-in" />
+              </button>
+              <button
+                type="button"
+                title="Zoom out"
+                onClick={() => {
+                  setZoom((current) => {
+                    const nextZoom = Math.max(1, current / 1.15);
+                    setOffset((currentOffset) =>
+                      clampOffset(nextZoom, currentOffset.x, currentOffset.y),
+                    );
+                    return nextZoom;
+                  });
+                }}
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+              >
+                <ViewControlIcon type="zoom-out" />
+              </button>
+              <button
+                type="button"
+                title="Rotate 90°"
+                onClick={rotateClockwise}
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+              >
+                <ViewControlIcon type="rotate" />
+              </button>
+              {showReset ? (
+                <button
+                  type="button"
+                  title="Reset view"
+                  onClick={resetView}
+                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+                >
+                  <ViewControlIcon type="reset" />
+                </button>
+              ) : null}
+            </div>
+
+            <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-400 backdrop-blur">
+              <span>{Math.round(zoom * 100)}%</span>
+              {rotation !== 0 ? <span>{rotation}°</span> : null}
             </div>
           </>
         ) : null}
@@ -1986,12 +2011,57 @@ function CropIcon() {
   );
 }
 
+function PanIcon() {
+  return (
+    <ToolbarIcon>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M10 3v14M3 10h14" strokeLinecap="round" />
+        <path
+          d="m8 5 2-2 2 2M15 8l2 2-2 2M12 15l-2 2-2-2M5 12l-2-2 2-2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </ToolbarIcon>
+  );
+}
+
+function ViewControlIcon({ type }: { type: 'zoom-in' | 'zoom-out' | 'rotate' | 'reset' }) {
+  return (
+    <span className="h-4 w-4">
+      {type === 'zoom-in' ? (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="7" cy="7" r="4.5" />
+          <path d="M7 5v4M5 7h4" strokeLinecap="round" />
+          <path d="M10.5 10.5 14 14" strokeLinecap="round" />
+        </svg>
+      ) : type === 'zoom-out' ? (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="7" cy="7" r="4.5" />
+          <path d="M5 7h4" strokeLinecap="round" />
+          <path d="M10.5 10.5 14 14" strokeLinecap="round" />
+        </svg>
+      ) : type === 'rotate' ? (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12.5 4a6 6 0 1 0 1.3 5" strokeLinecap="round" />
+          <path d="M13.5 1.5v3h-3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M8 3V1M8 15v-2M1 8H3M13 8h2" strokeLinecap="round" />
+          <circle cx="8" cy="8" r="3" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 function PlanCanvasSkeleton() {
   return (
     <div className="grid h-full min-h-0 gap-0 bg-[#f3f1ea] xl:grid-cols-[84px_minmax(0,1fr)_380px]">
       <div className="overflow-hidden border-r border-black/5 bg-white/72 p-3">
         <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="h-14 w-14 animate-pulse rounded-2xl bg-white" />
           ))}
         </div>
