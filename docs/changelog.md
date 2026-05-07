@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- fix(plans): lock the project shell to the viewport when a plan canvas route is active so the browser page can no longer scroll behind the fixed measurement workspace
+- feat(plans): true fullscreen measurement workspace — project header and tab bar hidden on `plans/:planId`; shell locked to viewport; exit/minimize via "Plans Library" breadcrumb in the workspace header
 
 - feat(plans): add FF&E `item_plan` image support so measured plan crops can publish into a dedicated FF&E detail-panel plan image surface without colliding with the main rendering
 - fix(plans): shrink the opened-plan viewport toolbar, keep the plan canvas filling the available window height, and convert the right sidebar into a one-open-section accordion while keeping the plan selector always visible

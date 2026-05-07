@@ -133,76 +133,15 @@ function ProjectLayout() {
         isPlanCanvasRoute ? 'h-screen overflow-hidden' : 'min-h-screen',
       ].join(' ')}
     >
-      <ProjectHeader
-        project={project}
-        showToolNavigation={false}
-        optionsOpen={headerMenuOpen}
-        onToggleOptions={() => setHeaderMenuOpen((open) => !open)}
-        onEditProject={() => {
-          setHeaderMenuOpen(false);
-          if (project) setEditProject(project);
-        }}
-        onProjectImages={() => {
-          setHeaderMenuOpen(false);
-          if (project) setImageProject(project);
-        }}
-        onDeleteProject={() => {
-          setHeaderMenuOpen(false);
-          if (project) setPendingDelete(project);
-        }}
-      />
-      {isLoading ? (
-        <div className="flex justify-center py-24">
-          <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
-        </div>
-      ) : project ? (
-        <>
-          <h1 className="sr-only">{project.name}</h1>
-          <nav
-            aria-label="Project sections"
-            className="no-print border-b border-gray-200 bg-white px-4 md:px-6"
-          >
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <div className="flex min-w-0 gap-1 overflow-x-auto">
-                  {(
-                    [
-                      [`/projects/${project.id}/ffe`, 'FF&E', false],
-                      [`/projects/${project.id}/proposal/table`, 'Proposal', false],
-                      [`/projects/${project.id}/plans`, 'Plans', true],
-                      [`/projects/${project.id}/materials`, 'Materials', true],
-                      [`/projects/${project.id}/budget`, 'Budget', true],
-                    ] as const
-                  ).map(([to, label, end]) => (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      end={end}
-                      className={({ isActive }) =>
-                        [
-                          'whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors',
-                          isActive
-                            ? 'border-brand-500 text-brand-700'
-                            : 'border-transparent text-gray-600 hover:text-brand-700',
-                        ].join(' ')
-                      }
-                    >
-                      {label}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-              {project && (
-                <ProjectTabActions
-                  activePath={location.pathname}
-                  project={project}
-                  roomsWithItems={roomsWithItems}
-                  proposalCategoriesWithItems={proposalCategoriesWithItems}
-                />
-              )}
-            </div>
-          </nav>
-          {isPlanCanvasRoute ? (
+      {isPlanCanvasRoute ? (
+        // Fullscreen measurement workspace — no project chrome
+        isLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+          </div>
+        ) : project ? (
+          <>
+            <h1 className="sr-only">{project.name}</h1>
             <div className="min-h-0 flex-1 overflow-hidden">
               <Outlet
                 context={
@@ -216,69 +155,142 @@ function ProjectLayout() {
                 }
               />
             </div>
-          ) : (
-            <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
-              <Outlet
-                context={
-                  {
-                    project,
-                    roomsWithItems,
-                    proposalCategoriesWithItems,
-                    onImport: () => setImportOpen(true),
-                    onProposalImport: () => setProposalImportOpen(true),
-                  } satisfies ProjectContext
-                }
-              />
-            </section>
-          )}
-          {project && (
+          </>
+        ) : null
+      ) : (
+        <>
+          <ProjectHeader
+            project={project}
+            showToolNavigation={false}
+            optionsOpen={headerMenuOpen}
+            onToggleOptions={() => setHeaderMenuOpen((open) => !open)}
+            onEditProject={() => {
+              setHeaderMenuOpen(false);
+              if (project) setEditProject(project);
+            }}
+            onProjectImages={() => {
+              setHeaderMenuOpen(false);
+              if (project) setImageProject(project);
+            }}
+            onDeleteProject={() => {
+              setHeaderMenuOpen(false);
+              if (project) setPendingDelete(project);
+            }}
+          />
+          {isLoading ? (
+            <div className="flex justify-center py-24">
+              <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+            </div>
+          ) : project ? (
             <>
-              <ImportExcelModal
-                open={importOpen}
-                projectId={project.id}
-                rooms={roomsWithItems}
-                onClose={() => setImportOpen(false)}
-                onSuccess={() => {
-                  setImportOpen(false);
-                  void queryClient.invalidateQueries();
-                }}
-              />
-              <ImportProposalExcelModal
-                open={proposalImportOpen}
-                projectId={project.id}
-                categories={proposalCategoriesWithItems}
-                onClose={() => setProposalImportOpen(false)}
-                onSuccess={() => {
-                  void queryClient.invalidateQueries();
-                }}
-              />
-              <EditProjectModal
-                project={editProject}
-                open={editProject !== null}
-                isSaving={updateProject.isPending}
-                onClose={() => setEditProject(null)}
-                onSave={async (projectId, patch) => {
-                  await updateProject.mutateAsync({ id: projectId, patch });
-                  setEditProject(null);
-                }}
-              />
-              <DeleteProjectModal
-                project={pendingDelete}
-                onClose={() => setPendingDelete(null)}
-                onConfirm={(projectId) => {
-                  deleteProject.mutate(projectId);
-                  setPendingDelete(null);
-                }}
-              />
-              <ProjectImagesModal
-                project={imageProject}
-                open={imageProject !== null}
-                onClose={() => setImageProject(null)}
-              />
+              <h1 className="sr-only">{project.name}</h1>
+              <nav
+                aria-label="Project sections"
+                className="no-print border-b border-gray-200 bg-white px-4 md:px-6"
+              >
+                <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex min-w-0 gap-1 overflow-x-auto">
+                      {(
+                        [
+                          [`/projects/${project.id}/ffe`, 'FF&E', false],
+                          [`/projects/${project.id}/proposal/table`, 'Proposal', false],
+                          [`/projects/${project.id}/plans`, 'Plans', true],
+                          [`/projects/${project.id}/materials`, 'Materials', true],
+                          [`/projects/${project.id}/budget`, 'Budget', true],
+                        ] as const
+                      ).map(([to, label, end]) => (
+                        <NavLink
+                          key={to}
+                          to={to}
+                          end={end}
+                          className={({ isActive }) =>
+                            [
+                              'whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors',
+                              isActive
+                                ? 'border-brand-500 text-brand-700'
+                                : 'border-transparent text-gray-600 hover:text-brand-700',
+                            ].join(' ')
+                          }
+                        >
+                          {label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                  {project && (
+                    <ProjectTabActions
+                      activePath={location.pathname}
+                      project={project}
+                      roomsWithItems={roomsWithItems}
+                      proposalCategoriesWithItems={proposalCategoriesWithItems}
+                    />
+                  )}
+                </div>
+              </nav>
+              <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
+                <Outlet
+                  context={
+                    {
+                      project,
+                      roomsWithItems,
+                      proposalCategoriesWithItems,
+                      onImport: () => setImportOpen(true),
+                      onProposalImport: () => setProposalImportOpen(true),
+                    } satisfies ProjectContext
+                  }
+                />
+              </section>
+              {project && (
+                <>
+                  <ImportExcelModal
+                    open={importOpen}
+                    projectId={project.id}
+                    rooms={roomsWithItems}
+                    onClose={() => setImportOpen(false)}
+                    onSuccess={() => {
+                      setImportOpen(false);
+                      void queryClient.invalidateQueries();
+                    }}
+                  />
+                  <ImportProposalExcelModal
+                    open={proposalImportOpen}
+                    projectId={project.id}
+                    categories={proposalCategoriesWithItems}
+                    onClose={() => setProposalImportOpen(false)}
+                    onSuccess={() => {
+                      void queryClient.invalidateQueries();
+                    }}
+                  />
+                  <EditProjectModal
+                    project={editProject}
+                    open={editProject !== null}
+                    isSaving={updateProject.isPending}
+                    onClose={() => setEditProject(null)}
+                    onSave={async (projectId, patch) => {
+                      await updateProject.mutateAsync({ id: projectId, patch });
+                      setEditProject(null);
+                    }}
+                  />
+                  <DeleteProjectModal
+                    project={pendingDelete}
+                    onClose={() => setPendingDelete(null)}
+                    onConfirm={(projectId) => {
+                      deleteProject.mutate(projectId);
+                      setPendingDelete(null);
+                    }}
+                  />
+                  <ProjectImagesModal
+                    project={imageProject}
+                    open={imageProject !== null}
+                    onClose={() => setImageProject(null)}
+                  />
+                </>
+              )}
             </>
-          )}
+          ) : null}
         </>
-      ) : null}
+      )}
     </main>
   );
 }
