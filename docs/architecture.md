@@ -74,7 +74,7 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 - `/projects/:id/proposal/materials` redirects to the shared project material library.
 - `/projects/:id/proposal/summary` redirects to the project budget view.
 - `/projects/:id/plans` shows the project-level Measured Plan library for architectural source images and calibration readiness.
-- `/projects/:id/plans/:planId` opens a project-scoped full-window plan workspace for protected-image viewing, plan switching, persisted calibration line editing, saved Length Line measurements, item-linked rectangle measurements, and future crop tools.
+- `/projects/:id/plans/:planId` opens a project-scoped full-window plan workspace for protected-image viewing, plan switching, persisted calibration line editing, saved Length Line measurements, item-linked rectangle measurements, and saved per-measurement crop framing.
 
 Legacy project routes continue to redirect to their current FF&E equivalents for compatibility.
 
@@ -90,9 +90,9 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
 - Project-level Measured Plan source-image metadata lives in Neon `measured_plans`; the source image bytes also live in the private R2 bucket `ffe-images`.
-- Per-plan calibration metadata lives in Neon `plan_calibrations`; calibration line coordinates are stored in raw image-pixel space while downstream crop parameters remain 0-1 percentages.
+- Per-plan calibration metadata lives in Neon `plan_calibrations`; calibration line coordinates are stored in raw image-pixel space and downstream crop rectangles are also stored in raw image-pixel space on the associated measurement.
 - Saved Length Line measurements live in Neon `length_lines`; line geometry is stored in raw image-pixel space and measured values are normalized into a canonical base unit before display conversion back into the plan calibration unit.
-- Item-linked area measurements live in Neon `measurements`; rectangle geometry is stored in raw image-pixel space, spans are normalized into the same canonical base unit, and the client renders rotated highlight polygons from image-space corners rather than viewport-aligned rectangles.
+- Item-linked area measurements live in Neon `measurements`; rectangle geometry and optional crop framing are stored in raw image-pixel space, spans are normalized into the same canonical base unit, and the client renders rotated highlight polygons from image-space corners rather than viewport-aligned rectangles.
 - R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `item_option`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering; `item_option` stores up to three alternate FF&E option renderings with one current selection.
 - Measured Plan source images are not stored in `image_assets`; they are uploaded through `/api/v1/projects/:id/plans`, persisted on `measured_plans`, and stored in R2 under `users/{uid}/projects/{projectId}/plans/{planId}.{ext}`.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.

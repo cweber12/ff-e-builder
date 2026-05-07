@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): add per-measurement crop framing to the full-window Plans workspace, persist crop rectangles through the existing measurement API, and render saved/draft crop overlays inside measured item highlights
 - feat(plans): convert the opened plan view into a full-window fixed-height workspace, replace the text tool rail with icon controls, add measured-item selection/highlight overlays, and persist item-linked rectangle measurements
 - feat(plans): add persisted Length Line measurement CRUD, canvas overlays, and a reusable measured-span sidebar on top of saved plan calibration
 - feat(plans): persist per-plan calibration lines with raw-pixel geometry, add calibration read/write worker + client APIs, and make the opened plan workspace save and render reference-line scale overlays

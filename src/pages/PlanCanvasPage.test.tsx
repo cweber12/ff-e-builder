@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { PlanCanvasPage } from './PlanCanvasPage';
@@ -271,5 +271,27 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByText('Banquette wall')).toBeInTheDocument();
     expect(screen.getByText('Measured Items')).toBeInTheDocument();
     expect(screen.getByText('A-101')).toBeInTheDocument();
+  });
+
+  it('shows crop guidance for a selected measured item on calibrated plans', () => {
+    render(
+      <MemoryRouter>
+        <PlanCanvasPage
+          project={project}
+          planId="plan-2"
+          roomsWithItems={roomsWithItems}
+          proposalCategoriesWithItems={proposalCategoriesWithItems}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
+    fireEvent.click(screen.getByRole('button', { name: /A-101/ }));
+
+    expect(screen.getByText('Selected area')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Draw a crop rectangle inside the selected measured area/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save crop' })).toBeDisabled();
   });
 });

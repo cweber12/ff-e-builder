@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Link } from 'react-router-dom';
+import { LineOverlay, RectOverlay } from '../components/plans/overlays';
 import { Button } from '../components/primitives';
 import {
   useCreatePlanLengthLine,
@@ -23,6 +24,16 @@ import {
   useUpdatePlanMeasurement,
 } from '../hooks';
 import { api } from '../lib/api';
+import {
+  buildRectPolygonPoints,
+  clampPointToRect,
+  getLineLength,
+  measurementToRectBounds,
+  normalizeRectDraft,
+  type ImagePoint,
+  type LineDraft,
+  type RectDraft,
+} from '../lib/plans/geometry';
 import type {
   LengthLine,
   Measurement,
@@ -39,25 +50,6 @@ type PlanCanvasPageProps = {
   planId: string;
   roomsWithItems: RoomWithItems[];
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
-};
-
-type LineDraft = {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-};
-
-type RectDraft = {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-};
-
-type ImagePoint = {
-  x: number;
-  y: number;
 };
 
 type ToolId = 'calibrate' | 'length' | 'rectangle' | 'crop';
@@ -128,6 +120,7 @@ export function PlanCanvasPage({
   const [selectedLengthLineId, setSelectedLengthLineId] = useState<string | null>(null);
   const [lengthLineLabelInput, setLengthLineLabelInput] = useState('');
   const [measurementDraft, setMeasurementDraft] = useState<RectDraft | null>(null);
+  const [cropDraft, setCropDraft] = useState<RectDraft | null>(null);
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
   const [selectedMeasurementTargetKey, setSelectedMeasurementTargetKey] = useState('');
   const [measuredItemsOpen, setMeasuredItemsOpen] = useState(true);
@@ -196,6 +189,7 @@ export function PlanCanvasPage({
     setCalibrationDraft(null);
     setLengthLineDraft(null);
     setMeasurementDraft(null);
+    setCropDraft(null);
     setSelectedLengthLineId(null);
     setSelectedMeasurementId(null);
     setSelectedMeasurementTargetKey('');
@@ -229,6 +223,14 @@ export function PlanCanvasPage({
   const normalizedMeasurementDraft = useMemo(
     () => (measurementDraft ? normalizeRectDraft(measurementDraft) : null),
     [measurementDraft],
+  );
+  const normalizedCropDraft = useMemo(
+    () => (cropDraft ? normalizeRectDraft(cropDraft) : null),
+    [cropDraft],
+  );
+  const selectedMeasurementRect = useMemo(
+    () => (selectedMeasurement ? measurementToRectBounds(selectedMeasurement) : null),
+    [selectedMeasurement],
   );
 
   const calibrationLengthValue = Number(calibrationLengthInput);
@@ -284,6 +286,20 @@ export function PlanCanvasPage({
     draftMeasurementHeightBase !== null &&
     selectedMeasurementTarget !== null &&
     !createMeasurement.isPending &&
+    !updateMeasurement.isPending;
+  const draftCropWidthPlanUnits =
+    calibration && normalizedCropDraft
+      ? normalizedCropDraft.width / calibration.pixelsPerUnit
+      : null;
+  const draftCropHeightPlanUnits =
+    calibration && normalizedCropDraft
+      ? normalizedCropDraft.height / calibration.pixelsPerUnit
+      : null;
+  const canSaveCrop =
+    selectedMeasurement !== null &&
+    normalizedCropDraft !== null &&
+    normalizedCropDraft.width > 0 &&
+    normalizedCropDraft.height > 0 &&
     !updateMeasurement.isPending;
 
   const handleSaveCalibration = async () => {
@@ -377,7 +393,60 @@ export function PlanCanvasPage({
     await deleteMeasurement.mutateAsync(selectedMeasurement);
     setSelectedMeasurementId(null);
     setMeasurementDraft(null);
+    setCropDraft(null);
     setSelectedMeasurementTargetKey('');
+  };
+
+  const handleSaveCrop = async () => {
+    if (!selectedMeasurement || !normalizedCropDraft) return;
+
+    const updated = await updateMeasurement.mutateAsync({
+      measurementId: selectedMeasurement.id,
+      input: {
+        targetKind: selectedMeasurement.targetKind,
+        targetItemId: selectedMeasurement.targetItemId,
+        targetTagSnapshot: selectedMeasurement.targetTagSnapshot,
+        rectX: selectedMeasurement.rectX,
+        rectY: selectedMeasurement.rectY,
+        rectWidth: selectedMeasurement.rectWidth,
+        rectHeight: selectedMeasurement.rectHeight,
+        horizontalSpanBase: selectedMeasurement.horizontalSpanBase,
+        verticalSpanBase: selectedMeasurement.verticalSpanBase,
+        cropX: normalizedCropDraft.x,
+        cropY: normalizedCropDraft.y,
+        cropWidth: normalizedCropDraft.width,
+        cropHeight: normalizedCropDraft.height,
+      },
+    });
+
+    setSelectedMeasurementId(updated.id);
+    setCropDraft(null);
+  };
+
+  const handleClearSavedCrop = async () => {
+    if (!selectedMeasurement) return;
+
+    const updated = await updateMeasurement.mutateAsync({
+      measurementId: selectedMeasurement.id,
+      input: {
+        targetKind: selectedMeasurement.targetKind,
+        targetItemId: selectedMeasurement.targetItemId,
+        targetTagSnapshot: selectedMeasurement.targetTagSnapshot,
+        rectX: selectedMeasurement.rectX,
+        rectY: selectedMeasurement.rectY,
+        rectWidth: selectedMeasurement.rectWidth,
+        rectHeight: selectedMeasurement.rectHeight,
+        horizontalSpanBase: selectedMeasurement.horizontalSpanBase,
+        verticalSpanBase: selectedMeasurement.verticalSpanBase,
+        cropX: null,
+        cropY: null,
+        cropWidth: null,
+        cropHeight: null,
+      },
+    });
+
+    setSelectedMeasurementId(updated.id);
+    setCropDraft(null);
   };
 
   if (isLoading) {
@@ -481,6 +550,8 @@ export function PlanCanvasPage({
             selectedMeasurementId={selectedMeasurementId}
             measurementDraft={measurementDraft}
             onMeasurementDraftChange={setMeasurementDraft}
+            cropDraft={cropDraft}
+            onCropDraftChange={setCropDraft}
           />
         </main>
 
@@ -887,6 +958,106 @@ export function PlanCanvasPage({
                     </div>
                   ) : null}
 
+                  {activeTool === 'crop' ? (
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                        {!selectedMeasurement
+                          ? 'Select a measured item below, then draw a crop rectangle inside its highlighted area.'
+                          : normalizedCropDraft
+                            ? 'Crop area captured. Save it to refine the stored plan image framing for this item.'
+                            : selectedMeasurement.cropWidth !== null &&
+                                selectedMeasurement.cropHeight !== null
+                              ? 'A saved crop already exists for this measured item. Draw a new one to replace it.'
+                              : 'Draw a crop rectangle inside the selected measured area to define the plan image framing.'}
+                      </div>
+
+                      {selectedMeasurementRect ? (
+                        <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 px-4 py-3 text-sm text-neutral-700">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="font-semibold">Selected area</span>
+                            <span>
+                              {formatDisplayNumber(selectedMeasurementRect.width)} ×{' '}
+                              {formatDisplayNumber(selectedMeasurementRect.height)} px
+                            </span>
+                          </div>
+                          {calibration && selectedMeasurement ? (
+                            <div className="mt-2 text-xs text-neutral-500">
+                              {`${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, calibration.unit))} ${calibration.unit} × ${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit))} ${calibration.unit}`}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {normalizedCropDraft ? (
+                        <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="font-semibold">Draft crop</span>
+                            <span>
+                              {formatDisplayNumber(normalizedCropDraft.width)} ×{' '}
+                              {formatDisplayNumber(normalizedCropDraft.height)} px
+                            </span>
+                          </div>
+                          {calibration ? (
+                            <div className="mt-2 text-xs text-brand-800">
+                              {draftCropWidthPlanUnits !== null && draftCropHeightPlanUnits !== null
+                                ? `${formatDisplayNumber(draftCropWidthPlanUnits)} ${calibration.unit} × ${formatDisplayNumber(draftCropHeightPlanUnits)} ${calibration.unit}`
+                                : 'Waiting for calibration'}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {selectedMeasurement &&
+                      selectedMeasurement.cropWidth !== null &&
+                      selectedMeasurement.cropHeight !== null ? (
+                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="font-semibold">Saved crop</span>
+                            <span>
+                              {formatDisplayNumber(selectedMeasurement.cropWidth)} ×{' '}
+                              {formatDisplayNumber(selectedMeasurement.cropHeight)} px
+                            </span>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => void handleSaveCrop()}
+                          disabled={!canSaveCrop}
+                        >
+                          {updateMeasurement.isPending ? 'Saving…' : 'Save crop'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCropDraft(null)}
+                          disabled={!normalizedCropDraft || updateMeasurement.isPending}
+                        >
+                          Clear draft
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void handleClearSavedCrop()}
+                          disabled={
+                            !selectedMeasurement ||
+                            selectedMeasurement.cropWidth === null ||
+                            selectedMeasurement.cropHeight === null ||
+                            updateMeasurement.isPending
+                          }
+                        >
+                          Remove saved crop
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="mt-4 space-y-2">
                     {measurementsLoading ? (
                       <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
@@ -906,8 +1077,11 @@ export function PlanCanvasPage({
                             type="button"
                             onClick={() => {
                               setSelectedMeasurementId(measurement.id);
-                              setActiveTool('rectangle');
+                              setActiveTool((currentTool) =>
+                                currentTool === 'crop' ? 'crop' : 'rectangle',
+                              );
                               setMeasurementDraft(null);
+                              setCropDraft(null);
                               if (item) setSelectedMeasurementTargetKey(item.key);
                             }}
                             className={[
@@ -946,6 +1120,7 @@ export function PlanCanvasPage({
                         onClick={() => {
                           setSelectedMeasurementId(null);
                           setMeasurementDraft(null);
+                          setCropDraft(null);
                           setSelectedMeasurementTargetKey('');
                         }}
                       >
@@ -999,6 +1174,8 @@ function PlanViewport({
   selectedMeasurementId,
   measurementDraft,
   onMeasurementDraftChange,
+  cropDraft,
+  onCropDraftChange,
 }: {
   projectId: string;
   plan: MeasuredPlan;
@@ -1014,6 +1191,8 @@ function PlanViewport({
   selectedMeasurementId: string | null;
   measurementDraft: RectDraft | null;
   onMeasurementDraftChange: (draft: RectDraft | null) => void;
+  cropDraft: RectDraft | null;
+  onCropDraftChange: (draft: RectDraft | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -1030,6 +1209,11 @@ function PlanViewport({
   const offsetRef = useRef(offset);
   zoomRef.current = zoom;
   offsetRef.current = offset;
+  const selectedMeasurement =
+    measurements.find((candidate) => candidate.id === selectedMeasurementId) ?? null;
+  const selectedMeasurementRect = selectedMeasurement
+    ? measurementToRectBounds(selectedMeasurement)
+    : null;
 
   useEffect(() => {
     let disposed = false;
@@ -1222,12 +1406,17 @@ function PlanViewport({
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsInteracting(true);
 
-    if (activeTool === 'calibrate' || activeTool === 'length' || activeTool === 'rectangle') {
+    if (
+      activeTool === 'calibrate' ||
+      activeTool === 'length' ||
+      activeTool === 'rectangle' ||
+      activeTool === 'crop'
+    ) {
       const point = imagePointFromClient(event.clientX, event.clientY);
       if (!point) return;
-      shapeStart.current = point;
 
       if (activeTool === 'calibrate') {
+        shapeStart.current = point;
         onCalibrationDraftChange({
           startX: point.x,
           startY: point.y,
@@ -1235,18 +1424,29 @@ function PlanViewport({
           endY: point.y,
         });
       } else if (activeTool === 'length') {
+        shapeStart.current = point;
         onLengthLineDraftChange({
           startX: point.x,
           startY: point.y,
           endX: point.x,
           endY: point.y,
         });
-      } else {
+      } else if (activeTool === 'rectangle') {
+        shapeStart.current = point;
         onMeasurementDraftChange({
           startX: point.x,
           startY: point.y,
           endX: point.x,
           endY: point.y,
+        });
+      } else if (selectedMeasurementRect) {
+        const constrainedPoint = clampPointToRect(point, selectedMeasurementRect);
+        shapeStart.current = constrainedPoint;
+        onCropDraftChange({
+          startX: constrainedPoint.x,
+          startY: constrainedPoint.y,
+          endX: constrainedPoint.x,
+          endY: constrainedPoint.y,
         });
       }
       return;
@@ -1281,6 +1481,14 @@ function PlanViewport({
           endX: point.x,
           endY: point.y,
         });
+      } else if (activeTool === 'crop' && selectedMeasurementRect) {
+        const constrainedPoint = clampPointToRect(point, selectedMeasurementRect);
+        onCropDraftChange({
+          startX: shapeStart.current.x,
+          startY: shapeStart.current.y,
+          endX: constrainedPoint.x,
+          endY: constrainedPoint.y,
+        });
       }
       return;
     }
@@ -1301,6 +1509,7 @@ function PlanViewport({
 
   const showReset = zoom > 1.01 || rotation !== 0 || offset.x !== 0 || offset.y !== 0;
   const draftMeasurementRect = measurementDraft ? normalizeRectDraft(measurementDraft) : null;
+  const draftCropRect = cropDraft ? normalizeRectDraft(cropDraft) : null;
 
   return (
     <div className="grid h-full min-h-0 gap-4">
@@ -1350,7 +1559,10 @@ function PlanViewport({
         className="relative min-h-0 flex-1 overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
         style={{
           cursor: imageUrl
-            ? activeTool === 'calibrate' || activeTool === 'length' || activeTool === 'rectangle'
+            ? activeTool === 'calibrate' ||
+              activeTool === 'length' ||
+              activeTool === 'rectangle' ||
+              (activeTool === 'crop' && selectedMeasurementRect !== null)
               ? 'crosshair'
               : panDragStart.current
                 ? 'grabbing'
@@ -1427,11 +1639,32 @@ function PlanViewport({
               ))}
 
               {measurements.map((measurement) => (
-                <RectOverlay
-                  key={measurement.id}
-                  points={buildRectPolygonPoints(measurement).map(viewportPointFromImage)}
-                  active={measurement.id === selectedMeasurementId}
-                />
+                <g key={measurement.id}>
+                  <RectOverlay
+                    points={buildRectPolygonPoints(measurementToRectBounds(measurement)).map(
+                      viewportPointFromImage,
+                    )}
+                    active={measurement.id === selectedMeasurementId}
+                  />
+                  {measurement.cropX !== null &&
+                  measurement.cropY !== null &&
+                  measurement.cropWidth !== null &&
+                  measurement.cropHeight !== null ? (
+                    <RectOverlay
+                      points={buildRectPolygonPoints({
+                        x: measurement.cropX,
+                        y: measurement.cropY,
+                        width: measurement.cropWidth,
+                        height: measurement.cropHeight,
+                      }).map(viewportPointFromImage)}
+                      active={measurement.id === selectedMeasurementId}
+                      dashed
+                      fill="rgba(16, 185, 129, 0.08)"
+                      stroke={measurement.id === selectedMeasurementId ? '#059669' : '#10b981'}
+                      strokeWidth={measurement.id === selectedMeasurementId ? 3 : 2}
+                    />
+                  ) : null}
+                </g>
               ))}
 
               {calibrationDraft ? (
@@ -1471,6 +1704,17 @@ function PlanViewport({
                   dashed
                 />
               ) : null}
+
+              {draftCropRect ? (
+                <RectOverlay
+                  points={buildRectPolygonPoints(draftCropRect).map(viewportPointFromImage)}
+                  active
+                  dashed
+                  fill="rgba(16, 185, 129, 0.12)"
+                  stroke="#059669"
+                  strokeWidth={3}
+                />
+              ) : null}
             </svg>
 
             <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
@@ -1480,7 +1724,11 @@ function PlanViewport({
                   ? 'Draw measured line • scroll to zoom • double-click to reset'
                   : activeTool === 'rectangle'
                     ? 'Draw measured area • scroll to zoom • double-click to reset'
-                    : 'Scroll to zoom • drag to pan • double-click to reset'}
+                    : activeTool === 'crop'
+                      ? selectedMeasurementRect
+                        ? 'Draw crop inside the selected measured area • scroll to zoom • double-click to reset'
+                        : 'Select a measured item first • scroll to zoom • double-click to reset'
+                      : 'Scroll to zoom • drag to pan • double-click to reset'}
             </div>
           </>
         ) : null}
@@ -1524,124 +1772,6 @@ function buildMeasurementItems(
   }
 
   return items.sort((a, b) => a.primaryLabel.localeCompare(b.primaryLabel));
-}
-
-function normalizeRectDraft(rect: RectDraft) {
-  return {
-    x: Math.min(rect.startX, rect.endX),
-    y: Math.min(rect.startY, rect.endY),
-    width: Math.abs(rect.endX - rect.startX),
-    height: Math.abs(rect.endY - rect.startY),
-  };
-}
-
-function buildRectPolygonPoints(rect: {
-  rectX?: number;
-  rectY?: number;
-  rectWidth?: number;
-  rectHeight?: number;
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-}) {
-  const x = rect.rectX ?? rect.x ?? 0;
-  const y = rect.rectY ?? rect.y ?? 0;
-  const width = rect.rectWidth ?? rect.width ?? 0;
-  const height = rect.rectHeight ?? rect.height ?? 0;
-
-  return [
-    { x, y },
-    { x: x + width, y },
-    { x: x + width, y: y + height },
-    { x, y: y + height },
-  ];
-}
-
-function LineOverlay({
-  start,
-  end,
-  strokeClassName,
-  dotClassName,
-  dashed = false,
-  label,
-}: {
-  start: ImagePoint;
-  end: ImagePoint;
-  strokeClassName: string;
-  dotClassName: string;
-  dashed?: boolean;
-  label?: string | undefined;
-}) {
-  const midX = (start.x + end.x) / 2;
-  const midY = (start.y + end.y) / 2;
-
-  return (
-    <>
-      <line
-        x1={start.x}
-        y1={start.y}
-        x2={end.x}
-        y2={end.y}
-        className={strokeClassName}
-        strokeWidth={3}
-        strokeDasharray={dashed ? '10 8' : undefined}
-        strokeLinecap="round"
-      />
-      <circle cx={start.x} cy={start.y} r={5} className={dotClassName} />
-      <circle cx={end.x} cy={end.y} r={5} className={dotClassName} />
-      {label ? (
-        <g>
-          <rect
-            x={midX - 42}
-            y={midY - 20}
-            width={84}
-            height={18}
-            rx={9}
-            fill="rgba(255,255,255,0.82)"
-          />
-          <text
-            x={midX}
-            y={midY - 8}
-            textAnchor="middle"
-            fill="#3f3f46"
-            fontSize="11"
-            fontWeight="600"
-            letterSpacing="0.08em"
-          >
-            {label}
-          </text>
-        </g>
-      ) : null}
-    </>
-  );
-}
-
-function RectOverlay({
-  points,
-  active,
-  dashed = false,
-}: {
-  points: ImagePoint[];
-  active: boolean;
-  dashed?: boolean;
-}) {
-  const pointsAttr = points.map((point) => `${point.x},${point.y}`).join(' ');
-
-  return (
-    <polygon
-      points={pointsAttr}
-      fill={active ? 'rgba(201, 151, 35, 0.16)' : 'rgba(82, 82, 91, 0.08)'}
-      stroke={active ? '#c99723' : '#71717a'}
-      strokeWidth={active ? 3.5 : 2}
-      strokeDasharray={dashed ? '10 8' : undefined}
-      strokeLinejoin="round"
-    />
-  );
-}
-
-function getLineLength(line: Pick<LineDraft, 'startX' | 'startY' | 'endX' | 'endY'>) {
-  return Math.hypot(line.endX - line.startX, line.endY - line.startY);
 }
 
 function convertPlanUnitsToBase(value: number, unit: PlanMeasurementUnit) {

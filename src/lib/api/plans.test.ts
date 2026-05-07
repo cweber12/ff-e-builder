@@ -452,6 +452,68 @@ describe('plansApi', () => {
     );
   });
 
+  it('updates a measurement crop for a plan item', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        measurement: {
+          id: 'measurement-1',
+          measured_plan_id: 'plan-1',
+          target_kind: 'ffe',
+          target_item_id: 'item-1',
+          target_tag_snapshot: 'A-101',
+          rect_x: 100,
+          rect_y: 120,
+          rect_width: 240,
+          rect_height: 180,
+          horizontal_span_base: '3657.6000',
+          vertical_span_base: '2743.2000',
+          crop_x: 120,
+          crop_y: 140,
+          crop_width: 140,
+          crop_height: 90,
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-07T00:00:00Z',
+        },
+      }),
+    );
+
+    await plansApi.updateMeasurement('project-1', 'plan-1', 'measurement-1', {
+      targetKind: 'ffe',
+      targetItemId: 'item-1',
+      targetTagSnapshot: 'A-101',
+      rectX: 100,
+      rectY: 120,
+      rectWidth: 240,
+      rectHeight: 180,
+      horizontalSpanBase: 3657.6,
+      verticalSpanBase: 2743.2,
+      cropX: 120,
+      cropY: 140,
+      cropWidth: 140,
+      cropHeight: 90,
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.method).toBe('PATCH');
+    expect(init?.body).toBe(
+      JSON.stringify({
+        target_kind: 'ffe',
+        target_item_id: 'item-1',
+        target_tag_snapshot: 'A-101',
+        rect_x: 100,
+        rect_y: 120,
+        rect_width: 240,
+        rect_height: 180,
+        horizontal_span_base: 3657.6,
+        vertical_span_base: 2743.2,
+        crop_x: 120,
+        crop_y: 140,
+        crop_width: 140,
+        crop_height: 90,
+      }),
+    );
+  });
+
   it('deletes a measurement for a plan item', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
 
