@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -186,6 +187,25 @@ vi.mock('../hooks', () => ({
               createdAt: '2026-05-06T00:00:00Z',
               updatedAt: '2026-05-06T00:00:00Z',
             },
+            {
+              id: 'measurement-2',
+              measuredPlanId: 'plan-2',
+              targetKind: 'proposal',
+              targetItemId: 'proposal-item-1',
+              targetTagSnapshot: 'P-42',
+              rectX: 360,
+              rectY: 180,
+              rectWidth: 220,
+              rectHeight: 160,
+              horizontalSpanBase: 3352.8,
+              verticalSpanBase: 2438.4,
+              cropX: 390,
+              cropY: 210,
+              cropWidth: 140,
+              cropHeight: 90,
+              createdAt: '2026-05-06T00:00:00Z',
+              updatedAt: '2026-05-06T00:00:00Z',
+            },
           ]
         : [],
     isLoading: false,
@@ -225,21 +245,81 @@ vi.mock('../lib/api', () => ({
     plans: {
       downloadContent: vi.fn(() => Promise.resolve(new Blob(['preview']))),
     },
+    images: {
+      list: vi.fn(() => Promise.resolve([])),
+      delete: vi.fn(() => Promise.resolve()),
+      upload: vi.fn(() =>
+        Promise.resolve({
+          id: 'image-1',
+          entityType: 'proposal_plan',
+          ownerUid: 'user-1',
+          projectId: 'project-1',
+          roomId: null,
+          itemId: null,
+          materialId: null,
+          proposalItemId: 'proposal-item-1',
+          filename: 'plan.png',
+          contentType: 'image/png',
+          byteSize: 1024,
+          altText: 'P-42 plan image',
+          isPrimary: true,
+          cropX: null,
+          cropY: null,
+          cropWidth: null,
+          cropHeight: null,
+          createdAt: '2026-05-06T00:00:00Z',
+          updatedAt: '2026-05-06T00:00:00Z',
+        }),
+      ),
+      setCrop: vi.fn((imageId: string, params: unknown) =>
+        Promise.resolve({
+          id: imageId,
+          entityType: 'proposal_plan',
+          ownerUid: 'user-1',
+          projectId: 'project-1',
+          roomId: null,
+          itemId: null,
+          materialId: null,
+          proposalItemId: 'proposal-item-1',
+          filename: 'plan.png',
+          contentType: 'image/png',
+          byteSize: 1024,
+          altText: 'P-42 plan image',
+          isPrimary: true,
+          ...(params as object),
+          createdAt: '2026-05-06T00:00:00Z',
+          updatedAt: '2026-05-06T00:00:00Z',
+        }),
+      ),
+    },
   },
 }));
 
-describe('PlanCanvasPage', () => {
-  it('renders the workspace shell and disables downstream tools when uncalibrated', () => {
-    render(
+function renderPlanCanvasPage(planId: 'plan-1' | 'plan-2') {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <PlanCanvasPage
           project={project}
-          planId="plan-1"
+          planId={planId}
           roomsWithItems={roomsWithItems}
           proposalCategoriesWithItems={proposalCategoriesWithItems}
         />
-      </MemoryRouter>,
-    );
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+describe('PlanCanvasPage', () => {
+  it('renders the workspace shell and disables downstream tools when uncalibrated', () => {
+    renderPlanCanvasPage('plan-1');
 
     expect(screen.getByRole('heading', { name: 'Level 1 Furniture Plan' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Calibrate' })).toBeEnabled();
@@ -254,16 +334,7 @@ describe('PlanCanvasPage', () => {
   });
 
   it('shows saved calibration details for calibrated plans', () => {
-    render(
-      <MemoryRouter>
-        <PlanCanvasPage
-          project={project}
-          planId="plan-2"
-          roomsWithItems={roomsWithItems}
-          proposalCategoriesWithItems={proposalCategoriesWithItems}
-        />
-      </MemoryRouter>,
-    );
+    renderPlanCanvasPage('plan-2');
 
     expect(screen.getByText('Saved scale')).toBeInTheDocument();
     expect(screen.getAllByText(/12 ft/i)).toHaveLength(2);
@@ -274,16 +345,7 @@ describe('PlanCanvasPage', () => {
   });
 
   it('shows crop guidance for a selected measured item on calibrated plans', () => {
-    render(
-      <MemoryRouter>
-        <PlanCanvasPage
-          project={project}
-          planId="plan-2"
-          roomsWithItems={roomsWithItems}
-          proposalCategoriesWithItems={proposalCategoriesWithItems}
-        />
-      </MemoryRouter>,
-    );
+    renderPlanCanvasPage('plan-2');
 
     fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
     fireEvent.click(screen.getByRole('button', { name: /A-101/ }));
@@ -293,5 +355,17 @@ describe('PlanCanvasPage', () => {
       screen.getByText(/Draw a crop rectangle inside the selected measured area/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save crop' })).toBeDisabled();
+  });
+
+  it('shows proposal plan-image save action for measured proposal crops', () => {
+    renderPlanCanvasPage('plan-2');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
+    fireEvent.click(screen.getByRole('button', { name: /P-42/ }));
+
+    expect(screen.getByRole('button', { name: 'Save as plan image' })).toBeDisabled();
+    expect(
+      screen.getByText(/This saves the selected crop as the Proposal item's Plan image/i),
+    ).toBeInTheDocument();
   });
 });

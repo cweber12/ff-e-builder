@@ -7,6 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { LineOverlay, RectOverlay } from '../components/plans/overlays';
 import { Button } from '../components/primitives';
@@ -34,7 +35,9 @@ import {
   type LineDraft,
   type RectDraft,
 } from '../lib/plans/geometry';
+import { imageKeys } from '../hooks/queryKeys';
 import type {
+  CropParams,
   LengthLine,
   Measurement,
   MeasuredPlan,
@@ -111,6 +114,7 @@ export function PlanCanvasPage({
   roomsWithItems,
   proposalCategoriesWithItems,
 }: PlanCanvasPageProps) {
+  const queryClient = useQueryClient();
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
   const [activeTool, setActiveTool] = useState<ToolId>('calibrate');
   const [calibrationDraft, setCalibrationDraft] = useState<LineDraft | null>(null);
@@ -121,9 +125,14 @@ export function PlanCanvasPage({
   const [lengthLineLabelInput, setLengthLineLabelInput] = useState('');
   const [measurementDraft, setMeasurementDraft] = useState<RectDraft | null>(null);
   const [cropDraft, setCropDraft] = useState<RectDraft | null>(null);
+  const [planNaturalSize, setPlanNaturalSize] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
   const [selectedMeasurementTargetKey, setSelectedMeasurementTargetKey] = useState('');
   const [measuredItemsOpen, setMeasuredItemsOpen] = useState(true);
+  const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
 
   const selectedPlan = useMemo(
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
@@ -190,6 +199,7 @@ export function PlanCanvasPage({
     setLengthLineDraft(null);
     setMeasurementDraft(null);
     setCropDraft(null);
+    setPlanNaturalSize({ width: 0, height: 0 });
     setSelectedLengthLineId(null);
     setSelectedMeasurementId(null);
     setSelectedMeasurementTargetKey('');
@@ -301,6 +311,25 @@ export function PlanCanvasPage({
     normalizedCropDraft.width > 0 &&
     normalizedCropDraft.height > 0 &&
     !updateMeasurement.isPending;
+  const savedCropParams =
+    selectedMeasurement &&
+    selectedMeasurement.cropX !== null &&
+    selectedMeasurement.cropY !== null &&
+    selectedMeasurement.cropWidth !== null &&
+    selectedMeasurement.cropHeight !== null
+      ? ({
+          cropX: selectedMeasurement.cropX,
+          cropY: selectedMeasurement.cropY,
+          cropWidth: selectedMeasurement.cropWidth,
+          cropHeight: selectedMeasurement.cropHeight,
+        } satisfies CropParams)
+      : null;
+  const canSavePlanImage =
+    selectedMeasurement?.targetKind === 'proposal' &&
+    savedCropParams !== null &&
+    planNaturalSize.width > 0 &&
+    planNaturalSize.height > 0 &&
+    !isSavingPlanImage;
 
   const handleSaveCalibration = async () => {
     if (!canSaveCalibration || !calibrationDraft || calibrationPixelLength === null) return;
@@ -449,6 +478,59 @@ export function PlanCanvasPage({
     setCropDraft(null);
   };
 
+  const handleSavePlanImage = async () => {
+    if (
+      !selectedMeasurement ||
+      selectedMeasurement.targetKind !== 'proposal' ||
+      !savedCropParams ||
+      !selectedPlan ||
+      planNaturalSize.width <= 0 ||
+      planNaturalSize.height <= 0
+    ) {
+      return;
+    }
+
+    setIsSavingPlanImage(true);
+    try {
+      const existingImages = await api.images.list({
+        entityType: 'proposal_plan',
+        entityId: selectedMeasurement.targetItemId,
+      });
+
+      if (existingImages.length > 0) {
+        await Promise.all(existingImages.map((image) => api.images.delete(image.id)));
+      }
+
+      const sourceBlob = await api.plans.downloadContent(project.id, selectedPlanId);
+      const sourceType = sourceBlob.type || selectedPlan.imageContentType || 'image/png';
+      const extension = sourceType.split('/')[1] || 'png';
+      const uploadFile = new File([sourceBlob], `${selectedPlan.name}-plan.${extension}`, {
+        type: sourceType,
+      });
+
+      const uploadedImage = await api.images.upload({
+        entityType: 'proposal_plan',
+        entityId: selectedMeasurement.targetItemId,
+        file: uploadFile,
+        altText: `${selectedMeasurement.targetTagSnapshot} plan image`,
+      });
+
+      const croppedImage = await api.images.setCrop(uploadedImage.id, {
+        cropX: savedCropParams.cropX / planNaturalSize.width,
+        cropY: savedCropParams.cropY / planNaturalSize.height,
+        cropWidth: savedCropParams.cropWidth / planNaturalSize.width,
+        cropHeight: savedCropParams.cropHeight / planNaturalSize.height,
+      });
+
+      queryClient.setQueryData(
+        imageKeys.forEntity('proposal_plan', selectedMeasurement.targetItemId),
+        [croppedImage],
+      );
+    } finally {
+      setIsSavingPlanImage(false);
+    }
+  };
+
   if (isLoading) {
     return <PlanCanvasSkeleton />;
   }
@@ -552,6 +634,7 @@ export function PlanCanvasPage({
             onMeasurementDraftChange={setMeasurementDraft}
             cropDraft={cropDraft}
             onCropDraftChange={setCropDraft}
+            onNaturalSizeChange={setPlanNaturalSize}
           />
         </main>
 
@@ -1054,7 +1137,24 @@ export function PlanCanvasPage({
                         >
                           Remove saved crop
                         </Button>
+                        {selectedMeasurement?.targetKind === 'proposal' ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => void handleSavePlanImage()}
+                            disabled={!canSavePlanImage}
+                          >
+                            {isSavingPlanImage ? 'Saving plan image…' : 'Save as plan image'}
+                          </Button>
+                        ) : null}
                       </div>
+                      {selectedMeasurement?.targetKind === 'proposal' ? (
+                        <p className="text-xs leading-5 text-neutral-500">
+                          This saves the selected crop as the Proposal item&apos;s Plan image so it
+                          appears in the Proposal table and detail panel.
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
 
@@ -1176,6 +1276,7 @@ function PlanViewport({
   onMeasurementDraftChange,
   cropDraft,
   onCropDraftChange,
+  onNaturalSizeChange,
 }: {
   projectId: string;
   plan: MeasuredPlan;
@@ -1193,6 +1294,7 @@ function PlanViewport({
   onMeasurementDraftChange: (draft: RectDraft | null) => void;
   cropDraft: RectDraft | null;
   onCropDraftChange: (draft: RectDraft | null) => void;
+  onNaturalSizeChange: (size: { width: number; height: number }) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -1241,6 +1343,10 @@ function PlanViewport({
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [plan.id, projectId]);
+
+  useEffect(() => {
+    onNaturalSizeChange(naturalSize);
+  }, [naturalSize, onNaturalSizeChange]);
 
   useEffect(() => {
     const element = containerRef.current;
