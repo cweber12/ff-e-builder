@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
@@ -308,7 +308,6 @@ export function CatalogPage({
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
   const projectSlug = slugify(project.name);
-  const catalogBodyRef = useRef<HTMLElement>(null);
   const saveField = (field: EditableCatalogField, value: string, required = false) =>
     updateItem
       .mutateAsync({
@@ -326,94 +325,100 @@ export function CatalogPage({
       aria-label={`${item.itemName} catalog page`}
     >
       <header className="catalog-header">
-        <span>{project.name}</span>
-        <span>{project.clientName}</span>
+        <div className="min-w-0">
+          <p>{project.name}</p>
+          {project.clientName ? <p className="catalog-client-line">{project.clientName}</p> : null}
+        </div>
+        <span>{room.name}</span>
       </header>
 
-      <section ref={catalogBodyRef} className="catalog-body">
-        <CatalogLeftColumn
-          item={item}
-          bodyRef={catalogBodyRef}
-          updateItem={updateItem.mutateAsync}
-        />
-
-        <div className="catalog-details">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
-              {room.name}
-            </p>
-            <div className="mt-3 flex items-baseline gap-2">
-              {item.itemIdTag ? (
-                <span className="shrink-0 font-mono text-xl font-bold tracking-wide text-gray-900">
-                  {item.itemIdTag}
-                </span>
-              ) : (
-                <span className="shrink-0 font-mono text-sm font-semibold tracking-wide text-gray-400">
-                  No ID
-                </span>
-              )}
-              <InlineTextEdit
-                value={item.itemName}
-                aria-label={`Item name for ${item.itemName}`}
-                className="min-w-0 flex-1"
-                inputClassName="w-full text-xl font-medium leading-tight text-gray-700"
-                onSave={(value) => saveField('itemName', value, true)}
-                renderDisplay={(value) => (
-                  <h1 className="text-xl font-medium leading-tight text-gray-700">{value}</h1>
-                )}
-              />
-            </div>
-            <div className="mt-2">
-              <InlineTextEdit
-                value={item.dimensions ?? ''}
-                aria-label={`Dimensions for ${item.itemName}`}
-                inputClassName="text-sm text-gray-600"
-                onSave={(value) => saveField('dimensions', value)}
-                renderDisplay={(value) =>
-                  value.trim() ? (
-                    <span className="text-sm text-gray-600">{value}</span>
-                  ) : (
-                    <span className="text-sm italic text-gray-400">Click to add dimensions</span>
-                  )
-                }
-              />
-            </div>
-            <div className="mt-4">
-              <InlineTextEdit
-                value={item.description ?? ''}
-                aria-label={`Description for ${item.itemName}`}
-                className="block"
-                inputClassName="w-full text-sm text-gray-600"
-                onSave={(value) => saveField('description', value)}
-                renderDisplay={(value) =>
-                  value.trim() ? (
-                    <p className="text-sm leading-6 text-gray-600">{value}</p>
-                  ) : (
-                    <p className="text-sm italic text-gray-400">Click to add a description</p>
-                  )
-                }
-              />
-            </div>
-          </div>
-
-          <div className="h-px bg-brand-500/40" />
-
-          {item.unitCostCents > 0 && (
-            <div className="catalog-price-block">
-              <div>
-                <span>Unit cost</span>
-                <strong>{formatMoney(cents(item.unitCostCents))}</strong>
-              </div>
-            </div>
+      <section className="catalog-top-section">
+        <div className="catalog-title-row">
+          {item.itemIdTag ? (
+            <span className="catalog-item-id">{item.itemIdTag}</span>
+          ) : (
+            <span className="catalog-item-id catalog-item-id-empty">No ID</span>
           )}
+          <InlineTextEdit
+            value={item.itemName}
+            aria-label={`Item name for ${item.itemName}`}
+            className="min-w-0 flex-1"
+            inputClassName="w-full text-[30px] font-semibold leading-tight text-gray-900"
+            onSave={(value) => saveField('itemName', value, true)}
+            renderDisplay={(value) => <h1 className="catalog-item-name">{value}</h1>}
+          />
+        </div>
 
-          <div className="flex-1 min-h-0">
+        <div className="catalog-dimensions-row">
+          <InlineTextEdit
+            value={item.dimensions ?? ''}
+            aria-label={`Dimensions for ${item.itemName}`}
+            inputClassName="text-sm text-gray-600"
+            onSave={(value) => saveField('dimensions', value)}
+            renderDisplay={(value) =>
+              value.trim() ? (
+                <span className="catalog-dimensions-text">{value}</span>
+              ) : (
+                <span className="catalog-dimensions-text text-gray-400 italic">
+                  Click to add dimensions
+                </span>
+              )
+            }
+          />
+        </div>
+
+        <div className="catalog-description-row">
+          <InlineTextEdit
+            value={item.description ?? ''}
+            aria-label={`Description for ${item.itemName}`}
+            className="block"
+            inputClassName="w-full text-sm text-gray-600"
+            onSave={(value) => saveField('description', value)}
+            renderDisplay={(value) =>
+              value.trim() ? (
+                <p className="catalog-description-summary">{value}</p>
+              ) : (
+                <p className="catalog-description-summary text-gray-400 italic">
+                  Click to add a description
+                </p>
+              )
+            }
+          />
+        </div>
+      </section>
+
+      <section className="catalog-second-section">
+        <div className="catalog-rendering-panel">
+          <div className="catalog-section-label">Rendering</div>
+          <div className="catalog-rendering-frame">
+            <ImageFrame
+              entityType="item"
+              entityId={item.id}
+              alt={item.itemName}
+              fallbackUrl={item.imageUrl}
+              onFallbackDelete={async () => {
+                await updateItem.mutateAsync({
+                  id: item.id,
+                  patch: { imageUrl: null, version: item.version },
+                });
+              }}
+              className="h-full w-full border-0 shadow-none"
+              imageClassName="catalog-image"
+              placeholderClassName="catalog-placeholder"
+              placeholderContent={<span>{initials(item.itemName)}</span>}
+            />
+          </div>
+        </div>
+
+        <div className="catalog-notes-panel">
+          <div className="catalog-section-label">Notes</div>
+          <div className="catalog-notes-content">
             <InlineTextEdit
               value={item.notes ?? ''}
               aria-label={`Notes for ${item.itemName}`}
               className="block h-full w-full"
               multiline
-              rows={5}
+              rows={7}
               inputClassName="h-full min-h-24 w-full resize-none overflow-y-auto text-sm leading-6 text-gray-600"
               onSave={(value) => saveField('notes', value)}
               renderDisplay={(value) =>
@@ -427,10 +432,33 @@ export function CatalogPage({
               }
             />
           </div>
-
-          <CatalogApprovalSection />
+          {item.unitCostCents > 0 ? (
+            <div className="catalog-cost-row">
+              <span>Unit cost</span>
+              <strong>{formatMoney(cents(item.unitCostCents))}</strong>
+            </div>
+          ) : null}
         </div>
       </section>
+
+      <section className="catalog-third-section">
+        <CatalogOptionRenderings itemId={item.id} itemName={item.itemName} />
+        {item.materials.length > 0 ? (
+          <div className="catalog-materials-strip">
+            <div className="catalog-section-label">Materials</div>
+            <div className="catalog-materials-grid">
+              {item.materials.map((material) => (
+                <div key={material.id} className="catalog-material-card">
+                  <MaterialSwatchImage material={material} size="lg" />
+                  <span className="catalog-material-label">{material.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <CatalogApprovalSection />
 
       <footer className="catalog-footer">
         <span>
@@ -452,173 +480,8 @@ export function CatalogPage({
   );
 }
 
-type CatalogOptionLayout = 'stacked' | 'row';
-
-const CATALOG_LEFT_COLUMN_GAP_PX = 16;
-const CATALOG_OPTION_CARD_GAP_PX = 12;
-const CATALOG_OPTION_ROW_MIN_HEIGHT_PX = 118;
-const CATALOG_OPTION_STACKED_MIN_HEIGHT_PX = 248;
-const CATALOG_MATERIAL_SECTION_MIN_HEIGHT_PX = 72;
-const CATALOG_MATERIAL_SECTION_PREFERRED_HEIGHT_PX = 112;
-
-type CatalogLeftLayoutState = {
-  optionLayout: CatalogOptionLayout;
-  optionHeight: number | null;
-  materialHeight: number | null;
-  materialSwatchSize: number | null;
-  compactMaterials: boolean;
-};
-
-function clampNumber(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function containedImageArea(
-  wrapperWidth: number,
-  wrapperHeight: number,
-  aspectRatio: number | null | undefined,
-) {
-  if (!aspectRatio || wrapperWidth <= 0 || wrapperHeight <= 0) return 0;
-  const imageWidthFromHeight = wrapperHeight * aspectRatio;
-  if (imageWidthFromHeight <= wrapperWidth) {
-    return imageWidthFromHeight * wrapperHeight;
-  }
-  const imageHeightFromWidth = wrapperWidth / aspectRatio;
-  return wrapperWidth * imageHeightFromWidth;
-}
-
-function optionAreaScore(
-  layout: CatalogOptionLayout,
-  optionHeight: number,
-  optionCount: number,
-  optionAspectRatios: Array<number | null>,
-) {
-  if (optionCount <= 0 || optionHeight <= 0) return 0;
-
-  if (layout === 'stacked') {
-    const cardHeight = Math.max(0, (optionHeight - CATALOG_OPTION_CARD_GAP_PX) / 2);
-    let total = 0;
-    for (const ratio of optionAspectRatios.slice(0, optionCount)) {
-      total += containedImageArea(1, cardHeight / CATALOG_OPTION_STACKED_MIN_HEIGHT_PX, ratio);
-    }
-    return total;
-  }
-
-  const cardWidth = (1 - 0.12) / 2;
-  let total = 0;
-  for (const ratio of optionAspectRatios.slice(0, optionCount)) {
-    total += containedImageArea(cardWidth, optionHeight / CATALOG_OPTION_ROW_MIN_HEIGHT_PX, ratio);
-  }
-  return total;
-}
-
-function computeCatalogLeftLayout(
-  supportHeight: number,
-  optionCount: number,
-  materialCount: number,
-  optionAspectRatios: Array<number | null>,
-): CatalogLeftLayoutState {
-  if (supportHeight <= 0) {
-    return {
-      optionLayout: 'stacked',
-      optionHeight: null,
-      materialHeight: null,
-      materialSwatchSize: null,
-      compactMaterials: false,
-    };
-  }
-
-  const hasOptions = optionCount > 0;
-  const hasMaterials = materialCount > 0;
-  const materialsGap = hasOptions && hasMaterials ? CATALOG_LEFT_COLUMN_GAP_PX : 0;
-  const minMaterialsHeight = hasMaterials ? CATALOG_MATERIAL_SECTION_MIN_HEIGHT_PX : 0;
-  const preferredMaterialsHeight = hasMaterials ? CATALOG_MATERIAL_SECTION_PREFERRED_HEIGHT_PX : 0;
-  const evaluateLayout = (layout: CatalogOptionLayout) => {
-    let materialHeight = hasMaterials
-      ? clampNumber(
-          Math.round(supportHeight * (layout === 'stacked' ? 0.34 : 0.42)),
-          minMaterialsHeight,
-          preferredMaterialsHeight,
-        )
-      : 0;
-    let optionHeight = hasOptions ? supportHeight - materialHeight - materialsGap : 0;
-    const optionMinHeight =
-      layout === 'stacked'
-        ? CATALOG_OPTION_STACKED_MIN_HEIGHT_PX
-        : CATALOG_OPTION_ROW_MIN_HEIGHT_PX;
-
-    if (hasOptions && optionHeight < optionMinHeight) {
-      optionHeight = optionMinHeight;
-      materialHeight = hasMaterials ? Math.max(0, supportHeight - optionHeight - materialsGap) : 0;
-    }
-
-    return {
-      layout,
-      optionHeight: hasOptions ? Math.max(0, optionHeight) : 0,
-      materialHeight: hasMaterials ? Math.max(0, materialHeight) : 0,
-    };
-  };
-
-  const stacked = evaluateLayout('stacked');
-  const row = evaluateLayout('row');
-  const stackedFitsMaterials = !hasMaterials || stacked.materialHeight >= minMaterialsHeight;
-  const rowFitsMaterials = !hasMaterials || row.materialHeight >= minMaterialsHeight;
-  const stackedScore = optionAreaScore(
-    'stacked',
-    stacked.optionHeight,
-    optionCount,
-    optionAspectRatios,
-  );
-  const rowScore = optionAreaScore('row', row.optionHeight, optionCount, optionAspectRatios);
-  const shouldPreferRow =
-    optionCount > 1 &&
-    rowFitsMaterials &&
-    (!stackedFitsMaterials || rowScore > stackedScore * 1.08);
-  const chosen = shouldPreferRow ? row : stackedFitsMaterials ? stacked : row;
-
-  let materialHeight = chosen.materialHeight;
-  let optionHeight = chosen.optionHeight;
-  const optionLayout = chosen.layout;
-
-  if (!hasMaterials) {
-    materialHeight = 0;
-  }
-
-  if (!hasOptions) {
-    materialHeight = supportHeight;
-  }
-
-  const materialRows = Math.max(1, Math.ceil(materialCount / 4));
-  const materialInnerHeight = Math.max(0, materialHeight - 34 - (materialRows - 1) * 10);
-  const materialSwatchSize = hasMaterials
-    ? clampNumber(Math.floor(materialInnerHeight / materialRows) - 22, 28, 72)
-    : null;
-
-  return {
-    optionLayout,
-    optionHeight: hasOptions ? Math.max(0, optionHeight) : null,
-    materialHeight: hasMaterials ? Math.max(0, materialHeight) : null,
-    materialSwatchSize,
-    compactMaterials:
-      hasMaterials &&
-      (materialHeight < preferredMaterialsHeight ||
-        (materialSwatchSize !== null && materialSwatchSize < 64)),
-  };
-}
-
-function CatalogLeftColumn({
-  item,
-  bodyRef,
-  updateItem,
-}: {
-  item: Item;
-  bodyRef: RefObject<HTMLElement>;
-  updateItem: ReturnType<typeof useUpdateItem>['mutateAsync'];
-}) {
-  const leftColumnRef = useRef<HTMLDivElement>(null);
-  const imageWrapRef = useRef<HTMLDivElement>(null);
-  const supportRef = useRef<HTMLDivElement>(null);
-  const optionImagesQuery = useImages('item_option', item.id);
+function CatalogOptionRenderings({ itemId, itemName }: { itemId: string; itemName: string }) {
+  const optionImagesQuery = useImages('item_option', itemId);
   const optionImages = useMemo(
     () =>
       [...(optionImagesQuery.data ?? [])]
@@ -626,140 +489,6 @@ function CatalogLeftColumn({
         .slice(0, 2),
     [optionImagesQuery.data],
   );
-  const [layoutState, setLayoutState] = useState<CatalogLeftLayoutState>({
-    optionLayout: 'stacked',
-    optionHeight: null,
-    materialHeight: null,
-    materialSwatchSize: null,
-    compactMaterials: false,
-  });
-  const [optionAspectRatios, setOptionAspectRatios] = useState<Array<number | null>>([null, null]);
-
-  useEffect(() => {
-    const updateLayout = () => {
-      const leftColumn = leftColumnRef.current;
-      const imageWrap = imageWrapRef.current;
-      const body = bodyRef.current;
-      const support = supportRef.current;
-
-      if (!leftColumn || !imageWrap || !body || !support) return;
-      if (body.clientHeight === 0 || imageWrap.offsetHeight === 0 || support.clientHeight === 0) {
-        setLayoutState((current) => ({ ...current, optionLayout: 'stacked' }));
-        return;
-      }
-
-      const optionCount = optionImages.length;
-      const nextState = computeCatalogLeftLayout(
-        support.clientHeight,
-        optionCount,
-        item.materials.length,
-        optionAspectRatios,
-      );
-      setLayoutState(nextState);
-    };
-
-    updateLayout();
-
-    if (typeof ResizeObserver === 'undefined') return;
-
-    const observer = new ResizeObserver(() => updateLayout());
-    if (leftColumnRef.current) observer.observe(leftColumnRef.current);
-    if (bodyRef.current) observer.observe(bodyRef.current);
-    if (imageWrapRef.current) observer.observe(imageWrapRef.current);
-    if (supportRef.current) observer.observe(supportRef.current);
-
-    return () => observer.disconnect();
-  }, [bodyRef, item.materials.length, optionAspectRatios, optionImages.length]);
-
-  return (
-    <div ref={leftColumnRef} className="catalog-left-column">
-      <div ref={imageWrapRef} className="catalog-image-wrap">
-        <ImageFrame
-          entityType="item"
-          entityId={item.id}
-          alt={item.itemName}
-          fallbackUrl={item.imageUrl}
-          onFallbackDelete={async () => {
-            await updateItem({
-              id: item.id,
-              patch: { imageUrl: null, version: item.version },
-            });
-          }}
-          className="h-full w-full border-0 shadow-none"
-          imageClassName="catalog-image"
-          placeholderClassName="catalog-placeholder"
-          placeholderContent={<span>{initials(item.itemName)}</span>}
-        />
-      </div>
-
-      <div ref={supportRef} className="catalog-left-support">
-        <CatalogOptionRenderings
-          itemId={item.id}
-          itemName={item.itemName}
-          layout={layoutState.optionLayout}
-          sectionHeight={layoutState.optionHeight}
-          optionImages={optionImages}
-          onAspectRatioChange={(index, ratio) =>
-            setOptionAspectRatios((current) => {
-              if (current[index] === ratio) return current;
-              const next = [...current];
-              next[index] = ratio;
-              return next;
-            })
-          }
-        />
-
-        {item.materials.length > 0 && (
-          <div
-            className={`catalog-materials-block ${layoutState.compactMaterials ? 'catalog-materials-block-compact' : ''}`}
-            style={
-              {
-                height:
-                  layoutState.materialHeight !== null
-                    ? `${layoutState.materialHeight}px`
-                    : undefined,
-                '--catalog-material-swatch-size':
-                  layoutState.materialSwatchSize !== null
-                    ? `${layoutState.materialSwatchSize}px`
-                    : undefined,
-              } as CSSProperties
-            }
-          >
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">
-              Materials
-            </p>
-            <div className="catalog-materials-grid">
-              {item.materials.map((material) => (
-                <div key={material.id} className="catalog-material-card">
-                  <MaterialSwatchImage material={material} size="lg" />
-                  <span className="max-w-[80px] text-center text-[10px] font-medium leading-tight text-gray-600">
-                    {material.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CatalogOptionRenderings({
-  itemId,
-  itemName,
-  layout,
-  sectionHeight,
-  optionImages,
-  onAspectRatioChange,
-}: {
-  itemId: string;
-  itemName: string;
-  layout: CatalogOptionLayout;
-  sectionHeight: number | null;
-  optionImages: ImageAsset[];
-  onAspectRatioChange: (index: number, ratio: number | null) => void;
-}) {
   const setPrimary = useSetPrimaryImage('item_option', itemId);
   const upload = useUploadImage('item_option', itemId);
   const deleteImage = useDeleteImage('item_option', itemId);
@@ -767,16 +496,9 @@ function CatalogOptionRenderings({
   const isBusy = upload.isPending || deleteImage.isPending;
 
   return (
-    <div
-      className="catalog-option-section"
-      style={{ height: sectionHeight !== null ? `${sectionHeight}px` : undefined }}
-    >
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">Options</p>
-      <div
-        className={`catalog-option-grid ${
-          layout === 'stacked' ? 'catalog-option-grid-stacked' : 'catalog-option-grid-row'
-        }`}
-      >
+    <div className="catalog-options-strip">
+      <div className="catalog-section-label">Options</div>
+      <div className="catalog-option-grid">
         {slots.map((image, index) => (
           <CatalogOptionCard
             key={image?.id ?? `catalog-option-${index}`}
@@ -787,7 +509,6 @@ function CatalogOptionRenderings({
             onSelect={(imageId) => setPrimary.mutate(imageId)}
             onUpload={(file) => upload.mutate({ file, altText: `${itemName} option ${index + 1}` })}
             onDelete={(imageId) => deleteImage.mutate(imageId)}
-            onAspectRatioChange={onAspectRatioChange}
           />
         ))}
       </div>
@@ -803,7 +524,6 @@ function CatalogOptionCard({
   onSelect,
   onUpload,
   onDelete,
-  onAspectRatioChange,
 }: {
   image: ImageAsset | null;
   itemName: string;
@@ -812,19 +532,12 @@ function CatalogOptionCard({
   onSelect: (imageId: string) => void;
   onUpload: (file: File) => void;
   onDelete: (imageId: string) => void;
-  onAspectRatioChange: (index: number, ratio: number | null) => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
   const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
-
-  useEffect(() => {
-    if (!image) {
-      onAspectRatioChange(index, null);
-    }
-  }, [image, index, onAspectRatioChange]);
 
   useEffect(() => {
     let ignore = false;
@@ -842,24 +555,10 @@ function CatalogOptionCard({
       .then((blob) => {
         if (ignore) return;
         nextUrl = URL.createObjectURL(blob);
-        const previewImage = new Image();
-        previewImage.onload = () => {
-          if (ignore) return;
-          const width = previewImage.naturalWidth || previewImage.width || 1;
-          const height = previewImage.naturalHeight || previewImage.height || 1;
-          onAspectRatioChange(index, height > 0 ? width / height : null);
-          setPreviewUrl(nextUrl);
-        };
-        previewImage.onerror = () => {
-          if (ignore) return;
-          onAspectRatioChange(index, null);
-          setPreviewUrl(nextUrl);
-        };
-        previewImage.src = nextUrl;
+        setPreviewUrl(nextUrl);
       })
       .catch(() => {
         if (!ignore) {
-          onAspectRatioChange(index, null);
           setPreviewUrl(null);
         }
       });
@@ -868,7 +567,7 @@ function CatalogOptionCard({
       ignore = true;
       if (nextUrl) URL.revokeObjectURL(nextUrl);
     };
-  }, [image, index, onAspectRatioChange]);
+  }, [image]);
 
   useEffect(
     () => () => {
@@ -978,27 +677,27 @@ function CatalogOptionCard({
 
 function CatalogApprovalSection() {
   return (
-    <section className="catalog-approval">
-      <p className="catalog-approval-title">Customer approval</p>
-      <div className="catalog-approval-grid">
-        <div>
+    <section className="catalog-approval-band">
+      <p className="catalog-section-label">Customer approval</p>
+      <div className="catalog-approval-row">
+        <div className="catalog-approval-field">
           <span>Signature</span>
           <div className="catalog-approval-line" />
         </div>
-        <div>
+        <div className="catalog-approval-field catalog-approval-date">
           <span>Date</span>
           <div className="catalog-approval-line" />
         </div>
-      </div>
-      <div className="catalog-approval-checks">
-        <label>
-          <input type="checkbox" />
-          Approved w/ changes
-        </label>
-        <label>
-          <input type="checkbox" />
-          Approved w/o changes
-        </label>
+        <div className="catalog-approval-checks">
+          <label>
+            <input type="checkbox" />
+            Approved w/ changes
+          </label>
+          <label>
+            <input type="checkbox" />
+            Approved w/o changes
+          </label>
+        </div>
       </div>
     </section>
   );

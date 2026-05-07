@@ -400,11 +400,11 @@ describe('catalog PDF page model', () => {
     expect(model.materials).toEqual([material]);
   });
 
-  it('stacks two option images when there is enough vertical space', () => {
-    expect(pickCatalogPdfOptionLayout(2, [], 90)).toBe('stacked');
+  it('keeps a single option centered as a standalone card', () => {
+    expect(pickCatalogPdfOptionLayout(1, [], 90)).toBe('stacked');
   });
 
-  it('falls back to a two-up row when stacked options would crowd remaining content', () => {
+  it('renders two option images in a horizontal two-up row', () => {
     expect(pickCatalogPdfOptionLayout(2, [makeMaterial()], 60)).toBe('row');
   });
 });

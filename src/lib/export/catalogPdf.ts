@@ -7,30 +7,28 @@ import { fmtMoney, safeName } from './shared';
 
 const BRAND = BRAND_RGB;
 const PAGE_PADDING = 13;
-const HEADER_Y = PAGE_PADDING + 3;
+const CONTENT_W = 210 - PAGE_PADDING * 2;
+const HEADER_TEXT_Y = PAGE_PADDING + 3.5;
 const HEADER_RULE_Y = PAGE_PADDING + 9;
-const BODY_TOP_Y = PAGE_PADDING + 22;
-const FOOTER_RULE_Y_OFFSET = 10;
-const BODY_BOTTOM_GAP = 4;
-const COLUMN_GAP = 9;
-const LEFT_COLUMN_W = 96;
-const OPTION_GAP = 3.5;
-const OPTION_CARD_ROW_H = 28;
-const OPTION_CARD_STACKED_H = 28;
-const MAIN_IMAGE_H = 76;
-const MATERIAL_SWATCH_SIZE = 14;
-const MATERIALS_PER_ROW = 4;
+const TOP_SECTION_Y = HEADER_RULE_Y + 6;
+const SECTION_GAP = 7;
+const COLUMN_GAP = 8;
+const FOOTER_RULE_Y = 287;
+const FOOTER_TEXT_Y = FOOTER_RULE_Y + 5;
 const MAX_OPTION_IMAGES = 2;
 const MAX_MATERIALS = 8;
-const APPROVAL_W = 76;
-const APPROVAL_H = 34;
-const APPROVAL_GAP = 7;
+const APPROVAL_HEIGHT = 23;
+const SECOND_SECTION_PANEL_HEIGHT = 74;
+const OPTION_CARD_HEIGHT = 34;
+const OPTION_CARD_GAP = 6;
+const MATERIAL_SWATCH_SIZE = 10;
+const MATERIALS_PER_ROW = 5;
 
 const LIGHT_BORDER: [number, number, number] = [229, 231, 235];
 const LIGHT_TEXT: [number, number, number] = [107, 114, 128];
 const MUTED_TEXT: [number, number, number] = [156, 163, 175];
-const APPROVAL_BG: [number, number, number] = [249, 250, 251];
-const IMAGE_BG: [number, number, number] = [245, 248, 252];
+const PANEL_BG: [number, number, number] = [249, 250, 251];
+const APPROVAL_BG: [number, number, number] = [248, 250, 252];
 
 type CatalogItemEntry = {
   item: Item;
@@ -97,77 +95,14 @@ export function buildCatalogPdfPageModel(
   };
 }
 
-function optionLabelHeight() {
-  return 4;
-}
-
-function containedImageArea(
-  wrapperWidth: number,
-  wrapperHeight: number,
-  aspectRatio: number | null | undefined,
-) {
-  if (!aspectRatio || wrapperWidth <= 0 || wrapperHeight <= 0) return 0;
-  const imageWidthFromHeight = wrapperHeight * aspectRatio;
-  if (imageWidthFromHeight <= wrapperWidth) {
-    return imageWidthFromHeight * wrapperHeight;
-  }
-  const imageHeightFromWidth = wrapperWidth / aspectRatio;
-  return wrapperWidth * imageHeightFromWidth;
-}
-
-function optionAspectRatios(options: CatalogOptionAsset[]) {
-  return options.map((option) => {
-    if (!option.dataUrl) return null;
-    const imageProperties = new jsPDF().getImageProperties(option.dataUrl);
-    return imageProperties.height > 0 ? imageProperties.width / imageProperties.height : null;
-  });
-}
-
-function optionCardsHeight(optionCount: number, layout: CatalogPdfOptionLayout) {
-  if (optionCount <= 0) return 0;
-  if (layout === 'stacked') {
-    return (
-      optionLabelHeight() + optionCount * OPTION_CARD_STACKED_H + (optionCount - 1) * OPTION_GAP
-    );
-  }
-  return optionLabelHeight() + OPTION_CARD_ROW_H;
-}
-
-function materialsBlockHeight(materials: Material[]) {
-  if (materials.length === 0) return 0;
-  const visibleMaterials = materials.slice(0, MAX_MATERIALS);
-  return 5 + Math.ceil(visibleMaterials.length / MATERIALS_PER_ROW) * 19 + 4;
-}
-
 export function pickCatalogPdfOptionLayout(
   optionCount: number,
   materials: Material[],
   availableHeight: number,
-  aspectRatios: Array<number | null> = [],
-) {
-  if (optionCount <= 1) return 'stacked';
-  const stackedHeight = optionCardsHeight(optionCount, 'stacked');
-  const totalHeightWithMaterials =
-    stackedHeight + (materials.length > 0 ? OPTION_GAP + materialsBlockHeight(materials) : 0);
-  const fitsStacked = totalHeightWithMaterials <= availableHeight;
-  const stackedWrapperHeight = Math.max(
-    1,
-    (OPTION_CARD_STACKED_H * optionCount + OPTION_GAP * (optionCount - 1)) / optionCount,
-  );
-  let stackedScore = 0;
-  for (const ratio of aspectRatios.slice(0, optionCount)) {
-    stackedScore += containedImageArea(LEFT_COLUMN_W, stackedWrapperHeight, ratio);
-  }
-  let rowScore = 0;
-  for (const ratio of aspectRatios.slice(0, optionCount)) {
-    rowScore += containedImageArea(
-      (LEFT_COLUMN_W - OPTION_GAP * (optionCount - 1)) / optionCount,
-      OPTION_CARD_ROW_H,
-      ratio,
-    );
-  }
-  if (rowScore > stackedScore * 1.08) return 'row';
-  return fitsStacked ? 'stacked' : 'row';
+): CatalogPdfOptionLayout {
+  void materials;
+  void availableHeight;
+  return optionCount > 1 ? 'row' : 'stacked';
 }
 
 async function fallbackUrlToPngDataUrl(url: string | null): Promise<string | null> {
@@ -230,7 +165,7 @@ function addTextField(
   field.width = width;
   field.height = height;
   field.fontName = 'helvetica';
-  field.fontSize = 9;
+  field.fontSize = 8;
   field.textAlign = 'left';
   field.showWhenPrinted = true;
   doc.addField(field);
@@ -259,28 +194,6 @@ function lineHeight(fontSize: number, multiplier = 1.4) {
   return fontSize * 0.3528 * multiplier;
 }
 
-function drawWrappedText(
-  doc: jsPDF,
-  value: string,
-  x: number,
-  y: number,
-  width: number,
-  fontSize: number,
-  color: [number, number, number],
-  options?: { bold?: boolean; maxLines?: number },
-) {
-  doc.setFont('helvetica', options?.bold ? 'bold' : 'normal');
-  doc.setFontSize(fontSize);
-  doc.setTextColor(color[0], color[1], color[2]);
-  const lines = doc.splitTextToSize(value, width) as string[];
-  const limitedLines = options?.maxLines ? lines.slice(0, options.maxLines) : lines;
-  doc.text(limitedLines, x, y);
-  return {
-    lines: limitedLines,
-    height: limitedLines.length * lineHeight(fontSize),
-  };
-}
-
 function addContainedImage(
   doc: jsPDF,
   dataUrl: string,
@@ -301,28 +214,13 @@ function addContainedImage(
   doc.addImage(dataUrl, 'PNG', drawX, drawY, drawWidth, drawHeight);
 }
 
-function drawImagePlaceholder(
-  doc: jsPDF,
-  label: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  doc.setFillColor(IMAGE_BG[0], IMAGE_BG[1], IMAGE_BG[2]);
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.roundedRect(x, y, width, height, 1.5, 1.5, 'FD');
-
-  const circleSize = Math.min(30, width * 0.45, height * 0.45);
-  const circleX = x + (width - circleSize) / 2;
-  const circleY = y + (height - circleSize) / 2;
-  doc.setFillColor(BRAND[0], BRAND[1], BRAND[2], 0.12);
-  doc.circle(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(label, x + width / 2, y + height / 2 + 2, { align: 'center' });
+function initials(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
 }
 
 function drawSectionLabel(doc: jsPDF, label: string, x: number, y: number) {
@@ -332,63 +230,202 @@ function drawSectionLabel(doc: jsPDF, label: string, x: number, y: number) {
   doc.text(label.toUpperCase(), x, y);
 }
 
+function drawPanel(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  background: [number, number, number],
+) {
+  doc.setFillColor(background[0], background[1], background[2]);
+  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+  doc.roundedRect(x, y, width, height, 4, 4, 'FD');
+}
+
+function drawImagePlaceholder(
+  doc: jsPDF,
+  label: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  drawPanel(doc, x, y, width, height, PANEL_BG);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+  doc.text(label, x + width / 2, y + height / 2 + 2, { align: 'center' });
+}
+
+function drawWrappedText(
+  doc: jsPDF,
+  value: string,
+  x: number,
+  y: number,
+  width: number,
+  fontSize: number,
+  color: [number, number, number],
+  options?: { bold?: boolean; maxLines?: number; align?: 'left' | 'center' | 'right' },
+) {
+  doc.setFont('helvetica', options?.bold ? 'bold' : 'normal');
+  doc.setFontSize(fontSize);
+  doc.setTextColor(color[0], color[1], color[2]);
+  const lines = doc.splitTextToSize(value, width) as string[];
+  const limitedLines = options?.maxLines ? lines.slice(0, options.maxLines) : lines;
+  doc.text(limitedLines, x, y, { align: options?.align ?? 'left', maxWidth: width });
+  return {
+    lines: limitedLines,
+    height: limitedLines.length * lineHeight(fontSize),
+  };
+}
+
+function drawTopSection(
+  doc: jsPDF,
+  item: Item,
+  model: CatalogPdfPageModel,
+  x: number,
+  y: number,
+  width: number,
+) {
+  let currentY = y;
+  const idText = model.itemIdTag;
+
+  if (idText) {
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+    doc.text(idText, x, currentY);
+  }
+
+  const idWidth = idText ? doc.getTextWidth(idText) + 5 : 0;
+  const title = drawWrappedText(
+    doc,
+    item.itemName,
+    x + idWidth,
+    currentY,
+    width - idWidth,
+    18,
+    [17, 24, 39],
+    { bold: true, maxLines: 2 },
+  );
+  currentY += Math.max(7.5, title.height) + 2;
+
+  if (model.dimensions) {
+    const dimensions = drawWrappedText(doc, model.dimensions, x, currentY, width, 9, LIGHT_TEXT, {
+      maxLines: 2,
+    });
+    currentY += dimensions.height + 2;
+  }
+
+  if (model.description) {
+    const description = drawWrappedText(doc, model.description, x, currentY, width, 9, LIGHT_TEXT, {
+      maxLines: 4,
+    });
+    currentY += description.height;
+  }
+
+  return currentY;
+}
+
+function drawNotesAndCost(
+  doc: jsPDF,
+  model: CatalogPdfPageModel,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  drawPanel(doc, x, y, width, height, [255, 255, 255]);
+  const innerX = x + 5;
+  const innerY = y + 6;
+  const innerWidth = width - 10;
+
+  let reservedBottom = 0;
+  if (model.unitCostCents !== null) {
+    reservedBottom = 14;
+    const dividerY = y + height - reservedBottom;
+    doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+    doc.line(x + 4, dividerY, x + width - 4, dividerY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
+    doc.text('Unit cost', innerX, dividerY + 5.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
+    doc.text(fmtMoney(model.unitCostCents), x + width - 5, dividerY + 5.5, { align: 'right' });
+  }
+
+  if (!model.notes) return;
+
+  const maxLines = Math.max(1, Math.floor((height - reservedBottom - 10) / lineHeight(9, 1.55)));
+  drawWrappedText(doc, model.notes, innerX, innerY, innerWidth, 9, LIGHT_TEXT, {
+    maxLines,
+  });
+}
+
 function drawOptionSelectionMark(doc: jsPDF, x: number, y: number, isPrimary: boolean) {
   doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(209, 213, 219);
-  doc.circle(x, y, 2.5, 'FD');
+  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+  doc.circle(x, y, 2.4, 'FD');
   if (!isPrimary) return;
   doc.setDrawColor(BRAND[0], BRAND[1], BRAND[2]);
   doc.setLineWidth(0.5);
-  doc.line(x - 1, y, x - 0.2, y + 0.9);
-  doc.line(x - 0.2, y + 0.9, x + 1.3, y - 1);
+  doc.line(x - 0.9, y, x - 0.15, y + 0.8);
+  doc.line(x - 0.15, y + 0.8, x + 1.2, y - 1);
   doc.setLineWidth(0.2);
 }
 
-function drawOptionCards(
+function drawOptionsStrip(
   doc: jsPDF,
   options: CatalogOptionAsset[],
   x: number,
   y: number,
   width: number,
-  layout: CatalogPdfOptionLayout,
 ) {
   const visibleOptions = options.filter((option) => option.dataUrl).slice(0, MAX_OPTION_IMAGES);
   if (visibleOptions.length === 0) return y;
 
   drawSectionLabel(doc, 'Options', x, y);
-  const cardsY = y + 4;
+  const cardsY = y + 4.5;
+  const layout = pickCatalogPdfOptionLayout(visibleOptions.length, [], OPTION_CARD_HEIGHT);
 
-  if (layout === 'stacked' || visibleOptions.length === 1) {
-    visibleOptions.forEach((option, index) => {
-      const cardY = cardsY + index * (OPTION_CARD_STACKED_H + OPTION_GAP);
-      doc.setFillColor(IMAGE_BG[0], IMAGE_BG[1], IMAGE_BG[2]);
-      doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-      doc.rect(x, cardY, width, OPTION_CARD_STACKED_H, 'FD');
-      if (option.dataUrl)
-        addContainedImage(doc, option.dataUrl, x, cardY, width, OPTION_CARD_STACKED_H, 2);
-      drawOptionSelectionMark(doc, x + width - 4, cardY + 4, option.isPrimary);
-    });
-
-    return (
-      cardsY +
-      visibleOptions.length * OPTION_CARD_STACKED_H +
-      (visibleOptions.length - 1) * OPTION_GAP
+  if (layout === 'stacked') {
+    const cardWidth = Math.min(84, width * 0.56);
+    const cardX = x + (width - cardWidth) / 2;
+    drawPanel(doc, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, PANEL_BG);
+    if (visibleOptions[0]?.dataUrl) {
+      addContainedImage(
+        doc,
+        visibleOptions[0].dataUrl,
+        cardX,
+        cardsY,
+        cardWidth,
+        OPTION_CARD_HEIGHT,
+        2,
+      );
+    }
+    drawOptionSelectionMark(
+      doc,
+      cardX + cardWidth - 4,
+      cardsY + 4,
+      visibleOptions[0]?.isPrimary ?? false,
     );
+    return cardsY + OPTION_CARD_HEIGHT;
   }
 
-  const cardWidth = (width - OPTION_GAP * (visibleOptions.length - 1)) / visibleOptions.length;
-
+  const cardWidth = (width - OPTION_CARD_GAP) / 2;
   visibleOptions.forEach((option, index) => {
-    const cardX = x + index * (cardWidth + OPTION_GAP);
-    doc.setFillColor(IMAGE_BG[0], IMAGE_BG[1], IMAGE_BG[2]);
-    doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-    doc.rect(cardX, cardsY, cardWidth, OPTION_CARD_ROW_H, 'FD');
-    if (option.dataUrl)
-      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_ROW_H, 2);
+    const cardX = x + index * (cardWidth + OPTION_CARD_GAP);
+    drawPanel(doc, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, PANEL_BG);
+    if (option.dataUrl) {
+      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, OPTION_CARD_HEIGHT, 2);
+    }
     drawOptionSelectionMark(doc, cardX + cardWidth - 4, cardsY + 4, option.isPrimary);
   });
 
-  return cardsY + OPTION_CARD_ROW_H;
+  return cardsY + OPTION_CARD_HEIGHT;
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -406,132 +443,75 @@ function hexToRgb(hex: string): [number, number, number] {
   return [Number.isNaN(r) ? 232 : r, Number.isNaN(g) ? 232 : g, Number.isNaN(b) ? 232 : b];
 }
 
-function drawMaterials(doc: jsPDF, materials: Material[], x: number, y: number, width: number) {
+function drawMaterialsStrip(
+  doc: jsPDF,
+  materials: Material[],
+  x: number,
+  y: number,
+  width: number,
+) {
   const visibleMaterials = materials.slice(0, MAX_MATERIALS);
   if (visibleMaterials.length === 0) return y;
 
   drawSectionLabel(doc, 'Materials', x, y);
-  let currentY = y + 5;
-  const itemWidth = width / Math.min(MATERIALS_PER_ROW, visibleMaterials.length);
+  const startY = y + 5;
+  const columns = Math.min(MATERIALS_PER_ROW, visibleMaterials.length);
+  const itemWidth = width / columns;
 
   visibleMaterials.forEach((material, index) => {
-    const column = index % MATERIALS_PER_ROW;
-    const row = Math.floor(index / MATERIALS_PER_ROW);
+    const column = index % columns;
+    const row = Math.floor(index / columns);
     const centerX = x + column * itemWidth + itemWidth / 2;
-    const circleY = currentY + row * 19;
+    const rowY = startY + row * 18;
     const [r, g, b] = hexToRgb(material.swatchHex);
     doc.setFillColor(r, g, b);
     doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-    doc.circle(centerX, circleY + MATERIAL_SWATCH_SIZE / 2, MATERIAL_SWATCH_SIZE / 2, 'FD');
+    doc.circle(centerX, rowY + MATERIAL_SWATCH_SIZE / 2, MATERIAL_SWATCH_SIZE / 2, 'FD');
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
     const label = compactText(material.name) ?? compactText(material.materialId) ?? 'Material';
-    const labelLines = doc.splitTextToSize(label, itemWidth - 4) as string[];
-    doc.text(labelLines.slice(0, 2), centerX, circleY + MATERIAL_SWATCH_SIZE + 4, {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.2);
+    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
+    const labelLines = (doc.splitTextToSize(label, itemWidth - 3) as string[]).slice(0, 2);
+    doc.text(labelLines, centerX, rowY + MATERIAL_SWATCH_SIZE + 3.8, {
       align: 'center',
-      maxWidth: itemWidth - 4,
+      maxWidth: itemWidth - 3,
     });
   });
 
-  return (
-    currentY +
-    Math.ceil(visibleMaterials.length / MATERIALS_PER_ROW) * 19 +
-    (visibleMaterials.length > 0 ? 4 : 0)
-  );
+  return startY + Math.ceil(visibleMaterials.length / columns) * 18;
 }
 
-function initials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
+function drawApprovalBand(doc: jsPDF, itemId: string, x: number, y: number, width: number) {
+  drawPanel(doc, x, y, width, APPROVAL_HEIGHT, APPROVAL_BG);
+  drawSectionLabel(doc, 'Customer approval', x + 4, y + 5.3);
 
-function drawApprovalSection(doc: jsPDF, itemId: string, x: number, y: number, width: number) {
-  doc.setFillColor(APPROVAL_BG[0], APPROVAL_BG[1], APPROVAL_BG[2]);
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.roundedRect(x, y, width, APPROVAL_H, 4, 4, 'FD');
-
-  drawSectionLabel(doc, 'Customer approval', x + 4, y + 5.5);
+  const contentY = y + 10;
+  const signatureW = width * 0.5;
+  const dateW = width * 0.16;
+  const checksX = x + signatureW + dateW + 14;
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text('Signature', x + 4, y + 11.5);
-  doc.text('Date', x + width - 26, y + 11.5);
+  doc.text('Signature', x + 4, contentY);
+  doc.text('Date', x + signatureW + 8, contentY);
 
   doc.setDrawColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.line(x + 4, y + 18, x + width - 30, y + 18);
-  doc.line(x + width - 26, y + 18, x + width - 4, y + 18);
+  doc.line(x + 4, y + 17, x + signatureW, y + 17);
+  doc.line(x + signatureW + 8, y + 17, x + signatureW + dateW, y + 17);
 
-  addTextField(doc, `${itemId}-approval-signature`, x + 4, y + 12.5, width - 34, 5);
-  addTextField(doc, `${itemId}-approval-date`, x + width - 26, y + 12.5, 22, 5);
+  addTextField(doc, `${itemId}-approval-signature`, x + 4, y + 11.5, signatureW - 4, 5);
+  addTextField(doc, `${itemId}-approval-date`, x + signatureW + 8, y + 11.5, dateW - 8, 5);
 
-  addCheckboxField(doc, `${itemId}-approval-with-changes`, x + 4, y + 24, 3.5, false);
-  addCheckboxField(doc, `${itemId}-approval-without-changes`, x + 4, y + 29, 3.5, false);
+  addCheckboxField(doc, `${itemId}-approval-with-changes`, checksX, y + 12.2, 3.5, false);
+  addCheckboxField(doc, `${itemId}-approval-without-changes`, checksX, y + 17.5, 3.5, false);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(6.8);
   doc.setTextColor(75, 85, 99);
-  doc.text('Approved w/ changes', x + 9, y + 26.7);
-  doc.text('Approved w/o changes', x + 9, y + 31.7);
-}
-
-function drawPriceBlock(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  width: number,
-  unitCostCents: number | null,
-) {
-  if (unitCostCents === null) return y;
-
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.line(x, y, x + width, y);
-  doc.line(x, y + 12, x + width, y + 12);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text('Unit cost', x, y + 7.2);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(17, 24, 39);
-  doc.text(fmtMoney(unitCostCents), x + width, y + 7.2, { align: 'right' });
-
-  return y + 12;
-}
-
-function drawNotesBlock(
-  doc: jsPDF,
-  notes: string | null,
-  x: number,
-  y: number,
-  width: number,
-  maxBottomY: number,
-) {
-  if (!notes) return y;
-
-  const availableHeight = maxBottomY - y;
-  if (availableHeight <= 0) return y;
-
-  doc.setDrawColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.setLineWidth(0.6);
-  doc.line(x, y, x, Math.min(maxBottomY, y + availableHeight));
-  doc.setLineWidth(0.2);
-
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(10);
-  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  const maxLines = Math.max(1, Math.floor((availableHeight - 1) / lineHeight(10, 1.6)));
-  const lines = (doc.splitTextToSize(notes, width - 5) as string[]).slice(0, maxLines);
-  doc.text(lines, x + 5, y + 3.5);
-
-  return y + Math.min(availableHeight, lines.length * lineHeight(10, 1.6));
+  doc.text('Approved w/ changes', checksX + 5, y + 14.8);
+  doc.text('Approved w/o changes', checksX + 5, y + 20.1);
 }
 
 function drawCatalogPage(
@@ -543,143 +523,102 @@ function drawCatalogPage(
   total: number,
 ): void {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const footerRuleY = pageHeight - FOOTER_RULE_Y_OFFSET;
-  const footerTextY = footerRuleY + 5.2;
-  const leftX = PAGE_PADDING;
-  const rightX = leftX + LEFT_COLUMN_W + COLUMN_GAP;
-  const rightWidth = pageWidth - PAGE_PADDING - rightX;
-  const approvalX = rightX + Math.max(0, rightWidth - APPROVAL_W);
-  const approvalY = footerRuleY - BODY_BOTTOM_GAP - APPROVAL_H;
-  const leftWidth = LEFT_COLUMN_W;
   const model = buildCatalogPdfPageModel(entry.item, assets.options);
   const clientName = compactText(project.clientName);
-  const leftAvailableHeight = footerRuleY - BODY_BOTTOM_GAP - (BODY_TOP_Y + MAIN_IMAGE_H + 7);
-  const aspectRatios = optionAspectRatios(assets.options.filter((option) => option.dataUrl));
-  const optionLayout = pickCatalogPdfOptionLayout(
-    model.optionCount,
-    model.materials,
-    leftAvailableHeight,
-    aspectRatios,
-  );
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(project.name.toUpperCase(), PAGE_PADDING, HEADER_Y);
+  doc.text(project.name.toUpperCase(), PAGE_PADDING, HEADER_TEXT_Y);
+  doc.text(entry.roomName.toUpperCase(), pageWidth - PAGE_PADDING, HEADER_TEXT_Y, {
+    align: 'right',
+  });
   if (clientName) {
-    doc.text(clientName.toUpperCase(), pageWidth - PAGE_PADDING, HEADER_Y, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.8);
+    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
+    doc.text(clientName.toUpperCase(), PAGE_PADDING, HEADER_TEXT_Y + 4.4);
   }
   doc.setDrawColor(BRAND[0], BRAND[1], BRAND[2]);
   doc.line(PAGE_PADDING, HEADER_RULE_Y, pageWidth - PAGE_PADDING, HEADER_RULE_Y);
 
-  let leftY = BODY_TOP_Y;
-  doc.setFillColor(IMAGE_BG[0], IMAGE_BG[1], IMAGE_BG[2]);
-  doc.setDrawColor(255, 255, 255);
-  doc.rect(leftX, leftY, leftWidth, MAIN_IMAGE_H, 'F');
+  const topSectionBottomY = drawTopSection(
+    doc,
+    entry.item,
+    model,
+    PAGE_PADDING,
+    TOP_SECTION_Y,
+    CONTENT_W,
+  );
+  const secondSectionY = topSectionBottomY + SECTION_GAP;
+  const secondSectionLabelY = secondSectionY;
+  const panelY = secondSectionLabelY + 4.5;
+  const leftWidth = (CONTENT_W - COLUMN_GAP) * 0.62;
+  const rightWidth = CONTENT_W - COLUMN_GAP - leftWidth;
+  const rightX = PAGE_PADDING + leftWidth + COLUMN_GAP;
+
+  drawSectionLabel(doc, 'Rendering', PAGE_PADDING, secondSectionLabelY);
+  drawPanel(doc, PAGE_PADDING, panelY, leftWidth, SECOND_SECTION_PANEL_HEIGHT, PANEL_BG);
   if (assets.rendering) {
-    addContainedImage(doc, assets.rendering, leftX, leftY, leftWidth, MAIN_IMAGE_H, 2);
+    addContainedImage(
+      doc,
+      assets.rendering,
+      PAGE_PADDING,
+      panelY,
+      leftWidth,
+      SECOND_SECTION_PANEL_HEIGHT,
+      3,
+    );
   } else {
-    drawImagePlaceholder(doc, initials(entry.item.itemName), leftX, leftY, leftWidth, MAIN_IMAGE_H);
-  }
-  leftY += MAIN_IMAGE_H + 7;
-  leftY = drawOptionCards(doc, assets.options, leftX, leftY, leftWidth, optionLayout);
-  if (model.optionCount > 0) leftY += 7;
-  drawMaterials(doc, model.materials, leftX, leftY, leftWidth);
-
-  let rightY = BODY_TOP_Y + 2;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(entry.roomName.toUpperCase(), rightX, rightY);
-  rightY += 8;
-
-  if (model.itemIdTag) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(15);
-    doc.setTextColor(17, 24, 39);
-    doc.text(model.itemIdTag, rightX, rightY);
-    const idWidth = doc.getTextWidth(model.itemIdTag);
-    const nameX = rightX + idWidth + 4;
-    drawWrappedText(
+    drawImagePlaceholder(
       doc,
-      entry.item.itemName,
-      nameX,
-      rightY,
-      rightWidth - idWidth - 4,
-      15,
-      [75, 85, 99],
-      {
-        maxLines: 3,
-      },
+      initials(entry.item.itemName),
+      PAGE_PADDING,
+      panelY,
+      leftWidth,
+      SECOND_SECTION_PANEL_HEIGHT,
     );
-    rightY += 7;
-  } else {
-    const title = drawWrappedText(
-      doc,
-      entry.item.itemName,
-      rightX,
-      rightY,
-      rightWidth,
-      15,
-      [75, 85, 99],
-      {
-        maxLines: 3,
-      },
-    );
-    rightY += title.height;
   }
 
-  if (model.dimensions) {
-    rightY += 1;
-    const dimensions = drawWrappedText(
+  drawSectionLabel(doc, 'Notes', rightX, secondSectionLabelY);
+  drawNotesAndCost(doc, model, rightX, panelY, rightWidth, SECOND_SECTION_PANEL_HEIGHT);
+
+  const thirdSectionY = panelY + SECOND_SECTION_PANEL_HEIGHT + SECTION_GAP;
+  let thirdSectionBottomY = thirdSectionY;
+  if (model.optionCount > 0) {
+    thirdSectionBottomY = drawOptionsStrip(
       doc,
-      model.dimensions,
-      rightX,
-      rightY,
-      rightWidth,
-      9,
-      LIGHT_TEXT,
-      { maxLines: 2 },
+      assets.options,
+      PAGE_PADDING,
+      thirdSectionY,
+      CONTENT_W,
     );
-    rightY += dimensions.height + 2;
+  }
+  if (model.materials.length > 0) {
+    thirdSectionBottomY = drawMaterialsStrip(
+      doc,
+      model.materials,
+      PAGE_PADDING,
+      thirdSectionBottomY + (model.optionCount > 0 ? 6 : 0),
+      CONTENT_W,
+    );
   }
 
-  if (model.description) {
-    rightY += 3;
-    const description = drawWrappedText(
-      doc,
-      model.description,
-      rightX,
-      rightY,
-      rightWidth,
-      9,
-      LIGHT_TEXT,
-      { maxLines: 6 },
-    );
-    rightY += description.height + 2;
-  }
-
-  rightY += 4;
-  doc.setDrawColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.line(rightX, rightY, rightX + rightWidth, rightY);
-  rightY += 7;
-
-  rightY = drawPriceBlock(doc, rightX, rightY, rightWidth, model.unitCostCents);
-  if (model.unitCostCents !== null) rightY += 8;
-
-  drawNotesBlock(doc, model.notes, rightX, rightY, rightWidth, approvalY - APPROVAL_GAP);
-  drawApprovalSection(doc, entry.item.id, approvalX, approvalY, APPROVAL_W);
+  const approvalY = Math.min(
+    thirdSectionBottomY + SECTION_GAP,
+    FOOTER_RULE_Y - APPROVAL_HEIGHT - 6,
+  );
+  drawApprovalBand(doc, entry.item.id, PAGE_PADDING, approvalY, CONTENT_W);
 
   doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.line(PAGE_PADDING, footerRuleY, pageWidth - PAGE_PADDING, footerRuleY);
+  doc.line(PAGE_PADDING, FOOTER_RULE_Y, pageWidth - PAGE_PADDING, FOOTER_RULE_Y);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text(`${pageNum} of ${total}`, PAGE_PADDING, footerTextY);
-  doc.text(safeName(project.name), pageWidth / 2, footerTextY, { align: 'center' });
+  doc.text(`${pageNum} of ${total}`, PAGE_PADDING, FOOTER_TEXT_Y);
+  doc.text(safeName(project.name), pageWidth / 2, FOOTER_TEXT_Y, { align: 'center' });
   if (model.itemIdTag) {
-    doc.text(model.itemIdTag, pageWidth - PAGE_PADDING, footerTextY, { align: 'right' });
+    doc.text(model.itemIdTag, pageWidth - PAGE_PADDING, FOOTER_TEXT_Y, { align: 'right' });
   }
 }
 
