@@ -8,6 +8,7 @@ import { roomsRouter } from './routes/rooms';
 import { itemsRouter } from './routes/items';
 import { imagesRouter } from './routes/images';
 import { materialsRouter } from './routes/materials';
+import { plansRouter } from './routes/plans';
 import { proposalRouter } from './routes/proposal';
 import { usersRouter } from './routes/users';
 
@@ -42,6 +43,7 @@ app.use('/api/v1/proposal/*', requireAuthorized);
 
 // ─── Routes ───────────────────────────────────────────────────────────────
 app.route('/api/v1/projects', projectsRouter);
+app.route('/api/v1/projects', plansRouter);
 app.route('/api/v1/projects', materialsRouter);
 app.route('/api/v1/rooms', roomsRouter);
 app.route('/api/v1/items', itemsRouter);

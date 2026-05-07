@@ -140,6 +140,69 @@ export interface ProposalItem {
   updated_at: string;
 }
 
+export type CalibrationStatus = 'uncalibrated' | 'calibrated';
+
+export interface MeasuredPlan {
+  id: string;
+  project_id: string;
+  owner_uid: string;
+  name: string;
+  sheet_reference: string;
+  image_r2_key: string;
+  image_filename: string;
+  image_content_type: string;
+  image_byte_size: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlanCalibration {
+  id: string;
+  measured_plan_id: string;
+  start_x: number;
+  start_y: number;
+  end_x: number;
+  end_y: number;
+  real_world_length: string;
+  unit: 'in' | 'ft' | 'mm' | 'cm' | 'm';
+  pixels_per_unit: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LengthLine {
+  id: string;
+  measured_plan_id: string;
+  start_x: number;
+  start_y: number;
+  end_x: number;
+  end_y: number;
+  measured_length_base: string | null;
+  label: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Measurement {
+  id: string;
+  measured_plan_id: string;
+  target_kind: 'ffe' | 'proposal';
+  target_item_id: string;
+  target_tag_snapshot: string;
+  rect_x: number;
+  rect_y: number;
+  rect_width: number;
+  rect_height: number;
+  horizontal_span_base: string;
+  vertical_span_base: string;
+  crop_x: number | null;
+  crop_y: number | null;
+  crop_width: number | null;
+  crop_height: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ImageEntityType =
   | 'project'
   | 'room'
@@ -181,6 +244,8 @@ import { z } from 'zod';
 const itemStatuses = ['pending', 'ordered', 'approved', 'received'] as const;
 const budgetModes = ['shared', 'individual'] as const;
 const sizeModes = ['imperial', 'metric'] as const;
+const calibrationStatuses = ['uncalibrated', 'calibrated'] as const;
+const planMeasurementUnits = ['in', 'ft', 'mm', 'cm', 'm'] as const;
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1).max(255),
@@ -291,6 +356,26 @@ export const UpdateProposalItemSchema = CreateProposalItemSchema.partial().exten
   version: z.number().int().nonnegative(),
 });
 export type UpdateProposalItemInput = z.infer<typeof UpdateProposalItemSchema>;
+
+export const CreateMeasuredPlanSchema = z.object({
+  name: z.string().min(1).max(255),
+  sheet_reference: z.string().max(100).default(''),
+});
+export type CreateMeasuredPlanInput = z.infer<typeof CreateMeasuredPlanSchema>;
+
+export const UpdatePlanCalibrationSchema = z.object({
+  start_x: z.number().min(0).max(1),
+  start_y: z.number().min(0).max(1),
+  end_x: z.number().min(0).max(1),
+  end_y: z.number().min(0).max(1),
+  real_world_length: z.number().positive(),
+  unit: z.enum(planMeasurementUnits),
+  pixels_per_unit: z.number().positive(),
+});
+export type UpdatePlanCalibrationInput = z.infer<typeof UpdatePlanCalibrationSchema>;
+
+export const CalibrationStatusSchema = z.enum(calibrationStatuses);
+export type CalibrationStatusInput = z.infer<typeof CalibrationStatusSchema>;
 
 export const ImageEntitySchema = z.object({
   entity_type: z.enum([
