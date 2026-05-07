@@ -297,10 +297,6 @@
     min-height: 220px;
   }
 
-  .catalog-page--two-options .catalog-second-section {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .catalog-rendering-panel,
   .catalog-notes-panel {
     display: flex;

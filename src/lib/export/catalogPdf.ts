@@ -44,6 +44,7 @@ type CatalogOptionAsset = {
 type CatalogItemAssets = {
   rendering: string | null;
   options: CatalogOptionAsset[];
+  materialImages: Map<string, string | null>;
 };
 
 export type CatalogPdfPageModel = {
@@ -143,7 +144,14 @@ async function buildCatalogAssets(
           })),
       );
 
-      return [item.id, { rendering, options }] as const;
+      const materialImages = new Map<string, string | null>();
+      for (const material of item.materials.slice(0, MAX_MATERIALS)) {
+        const matImages = await api.images.list({ entityType: 'material', entityId: material.id });
+        const matImage = matImages.find((img) => img.isPrimary) ?? matImages[0] ?? null;
+        materialImages.set(material.id, matImage ? await imageAssetToPngDataUrl(matImage) : null);
+      }
+
+      return [item.id, { rendering, options, materialImages }] as const;
     }),
   );
 
@@ -336,7 +344,6 @@ function drawNotesAndCost(
   width: number,
   height: number,
 ) {
-  drawPanel(doc, x, y, width, height, [255, 255, 255]);
   const innerX = x + 5;
   const innerY = y + 6;
   const innerWidth = width - 10;
@@ -392,7 +399,7 @@ function drawOptionsStrip(
   const layout = pickCatalogPdfOptionLayout(visibleOptions.length, [], OPTION_CARD_HEIGHT);
 
   if (layout === 'stacked') {
-    const cardWidth = Math.min(84, width * 0.56);
+    const cardWidth = Math.min(120, width * 0.72);
     const cardX = x + (width - cardWidth) / 2;
     if (visibleOptions[0]?.dataUrl) {
       addContainedImage(
@@ -444,6 +451,7 @@ function hexToRgb(hex: string): [number, number, number] {
 function drawMaterialsStrip(
   doc: jsPDF,
   materials: Material[],
+  materialImages: Map<string, string | null>,
   x: number,
   y: number,
   width: number,
@@ -461,10 +469,29 @@ function drawMaterialsStrip(
     const row = Math.floor(index / columns);
     const centerX = x + column * itemWidth + itemWidth / 2;
     const rowY = startY + row * 18;
-    const [r, g, b] = hexToRgb(material.swatchHex);
-    doc.setFillColor(r, g, b);
-    doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-    doc.circle(centerX, rowY + MATERIAL_SWATCH_SIZE / 2, MATERIAL_SWATCH_SIZE / 2, 'FD');
+    const swatchX = centerX - MATERIAL_SWATCH_SIZE / 2;
+    const swatchY = rowY;
+
+    const imageDataUrl = materialImages.get(material.id);
+    if (imageDataUrl) {
+      doc.setFillColor(PANEL_BG[0], PANEL_BG[1], PANEL_BG[2]);
+      doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+      doc.roundedRect(swatchX, swatchY, MATERIAL_SWATCH_SIZE, MATERIAL_SWATCH_SIZE, 2, 2, 'FD');
+      addContainedImage(
+        doc,
+        imageDataUrl,
+        swatchX,
+        swatchY,
+        MATERIAL_SWATCH_SIZE,
+        MATERIAL_SWATCH_SIZE,
+        1,
+      );
+    } else {
+      const [r, g, b] = hexToRgb(material.swatchHex);
+      doc.setFillColor(r, g, b);
+      doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
+      doc.circle(centerX, rowY + MATERIAL_SWATCH_SIZE / 2, MATERIAL_SWATCH_SIZE / 2, 'FD');
+    }
 
     const label = compactText(material.name) ?? compactText(material.materialId) ?? 'Material';
     doc.setFont('helvetica', 'normal');
@@ -553,13 +580,12 @@ function drawCatalogPage(
   const secondSectionY = topSectionBottomY + SECTION_GAP;
   const secondSectionLabelY = secondSectionY;
   const panelY = secondSectionLabelY + 4.5;
-  const leftRatio = model.optionCount === 2 ? 0.5 : 0.62;
+  const leftRatio = 0.42;
   const leftWidth = (CONTENT_W - COLUMN_GAP) * leftRatio;
   const rightWidth = CONTENT_W - COLUMN_GAP - leftWidth;
   const rightX = PAGE_PADDING + leftWidth + COLUMN_GAP;
 
   drawSectionLabel(doc, 'Rendering', PAGE_PADDING, secondSectionLabelY);
-  drawPanel(doc, PAGE_PADDING, panelY, leftWidth, SECOND_SECTION_PANEL_HEIGHT, PANEL_BG);
   if (assets.rendering) {
     addContainedImage(
       doc,
@@ -599,6 +625,7 @@ function drawCatalogPage(
     thirdSectionBottomY = drawMaterialsStrip(
       doc,
       model.materials,
+      assets.materialImages,
       PAGE_PADDING,
       thirdSectionBottomY + (model.optionCount > 0 ? 6 : 0),
       CONTENT_W,
@@ -636,7 +663,7 @@ export async function exportCatalogPdf(project: Project, rooms: RoomWithItems[])
       doc,
       project,
       entry,
-      assets.get(entry.item.id) ?? { rendering: null, options: [] },
+      assets.get(entry.item.id) ?? { rendering: null, options: [], materialImages: new Map() },
       index + 1,
       entries.length,
     );
@@ -661,7 +688,7 @@ export async function exportCatalogItemPdf(
     doc,
     project,
     entry,
-    assets.get(entry.item.id) ?? { rendering: null, options: [] },
+    assets.get(entry.item.id) ?? { rendering: null, options: [], materialImages: new Map() },
     entryIndex + 1,
     entries.length,
   );
