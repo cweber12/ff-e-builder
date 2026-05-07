@@ -8,16 +8,30 @@ import {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/primitives';
-import { useMeasuredPlans, usePlanCalibration, useSetPlanCalibration } from '../hooks';
+import {
+  useCreatePlanLengthLine,
+  useDeletePlanLengthLine,
+  useMeasuredPlans,
+  usePlanCalibration,
+  usePlanLengthLines,
+  useSetPlanCalibration,
+  useUpdatePlanLengthLine,
+} from '../hooks';
 import { api } from '../lib/api';
-import type { MeasuredPlan, PlanCalibration, PlanMeasurementUnit, Project } from '../types';
+import type {
+  LengthLine,
+  MeasuredPlan,
+  PlanCalibration,
+  PlanMeasurementUnit,
+  Project,
+} from '../types';
 
 type PlanCanvasPageProps = {
   project: Project;
   planId: string;
 };
 
-type CalibrationDraft = {
+type LineDraft = {
   startX: number;
   startY: number;
   endX: number;
@@ -31,7 +45,7 @@ type ImagePoint = {
 
 const TOOL_DEFINITIONS = [
   { id: 'calibrate', label: 'Calibrate', description: 'Set the plan scale from a reference line.' },
-  { id: 'length', label: 'Length Line', description: 'Measure a linear span on the plan.' },
+  { id: 'length', label: 'Length Line', description: 'Measure and save linear spans on the plan.' },
   {
     id: 'rectangle',
     label: 'Rectangle',
@@ -41,15 +55,25 @@ const TOOL_DEFINITIONS = [
 ] as const;
 
 const UNIT_OPTIONS: PlanMeasurementUnit[] = ['ft', 'in', 'm', 'cm', 'mm'];
+const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
+  ft: 304.8,
+  in: 25.4,
+  mm: 1,
+  cm: 10,
+  m: 1000,
+};
 
 type ToolId = (typeof TOOL_DEFINITIONS)[number]['id'];
 
 export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
   const [activeTool, setActiveTool] = useState<ToolId>('calibrate');
-  const [calibrationDraft, setCalibrationDraft] = useState<CalibrationDraft | null>(null);
+  const [calibrationDraft, setCalibrationDraft] = useState<LineDraft | null>(null);
   const [calibrationLengthInput, setCalibrationLengthInput] = useState('1');
   const [calibrationUnit, setCalibrationUnit] = useState<PlanMeasurementUnit>('ft');
+  const [lengthLineDraft, setLengthLineDraft] = useState<LineDraft | null>(null);
+  const [selectedLengthLineId, setSelectedLengthLineId] = useState<string | null>(null);
+  const [lengthLineLabelInput, setLengthLineLabelInput] = useState('');
 
   const selectedPlan = useMemo(
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
@@ -61,9 +85,18 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     project.id,
     selectedPlanId,
   );
+  const { data: lengthLines = [], isLoading: lengthLinesLoading } = usePlanLengthLines(
+    project.id,
+    selectedPlanId,
+  );
   const setCalibration = useSetPlanCalibration(project.id, selectedPlanId);
+  const createLengthLine = useCreatePlanLengthLine(project.id, selectedPlanId);
+  const updateLengthLine = useUpdatePlanLengthLine(project.id, selectedPlanId);
+  const deleteLengthLine = useDeletePlanLengthLine(project.id, selectedPlanId);
 
   const isCalibrated = calibration !== null || selectedPlan?.calibrationStatus === 'calibrated';
+  const selectedLengthLine =
+    lengthLines.find((candidate) => candidate.id === selectedLengthLineId) ?? null;
 
   useEffect(() => {
     if (!selectedPlan) return;
@@ -74,6 +107,9 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
 
   useEffect(() => {
     setCalibrationDraft(null);
+    setLengthLineDraft(null);
+    setSelectedLengthLineId(null);
+    setLengthLineLabelInput('');
   }, [selectedPlanId]);
 
   useEffect(() => {
@@ -82,10 +118,19 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     setCalibrationUnit(calibration.unit);
   }, [calibration]);
 
-  const calibrationPixelLength = useMemo(() => {
-    if (!calibrationDraft) return null;
-    return getLineLength(calibrationDraft);
-  }, [calibrationDraft]);
+  useEffect(() => {
+    if (lengthLineDraft) return;
+    setLengthLineLabelInput(selectedLengthLine?.label ?? '');
+  }, [lengthLineDraft, selectedLengthLine]);
+
+  const calibrationPixelLength = useMemo(
+    () => (calibrationDraft ? getLineLength(calibrationDraft) : null),
+    [calibrationDraft],
+  );
+  const lengthLinePixelLength = useMemo(
+    () => (lengthLineDraft ? getLineLength(lengthLineDraft) : null),
+    [lengthLineDraft],
+  );
 
   const calibrationLengthValue = Number(calibrationLengthInput);
   const canSaveCalibration =
@@ -95,6 +140,23 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
     Number.isFinite(calibrationLengthValue) &&
     calibrationLengthValue > 0 &&
     !setCalibration.isPending;
+
+  const measuredLengthInPlanUnits =
+    calibration && lengthLinePixelLength !== null
+      ? lengthLinePixelLength / calibration.pixelsPerUnit
+      : null;
+  const measuredLengthBase =
+    calibration && measuredLengthInPlanUnits !== null
+      ? convertPlanUnitsToBase(measuredLengthInPlanUnits, calibration.unit)
+      : null;
+  const canSaveLengthLine =
+    calibration !== null &&
+    lengthLineDraft !== null &&
+    lengthLinePixelLength !== null &&
+    lengthLinePixelLength > 0 &&
+    measuredLengthBase !== null &&
+    !createLengthLine.isPending &&
+    !updateLengthLine.isPending;
 
   const handleSaveCalibration = async () => {
     if (!canSaveCalibration || !calibrationDraft || calibrationPixelLength === null) return;
@@ -108,6 +170,37 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
       pixelsPerUnit: calibrationPixelLength / calibrationLengthValue,
     });
     setCalibrationDraft(null);
+  };
+
+  const handleSaveLengthLine = async () => {
+    if (!canSaveLengthLine || !lengthLineDraft || measuredLengthBase === null) return;
+
+    const input = {
+      startX: lengthLineDraft.startX,
+      startY: lengthLineDraft.startY,
+      endX: lengthLineDraft.endX,
+      endY: lengthLineDraft.endY,
+      measuredLengthBase,
+      label: lengthLineLabelInput.trim() || null,
+    };
+
+    if (selectedLengthLineId) {
+      const updated = await updateLengthLine.mutateAsync({ lineId: selectedLengthLineId, input });
+      setSelectedLengthLineId(updated.id);
+    } else {
+      const created = await createLengthLine.mutateAsync(input);
+      setSelectedLengthLineId(created.id);
+    }
+
+    setLengthLineDraft(null);
+  };
+
+  const handleDeleteLengthLine = async () => {
+    if (!selectedLengthLine) return;
+    await deleteLengthLine.mutateAsync(selectedLengthLine);
+    setSelectedLengthLineId(null);
+    setLengthLineDraft(null);
+    setLengthLineLabelInput('');
   };
 
   if (isLoading) {
@@ -156,8 +249,8 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
               </span>
             </div>
             <p className="mt-2 text-sm text-neutral-500">
-              Calibration is now persisted per Measured Plan. Draw a reference line, enter the
-              real-world length, and unlock the downstream measurement tools.
+              Saved calibration now powers reusable Length Line measurements. Draw spans directly on
+              the protected plan image, save them, and reuse the recorded geometry later.
             </p>
           </div>
 
@@ -172,7 +265,7 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
         </div>
       </header>
 
-      <div className="grid flex-1 gap-0 xl:grid-cols-[96px_minmax(0,1fr)_340px]">
+      <div className="grid flex-1 gap-0 xl:grid-cols-[96px_minmax(0,1fr)_360px]">
         <aside className="border-r border-black/5 bg-white/72 p-3 backdrop-blur">
           <div className="flex flex-col gap-2">
             {TOOL_DEFINITIONS.map((tool) => {
@@ -211,6 +304,10 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
             calibration={calibration}
             calibrationDraft={calibrationDraft}
             onCalibrationDraftChange={setCalibrationDraft}
+            lengthLines={lengthLines}
+            selectedLengthLineId={selectedLengthLineId}
+            lengthLineDraft={lengthLineDraft}
+            onLengthLineDraftChange={setLengthLineDraft}
           />
         </main>
 
@@ -271,7 +368,7 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
               <p className="mt-2 text-sm leading-6 text-neutral-500">
                 {activeTool === 'calibrate'
                   ? 'Click and drag on the plan to mark a reference line, then enter the documented full-size length.'
-                  : 'The saved plan scale is reused by the downstream measurement tools once calibration exists.'}
+                  : 'Saved calibration is reused to convert every Length Line into a normalized measured value.'}
               </p>
 
               {calibration ? (
@@ -369,16 +466,167 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  Measurements
+                  Length Lines
                 </p>
                 <span className="rounded-full bg-neutral-100 px-2 py-1 text-[11px] font-medium text-neutral-500">
-                  {selectedPlan.measurementCount}
+                  {lengthLines.length}
                 </span>
               </div>
-              <div className="mt-4 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-6 text-sm leading-6 text-neutral-500">
-                Saved measurement rows and canvas selection land in the next slice once rectangle
-                CRUD is wired.
+
+              <p className="mt-3 text-sm leading-6 text-neutral-500">
+                {activeTool === 'length'
+                  ? 'Draw a line directly on the plan to save a measured span. Selecting an existing row lets you replace or delete it.'
+                  : 'Switch to the Length Line tool to create reusable measured spans from this plan.'}
+              </p>
+
+              {activeTool === 'length' && calibration ? (
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                    {lengthLineDraft
+                      ? selectedLengthLine
+                        ? 'Replacement span captured. Save to update the selected line.'
+                        : 'Span captured. Save it to create a reusable Length Line.'
+                      : selectedLengthLine
+                        ? 'Selected line loaded. Draw again on the plan if you want to replace its geometry.'
+                        : 'No draft line yet. Draw directly on the plan to capture a measured span.'}
+                  </div>
+
+                  {lengthLineDraft ? (
+                    <>
+                      <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="font-semibold">Draft span</span>
+                          <span>{formatDisplayNumber(lengthLinePixelLength ?? 0)} px</span>
+                        </div>
+                        <div className="mt-2 text-xs text-brand-800">
+                          {measuredLengthInPlanUnits !== null
+                            ? `${formatDisplayNumber(measuredLengthInPlanUnits)} ${calibration.unit}`
+                            : 'Waiting for calibration'}
+                        </div>
+                      </div>
+
+                      <label className="block">
+                        <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                          Label
+                        </span>
+                        <input
+                          type="text"
+                          value={lengthLineLabelInput}
+                          onChange={(event) => setLengthLineLabelInput(event.target.value)}
+                          placeholder="Optional note"
+                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                        />
+                      </label>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => void handleSaveLengthLine()}
+                          disabled={!canSaveLengthLine}
+                        >
+                          {createLengthLine.isPending || updateLengthLine.isPending
+                            ? 'Saving…'
+                            : selectedLengthLine
+                              ? 'Update line'
+                              : 'Save line'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLengthLineDraft(null)}
+                          disabled={createLengthLine.isPending || updateLengthLine.isPending}
+                        >
+                          Clear draft
+                        </Button>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="mt-4 space-y-2">
+                {lengthLinesLoading ? (
+                  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
+                    Loading saved Length Lines…
+                  </div>
+                ) : lengthLines.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-500">
+                    No saved Length Lines yet.
+                  </div>
+                ) : (
+                  lengthLines.map((line) => {
+                    const active = line.id === selectedLengthLineId;
+                    const displayLength =
+                      calibration && line.measuredLengthBase !== null
+                        ? convertBaseToPlanUnits(line.measuredLengthBase, calibration.unit)
+                        : null;
+
+                    return (
+                      <button
+                        key={line.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedLengthLineId(line.id);
+                          setActiveTool('length');
+                          setLengthLineDraft(null);
+                          setLengthLineLabelInput(line.label ?? '');
+                        }}
+                        className={[
+                          'block w-full rounded-2xl border px-3 py-3 text-left transition',
+                          active
+                            ? 'border-brand-500 bg-brand-50'
+                            : 'border-neutral-200 bg-white hover:border-brand-200 hover:bg-brand-50/40',
+                        ].join(' ')}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-neutral-900">
+                              {line.label?.trim() || `Length Line ${line.id.slice(0, 4)}`}
+                            </p>
+                            <p className="mt-1 text-xs text-neutral-500">
+                              {displayLength !== null && calibration
+                                ? `${formatDisplayNumber(displayLength)} ${calibration.unit}`
+                                : 'Measured span'}
+                            </p>
+                          </div>
+                          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                            {formatDisplayNumber(getLineLength(line))} px
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
+
+              {selectedLengthLine ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedLengthLineId(null);
+                      setLengthLineDraft(null);
+                      setLengthLineLabelInput('');
+                    }}
+                  >
+                    Clear selection
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => void handleDeleteLengthLine()}
+                    disabled={deleteLengthLine.isPending}
+                  >
+                    {deleteLengthLine.isPending ? 'Deleting…' : 'Delete line'}
+                  </Button>
+                </div>
+              ) : null}
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -406,13 +654,21 @@ function PlanViewport({
   calibration,
   calibrationDraft,
   onCalibrationDraftChange,
+  lengthLines,
+  selectedLengthLineId,
+  lengthLineDraft,
+  onLengthLineDraftChange,
 }: {
   projectId: string;
   plan: MeasuredPlan;
   activeTool: ToolId;
   calibration: PlanCalibration | null | undefined;
-  calibrationDraft: CalibrationDraft | null;
-  onCalibrationDraftChange: (draft: CalibrationDraft | null) => void;
+  calibrationDraft: LineDraft | null;
+  onCalibrationDraftChange: (draft: LineDraft | null) => void;
+  lengthLines: LengthLine[];
+  selectedLengthLineId: string | null;
+  lengthLineDraft: LineDraft | null;
+  onLengthLineDraftChange: (draft: LineDraft | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -423,7 +679,7 @@ function PlanViewport({
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const panDragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
-  const calibrationStart = useRef<ImagePoint | null>(null);
+  const lineDrawStart = useRef<ImagePoint | null>(null);
   const zoomRef = useRef(zoom);
   const offsetRef = useRef(offset);
   zoomRef.current = zoom;
@@ -503,6 +759,8 @@ function PlanViewport({
 
   const effectiveScale = fitScale * zoom;
   const isCalibrating = activeTool === 'calibrate';
+  const isLengthMeasuring = activeTool === 'length';
+  const isDrawingLine = isCalibrating || isLengthMeasuring;
 
   const clampOffset = useCallback(
     (nextZoom: number, nextOffsetX: number, nextOffsetY: number) => {
@@ -615,16 +873,25 @@ function PlanViewport({
     if (!imageUrl || event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    if (isCalibrating) {
+    if (isDrawingLine) {
       const point = imagePointFromClient(event.clientX, event.clientY);
       if (!point) return;
-      calibrationStart.current = point;
-      onCalibrationDraftChange({
-        startX: point.x,
-        startY: point.y,
-        endX: point.x,
-        endY: point.y,
-      });
+      lineDrawStart.current = point;
+      if (isCalibrating) {
+        onCalibrationDraftChange({
+          startX: point.x,
+          startY: point.y,
+          endX: point.x,
+          endY: point.y,
+        });
+      } else {
+        onLengthLineDraftChange({
+          startX: point.x,
+          startY: point.y,
+          endX: point.x,
+          endY: point.y,
+        });
+      }
       return;
     }
 
@@ -632,15 +899,20 @@ function PlanViewport({
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (calibrationStart.current && isCalibrating) {
+    if (lineDrawStart.current && isDrawingLine) {
       const point = imagePointFromClient(event.clientX, event.clientY, true);
       if (!point) return;
-      onCalibrationDraftChange({
-        startX: calibrationStart.current.x,
-        startY: calibrationStart.current.y,
+      const nextDraft = {
+        startX: lineDrawStart.current.x,
+        startY: lineDrawStart.current.y,
         endX: point.x,
         endY: point.y,
-      });
+      };
+      if (isCalibrating) {
+        onCalibrationDraftChange(nextDraft);
+      } else {
+        onLengthLineDraftChange(nextDraft);
+      }
       return;
     }
 
@@ -654,41 +926,20 @@ function PlanViewport({
 
   const handlePointerUp = () => {
     panDragStart.current = null;
-    calibrationStart.current = null;
+    lineDrawStart.current = null;
   };
 
   const showReset = zoom > 1.01 || rotation !== 0 || offset.x !== 0 || offset.y !== 0;
-  const calibrationLine =
-    calibrationDraft ??
-    (calibration
-      ? {
-          startX: calibration.startX,
-          startY: calibration.startY,
-          endX: calibration.endX,
-          endY: calibration.endY,
-        }
-      : null);
+  const savedCalibrationLine = calibration
+    ? {
+        startX: calibration.startX,
+        startY: calibration.startY,
+        endX: calibration.endX,
+        endY: calibration.endY,
+      }
+    : null;
 
-  const savedCalibrationLine =
-    calibration && !calibrationDraft
-      ? {
-          startX: calibration.startX,
-          startY: calibration.startY,
-          endX: calibration.endX,
-          endY: calibration.endY,
-        }
-      : calibration && calibrationDraft
-        ? {
-            startX: calibration.startX,
-            startY: calibration.startY,
-            endX: calibration.endX,
-            endY: calibration.endY,
-          }
-        : null;
-
-  const draftCalibrationLine = calibrationDraft;
-
-  const savedPoints = savedCalibrationLine
+  const savedCalibrationPoints = savedCalibrationLine
     ? {
         start: viewportPointFromImage({
           x: savedCalibrationLine.startX,
@@ -698,13 +949,17 @@ function PlanViewport({
       }
     : null;
 
-  const draftPoints = draftCalibrationLine
+  const draftCalibrationPoints = calibrationDraft
     ? {
-        start: viewportPointFromImage({
-          x: draftCalibrationLine.startX,
-          y: draftCalibrationLine.startY,
-        }),
-        end: viewportPointFromImage({ x: draftCalibrationLine.endX, y: draftCalibrationLine.endY }),
+        start: viewportPointFromImage({ x: calibrationDraft.startX, y: calibrationDraft.startY }),
+        end: viewportPointFromImage({ x: calibrationDraft.endX, y: calibrationDraft.endY }),
+      }
+    : null;
+
+  const draftLengthPoints = lengthLineDraft
+    ? {
+        start: viewportPointFromImage({ x: lengthLineDraft.startX, y: lengthLineDraft.startY }),
+        end: viewportPointFromImage({ x: lengthLineDraft.endX, y: lengthLineDraft.endY }),
       }
     : null;
 
@@ -756,7 +1011,7 @@ function PlanViewport({
         className="relative min-h-[58vh] overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
         style={{
           cursor: imageUrl
-            ? isCalibrating
+            ? isDrawingLine
               ? 'crosshair'
               : panDragStart.current
                 ? 'grabbing'
@@ -804,43 +1059,69 @@ function PlanViewport({
                 transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${effectiveScale})`,
                 transformOrigin: 'center center',
                 transition:
-                  panDragStart.current || calibrationStart.current
+                  panDragStart.current || lineDrawStart.current
                     ? 'none'
                     : 'transform 0.08s ease-out',
               }}
             />
 
             <svg className="pointer-events-none absolute inset-0 h-full w-full">
-              {savedPoints ? (
-                <CalibrationLineOverlay
-                  start={savedPoints.start}
-                  end={savedPoints.end}
+              {savedCalibrationPoints ? (
+                <LineOverlay
+                  start={savedCalibrationPoints.start}
+                  end={savedCalibrationPoints.end}
                   strokeClassName="stroke-emerald-500"
                   dotClassName="fill-emerald-500"
                 />
               ) : null}
-              {draftPoints ? (
-                <CalibrationLineOverlay
-                  start={draftPoints.start}
-                  end={draftPoints.end}
+
+              {lengthLines.map((line) => {
+                const points = {
+                  start: viewportPointFromImage({ x: line.startX, y: line.startY }),
+                  end: viewportPointFromImage({ x: line.endX, y: line.endY }),
+                };
+                const active = line.id === selectedLengthLineId;
+                return (
+                  <LineOverlay
+                    key={line.id}
+                    start={points.start}
+                    end={points.end}
+                    strokeClassName={active ? 'stroke-brand-700' : 'stroke-[#8b6f47]'}
+                    dotClassName={active ? 'fill-brand-700' : 'fill-[#8b6f47]'}
+                    label={line.label?.trim() || undefined}
+                  />
+                );
+              })}
+
+              {draftCalibrationPoints ? (
+                <LineOverlay
+                  start={draftCalibrationPoints.start}
+                  end={draftCalibrationPoints.end}
                   strokeClassName="stroke-brand-600"
                   dotClassName="fill-brand-600"
                   dashed
+                />
+              ) : null}
+
+              {draftLengthPoints ? (
+                <LineOverlay
+                  start={draftLengthPoints.start}
+                  end={draftLengthPoints.end}
+                  strokeClassName="stroke-[#c17a00]"
+                  dotClassName="fill-[#c17a00]"
+                  dashed
+                  label={selectedLengthLineId ? 'Replacement' : 'Draft'}
                 />
               ) : null}
             </svg>
 
             <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
               {isCalibrating
-                ? 'Draw reference line • scroll to zoom • double-click to reset'
-                : 'Scroll to zoom • drag to pan • double-click to reset'}
+                ? 'Draw calibration line • scroll to zoom • double-click to reset'
+                : isLengthMeasuring
+                  ? 'Draw measured line • scroll to zoom • double-click to reset'
+                  : 'Scroll to zoom • drag to pan • double-click to reset'}
             </div>
-
-            {calibrationLine ? (
-              <div className="pointer-events-none absolute bottom-4 left-4 rounded-full border border-white/60 bg-white/84 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
-                Calibration line visible
-              </div>
-            ) : null}
           </>
         ) : null}
       </div>
@@ -848,19 +1129,24 @@ function PlanViewport({
   );
 }
 
-function CalibrationLineOverlay({
+function LineOverlay({
   start,
   end,
   strokeClassName,
   dotClassName,
   dashed = false,
+  label,
 }: {
   start: ImagePoint;
   end: ImagePoint;
   strokeClassName: string;
   dotClassName: string;
   dashed?: boolean;
+  label?: string | undefined;
 }) {
+  const midX = (start.x + end.x) / 2;
+  const midY = (start.y + end.y) / 2;
+
   return (
     <>
       <line
@@ -875,21 +1161,54 @@ function CalibrationLineOverlay({
       />
       <circle cx={start.x} cy={start.y} r={5} className={dotClassName} />
       <circle cx={end.x} cy={end.y} r={5} className={dotClassName} />
+      {label ? (
+        <g>
+          <rect
+            x={midX - 42}
+            y={midY - 20}
+            width={84}
+            height={18}
+            rx={9}
+            fill="rgba(255,255,255,0.82)"
+          />
+          <text
+            x={midX}
+            y={midY - 8}
+            textAnchor="middle"
+            fill="#3f3f46"
+            fontSize="11"
+            fontWeight="600"
+            letterSpacing="0.08em"
+          >
+            {label}
+          </text>
+        </g>
+      ) : null}
     </>
   );
 }
 
-function getLineLength(line: CalibrationDraft) {
+function getLineLength(line: Pick<LineDraft, 'startX' | 'startY' | 'endX' | 'endY'>) {
   return Math.hypot(line.endX - line.startX, line.endY - line.startY);
 }
 
+function convertPlanUnitsToBase(value: number, unit: PlanMeasurementUnit) {
+  return value * MILLIMETERS_PER_UNIT[unit];
+}
+
+function convertBaseToPlanUnits(value: number, unit: PlanMeasurementUnit) {
+  return value / MILLIMETERS_PER_UNIT[unit];
+}
+
 function formatDisplayNumber(value: number) {
-  return value.toFixed(value >= 10 ? 1 : 2).replace(/\.0$/, '');
+  if (value >= 100) return value.toFixed(0);
+  if (value >= 10) return value.toFixed(1).replace(/\.0$/, '');
+  return value.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
 }
 
 function PlanCanvasSkeleton() {
   return (
-    <div className="-mx-4 grid min-h-[calc(100vh-185px)] gap-0 bg-[#f3f1ea] md:-mx-6 xl:grid-cols-[96px_minmax(0,1fr)_340px]">
+    <div className="-mx-4 grid min-h-[calc(100vh-185px)] gap-0 bg-[#f3f1ea] md:-mx-6 xl:grid-cols-[96px_minmax(0,1fr)_360px]">
       <div className="border-r border-black/5 bg-white/72 p-3">
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, index) => (

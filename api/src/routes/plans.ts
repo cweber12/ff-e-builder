@@ -3,10 +3,15 @@ import type {
   CalibrationStatus,
   Env,
   HonoVariables,
+  LengthLine,
   MeasuredPlan,
   PlanCalibration,
 } from '../types';
-import { CreateMeasuredPlanSchema, UpdatePlanCalibrationSchema } from '../types';
+import {
+  CreateMeasuredPlanSchema,
+  UpdatePlanCalibrationSchema,
+  UpsertLengthLineSchema,
+} from '../types';
 import { assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
@@ -62,6 +67,28 @@ async function getOwnedMeasuredPlan(
   `;
 
   return (rows[0] as MeasuredPlan | undefined) ?? null;
+}
+
+async function getOwnedLengthLine(
+  env: Env,
+  uid: string,
+  projectId: string,
+  planId: string,
+  lineId: string,
+): Promise<LengthLine | null> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT ll.*
+    FROM length_lines ll
+    INNER JOIN measured_plans mp ON mp.id = ll.measured_plan_id
+    WHERE ll.id = ${lineId}
+      AND ll.measured_plan_id = ${planId}
+      AND mp.project_id = ${projectId}
+      AND mp.owner_uid = ${uid}
+    LIMIT 1
+  `;
+
+  return (rows[0] as LengthLine | undefined) ?? null;
 }
 
 router.get('/:id/plans', async (c) => {
@@ -275,6 +302,121 @@ router.put('/:projectId/plans/:planId/calibration', async (c) => {
   `;
 
   return c.json({ calibration: rows[0] as PlanCalibration });
+});
+
+router.get('/:projectId/plans/:planId/length-lines', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    SELECT *
+    FROM length_lines
+    WHERE measured_plan_id = ${planId}
+    ORDER BY created_at DESC
+  `;
+
+  return c.json({ length_lines: rows as LengthLine[] });
+});
+
+router.post('/:projectId/plans/:planId/length-lines', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json<unknown>().catch(() => null);
+  if (!body) return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const parsed = UpsertLengthLineSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const lineId = crypto.randomUUID();
+  const rows = await sql`
+    INSERT INTO length_lines (
+      id,
+      measured_plan_id,
+      start_x,
+      start_y,
+      end_x,
+      end_y,
+      measured_length_base,
+      label
+    )
+    VALUES (
+      ${lineId},
+      ${planId},
+      ${parsed.data.start_x},
+      ${parsed.data.start_y},
+      ${parsed.data.end_x},
+      ${parsed.data.end_y},
+      ${parsed.data.measured_length_base},
+      ${parsed.data.label}
+    )
+    RETURNING *
+  `;
+
+  return c.json({ length_line: rows[0] as LengthLine }, 201);
+});
+
+router.patch('/:projectId/plans/:planId/length-lines/:lineId', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+  const lineId = c.req.param('lineId');
+
+  const line = await getOwnedLengthLine(c.env, uid, projectId, planId, lineId);
+  if (!line) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json<unknown>().catch(() => null);
+  if (!body) return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const parsed = UpsertLengthLineSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    UPDATE length_lines
+    SET
+      start_x = ${parsed.data.start_x},
+      start_y = ${parsed.data.start_y},
+      end_x = ${parsed.data.end_x},
+      end_y = ${parsed.data.end_y},
+      measured_length_base = ${parsed.data.measured_length_base},
+      label = ${parsed.data.label},
+      updated_at = now()
+    WHERE id = ${lineId}
+      AND measured_plan_id = ${planId}
+    RETURNING *
+  `;
+
+  return c.json({ length_line: rows[0] as LengthLine });
+});
+
+router.delete('/:projectId/plans/:planId/length-lines/:lineId', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+  const lineId = c.req.param('lineId');
+
+  const line = await getOwnedLengthLine(c.env, uid, projectId, planId, lineId);
+  if (!line) return c.json({ error: 'Not found' }, 404);
+
+  const sql = getDb(c.env);
+  await sql`
+    DELETE FROM length_lines
+    WHERE id = ${lineId}
+      AND measured_plan_id = ${planId}
+  `;
+
+  return c.body(null, 204);
 });
 
 router.delete('/:projectId/plans/:planId', async (c) => {

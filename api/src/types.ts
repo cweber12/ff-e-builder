@@ -374,6 +374,16 @@ export const UpdatePlanCalibrationSchema = z.object({
 });
 export type UpdatePlanCalibrationInput = z.infer<typeof UpdatePlanCalibrationSchema>;
 
+export const UpsertLengthLineSchema = z.object({
+  start_x: z.number().min(0),
+  start_y: z.number().min(0),
+  end_x: z.number().min(0),
+  end_y: z.number().min(0),
+  measured_length_base: z.number().nonnegative().nullable().default(null),
+  label: z.string().max(255).nullable().default(null),
+});
+export type UpsertLengthLineInput = z.infer<typeof UpsertLengthLineSchema>;
+
 export const CalibrationStatusSchema = z.enum(calibrationStatuses);
 export type CalibrationStatusInput = z.infer<typeof CalibrationStatusSchema>;
 

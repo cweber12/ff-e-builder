@@ -71,7 +71,39 @@ vi.mock('../hooks', () => ({
         : null,
     isLoading: false,
   })),
+  usePlanLengthLines: vi.fn((_projectId: string, planId: string) => ({
+    data:
+      planId === 'plan-2'
+        ? [
+            {
+              id: 'line-1',
+              measuredPlanId: 'plan-2',
+              startX: 120,
+              startY: 120,
+              endX: 420,
+              endY: 120,
+              measuredLengthBase: 3657.6,
+              label: 'Banquette wall',
+              createdAt: '2026-05-06T00:00:00Z',
+              updatedAt: '2026-05-06T00:00:00Z',
+            },
+          ]
+        : [],
+    isLoading: false,
+  })),
   useSetPlanCalibration: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useCreatePlanLengthLine: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useUpdatePlanLengthLine: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useDeletePlanLengthLine: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
   })),
@@ -113,7 +145,8 @@ describe('PlanCanvasPage', () => {
     );
 
     expect(screen.getByText('Saved scale')).toBeInTheDocument();
-    expect(screen.getByText(/12 ft/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/12 ft/i)).toHaveLength(2);
     expect(screen.getByRole('button', { name: 'Length Line' })).toBeEnabled();
+    expect(screen.getByText('Banquette wall')).toBeInTheDocument();
   });
 });

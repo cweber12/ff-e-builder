@@ -173,4 +173,127 @@ describe('plansApi', () => {
     expect(blob.type).toBe('image/png');
     await expect(blob.text()).resolves.toBe('content');
   });
+
+  it('lists saved length lines for a plan', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        length_lines: [
+          {
+            id: 'line-1',
+            measured_plan_id: 'plan-1',
+            start_x: 120,
+            start_y: 100,
+            end_x: 420,
+            end_y: 100,
+            measured_length_base: '3657.6000',
+            label: 'Banquette wall',
+            created_at: '2026-05-06T00:00:00Z',
+            updated_at: '2026-05-06T00:00:00Z',
+          },
+        ],
+      }),
+    );
+
+    await expect(plansApi.listLengthLines('project-1', 'plan-1')).resolves.toEqual([
+      expect.objectContaining({
+        id: 'line-1',
+        measuredPlanId: 'plan-1',
+        measuredLengthBase: 3657.6,
+        label: 'Banquette wall',
+      }),
+    ]);
+  });
+
+  it('creates a saved length line', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        length_line: {
+          id: 'line-1',
+          measured_plan_id: 'plan-1',
+          start_x: 120,
+          start_y: 100,
+          end_x: 420,
+          end_y: 100,
+          measured_length_base: '3657.6000',
+          label: 'Banquette wall',
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-06T00:00:00Z',
+        },
+      }),
+    );
+
+    await plansApi.createLengthLine('project-1', 'plan-1', {
+      startX: 120,
+      startY: 100,
+      endX: 420,
+      endY: 100,
+      measuredLengthBase: 3657.6,
+      label: 'Banquette wall',
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBe(
+      JSON.stringify({
+        start_x: 120,
+        start_y: 100,
+        end_x: 420,
+        end_y: 100,
+        measured_length_base: 3657.6,
+        label: 'Banquette wall',
+      }),
+    );
+  });
+
+  it('updates a saved length line', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        length_line: {
+          id: 'line-1',
+          measured_plan_id: 'plan-1',
+          start_x: 150,
+          start_y: 100,
+          end_x: 450,
+          end_y: 100,
+          measured_length_base: '3962.4000',
+          label: 'Updated wall',
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-07T00:00:00Z',
+        },
+      }),
+    );
+
+    await plansApi.updateLengthLine('project-1', 'plan-1', 'line-1', {
+      startX: 150,
+      startY: 100,
+      endX: 450,
+      endY: 100,
+      measuredLengthBase: 3962.4,
+      label: 'Updated wall',
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.method).toBe('PATCH');
+    expect(init?.body).toBe(
+      JSON.stringify({
+        start_x: 150,
+        start_y: 100,
+        end_x: 450,
+        end_y: 100,
+        measured_length_base: 3962.4,
+        label: 'Updated wall',
+      }),
+    );
+  });
+
+  it('deletes a saved length line', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await plansApi.deleteLengthLine('project-1', 'plan-1', 'line-1');
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/projects/project-1/plans/plan-1/length-lines/line-1'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
 });

@@ -3,8 +3,12 @@ import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import { removeListItem } from '../optimisticList';
 import { planKeys } from '../queryKeys';
-import type { CreateMeasuredPlanInput, UpdatePlanCalibrationInput } from '../../lib/api';
-import type { MeasuredPlan, PlanCalibration } from '../../types';
+import type {
+  CreateMeasuredPlanInput,
+  UpdatePlanCalibrationInput,
+  UpsertPlanLengthLineInput,
+} from '../../lib/api';
+import type { LengthLine, MeasuredPlan, PlanCalibration } from '../../types';
 
 export function useMeasuredPlans(projectId: string) {
   return useQuery({
@@ -69,5 +73,58 @@ export function useSetPlanCalibration(projectId: string, planId: string) {
       );
     },
     onError: (err) => toast.error(`Plan calibration save failed: ${err.message}`),
+  });
+}
+
+export function usePlanLengthLines(projectId: string, planId: string) {
+  return useQuery({
+    queryKey: planKeys.lengthLines(projectId, planId),
+    queryFn: () => api.plans.listLengthLines(projectId, planId),
+    enabled: projectId.length > 0 && planId.length > 0,
+  });
+}
+
+export function useCreatePlanLengthLine(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpsertPlanLengthLineInput) =>
+      api.plans.createLengthLine(projectId, planId, input),
+    onSuccess: (line) => {
+      queryClient.setQueryData<LengthLine[]>(planKeys.lengthLines(projectId, planId), (old) => [
+        line,
+        ...(old ?? []),
+      ]);
+    },
+    onError: (err) => toast.error(`Length Line save failed: ${err.message}`),
+  });
+}
+
+export function useUpdatePlanLengthLine(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ lineId, input }: { lineId: string; input: UpsertPlanLengthLineInput }) =>
+      api.plans.updateLengthLine(projectId, planId, lineId, input),
+    onSuccess: (line) => {
+      queryClient.setQueryData<LengthLine[]>(planKeys.lengthLines(projectId, planId), (old) =>
+        (old ?? []).map((candidate) => (candidate.id === line.id ? line : candidate)),
+      );
+    },
+    onError: (err) => toast.error(`Length Line update failed: ${err.message}`),
+  });
+}
+
+export function useDeletePlanLengthLine(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (line: LengthLine) => api.plans.deleteLengthLine(projectId, planId, line.id),
+    onSuccess: (_data, line) => {
+      queryClient.setQueryData<LengthLine[]>(planKeys.lengthLines(projectId, planId), (old) =>
+        removeListItem(old, line.id),
+      );
+    },
+    onError: (err) => toast.error(`Length Line delete failed: ${err.message}`),
   });
 }

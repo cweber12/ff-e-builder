@@ -1,11 +1,13 @@
 import { apiFetch, apiFetchResponse } from './transport';
 import {
+  mapLengthLine,
   mapMeasuredPlan,
   mapPlanCalibration,
+  type RawLengthLine,
   type RawMeasuredPlan,
   type RawPlanCalibration,
 } from './mappers';
-import type { MeasuredPlan, PlanCalibration, PlanMeasurementUnit } from '../../types';
+import type { LengthLine, MeasuredPlan, PlanCalibration, PlanMeasurementUnit } from '../../types';
 
 export type CreateMeasuredPlanInput = {
   name: string;
@@ -21,6 +23,15 @@ export type UpdatePlanCalibrationInput = {
   realWorldLength: number;
   unit: PlanMeasurementUnit;
   pixelsPerUnit: number;
+};
+
+export type UpsertPlanLengthLineInput = {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  measuredLengthBase: number | null;
+  label?: string | null;
 };
 
 export const plansApi = {
@@ -71,6 +82,57 @@ export const plansApi = {
         }),
       },
     ).then((r) => mapPlanCalibration(r.calibration)),
+
+  listLengthLines: (projectId: string, planId: string): Promise<LengthLine[]> =>
+    apiFetch<{ length_lines: RawLengthLine[] }>(
+      `/api/v1/projects/${projectId}/plans/${planId}/length-lines`,
+    ).then((r) => r.length_lines.map(mapLengthLine)),
+
+  createLengthLine: (
+    projectId: string,
+    planId: string,
+    input: UpsertPlanLengthLineInput,
+  ): Promise<LengthLine> =>
+    apiFetch<{ length_line: RawLengthLine }>(
+      `/api/v1/projects/${projectId}/plans/${planId}/length-lines`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          start_x: input.startX,
+          start_y: input.startY,
+          end_x: input.endX,
+          end_y: input.endY,
+          measured_length_base: input.measuredLengthBase,
+          label: input.label ?? null,
+        }),
+      },
+    ).then((r) => mapLengthLine(r.length_line)),
+
+  updateLengthLine: (
+    projectId: string,
+    planId: string,
+    lineId: string,
+    input: UpsertPlanLengthLineInput,
+  ): Promise<LengthLine> =>
+    apiFetch<{ length_line: RawLengthLine }>(
+      `/api/v1/projects/${projectId}/plans/${planId}/length-lines/${lineId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          start_x: input.startX,
+          start_y: input.startY,
+          end_x: input.endX,
+          end_y: input.endY,
+          measured_length_base: input.measuredLengthBase,
+          label: input.label ?? null,
+        }),
+      },
+    ).then((r) => mapLengthLine(r.length_line)),
+
+  deleteLengthLine: (projectId: string, planId: string, lineId: string): Promise<void> =>
+    apiFetch<void>(`/api/v1/projects/${projectId}/plans/${planId}/length-lines/${lineId}`, {
+      method: 'DELETE',
+    }),
 
   downloadContent: async (projectId: string, planId: string): Promise<Blob> => {
     const response = await apiFetchResponse(

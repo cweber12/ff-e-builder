@@ -41,7 +41,7 @@ C4Component
     Component(router, "Router", "Hono", "Mounts route modules under /api/v1")
     Component(authMw, "Auth Middleware", "Firebase token verification", "Rejects unauthenticated API calls")
     Component(ownership, "Ownership Helpers", "SQL lookups", "Ensures resources belong to the Firebase UID")
-    Component(routeHandlers, "Route Handlers", "TypeScript", "Projects, rooms, items, materials, proposal, images, users")
+    Component(routeHandlers, "Route Handlers", "TypeScript", "Projects, rooms, items, materials, proposal, plans, images, users")
     Component(db, "Database Client", "Neon serverless SQL template", "Hand-written SQL queries")
     Component(imageGateway, "Image Gateway", "Cloudflare R2 binding", "Uploads, primary image selection, protected downloads")
   }
@@ -74,7 +74,7 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 - `/projects/:id/proposal/materials` redirects to the shared project material library.
 - `/projects/:id/proposal/summary` redirects to the project budget view.
 - `/projects/:id/plans` shows the project-level Measured Plan library for architectural source images and calibration readiness.
-- `/projects/:id/plans/:planId` opens a project-scoped plan workspace for protected-image viewing, plan switching, persisted calibration line editing, and future measurement tools.
+- `/projects/:id/plans/:planId` opens a project-scoped plan workspace for protected-image viewing, plan switching, persisted calibration line editing, saved Length Line measurements, and future rectangle/crop tools.
 
 Legacy project routes continue to redirect to their current FF&E equivalents for compatibility.
 
@@ -91,6 +91,7 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
 - Project-level Measured Plan source-image metadata lives in Neon `measured_plans`; the source image bytes also live in the private R2 bucket `ffe-images`.
 - Per-plan calibration metadata lives in Neon `plan_calibrations`; calibration line coordinates are stored in raw image-pixel space while downstream crop parameters remain 0-1 percentages.
+- Saved Length Line measurements live in Neon `length_lines`; line geometry is stored in raw image-pixel space and measured values are normalized into a canonical base unit before display conversion back into the plan calibration unit.
 - R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `item_option`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering; `item_option` stores up to three alternate FF&E option renderings with one current selection.
 - Measured Plan source images are not stored in `image_assets`; they are uploaded through `/api/v1/projects/:id/plans`, persisted on `measured_plans`, and stored in R2 under `users/{uid}/projects/{projectId}/plans/{planId}.{ext}`.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.

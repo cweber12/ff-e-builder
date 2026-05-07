@@ -4,6 +4,7 @@ import type {
   ImageEntityType,
   Item,
   ItemStatus,
+  LengthLine,
   PlanCalibration,
   Material,
   MeasuredPlan,
@@ -167,6 +168,19 @@ export interface RawPlanCalibration {
   updated_at: string;
 }
 
+export interface RawLengthLine {
+  id: string;
+  measured_plan_id: string;
+  start_x: number;
+  start_y: number;
+  end_x: number;
+  end_y: number;
+  measured_length_base: string | null;
+  label: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // Response mappers
 export const mapProject = (r: RawProject): Project => ({
   id: r.id,
@@ -318,6 +332,19 @@ export const mapPlanCalibration = (r: RawPlanCalibration): PlanCalibration => ({
   realWorldLength: Number(r.real_world_length),
   unit: r.unit,
   pixelsPerUnit: Number(r.pixels_per_unit),
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export const mapLengthLine = (r: RawLengthLine): LengthLine => ({
+  id: r.id,
+  measuredPlanId: r.measured_plan_id,
+  startX: r.start_x,
+  startY: r.start_y,
+  endX: r.end_x,
+  endY: r.end_y,
+  measuredLengthBase: r.measured_length_base === null ? null : Number(r.measured_length_base),
+  label: r.label,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

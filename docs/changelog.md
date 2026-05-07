@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to FF&E Builder will be documented in this file.
+All notable changes to ChillDesignStudio will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): add persisted Length Line measurement CRUD, canvas overlays, and a reusable measured-span sidebar on top of saved plan calibration
 - feat(plans): persist per-plan calibration lines with raw-pixel geometry, add calibration read/write worker + client APIs, and make the opened plan workspace save and render reference-line scale overlays
 - feat(plans): add the opened-plan workspace shell with a dedicated `plans/:planId` route, protected source-image canvas, plan selector, calibration-aware tool rail, and session-only zoom/pan/rotation controls
 - feat(plans): add the first project-level Plans slice with a new nav tab, persisted Measured Plan uploads/library cards, worker/API support, and foundational plans-domain tables for upcoming calibration and measurement tooling
