@@ -8,13 +8,25 @@ import {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/primitives';
-import { useMeasuredPlans } from '../hooks';
+import { useMeasuredPlans, usePlanCalibration, useSetPlanCalibration } from '../hooks';
 import { api } from '../lib/api';
-import type { MeasuredPlan, Project } from '../types';
+import type { MeasuredPlan, PlanCalibration, PlanMeasurementUnit, Project } from '../types';
 
 type PlanCanvasPageProps = {
   project: Project;
   planId: string;
+};
+
+type CalibrationDraft = {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+};
+
+type ImagePoint = {
+  x: number;
+  y: number;
 };
 
 const TOOL_DEFINITIONS = [
@@ -28,24 +40,75 @@ const TOOL_DEFINITIONS = [
   { id: 'crop', label: 'Crop', description: 'Refine the derived plan image framing.' },
 ] as const;
 
+const UNIT_OPTIONS: PlanMeasurementUnit[] = ['ft', 'in', 'm', 'cm', 'mm'];
+
 type ToolId = (typeof TOOL_DEFINITIONS)[number]['id'];
 
 export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
   const [activeTool, setActiveTool] = useState<ToolId>('calibrate');
+  const [calibrationDraft, setCalibrationDraft] = useState<CalibrationDraft | null>(null);
+  const [calibrationLengthInput, setCalibrationLengthInput] = useState('1');
+  const [calibrationUnit, setCalibrationUnit] = useState<PlanMeasurementUnit>('ft');
 
   const selectedPlan = useMemo(
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
     [planId, plans],
   );
 
+  const selectedPlanId = selectedPlan?.id ?? '';
+  const { data: calibration, isLoading: calibrationLoading } = usePlanCalibration(
+    project.id,
+    selectedPlanId,
+  );
+  const setCalibration = useSetPlanCalibration(project.id, selectedPlanId);
+
+  const isCalibrated = calibration !== null || selectedPlan?.calibrationStatus === 'calibrated';
+
   useEffect(() => {
     if (!selectedPlan) return;
-    if (selectedPlan.calibrationStatus === 'calibrated' && activeTool === 'calibrate') return;
-    if (selectedPlan.calibrationStatus === 'uncalibrated') {
+    if (!isCalibrated) {
       setActiveTool('calibrate');
     }
-  }, [activeTool, selectedPlan]);
+  }, [isCalibrated, selectedPlan]);
+
+  useEffect(() => {
+    setCalibrationDraft(null);
+  }, [selectedPlanId]);
+
+  useEffect(() => {
+    if (!calibration) return;
+    setCalibrationLengthInput(formatDisplayNumber(calibration.realWorldLength));
+    setCalibrationUnit(calibration.unit);
+  }, [calibration]);
+
+  const calibrationPixelLength = useMemo(() => {
+    if (!calibrationDraft) return null;
+    return getLineLength(calibrationDraft);
+  }, [calibrationDraft]);
+
+  const calibrationLengthValue = Number(calibrationLengthInput);
+  const canSaveCalibration =
+    calibrationDraft !== null &&
+    calibrationPixelLength !== null &&
+    calibrationPixelLength > 0 &&
+    Number.isFinite(calibrationLengthValue) &&
+    calibrationLengthValue > 0 &&
+    !setCalibration.isPending;
+
+  const handleSaveCalibration = async () => {
+    if (!canSaveCalibration || !calibrationDraft || calibrationPixelLength === null) return;
+    await setCalibration.mutateAsync({
+      startX: calibrationDraft.startX,
+      startY: calibrationDraft.startY,
+      endX: calibrationDraft.endX,
+      endY: calibrationDraft.endY,
+      realWorldLength: calibrationLengthValue,
+      unit: calibrationUnit,
+      pixelsPerUnit: calibrationPixelLength / calibrationLengthValue,
+    });
+    setCalibrationDraft(null);
+  };
 
   if (isLoading) {
     return <PlanCanvasSkeleton />;
@@ -64,8 +127,6 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
       </div>
     );
   }
-
-  const isCalibrated = selectedPlan.calibrationStatus === 'calibrated';
 
   return (
     <div className="-mx-4 flex min-h-[calc(100vh-185px)] flex-col bg-[#f3f1ea] md:-mx-6">
@@ -91,12 +152,12 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
                   isCalibrated ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
                 ].join(' ')}
               >
-                {selectedPlan.calibrationStatus}
+                {isCalibrated ? 'calibrated' : 'uncalibrated'}
               </span>
             </div>
             <p className="mt-2 text-sm text-neutral-500">
-              Workspace shell for calibration and measurements. This slice focuses on the opened
-              plan surface, image viewport controls, and tool framing.
+              Calibration is now persisted per Measured Plan. Draw a reference line, enter the
+              real-world length, and unlock the downstream measurement tools.
             </p>
           </div>
 
@@ -111,7 +172,7 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
         </div>
       </header>
 
-      <div className="grid flex-1 gap-0 xl:grid-cols-[96px_minmax(0,1fr)_320px]">
+      <div className="grid flex-1 gap-0 xl:grid-cols-[96px_minmax(0,1fr)_340px]">
         <aside className="border-r border-black/5 bg-white/72 p-3 backdrop-blur">
           <div className="flex flex-col gap-2">
             {TOOL_DEFINITIONS.map((tool) => {
@@ -143,7 +204,14 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
         </aside>
 
         <main className="min-w-0 p-4 md:p-6">
-          <PlanViewport projectId={project.id} plan={selectedPlan} />
+          <PlanViewport
+            projectId={project.id}
+            plan={selectedPlan}
+            activeTool={activeTool}
+            calibration={calibration}
+            calibrationDraft={calibrationDraft}
+            onCalibrationDraftChange={setCalibrationDraft}
+          />
         </main>
 
         <aside className="border-l border-black/5 bg-white/72 p-4 backdrop-blur md:p-5">
@@ -186,17 +254,116 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                Calibration
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+                  Calibration
+                </p>
+                {calibrationLoading ? (
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+                    Loading
+                  </span>
+                ) : null}
+              </div>
+
               <p className="mt-3 text-sm font-medium text-neutral-800">
                 {isCalibrated ? 'Calibrated' : 'Needs calibration'}
               </p>
               <p className="mt-2 text-sm leading-6 text-neutral-500">
-                {isCalibrated
-                  ? 'Length, rectangle, and crop tools can build on the saved plan scale.'
-                  : 'Length, rectangle, and crop tools stay disabled until this plan has a calibration reference.'}
+                {activeTool === 'calibrate'
+                  ? 'Click and drag on the plan to mark a reference line, then enter the documented full-size length.'
+                  : 'The saved plan scale is reused by the downstream measurement tools once calibration exists.'}
               </p>
+
+              {calibration ? (
+                <div className="mt-4 grid gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 text-sm text-emerald-900">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-semibold">Saved scale</span>
+                    <span className="text-xs uppercase tracking-[0.18em] text-emerald-700">
+                      {formatDisplayNumber(calibration.realWorldLength)} {calibration.unit}
+                    </span>
+                  </div>
+                  <div className="text-xs leading-5 text-emerald-800">
+                    {formatDisplayNumber(calibration.pixelsPerUnit)} px per {calibration.unit}
+                  </div>
+                </div>
+              ) : null}
+
+              {activeTool === 'calibrate' ? (
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                    {calibrationDraft
+                      ? 'Reference line captured. Enter the documented full-size length below to save or replace this plan calibration.'
+                      : calibration
+                        ? 'Draw a new line on the plan if you want to replace the saved calibration.'
+                        : 'No reference line yet. Draw directly on the plan to start calibration.'}
+                  </div>
+
+                  {calibrationDraft ? (
+                    <>
+                      <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="font-semibold">Reference line</span>
+                          <span>{formatDisplayNumber(calibrationPixelLength ?? 0)} px</span>
+                        </div>
+                      </div>
+
+                      <label className="block">
+                        <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                          Real-world length
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={calibrationLengthInput}
+                          onChange={(event) => setCalibrationLengthInput(event.target.value)}
+                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                          Unit
+                        </span>
+                        <select
+                          value={calibrationUnit}
+                          onChange={(event) =>
+                            setCalibrationUnit(event.target.value as PlanMeasurementUnit)
+                          }
+                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                        >
+                          {UNIT_OPTIONS.map((unit) => (
+                            <option key={unit} value={unit}>
+                              {unit}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => void handleSaveCalibration()}
+                          disabled={!canSaveCalibration}
+                        >
+                          {setCalibration.isPending ? 'Saving…' : 'Save calibration'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCalibrationDraft(null)}
+                          disabled={setCalibration.isPending}
+                        >
+                          Clear line
+                        </Button>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
             </section>
 
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -232,7 +399,21 @@ export function PlanCanvasPage({ project, planId }: PlanCanvasPageProps) {
   );
 }
 
-function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPlan }) {
+function PlanViewport({
+  projectId,
+  plan,
+  activeTool,
+  calibration,
+  calibrationDraft,
+  onCalibrationDraftChange,
+}: {
+  projectId: string;
+  plan: MeasuredPlan;
+  activeTool: ToolId;
+  calibration: PlanCalibration | null | undefined;
+  calibrationDraft: CalibrationDraft | null;
+  onCalibrationDraftChange: (draft: CalibrationDraft | null) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -241,7 +422,8 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const dragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
+  const panDragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
+  const calibrationStart = useRef<ImagePoint | null>(null);
   const zoomRef = useRef(zoom);
   const offsetRef = useRef(offset);
   zoomRef.current = zoom;
@@ -320,6 +502,7 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
   ]);
 
   const effectiveScale = fitScale * zoom;
+  const isCalibrating = activeTool === 'calibrate';
 
   const clampOffset = useCallback(
     (nextZoom: number, nextOffsetX: number, nextOffsetY: number) => {
@@ -346,6 +529,61 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
     setZoom(1);
     setOffset({ x: 0, y: 0 });
   }, []);
+
+  const imagePointFromClient = useCallback(
+    (clientX: number, clientY: number, clamp = false): ImagePoint | null => {
+      const element = containerRef.current;
+      if (!element || naturalSize.width <= 0 || naturalSize.height <= 0 || effectiveScale <= 0) {
+        return null;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const centeredX = clientX - rect.left - rect.width / 2 - offset.x;
+      const centeredY = clientY - rect.top - rect.height / 2 - offset.y;
+      const radians = (-rotation * Math.PI) / 180;
+      const unrotatedX = centeredX * Math.cos(radians) - centeredY * Math.sin(radians);
+      const unrotatedY = centeredX * Math.sin(radians) + centeredY * Math.cos(radians);
+      const imageX = unrotatedX / effectiveScale + naturalSize.width / 2;
+      const imageY = unrotatedY / effectiveScale + naturalSize.height / 2;
+
+      if (!clamp) {
+        if (imageX < 0 || imageX > naturalSize.width || imageY < 0 || imageY > naturalSize.height) {
+          return null;
+        }
+        return { x: imageX, y: imageY };
+      }
+
+      return {
+        x: Math.max(0, Math.min(naturalSize.width, imageX)),
+        y: Math.max(0, Math.min(naturalSize.height, imageY)),
+      };
+    },
+    [effectiveScale, naturalSize.height, naturalSize.width, offset.x, offset.y, rotation],
+  );
+
+  const viewportPointFromImage = useCallback(
+    (point: ImagePoint): ImagePoint => {
+      const centeredX = (point.x - naturalSize.width / 2) * effectiveScale;
+      const centeredY = (point.y - naturalSize.height / 2) * effectiveScale;
+      const radians = (rotation * Math.PI) / 180;
+      const rotatedX = centeredX * Math.cos(radians) - centeredY * Math.sin(radians);
+      const rotatedY = centeredX * Math.sin(radians) + centeredY * Math.cos(radians);
+      return {
+        x: containerSize.width / 2 + offset.x + rotatedX,
+        y: containerSize.height / 2 + offset.y + rotatedY,
+      };
+    },
+    [
+      containerSize.height,
+      containerSize.width,
+      effectiveScale,
+      naturalSize.height,
+      naturalSize.width,
+      offset.x,
+      offset.y,
+      rotation,
+    ],
+  );
 
   useEffect(() => {
     const element = containerRef.current;
@@ -376,21 +614,99 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!imageUrl || event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
-    dragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
+
+    if (isCalibrating) {
+      const point = imagePointFromClient(event.clientX, event.clientY);
+      if (!point) return;
+      calibrationStart.current = point;
+      onCalibrationDraftChange({
+        startX: point.x,
+        startY: point.y,
+        endX: point.x,
+        endY: point.y,
+      });
+      return;
+    }
+
+    panDragStart.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!dragStart.current) return;
-    const deltaX = event.clientX - dragStart.current.px;
-    const deltaY = event.clientY - dragStart.current.py;
-    setOffset(clampOffset(zoom, dragStart.current.ox + deltaX, dragStart.current.oy + deltaY));
+    if (calibrationStart.current && isCalibrating) {
+      const point = imagePointFromClient(event.clientX, event.clientY, true);
+      if (!point) return;
+      onCalibrationDraftChange({
+        startX: calibrationStart.current.x,
+        startY: calibrationStart.current.y,
+        endX: point.x,
+        endY: point.y,
+      });
+      return;
+    }
+
+    if (!panDragStart.current) return;
+    const deltaX = event.clientX - panDragStart.current.px;
+    const deltaY = event.clientY - panDragStart.current.py;
+    setOffset(
+      clampOffset(zoom, panDragStart.current.ox + deltaX, panDragStart.current.oy + deltaY),
+    );
   };
 
   const handlePointerUp = () => {
-    dragStart.current = null;
+    panDragStart.current = null;
+    calibrationStart.current = null;
   };
 
   const showReset = zoom > 1.01 || rotation !== 0 || offset.x !== 0 || offset.y !== 0;
+  const calibrationLine =
+    calibrationDraft ??
+    (calibration
+      ? {
+          startX: calibration.startX,
+          startY: calibration.startY,
+          endX: calibration.endX,
+          endY: calibration.endY,
+        }
+      : null);
+
+  const savedCalibrationLine =
+    calibration && !calibrationDraft
+      ? {
+          startX: calibration.startX,
+          startY: calibration.startY,
+          endX: calibration.endX,
+          endY: calibration.endY,
+        }
+      : calibration && calibrationDraft
+        ? {
+            startX: calibration.startX,
+            startY: calibration.startY,
+            endX: calibration.endX,
+            endY: calibration.endY,
+          }
+        : null;
+
+  const draftCalibrationLine = calibrationDraft;
+
+  const savedPoints = savedCalibrationLine
+    ? {
+        start: viewportPointFromImage({
+          x: savedCalibrationLine.startX,
+          y: savedCalibrationLine.startY,
+        }),
+        end: viewportPointFromImage({ x: savedCalibrationLine.endX, y: savedCalibrationLine.endY }),
+      }
+    : null;
+
+  const draftPoints = draftCalibrationLine
+    ? {
+        start: viewportPointFromImage({
+          x: draftCalibrationLine.startX,
+          y: draftCalibrationLine.startY,
+        }),
+        end: viewportPointFromImage({ x: draftCalibrationLine.endX, y: draftCalibrationLine.endY }),
+      }
+    : null;
 
   return (
     <div className="grid h-full gap-4">
@@ -438,7 +754,15 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
       <div
         ref={containerRef}
         className="relative min-h-[58vh] overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
-        style={{ cursor: imageUrl ? (dragStart.current ? 'grabbing' : 'grab') : 'default' }}
+        style={{
+          cursor: imageUrl
+            ? isCalibrating
+              ? 'crosshair'
+              : panDragStart.current
+                ? 'grabbing'
+                : 'grab'
+            : 'default',
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -479,12 +803,44 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
                 height: naturalSize.height || undefined,
                 transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${effectiveScale})`,
                 transformOrigin: 'center center',
-                transition: dragStart.current ? 'none' : 'transform 0.08s ease-out',
+                transition:
+                  panDragStart.current || calibrationStart.current
+                    ? 'none'
+                    : 'transform 0.08s ease-out',
               }}
             />
+
+            <svg className="pointer-events-none absolute inset-0 h-full w-full">
+              {savedPoints ? (
+                <CalibrationLineOverlay
+                  start={savedPoints.start}
+                  end={savedPoints.end}
+                  strokeClassName="stroke-emerald-500"
+                  dotClassName="fill-emerald-500"
+                />
+              ) : null}
+              {draftPoints ? (
+                <CalibrationLineOverlay
+                  start={draftPoints.start}
+                  end={draftPoints.end}
+                  strokeClassName="stroke-brand-600"
+                  dotClassName="fill-brand-600"
+                  dashed
+                />
+              ) : null}
+            </svg>
+
             <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
-              Scroll to zoom • drag to pan • double-click to reset
+              {isCalibrating
+                ? 'Draw reference line • scroll to zoom • double-click to reset'
+                : 'Scroll to zoom • drag to pan • double-click to reset'}
             </div>
+
+            {calibrationLine ? (
+              <div className="pointer-events-none absolute bottom-4 left-4 rounded-full border border-white/60 bg-white/84 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
+                Calibration line visible
+              </div>
+            ) : null}
           </>
         ) : null}
       </div>
@@ -492,9 +848,48 @@ function PlanViewport({ projectId, plan }: { projectId: string; plan: MeasuredPl
   );
 }
 
+function CalibrationLineOverlay({
+  start,
+  end,
+  strokeClassName,
+  dotClassName,
+  dashed = false,
+}: {
+  start: ImagePoint;
+  end: ImagePoint;
+  strokeClassName: string;
+  dotClassName: string;
+  dashed?: boolean;
+}) {
+  return (
+    <>
+      <line
+        x1={start.x}
+        y1={start.y}
+        x2={end.x}
+        y2={end.y}
+        className={strokeClassName}
+        strokeWidth={3}
+        strokeDasharray={dashed ? '10 8' : undefined}
+        strokeLinecap="round"
+      />
+      <circle cx={start.x} cy={start.y} r={5} className={dotClassName} />
+      <circle cx={end.x} cy={end.y} r={5} className={dotClassName} />
+    </>
+  );
+}
+
+function getLineLength(line: CalibrationDraft) {
+  return Math.hypot(line.endX - line.startX, line.endY - line.startY);
+}
+
+function formatDisplayNumber(value: number) {
+  return value.toFixed(value >= 10 ? 1 : 2).replace(/\.0$/, '');
+}
+
 function PlanCanvasSkeleton() {
   return (
-    <div className="-mx-4 grid min-h-[calc(100vh-185px)] gap-0 bg-[#f3f1ea] md:-mx-6 xl:grid-cols-[96px_minmax(0,1fr)_320px]">
+    <div className="-mx-4 grid min-h-[calc(100vh-185px)] gap-0 bg-[#f3f1ea] md:-mx-6 xl:grid-cols-[96px_minmax(0,1fr)_340px]">
       <div className="border-r border-black/5 bg-white/72 p-3">
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, index) => (

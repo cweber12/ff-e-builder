@@ -8,6 +8,8 @@ export const projectKeys = {
 
 export const planKeys = {
   forProject: (projectId: string) => ['plans', projectId] as const,
+  calibration: (projectId: string, planId: string) =>
+    ['plans', projectId, planId, 'calibration'] as const,
 };
 
 export const userProfileKeys = {

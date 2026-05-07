@@ -364,10 +364,10 @@ export const CreateMeasuredPlanSchema = z.object({
 export type CreateMeasuredPlanInput = z.infer<typeof CreateMeasuredPlanSchema>;
 
 export const UpdatePlanCalibrationSchema = z.object({
-  start_x: z.number().min(0).max(1),
-  start_y: z.number().min(0).max(1),
-  end_x: z.number().min(0).max(1),
-  end_y: z.number().min(0).max(1),
+  start_x: z.number().min(0),
+  start_y: z.number().min(0),
+  end_x: z.number().min(0),
+  end_y: z.number().min(0),
   real_world_length: z.number().positive(),
   unit: z.enum(planMeasurementUnits),
   pixels_per_unit: z.number().positive(),

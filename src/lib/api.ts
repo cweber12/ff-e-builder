@@ -12,7 +12,7 @@ export { ApiError } from './api/transport';
 export type { ImageEntityRef, UploadImageInput } from './api/images';
 export type { CreateItemInput, UpdateItemInput } from './api/items';
 export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
-export type { CreateMeasuredPlanInput } from './api/plans';
+export type { CreateMeasuredPlanInput, UpdatePlanCalibrationInput } from './api/plans';
 export type {
   CreateProposalCategoryInput,
   CreateProposalItemInput,

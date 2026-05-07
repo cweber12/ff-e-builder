@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): persist per-plan calibration lines with raw-pixel geometry, add calibration read/write worker + client APIs, and make the opened plan workspace save and render reference-line scale overlays
 - feat(plans): add the opened-plan workspace shell with a dedicated `plans/:planId` route, protected source-image canvas, plan selector, calibration-aware tool rail, and session-only zoom/pan/rotation controls
 - feat(plans): add the first project-level Plans slice with a new nav tab, persisted Measured Plan uploads/library cards, worker/API support, and foundational plans-domain tables for upcoming calibration and measurement tooling
 - fix(catalog): reorganize the FF&E catalog page and PDF export into a cleaner four-section spec-sheet layout with rendering and notes up top, horizontal options, materials beneath, a full-width approval band, and omission of blank or zero-value export fields

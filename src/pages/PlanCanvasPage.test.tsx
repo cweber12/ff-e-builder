@@ -52,6 +52,29 @@ vi.mock('../hooks', () => ({
     ],
     isLoading: false,
   })),
+  usePlanCalibration: vi.fn((_projectId: string, planId: string) => ({
+    data:
+      planId === 'plan-2'
+        ? {
+            id: 'cal-1',
+            measuredPlanId: 'plan-2',
+            startX: 120,
+            startY: 80,
+            endX: 420,
+            endY: 80,
+            realWorldLength: 12,
+            unit: 'ft',
+            pixelsPerUnit: 25,
+            createdAt: '2026-05-06T00:00:00Z',
+            updatedAt: '2026-05-06T00:00:00Z',
+          }
+        : null,
+    isLoading: false,
+  })),
+  useSetPlanCalibration: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock('../lib/api', () => ({
@@ -79,5 +102,18 @@ describe('PlanCanvasPage', () => {
       'href',
       '/projects/project-1/plans/plan-2',
     );
+    expect(screen.getByText(/No reference line yet/i)).toBeInTheDocument();
+  });
+
+  it('shows saved calibration details for calibrated plans', () => {
+    render(
+      <MemoryRouter>
+        <PlanCanvasPage project={project} planId="plan-2" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Saved scale')).toBeInTheDocument();
+    expect(screen.getByText(/12 ft/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Length Line' })).toBeEnabled();
   });
 });

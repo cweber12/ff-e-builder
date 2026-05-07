@@ -1,6 +1,12 @@
 import { Hono } from 'hono';
-import type { CalibrationStatus, Env, HonoVariables, MeasuredPlan } from '../types';
-import { CreateMeasuredPlanSchema } from '../types';
+import type {
+  CalibrationStatus,
+  Env,
+  HonoVariables,
+  MeasuredPlan,
+  PlanCalibration,
+} from '../types';
+import { CreateMeasuredPlanSchema, UpdatePlanCalibrationSchema } from '../types';
 import { assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
@@ -196,6 +202,79 @@ router.get('/:projectId/plans/:planId/content', async (c) => {
   headers.set('X-Content-Type-Options', 'nosniff');
 
   return new Response(object.body, { headers });
+});
+
+router.get('/:projectId/plans/:planId/calibration', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const sql = getDb(c.env);
+  const rows = await sql`
+    SELECT *
+    FROM plan_calibrations
+    WHERE measured_plan_id = ${planId}
+    LIMIT 1
+  `;
+
+  return c.json({ calibration: (rows[0] as PlanCalibration | undefined) ?? null });
+});
+
+router.put('/:projectId/plans/:planId/calibration', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json<unknown>().catch(() => null);
+  if (!body) return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const parsed = UpdatePlanCalibrationSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const calibrationId = crypto.randomUUID();
+  const rows = await sql`
+    INSERT INTO plan_calibrations (
+      id,
+      measured_plan_id,
+      start_x,
+      start_y,
+      end_x,
+      end_y,
+      real_world_length,
+      unit,
+      pixels_per_unit
+    )
+    VALUES (
+      ${calibrationId},
+      ${planId},
+      ${parsed.data.start_x},
+      ${parsed.data.start_y},
+      ${parsed.data.end_x},
+      ${parsed.data.end_y},
+      ${parsed.data.real_world_length},
+      ${parsed.data.unit},
+      ${parsed.data.pixels_per_unit}
+    )
+    ON CONFLICT (measured_plan_id) DO UPDATE SET
+      start_x = EXCLUDED.start_x,
+      start_y = EXCLUDED.start_y,
+      end_x = EXCLUDED.end_x,
+      end_y = EXCLUDED.end_y,
+      real_world_length = EXCLUDED.real_world_length,
+      unit = EXCLUDED.unit,
+      pixels_per_unit = EXCLUDED.pixels_per_unit,
+      updated_at = now()
+    RETURNING *
+  `;
+
+  return c.json({ calibration: rows[0] as PlanCalibration });
 });
 
 router.delete('/:projectId/plans/:planId', async (c) => {

@@ -4,6 +4,7 @@ import type {
   ImageEntityType,
   Item,
   ItemStatus,
+  PlanCalibration,
   Material,
   MeasuredPlan,
   Project,
@@ -152,6 +153,20 @@ export interface RawMeasuredPlan {
   updated_at: string;
 }
 
+export interface RawPlanCalibration {
+  id: string;
+  measured_plan_id: string;
+  start_x: number;
+  start_y: number;
+  end_x: number;
+  end_y: number;
+  real_world_length: string;
+  unit: PlanCalibration['unit'];
+  pixels_per_unit: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Response mappers
 export const mapProject = (r: RawProject): Project => ({
   id: r.id,
@@ -289,6 +304,20 @@ export const mapMeasuredPlan = (r: RawMeasuredPlan): MeasuredPlan => ({
   imageByteSize: r.image_byte_size,
   calibrationStatus: r.calibration_status,
   measurementCount: r.measurement_count,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export const mapPlanCalibration = (r: RawPlanCalibration): PlanCalibration => ({
+  id: r.id,
+  measuredPlanId: r.measured_plan_id,
+  startX: r.start_x,
+  startY: r.start_y,
+  endX: r.end_x,
+  endY: r.end_y,
+  realWorldLength: Number(r.real_world_length),
+  unit: r.unit,
+  pixelsPerUnit: Number(r.pixels_per_unit),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

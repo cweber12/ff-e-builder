@@ -88,6 +88,81 @@ describe('plansApi', () => {
     );
   });
 
+  it('loads a plan calibration', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        calibration: {
+          id: 'cal-1',
+          measured_plan_id: 'plan-1',
+          start_x: 120,
+          start_y: 80,
+          end_x: 420,
+          end_y: 80,
+          real_world_length: '12.0000',
+          unit: 'ft',
+          pixels_per_unit: '25.00000000',
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-06T00:00:00Z',
+        },
+      }),
+    );
+
+    await expect(plansApi.getCalibration('project-1', 'plan-1')).resolves.toEqual(
+      expect.objectContaining({
+        id: 'cal-1',
+        measuredPlanId: 'plan-1',
+        startX: 120,
+        endX: 420,
+        realWorldLength: 12,
+        pixelsPerUnit: 25,
+      }),
+    );
+  });
+
+  it('saves a plan calibration in raw pixel space', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        calibration: {
+          id: 'cal-1',
+          measured_plan_id: 'plan-1',
+          start_x: 120,
+          start_y: 80,
+          end_x: 420,
+          end_y: 80,
+          real_world_length: '12.0000',
+          unit: 'ft',
+          pixels_per_unit: '25.00000000',
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-06T00:00:00Z',
+        },
+      }),
+    );
+
+    await plansApi.setCalibration('project-1', 'plan-1', {
+      startX: 120,
+      startY: 80,
+      endX: 420,
+      endY: 80,
+      realWorldLength: 12,
+      unit: 'ft',
+      pixelsPerUnit: 25,
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.method).toBe('PUT');
+    expect(init?.body).toBe(
+      JSON.stringify({
+        start_x: 120,
+        start_y: 80,
+        end_x: 420,
+        end_y: 80,
+        real_world_length: 12,
+        unit: 'ft',
+        pixels_per_unit: 25,
+      }),
+    );
+  });
+
   it('downloads measured plan content as a blob', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response('content', { status: 200, headers: { 'Content-Type': 'image/png' } }),

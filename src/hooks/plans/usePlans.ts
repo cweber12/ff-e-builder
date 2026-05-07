@@ -3,8 +3,8 @@ import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import { removeListItem } from '../optimisticList';
 import { planKeys } from '../queryKeys';
-import type { CreateMeasuredPlanInput } from '../../lib/api';
-import type { MeasuredPlan } from '../../types';
+import type { CreateMeasuredPlanInput, UpdatePlanCalibrationInput } from '../../lib/api';
+import type { MeasuredPlan, PlanCalibration } from '../../types';
 
 export function useMeasuredPlans(projectId: string) {
   return useQuery({
@@ -40,5 +40,34 @@ export function useDeleteMeasuredPlan(projectId: string) {
       );
     },
     onError: (err) => toast.error(`Measured Plan delete failed: ${err.message}`),
+  });
+}
+
+export function usePlanCalibration(projectId: string, planId: string) {
+  return useQuery({
+    queryKey: planKeys.calibration(projectId, planId),
+    queryFn: () => api.plans.getCalibration(projectId, planId),
+    enabled: projectId.length > 0 && planId.length > 0,
+  });
+}
+
+export function useSetPlanCalibration(projectId: string, planId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdatePlanCalibrationInput) =>
+      api.plans.setCalibration(projectId, planId, input),
+    onSuccess: (calibration) => {
+      queryClient.setQueryData<PlanCalibration | null>(
+        planKeys.calibration(projectId, planId),
+        calibration,
+      );
+      queryClient.setQueryData<MeasuredPlan[]>(planKeys.forProject(projectId), (old) =>
+        (old ?? []).map((plan) =>
+          plan.id === planId ? { ...plan, calibrationStatus: 'calibrated' } : plan,
+        ),
+      );
+    },
+    onError: (err) => toast.error(`Plan calibration save failed: ${err.message}`),
   });
 }
