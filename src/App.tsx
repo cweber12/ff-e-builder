@@ -127,7 +127,12 @@ function ProjectLayout() {
 
   const isLoading = projectsLoading || dataLoading || proposalLoading;
   return (
-    <main className="flex min-h-screen flex-col bg-surface-muted">
+    <main
+      className={[
+        'flex flex-col bg-surface-muted',
+        isPlanCanvasRoute ? 'h-screen overflow-hidden' : 'min-h-screen',
+      ].join(' ')}
+    >
       <ProjectHeader
         project={project}
         showToolNavigation={false}
