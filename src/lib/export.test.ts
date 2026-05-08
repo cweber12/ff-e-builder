@@ -118,6 +118,7 @@ const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem =
   drawings: 'A-101',
   location: 'Living Room',
   description: 'Custom lounge chair',
+  notes: '',
   sizeLabel: '30"W x 32"D x 32"H',
   sizeMode: 'imperial',
   sizeW: '30',

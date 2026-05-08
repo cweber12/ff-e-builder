@@ -41,6 +41,7 @@ const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem =
   drawings: '',
   location: '',
   description: '',
+  notes: '',
   sizeLabel: '',
   sizeMode: 'imperial',
   sizeW: '',

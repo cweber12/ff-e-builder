@@ -32,6 +32,7 @@ export type ProposalItem = {
   drawings: string;
   location: string;
   description: string;
+  notes: string;
   sizeLabel: string;
   sizeMode: SizeMode;
   sizeW: string;

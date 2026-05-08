@@ -57,6 +57,7 @@ const proposalTableHeadings = [
   { label: 'Drawings', className: 'min-w-36' },
   { label: 'Location', className: 'min-w-36' },
   { label: 'Product Description', className: 'min-w-64' },
+  { label: 'Notes', className: 'min-w-48' },
   { label: 'Size', className: 'w-44 min-w-44' },
   { label: 'Swatch', className: 'min-w-36' },
   { label: 'CBM', className: 'w-24 min-w-24' },
@@ -587,8 +588,8 @@ function ProposalCategorySection({
                     className={cn(
                       'border-b border-gray-200 px-3 py-2 font-semibold',
                       heading.className,
-                      index === 11 && stickyTotalHeaderClassName,
-                      index === 12 && stickyOptionsHeaderClassName,
+                      index === 12 && stickyTotalHeaderClassName,
+                      index === 13 && stickyOptionsHeaderClassName,
                     )}
                   >
                     {heading.label}
@@ -650,8 +651,8 @@ function ProposalCategorySection({
                         className={cn(
                           'border-b border-gray-100 px-3 py-3 font-semibold',
                           heading.className,
-                          index === 11 && stickyTotalExpandedHeaderClassName,
-                          index === 12 && stickyOptionsExpandedHeaderClassName,
+                          index === 12 && stickyTotalExpandedHeaderClassName,
+                          index === 13 && stickyOptionsExpandedHeaderClassName,
                         )}
                       >
                         {heading.label}
@@ -732,6 +733,7 @@ function ProposalRow({
         onSave={(description) => onSave({ description })}
         className="min-w-64"
       />
+      <EditableCell value={item.notes} onSave={(notes) => onSave({ notes })} className="min-w-48" />
       <td className="px-3 py-2" onClick={stopProp}>
         <button
           type="button"

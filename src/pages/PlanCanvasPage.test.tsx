@@ -71,6 +71,7 @@ const proposalCategoriesWithItems = [
         drawings: '',
         location: '',
         description: 'Reception millwork',
+        notes: '',
         sizeLabel: '',
         sizeMode: 'imperial' as const,
         sizeW: '',

@@ -162,7 +162,7 @@ router.post('/proposal/categories/:id/items', async (c) => {
   const sql = getDb(c.env);
   const rows = await sql`
     INSERT INTO proposal_items (
-      category_id, product_tag, plan, drawings, location, description,
+      category_id, product_tag, plan, drawings, location, description, notes,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order
     )
@@ -173,6 +173,7 @@ router.post('/proposal/categories/:id/items', async (c) => {
       ${parsed.data.drawings},
       ${parsed.data.location},
       ${parsed.data.description},
+      ${parsed.data.notes},
       ${parsed.data.size_label},
       ${parsed.data.size_mode},
       ${parsed.data.size_w},
@@ -213,6 +214,7 @@ router.patch('/proposal/items/:id', async (c) => {
       drawings = COALESCE(${parsed.data.drawings ?? null}, drawings),
       location = COALESCE(${parsed.data.location ?? null}, location),
       description = COALESCE(${parsed.data.description ?? null}, description),
+      notes = COALESCE(${parsed.data.notes ?? null}, notes),
       size_label = COALESCE(${parsed.data.size_label ?? null}, size_label),
       size_mode = COALESCE(${parsed.data.size_mode ?? null}, size_mode),
       size_w = COALESCE(${parsed.data.size_w ?? null}, size_w),

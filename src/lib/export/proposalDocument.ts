@@ -12,6 +12,7 @@ export type ProposalExportColumnKey =
   | 'plan'
   | 'drawingsLocation'
   | 'description'
+  | 'notes'
   | 'size'
   | 'swatch'
   | 'cbm'
@@ -78,6 +79,7 @@ const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
     excelWidth: 30,
     alwaysVisible: true,
   },
+  { key: 'notes', label: 'Notes', pdfWidth: 28, excelWidth: 22 },
   { key: 'size', label: 'Size', pdfWidth: 22, excelWidth: 18 },
   { key: 'swatch', label: 'Swatch', pdfWidth: 16, excelWidth: 12 },
   { key: 'cbm', label: 'CBM', pdfWidth: 10, excelWidth: 9 },
@@ -210,6 +212,8 @@ function proposalColumnHasData(item: ProposalItem, key: ProposalExportColumnKey)
       return Boolean(item.drawings.trim() || item.location.trim());
     case 'description':
       return Boolean(item.description.trim());
+    case 'notes':
+      return Boolean(item.notes.trim());
     case 'size':
       return Boolean(item.sizeLabel.trim());
     case 'cbm':
@@ -240,6 +244,8 @@ function proposalCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
       return [item.drawings, item.location].filter(Boolean).join(' / ');
     case 'description':
       return item.description || '';
+    case 'notes':
+      return item.notes || '';
     case 'size':
       return item.sizeLabel || '';
     case 'cbm':
@@ -267,6 +273,7 @@ function truncateProposalText(value: string, maxChars: number) {
 function proposalWrappedCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
   const value = proposalCellValue(item, key);
   if (key === 'description') return truncateProposalText(value, 96);
+  if (key === 'notes') return truncateProposalText(value, 72);
   if (key === 'drawingsLocation') return truncateProposalText(value, 48);
   if (key === 'size') return truncateProposalText(value, 30);
   if (key === 'plan') return truncateProposalText(value, 24);

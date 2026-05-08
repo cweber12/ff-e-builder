@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(proposal): add persisted Proposal Item notes with inline table editing and CSV/Excel/PDF export support
+
 - feat(plans): add canvas click-to-select for measured areas plus temporary Space+drag pan in the fullscreen measurement workspace without changing active tool mode
 
 - feat(plans): true fullscreen measurement workspace — project header and tab bar hidden on `plans/:planId`; shell locked to viewport; exit/minimize via "Plans Library" breadcrumb in the workspace header

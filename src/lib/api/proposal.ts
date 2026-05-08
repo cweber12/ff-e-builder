@@ -23,6 +23,7 @@ export type CreateProposalItemInput = {
   drawings?: string;
   location?: string;
   description?: string;
+  notes?: string;
   sizeLabel?: string;
   sizeMode?: 'imperial' | 'metric';
   sizeW?: string;
@@ -57,6 +58,7 @@ const proposalItemCreatePayload = (input: CreateProposalItemInput) => ({
   drawings: input.drawings ?? '',
   location: input.location ?? '',
   description: input.description ?? '',
+  notes: input.notes ?? '',
   size_label: input.sizeLabel ?? '',
   size_mode: input.sizeMode ?? 'imperial',
   size_w: input.sizeW ?? '',
@@ -77,6 +79,7 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
   drawings: patch.drawings,
   location: patch.location,
   description: patch.description,
+  notes: patch.notes,
   size_label: patch.sizeLabel,
   size_mode: patch.sizeMode,
   size_w: patch.sizeW,

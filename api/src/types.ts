@@ -123,6 +123,7 @@ export interface ProposalItem {
   drawings: string;
   location: string;
   description: string;
+  notes: string;
   size_label: string;
   size_mode: 'imperial' | 'metric';
   size_w: string;
@@ -339,6 +340,7 @@ export const CreateProposalItemSchema = z.object({
   drawings: z.string().max(255).default(''),
   location: z.string().max(255).default(''),
   description: z.string().max(1000).default(''),
+  notes: z.string().max(2000).default(''),
   size_label: z.string().max(255).default(''),
   size_mode: z.enum(sizeModes).default('imperial'),
   size_w: z.string().max(50).default(''),

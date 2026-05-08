@@ -7,6 +7,12 @@ description: Guidance for heavy/reasoning agents to delegate bounded tasks to ch
 
 Use this skill when acting as the heavy / high-reasoning agent.
 
+When this skill is explicitly invoked by the user, the heavy agent must delegate all codebase
+discovery, search, and verification work. The heavy agent may read only this `SKILL.md`, the
+prompt templates in `.agents/skills/heavy-agent-delegation/prompts/`, and files explicitly named
+by the user in the request. Any additional repo context must be requested through a light-agent
+handoff first.
+
 The heavy agent owns:
 
 - architecture decisions
@@ -54,6 +60,19 @@ Delegate when:
 - You need verification output (typecheck / lint / test / build) and do not want to run it yourself
 - You need a commit message drafted from a diff
 
+Mandatory delegation when this skill is explicitly invoked:
+
+- any repo-wide or multi-file discovery beyond files explicitly named by the user
+- any search command such as `rg`, `grep`, or "find all usages"
+- any verification run such as `pnpm typecheck`, `pnpm lint`, `pnpm test`, or `pnpm build`
+- any request for additional repo context needed to decide implementation details
+
+Forbidden for the heavy agent while this skill is active:
+
+- reading repo files not explicitly named by the user before a light-agent handoff returns
+- running codebase inspection commands to discover structure or usage patterns
+- running verification commands directly
+
 Do it yourself when:
 
 - The task requires architecture or product judgment
@@ -68,6 +87,12 @@ Do it yourself when:
 4. Prepend your filled prompt with: `TASK FOR LIGHT AGENT` (already included in each template).
 5. Paste to the light/cheap model.
 6. Evaluate the returned response using the criteria below.
+
+Before taking any repo tool action, ask:
+
+- Can I produce a light-agent prompt right now without reading more repo files?
+
+If yes, do that instead.
 
 ### Filling placeholder fields
 

@@ -112,6 +112,7 @@ export interface RawProposalItem {
   drawings: string;
   location: string;
   description: string;
+  notes: string;
   size_label: string;
   size_mode: 'imperial' | 'metric';
   size_w: string;
@@ -300,6 +301,7 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   drawings: r.drawings,
   location: r.location,
   description: r.description,
+  notes: r.notes,
   sizeLabel: r.size_label,
   sizeMode: r.size_mode,
   sizeW: r.size_w,
