@@ -1,3 +1,8 @@
+---
+name: heavy-agent-delegation
+description: Guidance for heavy/reasoning agents to delegate bounded tasks to cheaper models using prompt templates, decision boundaries, and acceptance criteria.
+---
+
 # Heavy Agent Delegation Skill
 
 Use this skill when acting as the heavy / high-reasoning agent.
