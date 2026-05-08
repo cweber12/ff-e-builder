@@ -1,6 +1,6 @@
 # Runbook
 
-Operational procedures for FF&E Builder.
+Operational procedures for ChillDesignStudio.
 
 ---
 
