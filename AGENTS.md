@@ -116,6 +116,8 @@ Every feature is done when **all** of the following are true:
 
 Heavy models (Claude Opus/Sonnet, GPT-4o) are expensive. Offload tasks that require no judgment to a cheap model (GPT-4o-mini, Claude Haiku) using the handoff protocol below.
 
+> **Structured delegation skill available.** When acting as the heavy agent, read `.agents/skills/heavy-agent-delegation/SKILL.md` for a decision table, prompt library, and response-evaluation criteria. Reusable light-agent prompt templates are in `.agents/skills/heavy-agent-delegation/prompts/`.
+
 ### What cheap models can do reliably
 
 - Extract constants or values from a file: "Read `catalogPdf.ts` lines 1–30 and return all `const` declarations as JSON `{name, value}`"

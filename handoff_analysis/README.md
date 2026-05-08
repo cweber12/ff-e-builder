@@ -25,5 +25,6 @@ This keeps multiple handoff reviews from the same day distinct and sortable.
   - What was helpful but could have been better
   - What was not helpful
   - What was missing that would have helped
+- Add a section analyzing how you could have improved the prompt for a better response.
 - Add a list of generic instructions, terms or keywords that can be used by any agent in any repository for this use case to maximize efficiency and minimize token use.
 - add anything else that may be helpful to know for next time.
