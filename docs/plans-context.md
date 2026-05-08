@@ -2,7 +2,7 @@
 
 ## Project stack
 
-React 18 + TypeScript 5 + Vite 5, Tailwind 3, shadcn/ui primitives, @tanstack/react-query, Firebase Auth → Cloudflare Workers (Hono 4) → Neon Postgres (Drizzle ORM), pnpm monorepo (`src/` client, `api/` worker).
+React 18 + TypeScript 5 + Vite 5, Tailwind 3, shadcn/ui primitives, @tanstack/react-query, Firebase Auth → Cloudflare Workers (Hono 4) → Neon Postgres (hand-written SQL via @neondatabase/serverless), pnpm monorepo (`src/` client, `api/` worker).
 
 ---
 

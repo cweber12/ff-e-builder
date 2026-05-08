@@ -67,23 +67,23 @@
 
 Pin these exact versions unless a version bump is explicitly requested.
 
-| Layer               | Technology                     | Version        |
-| ------------------- | ------------------------------ | -------------- |
-| UI framework        | React                          | 18.x           |
-| Build tool          | Vite                           | 5.x            |
-| Language            | TypeScript                     | 5.x            |
-| Package manager     | pnpm                           | 9.x            |
-| Runtime (Node)      | Node.js                        | 20 LTS         |
-| Auth                | Firebase Auth                  | 10.x           |
-| API runtime         | Cloudflare Workers             | (wrangler 3.x) |
-| API framework       | Hono                           | 4.x            |
-| Database            | Neon (serverless Postgres)     | —              |
-| ORM / query builder | Drizzle ORM                    | 0.30.x         |
-| Migration runner    | tsx + @neondatabase/serverless | —              |
-| Styling             | Tailwind CSS                   | 3.x            |
-| Component library   | shadcn/ui                      | latest         |
-| Testing             | Vitest + Testing Library       | 2.x            |
-| Linting             | ESLint + Prettier              | —              |
+| Layer             | Technology                                  | Version        |
+| ----------------- | ------------------------------------------- | -------------- |
+| UI framework      | React                                       | 18.x           |
+| Build tool        | Vite                                        | 5.x            |
+| Language          | TypeScript                                  | 5.x            |
+| Package manager   | pnpm                                        | 9.x            |
+| Runtime (Node)    | Node.js                                     | 20 LTS         |
+| Auth              | Firebase Auth                               | 10.x           |
+| API runtime       | Cloudflare Workers                          | (wrangler 3.x) |
+| API framework     | Hono                                        | 4.x            |
+| Database          | Neon (serverless Postgres)                  | —              |
+| DB client         | @neondatabase/serverless (hand-written SQL) | —              |
+| Migration runner  | tsx + @neondatabase/serverless              | —              |
+| Styling           | Tailwind CSS                                | 3.x            |
+| Component library | shadcn/ui                                   | latest         |
+| Testing           | Vitest + Testing Library                    | 2.x            |
+| Linting           | ESLint + Prettier                           | —              |
 
 ---
 
