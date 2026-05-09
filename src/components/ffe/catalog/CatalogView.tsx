@@ -397,13 +397,7 @@ export function CatalogPage({
               entityType="item"
               entityId={item.id}
               alt={item.itemName}
-              fallbackUrl={item.imageUrl}
-              onFallbackDelete={async () => {
-                await updateItem.mutateAsync({
-                  id: item.id,
-                  patch: { imageUrl: null, version: item.version },
-                });
-              }}
+              fallbackUrl={null}
               className="border-0 shadow-none"
               imageClassName="catalog-image"
               placeholderClassName="catalog-placeholder"

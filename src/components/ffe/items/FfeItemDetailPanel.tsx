@@ -57,7 +57,7 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                 entityType="item"
                 entityId={item.id}
                 alt={item.itemName}
-                fallbackUrl={item.imageUrl}
+                fallbackUrl={null}
                 className="w-full aspect-[117/75] rounded-lg"
                 disabled
               />
@@ -82,7 +82,6 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
               <MetaField label="Item ID" value={item.itemIdTag} />
               <MetaField label="Category" value={item.category} />
               <MetaField label="Dimensions" value={item.dimensions} />
-              <MetaField label="Seat Height" value={item.seatHeight} />
               <MetaField label="Lead Time" value={item.leadTime} />
               <MetaField label="Notes" value={item.notes} />
 

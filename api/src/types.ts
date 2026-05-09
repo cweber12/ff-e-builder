@@ -58,31 +58,31 @@ export interface Item {
   item_name: string;
   description: string | null;
   category: string | null;
-  vendor: string | null;
-  model: string | null;
   item_id_tag: string | null;
   dimensions: string | null;
-  seat_height: string | null;
-  finishes: string | null;
   notes: string | null;
   qty: number;
   /** Always integer cents — see /docs/money.md */
   unit_cost_cents: number;
-  /**
-   * numeric(5,2) — Postgres returns this as a string.
-   * Parse with parseFloat only at the display layer.
-   */
-  markup_pct: string;
   lead_time: string | null;
   status: 'pending' | 'ordered' | 'approved' | 'received';
-  image_url: string | null;
-  link_url: string | null;
+  /** User-defined custom column values keyed by item_column_def UUID */
+  custom_data: Record<string, string>;
   sort_order: number;
   /** Optimistic concurrency version counter */
   version: number;
   created_at: string;
   updated_at: string;
   materials?: Material[];
+}
+
+export interface ItemColumnDef {
+  id: string;
+  project_id: string;
+  label: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Material {
@@ -280,14 +280,12 @@ export const CreateItemSchema = z.object({
   category: z.string().max(100).nullable().default(null),
   item_id_tag: z.string().max(100).nullable().default(null),
   dimensions: z.string().max(100).nullable().default(null),
-  seat_height: z.string().max(100).nullable().default(null),
   notes: z.string().nullable().default(null),
   qty: z.number().int().nonnegative().default(1),
   unit_cost_cents: z.number().int().nonnegative().default(0),
   lead_time: z.string().max(100).nullable().default(null),
   status: z.enum(itemStatuses).default('pending'),
-  image_url: z.string().url().nullable().default(null),
-  link_url: z.string().url().nullable().default(null),
+  custom_data: z.record(z.string().uuid(), z.string().max(2000)).default({}),
   sort_order: z.number().int().nonnegative().default(0),
 });
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
@@ -296,6 +294,15 @@ export const UpdateItemSchema = CreateItemSchema.partial().extend({
   version: z.number().int().nonnegative(),
 });
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
+
+export const CreateItemColumnDefSchema = z.object({
+  label: z.string().min(1).max(100),
+  sort_order: z.number().int().nonnegative().default(0),
+});
+export type CreateItemColumnDefInput = z.infer<typeof CreateItemColumnDefSchema>;
+
+export const UpdateItemColumnDefSchema = CreateItemColumnDefSchema.partial();
+export type UpdateItemColumnDefInput = z.infer<typeof UpdateItemColumnDefSchema>;
 
 const SwatchHexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 

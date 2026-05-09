@@ -13,14 +13,6 @@ const nullableText = (max: number) =>
     .max(max)
     .transform((value) => (value.length > 0 ? value : null));
 
-const optionalUrlInput = (label: string) =>
-  z
-    .string()
-    .trim()
-    .refine((value) => value.length === 0 || z.string().url().safeParse(value).success, {
-      message: `Enter a valid ${label} URL`,
-    });
-
 export const itemNameSchema = z.string().trim().min(1, 'Item name is required').max(255);
 export const itemQtySchema = z
   .number()
@@ -38,14 +30,12 @@ export const editableItemPatchSchema = z.object({
   category: nullableText(100).optional(),
   itemIdTag: nullableText(100).optional(),
   dimensions: nullableText(100).optional(),
-  seatHeight: nullableText(100).optional(),
   notes: nullableText(2000).optional(),
   qty: itemQtySchema.optional(),
   unitCostCents: itemUnitCostCentsSchema.optional(),
   leadTime: nullableText(100).optional(),
   status: ItemStatusSchema.optional(),
-  imageUrl: nullableText(2048).optional(),
-  linkUrl: nullableText(2048).optional(),
+  customData: z.record(z.string().uuid(), z.string().max(2000)).optional(),
 });
 
 export const itemFormSchema = z.object({
@@ -54,7 +44,6 @@ export const itemFormSchema = z.object({
   category: z.string().trim().max(100).default(''),
   itemIdTag: z.string().trim().max(100).default(''),
   dimensions: z.string().trim().max(100).default(''),
-  seatHeight: z.string().trim().max(100).default(''),
   qty: z.string().refine((value) => parseQtyInput(value) !== undefined, {
     message: 'Quantity must be a whole number 0 or greater',
   }),
@@ -62,8 +51,6 @@ export const itemFormSchema = z.object({
     message: 'Unit cost must be 0 or greater with max 2 decimals',
   }),
   notes: z.string().trim().default(''),
-  imageUrl: optionalUrlInput('image').default(''),
-  linkUrl: optionalUrlInput('link').default(''),
 });
 
 export type ItemFormValues = z.infer<typeof itemFormSchema>;

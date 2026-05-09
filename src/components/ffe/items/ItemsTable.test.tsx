@@ -79,14 +79,12 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   category: 'Seating',
   itemIdTag: 'CH-01',
   dimensions: '28 x 30 x 31',
-  seatHeight: '18',
   notes: 'COM approved',
   qty: 2,
   unitCostCents: 123_456,
   leadTime: '8 weeks',
   status: 'approved',
-  imageUrl: null,
-  linkUrl: null,
+  customData: {},
   sortOrder: 0,
   version: 1,
   createdAt: '2026-01-01T00:00:00Z',
@@ -347,14 +345,11 @@ describe('ItemsTable', () => {
     await user.type(within(drawer).getByLabelText('Category'), 'Casegoods');
     await user.type(within(drawer).getByLabelText('Item ID/tag'), 'TB-02');
     await user.type(within(drawer).getByLabelText('Dimensions'), '20 x 20 x 24');
-    await user.type(within(drawer).getByLabelText('Seat height'), 'n/a');
     await user.clear(within(drawer).getByLabelText('Qty'));
     await user.type(within(drawer).getByLabelText('Qty'), '3');
     await user.clear(within(drawer).getByLabelText('Unit cost'));
     await user.type(within(drawer).getByLabelText('Unit cost'), '250.50');
     await user.type(within(drawer).getByLabelText('Notes'), 'Match sample finish');
-    await user.type(within(drawer).getByLabelText('Image URL'), 'https://example.com/image.jpg');
-    await user.type(within(drawer).getByLabelText('Link URL'), 'https://example.com/spec');
     await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
 
     expect(mockCreateItemMutateAsync).toHaveBeenCalledWith({
@@ -363,12 +358,9 @@ describe('ItemsTable', () => {
       category: 'Casegoods',
       itemIdTag: 'TB-02',
       dimensions: '20 x 20 x 24',
-      seatHeight: 'n/a',
       qty: 3,
       unitCostCents: 25050,
       notes: 'Match sample finish',
-      imageUrl: 'https://example.com/image.jpg',
-      linkUrl: 'https://example.com/spec',
       sortOrder: 2,
     });
     expect(
@@ -492,7 +484,6 @@ describe('ItemsTable', () => {
         category: 'Seating',
         itemIdTag: 'CH-01',
         dimensions: '28 x 30 x 31',
-        seatHeight: '18',
         qty: 2,
         unitCostCents: 123456,
         notes: 'COM approved',

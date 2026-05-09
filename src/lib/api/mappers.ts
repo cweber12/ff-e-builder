@@ -3,6 +3,7 @@ import type {
   ImageAsset,
   ImageEntityType,
   Item,
+  ItemColumnDef,
   ItemStatus,
   LengthLine,
   Measurement,
@@ -48,14 +49,12 @@ export interface RawItem {
   category: string | null;
   item_id_tag: string | null;
   dimensions: string | null;
-  seat_height: string | null;
   notes: string | null;
   qty: number;
   unit_cost_cents: number;
   lead_time: string | null;
   status: ItemStatus;
-  image_url: string | null;
-  link_url: string | null;
+  custom_data: Record<string, string>;
   sort_order: number;
   version: number;
   created_at: string;
@@ -236,19 +235,35 @@ export const mapItem = (r: RawItem): Item => ({
   category: r.category,
   itemIdTag: r.item_id_tag,
   dimensions: r.dimensions,
-  seatHeight: r.seat_height,
   notes: r.notes,
   qty: r.qty,
   unitCostCents: r.unit_cost_cents,
   leadTime: r.lead_time,
   status: r.status,
-  imageUrl: r.image_url,
-  linkUrl: r.link_url,
+  customData: r.custom_data ?? {},
   sortOrder: r.sort_order,
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
   materials: (r.materials ?? []).map(mapMaterial),
+});
+
+export interface RawItemColumnDef {
+  id: string;
+  project_id: string;
+  label: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const mapItemColumnDef = (r: RawItemColumnDef): ItemColumnDef => ({
+  id: r.id,
+  projectId: r.project_id,
+  label: r.label,
+  sortOrder: r.sort_order,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
 });
 
 export const mapImageAsset = (r: RawImageAsset): ImageAsset => ({

@@ -496,8 +496,7 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         entityType="item"
         entityId={row.original.id}
         alt={row.original.itemName}
-        fallbackUrl={row.original.imageUrl}
-        onFallbackDelete={() => saveValidatedPatch(onSave, row.original, { imageUrl: null })}
+        fallbackUrl={null}
         className="h-12 aspect-[117/75]"
         compact
       />
@@ -982,8 +981,7 @@ function MobileItemCards({
                 entityType="item"
                 entityId={item.id}
                 alt={item.itemName}
-                fallbackUrl={item.imageUrl}
-                onFallbackDelete={() => saveValidatedPatch(onSave, item, { imageUrl: null })}
+                fallbackUrl={null}
                 className="h-14 aspect-[117/75] shrink-0"
                 compact
               />
@@ -1248,14 +1246,11 @@ function RoomItemsSection({
         category: item.category,
         itemIdTag: item.itemIdTag,
         dimensions: item.dimensions,
-        seatHeight: item.seatHeight,
         notes: item.notes,
         qty: item.qty,
         unitCostCents: item.unitCostCents,
         leadTime: item.leadTime,
         status: item.status,
-        imageUrl: item.imageUrl,
-        linkUrl: item.linkUrl,
         sortOrder: sortedItems.length,
       });
     },

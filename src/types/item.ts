@@ -11,19 +11,27 @@ export type Item = {
   category: string | null;
   itemIdTag: string | null;
   dimensions: string | null;
-  seatHeight: string | null;
   notes: string | null;
   qty: number;
   /** Always integer cents — see /docs/money.md */
   unitCostCents: number;
   leadTime: string | null;
   status: ItemStatus;
-  imageUrl: string | null;
-  linkUrl: string | null;
+  /** User-defined custom column values keyed by ItemColumnDef id */
+  customData: Record<string, string>;
   sortOrder: number;
   /** Optimistic concurrency version counter */
   version: number;
   createdAt: string;
   updatedAt: string;
   materials: Material[];
+};
+
+export type ItemColumnDef = {
+  id: string;
+  projectId: string;
+  label: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 };

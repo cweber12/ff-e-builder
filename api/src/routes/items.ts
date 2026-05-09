@@ -34,14 +34,16 @@ router.patch('/:id', async (c) => {
       category        = COALESCE(${parsed.data.category ?? null}, category),
       item_id_tag     = COALESCE(${parsed.data.item_id_tag ?? null}, item_id_tag),
       dimensions      = COALESCE(${parsed.data.dimensions ?? null}, dimensions),
-      seat_height     = COALESCE(${parsed.data.seat_height ?? null}, seat_height),
       notes           = COALESCE(${parsed.data.notes ?? null}, notes),
       qty             = COALESCE(${parsed.data.qty ?? null}, qty),
       unit_cost_cents = COALESCE(${parsed.data.unit_cost_cents ?? null}, unit_cost_cents),
       lead_time       = COALESCE(${parsed.data.lead_time ?? null}, lead_time),
       status          = COALESCE(${parsed.data.status ?? null}, status),
-      image_url       = COALESCE(${parsed.data.image_url ?? null}, image_url),
-      link_url        = COALESCE(${parsed.data.link_url ?? null}, link_url),
+      custom_data     = CASE
+                          WHEN ${parsed.data.custom_data != null}::boolean
+                          THEN custom_data || ${JSON.stringify(parsed.data.custom_data ?? {})}::jsonb
+                          ELSE custom_data
+                        END,
       sort_order      = COALESCE(${parsed.data.sort_order ?? null}, sort_order),
       version         = version + 1
     WHERE id = ${id} AND version = ${parsed.data.version}

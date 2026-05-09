@@ -119,8 +119,8 @@ router.post('/:id/items', async (c) => {
   const rows = await sql`
     INSERT INTO items (
       room_id, item_name, description, category, item_id_tag,
-      dimensions, seat_height, notes, qty, unit_cost_cents,
-      lead_time, status, image_url, link_url, sort_order
+      dimensions, notes, qty, unit_cost_cents,
+      lead_time, status, custom_data, sort_order
     )
     VALUES (
       ${roomId},
@@ -129,14 +129,12 @@ router.post('/:id/items', async (c) => {
       ${parsed.data.category},
       ${parsed.data.item_id_tag},
       ${parsed.data.dimensions},
-      ${parsed.data.seat_height},
       ${parsed.data.notes},
       ${parsed.data.qty},
       ${parsed.data.unit_cost_cents},
       ${parsed.data.lead_time},
       ${parsed.data.status},
-      ${parsed.data.image_url},
-      ${parsed.data.link_url},
+      ${JSON.stringify(parsed.data.custom_data)},
       ${parsed.data.sort_order}
     )
     RETURNING *

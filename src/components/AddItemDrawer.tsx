@@ -37,12 +37,9 @@ const defaultValues: ItemFormValues = {
   category: '',
   itemIdTag: '',
   dimensions: '',
-  seatHeight: '',
   qty: '1',
   unitCost: '0',
   notes: '',
-  imageUrl: '',
-  linkUrl: '',
 };
 
 const typicalCategories = [
@@ -165,12 +162,9 @@ export function AddItemDrawer({
         category: emptyToNull(values.category),
         itemIdTag: emptyToNull(values.itemIdTag),
         dimensions: emptyToNull(values.dimensions),
-        seatHeight: emptyToNull(values.seatHeight),
         qty,
         unitCostCents: unitCostDollarsToCents(unitCostDollars),
         notes: emptyToNull(values.notes),
-        imageUrl: emptyToNull(values.imageUrl),
-        linkUrl: emptyToNull(values.linkUrl),
       },
       selectedMaterials,
     );
@@ -220,9 +214,6 @@ export function AddItemDrawer({
         <div className="grid grid-cols-2 gap-3">
           <Field label="Dimensions" error={errors.dimensions?.message}>
             <input {...register('dimensions')} className={inputClassName} />
-          </Field>
-          <Field label="Seat height" error={errors.seatHeight?.message}>
-            <input {...register('seatHeight')} className={inputClassName} />
           </Field>
         </div>
 
@@ -310,14 +301,6 @@ export function AddItemDrawer({
 
         <Field label="Notes" error={errors.notes?.message}>
           <textarea {...register('notes')} rows={4} className={inputClassName} />
-        </Field>
-
-        <Field label="Image URL" error={errors.imageUrl?.message}>
-          <input {...register('imageUrl')} type="url" className={inputClassName} />
-        </Field>
-
-        <Field label="Link URL" error={errors.linkUrl?.message}>
-          <input {...register('linkUrl')} type="url" className={inputClassName} />
         </Field>
 
         <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-gray-100 bg-white px-6 py-4">
