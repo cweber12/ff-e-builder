@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SummaryView } from './SummaryView';
 import { catalogProjectFixture, catalogRoomsFixture } from '../../../data/catalogFixture';
 import { cents, formatMoney } from '../../../types';
-import { projectTotalCents, roomSubtotalCents } from '../../../lib/calc';
+import { projectTotalCents, roomSubtotalCents } from '../../../lib/budgetCalc';
 
 describe('SummaryView', () => {
   it('renders room subtotals, grand total, and status cards', () => {

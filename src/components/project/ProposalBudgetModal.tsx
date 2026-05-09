@@ -1,6 +1,6 @@
 import { Modal } from '../primitives';
 import { ExportMenu } from '../shared/ExportMenu';
-import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../lib/calc';
+import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../lib/budgetCalc';
 import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../lib/export';
 import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../types';
 

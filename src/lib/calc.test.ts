@@ -5,7 +5,7 @@ import {
   roomSubtotalCents,
   proposalLineTotalCents,
   proposalProjectTotalCents,
-} from './calc';
+} from './budgetCalc';
 import type { Item } from '../types/item';
 import type { ProposalItem } from '../types/proposal';
 

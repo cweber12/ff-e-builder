@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { ImageFrame } from '../../shared/ImageFrame';
 import { StatusBadge } from '../../primitives/StatusBadge';
 import { cents, formatMoney } from '../../../types';
-import { lineTotalCents } from '../../../lib/calc';
+import { lineTotalCents } from '../../../lib/budgetCalc';
 import type { Item } from '../../../types';
 import { ItemOptionImagesPanel } from './ItemOptionImagesPanel';
 

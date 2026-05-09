@@ -1,4 +1,4 @@
-import { proposalLineTotalCents, projectTotalCents, roomSubtotalCents } from '../calc';
+import { proposalLineTotalCents, projectTotalCents, roomSubtotalCents } from '../budgetCalc';
 import type {
   CustomColumnDef,
   Project,

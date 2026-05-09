@@ -5,7 +5,7 @@ import { api } from '../../../lib/api';
 import { useImages } from '../../../hooks';
 import { ImageFrame } from '../../shared/ImageFrame';
 import { cents, formatMoney } from '../../../types';
-import { proposalLineTotalCents } from '../../../lib/calc';
+import { proposalLineTotalCents } from '../../../lib/budgetCalc';
 import type { ImageAsset, ProposalItem } from '../../../types';
 
 type Props = {

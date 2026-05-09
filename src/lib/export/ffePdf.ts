@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { projectTotalCents, roomSubtotalCents } from '../calc';
+import { projectTotalCents, roomSubtotalCents } from '../budgetCalc';
 import { BRAND_RGB } from '../constants';
 import type { CustomColumnDef, Item, Project, RoomWithItems } from '../../types';
 import { cropDataUrlToCover } from './imageHelpers';

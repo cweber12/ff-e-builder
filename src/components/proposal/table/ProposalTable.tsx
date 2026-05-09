@@ -60,7 +60,7 @@ import {
   proposalCategorySubtotalCents,
   proposalLineTotalCents,
   proposalProjectTotalCents,
-} from '../../../lib/calc';
+} from '../../../lib/budgetCalc';
 import type { UpdateProposalItemInput } from '../../../lib/api';
 import { DimensionEditorModal } from '../../shared/DimensionEditorModal';
 import {

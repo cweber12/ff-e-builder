@@ -1,4 +1,4 @@
-﻿import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/calc';
+﻿import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/budgetCalc';
 import { cents, formatMoney, itemStatuses, type Item, type Project } from '../../../types';
 import type { RoomWithItems } from '../../../types';
 import { StatusBadge } from '../../primitives';

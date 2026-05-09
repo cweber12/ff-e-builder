@@ -2,7 +2,7 @@ import {
   proposalCategorySubtotalCents,
   proposalLineTotalCents,
   proposalProjectTotalCents,
-} from '../calc';
+} from '../budgetCalc';
 import type {
   CustomColumnDef,
   Project,

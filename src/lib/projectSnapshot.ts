@@ -7,7 +7,7 @@ import {
   type ProposalCategoryWithItems,
   type RoomWithItems,
 } from '../types';
-import { projectTotalCents, proposalProjectTotalCents } from './calc';
+import { projectTotalCents, proposalProjectTotalCents } from './budgetCalc';
 
 export type SnapshotMetricRow = {
   label: string;
