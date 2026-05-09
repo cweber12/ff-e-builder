@@ -10,7 +10,7 @@ export type {
   PlanMeasurementUnit,
 } from './plan';
 export type { Room, RoomWithItems } from './room';
-export type { Item, ItemColumnDef, ItemStatus } from './item';
+export type { Item, CustomColumnDef, ItemStatus } from './item';
 export type { ImageAsset, ImageEntityType, CropParams } from './image';
 export { CROPPABLE_ENTITY_TYPES, CROP_ASPECT } from './image';
 export type { Material } from './material';

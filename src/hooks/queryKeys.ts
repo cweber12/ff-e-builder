@@ -45,5 +45,6 @@ export const proposalKeys = {
 };
 
 export const columnDefKeys = {
-  forProject: (projectId: string) => ['column-defs', projectId] as const,
+  forTable: (projectId: string, tableType: 'ffe' | 'proposal') =>
+    ['column-defs', projectId, tableType] as const,
 };

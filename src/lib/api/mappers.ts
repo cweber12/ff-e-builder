@@ -3,7 +3,7 @@ import type {
   ImageAsset,
   ImageEntityType,
   Item,
-  ItemColumnDef,
+  CustomColumnDef,
   ItemStatus,
   LengthLine,
   Measurement,
@@ -124,6 +124,7 @@ export interface RawProposalItem {
   quantity_unit: string;
   unit_cost_cents: number;
   sort_order: number;
+  custom_data: Record<string, string>;
   version: number;
   created_at: string;
   updated_at: string;
@@ -253,15 +254,17 @@ export interface RawItemColumnDef {
   project_id: string;
   label: string;
   sort_order: number;
+  table_type: 'ffe' | 'proposal';
   created_at: string;
   updated_at: string;
 }
 
-export const mapItemColumnDef = (r: RawItemColumnDef): ItemColumnDef => ({
+export const mapItemColumnDef = (r: RawItemColumnDef): CustomColumnDef => ({
   id: r.id,
   projectId: r.project_id,
   label: r.label,
   sortOrder: r.sort_order,
+  tableType: r.table_type,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -329,6 +332,7 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   quantityUnit: r.quantity_unit,
   unitCostCents: r.unit_cost_cents,
   sortOrder: r.sort_order,
+  customData: r.custom_data ?? {},
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,

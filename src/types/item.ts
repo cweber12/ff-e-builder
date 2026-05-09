@@ -27,11 +27,12 @@ export type Item = {
   materials: Material[];
 };
 
-export type ItemColumnDef = {
+export type CustomColumnDef = {
   id: string;
   projectId: string;
   label: string;
   sortOrder: number;
+  tableType: 'ffe' | 'proposal';
   createdAt: string;
   updatedAt: string;
 };

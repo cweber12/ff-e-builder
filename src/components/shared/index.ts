@@ -11,3 +11,5 @@ export {
   StickyGrandTotal,
 } from './TableViewWrappers';
 export { AddGroupModal } from './AddGroupModal';
+export { SortableColHeader } from './SortableColHeader';
+export { CustomColumnHeader } from './CustomColumnHeader';

@@ -295,9 +295,13 @@ export const UpdateItemSchema = CreateItemSchema.partial().extend({
 });
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
+export const ColumnDefTableTypeSchema = z.enum(['ffe', 'proposal']);
+export type ColumnDefTableType = z.infer<typeof ColumnDefTableTypeSchema>;
+
 export const CreateItemColumnDefSchema = z.object({
   label: z.string().min(1).max(100),
   sort_order: z.number().int().nonnegative().default(0),
+  table_type: ColumnDefTableTypeSchema.default('ffe'),
 });
 export type CreateItemColumnDefInput = z.infer<typeof CreateItemColumnDefSchema>;
 
@@ -359,6 +363,7 @@ export const CreateProposalItemSchema = z.object({
   quantity_unit: z.string().max(50).default('unit'),
   unit_cost_cents: z.number().int().nonnegative().default(0),
   sort_order: z.number().int().nonnegative().default(0),
+  custom_data: z.record(z.string().uuid(), z.string().max(2000)).default({}),
 });
 export type CreateProposalItemInput = z.infer<typeof CreateProposalItemSchema>;
 

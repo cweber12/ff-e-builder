@@ -45,6 +45,8 @@ export type ProposalItem = {
   quantityUnit: ProposalQuantityUnit;
   unitCostCents: number;
   sortOrder: number;
+  /** User-defined custom column values keyed by CustomColumnDef id */
+  customData: Record<string, string>;
   version: number;
   createdAt: string;
   updatedAt: string;

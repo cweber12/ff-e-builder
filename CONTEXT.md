@@ -109,8 +109,8 @@ _Avoid_: Size unit
 ### Shared Table UI
 
 **Table Group**:
-The unit of organisation inside a tool's table view — a **Room** in FF&E, a **Proposal Category** in Proposal. Both tools share table chrome primitives (group header, add-group button, grand total bar, export menu) but own their own column layout and row behaviour separately.
-_Avoid_: Section, bucket, container
+The unit of organisation inside a tool's table view — a **Room** in FF&E, a **Proposal Category** in Proposal. Both tools share table chrome primitives (group header, add-group button, grand total bar, export menu) but own their own column layout and row behaviour separately. The action to remove a Table Group is labelled "Delete room" or "Delete category" in the UI — never "Delete table."
+_Avoid_: Section, bucket, container, "delete table" (use "Delete room" or "Delete category" instead)
 
 ### Finish Library and Images
 

@@ -1,37 +1,39 @@
 import { apiFetch } from './transport';
 import { mapItemColumnDef, type RawItemColumnDef } from './mappers';
-import type { ItemColumnDef } from '../../types';
+import type { CustomColumnDef } from '../../types';
 
-export type CreateItemColumnDefInput = {
+export type CreateColumnDefInput = {
   label: string;
   sortOrder?: number;
+  tableType: 'ffe' | 'proposal';
 };
 
-export type UpdateItemColumnDefInput = {
+export type UpdateColumnDefInput = {
   label?: string;
   sortOrder?: number;
 };
 
 export const columnDefsApi = {
-  list: (projectId: string): Promise<ItemColumnDef[]> =>
-    apiFetch<{ column_defs: RawItemColumnDef[] }>(`/api/v1/projects/${projectId}/column-defs`).then(
-      (r) => r.column_defs.map(mapItemColumnDef),
-    ),
+  list: (projectId: string, tableType: 'ffe' | 'proposal'): Promise<CustomColumnDef[]> =>
+    apiFetch<{ column_defs: RawItemColumnDef[] }>(
+      `/api/v1/projects/${projectId}/column-defs?tableType=${tableType}`,
+    ).then((r) => r.column_defs.map(mapItemColumnDef)),
 
-  create: (projectId: string, input: CreateItemColumnDefInput): Promise<ItemColumnDef> =>
+  create: (projectId: string, input: CreateColumnDefInput): Promise<CustomColumnDef> =>
     apiFetch<{ column_def: RawItemColumnDef }>(`/api/v1/projects/${projectId}/column-defs`, {
       method: 'POST',
       body: JSON.stringify({
         label: input.label,
         sort_order: input.sortOrder ?? 0,
+        table_type: input.tableType,
       }),
     }).then((r) => mapItemColumnDef(r.column_def)),
 
   update: (
     projectId: string,
     defId: string,
-    patch: UpdateItemColumnDefInput,
-  ): Promise<ItemColumnDef> =>
+    patch: UpdateColumnDefInput,
+  ): Promise<CustomColumnDef> =>
     apiFetch<{ column_def: RawItemColumnDef }>(
       `/api/v1/projects/${projectId}/column-defs/${defId}`,
       {

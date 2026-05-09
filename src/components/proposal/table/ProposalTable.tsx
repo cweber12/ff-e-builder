@@ -20,9 +20,7 @@ import {
   horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
@@ -36,6 +34,10 @@ import {
   useUpdateProposalCategory,
   useUpdateProposalItem,
   useColumnConfig,
+  useColumnDefs,
+  useCreateColumnDef,
+  useUpdateColumnDef,
+  useDeleteColumnDef,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -46,6 +48,7 @@ import {
   type Project,
   type ProposalItem,
   type ProposalCategoryWithItems,
+  type CustomColumnDef,
 } from '../../../types';
 import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
 import { useUserProfile } from '../../../hooks';
@@ -63,6 +66,8 @@ import {
   TableViewStack,
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
+import { SortableColHeader } from '../../shared/SortableColHeader';
+import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
 import { ColumnManagerPopover } from '../../shared/ColumnManagerPopover';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/cn';
@@ -124,7 +129,16 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
   const updateCategory = useUpdateProposalCategory(projectId);
   const deleteCategory = useDeleteProposalCategory(projectId);
   const updateItem = useUpdateProposalItem();
-  const columnConfig = useColumnConfig(projectId, 'proposal', PROPOSAL_HIDEABLE_IDS, []);
+  const { data: customColumnDefs = [] } = useColumnDefs(projectId, 'proposal');
+  const createColumnDef = useCreateColumnDef(projectId, 'proposal');
+  const updateColumnDef = useUpdateColumnDef(projectId, 'proposal');
+  const deleteColumnDef = useDeleteColumnDef(projectId, 'proposal');
+  const columnConfig = useColumnConfig(
+    projectId,
+    'proposal',
+    PROPOSAL_HIDEABLE_IDS,
+    customColumnDefs,
+  );
   const hiddenColumnDefaults = useMemo(
     () =>
       columnConfig.hiddenDefaults.map((id) => ({
@@ -241,10 +255,18 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
             setSelectedCategoryName(category.name);
           }}
           visibleColOrder={columnConfig.visibleOrder}
+          customColumnDefs={customColumnDefs}
           hiddenColumnDefaults={hiddenColumnDefaults}
           onRestoreColumn={columnConfig.restoreDefaultColumn}
           onMoveColumn={handleColumnDragEnd}
           onHideColumn={handleHideColumn}
+          onAddCustomColumn={async (label) => {
+            await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
+          }}
+          onRenameCustomColumn={async (defId, label) => {
+            await updateColumnDef.mutateAsync({ defId, patch: { label } });
+          }}
+          onDeleteCustomColumn={(defId) => deleteColumnDef.mutate(defId)}
         />
       ))}
 
@@ -563,10 +585,14 @@ function ProposalCategorySection({
   onItemSave,
   onItemClick,
   visibleColOrder,
+  customColumnDefs,
   hiddenColumnDefaults,
   onRestoreColumn,
   onMoveColumn,
   onHideColumn,
+  onAddCustomColumn,
+  onRenameCustomColumn,
+  onDeleteCustomColumn,
 }: {
   projectId: string;
   categoryId: string;
@@ -580,10 +606,14 @@ function ProposalCategorySection({
   onItemSave: (item: ProposalItem, patch: UpdateProposalItemInput) => void;
   onItemClick: (item: ProposalItem) => void;
   visibleColOrder: string[];
+  customColumnDefs: CustomColumnDef[];
   hiddenColumnDefaults: { id: string; label: string }[];
   onRestoreColumn: (id: string) => void;
   onMoveColumn: (fromId: string, toId: string) => void;
   onHideColumn: (id: string) => void;
+  onAddCustomColumn: (label: string) => Promise<void>;
+  onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
+  onDeleteCustomColumn: (defId: string) => void;
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -678,18 +708,35 @@ function ProposalCategorySection({
                   <SortableContext items={visibleColOrder} strategy={horizontalListSortingStrategy}>
                     {visibleColOrder.map((colId) => {
                       const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
-                      if (!meta) return null;
+                      if (meta) {
+                        return (
+                          <SortableColHeader
+                            key={colId}
+                            colId={colId}
+                            label={meta.label}
+                            className={cn(
+                              'border-b border-gray-200 px-3 py-2 font-semibold',
+                              meta.className,
+                            )}
+                            onHide={() => onHideColumn(colId)}
+                          />
+                        );
+                      }
+                      const customDef = customColumnDefs.find((d) => d.id === colId);
+                      if (!customDef) return null;
                       return (
-                        <SortableProposalColHeader
+                        <SortableColHeader
                           key={colId}
                           colId={colId}
-                          label={meta.label}
-                          className={cn(
-                            'border-b border-gray-200 px-3 py-2 font-semibold',
-                            meta.className,
-                          )}
+                          className="border-b border-gray-200 px-3 py-2 font-semibold min-w-36"
                           onHide={() => onHideColumn(colId)}
-                        />
+                        >
+                          <CustomColumnHeader
+                            def={customDef}
+                            onDelete={() => onDeleteCustomColumn(customDef.id)}
+                            onRename={(label) => onRenameCustomColumn(customDef.id, label)}
+                          />
+                        </SortableColHeader>
                       );
                     })}
                   </SortableContext>
@@ -710,8 +757,9 @@ function ProposalCategorySection({
                     <div className="flex items-center justify-end px-1 py-2">
                       <ColumnManagerPopover
                         hiddenDefaults={hiddenColumnDefaults}
-                        allowCustomColumns={false}
+                        allowCustomColumns
                         onRestoreDefault={onRestoreColumn}
+                        onAddCustomColumn={onAddCustomColumn}
                       />
                     </div>
                   </th>
@@ -729,6 +777,7 @@ function ProposalCategorySection({
                   onDelete={() => deleteItem.mutate(item.id)}
                   onRowClick={() => onItemClick(item)}
                   visibleColIds={visibleColIds}
+                  customColumnDefs={customColumnDefs}
                 />
               ))}
             </tbody>
@@ -778,18 +827,35 @@ function ProposalCategorySection({
                       >
                         {visibleColOrder.map((colId) => {
                           const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
-                          if (!meta) return null;
+                          if (meta) {
+                            return (
+                              <SortableColHeader
+                                key={colId}
+                                colId={colId}
+                                label={meta.label}
+                                className={cn(
+                                  'border-b border-gray-100 px-3 py-3 font-semibold',
+                                  meta.className,
+                                )}
+                                onHide={() => onHideColumn(colId)}
+                              />
+                            );
+                          }
+                          const customDef = customColumnDefs.find((d) => d.id === colId);
+                          if (!customDef) return null;
                           return (
-                            <SortableProposalColHeader
+                            <SortableColHeader
                               key={colId}
                               colId={colId}
-                              label={meta.label}
-                              className={cn(
-                                'border-b border-gray-100 px-3 py-3 font-semibold',
-                                meta.className,
-                              )}
+                              className="border-b border-gray-100 px-3 py-3 font-semibold min-w-36"
                               onHide={() => onHideColumn(colId)}
-                            />
+                            >
+                              <CustomColumnHeader
+                                def={customDef}
+                                onDelete={() => onDeleteCustomColumn(customDef.id)}
+                                onRename={(label) => onRenameCustomColumn(customDef.id, label)}
+                              />
+                            </SortableColHeader>
                           );
                         })}
                       </SortableContext>
@@ -810,8 +876,9 @@ function ProposalCategorySection({
                         <div className="flex items-center justify-end px-1 py-3">
                           <ColumnManagerPopover
                             hiddenDefaults={hiddenColumnDefaults}
-                            allowCustomColumns={false}
+                            allowCustomColumns
                             onRestoreDefault={onRestoreColumn}
+                            onAddCustomColumn={onAddCustomColumn}
                           />
                         </div>
                       </th>
@@ -829,6 +896,7 @@ function ProposalCategorySection({
                       onDelete={() => deleteItem.mutate(item.id)}
                       onRowClick={() => onItemClick(item)}
                       visibleColIds={visibleColIds}
+                      customColumnDefs={customColumnDefs}
                     />
                   ))}
                 </tbody>
@@ -841,61 +909,6 @@ function ProposalCategorySection({
   );
 }
 
-function SortableProposalColHeader({
-  colId,
-  label,
-  className,
-  onHide,
-}: {
-  colId: string;
-  label: string;
-  className: string;
-  onHide: () => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: colId });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-  return (
-    <th
-      ref={setNodeRef}
-      style={style}
-      className={cn(className, 'group cursor-grab active:cursor-grabbing')}
-      {...attributes}
-      {...listeners}
-    >
-      <span className="flex items-center gap-1">
-        <span className="flex-1">{label}</span>
-        <button
-          type="button"
-          aria-label={`Hide ${label} column`}
-          title={`Hide ${label} column`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onHide();
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="hidden rounded p-0.5 text-gray-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </span>
-    </th>
-  );
-}
-
 function ProposalRow({
   projectId,
   categoryId,
@@ -904,6 +917,7 @@ function ProposalRow({
   onDelete,
   onRowClick,
   visibleColIds,
+  customColumnDefs,
 }: {
   projectId: string;
   categoryId: string;
@@ -912,6 +926,7 @@ function ProposalRow({
   onDelete: () => void;
   onRowClick: () => void;
   visibleColIds: Set<string>;
+  customColumnDefs: CustomColumnDef[];
 }) {
   const [sizeOpen, setSizeOpen] = useState(false);
   const [swatchOpen, setSwatchOpen] = useState(false);
@@ -1028,6 +1043,17 @@ function ProposalRow({
           onSave={(unitCostCents) => onSave({ unitCostCents })}
         />
       )}
+      {customColumnDefs
+        .filter((def) => visibleColIds.has(def.id))
+        .map((def) => (
+          <EditableCell
+            key={def.id}
+            value={item.customData[def.id] ?? ''}
+            onSave={(value) => {
+              onSave({ customData: { ...item.customData, [def.id]: value } });
+            }}
+          />
+        ))}
       <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
         {formatMoney(cents(lineTotal))}
       </td>

@@ -164,7 +164,7 @@ router.post('/proposal/categories/:id/items', async (c) => {
     INSERT INTO proposal_items (
       category_id, product_tag, plan, drawings, location, description, notes,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
-      cbm, quantity, quantity_unit, unit_cost_cents, sort_order
+      cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
     )
     VALUES (
       ${categoryId},
@@ -184,7 +184,8 @@ router.post('/proposal/categories/:id/items', async (c) => {
       ${parsed.data.quantity},
       ${parsed.data.quantity_unit},
       ${parsed.data.unit_cost_cents},
-      ${parsed.data.sort_order}
+      ${parsed.data.sort_order},
+      ${JSON.stringify(parsed.data.custom_data)}
     )
     RETURNING *
   `;
@@ -226,6 +227,11 @@ router.patch('/proposal/items/:id', async (c) => {
       quantity_unit = COALESCE(${parsed.data.quantity_unit ?? null}, quantity_unit),
       unit_cost_cents = COALESCE(${parsed.data.unit_cost_cents ?? null}, unit_cost_cents),
       sort_order = COALESCE(${parsed.data.sort_order ?? null}, sort_order),
+      custom_data = CASE
+                      WHEN ${parsed.data.custom_data != null}::boolean
+                      THEN custom_data || ${JSON.stringify(parsed.data.custom_data ?? {})}::jsonb
+                      ELSE custom_data
+                    END,
       version = version + 1
     WHERE id = ${id} AND version = ${parsed.data.version}
     RETURNING *

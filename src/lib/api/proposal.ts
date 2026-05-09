@@ -35,6 +35,7 @@ export type CreateProposalItemInput = {
   quantityUnit?: string;
   unitCostCents?: number;
   sortOrder?: number;
+  customData?: Record<string, string>;
 };
 
 export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
@@ -70,6 +71,7 @@ const proposalItemCreatePayload = (input: CreateProposalItemInput) => ({
   quantity_unit: input.quantityUnit ?? 'unit',
   unit_cost_cents: input.unitCostCents ?? 0,
   sort_order: input.sortOrder ?? 0,
+  custom_data: input.customData ?? {},
 });
 
 const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
@@ -91,6 +93,7 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
   quantity_unit: patch.quantityUnit,
   unit_cost_cents: patch.unitCostCents,
   sort_order: patch.sortOrder,
+  custom_data: patch.customData,
   version: patch.version,
 });
 
