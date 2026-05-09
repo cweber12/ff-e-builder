@@ -10,6 +10,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
+  horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -39,6 +40,11 @@ import {
   useMoveItem,
   useUpdateItem,
   useUpdateRoom,
+  useItemColumnDefs,
+  useCreateItemColumnDef,
+  useDeleteItemColumnDef,
+  useUpdateItemColumnDef,
+  useColumnConfig,
 } from '../../../hooks';
 import {
   cents,
@@ -73,6 +79,50 @@ import {
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
+import { ColumnManagerPopover } from '../../shared/ColumnManagerPopover';
+
+/**
+ * Stable IDs for built-in columns — used as keys in useColumnConfig.
+ * The order here is the initial default order.
+ */
+const DEFAULT_COLUMN_IDS = [
+  'drag',
+  'image',
+  'itemIdTag',
+  'itemName',
+  'description',
+  'category',
+  'dimensions',
+  'materials',
+  'qty',
+  'unitCostCents',
+  'lineTotal',
+  'status',
+  'leadTime',
+  'notes',
+  'actions',
+] as const;
+
+type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
+
+/** Human-readable labels for default columns shown in the restore picker. */
+const DEFAULT_COLUMN_LABELS: Record<DefaultColumnId, string> = {
+  drag: 'Drag',
+  image: 'Rendering',
+  itemIdTag: 'ID',
+  itemName: 'Item',
+  description: 'Product Description',
+  category: 'Category',
+  dimensions: 'Dimensions',
+  materials: 'Materials',
+  qty: 'Qty',
+  unitCostCents: 'Unit Cost',
+  lineTotal: 'Total',
+  status: 'Status',
+  leadTime: 'Lead Time',
+  notes: 'Notes',
+  actions: 'Actions',
+};
 
 type ItemsTableProps = {
   roomsWithItems: RoomWithItems[];
@@ -651,6 +701,148 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   },
 ];
 
+/**
+ * Build the full visible column list from the user's column config.
+ * Default columns are filtered/reordered by visibleOrder; custom columns
+ * are appended as inline-editable text columns reading from item.customData.
+ */
+function buildColumns(
+  onSave: SaveItemPatch,
+  actions: TableActions,
+  visibleOrder: string[],
+  customDefs: import('../../../types').ItemColumnDef[],
+  onSaveCustomCell: (item: Item, defId: string, value: string) => Promise<void>,
+  onDeleteCustomDef: (defId: string) => void,
+  onRenameCustomDef: (defId: string, label: string) => Promise<void>,
+): ColumnDef<Item>[] {
+  const allDefaultCols = createColumns(onSave, actions);
+  const defaultColMap = new Map(
+    allDefaultCols.map((col) => [col.id ?? (col as { accessorKey?: string }).accessorKey, col]),
+  );
+  const customDefMap = new Map(customDefs.map((d) => [d.id, d]));
+
+  return visibleOrder
+    .map((colId): ColumnDef<Item> | null => {
+      const defaultCol = defaultColMap.get(colId);
+      if (defaultCol) return defaultCol;
+
+      const def = customDefMap.get(colId);
+      if (!def) return null;
+
+      return {
+        id: def.id,
+        header: () => (
+          <CustomColumnHeader
+            def={def}
+            onDelete={() => onDeleteCustomDef(def.id)}
+            onRename={(label) => onRenameCustomDef(def.id, label)}
+          />
+        ),
+        cell: ({ row }) => (
+          <InlineTextEdit
+            value={row.original.customData[def.id] ?? ''}
+            aria-label={`${def.label} for ${row.original.itemName}`}
+            onSave={(value) => onSaveCustomCell(row.original, def.id, value)}
+            renderDisplay={(v) =>
+              v.trim().length > 0 ? <span>{v}</span> : <span className="text-gray-400">-</span>
+            }
+          />
+        ),
+      };
+    })
+    .filter((col): col is ColumnDef<Item> => col !== null);
+}
+
+function CustomColumnHeader({
+  def,
+  onDelete,
+  onRename,
+}: {
+  def: import('../../../types').ItemColumnDef;
+  onDelete: () => void;
+  onRename: (label: string) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(def.label);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) setTimeout(() => inputRef.current?.focus(), 0);
+  }, [editing]);
+
+  const commit = async () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== def.label) await onRename(trimmed);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => void commit()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') void commit();
+          if (e.key === 'Escape') {
+            setDraft(def.label);
+            setEditing(false);
+          }
+        }}
+        maxLength={100}
+        className="w-full rounded border border-brand-400 bg-white px-1 py-0.5 text-xs font-semibold uppercase tracking-wide text-gray-700 focus:outline-none"
+        aria-label={`Rename column ${def.label}`}
+      />
+    );
+  }
+
+  return (
+    <span className="group flex items-center gap-1">
+      <button
+        type="button"
+        title={`Rename column "${def.label}"`}
+        onClick={() => setEditing(true)}
+        className="flex-1 text-left hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        {def.label}
+      </button>
+      <button
+        type="button"
+        title={`Delete column "${def.label}"`}
+        aria-label={`Delete column "${def.label}"`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        className="hidden rounded p-0.5 text-gray-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        <XSmallIcon />
+      </button>
+    </span>
+  );
+}
+
+function XSmallIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 function useCollapsedRooms(rooms: RoomWithItems[]) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(rooms.map((room) => [room.id, readRoomCollapsed(room.id)])),
@@ -1198,6 +1390,11 @@ function RoomItemsSection({
   const moveItem = useMoveItem();
   const projectMaterials = useMaterials(projectId);
   const materialActions = useItemMaterialActions({ kind: 'ffe', itemGroupId: room.id, projectId });
+  const { data: columnDefs = [] } = useItemColumnDefs(projectId);
+  const createColumnDef = useCreateItemColumnDef(projectId);
+  const updateColumnDef = useUpdateItemColumnDef(projectId);
+  const deleteColumnDef = useDeleteItemColumnDef(projectId);
+  const columnConfig = useColumnConfig(projectId, 'ffe', DEFAULT_COLUMN_IDS, columnDefs);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
@@ -1284,7 +1481,56 @@ function RoomItemsSection({
     },
     [updateItem],
   );
-  const columns = useMemo(() => createColumns(saveItemPatch, actions), [actions, saveItemPatch]);
+  const saveCustomCell = useCallback(
+    async (item: Item, defId: string, value: string) => {
+      await updateItem.mutateAsync({
+        id: item.id,
+        patch: { customData: { [defId]: value }, version: item.version },
+      });
+    },
+    [updateItem],
+  );
+  const handleDeleteCustomDef = useCallback(
+    (defId: string) => {
+      void deleteColumnDef.mutateAsync(defId);
+    },
+    [deleteColumnDef],
+  );
+  const handleRenameCustomDef = useCallback(
+    async (defId: string, label: string) => {
+      await updateColumnDef.mutateAsync({ defId, patch: { label } });
+    },
+    [updateColumnDef],
+  );
+  const columns = useMemo(
+    () =>
+      buildColumns(
+        saveItemPatch,
+        actions,
+        columnConfig.visibleOrder,
+        columnDefs,
+        saveCustomCell,
+        handleDeleteCustomDef,
+        handleRenameCustomDef,
+      ),
+    [
+      actions,
+      saveItemPatch,
+      columnConfig.visibleOrder,
+      columnDefs,
+      saveCustomCell,
+      handleDeleteCustomDef,
+      handleRenameCustomDef,
+    ],
+  );
+  const hiddenDefaultColumns = useMemo(
+    () =>
+      columnConfig.hiddenDefaults.map((id) => ({
+        id,
+        label: DEFAULT_COLUMN_LABELS[id as DefaultColumnId] ?? id,
+      })),
+    [columnConfig.hiddenDefaults],
+  );
   const table = useReactTable({
     data: sortedItems,
     columns,
@@ -1302,6 +1548,11 @@ function RoomItemsSection({
         await updateItem.mutateAsync({ id: item.id, patch: { sortOrder, version: item.version } });
       }
     })();
+  };
+  const handleColumnDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    columnConfig.moveColumn(String(active.id), String(over.id));
   };
 
   return (
@@ -1460,25 +1711,49 @@ function RoomItemsSection({
             >
               <table className="w-full min-w-[1180px] border-collapse text-sm">
                 <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="border-b border-gray-100 px-3 py-3 font-semibold"
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleColumnDragEnd}
+                  >
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id}>
+                        <SortableContext
+                          items={columnConfig.visibleOrder}
+                          strategy={horizontalListSortingStrategy}
                         >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="border-b border-gray-100 px-3 py-3 font-semibold"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          ))}
+                        </SortableContext>
+                        <th className="relative border-b border-gray-100 px-1 py-3">
+                          <ColumnManagerPopover
+                            hiddenDefaults={hiddenDefaultColumns}
+                            allowCustomColumns
+                            onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+                            onAddCustomColumn={async (label) => {
+                              await createColumnDef.mutateAsync({
+                                label,
+                                sortOrder: columnDefs.length,
+                              });
+                            }}
+                          />
                         </th>
-                      ))}
-                    </tr>
-                  ))}
+                      </tr>
+                    ))}
+                  </DndContext>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {table.getRowModel().rows.length === 0 ? (
                     <tr>
-                      <td colSpan={columns.length} className="p-3">
+                      <td colSpan={columns.length + 1} className="p-3">
                         <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
                           Add first item -&gt;
                         </div>
@@ -1547,25 +1822,52 @@ function RoomItemsSection({
                 >
                   <table className="w-full min-w-[1180px] border-collapse text-sm">
                     <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <th
-                              key={header.id}
-                              className="border-b border-gray-100 px-3 py-3 font-semibold"
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleColumnDragEnd}
+                      >
+                        {table.getHeaderGroups().map((headerGroup) => (
+                          <tr key={headerGroup.id}>
+                            <SortableContext
+                              items={columnConfig.visibleOrder}
+                              strategy={horizontalListSortingStrategy}
                             >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
+                              {headerGroup.headers.map((header) => (
+                                <th
+                                  key={header.id}
+                                  className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                >
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                      )}
+                                </th>
+                              ))}
+                            </SortableContext>
+                            <th className="relative border-b border-gray-100 px-1 py-3">
+                              <ColumnManagerPopover
+                                hiddenDefaults={hiddenDefaultColumns}
+                                allowCustomColumns
+                                onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+                                onAddCustomColumn={async (label) => {
+                                  await createColumnDef.mutateAsync({
+                                    label,
+                                    sortOrder: columnDefs.length,
+                                  });
+                                }}
+                              />
                             </th>
-                          ))}
-                        </tr>
-                      ))}
+                          </tr>
+                        ))}
+                      </DndContext>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {table.getRowModel().rows.length === 0 ? (
                         <tr>
-                          <td colSpan={columns.length} className="p-3">
+                          <td colSpan={columns.length + 1} className="p-3">
                             <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
                               Add first item -&gt;
                             </div>

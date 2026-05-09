@@ -10,6 +10,7 @@ These items are not in AGENTS.md and apply only to Copilot:
 2. **Client/API boundary is strict.** Client talks to `/api/v1/*`; no Neon imports in `/src`.
 3. **Deploy via script.** Use `pnpm --filter ffe-api deploy`.
 4. **Keep secrets server-side.** `FIREBASE_ADMIN_*` never belongs in client code.
+5. **Output a commit message after every logical unit of work** — do not wait to be asked. After completing a step or a set of related changes, immediately output the conventional-commits message as a fenced code block so the user can commit when ready.
 
 ## Local agent skills
 
