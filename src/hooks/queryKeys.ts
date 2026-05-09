@@ -43,3 +43,7 @@ export const proposalKeys = {
   categories: (projectId: string) => ['proposal', projectId, 'categories'] as const,
   items: (categoryId: string) => ['proposal', 'category', categoryId, 'items'] as const,
 };
+
+export const columnDefKeys = {
+  forProject: (projectId: string) => ['column-defs', projectId] as const,
+};

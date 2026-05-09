@@ -2,7 +2,7 @@ import jsPDF, { AcroFormCheckBox, AcroFormTextField } from 'jspdf';
 import { api } from '../api';
 import { BRAND_RGB } from '../constants';
 import type { ImageAsset, Item, Material, Project, RoomWithItems } from '../../types';
-import { blobToPngDataUrl, imageAssetToPngDataUrl } from './imageHelpers';
+import { imageAssetToPngDataUrl } from './imageHelpers';
 import { fmtMoney, safeName } from './shared';
 
 const BRAND = BRAND_RGB;
@@ -107,17 +107,6 @@ export function pickCatalogPdfOptionLayout(
   return optionCount > 1 ? 'row' : 'stacked';
 }
 
-async function fallbackUrlToPngDataUrl(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    return await blobToPngDataUrl(await response.blob());
-  } catch {
-    return null;
-  }
-}
-
 function primaryImage(images: ImageAsset[]): ImageAsset | null {
   return images.find((image) => image.isPrimary) ?? images[0] ?? null;
 }
@@ -129,9 +118,7 @@ async function buildCatalogAssets(
     entries.map(async ({ item }) => {
       const renderingImages = await api.images.list({ entityType: 'item', entityId: item.id });
       const renderingAsset = primaryImage(renderingImages);
-      const rendering = renderingAsset
-        ? await imageAssetToPngDataUrl(renderingAsset)
-        : await fallbackUrlToPngDataUrl(item.imageUrl);
+      const rendering = renderingAsset ? await imageAssetToPngDataUrl(renderingAsset) : null;
 
       const optionImages = await api.images.list({ entityType: 'item_option', entityId: item.id });
       const options = await Promise.all(
