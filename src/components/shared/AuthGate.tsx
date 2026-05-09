@@ -6,8 +6,8 @@ import {
   signInWithEmailPassword,
   signInWithGoogle,
   signOut,
+  useAuthUser,
 } from '../../lib/auth';
-import { useAuthUser } from '../../lib/auth-state';
 import { seedExampleProject } from '../../lib/seed';
 import { useUserProfile } from '../../hooks';
 import { UserProfileModal } from './UserProfileModal';

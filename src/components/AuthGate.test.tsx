@@ -18,9 +18,6 @@ vi.mock('../lib/auth', () => ({
   signInWithEmailPassword: authMocks.signInWithEmailPassword,
   signInWithGoogle: authMocks.signInWithGoogle,
   signOut: authMocks.signOut,
-}));
-
-vi.mock('../lib/auth-state', () => ({
   useAuthUser: authMocks.useAuthUser,
 }));
 
