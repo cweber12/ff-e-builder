@@ -1515,15 +1515,28 @@ function RoomItemsSection({
             onDeleteRoom={() => onDeleteRoom(room)}
           />
           {!isMobile && !collapsed && (
-            <button
-              type="button"
-              aria-label="Expand table view"
-              title="Expand table view"
-              onClick={() => setIsExpanded(true)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-            >
-              <ExpandIcon />
-            </button>
+            <>
+              <ColumnManagerPopover
+                hiddenDefaults={hiddenDefaultColumns}
+                allowCustomColumns
+                onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+                onAddCustomColumn={async (label) => {
+                  await createColumnDef.mutateAsync({
+                    label,
+                    sortOrder: columnDefs.length,
+                  });
+                }}
+              />
+              <button
+                type="button"
+                aria-label="Expand table view"
+                title="Expand table view"
+                onClick={() => setIsExpanded(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                <ExpandIcon />
+              </button>
+            </>
           )}
         </div>
       </GroupedTableHeader>
@@ -1644,19 +1657,6 @@ function RoomItemsSection({
                             </th>
                           ))}
                         </SortableContext>
-                        <th className="relative border-b border-gray-100 px-1 py-3">
-                          <ColumnManagerPopover
-                            hiddenDefaults={hiddenDefaultColumns}
-                            allowCustomColumns
-                            onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
-                            onAddCustomColumn={async (label) => {
-                              await createColumnDef.mutateAsync({
-                                label,
-                                sortOrder: columnDefs.length,
-                              });
-                            }}
-                          />
-                        </th>
                       </tr>
                     ))}
                   </DndContext>
@@ -1664,7 +1664,7 @@ function RoomItemsSection({
                 <tbody className="divide-y divide-gray-100">
                   {table.getRowModel().rows.length === 0 ? (
                     <tr>
-                      <td colSpan={columns.length + 1} className="p-3">
+                      <td colSpan={columns.length} className="p-3">
                         <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
                           Add first item -&gt;
                         </div>
@@ -1700,17 +1700,30 @@ function RoomItemsSection({
                   {itemCount} {itemCount === 1 ? 'item' : 'items'} - {formatMoney(cents(subtotal))}
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label="Minimize table view"
-                title="Minimize table view"
-                onClick={() => setIsExpanded(false)}
-              >
-                <ExpandIcon expanded />
-                Minimize
-              </Button>
+              <div className="flex items-center gap-2">
+                <ColumnManagerPopover
+                  hiddenDefaults={hiddenDefaultColumns}
+                  allowCustomColumns
+                  onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+                  onAddCustomColumn={async (label) => {
+                    await createColumnDef.mutateAsync({
+                      label,
+                      sortOrder: columnDefs.length,
+                    });
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Minimize table view"
+                  title="Minimize table view"
+                  onClick={() => setIsExpanded(false)}
+                >
+                  <ExpandIcon expanded />
+                  Minimize
+                </Button>
+              </div>
             </div>
             <div className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)] gap-0">
               <aside className="border-r border-gray-100 bg-surface-muted p-4">
@@ -1758,19 +1771,6 @@ function RoomItemsSection({
                                 </th>
                               ))}
                             </SortableContext>
-                            <th className="relative border-b border-gray-100 px-1 py-3">
-                              <ColumnManagerPopover
-                                hiddenDefaults={hiddenDefaultColumns}
-                                allowCustomColumns
-                                onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
-                                onAddCustomColumn={async (label) => {
-                                  await createColumnDef.mutateAsync({
-                                    label,
-                                    sortOrder: columnDefs.length,
-                                  });
-                                }}
-                              />
-                            </th>
                           </tr>
                         ))}
                       </DndContext>
@@ -1778,7 +1778,7 @@ function RoomItemsSection({
                     <tbody className="divide-y divide-gray-100">
                       {table.getRowModel().rows.length === 0 ? (
                         <tr>
-                          <td colSpan={columns.length + 1} className="p-3">
+                          <td colSpan={columns.length} className="p-3">
                             <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
                               Add first item -&gt;
                             </div>
