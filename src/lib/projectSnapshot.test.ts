@@ -139,6 +139,7 @@ const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
         version: 1,
         createdAt: '',
         updatedAt: '',
+        customData: {},
       },
       {
         id: 'proposal-2',
@@ -164,6 +165,7 @@ const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
         version: 1,
         createdAt: '',
         updatedAt: '',
+        customData: {},
       },
       {
         id: 'proposal-3',
@@ -189,6 +191,7 @@ const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
         version: 1,
         createdAt: '',
         updatedAt: '',
+        customData: {},
       },
     ],
   },

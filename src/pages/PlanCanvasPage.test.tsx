@@ -85,6 +85,7 @@ const proposalCategoriesWithItems = [
         version: 1,
         createdAt: '2026-05-01T00:00:00Z',
         updatedAt: '2026-05-01T00:00:00Z',
+        customData: {},
       },
     ],
   },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
-import type { ItemColumnDef } from '../../types';
+import type { CustomColumnDef } from '../../types';
 
 export type ColumnConfig = {
   /** Ordered list of all visible column IDs (default + custom). */
@@ -49,15 +49,15 @@ function writeConfig(projectId: string, tableKey: string, config: ColumnConfig) 
  *   `id` fields from `createColumns`). Must be referentially stable (useMemo or
  *   module-level const) to avoid reinitialisation on every render.
  *
- * `customDefs` — live list of user-created `ItemColumnDef` records for this
+ * `customDefs` — live list of user-created `CustomColumnDef` records for this
  *   project, sorted by `sortOrder`. Pass `[]` for tables that don't support
- *   custom columns yet (e.g. ProposalTable in Phase 1).
+ *   custom columns yet.
  */
 export function useColumnConfig(
   projectId: string,
   tableKey: string,
   defaultColumnIds: readonly string[],
-  customDefs: ItemColumnDef[],
+  customDefs: CustomColumnDef[],
 ) {
   const [config, setConfig] = useState<ColumnConfig>(() => {
     const saved = readConfig(projectId, tableKey);
