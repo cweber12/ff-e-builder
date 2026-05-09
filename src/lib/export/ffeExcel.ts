@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { projectTotalCents, roomSubtotalCents } from '../calc';
-import type { Project, RoomWithItems } from '../../types';
+import type { CustomColumnDef, Project, RoomWithItems } from '../../types';
 import { addExcelContainImage, excelPaddedCellPlacement } from './imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';
 import { buildStatusBreakdown, sortedItems } from './ffeRows';
@@ -37,10 +37,17 @@ export async function exportTableExcel(
   project: Project,
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
+  customColumnDefs: CustomColumnDef[] = [],
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const targetRooms = filterRoom ? [filterRoom] : rooms;
+  const allSortedItems = targetRooms.flatMap((r) => sortedItems(r));
   const imageMap = await buildFfeItemImages(targetRooms);
+
+  const activeCustomCols = customColumnDefs
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((def) => allSortedItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
 
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet('FF&E');
@@ -53,9 +60,12 @@ export async function exportTableExcel(
     margins: { left: 0.3, right: 0.3, top: 0.45, bottom: 0.45, header: 0.15, footer: 0.2 },
   };
 
-  const endColumn = FFE_EXCEL_COLS.length;
+  const endColumn = FFE_EXCEL_COLS.length + activeCustomCols.length;
   FFE_EXCEL_COLS.forEach((col, i) => {
     worksheet.getColumn(i + 1).width = col.width;
+  });
+  activeCustomCols.forEach((_def, i) => {
+    worksheet.getColumn(FFE_EXCEL_COLS.length + i + 1).width = 18;
   });
 
   let currentRow = 1;
@@ -96,6 +106,14 @@ export async function exportTableExcel(
     FFE_EXCEL_COLS.forEach((col, i) => {
       const cell = headerRow.getCell(i + 1);
       cell.value = col.label;
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF374151' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_FILL_ARGB } };
+      cell.border = thinBorder();
+    });
+    activeCustomCols.forEach((def, i) => {
+      const cell = headerRow.getCell(FFE_EXCEL_COLS.length + i + 1);
+      cell.value = def.label;
       cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: 'FF374151' } };
       cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_FILL_ARGB } };
@@ -151,6 +169,20 @@ export async function exportTableExcel(
         await addExcelContainImage(workbook, worksheet, imageDataUrl, placement);
       }
 
+      // ── Custom column cells ──
+      activeCustomCols.forEach((def, i) => {
+        const cell = row.getCell(FFE_EXCEL_COLS.length + i + 1);
+        cell.value = item.customData[def.id] ?? '';
+        cell.font = { name: 'Helvetica', size: 9, color: { argb: 'FF374151' } };
+        cell.alignment = {
+          vertical: 'top',
+          horizontal: 'left',
+          wrapText: true,
+          shrinkToFit: false,
+        };
+        cell.border = thinBorder();
+      });
+
       currentRow += 1;
     }
 
@@ -168,6 +200,14 @@ export async function exportTableExcel(
       }
       cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: BRAND_ARGB } };
       cell.alignment = { vertical: 'middle', horizontal: i === lineIndex ? 'center' : 'left' };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SUBTOTAL_FILL_ARGB } };
+      cell.border = thinBorder();
+    });
+    activeCustomCols.forEach((_def, i) => {
+      const cell = subtotalRow.getCell(FFE_EXCEL_COLS.length + i + 1);
+      cell.value = '';
+      cell.font = { name: 'Helvetica', size: 9, bold: true, color: { argb: BRAND_ARGB } };
+      cell.alignment = { vertical: 'middle', horizontal: 'left' };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SUBTOTAL_FILL_ARGB } };
       cell.border = thinBorder();
     });
@@ -189,6 +229,14 @@ export async function exportTableExcel(
     }
     cell.font = { name: 'Helvetica', size: 10, bold: true, color: { argb: BRAND_ARGB } };
     cell.alignment = { vertical: 'middle', horizontal: i === lineIndex ? 'center' : 'left' };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND_FILL_ARGB } };
+    cell.border = thinBorder();
+  });
+  activeCustomCols.forEach((_def, i) => {
+    const cell = totalRow.getCell(FFE_EXCEL_COLS.length + i + 1);
+    cell.value = '';
+    cell.font = { name: 'Helvetica', size: 10, bold: true, color: { argb: BRAND_ARGB } };
+    cell.alignment = { vertical: 'middle', horizontal: 'left' };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND_FILL_ARGB } };
     cell.border = thinBorder();
   });

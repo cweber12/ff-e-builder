@@ -86,3 +86,9 @@ _Items flagged in senior frontend review (May 2026). No new data fields required
 - **"No material ID" placeholder** — verbose. Replace with `—`.
 - **Delete button has no confirmation** — MaterialGridCard calls `onDelete` directly on click with no modal. Add a confirmation step matching ItemsTable's pattern.
 - **Swatch `rounded-full` in table view** — circular crop destroys rectangular texture/fabric images. Use `rounded-md` instead.
+
+## Technical debt
+
+### Route-based code splitting
+
+The entire app ships as a single `index.js` chunk (>500 KB minified). Split by route using `React.lazy()` and dynamic `import()` on each page component, letting Vite emit per-route chunks. This eliminates the Rollup chunk-size warning and improves initial load time, particularly for pages like Plans and Catalog that pull in heavy PDF/canvas dependencies. Raise `build.chunkSizeWarningLimit` temporarily if needed while migrating.

@@ -1,5 +1,11 @@
 import { proposalLineTotalCents, projectTotalCents, roomSubtotalCents } from '../calc';
-import type { Project, ProposalCategoryWithItems, ProposalItem, RoomWithItems } from '../../types';
+import type {
+  CustomColumnDef,
+  Project,
+  ProposalCategoryWithItems,
+  ProposalItem,
+  RoomWithItems,
+} from '../../types';
 import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
 import { csvCell, fmtMoney, safeName, triggerDownload } from './shared';
 
@@ -39,20 +45,32 @@ function buildCsvRows(
   project: Project,
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
+  customCols: CustomColumnDef[] = [],
 ): string[][] {
   const targetRooms = filterRoom ? [filterRoom] : rooms;
   const dataRows = targetRooms.flatMap((room) =>
-    sortedItems(room).map((item) => [project.name, room.name, ...itemToRow(item)]),
+    sortedItems(room).map((item) => [
+      project.name,
+      room.name,
+      ...itemToRow(item),
+      ...customCols.map((def) => item.customData[def.id] ?? ''),
+    ]),
   );
-  return [['Project', 'Room', ...TABLE_HEADERS], ...dataRows];
+  return [['Project', 'Room', ...TABLE_HEADERS, ...customCols.map((d) => d.label)], ...dataRows];
 }
 
 export function exportTableCsv(
   project: Project,
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
+  customColumnDefs: CustomColumnDef[] = [],
 ): void {
-  const rows = buildCsvRows(project, rooms, filterRoom);
+  const allItems = (filterRoom ? [filterRoom] : rooms).flatMap((r) => sortedItems(r));
+  const activeCustomCols = customColumnDefs
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((def) => allItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
+  const rows = buildCsvRows(project, rooms, filterRoom, activeCustomCols);
   const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const suffix = filterRoom ? `-${safeName(filterRoom.name)}` : '';
@@ -93,11 +111,25 @@ export function exportSummaryCsv(project: Project, rooms: RoomWithItems[]): void
   triggerDownload(blob, `${safeName(project.name)}-summary.csv`);
 }
 
-export function exportProposalCsv(project: Project, categories: ProposalCategoryWithItems[]): void {
+export function exportProposalCsv(
+  project: Project,
+  categories: ProposalCategoryWithItems[],
+  customColumnDefs: CustomColumnDef[] = [],
+): void {
+  const allItems = categories.flatMap((c) => c.items);
+  const activeCustomCols = customColumnDefs
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((def) => allItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
   const rows = [
-    ['Project', 'Category', ...PROPOSAL_CSV_HEADERS],
+    ['Project', 'Category', ...PROPOSAL_CSV_HEADERS, ...activeCustomCols.map((d) => d.label)],
     ...categories.flatMap((category) =>
-      category.items.map((item) => [project.name, category.name, ...proposalItemToRow(item)]),
+      category.items.map((item) => [
+        project.name,
+        category.name,
+        ...proposalItemToRow(item),
+        ...activeCustomCols.map((def) => item.customData[def.id] ?? ''),
+      ]),
     ),
   ];
   const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');

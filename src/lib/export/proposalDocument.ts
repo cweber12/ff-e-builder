@@ -3,7 +3,13 @@ import {
   proposalLineTotalCents,
   proposalProjectTotalCents,
 } from '../calc';
-import type { Project, ProposalCategoryWithItems, ProposalItem, UserProfile } from '../../types';
+import type {
+  CustomColumnDef,
+  Project,
+  ProposalCategoryWithItems,
+  ProposalItem,
+  UserProfile,
+} from '../../types';
 import { fmtMoney } from './shared';
 
 export type ProposalExportColumnKey =
@@ -22,11 +28,12 @@ export type ProposalExportColumnKey =
   | 'totalCost';
 
 export type ProposalExportColumn = {
-  key: ProposalExportColumnKey;
+  key: string;
   label: string;
   pdfWidth: number;
   excelWidth: number;
   alwaysVisible?: boolean;
+  isCustom?: boolean;
 };
 
 export type ProposalAssetBundle = {
@@ -38,7 +45,7 @@ export type ProposalAssetBundle = {
 
 export type ProposalExportRow = {
   item: ProposalItem;
-  values: Record<ProposalExportColumnKey, string>;
+  values: Record<string, string>;
   rendering: string | null;
   planImage: string | null;
   swatches: string[];
@@ -100,11 +107,7 @@ export function proposalCompactIdentityLine(project: Project) {
 }
 
 export function proposalSubtotalLabelColumnIndex(columns: ProposalExportColumn[]) {
-  const preferredKeys: ProposalExportColumnKey[] = [
-    'description',
-    'drawingsLocation',
-    'productTag',
-  ];
+  const preferredKeys: string[] = ['description', 'drawingsLocation', 'productTag'];
   for (const key of preferredKeys) {
     const index = columns.findIndex((column) => column.key === key);
     if (index >= 0) return index;
@@ -117,8 +120,9 @@ export function buildProposalExportDocument(
   categories: ProposalCategoryWithItems[],
   assets: ProposalAssetBundle,
   userProfile?: UserProfile | null,
+  customColumnDefs: CustomColumnDef[] = [],
 ): ProposalExportDocument {
-  const columns = buildProposalVisibleColumns(categories, assets);
+  const columns = buildProposalVisibleColumns(categories, assets, customColumnDefs);
   const categorySections = categories.map((category) => ({
     category,
     subtotalCents: proposalCategorySubtotalCents(category.items),
@@ -131,12 +135,17 @@ export function buildProposalExportDocument(
       pdfRendering: null,
       pdfPlanImage: null,
       pdfSwatches: [] as string[],
-      values: Object.fromEntries(
-        PROPOSAL_EXPORT_COLUMNS.map((column) => [
-          column.key,
-          buildProposalRowValue(item, column.key),
-        ]),
-      ) as Record<ProposalExportColumnKey, string>,
+      values: {
+        ...Object.fromEntries(
+          PROPOSAL_EXPORT_COLUMNS.map((column) => [
+            column.key,
+            buildProposalRowValue(item, column.key as ProposalExportColumnKey),
+          ]),
+        ),
+        ...Object.fromEntries(
+          customColumnDefs.map((def) => [def.id, item.customData[def.id] ?? '']),
+        ),
+      },
     })),
   }));
 
@@ -176,20 +185,38 @@ function getProposalBudgetTarget(project: Project) {
 function buildProposalVisibleColumns(
   categories: ProposalCategoryWithItems[],
   assets: ProposalAssetBundle,
+  customColumnDefs: CustomColumnDef[] = [],
 ): ProposalExportColumn[] {
   const items = categories.flatMap((category) => category.items);
   const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
   const hasPlanImages = items.some((item) => assets.planByItemId.has(item.id));
   const hasSwatches = items.some((item) => (assets.swatchesByItemId.get(item.id)?.length ?? 0) > 0);
 
-  return PROPOSAL_EXPORT_COLUMNS.filter((column) => {
+  const fixedColumns = PROPOSAL_EXPORT_COLUMNS.filter((column) => {
     if (column.key === 'rendering') return hasRendering;
     if (column.key === 'plan')
-      return hasPlanImages || items.some((item) => proposalColumnHasData(item, column.key));
+      return (
+        hasPlanImages ||
+        items.some((item) => proposalColumnHasData(item, column.key as ProposalExportColumnKey))
+      );
     if (column.key === 'swatch') return hasSwatches;
     if (column.alwaysVisible) return true;
-    return items.some((item) => proposalColumnHasData(item, column.key));
+    return items.some((item) => proposalColumnHasData(item, column.key as ProposalExportColumnKey));
   });
+
+  const activeCustomColumns: ProposalExportColumn[] = customColumnDefs
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((def) => items.some((item) => (item.customData[def.id] ?? '').trim() !== ''))
+    .map((def) => ({
+      key: def.id,
+      label: def.label,
+      pdfWidth: 20,
+      excelWidth: 18,
+      isCustom: true,
+    }));
+
+  return [...fixedColumns, ...activeCustomColumns];
 }
 
 function buildProposalRowValue(item: ProposalItem, key: ProposalExportColumnKey) {

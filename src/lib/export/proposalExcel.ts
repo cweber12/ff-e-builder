@@ -21,6 +21,7 @@ export async function exportProposalExcel(
   project: Project,
   categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
+  customColumnDefs: import('../../types').CustomColumnDef[] = [],
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const exportCategories = filteredProposalCategories(categories);
@@ -29,7 +30,13 @@ export async function exportProposalExcel(
     exportCategories,
     PROPOSAL_SWATCH_LIMIT,
   );
-  const exportDoc = buildProposalExportDocument(project, exportCategories, assets, userProfile);
+  const exportDoc = buildProposalExportDocument(
+    project,
+    exportCategories,
+    assets,
+    userProfile,
+    customColumnDefs,
+  );
   const columns = exportDoc.columns;
 
   const workbook = new Workbook();

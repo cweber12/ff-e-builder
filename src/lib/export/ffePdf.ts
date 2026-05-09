@@ -2,14 +2,13 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { projectTotalCents, roomSubtotalCents } from '../calc';
 import { BRAND_RGB } from '../constants';
-import type { Item, Project, RoomWithItems } from '../../types';
+import type { CustomColumnDef, Item, Project, RoomWithItems } from '../../types';
 import { cropDataUrlToCover } from './imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';
 import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
 import { fmtMoney, safeName } from './shared';
 
 const BRAND = BRAND_RGB;
-const FFE_PDF_HEADERS = ['Image', ...TABLE_HEADERS];
 const FFE_PDF_IMAGE_COL_WIDTH = 18; // mm
 const FFE_PDF_IMAGE_COL_HEIGHT = 18; // mm minCellHeight
 const FFE_PDF_MM_TO_PX = 3.7795;
@@ -18,9 +17,18 @@ export async function exportTablePdf(
   project: Project,
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
+  customColumnDefs: CustomColumnDef[] = [],
 ): Promise<void> {
   const targetRooms = filterRoom ? [filterRoom] : rooms;
+  const allSortedItems = targetRooms.flatMap((r) => sortedItems(r));
   const imageMap = await buildFfeItemImages(targetRooms);
+
+  const activeCustomCols = customColumnDefs
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((def) => allSortedItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
+
+  const headers = ['Image', ...TABLE_HEADERS, ...activeCustomCols.map((c) => c.label)];
 
   // Pre-crop images to PDF cell dimensions
   const cellWPx = Math.round((FFE_PDF_IMAGE_COL_WIDTH - 2) * FFE_PDF_MM_TO_PX);
@@ -39,7 +47,6 @@ export async function exportTablePdf(
   for (const room of targetRooms) {
     allItems.push(...sortedItems(room));
   }
-
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const title = filterRoom ? `${project.name} — ${filterRoom.name}` : project.name;
 
@@ -64,15 +71,19 @@ export async function exportTablePdf(
     firstRoom = false;
 
     const items = sortedItems(room);
-    // row 0 = 'image' column (empty string) + rest of item data
-    const rows = items.map((item) => ['', ...itemToRow(item)]);
+    // row 0 = 'image' column (empty string) + rest of item data + custom col values
+    const rows = items.map((item) => [
+      '',
+      ...itemToRow(item),
+      ...activeCustomCols.map((def) => item.customData[def.id] ?? ''),
+    ]);
     const subtotal = roomSubtotalCents(room.items);
     const roomItemOffset = rowOffset;
     rowOffset += items.length;
 
     autoTable(doc, {
       startY,
-      head: [FFE_PDF_HEADERS],
+      head: [headers],
       body: [
         ...rows,
         [
@@ -92,6 +103,7 @@ export async function exportTablePdf(
           '',
           '',
           '',
+          ...activeCustomCols.map(() => ''),
         ],
       ],
       headStyles: { fillColor: [...BRAND] as [number, number, number], fontSize: 7 },

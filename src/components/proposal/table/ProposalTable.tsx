@@ -20,7 +20,11 @@ import {
   horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
 } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
@@ -73,7 +77,7 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/cn';
 
 // --- Proposal Table Column Definitions ---
-export const PROPOSAL_HIDEABLE_IDS = [
+const PROPOSAL_HIDEABLE_IDS = [
   'rendering',
   'productTag',
   'plan',
@@ -90,21 +94,20 @@ export const PROPOSAL_HIDEABLE_IDS = [
 
 export type ProposalColumnId = (typeof PROPOSAL_HIDEABLE_IDS)[number];
 
-export const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className: string }> =
-  {
-    rendering: { label: 'Rendering', className: 'w-40 min-w-40' },
-    productTag: { label: 'Product Tag', className: 'min-w-36' },
-    plan: { label: 'Plan', className: 'w-36 min-w-36' },
-    drawings: { label: 'Drawings', className: 'min-w-36' },
-    location: { label: 'Location', className: 'min-w-36' },
-    description: { label: 'Product Description', className: 'min-w-64' },
-    notes: { label: 'Notes', className: 'min-w-48' },
-    size: { label: 'Size', className: 'w-44 min-w-44' },
-    swatch: { label: 'Swatch', className: 'min-w-36' },
-    cbm: { label: 'CBM', className: 'w-24 min-w-24' },
-    quantity: { label: 'Quantity', className: 'w-44 min-w-44' },
-    unitCost: { label: 'Unit Cost', className: 'w-32 min-w-32' },
-  };
+const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className: string }> = {
+  rendering: { label: 'Rendering', className: 'w-40 min-w-40' },
+  productTag: { label: 'Product Tag', className: 'min-w-36' },
+  plan: { label: 'Plan', className: 'w-36 min-w-36' },
+  drawings: { label: 'Drawings', className: 'min-w-36' },
+  location: { label: 'Location', className: 'min-w-36' },
+  description: { label: 'Product Description', className: 'min-w-64' },
+  notes: { label: 'Notes', className: 'min-w-48' },
+  size: { label: 'Size', className: 'w-44 min-w-44' },
+  swatch: { label: 'Swatch', className: 'min-w-36' },
+  cbm: { label: 'CBM', className: 'w-24 min-w-24' },
+  quantity: { label: 'Quantity', className: 'w-44 min-w-44' },
+  unitCost: { label: 'Unit Cost', className: 'w-32 min-w-32' },
+};
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
@@ -115,6 +118,19 @@ const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white'
 const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
 const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
 const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
+
+function GripIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+      <circle cx="5" cy="4" r="1.5" />
+      <circle cx="11" cy="4" r="1.5" />
+      <circle cx="5" cy="8" r="1.5" />
+      <circle cx="11" cy="8" r="1.5" />
+      <circle cx="5" cy="12" r="1.5" />
+      <circle cx="11" cy="12" r="1.5" />
+    </svg>
+  );
+}
 
 type ProposalTableProps = {
   projectId: string;
@@ -200,23 +216,50 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
               label="Export"
               size="sm"
               disabled={categoriesWithItems.every((c) => c.items.length === 0)}
-              onCsv={() => exportProposalCsv(project, categoriesWithItems)}
-              onExcel={() => void exportProposalExcel(project, categoriesWithItems, userProfile)}
-              onPdf={() => void exportProposalPdf(project, categoriesWithItems, userProfile)}
+              onCsv={() => exportProposalCsv(project, categoriesWithItems, customColumnDefs)}
+              onExcel={() =>
+                void exportProposalExcel(
+                  project,
+                  categoriesWithItems,
+                  userProfile,
+                  customColumnDefs,
+                )
+              }
+              onPdf={() =>
+                void exportProposalPdf(
+                  project,
+                  categoriesWithItems,
+                  userProfile,
+                  {},
+                  customColumnDefs,
+                )
+              }
               pdfOptions={[
                 {
                   label: 'Continuous',
                   onSelect: () =>
-                    void exportProposalPdf(project, categoriesWithItems, userProfile, {
-                      mode: 'continuous',
-                    }),
+                    void exportProposalPdf(
+                      project,
+                      categoriesWithItems,
+                      userProfile,
+                      {
+                        mode: 'continuous',
+                      },
+                      customColumnDefs,
+                    ),
                 },
                 {
                   label: 'Separated',
                   onSelect: () =>
-                    void exportProposalPdf(project, categoriesWithItems, userProfile, {
-                      mode: 'separated',
-                    }),
+                    void exportProposalPdf(
+                      project,
+                      categoriesWithItems,
+                      userProfile,
+                      {
+                        mode: 'separated',
+                      },
+                      customColumnDefs,
+                    ),
                 },
               ]}
             />
@@ -614,7 +657,9 @@ function ProposalCategorySection({
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
+  const updateItem = useUpdateProposalItem();
   const [isExpanded, setIsExpanded] = useState(false);
+  const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items]);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -626,6 +671,28 @@ function ProposalCategorySection({
       onMoveColumn(String(active.id), String(over.id));
     },
     [onMoveColumn],
+  );
+  const handleRowDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const oldIndex = sortedItems.findIndex((item) => item.id === active.id);
+      const newIndex = sortedItems.findIndex((item) => item.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return;
+      const reordered = arrayMove(sortedItems, oldIndex, newIndex);
+      const patches = reordered
+        .map((item, sortOrder) => ({ item, sortOrder }))
+        .filter(({ item, sortOrder }) => item.sortOrder !== sortOrder);
+      void (async () => {
+        for (const { item, sortOrder } of patches) {
+          await updateItem.mutateAsync({
+            id: item.id,
+            patch: { sortOrder, version: item.version },
+          });
+        }
+      })();
+    },
+    [sortedItems, updateItem],
   );
   const visibleColIds = useMemo(() => new Set(visibleColOrder), [visibleColOrder]);
   const itemCount = items.length;
@@ -702,6 +769,7 @@ function ProposalCategorySection({
                 onDragEnd={handleColumnDragEnd}
               >
                 <tr>
+                  <th className="border-b border-gray-200 w-8 min-w-8 px-1 py-2" />
                   <SortableContext items={visibleColOrder} strategy={horizontalListSortingStrategy}>
                     {visibleColOrder.map((colId) => {
                       const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
@@ -755,19 +823,30 @@ function ProposalCategorySection({
               </DndContext>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <ProposalRow
-                  key={item.id}
-                  projectId={projectId}
-                  categoryId={categoryId}
-                  item={item}
-                  onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
-                  onDelete={() => deleteItem.mutate(item.id)}
-                  onRowClick={() => onItemClick(item)}
-                  visibleColIds={visibleColIds}
-                  customColumnDefs={customColumnDefs}
-                />
-              ))}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleRowDragEnd}
+              >
+                <SortableContext
+                  items={sortedItems.map((item) => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sortedItems.map((item) => (
+                    <ProposalRow
+                      key={item.id}
+                      projectId={projectId}
+                      categoryId={categoryId}
+                      item={item}
+                      onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
+                      onDelete={() => deleteItem.mutate(item.id)}
+                      onRowClick={() => onItemClick(item)}
+                      visibleColIds={visibleColIds}
+                      customColumnDefs={customColumnDefs}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
             </tbody>
           </table>
         </div>
@@ -809,6 +888,7 @@ function ProposalCategorySection({
                     onDragEnd={handleColumnDragEnd}
                   >
                     <tr>
+                      <th className="border-b border-gray-100 w-8 min-w-8 px-1 py-3" />
                       <SortableContext
                         items={visibleColOrder}
                         strategy={horizontalListSortingStrategy}
@@ -865,19 +945,30 @@ function ProposalCategorySection({
                   </DndContext>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
-                    <ProposalRow
-                      key={item.id}
-                      projectId={projectId}
-                      categoryId={categoryId}
-                      item={item}
-                      onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
-                      onDelete={() => deleteItem.mutate(item.id)}
-                      onRowClick={() => onItemClick(item)}
-                      visibleColIds={visibleColIds}
-                      customColumnDefs={customColumnDefs}
-                    />
-                  ))}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleRowDragEnd}
+                  >
+                    <SortableContext
+                      items={sortedItems.map((item) => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {sortedItems.map((item) => (
+                        <ProposalRow
+                          key={item.id}
+                          projectId={projectId}
+                          categoryId={categoryId}
+                          item={item}
+                          onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
+                          onDelete={() => deleteItem.mutate(item.id)}
+                          onRowClick={() => onItemClick(item)}
+                          visibleColIds={visibleColIds}
+                          customColumnDefs={customColumnDefs}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
                 </tbody>
               </table>
             </div>
@@ -907,6 +998,10 @@ function ProposalRow({
   visibleColIds: Set<string>;
   customColumnDefs: CustomColumnDef[];
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
+  const style = { transform: CSS.Transform.toString(transform), transition };
   const [sizeOpen, setSizeOpen] = useState(false);
   const [swatchOpen, setSwatchOpen] = useState(false);
   const lineTotal = proposalLineTotalCents(item);
@@ -914,9 +1009,25 @@ function ProposalRow({
 
   return (
     <tr
-      className="cursor-pointer border-b border-gray-100 align-top last:border-b-0 hover:bg-brand-50/30"
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'cursor-pointer border-b border-gray-100 align-top last:border-b-0 hover:bg-brand-50/30',
+        isDragging && 'bg-brand-50 shadow-md opacity-80',
+      )}
       onClick={onRowClick}
     >
+      <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
+        <button
+          type="button"
+          aria-label={`Drag ${item.productTag || 'item'}`}
+          className="cursor-grab rounded px-1 text-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          {...attributes}
+          {...listeners}
+        >
+          <GripIcon />
+        </button>
+      </td>
       {visibleColIds.has('rendering') && (
         <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
           <ImageFrame

@@ -1186,11 +1186,13 @@ function RoomActionsMenu({
   room,
   rooms,
   project,
+  columnDefs,
   onDeleteRoom,
 }: {
   room: RoomWithItems;
   rooms: RoomWithItems[];
   project?: Project;
+  columnDefs: import('../../../types').CustomColumnDef[];
   onDeleteRoom: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -1236,7 +1238,7 @@ function RoomActionsMenu({
                 type="button"
                 role="menuitem"
                 className={menuItemClassName}
-                onClick={() => runAction(() => exportTableCsv(project, rooms, room))}
+                onClick={() => runAction(() => exportTableCsv(project, rooms, room, columnDefs))}
               >
                 Export CSV
               </button>
@@ -1244,7 +1246,9 @@ function RoomActionsMenu({
                 type="button"
                 role="menuitem"
                 className={menuItemClassName}
-                onClick={() => runAction(() => void exportTableExcel(project, rooms, room))}
+                onClick={() =>
+                  runAction(() => void exportTableExcel(project, rooms, room, columnDefs))
+                }
               >
                 Export Excel
               </button>
@@ -1252,7 +1256,9 @@ function RoomActionsMenu({
                 type="button"
                 role="menuitem"
                 className={menuItemClassName}
-                onClick={() => runAction(() => void exportTablePdf(project, rooms, room))}
+                onClick={() =>
+                  runAction(() => void exportTablePdf(project, rooms, room, columnDefs))
+                }
               >
                 Export PDF
               </button>
@@ -1512,6 +1518,7 @@ function RoomItemsSection({
             room={room}
             rooms={rooms}
             {...(project !== undefined ? { project } : {})}
+            columnDefs={columnDefs}
             onDeleteRoom={() => onDeleteRoom(room)}
           />
           {!isMobile && !collapsed && (

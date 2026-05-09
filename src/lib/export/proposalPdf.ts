@@ -223,7 +223,7 @@ function drawPdfProposalTable(
   },
 ) {
   const subtotalLabelIndex = proposalSubtotalLabelColumnIndex(columns);
-  const body = section.rows.map((row) => columns.map((column) => row.values[column.key]));
+  const body = section.rows.map((row) => columns.map((column) => row.values[column.key] ?? ''));
   body.push(
     columns.map((_column, index) => {
       if (index === subtotalLabelIndex) return `${section.category.name} subtotal`;
@@ -335,6 +335,7 @@ export async function exportProposalPdf(
   categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
   options: ProposalPdfOptions = {},
+  customColumnDefs: import('../../types').CustomColumnDef[] = [],
 ): Promise<void> {
   const mode = options.mode ?? 'continuous';
   const exportCategories = filteredProposalCategories(categories);
@@ -343,7 +344,13 @@ export async function exportProposalPdf(
     exportCategories,
     PROPOSAL_SWATCH_LIMIT,
   );
-  const exportDoc = buildProposalExportDocument(project, exportCategories, assets, userProfile);
+  const exportDoc = buildProposalExportDocument(
+    project,
+    exportCategories,
+    assets,
+    userProfile,
+    customColumnDefs,
+  );
   const columns = exportDoc.columns;
 
   // Scale column widths so the table fills the full A3 landscape printable width.
