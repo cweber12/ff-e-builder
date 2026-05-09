@@ -20,7 +20,7 @@ import {
   type ProposalImportField,
   type ProposalImportImage,
   type ProposalParsedRow,
-} from '../../../lib/proposalImportUtils';
+} from '../../../lib/import';
 import type { ProposalCategoryWithItems } from '../../../types';
 import { Button, Modal } from '../../primitives';
 

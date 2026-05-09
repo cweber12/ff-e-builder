@@ -1,4 +1,2 @@
-/** Merge Tailwind class strings, filtering falsy values. */
-export function cn(...classes: (string | undefined | false | null)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+// Compatibility shim — canonical module is utils/style.ts
+export { cn } from './utils/style';

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { cn } from '../../lib/cn';
+import { cn } from '../../lib/utils';
 
 type ColumnManagerPopoverProps = {
   /** Labels for default columns that have been hidden, keyed by column ID. */

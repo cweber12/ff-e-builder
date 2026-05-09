@@ -6,7 +6,7 @@ import {
   transformRows,
   type ColumnMap,
   type ParsedSpreadsheet,
-} from '../../../lib/importUtils';
+} from '../../../lib/import';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives/Button';
 import { Modal } from '../../primitives/Modal';

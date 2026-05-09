@@ -1,5 +1,2 @@
-export function reportError(error: unknown, context?: Record<string, unknown>) {
-  if (import.meta.env.DEV) {
-    console.error('[reportError]', error, context);
-  }
-}
+// Compatibility shim — canonical module is utils/observability.ts
+export { reportError } from './utils/observability';

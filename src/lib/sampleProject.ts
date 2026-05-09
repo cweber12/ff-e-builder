@@ -1,5 +1,5 @@
 import { api } from './api';
-import { reportError } from './reportError';
+import { reportError } from './utils';
 import type { Project } from '../types';
 
 type SeedProjectOptions = {

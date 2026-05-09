@@ -1,4 +1,2 @@
-export const emptyToNull = (value: string): string | null => {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
+// Compatibility shim — canonical module is utils/formatting.ts
+export { emptyToNull } from './utils/formatting';

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../../hooks';
-import { cn } from '../../lib/cn';
+import { cn } from '../../lib/utils';
 
 interface ProjectSwitcherProps {
   currentProjectId: string;

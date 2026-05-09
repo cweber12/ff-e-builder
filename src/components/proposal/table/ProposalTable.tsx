@@ -74,7 +74,7 @@ import { SortableColHeader } from '../../shared/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
 import { ColumnManagerPopover } from '../../shared/ColumnManagerPopover';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
-import { cn } from '../../../lib/cn';
+import { cn } from '../../../lib/utils';
 
 // --- Proposal Table Column Definitions ---
 const PROPOSAL_HIDEABLE_IDS = [

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type MouseEvent, type ReactNode } from 'react';
-import { cn } from '../../lib/cn';
+import { cn } from '../../lib/utils';
 
 interface ModalProps {
   open: boolean;

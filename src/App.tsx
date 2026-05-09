@@ -26,7 +26,7 @@ import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProjectImagesModal } from './components/project/ProjectImagesModal';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
-import { recordSession } from './lib/telemetry';
+import { recordSession } from './lib/utils';
 import {
   exportSummaryCsv,
   exportSummaryExcel,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode, PointerEvent as ReactPointerEvent } from 'react';
-import { cn } from '../../../lib/cn';
+import { cn } from '../../../lib/utils';
 import { api } from '../../../lib/api';
 import { useImages } from '../../../hooks';
 import { ImageFrame } from '../../shared/ImageFrame';

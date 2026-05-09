@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { cn } from '../../../lib/cn';
+import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
@@ -17,7 +17,6 @@ import { ImageFrame } from '../../shared/ImageFrame';
 import { ImageOptionsMenu } from '../../shared/ImageOptionsMenu';
 import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
 import { api } from '../../../lib/api';
-import { emptyToNull } from '../../../lib/textUtils';
 import type { ImageAsset } from '../../../types';
 
 type CatalogEntry = {

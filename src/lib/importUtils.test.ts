@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { autoMapColumns, transformRow, transformRows } from './importUtils';
-import type { ColumnMap } from './importUtils';
+import { autoMapColumns, transformRow, transformRows } from './import/ffe';
+import type { ColumnMap } from './import/ffe';
 
 // ─── autoMapColumns ───────────────────────────────────────────────────────────
 

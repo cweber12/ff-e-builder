@@ -1,5 +1,5 @@
 import type { ItemStatus } from '../../types';
-import { cn } from '../../lib/cn';
+import { cn } from '../../lib/utils';
 
 type StatusIconName = 'clock' | 'check' | 'truck' | 'box';
 

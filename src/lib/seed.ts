@@ -1,5 +1,5 @@
 import { createProjectWithSampleContent } from './sampleProject';
-import { reportError } from './reportError';
+import { reportError } from './utils';
 
 /**
  * Seeds an example project for a newly created account.

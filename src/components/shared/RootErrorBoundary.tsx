@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { reportError } from '../../lib/reportError';
+import { reportError } from '../../lib/utils';
 import { Button } from '../primitives';
 
 type RootErrorBoundaryProps = {
