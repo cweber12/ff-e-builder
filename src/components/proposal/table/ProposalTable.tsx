@@ -187,6 +187,14 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           Add category
         </Button>
         <div className="flex items-center gap-2">
+          <ColumnManagerPopover
+            hiddenDefaults={hiddenColumnDefaults}
+            allowCustomColumns
+            onRestoreDefault={columnConfig.restoreDefaultColumn}
+            onAddCustomColumn={async (label) => {
+              await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
+            }}
+          />
           {project && (
             <ExportMenu
               label="Export"
@@ -256,13 +264,8 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           }}
           visibleColOrder={columnConfig.visibleOrder}
           customColumnDefs={customColumnDefs}
-          hiddenColumnDefaults={hiddenColumnDefaults}
-          onRestoreColumn={columnConfig.restoreDefaultColumn}
           onMoveColumn={handleColumnDragEnd}
           onHideColumn={handleHideColumn}
-          onAddCustomColumn={async (label) => {
-            await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
-          }}
           onRenameCustomColumn={async (defId, label) => {
             await updateColumnDef.mutateAsync({ defId, patch: { label } });
           }}
@@ -586,11 +589,8 @@ function ProposalCategorySection({
   onItemClick,
   visibleColOrder,
   customColumnDefs,
-  hiddenColumnDefaults,
-  onRestoreColumn,
   onMoveColumn,
   onHideColumn,
-  onAddCustomColumn,
   onRenameCustomColumn,
   onDeleteCustomColumn,
 }: {
@@ -607,11 +607,8 @@ function ProposalCategorySection({
   onItemClick: (item: ProposalItem) => void;
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
-  hiddenColumnDefaults: { id: string; label: string }[];
-  onRestoreColumn: (id: string) => void;
   onMoveColumn: (fromId: string, toId: string) => void;
   onHideColumn: (id: string) => void;
-  onAddCustomColumn: (label: string) => Promise<void>;
   onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
   onDeleteCustomColumn: (defId: string) => void;
 }) {
@@ -753,16 +750,7 @@ function ProposalCategorySection({
                       'border-b border-gray-200 font-semibold',
                       stickyOptionsHeaderClassName,
                     )}
-                  >
-                    <div className="flex items-center justify-end px-1 py-2">
-                      <ColumnManagerPopover
-                        hiddenDefaults={hiddenColumnDefaults}
-                        allowCustomColumns
-                        onRestoreDefault={onRestoreColumn}
-                        onAddCustomColumn={onAddCustomColumn}
-                      />
-                    </div>
-                  </th>
+                  />
                 </tr>
               </DndContext>
             </thead>
@@ -872,16 +860,7 @@ function ProposalCategorySection({
                           'border-b border-gray-100 font-semibold',
                           stickyOptionsExpandedHeaderClassName,
                         )}
-                      >
-                        <div className="flex items-center justify-end px-1 py-3">
-                          <ColumnManagerPopover
-                            hiddenDefaults={hiddenColumnDefaults}
-                            allowCustomColumns
-                            onRestoreDefault={onRestoreColumn}
-                            onAddCustomColumn={onAddCustomColumn}
-                          />
-                        </div>
-                      </th>
+                      />
                     </tr>
                   </DndContext>
                 </thead>
