@@ -41,7 +41,7 @@ const mockEnv = {
 describe('Proposal routes', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockVerify.mockResolvedValue({ uid: 'user-123' });
+    mockVerify.mockResolvedValue({ uid: 'user-123', email: null });
     mockAssertProposalCategoryOwnership.mockResolvedValue(undefined);
   });
 

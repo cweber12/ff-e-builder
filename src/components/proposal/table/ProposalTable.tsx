@@ -1,4 +1,28 @@
-import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent,
+} from 'react';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  horizontalListSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
@@ -11,6 +35,7 @@ import {
   useProposalWithItems,
   useUpdateProposalCategory,
   useUpdateProposalItem,
+  useColumnConfig,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -38,8 +63,43 @@ import {
   TableViewStack,
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
+import { ColumnManagerPopover } from '../../shared/ColumnManagerPopover';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/cn';
+
+// --- Proposal Table Column Definitions ---
+export const PROPOSAL_HIDEABLE_IDS = [
+  'rendering',
+  'productTag',
+  'plan',
+  'drawings',
+  'location',
+  'description',
+  'notes',
+  'size',
+  'swatch',
+  'cbm',
+  'quantity',
+  'unitCost',
+] as const;
+
+export type ProposalColumnId = (typeof PROPOSAL_HIDEABLE_IDS)[number];
+
+export const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className: string }> =
+  {
+    rendering: { label: 'Rendering', className: 'w-40 min-w-40' },
+    productTag: { label: 'Product Tag', className: 'min-w-36' },
+    plan: { label: 'Plan', className: 'w-36 min-w-36' },
+    drawings: { label: 'Drawings', className: 'min-w-36' },
+    location: { label: 'Location', className: 'min-w-36' },
+    description: { label: 'Product Description', className: 'min-w-64' },
+    notes: { label: 'Notes', className: 'min-w-48' },
+    size: { label: 'Size', className: 'w-44 min-w-44' },
+    swatch: { label: 'Swatch', className: 'min-w-36' },
+    cbm: { label: 'CBM', className: 'w-24 min-w-24' },
+    quantity: { label: 'Quantity', className: 'w-44 min-w-44' },
+    unitCost: { label: 'Unit Cost', className: 'w-32 min-w-32' },
+  };
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
@@ -50,22 +110,6 @@ const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white'
 const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
 const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
 const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
-const proposalTableHeadings = [
-  { label: 'Rendering', className: 'w-40 min-w-40' },
-  { label: 'Product Tag', className: 'min-w-36' },
-  { label: 'Plan', className: 'w-36 min-w-36' },
-  { label: 'Drawings', className: 'min-w-36' },
-  { label: 'Location', className: 'min-w-36' },
-  { label: 'Product Description', className: 'min-w-64' },
-  { label: 'Notes', className: 'min-w-48' },
-  { label: 'Size', className: 'w-44 min-w-44' },
-  { label: 'Swatch', className: 'min-w-36' },
-  { label: 'CBM', className: 'w-24 min-w-24' },
-  { label: 'Quantity', className: 'w-44 min-w-44' },
-  { label: 'Unit Cost', className: 'w-32 min-w-32' },
-  { label: 'Total Cost', className: 'w-32 min-w-32' },
-  { label: '', className: 'w-24 min-w-24' },
-] as const;
 
 type ProposalTableProps = {
   projectId: string;
@@ -80,6 +124,23 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
   const updateCategory = useUpdateProposalCategory(projectId);
   const deleteCategory = useDeleteProposalCategory(projectId);
   const updateItem = useUpdateProposalItem();
+  const columnConfig = useColumnConfig(projectId, 'proposal', PROPOSAL_HIDEABLE_IDS, []);
+  const hiddenColumnDefaults = useMemo(
+    () =>
+      columnConfig.hiddenDefaults.map((id) => ({
+        id,
+        label: PROPOSAL_COLUMN_META[id as ProposalColumnId]?.label ?? id,
+      })),
+    [columnConfig.hiddenDefaults],
+  );
+  const handleColumnDragEnd = useCallback(
+    (fromId: string, toId: string) => columnConfig.moveColumn(fromId, toId),
+    [columnConfig],
+  );
+  const handleHideColumn = useCallback(
+    (id: string) => columnConfig.hideDefaultColumn(id),
+    [columnConfig],
+  );
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [selectedItem, setSelectedItem] = useState<ProposalItem | null>(null);
@@ -179,6 +240,11 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
             setSelectedItem(item);
             setSelectedCategoryName(category.name);
           }}
+          visibleColOrder={columnConfig.visibleOrder}
+          hiddenColumnDefaults={hiddenColumnDefaults}
+          onRestoreColumn={columnConfig.restoreDefaultColumn}
+          onMoveColumn={handleColumnDragEnd}
+          onHideColumn={handleHideColumn}
         />
       ))}
 
@@ -496,6 +562,11 @@ function ProposalCategorySection({
   onCategoryDelete,
   onItemSave,
   onItemClick,
+  visibleColOrder,
+  hiddenColumnDefaults,
+  onRestoreColumn,
+  onMoveColumn,
+  onHideColumn,
 }: {
   projectId: string;
   categoryId: string;
@@ -508,11 +579,28 @@ function ProposalCategorySection({
   onCategoryDelete: () => void;
   onItemSave: (item: ProposalItem, patch: UpdateProposalItemInput) => void;
   onItemClick: (item: ProposalItem) => void;
+  visibleColOrder: string[];
+  hiddenColumnDefaults: { id: string; label: string }[];
+  onRestoreColumn: (id: string) => void;
+  onMoveColumn: (fromId: string, toId: string) => void;
+  onHideColumn: (id: string) => void;
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const [isExpanded, setIsExpanded] = useState(false);
-
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleColumnDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      onMoveColumn(String(active.id), String(over.id));
+    },
+    [onMoveColumn],
+  );
+  const visibleColIds = useMemo(() => new Set(visibleColOrder), [visibleColOrder]);
   const itemCount = items.length;
 
   return (
@@ -581,21 +669,54 @@ function ProposalCategorySection({
         <div className="overflow-x-auto">
           <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
             <thead className="bg-white text-xs uppercase tracking-wide text-gray-500">
-              <tr>
-                {proposalTableHeadings.map((heading, index) => (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleColumnDragEnd}
+              >
+                <tr>
+                  <SortableContext items={visibleColOrder} strategy={horizontalListSortingStrategy}>
+                    {visibleColOrder.map((colId) => {
+                      const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
+                      if (!meta) return null;
+                      return (
+                        <SortableProposalColHeader
+                          key={colId}
+                          colId={colId}
+                          label={meta.label}
+                          className={cn(
+                            'border-b border-gray-200 px-3 py-2 font-semibold',
+                            meta.className,
+                          )}
+                          onHide={() => onHideColumn(colId)}
+                        />
+                      );
+                    })}
+                  </SortableContext>
                   <th
-                    key={`${heading.label}-${index}`}
                     className={cn(
-                      'border-b border-gray-200 px-3 py-2 font-semibold',
-                      heading.className,
-                      index === 12 && stickyTotalHeaderClassName,
-                      index === 13 && stickyOptionsHeaderClassName,
+                      'border-b border-gray-200 px-3 py-2 font-semibold w-32 min-w-32',
+                      stickyTotalHeaderClassName,
                     )}
                   >
-                    {heading.label}
+                    Total Cost
                   </th>
-                ))}
-              </tr>
+                  <th
+                    className={cn(
+                      'border-b border-gray-200 font-semibold',
+                      stickyOptionsHeaderClassName,
+                    )}
+                  >
+                    <div className="flex items-center justify-end px-1 py-2">
+                      <ColumnManagerPopover
+                        hiddenDefaults={hiddenColumnDefaults}
+                        allowCustomColumns={false}
+                        onRestoreDefault={onRestoreColumn}
+                      />
+                    </div>
+                  </th>
+                </tr>
+              </DndContext>
             </thead>
             <tbody>
               {items.map((item) => (
@@ -607,6 +728,7 @@ function ProposalCategorySection({
                   onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                   onDelete={() => deleteItem.mutate(item.id)}
                   onRowClick={() => onItemClick(item)}
+                  visibleColIds={visibleColIds}
                 />
               ))}
             </tbody>
@@ -644,21 +766,57 @@ function ProposalCategorySection({
             >
               <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
                 <thead className="sticky top-0 z-40 bg-white text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
-                  <tr>
-                    {proposalTableHeadings.map((heading, index) => (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleColumnDragEnd}
+                  >
+                    <tr>
+                      <SortableContext
+                        items={visibleColOrder}
+                        strategy={horizontalListSortingStrategy}
+                      >
+                        {visibleColOrder.map((colId) => {
+                          const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
+                          if (!meta) return null;
+                          return (
+                            <SortableProposalColHeader
+                              key={colId}
+                              colId={colId}
+                              label={meta.label}
+                              className={cn(
+                                'border-b border-gray-100 px-3 py-3 font-semibold',
+                                meta.className,
+                              )}
+                              onHide={() => onHideColumn(colId)}
+                            />
+                          );
+                        })}
+                      </SortableContext>
                       <th
-                        key={`${heading.label}-${index}`}
                         className={cn(
-                          'border-b border-gray-100 px-3 py-3 font-semibold',
-                          heading.className,
-                          index === 12 && stickyTotalExpandedHeaderClassName,
-                          index === 13 && stickyOptionsExpandedHeaderClassName,
+                          'border-b border-gray-100 px-3 py-3 font-semibold w-32 min-w-32',
+                          stickyTotalExpandedHeaderClassName,
                         )}
                       >
-                        {heading.label}
+                        Total Cost
                       </th>
-                    ))}
-                  </tr>
+                      <th
+                        className={cn(
+                          'border-b border-gray-100 font-semibold',
+                          stickyOptionsExpandedHeaderClassName,
+                        )}
+                      >
+                        <div className="flex items-center justify-end px-1 py-3">
+                          <ColumnManagerPopover
+                            hiddenDefaults={hiddenColumnDefaults}
+                            allowCustomColumns={false}
+                            onRestoreDefault={onRestoreColumn}
+                          />
+                        </div>
+                      </th>
+                    </tr>
+                  </DndContext>
                 </thead>
                 <tbody>
                   {items.map((item) => (
@@ -670,6 +828,7 @@ function ProposalCategorySection({
                       onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                       onDelete={() => deleteItem.mutate(item.id)}
                       onRowClick={() => onItemClick(item)}
+                      visibleColIds={visibleColIds}
                     />
                   ))}
                 </tbody>
@@ -682,6 +841,61 @@ function ProposalCategorySection({
   );
 }
 
+function SortableProposalColHeader({
+  colId,
+  label,
+  className,
+  onHide,
+}: {
+  colId: string;
+  label: string;
+  className: string;
+  onHide: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: colId });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={cn(className, 'group cursor-grab active:cursor-grabbing')}
+      {...attributes}
+      {...listeners}
+    >
+      <span className="flex items-center gap-1">
+        <span className="flex-1">{label}</span>
+        <button
+          type="button"
+          aria-label={`Hide ${label} column`}
+          title={`Hide ${label} column`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onHide();
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="hidden rounded p-0.5 text-gray-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </span>
+    </th>
+  );
+}
+
 function ProposalRow({
   projectId,
   categoryId,
@@ -689,6 +903,7 @@ function ProposalRow({
   onSave,
   onDelete,
   onRowClick,
+  visibleColIds,
 }: {
   projectId: string;
   categoryId: string;
@@ -696,6 +911,7 @@ function ProposalRow({
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onDelete: () => void;
   onRowClick: () => void;
+  visibleColIds: Set<string>;
 }) {
   const [sizeOpen, setSizeOpen] = useState(false);
   const [swatchOpen, setSwatchOpen] = useState(false);
@@ -707,83 +923,111 @@ function ProposalRow({
       className="cursor-pointer border-b border-gray-100 align-top last:border-b-0 hover:bg-brand-50/30"
       onClick={onRowClick}
     >
-      <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
-        <ImageFrame
-          entityType="proposal_item"
-          entityId={item.id}
-          alt={`${item.productTag || 'Proposal'} rendering`}
-          className="h-20 w-[125px] max-w-full"
-          compact
+      {visibleColIds.has('rendering') && (
+        <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
+          <ImageFrame
+            entityType="proposal_item"
+            entityId={item.id}
+            alt={`${item.productTag || 'Proposal'} rendering`}
+            className="h-20 w-[125px] max-w-full"
+            compact
+          />
+        </td>
+      )}
+      {visibleColIds.has('productTag') && (
+        <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
+      )}
+      {visibleColIds.has('plan') && (
+        <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
+          <ImageFrame
+            entityType="proposal_plan"
+            entityId={item.id}
+            alt={`${item.productTag || 'Proposal'} plan`}
+            className="h-20 w-[110px] max-w-full"
+            compact
+          />
+        </td>
+      )}
+      {visibleColIds.has('drawings') && (
+        <EditableCell value={item.drawings} onSave={(drawings) => onSave({ drawings })} />
+      )}
+      {visibleColIds.has('location') && (
+        <EditableCell value={item.location} onSave={(location) => onSave({ location })} />
+      )}
+      {visibleColIds.has('description') && (
+        <EditableCell
+          value={item.description}
+          onSave={(description) => onSave({ description })}
+          className="min-w-64"
         />
-      </td>
-      <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
-      <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
-        <ImageFrame
-          entityType="proposal_plan"
-          entityId={item.id}
-          alt={`${item.productTag || 'Proposal'} plan`}
-          className="h-20 w-[110px] max-w-full"
-          compact
+      )}
+      {visibleColIds.has('notes') && (
+        <EditableCell
+          value={item.notes}
+          onSave={(notes) => onSave({ notes })}
+          className="min-w-48"
         />
-      </td>
-      <EditableCell value={item.drawings} onSave={(drawings) => onSave({ drawings })} />
-      <EditableCell value={item.location} onSave={(location) => onSave({ location })} />
-      <EditableCell
-        value={item.description}
-        onSave={(description) => onSave({ description })}
-        className="min-w-64"
-      />
-      <EditableCell value={item.notes} onSave={(notes) => onSave({ notes })} className="min-w-48" />
-      <td className="px-3 py-2" onClick={stopProp}>
-        <button
-          type="button"
-          onClick={() => setSizeOpen(true)}
-          className={cn(
-            'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-            item.sizeLabel
-              ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
-              : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
-          )}
-        >
-          {item.sizeLabel || 'Set size'}
-        </button>
-        <SizeModal
-          item={item}
-          open={sizeOpen}
-          onClose={() => setSizeOpen(false)}
-          onSave={(patch) => {
-            onSave(patch);
-            setSizeOpen(false);
-          }}
+      )}
+      {visibleColIds.has('size') && (
+        <td className="px-3 py-2" onClick={stopProp}>
+          <button
+            type="button"
+            onClick={() => setSizeOpen(true)}
+            className={cn(
+              'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+              item.sizeLabel
+                ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
+                : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
+            )}
+          >
+            {item.sizeLabel || 'Set size'}
+          </button>
+          <SizeModal
+            item={item}
+            open={sizeOpen}
+            onClose={() => setSizeOpen(false)}
+            onSave={(patch) => {
+              onSave(patch);
+              setSizeOpen(false);
+            }}
+          />
+        </td>
+      )}
+      {visibleColIds.has('swatch') && (
+        <td className="min-w-36 px-3 py-2" onClick={stopProp}>
+          <MaterialBadges materials={item.materials} onOpen={() => setSwatchOpen(true)} />
+          <MaterialLibraryModal
+            open={swatchOpen}
+            projectId={projectId}
+            context="proposal"
+            categoryId={categoryId}
+            item={item}
+            onClose={() => setSwatchOpen(false)}
+          />
+        </td>
+      )}
+      {visibleColIds.has('cbm') && (
+        <NumberCell
+          value={item.cbm}
+          step="0.001"
+          onSave={(cbm) => onSave({ cbm })}
+          className="w-24"
         />
-      </td>
-      <td className="min-w-36 px-3 py-2" onClick={stopProp}>
-        <MaterialBadges materials={item.materials} onOpen={() => setSwatchOpen(true)} />
-        <MaterialLibraryModal
-          open={swatchOpen}
-          projectId={projectId}
-          context="proposal"
-          categoryId={categoryId}
-          item={item}
-          onClose={() => setSwatchOpen(false)}
+      )}
+      {visibleColIds.has('quantity') && (
+        <QuantityCell
+          quantity={item.quantity}
+          quantityUnit={item.quantityUnit}
+          onSaveQuantity={(quantity) => onSave({ quantity })}
+          onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
         />
-      </td>
-      <NumberCell
-        value={item.cbm}
-        step="0.001"
-        onSave={(cbm) => onSave({ cbm })}
-        className="w-24"
-      />
-      <QuantityCell
-        quantity={item.quantity}
-        quantityUnit={item.quantityUnit}
-        onSaveQuantity={(quantity) => onSave({ quantity })}
-        onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
-      />
-      <MoneyCell
-        valueCents={item.unitCostCents}
-        onSave={(unitCostCents) => onSave({ unitCostCents })}
-      />
+      )}
+      {visibleColIds.has('unitCost') && (
+        <MoneyCell
+          valueCents={item.unitCostCents}
+          onSave={(unitCostCents) => onSave({ unitCostCents })}
+        />
+      )}
       <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
         {formatMoney(cents(lineTotal))}
       </td>

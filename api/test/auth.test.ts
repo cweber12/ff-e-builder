@@ -64,7 +64,7 @@ describe('Auth middleware', () => {
   });
 
   it('reaches the handler and returns 200 when token is valid', async () => {
-    mockVerify.mockResolvedValue({ uid: 'user-123' });
+    mockVerify.mockResolvedValue({ uid: 'user-123', email: null });
     // GET /projects stub returns [] without hitting the DB
     mockGetDb.mockReturnValue(makeMockSql([]) as unknown as ReturnType<typeof getDb>);
 
@@ -93,7 +93,7 @@ describe('Health check', () => {
 describe('Ownership enforcement', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockVerify.mockResolvedValue({ uid: 'user-a' });
+    mockVerify.mockResolvedValue({ uid: 'user-a', email: null });
   });
 
   it('returns 404 when PATCH /projects/:id is called by a non-owner', async () => {
@@ -165,7 +165,7 @@ describe('Ownership enforcement', () => {
 describe('Input validation', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockVerify.mockResolvedValue({ uid: 'user-123' });
+    mockVerify.mockResolvedValue({ uid: 'user-123', email: null });
   });
 
   it('returns 400 on POST /projects with empty name', async () => {

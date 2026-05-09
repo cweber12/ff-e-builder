@@ -64,7 +64,7 @@ describe('Image uploads', () => {
     vi.resetAllMocks();
     bucketPut.mockResolvedValue(undefined);
     bucketDelete.mockResolvedValue(undefined);
-    mockVerify.mockResolvedValue({ uid: 'user-123' });
+    mockVerify.mockResolvedValue({ uid: 'user-123', email: null });
     mockGetOwnedProjectContext.mockResolvedValue({ projectId });
     mockGetOwnedItemContext.mockResolvedValue({
       projectId,

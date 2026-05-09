@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { ItemColumnDef } from '../../types';
 
@@ -94,6 +94,22 @@ export function useColumnConfig(
     },
     [projectId, tableKey],
   );
+
+  // Sync any custom def IDs added after mount (e.g. after createItemColumnDef resolves).
+  // Using a stable string key avoids re-running when React Query returns a new array reference.
+  const customDefIdsKey = customDefs.map((d) => d.id).join(',');
+  useEffect(() => {
+    setConfig((current) => {
+      const known = new Set(current.order);
+      const newIds = customDefIdsKey
+        ? customDefIdsKey.split(',').filter((id) => id && !known.has(id))
+        : [];
+      if (newIds.length === 0) return current;
+      const next: ColumnConfig = { ...current, order: [...current.order, ...newIds] };
+      writeConfig(projectId, tableKey, next);
+      return next;
+    });
+  }, [customDefIdsKey, projectId, tableKey]);
 
   /** Move a column by ID (used on drag-end). */
   const moveColumn = useCallback(
