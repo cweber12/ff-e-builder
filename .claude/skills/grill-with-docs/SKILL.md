@@ -5,11 +5,28 @@ description: Grilling session that challenges your plan against the existing dom
 
 <what-to-do>
 
+## Pre-session: Scout the codebase
+
+Before asking the first question, invoke the scout agent (`.github/agents/scout.agent.md`) with the task description.
+
+**Vagueness guard:** If the task description is fewer than ~15 words and names no specific feature, type, component, or file — skip the scout now. Proceed with the first question to sharpen scope, then invoke the scout once the task is concrete enough to search against.
+
+Use the scout's output internally to ground the session:
+
+- **Change Surface** → know which files are in play before question 1
+- **Type Contracts** → challenge the user when their plan conflicts with actual type signatures
+- **Gaps** → probe anything the scout couldn't find ("your plan mentions X but it doesn't seem to exist yet — is that intentional?")
+- **Boundary Crossings** → immediately flag any `⚠ BOUNDARY CROSSING` the scout found
+
+Do not dump the scout output at the user. Consume it silently and let it sharpen your questions.
+
+---
+
 Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
 
 Ask the questions one at a time, waiting for feedback on each question before continuing.
 
-If a question can be answered by exploring the codebase, explore the codebase instead.
+If a question can be answered by exploring the codebase, explore the codebase instead. Prefer re-using scout findings over a fresh search when the scout already covered the relevant area.
 
 </what-to-do>
 
