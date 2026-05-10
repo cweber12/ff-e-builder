@@ -8,7 +8,7 @@ import {
   signOut,
   useAuthUser,
 } from '../../lib/auth';
-import { seedExampleProject } from '../../lib/seed';
+import { seedExampleProject } from '../../data/seed';
 import { useUserProfile } from '../../hooks';
 import { UserProfileModal } from './UserProfileModal';
 import { DemoPage } from '../../pages/DemoPage';
