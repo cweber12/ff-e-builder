@@ -7,6 +7,7 @@ import {
   type ChangeEvent,
   type MouseEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import {
   closestCenter,
   DndContext,
@@ -72,7 +73,7 @@ import {
 import { AddGroupModal } from '../../shared/AddGroupModal';
 import { SortableColHeader } from '../../shared/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
-import { ColumnManagerPopover } from '../../shared/ColumnManagerPopover';
+import { AddColumnModal } from '../../shared/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
 
@@ -203,14 +204,6 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           Add category
         </Button>
         <div className="flex items-center gap-2">
-          <ColumnManagerPopover
-            hiddenDefaults={hiddenColumnDefaults}
-            allowCustomColumns
-            onRestoreDefault={columnConfig.restoreDefaultColumn}
-            onAddCustomColumn={async (label) => {
-              await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
-            }}
-          />
           {project && (
             <ExportMenu
               label="Export"
@@ -313,6 +306,11 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
             await updateColumnDef.mutateAsync({ defId, patch: { label } });
           }}
           onDeleteCustomColumn={(defId) => deleteColumnDef.mutate(defId)}
+          hiddenDefaults={hiddenColumnDefaults}
+          onRestoreDefault={columnConfig.restoreDefaultColumn}
+          onAddCustomColumn={async (label) => {
+            await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
+          }}
         />
       ))}
 
@@ -562,19 +560,33 @@ const menuItemClassName =
 
 function CategoryActionsMenu({
   categoryName,
+  hiddenDefaults,
   onCategoryDelete,
+  onAddItem,
+  onRestoreDefault,
+  onOpenAddColumnModal,
 }: {
   categoryName: string;
+  hiddenDefaults: { id: string; label: string }[];
   onCategoryDelete: () => void;
+  onAddItem: () => void;
+  onRestoreDefault: (id: string) => void;
+  onOpenAddColumnModal: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [columnSubmenuOpen, setColumnSubmenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const columnTriggerRef = useRef<HTMLButtonElement>(null);
+  const columnSubmenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (event: globalThis.MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const inMain = ref.current?.contains(event.target as Node) ?? false;
+      const inSubmenu = columnSubmenuRef.current?.contains(event.target as Node) ?? false;
+      if (!inMain && !inSubmenu) {
         setOpen(false);
+        setColumnSubmenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -607,6 +619,73 @@ function CategoryActionsMenu({
           <button
             type="button"
             role="menuitem"
+            className={menuItemClassName}
+            onClick={() => runAction(onAddItem)}
+          >
+            Add item
+          </button>
+          <div className="relative">
+            <button
+              ref={columnTriggerRef}
+              type="button"
+              role="menuitem"
+              aria-haspopup="menu"
+              aria-expanded={columnSubmenuOpen}
+              className={cn(menuItemClassName, 'justify-between')}
+              onClick={() => setColumnSubmenuOpen((v) => !v)}
+            >
+              Add column
+              <ChevronIcon direction="right" />
+            </button>
+            {columnSubmenuOpen &&
+              columnTriggerRef.current &&
+              createPortal(
+                <div
+                  ref={columnSubmenuRef}
+                  role="menu"
+                  style={{
+                    position: 'fixed',
+                    top: columnTriggerRef.current.getBoundingClientRect().top,
+                    left: columnTriggerRef.current.getBoundingClientRect().right + 4,
+                  }}
+                  className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                >
+                  {hiddenDefaults.map((col) => (
+                    <button
+                      key={col.id}
+                      type="button"
+                      role="menuitem"
+                      className={menuItemClassName}
+                      onClick={() => {
+                        setColumnSubmenuOpen(false);
+                        setOpen(false);
+                        onRestoreDefault(col.id);
+                      }}
+                    >
+                      {col.label}
+                    </button>
+                  ))}
+                  {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={menuItemClassName}
+                    onClick={() => {
+                      setColumnSubmenuOpen(false);
+                      setOpen(false);
+                      onOpenAddColumnModal();
+                    }}
+                  >
+                    Add custom column...
+                  </button>
+                </div>,
+                document.body,
+              )}
+          </div>
+          <div className="my-1 h-px bg-gray-100" />
+          <button
+            type="button"
+            role="menuitem"
             className={cn(menuItemClassName, 'text-danger-600')}
             onClick={() => runAction(onCategoryDelete)}
           >
@@ -636,6 +715,9 @@ function ProposalCategorySection({
   onHideColumn,
   onRenameCustomColumn,
   onDeleteCustomColumn,
+  hiddenDefaults,
+  onRestoreDefault,
+  onAddCustomColumn,
 }: {
   projectId: string;
   categoryId: string;
@@ -654,11 +736,15 @@ function ProposalCategorySection({
   onHideColumn: (id: string) => void;
   onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
   onDeleteCustomColumn: (defId: string) => void;
+  hiddenDefaults: { id: string; label: string }[];
+  onRestoreDefault: (id: string) => void;
+  onAddCustomColumn: (label: string) => Promise<void>;
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const updateItem = useUpdateProposalItem();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items]);
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -730,21 +816,19 @@ function ProposalCategorySection({
           <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
             {formatMoney(cents(subtotalCents))}
           </span>
-          <button
-            type="button"
-            aria-label={`Add item to ${categoryName}`}
-            title={`Add item to ${categoryName}`}
-            onClick={() =>
+          <CategoryActionsMenu
+            categoryName={categoryName}
+            hiddenDefaults={hiddenDefaults}
+            onCategoryDelete={onCategoryDelete}
+            onAddItem={() =>
               createItem.mutate({
                 sortOrder: items.length,
                 productTag: `${categoryName.slice(0, 2).toUpperCase()}-${items.length + 1}`,
               })
             }
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          >
-            <PlusIcon />
-          </button>
-          <CategoryActionsMenu categoryName={categoryName} onCategoryDelete={onCategoryDelete} />
+            onRestoreDefault={onRestoreDefault}
+            onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
+          />
           {!collapsed && (
             <button
               type="button"
@@ -975,6 +1059,11 @@ function ProposalCategorySection({
           </div>
         </div>
       )}
+      <AddColumnModal
+        open={addColumnModalOpen}
+        onClose={() => setAddColumnModalOpen(false)}
+        onSubmit={onAddCustomColumn}
+      />
     </GroupedTableSection>
   );
 }

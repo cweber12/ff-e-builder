@@ -1,5 +1,6 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import {
   closestCenter,
   DndContext,
@@ -78,7 +79,7 @@ import {
 } from '../../shared/TableViewWrappers';
 import { AddGroupModal } from '../../shared/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
-import { ColumnManagerPopover } from '../../shared/ColumnManagerPopover';
+import { AddColumnModal } from '../../shared/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
 
 /**
@@ -1186,22 +1187,36 @@ function RoomActionsMenu({
   rooms,
   project,
   columnDefs,
+  hiddenDefaults,
   onDeleteRoom,
+  onAddItem,
+  onRestoreDefault,
+  onOpenAddColumnModal,
 }: {
   room: RoomWithItems;
   rooms: RoomWithItems[];
   project?: Project;
   columnDefs: import('../../../types').CustomColumnDef[];
+  hiddenDefaults: { id: string; label: string }[];
   onDeleteRoom: () => void;
+  onAddItem: () => void;
+  onRestoreDefault: (id: string) => void;
+  onOpenAddColumnModal: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [columnSubmenuOpen, setColumnSubmenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const columnTriggerRef = useRef<HTMLButtonElement>(null);
+  const columnSubmenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const inMain = ref.current?.contains(event.target as Node) ?? false;
+      const inSubmenu = columnSubmenuRef.current?.contains(event.target as Node) ?? false;
+      if (!inMain && !inSubmenu) {
         setOpen(false);
+        setColumnSubmenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -1231,6 +1246,73 @@ function RoomActionsMenu({
           role="menu"
           className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
         >
+          <button
+            type="button"
+            role="menuitem"
+            className={menuItemClassName}
+            onClick={() => runAction(onAddItem)}
+          >
+            Add item
+          </button>
+          <div className="relative">
+            <button
+              ref={columnTriggerRef}
+              type="button"
+              role="menuitem"
+              aria-haspopup="menu"
+              aria-expanded={columnSubmenuOpen}
+              className={cn(menuItemClassName, 'justify-between')}
+              onClick={() => setColumnSubmenuOpen((v) => !v)}
+            >
+              Add column
+              <ChevronIcon direction="right" />
+            </button>
+            {columnSubmenuOpen &&
+              columnTriggerRef.current &&
+              createPortal(
+                <div
+                  ref={columnSubmenuRef}
+                  role="menu"
+                  style={{
+                    position: 'fixed',
+                    top: columnTriggerRef.current.getBoundingClientRect().top,
+                    left: columnTriggerRef.current.getBoundingClientRect().right + 4,
+                  }}
+                  className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                >
+                  {hiddenDefaults.map((col) => (
+                    <button
+                      key={col.id}
+                      type="button"
+                      role="menuitem"
+                      className={menuItemClassName}
+                      onClick={() => {
+                        setColumnSubmenuOpen(false);
+                        setOpen(false);
+                        onRestoreDefault(col.id);
+                      }}
+                    >
+                      {col.label}
+                    </button>
+                  ))}
+                  {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={menuItemClassName}
+                    onClick={() => {
+                      setColumnSubmenuOpen(false);
+                      setOpen(false);
+                      onOpenAddColumnModal();
+                    }}
+                  >
+                    Add custom column...
+                  </button>
+                </div>,
+                document.body,
+              )}
+          </div>
+          <div className="my-1 h-px bg-gray-100" />
           {project && (
             <>
               <button
@@ -1312,6 +1394,7 @@ function RoomItemsSection({
   const deleteColumnDef = useDeleteItemColumnDef(projectId);
   const columnConfig = useColumnConfig(projectId, 'ffe', DEFAULT_COLUMN_IDS, columnDefs);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
   const [detailItem, setDetailItem] = useState<Item | null>(null);
@@ -1504,45 +1587,27 @@ function RoomItemsSection({
           {formatMoney(cents(subtotal))}
         </span>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            aria-label={`Add item to ${room.name}`}
-            title={`Add item to ${room.name}`}
-            onClick={() => setAddDrawerOpen(true)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          >
-            <PlusIcon />
-          </button>
           <RoomActionsMenu
             room={room}
             rooms={rooms}
             {...(project !== undefined ? { project } : {})}
             columnDefs={columnDefs}
+            hiddenDefaults={hiddenDefaultColumns}
             onDeleteRoom={() => onDeleteRoom(room)}
+            onAddItem={() => setAddDrawerOpen(true)}
+            onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+            onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
           />
           {!isMobile && !collapsed && (
-            <>
-              <ColumnManagerPopover
-                hiddenDefaults={hiddenDefaultColumns}
-                allowCustomColumns
-                onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
-                onAddCustomColumn={async (label) => {
-                  await createColumnDef.mutateAsync({
-                    label,
-                    sortOrder: columnDefs.length,
-                  });
-                }}
-              />
-              <button
-                type="button"
-                aria-label="Expand table view"
-                title="Expand table view"
-                onClick={() => setIsExpanded(true)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                <ExpandIcon />
-              </button>
-            </>
+            <button
+              type="button"
+              aria-label="Expand table view"
+              title="Expand table view"
+              onClick={() => setIsExpanded(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            >
+              <ExpandIcon />
+            </button>
           )}
         </div>
       </GroupedTableHeader>
@@ -1707,17 +1772,14 @@ function RoomItemsSection({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <ColumnManagerPopover
-                  hiddenDefaults={hiddenDefaultColumns}
-                  allowCustomColumns
-                  onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
-                  onAddCustomColumn={async (label) => {
-                    await createColumnDef.mutateAsync({
-                      label,
-                      sortOrder: columnDefs.length,
-                    });
-                  }}
-                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAddColumnModalOpen(true)}
+                >
+                  Add column
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"
@@ -1820,6 +1882,13 @@ function RoomItemsSection({
           onClose={() => setDetailItem(null)}
         />
       )}
+      <AddColumnModal
+        open={addColumnModalOpen}
+        onClose={() => setAddColumnModalOpen(false)}
+        onSubmit={async (label) => {
+          await createColumnDef.mutateAsync({ label, sortOrder: columnDefs.length });
+        }}
+      />
     </GroupedTableSection>
   );
 }
