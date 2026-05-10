@@ -1,4 +1,4 @@
-import type { ImagePoint } from '../../lib/plans/geometry';
+import type { ImagePoint } from '../../lib/plans';
 
 export function LineOverlay({
   start,

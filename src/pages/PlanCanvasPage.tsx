@@ -35,7 +35,7 @@ import {
   type ImagePoint,
   type LineDraft,
   type RectDraft,
-} from '../lib/plans/geometry';
+} from '../lib/plans';
 import { imageKeys } from '../hooks/queryKeys';
 import type {
   CropParams,
