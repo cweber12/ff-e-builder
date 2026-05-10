@@ -184,7 +184,8 @@ async function openLivingRoomActions(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function openLivingRoomAddItem(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: 'Add item to Living Room' }));
+  await user.click(screen.getByRole('button', { name: 'Open options for Living Room' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
 }
 
 describe('ItemsTable', () => {

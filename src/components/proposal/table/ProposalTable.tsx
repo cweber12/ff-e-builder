@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -6,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type MouseEvent,
+  type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -780,7 +782,6 @@ function ProposalCategorySection({
     },
     [sortedItems, updateItem],
   );
-  const visibleColIds = useMemo(() => new Set(visibleColOrder), [visibleColOrder]);
   const itemCount = items.length;
 
   return (
@@ -925,7 +926,7 @@ function ProposalCategorySection({
                       onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                       onDelete={() => deleteItem.mutate(item.id)}
                       onRowClick={() => onItemClick(item)}
-                      visibleColIds={visibleColIds}
+                      visibleColOrder={visibleColOrder}
                       customColumnDefs={customColumnDefs}
                     />
                   ))}
@@ -1047,7 +1048,7 @@ function ProposalCategorySection({
                           onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                           onDelete={() => deleteItem.mutate(item.id)}
                           onRowClick={() => onItemClick(item)}
-                          visibleColIds={visibleColIds}
+                          visibleColOrder={visibleColOrder}
                           customColumnDefs={customColumnDefs}
                         />
                       ))}
@@ -1075,7 +1076,7 @@ function ProposalRow({
   onSave,
   onDelete,
   onRowClick,
-  visibleColIds,
+  visibleColOrder,
   customColumnDefs,
 }: {
   projectId: string;
@@ -1084,7 +1085,7 @@ function ProposalRow({
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onDelete: () => void;
   onRowClick: () => void;
-  visibleColIds: Set<string>;
+  visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -1095,6 +1096,117 @@ function ProposalRow({
   const [swatchOpen, setSwatchOpen] = useState(false);
   const lineTotal = proposalLineTotalCents(item);
   const stopProp = (e: MouseEvent) => e.stopPropagation();
+
+  const cellRenderMap: Record<string, ReactNode> = {
+    rendering: (
+      <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
+        <ImageFrame
+          entityType="proposal_item"
+          entityId={item.id}
+          alt={`${item.productTag || 'Proposal'} rendering`}
+          className="h-20 w-[125px] max-w-full"
+          compact
+        />
+      </td>
+    ),
+    productTag: (
+      <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
+    ),
+    plan: (
+      <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
+        <ImageFrame
+          entityType="proposal_plan"
+          entityId={item.id}
+          alt={`${item.productTag || 'Proposal'} plan`}
+          className="h-20 w-[110px] max-w-full"
+          compact
+        />
+      </td>
+    ),
+    drawings: <EditableCell value={item.drawings} onSave={(drawings) => onSave({ drawings })} />,
+    location: <EditableCell value={item.location} onSave={(location) => onSave({ location })} />,
+    description: (
+      <EditableCell
+        value={item.description}
+        onSave={(description) => onSave({ description })}
+        className="min-w-64"
+      />
+    ),
+    notes: (
+      <EditableCell value={item.notes} onSave={(notes) => onSave({ notes })} className="min-w-48" />
+    ),
+    size: (
+      <td className="px-3 py-2" onClick={stopProp}>
+        <button
+          type="button"
+          onClick={() => setSizeOpen(true)}
+          className={cn(
+            'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+            item.sizeLabel
+              ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
+              : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
+          )}
+        >
+          {item.sizeLabel || 'Set size'}
+        </button>
+        <SizeModal
+          item={item}
+          open={sizeOpen}
+          onClose={() => setSizeOpen(false)}
+          onSave={(patch) => {
+            onSave(patch);
+            setSizeOpen(false);
+          }}
+        />
+      </td>
+    ),
+    swatch: (
+      <td className="min-w-36 px-3 py-2" onClick={stopProp}>
+        <MaterialBadges materials={item.materials} onOpen={() => setSwatchOpen(true)} />
+        <MaterialLibraryModal
+          open={swatchOpen}
+          projectId={projectId}
+          context="proposal"
+          categoryId={categoryId}
+          item={item}
+          onClose={() => setSwatchOpen(false)}
+        />
+      </td>
+    ),
+    cbm: (
+      <NumberCell
+        value={item.cbm}
+        step="0.001"
+        onSave={(cbm) => onSave({ cbm })}
+        className="w-24"
+      />
+    ),
+    quantity: (
+      <QuantityCell
+        quantity={item.quantity}
+        quantityUnit={item.quantityUnit}
+        onSaveQuantity={(quantity) => onSave({ quantity })}
+        onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+      />
+    ),
+    unitCost: (
+      <MoneyCell
+        valueCents={item.unitCostCents}
+        onSave={(unitCostCents) => onSave({ unitCostCents })}
+      />
+    ),
+    ...Object.fromEntries(
+      customColumnDefs.map((def) => [
+        def.id,
+        <EditableCell
+          value={item.customData[def.id] ?? ''}
+          onSave={(value) => {
+            onSave({ customData: { ...item.customData, [def.id]: value } });
+          }}
+        />,
+      ]),
+    ),
+  };
 
   return (
     <tr
@@ -1117,122 +1229,9 @@ function ProposalRow({
           <GripIcon />
         </button>
       </td>
-      {visibleColIds.has('rendering') && (
-        <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
-          <ImageFrame
-            entityType="proposal_item"
-            entityId={item.id}
-            alt={`${item.productTag || 'Proposal'} rendering`}
-            className="h-20 w-[125px] max-w-full"
-            compact
-          />
-        </td>
-      )}
-      {visibleColIds.has('productTag') && (
-        <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
-      )}
-      {visibleColIds.has('plan') && (
-        <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
-          <ImageFrame
-            entityType="proposal_plan"
-            entityId={item.id}
-            alt={`${item.productTag || 'Proposal'} plan`}
-            className="h-20 w-[110px] max-w-full"
-            compact
-          />
-        </td>
-      )}
-      {visibleColIds.has('drawings') && (
-        <EditableCell value={item.drawings} onSave={(drawings) => onSave({ drawings })} />
-      )}
-      {visibleColIds.has('location') && (
-        <EditableCell value={item.location} onSave={(location) => onSave({ location })} />
-      )}
-      {visibleColIds.has('description') && (
-        <EditableCell
-          value={item.description}
-          onSave={(description) => onSave({ description })}
-          className="min-w-64"
-        />
-      )}
-      {visibleColIds.has('notes') && (
-        <EditableCell
-          value={item.notes}
-          onSave={(notes) => onSave({ notes })}
-          className="min-w-48"
-        />
-      )}
-      {visibleColIds.has('size') && (
-        <td className="px-3 py-2" onClick={stopProp}>
-          <button
-            type="button"
-            onClick={() => setSizeOpen(true)}
-            className={cn(
-              'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-              item.sizeLabel
-                ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
-                : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
-            )}
-          >
-            {item.sizeLabel || 'Set size'}
-          </button>
-          <SizeModal
-            item={item}
-            open={sizeOpen}
-            onClose={() => setSizeOpen(false)}
-            onSave={(patch) => {
-              onSave(patch);
-              setSizeOpen(false);
-            }}
-          />
-        </td>
-      )}
-      {visibleColIds.has('swatch') && (
-        <td className="min-w-36 px-3 py-2" onClick={stopProp}>
-          <MaterialBadges materials={item.materials} onOpen={() => setSwatchOpen(true)} />
-          <MaterialLibraryModal
-            open={swatchOpen}
-            projectId={projectId}
-            context="proposal"
-            categoryId={categoryId}
-            item={item}
-            onClose={() => setSwatchOpen(false)}
-          />
-        </td>
-      )}
-      {visibleColIds.has('cbm') && (
-        <NumberCell
-          value={item.cbm}
-          step="0.001"
-          onSave={(cbm) => onSave({ cbm })}
-          className="w-24"
-        />
-      )}
-      {visibleColIds.has('quantity') && (
-        <QuantityCell
-          quantity={item.quantity}
-          quantityUnit={item.quantityUnit}
-          onSaveQuantity={(quantity) => onSave({ quantity })}
-          onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
-        />
-      )}
-      {visibleColIds.has('unitCost') && (
-        <MoneyCell
-          valueCents={item.unitCostCents}
-          onSave={(unitCostCents) => onSave({ unitCostCents })}
-        />
-      )}
-      {customColumnDefs
-        .filter((def) => visibleColIds.has(def.id))
-        .map((def) => (
-          <EditableCell
-            key={def.id}
-            value={item.customData[def.id] ?? ''}
-            onSave={(value) => {
-              onSave({ customData: { ...item.customData, [def.id]: value } });
-            }}
-          />
-        ))}
+      {visibleColOrder.map((colId) => (
+        <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
+      ))}
       <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
         {formatMoney(cents(lineTotal))}
       </td>

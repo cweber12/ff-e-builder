@@ -81,6 +81,7 @@ import { AddGroupModal } from '../../shared/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
+import { SortableColHeader } from '../../shared/SortableColHeader';
 
 /**
  * Stable IDs for built-in columns — used as keys in useColumnConfig.
@@ -1714,19 +1715,49 @@ function RoomItemsSection({
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr key={headerGroup.id}>
                         <SortableContext
-                          items={columnConfig.visibleOrder}
+                          items={columnConfig.visibleOrder.filter(
+                            (id) => id !== 'drag' && id !== 'actions',
+                          )}
                           strategy={horizontalListSortingStrategy}
                         >
-                          {headerGroup.headers.map((header) => (
-                            <th
-                              key={header.id}
-                              className="border-b border-gray-100 px-3 py-3 font-semibold"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </th>
-                          ))}
+                          {headerGroup.headers.map((header) => {
+                            const colId = header.column.id;
+                            if (colId === 'drag' || colId === 'actions') {
+                              return (
+                                <th
+                                  key={header.id}
+                                  className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                >
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                      )}
+                                </th>
+                              );
+                            }
+                            if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
+                              return (
+                                <SortableColHeader
+                                  key={header.id}
+                                  colId={colId}
+                                  label={header.column.columnDef.header as string}
+                                  className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                  onHide={() => columnConfig.hideDefaultColumn(colId)}
+                                />
+                              );
+                            }
+                            return (
+                              <SortableColHeader
+                                key={header.id}
+                                colId={colId}
+                                className="border-b border-gray-100 px-3 py-3 font-semibold min-w-36"
+                              >
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                              </SortableColHeader>
+                            );
+                          })}
                         </SortableContext>
                       </tr>
                     ))}
@@ -1822,22 +1853,52 @@ function RoomItemsSection({
                         {table.getHeaderGroups().map((headerGroup) => (
                           <tr key={headerGroup.id}>
                             <SortableContext
-                              items={columnConfig.visibleOrder}
+                              items={columnConfig.visibleOrder.filter(
+                                (id) => id !== 'drag' && id !== 'actions',
+                              )}
                               strategy={horizontalListSortingStrategy}
                             >
-                              {headerGroup.headers.map((header) => (
-                                <th
-                                  key={header.id}
-                                  className="border-b border-gray-100 px-3 py-3 font-semibold"
-                                >
-                                  {header.isPlaceholder
-                                    ? null
-                                    : flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext(),
-                                      )}
-                                </th>
-                              ))}
+                              {headerGroup.headers.map((header) => {
+                                const colId = header.column.id;
+                                if (colId === 'drag' || colId === 'actions') {
+                                  return (
+                                    <th
+                                      key={header.id}
+                                      className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                    >
+                                      {header.isPlaceholder
+                                        ? null
+                                        : flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext(),
+                                          )}
+                                    </th>
+                                  );
+                                }
+                                if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
+                                  return (
+                                    <SortableColHeader
+                                      key={header.id}
+                                      colId={colId}
+                                      label={header.column.columnDef.header as string}
+                                      className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                      onHide={() => columnConfig.hideDefaultColumn(colId)}
+                                    />
+                                  );
+                                }
+                                return (
+                                  <SortableColHeader
+                                    key={header.id}
+                                    colId={colId}
+                                    className="border-b border-gray-100 px-3 py-3 font-semibold min-w-36"
+                                  >
+                                    {flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext(),
+                                    )}
+                                  </SortableColHeader>
+                                );
+                              })}
                             </SortableContext>
                           </tr>
                         ))}
