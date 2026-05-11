@@ -18,12 +18,31 @@ export type SecondPassResult = {
   missingLabels: string[];
 };
 
+export type GroupedRow = {
+  rowStart: number; // 1-based, first raw row of this logical item
+  rowEnd: number; // 1-based, last raw row of this logical item
+  values: string[]; // merged column values — sub-row non-empty values joined with '\n'
+};
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SCAN_LIMIT = 25;
 const MIN_HEADER_CELLS = 2;
 const CONSISTENCY_ROWS = 3;
 const MIN_SCORE = 0.25;
+const ID_DETECTION_THRESHOLD = 3;
+
+export const ITEM_ID_PATTERN = /^[A-Za-z]+-?\s*\d+$/;
+
+const ID_COLUMN_ALIASES = [
+  'id',
+  'item id',
+  'item no',
+  'item number',
+  'item tag',
+  'ref',
+  'reference',
+];
 
 export const SUMMARY_ROW_PATTERNS = [
   /^total$/i,
@@ -92,11 +111,16 @@ export function columnsToRecord(columns: ImportColumn[], values: string[]): Reco
 
 // ─── Header detection ─────────────────────────────────────────────────────────
 
-function scoreHeaderCandidate(rows: string[][], rowIndex: number): number {
+function scoreHeaderCandidate(
+  rows: string[][],
+  rowIndex: number,
+  skipColumns?: Set<number>,
+): number {
   const row = rows[rowIndex] ?? [];
 
   const labelCols: number[] = [];
   for (let i = 0; i < row.length; i++) {
+    if (skipColumns?.has(i)) continue;
     const cell = row[i]?.trim() ?? '';
     if (cell && !isPurelyNumeric(cell)) labelCols.push(i);
   }
@@ -116,13 +140,17 @@ function scoreHeaderCandidate(rows: string[][], rowIndex: number): number {
   return labelScore * 0.4 + consistencyScore * 0.6;
 }
 
-export function detectTableHeader(rows: string[][], scanLimit = SCAN_LIMIT): number | null {
+export function detectTableHeader(
+  rows: string[][],
+  scanLimit = SCAN_LIMIT,
+  skipColumns?: Set<number>,
+): number | null {
   let bestIndex = -1;
   let bestScore = 0;
   const limit = Math.min(rows.length, scanLimit);
 
   for (let i = 0; i < limit; i++) {
-    const score = scoreHeaderCandidate(rows, i);
+    const score = scoreHeaderCandidate(rows, i, skipColumns);
     if (score > bestScore) {
       bestScore = score;
       bestIndex = i;
@@ -143,6 +171,75 @@ export function extractTableRows(rows: string[][], startIndex: number): string[]
     result.push(row);
   }
   return result;
+}
+
+// ─── ID column detection ──────────────────────────────────────────────────────
+
+// Returns the column key of the item ID column, or null if none found.
+// Strategy A: header alias match. Strategy B: pattern scan fallback.
+export function detectIdColumn(columns: ImportColumn[], dataRows: string[][]): string | null {
+  const aliasMatch = columns.find((col) => ID_COLUMN_ALIASES.includes(normalizeLabel(col.label)));
+  if (aliasMatch) return aliasMatch.key;
+
+  let bestKey: string | null = null;
+  let bestCount = 0;
+  for (const col of columns) {
+    const colIndex = col.columnNumber - 1;
+    const count = dataRows.filter((row) =>
+      ITEM_ID_PATTERN.test(row[colIndex]?.trim() ?? ''),
+    ).length;
+    if (count > bestCount) {
+      bestCount = count;
+      bestKey = col.key;
+    }
+  }
+  return bestCount >= ID_DETECTION_THRESHOLD ? bestKey : null;
+}
+
+// ─── ID-anchored row grouping ─────────────────────────────────────────────────
+
+// Groups raw rows into logical items using the ID column as the anchor.
+// Empty rows are skipped (not treated as item boundaries). Stops at summary
+// rows or stopIndex. Sub-row values are merged into the parent with '\n'.
+export function groupRowsById(
+  rows: string[][],
+  startIndex: number,
+  idColumnIndex: number,
+  stopIndex?: number,
+): GroupedRow[] {
+  const grouped: GroupedRow[] = [];
+  let current: GroupedRow | null = null;
+  const limit = stopIndex ?? rows.length;
+
+  for (let i = startIndex; i < limit; i++) {
+    const row = rows[i] ?? [];
+    const rowNumber = i + 1; // 1-based
+
+    if (isEmptyRow(row)) continue;
+    if (isSummaryRow(row)) break;
+
+    const idCell = row[idColumnIndex]?.trim() ?? '';
+    const isNewItem = ITEM_ID_PATTERN.test(idCell);
+
+    if (isNewItem) {
+      if (current) grouped.push(current);
+      current = { rowStart: rowNumber, rowEnd: rowNumber, values: [...row] };
+    } else if (current) {
+      current.rowEnd = rowNumber;
+      const maxLen = Math.max(current.values.length, row.length);
+      for (let col = 0; col < maxLen; col++) {
+        const existing = current.values[col]?.trim() ?? '';
+        const newVal = row[col]?.trim() ?? '';
+        if (newVal) {
+          current.values[col] = existing ? `${existing}\n${newVal}` : newVal;
+        }
+      }
+    }
+    // sub-rows before the first ID are silently discarded
+  }
+
+  if (current) grouped.push(current);
+  return grouped;
 }
 
 // ─── Second-pass scan (user-entered headers) ──────────────────────────────────

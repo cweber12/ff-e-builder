@@ -17,6 +17,7 @@ import {
   parseProposalSpreadsheetWithLabels,
   rowHasImportableContent,
   type ParsedProposalSpreadsheet,
+  type ProposalImportColumn,
   type ProposalImportColumnMap,
   type ProposalImportField,
   type ProposalImportImage,
@@ -204,7 +205,7 @@ export function ImportProposalExcelModal({
         skippedRows.push({ ...row, skippedReason: row.skippedReason ?? 'Summary row' });
         continue;
       }
-      if (rowHasImportableContent(row, mapping)) {
+      if (rowHasImportableContent(row)) {
         importableRows.push(row);
       } else {
         skippedRows.push({ ...row, skippedReason: 'No mapped data' });
@@ -212,7 +213,7 @@ export function ImportProposalExcelModal({
     }
 
     return { importableRows, skippedRows };
-  }, [mapping, parsed]);
+  }, [parsed]);
 
   const handleImport = async () => {
     if (!parsed) return;
@@ -297,7 +298,10 @@ export function ImportProposalExcelModal({
         }
 
         try {
-          const item = await api.proposal.createItem(categoryId, buildProposalItem(row, mapping));
+          const item = await api.proposal.createItem(
+            categoryId,
+            buildProposalItem(row, mapping, parsed.columns),
+          );
           const rowImageUploads = [
             ...selectedImages(row, mapping.rendering, 1).map((image, index) => ({
               image,
@@ -429,6 +433,12 @@ export function ImportProposalExcelModal({
 
   const previewRows = importPlan.importableRows.slice(0, 6);
   const headers = parsed?.columns ?? [];
+
+  const customColumnLabels = useMemo(() => {
+    if (!parsed) return [];
+    const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
+    return parsed.columns.filter((col) => !usedKeys.has(col.key)).map((col) => col.label);
+  }, [parsed, mapping]);
 
   return (
     <Modal
@@ -591,6 +601,14 @@ export function ImportProposalExcelModal({
             </table>
           </div>
 
+          {customColumnLabels.length > 0 && (
+            <p className="text-sm text-gray-500">
+              {customColumnLabels.length} column
+              {customColumnLabels.length !== 1 ? 's' : ''} will be saved as custom data:{' '}
+              {customColumnLabels.join(', ')}
+            </p>
+          )}
+
           {!mapping.category && (
             <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-surface-muted p-3">
               <label className="shrink-0 text-sm font-medium text-gray-700">
@@ -691,7 +709,17 @@ export function ImportProposalExcelModal({
 function buildProposalItem(
   row: ProposalParsedRow,
   mapping: ProposalImportColumnMap,
+  allColumns: ProposalImportColumn[],
 ): CreateProposalItemInput {
+  const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
+  const customData: Record<string, string> = {};
+  for (const col of allColumns) {
+    if (!usedKeys.has(col.key)) {
+      const val = (row.values[col.key] ?? '').trim();
+      if (val) customData[col.label] = val;
+    }
+  }
+
   return {
     productTag: getValue(row, mapping.productTag),
     plan: getValue(row, mapping.plan),
@@ -703,6 +731,7 @@ function buildProposalItem(
     quantity: parseNumber(getValue(row, mapping.quantity), 1),
     quantityUnit: getValue(row, mapping.quantityUnit) || 'unit',
     unitCostCents: parseMoney(getValue(row, mapping.unitCost)),
+    customData: Object.keys(customData).length > 0 ? customData : undefined,
   };
 }
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  PROPOSAL_IMPORT_EMPTY_MAP,
   autoMapProposalColumns,
   imageToFile,
   isSummaryProposalRow,
@@ -64,18 +63,16 @@ describe('autoMapProposalColumns', () => {
 });
 
 describe('rowHasImportableContent', () => {
-  it('allows rows with any mapped value', () => {
+  it('allows rows with any non-empty value', () => {
     const row = {
       ...BASE_ROW,
       values: { tag: 'M-101' },
     };
 
-    expect(rowHasImportableContent(row, { ...PROPOSAL_IMPORT_EMPTY_MAP, productTag: 'tag' })).toBe(
-      true,
-    );
+    expect(rowHasImportableContent(row)).toBe(true);
   });
 
-  it('allows rows with an assigned embedded image even when text is blank', () => {
+  it('allows rows with an embedded image even when text is blank', () => {
     const row = {
       ...BASE_ROW,
       imagesByColumn: {
@@ -95,9 +92,7 @@ describe('rowHasImportableContent', () => {
       images: { rendering: [], plan: [], swatches: [] },
     };
 
-    expect(
-      rowHasImportableContent(row, { ...PROPOSAL_IMPORT_EMPTY_MAP, rendering: 'rendering' }),
-    ).toBe(true);
+    expect(rowHasImportableContent(row)).toBe(true);
   });
 });
 

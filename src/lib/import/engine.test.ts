@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   buildColumns,
   columnsToRecord,
+  detectIdColumn,
   detectTable,
   detectTableHeader,
   extractTableRows,
+  groupRowsById,
   isSummaryRow,
   normalizeLabel,
   scanForExactHeaders,
@@ -185,6 +187,20 @@ describe('detectTableHeader', () => {
     expect(detectTableHeader(rows, 2)).toBeNull();
     expect(detectTableHeader(rows, 5)).toBe(3);
   });
+
+  it('skips columns in skipColumns when scoring', () => {
+    // Row 0: real header with an IMAGE col (col index 2) that has no data below
+    // Row 1: first data row — without skip, IMAGE penalty could make row 1 win
+    const rows = [
+      ['', 'ID', 'Manufacturer', 'IMAGE', 'Type', 'Description', 'Location'],
+      ['', 'PL-1', 'Herman Miller', '', 'Chair', 'Aeron', 'Office'],
+      ['', 'PL-2', 'Knoll', '', 'Table', 'Saarinen', 'Dining'],
+      ['', 'PL-3', 'Herman Miller', '', 'Sofa', 'Eames', 'Lounge'],
+    ];
+    // Without skipColumns, IMAGE col (index 3) in row 0 has no data below → possible score dip
+    // With skipColumns={3}, row 0 should reliably win
+    expect(detectTableHeader(rows, 25, new Set([0, 3]))).toBe(0);
+  });
 });
 
 // ─── extractTableRows ─────────────────────────────────────────────────────────
@@ -354,5 +370,150 @@ describe('detectTable', () => {
     ];
     const result = detectTable(rows);
     expect(result!.rows).toHaveLength(1);
+  });
+});
+
+// ─── detectIdColumn ───────────────────────────────────────────────────────────
+
+describe('detectIdColumn', () => {
+  const cols = buildColumns(['ID', 'Manufacturer', 'Description', 'Location']);
+  const dataRows = [
+    ['PL-1', 'Herman Miller', 'Aeron Chair', 'Office'],
+    ['PL-2', 'Knoll', 'Barcelona Chair', 'Lounge'],
+    ['PL-3', 'Vitra', 'Eames Lounge', 'Living Room'],
+  ];
+
+  it('finds ID column by alias match', () => {
+    expect(detectIdColumn(cols, dataRows)).toBe('ID__1');
+  });
+
+  it('alias match is case-insensitive', () => {
+    const cols2 = buildColumns(['Item ID', 'Manufacturer']);
+    expect(detectIdColumn(cols2, dataRows)).toBe('Item ID__1');
+  });
+
+  it('falls back to pattern scan when header alias not found', () => {
+    const cols2 = buildColumns(['Reference', 'Make', 'Model']);
+    // 'reference' is in the alias list, so this tests that path too
+    expect(detectIdColumn(cols2, dataRows)).toBe('Reference__1');
+  });
+
+  it('uses pattern scan when alias does not match', () => {
+    const cols2 = buildColumns(['Tag No.', 'Make', 'Model']);
+    const rows = [
+      ['FF-1', 'Knoll', 'Saarinen'],
+      ['FF-2', 'Herman Miller', 'Aeron'],
+      ['FF-3', 'Vitra', 'Panton'],
+      ['FF-4', 'Cassina', 'LC2'],
+    ];
+    expect(detectIdColumn(cols2, rows)).toBe('Tag No.__1');
+  });
+
+  it('returns null when fewer than 3 pattern matches are found', () => {
+    const cols2 = buildColumns(['Code', 'Make', 'Model']);
+    const sparseRows = [
+      ['FF-1', 'Knoll', 'Saarinen'],
+      ['not an id', 'Herman Miller', 'Aeron'],
+      ['also not', 'Vitra', 'Panton'],
+    ];
+    expect(detectIdColumn(cols2, sparseRows)).toBeNull();
+  });
+});
+
+// ─── groupRowsById ────────────────────────────────────────────────────────────
+
+describe('groupRowsById', () => {
+  // Columns: 0=ID, 1=Manufacturer, 2=Description, 3=Location
+  // idColumnIndex = 0
+
+  it('groups a simple two-item table', () => {
+    const rows = [
+      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
+      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
+    ];
+    const grouped = groupRowsById(rows, 0, 0);
+    expect(grouped).toHaveLength(2);
+    expect(grouped[0]!.values[0]).toBe('PL-1');
+    expect(grouped[1]!.values[0]).toBe('PL-2');
+  });
+
+  it('merges sub-rows into parent with newline separator', () => {
+    const rows = [
+      ['PL-1', 'Herman Miller', 'Aeron Chair', 'Office'],
+      ['', '', 'Task chair, adjustable arms', ''],
+      ['', '', 'Lead time: 12 weeks', ''],
+      ['PL-2', 'Knoll', 'Barcelona Chair', 'Lounge'],
+    ];
+    const grouped = groupRowsById(rows, 0, 0);
+    expect(grouped).toHaveLength(2);
+    expect(grouped[0]!.values[2]).toBe(
+      'Aeron Chair\nTask chair, adjustable arms\nLead time: 12 weeks',
+    );
+    expect(grouped[0]!.rowStart).toBe(1);
+    expect(grouped[0]!.rowEnd).toBe(3);
+  });
+
+  it('skips empty rows without stopping', () => {
+    const rows = [
+      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
+      ['', '', '', ''],
+      ['', '', '', ''],
+      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
+    ];
+    const grouped = groupRowsById(rows, 0, 0);
+    expect(grouped).toHaveLength(2);
+  });
+
+  it('stops at a summary row', () => {
+    const rows = [
+      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
+      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
+      ['Total', '', '', ''],
+      ['PL-3', 'Vitra', 'Panton', 'Dining'],
+    ];
+    const grouped = groupRowsById(rows, 0, 0);
+    expect(grouped).toHaveLength(2);
+  });
+
+  it('respects stopIndex boundary', () => {
+    const rows = [
+      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
+      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
+      ['PL-3', 'Vitra', 'Panton', 'Dining'],
+    ];
+    const grouped = groupRowsById(rows, 0, 0, 2); // stop before row index 2
+    expect(grouped).toHaveLength(2);
+    expect(grouped[1]!.values[0]).toBe('PL-2');
+  });
+
+  it('discards orphan sub-rows before the first ID', () => {
+    const rows = [
+      ['', 'orphan sub-row', '', ''],
+      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
+    ];
+    const grouped = groupRowsById(rows, 0, 0);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0]!.values[0]).toBe('PL-1');
+  });
+
+  it('returns empty array when no ID rows are found', () => {
+    const rows = [
+      ['', 'no id', '', ''],
+      ['', 'no id', '', ''],
+    ];
+    expect(groupRowsById(rows, 0, 0)).toHaveLength(0);
+  });
+
+  it('uses 1-based row numbers in GroupedRow', () => {
+    const rows = [
+      ['PL-1', 'Knoll', 'Chair', 'Office'], // startIndex=0 → rowStart=1
+      ['', '', 'Sub-row detail', ''], // rowEnd=2
+      ['PL-2', 'Vitra', 'Table', 'Dining'], // rowStart=3
+    ];
+    const grouped = groupRowsById(rows, 0, 0);
+    expect(grouped[0]!.rowStart).toBe(1);
+    expect(grouped[0]!.rowEnd).toBe(2);
+    expect(grouped[1]!.rowStart).toBe(3);
+    expect(grouped[1]!.rowEnd).toBe(3);
   });
 });

@@ -1,15 +1,18 @@
 export {
   buildColumns,
   columnsToRecord,
+  detectIdColumn,
   detectTable,
   detectTableHeader,
   extractTableRows,
+  groupRowsById,
   isSummaryRow,
   normalizeLabel,
   scanForExactHeaders,
+  ITEM_ID_PATTERN,
   SUMMARY_ROW_PATTERNS,
 } from './engine';
-export type { DetectedTable, ImportColumn, SecondPassResult } from './engine';
+export type { DetectedTable, GroupedRow, ImportColumn, SecondPassResult } from './engine';
 
 export {
   autoMapColumns,

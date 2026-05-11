@@ -3,8 +3,10 @@ import * as XLSX from 'xlsx';
 import {
   buildColumns,
   columnsToRecord,
+  detectIdColumn,
   detectTableHeader,
   extractTableRows,
+  groupRowsById,
   isSummaryRow,
   normalizeLabel,
   scanForExactHeaders,
@@ -79,7 +81,19 @@ export type ParsedProposalSpreadsheet = {
 const FIELD_ALIASES: Record<ProposalImportField, string[]> = {
   category: ['category', 'table category', 'section'],
   rendering: ['rendering', 'render', 'image', 'product image'],
-  productTag: ['product tag', 'tag', 'product', 'item tag', 'product id'],
+  productTag: [
+    'product tag',
+    'tag',
+    'product',
+    'item tag',
+    'product id',
+    'id',
+    'item id',
+    'item no',
+    'item number',
+    'ref',
+    'reference',
+  ],
   plan: ['plan', 'plan image'],
   drawings: ['drawings', 'drawing', 'drawings / location', 'drawings location'],
   location: ['location', 'area', 'room', 'space'],
@@ -134,24 +148,10 @@ export async function parseProposalSpreadsheet(file: File): Promise<ParsedPropos
   return parseFlatProposalSpreadsheet(file, extension === 'csv' ? 'csv' : 'xls');
 }
 
-export function rowHasImportableContent(
-  row: ProposalParsedRow,
-  mapping: ProposalImportColumnMap,
-): boolean {
-  const hasMappedValue = (Object.keys(mapping) as ProposalImportField[]).some((field) => {
-    const columnKey = mapping[field];
-    if (!columnKey) return false;
-    return (row.values[columnKey] ?? '').trim().length > 0;
-  });
-  const hasMappedImage = (['rendering', 'plan', 'swatches'] as ProposalImportField[]).some(
-    (field) => {
-      const columnKey = mapping[field];
-      if (!columnKey) return false;
-      return (row.imagesByColumn[columnKey] ?? []).length > 0;
-    },
-  );
-
-  return hasMappedValue || hasMappedImage;
+export function rowHasImportableContent(row: ProposalParsedRow): boolean {
+  const hasValue = Object.values(row.values).some((v) => v.trim().length > 0);
+  const hasImage = Object.values(row.imagesByColumn).some((imgs) => imgs.length > 0);
+  return hasValue || hasImage;
 }
 
 export function isSummaryProposalRow(row: ProposalParsedRow): boolean {
@@ -183,7 +183,11 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
   const rawRows = readWorksheetRowsDense(worksheet);
   const images = extractWorksheetImages(workbook, worksheet);
 
-  const firstHeaderIndex = detectTableHeader(rawRows, 25);
+  // Columns that contain only embedded images have no text in data rows,
+  // which penalizes the consistency score of the real header row. Skip them.
+  const imageColumnIndices = new Set(images.map((img) => img.column - 1));
+
+  const firstHeaderIndex = detectTableHeader(rawRows, 25, imageColumnIndices);
   if (firstHeaderIndex === null) {
     warnings.push('No Proposal header row was detected.');
     return { ...emptyParsedProposal(file, 'xlsx'), sheetName: worksheet.name, warnings };
@@ -196,6 +200,15 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
     ...findRepeatHeaderIndices(rawRows, firstHeaderIndex + 1, columnAliases),
   ];
 
+  const dataRowsForIdDetection = rawRows.slice(firstHeaderIndex + 1);
+  const idColumnKey = detectIdColumn(sharedColumns, dataRowsForIdDetection);
+  const idColumn = idColumnKey ? sharedColumns.find((c) => c.key === idColumnKey) : null;
+  if (!idColumn) {
+    warnings.push(
+      'No item ID column detected — rows will not be grouped. Add item IDs (e.g. PL-1) to enable multi-row merging.',
+    );
+  }
+
   const sections: ProposalImportSection[] = [];
   const rows: ProposalParsedRow[] = [];
 
@@ -206,38 +219,83 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
     const categoryName = findCategoryName(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
     const sectionRows: ProposalParsedRow[] = [];
 
-    for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
-      const rowArray = rawRows[i] ?? [];
-      if (isRepeatHeader(rowArray, columnAliases)) continue;
+    if (idColumn) {
+      const grouped = groupRowsById(
+        rawRows,
+        headerIndex + 1,
+        idColumn.columnNumber - 1,
+        nextHeaderIndex,
+      );
 
-      const record = columnsToRecord(sharedColumns, rowArray);
-      const rowNumber = i + 1; // 1-based to match ExcelJS image coordinates
-      const imagesByColumn = assignImagesByColumn(images, rowNumber, sharedColumns);
-      const rowImages = assignRowImages(imagesByColumn, sharedColumns);
+      for (const g of grouped) {
+        if (isRepeatHeader(g.values, columnAliases)) continue;
 
-      const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
-      const hasImages =
-        rowImages.rendering.length > 0 ||
-        rowImages.plan.length > 0 ||
-        rowImages.swatches.length > 0;
-      if (!hasRawContent && !hasImages) continue;
+        const record = columnsToRecord(sharedColumns, g.values);
+        const imagesByColumn = assignImagesByColumnRange(
+          images,
+          g.rowStart,
+          g.rowEnd,
+          sharedColumns,
+        );
+        const rowImages = assignRowImages(imagesByColumn, sharedColumns);
 
-      const parsedRow: ProposalParsedRow = {
-        id: `${sectionIndex}:${rowNumber}`,
-        rowNumber,
-        categoryName,
-        values: record,
-        imagesByColumn,
-        images: rowImages,
-        sourceSectionIndex: sectionIndex,
-      };
+        const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
+        const hasImages =
+          rowImages.rendering.length > 0 ||
+          rowImages.plan.length > 0 ||
+          rowImages.swatches.length > 0;
+        if (!hasRawContent && !hasImages) continue;
 
-      if (isSummaryProposalRow(parsedRow)) {
-        parsedRow.skippedReason = 'Summary row';
+        const parsedRow: ProposalParsedRow = {
+          id: `${sectionIndex}:${g.rowStart}`,
+          rowNumber: g.rowStart,
+          categoryName,
+          values: record,
+          imagesByColumn,
+          images: rowImages,
+          sourceSectionIndex: sectionIndex,
+        };
+
+        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+        sectionRows.push(parsedRow);
+        rows.push(parsedRow);
       }
+    } else {
+      for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
+        const rowArray = rawRows[i] ?? [];
+        if (isRepeatHeader(rowArray, columnAliases)) continue;
 
-      sectionRows.push(parsedRow);
-      rows.push(parsedRow);
+        const record = columnsToRecord(sharedColumns, rowArray);
+        const rowNumber = i + 1;
+        const imagesByColumn = assignImagesByColumnRange(
+          images,
+          rowNumber,
+          rowNumber,
+          sharedColumns,
+        );
+        const rowImages = assignRowImages(imagesByColumn, sharedColumns);
+
+        const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
+        const hasImages =
+          rowImages.rendering.length > 0 ||
+          rowImages.plan.length > 0 ||
+          rowImages.swatches.length > 0;
+        if (!hasRawContent && !hasImages) continue;
+
+        const parsedRow: ProposalParsedRow = {
+          id: `${sectionIndex}:${rowNumber}`,
+          rowNumber,
+          categoryName,
+          values: record,
+          imagesByColumn,
+          images: rowImages,
+          sourceSectionIndex: sectionIndex,
+        };
+
+        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+        sectionRows.push(parsedRow);
+        rows.push(parsedRow);
+      }
     }
 
     sections.push({
@@ -293,6 +351,18 @@ async function parseFlatProposalSpreadsheet(
     ...findRepeatHeaderIndices(rawRows, firstHeaderIndex + 1, columnAliases),
   ];
 
+  const dataRowsForIdDetection = rawRows.slice(firstHeaderIndex + 1);
+  const idColumnKey = detectIdColumn(sharedColumns, dataRowsForIdDetection);
+  const idColumn = idColumnKey ? sharedColumns.find((c) => c.key === idColumnKey) : null;
+
+  const warnings: string[] = [];
+  if (!idColumn) {
+    warnings.push(
+      'No item ID column detected — rows will not be grouped. Add item IDs (e.g. PL-1) to enable multi-row merging.',
+    );
+  }
+  if (fileType === 'csv') warnings.push('CSV imports support image URLs only.');
+
   const sections: ProposalImportSection[] = [];
   const rows: ProposalParsedRow[] = [];
 
@@ -303,27 +373,57 @@ async function parseFlatProposalSpreadsheet(
     const categoryName = findCategoryName(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
     const sectionRows: ProposalParsedRow[] = [];
 
-    for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
-      const rowArray = rawRows[i] ?? [];
-      if (isRepeatHeader(rowArray, columnAliases)) continue;
+    if (idColumn) {
+      const grouped = groupRowsById(
+        rawRows,
+        headerIndex + 1,
+        idColumn.columnNumber - 1,
+        nextHeaderIndex,
+      );
 
-      const record = columnsToRecord(sharedColumns, rowArray);
-      if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
+      for (const g of grouped) {
+        if (isRepeatHeader(g.values, columnAliases)) continue;
 
-      const rowNumber = i + 1;
-      const parsedRow: ProposalParsedRow = {
-        id: `${sectionIndex}:${rowNumber}`,
-        rowNumber,
-        categoryName,
-        values: record,
-        imagesByColumn: {},
-        images: { rendering: [], plan: [], swatches: [] },
-        sourceSectionIndex: sectionIndex,
-      };
+        const record = columnsToRecord(sharedColumns, g.values);
+        if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
 
-      if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
-      sectionRows.push(parsedRow);
-      rows.push(parsedRow);
+        const parsedRow: ProposalParsedRow = {
+          id: `${sectionIndex}:${g.rowStart}`,
+          rowNumber: g.rowStart,
+          categoryName,
+          values: record,
+          imagesByColumn: {},
+          images: { rendering: [], plan: [], swatches: [] },
+          sourceSectionIndex: sectionIndex,
+        };
+
+        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+        sectionRows.push(parsedRow);
+        rows.push(parsedRow);
+      }
+    } else {
+      for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
+        const rowArray = rawRows[i] ?? [];
+        if (isRepeatHeader(rowArray, columnAliases)) continue;
+
+        const record = columnsToRecord(sharedColumns, rowArray);
+        if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
+
+        const rowNumber = i + 1;
+        const parsedRow: ProposalParsedRow = {
+          id: `${sectionIndex}:${rowNumber}`,
+          rowNumber,
+          categoryName,
+          values: record,
+          imagesByColumn: {},
+          images: { rendering: [], plan: [], swatches: [] },
+          sourceSectionIndex: sectionIndex,
+        };
+
+        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+        sectionRows.push(parsedRow);
+        rows.push(parsedRow);
+      }
     }
 
     sections.push({
@@ -342,7 +442,7 @@ async function parseFlatProposalSpreadsheet(
     rows,
     sections,
     projectImages: [],
-    warnings: fileType === 'csv' ? ['CSV imports support image URLs only.'] : [],
+    warnings,
   };
 }
 
@@ -440,7 +540,7 @@ function buildProposalFromSecondPass({
     const rowArray = dataRows[i] ?? [];
     const record = columnsToRecord(sharedColumns, rowArray);
     const rowNumber = secondPass.headerRowIndex + 2 + i;
-    const imagesByColumn = assignImagesByColumn(images, rowNumber, sharedColumns);
+    const imagesByColumn = assignImagesByColumnRange(images, rowNumber, rowNumber, sharedColumns);
     const rowImages = assignRowImages(imagesByColumn, sharedColumns);
     const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
     const hasImages =
@@ -617,12 +717,13 @@ function contentTypeForExtension(extension: string): string {
   return 'image/png';
 }
 
-function assignImagesByColumn(
+function assignImagesByColumnRange(
   images: ProposalImportImage[],
-  rowNumber: number,
+  rowStart: number,
+  rowEnd: number,
   columns: ProposalImportColumn[],
 ): Record<string, ProposalImportImage[]> {
-  const rowImages = images.filter((image) => image.row <= rowNumber && image.rowEnd >= rowNumber);
+  const rowImages = images.filter((img) => img.row <= rowEnd && img.rowEnd >= rowStart);
   const result: Record<string, ProposalImportImage[]> = {};
   for (const column of columns) {
     result[column.key] = largestColumnOverlap(rowImages, column);
