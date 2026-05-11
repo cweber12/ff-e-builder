@@ -1,3 +1,16 @@
+export {
+  buildColumns,
+  columnsToRecord,
+  detectTable,
+  detectTableHeader,
+  extractTableRows,
+  isSummaryRow,
+  normalizeLabel,
+  scanForExactHeaders,
+  SUMMARY_ROW_PATTERNS,
+} from './engine';
+export type { DetectedTable, ImportColumn, SecondPassResult } from './engine';
+
 export { autoMapColumns, parseExcelFile, transformRow, transformRows } from './ffe';
 export type { ColumnMap, ImportedItem, ParsedSpreadsheet } from './ffe';
 

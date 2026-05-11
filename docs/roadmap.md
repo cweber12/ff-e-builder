@@ -87,6 +87,30 @@ _Items flagged in senior frontend review (May 2026). No new data fields required
 - **Delete button has no confirmation** — MaterialGridCard calls `onDelete` directly on click with no modal. Add a confirmation step matching ItemsTable's pattern.
 - **Swatch `rounded-full` in table view** — circular crop destroys rectangular texture/fabric images. Use `rounded-md` instead.
 
+## Deferred from Import Engine session (2026-05-11)
+
+_All items below were scoped out of the unified import engine implementation. Pick these up in the next import session._
+
+### Horizontal table detection
+
+Spreadsheets with tables arranged side-by-side (same rows, different column ranges) are not handled by the scoring algorithm. The detection engine finds one table per sheet pass. Users should restructure horizontally-arranged tables before importing.
+
+- Add a help section describing valid import formats and how to restructure non-standard files.
+- Detect two or more disjoint column-range groups with matching header patterns in the same row window.
+
+### Import format help documentation
+
+Add a help tooltip or linked guide explaining what the detection algorithm looks for, valid input formats, and how to prepare files from common sources (supplier sheets, purchasing databases, etc.).
+
+### Column limit — total columns (custom + default)
+
+The current 10-column cap applies only to custom column defs per `(project, tableType)`. The cap should apply to total visible columns including default fields, so table width is consistently bounded regardless of how many built-in columns are present.
+
+- Update `MAX_COLUMN_DEFS` in `api/src/routes/columnDefs.ts` to enforce `total = default_column_count + custom_column_count ≤ limit`.
+- Surface the remaining capacity to the import UI so warnings are accurate.
+
+---
+
 ## Technical debt
 
 ### Route-based code splitting

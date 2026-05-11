@@ -17,6 +17,8 @@ Use the scout's output internally to ground the session:
 - **Type Contracts** → challenge the user when their plan conflicts with actual type signatures
 - **Gaps** → probe anything the scout couldn't find ("your plan mentions X but it doesn't seem to exist yet — is that intentional?")
 - **Boundary Crossings** → immediately flag any `⚠ BOUNDARY CROSSING` the scout found
+- **Import Inventory** → before assuming a component or hook is available in a file, check this. "X is not imported" means an import line must be added — flag it if it affects the plan.
+- **Dependency Chains** → before planning any prop change, check this. All three locations (definition on child, parent computation, call sites) must be updated together or a type error will ship.
 
 Do not dump the scout output at the user. Consume it silently and let it sharpen your questions.
 

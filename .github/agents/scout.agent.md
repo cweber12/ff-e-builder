@@ -65,7 +65,22 @@ Start here before doing a broad search:
 3. Use `Glob` to discover file candidates, `Grep` to find symbol usages, `Read` to inspect specific lines
 4. If a symbol is not found at the expected location, check: (a) the barrel index for that directory, (b) whether a shim at the old path re-exports from a new canonical location
 5. Rank findings: definition > direct caller > related context; canonical path > shim; same package > cross-package
+
+**Step 4a — Import inventory per change-surface file:**
+Once the change surface is known, read the import block (first ~40 lines) of each file listed there. For each symbol relevant to the task, record whether it is already imported. "X is NOT imported in Y" is a valid, high-value finding — report it explicitly alongside what is present.
+
+**Step 4b — Prop/variable dependency chain:**
+If any prop on a child component will change (type, name, or removal), trace the full chain before reporting:
+
+1. Its type definition on the child component
+2. Every call site that passes it (there may be multiple — compact view, expanded view, etc.)
+3. Any computation in a parent that produces the value being passed
+
+Report all three locations even when two are in the same file. Stopping at the definition causes missed-call-site and stale-parent-computation bugs.
+
 6. Format and return — do not editorialize or suggest changes
+
+**Scope discipline:** When the change surface is clear, spend the 10-finding budget on depth within those files rather than breadth across the repo. Explicitly omit: library version numbers, barrel paths for types not in the change surface, type shapes for entities the task will not modify.
 
 ## Output Format
 
@@ -96,6 +111,23 @@ Return structured Markdown only. Use this exact shape:
 ## Barrel Entry Points
 <Where consumers should import from — the barrel index path, not the canonical file. One entry per symbol.>
 Example: `RoomWithItems` → import from `'../types'` (defined in `src/types/room.ts`)
+
+## Import Inventory
+<For each file in the change surface, list which task-relevant symbols are already imported and which are not. Both present and absent findings are required — "X is NOT imported in Y" is as valuable as confirming it is.>
+Example:
+### src/components/foo/Bar.tsx
+- ✓ `useSortable` (from @dnd-kit/sortable)
+- ✗ `SortableColHeader` — not imported; lives in `../../shared/SortableColHeader`
+- ✗ `Fragment` — not imported from react
+
+## Dependency Chains
+<For any prop on a child component that the task will change (rename, retype, or remove), document the full chain: prop definition on child, parent-level computation that produces the value, and every call site that passes it. If no props cross component boundaries, write "None".>
+Example:
+### `visibleColIds` prop on `ProposalRow`
+- **Prop definition**: `ProposalTable.tsx` L1087 — `visibleColIds: Set<string>`
+- **Parent computation**: `ProposalTable.tsx` L783 — `const visibleColIds = useMemo(...)`
+- **Call sites**: L930 (compact view), L1050 (expanded view)
+- **Note**: Removing this prop requires removing the parent memo AND both call sites.
 
 ## Gaps
 <Symbols searched but not found, and what was tried. If nothing is missing, write "None".>
