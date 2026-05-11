@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { CreateItemInput } from '../api';
 import { itemStatuses } from '../../types';
+import { detectTableHeader, extractTableRows, normalizeLabel } from './engine';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,37 +99,45 @@ export async function parseExcelFile(file: File): Promise<ParsedSpreadsheet> {
   const sheet = wb.Sheets[sheetName];
   if (!sheet) return { headers: [], rows: [] };
   const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-
   if (raw.length === 0) return { headers: [], rows: [] };
 
-  const headers = (raw[0] as unknown[]).map((h) => spreadsheetValueToString(h).trim());
+  const allRows: string[][] = raw.map((rowArray) => rowArray.map(spreadsheetValueToString));
+
+  const headerRowIndex = detectTableHeader(allRows);
+  if (headerRowIndex === null) return { headers: [], rows: [] };
+
+  const headers = (allRows[headerRowIndex] ?? []).map((h) => h.trim());
+  const nonEmptyHeaders = headers.filter(Boolean);
+  if (nonEmptyHeaders.length === 0) return { headers: [], rows: [] };
+
+  const dataRows = extractTableRows(allRows, headerRowIndex + 1);
   const rows: Record<string, string>[] = [];
 
-  for (let i = 1; i < raw.length; i++) {
-    const rowArray = raw[i] as unknown[];
+  for (const rowArray of dataRows) {
     const record: Record<string, string> = {};
     let hasContent = false;
     for (let j = 0; j < headers.length; j++) {
       const header = headers[j];
       if (!header) continue;
-      const cell = spreadsheetValueToString(rowArray[j]).trim();
+      const cell = rowArray[j]?.trim() ?? '';
       record[header] = cell;
       if (cell) hasContent = true;
     }
     if (hasContent) rows.push(record);
   }
 
-  return { headers, rows };
+  return { headers: nonEmptyHeaders, rows };
 }
 
 // ─── Auto-mapping ─────────────────────────────────────────────────────────────
 
 export function autoMapColumns(headers: string[]): Partial<ColumnMap> {
-  const normalized = headers.map((h) => h.toLowerCase().trim());
   const result: Partial<ColumnMap> = {};
 
   for (const [field, aliases] of Object.entries(FIELD_ALIASES) as [keyof ColumnMap, string[]][]) {
-    const match = normalized.findIndex((h) => aliases.includes(h));
+    const match = headers.findIndex((h) =>
+      aliases.some((alias) => normalizeLabel(alias) === normalizeLabel(h)),
+    );
     if (match !== -1) {
       const header = headers[match];
       if (header !== undefined) result[field] = header;
