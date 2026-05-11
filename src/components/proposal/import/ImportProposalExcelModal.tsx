@@ -14,6 +14,7 @@ import {
   imageToFile,
   isSummaryProposalRow,
   parseProposalSpreadsheet,
+  parseProposalSpreadsheetWithLabels,
   rowHasImportableContent,
   type ParsedProposalSpreadsheet,
   type ProposalImportColumnMap,
@@ -34,7 +35,7 @@ type Props = {
   onSuccess: () => void;
 };
 
-type Step = 'upload' | 'map';
+type Step = 'upload' | 'headers-missing' | 'map';
 
 type ImportResult = {
   imported: number;
@@ -99,6 +100,9 @@ export function ImportProposalExcelModal({
     startedAt: null,
   });
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [userLabels, setUserLabels] = useState('');
+  const [missingLabels, setMissingLabels] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -110,6 +114,9 @@ export function ImportProposalExcelModal({
     setImporting(false);
     setResult(null);
     setProgress({ processed: 0, total: 0, startedAt: null });
+    setPendingFile(null);
+    setUserLabels('');
+    setMissingLabels([]);
   };
 
   useEffect(() => {
@@ -128,7 +135,8 @@ export function ImportProposalExcelModal({
     try {
       const data = await parseProposalSpreadsheet(file);
       if (data.columns.length === 0) {
-        setError('No Proposal table headers were found in this file.');
+        setPendingFile(file);
+        setStep('headers-missing');
         return;
       }
       setParsed(data);
@@ -138,6 +146,35 @@ export function ImportProposalExcelModal({
       setError('Failed to parse the file. Make sure it is a valid .xlsx, .xls, or .csv file.');
     }
   }, []);
+
+  const handleUserLabels = useCallback(async () => {
+    if (!pendingFile) return;
+    const labels = userLabels
+      .split(/[\n,]+/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (labels.length === 0) {
+      setError('Enter at least one column header name.');
+      return;
+    }
+    setError('');
+    try {
+      const { parsed: data, missingLabels: missing } = await parseProposalSpreadsheetWithLabels(
+        pendingFile,
+        labels,
+      );
+      if (data.columns.length === 0) {
+        setError('None of the column names were found. Check the spelling and try again.');
+        return;
+      }
+      setParsed(data);
+      setMapping(autoMapProposalColumns(data.columns));
+      setMissingLabels(missing);
+      setStep('map');
+    } catch {
+      setError('Failed to scan the file. Please try again.');
+    }
+  }, [pendingFile, userLabels]);
 
   const handleDrop = useCallback(
     (event: DragEvent) => {
@@ -450,6 +487,41 @@ export function ImportProposalExcelModal({
             </p>
           )}
         </div>
+      ) : step === 'headers-missing' ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-600">
+            Column headers were not detected automatically. Enter the column header names exactly as
+            they appear in your spreadsheet.
+          </p>
+          <textarea
+            value={userLabels}
+            onChange={(e) => setUserLabels(e.target.value)}
+            placeholder={'Category\nProduct Description\nQuantity\nUnit Cost'}
+            rows={5}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+          />
+          <p className="text-xs text-gray-500">One column name per line, or separated by commas.</p>
+          {error && (
+            <p role="alert" className="text-sm text-danger-600">
+              {error}
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setStep('upload');
+                setError('');
+              }}
+            >
+              Back
+            </Button>
+            <Button type="button" onClick={() => void handleUserLabels()}>
+              Find Columns
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col gap-4">
           <div className="grid gap-3 rounded-lg border border-gray-200 bg-surface-muted p-3 text-sm text-gray-700 md:grid-cols-4">
@@ -535,6 +607,13 @@ export function ImportProposalExcelModal({
           {error && (
             <p role="alert" className="text-sm text-danger-600">
               {error}
+            </p>
+          )}
+
+          {missingLabels.length > 0 && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+              Column{missingLabels.length !== 1 ? 's' : ''} not found in file:{' '}
+              {missingLabels.join(', ')}
             </p>
           )}
 

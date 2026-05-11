@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { CreateItemInput } from '../api';
 import { itemStatuses } from '../../types';
-import { detectTableHeader, extractTableRows, normalizeLabel } from './engine';
+import { detectTableHeader, extractTableRows, normalizeLabel, scanForExactHeaders } from './engine';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -129,7 +129,40 @@ export async function parseExcelFile(file: File): Promise<ParsedSpreadsheet> {
   return { headers: nonEmptyHeaders, rows };
 }
 
-// ─── Auto-mapping ─────────────────────────────────────────────────────────────
+export async function parseExcelFileWithLabels(
+  file: File,
+  labels: string[],
+): Promise<{ parsed: ParsedSpreadsheet; missingLabels: string[] }> {
+  const empty = { parsed: { headers: [], rows: [] } as ParsedSpreadsheet, missingLabels: labels };
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer, { type: 'array' });
+  const sheetName = wb.SheetNames[0];
+  if (!sheetName) return empty;
+  const sheet = wb.Sheets[sheetName];
+  if (!sheet) return empty;
+
+  const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
+  const allRows: string[][] = raw.map((row) => row.map(spreadsheetValueToString));
+  const secondPass = scanForExactHeaders(allRows, labels);
+  if (!secondPass) return empty;
+
+  const headers = secondPass.foundColumns.map((c) => c.label);
+  const dataRows = extractTableRows(allRows, secondPass.headerRowIndex + 1);
+  const rows: Record<string, string>[] = [];
+
+  for (const rowArray of dataRows) {
+    const record: Record<string, string> = {};
+    let hasContent = false;
+    for (const column of secondPass.foundColumns) {
+      const cell = rowArray[column.columnNumber - 1]?.trim() ?? '';
+      record[column.label] = cell;
+      if (cell) hasContent = true;
+    }
+    if (hasContent) rows.push(record);
+  }
+
+  return { parsed: { headers, rows }, missingLabels: secondPass.missingLabels };
+}
 
 export function autoMapColumns(headers: string[]): Partial<ColumnMap> {
   const result: Partial<ColumnMap> = {};

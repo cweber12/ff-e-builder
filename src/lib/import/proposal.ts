@@ -4,9 +4,12 @@ import {
   buildColumns,
   columnsToRecord,
   detectTableHeader,
+  extractTableRows,
   isSummaryRow,
   normalizeLabel,
+  scanForExactHeaders,
   type ImportColumn,
+  type SecondPassResult,
 } from './engine';
 
 export type ProposalImportField =
@@ -343,7 +346,146 @@ async function parseFlatProposalSpreadsheet(
   };
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Second-pass parsing (user-provided labels) ───────────────────────────────
+
+export async function parseProposalSpreadsheetWithLabels(
+  file: File,
+  labels: string[],
+): Promise<{ parsed: ParsedProposalSpreadsheet; missingLabels: string[] }> {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (extension === 'xlsx') return parseXlsxProposalWithLabels(file, labels);
+  return parseFlatProposalWithLabels(file, labels, extension === 'csv' ? 'csv' : 'xls');
+}
+
+async function parseXlsxProposalWithLabels(
+  file: File,
+  labels: string[],
+): Promise<{ parsed: ParsedProposalSpreadsheet; missingLabels: string[] }> {
+  const buffer = await file.arrayBuffer();
+  const ExcelJS = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+  const worksheet = workbook.worksheets[0];
+  if (!worksheet) return { parsed: emptyParsedProposal(file, 'xlsx'), missingLabels: labels };
+
+  const rawRows = readWorksheetRowsDense(worksheet);
+  const images = extractWorksheetImages(workbook, worksheet);
+  const secondPass = scanForExactHeaders(rawRows, labels);
+  if (!secondPass || secondPass.foundColumns.length === 0) {
+    return {
+      parsed: { ...emptyParsedProposal(file, 'xlsx'), sheetName: worksheet.name },
+      missingLabels: labels,
+    };
+  }
+  return buildProposalFromSecondPass({
+    file,
+    fileType: 'xlsx',
+    sheetName: worksheet.name,
+    rawRows,
+    images,
+    secondPass,
+  });
+}
+
+async function parseFlatProposalWithLabels(
+  file: File,
+  labels: string[],
+  fileType: 'csv' | 'xls',
+): Promise<{ parsed: ParsedProposalSpreadsheet; missingLabels: string[] }> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) return { parsed: emptyParsedProposal(file, fileType), missingLabels: labels };
+  const sheet = workbook.Sheets[sheetName];
+  if (!sheet) return { parsed: emptyParsedProposal(file, fileType), missingLabels: labels };
+
+  const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
+  const rawRows: string[][] = raw.map((row) => row.map(spreadsheetValueToString));
+  const secondPass = scanForExactHeaders(rawRows, labels);
+  if (!secondPass || secondPass.foundColumns.length === 0) {
+    return { parsed: { ...emptyParsedProposal(file, fileType), sheetName }, missingLabels: labels };
+  }
+  return buildProposalFromSecondPass({
+    file,
+    fileType,
+    sheetName,
+    rawRows,
+    images: [],
+    secondPass,
+  });
+}
+
+function buildProposalFromSecondPass({
+  file,
+  fileType,
+  sheetName,
+  rawRows,
+  images,
+  secondPass,
+}: {
+  file: File;
+  fileType: 'xlsx' | 'csv' | 'xls';
+  sheetName: string;
+  rawRows: string[][];
+  images: ProposalImportImage[];
+  secondPass: SecondPassResult;
+}): { parsed: ParsedProposalSpreadsheet; missingLabels: string[] } {
+  const sharedColumns = secondPass.foundColumns;
+  const headerRowNumber = secondPass.headerRowIndex + 1;
+  const categoryName = findCategoryName(rawRows, secondPass.headerRowIndex) || 'Imported';
+  const dataRows = extractTableRows(rawRows, secondPass.headerRowIndex + 1);
+  const rows: ProposalParsedRow[] = [];
+
+  for (let i = 0; i < dataRows.length; i++) {
+    const rowArray = dataRows[i] ?? [];
+    const record = columnsToRecord(sharedColumns, rowArray);
+    const rowNumber = secondPass.headerRowIndex + 2 + i;
+    const imagesByColumn = assignImagesByColumn(images, rowNumber, sharedColumns);
+    const rowImages = assignRowImages(imagesByColumn, sharedColumns);
+    const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
+    const hasImages =
+      rowImages.rendering.length > 0 || rowImages.plan.length > 0 || rowImages.swatches.length > 0;
+    if (!hasRawContent && !hasImages) continue;
+
+    const parsedRow: ProposalParsedRow = {
+      id: `0:${rowNumber}`,
+      rowNumber,
+      categoryName,
+      values: record,
+      imagesByColumn,
+      images: rowImages,
+      sourceSectionIndex: 0,
+    };
+    if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+    rows.push(parsedRow);
+  }
+
+  const sections: ProposalImportSection[] = [
+    {
+      index: 0,
+      categoryName,
+      headerRowNumber,
+      rowCount: rows.filter((r) => !r.skippedReason).length,
+    },
+  ];
+
+  const warnings: string[] = [];
+  if (fileType === 'csv') warnings.push('CSV imports support image URLs only.');
+
+  return {
+    parsed: {
+      filename: file.name,
+      sheetName,
+      fileType,
+      columns: sharedColumns,
+      rows,
+      sections,
+      projectImages: extractProjectImages(images, headerRowNumber),
+      warnings,
+    },
+    missingLabels: secondPass.missingLabels,
+  };
+}
 
 function emptyParsedProposal(
   file: File,

@@ -11,7 +11,13 @@ export {
 } from './engine';
 export type { DetectedTable, ImportColumn, SecondPassResult } from './engine';
 
-export { autoMapColumns, parseExcelFile, transformRow, transformRows } from './ffe';
+export {
+  autoMapColumns,
+  parseExcelFile,
+  parseExcelFileWithLabels,
+  transformRow,
+  transformRows,
+} from './ffe';
 export type { ColumnMap, ImportedItem, ParsedSpreadsheet } from './ffe';
 
 export {
@@ -20,6 +26,7 @@ export {
   imageToFile,
   isSummaryProposalRow,
   parseProposalSpreadsheet,
+  parseProposalSpreadsheetWithLabels,
   rowHasImportableContent,
 } from './proposal';
 export type {

@@ -3,6 +3,7 @@ import { api } from '../../../lib/api';
 import {
   autoMapColumns,
   parseExcelFile,
+  parseExcelFileWithLabels,
   transformRows,
   type ColumnMap,
   type ParsedSpreadsheet,
@@ -21,7 +22,7 @@ type Props = {
   onSuccess: () => void;
 };
 
-type Step = 'upload' | 'map';
+type Step = 'upload' | 'headers-missing' | 'map';
 
 const FIELD_LABELS: Record<keyof ColumnMap, string> = {
   itemName: 'Item Name *',
@@ -65,6 +66,9 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
     startedAt: null,
   });
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [userLabels, setUserLabels] = useState('');
+  const [missingLabels, setMissingLabels] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -88,6 +92,9 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
     setImporting(false);
     setResult(null);
     setProgress({ processed: 0, total: 0, startedAt: null });
+    setPendingFile(null);
+    setUserLabels('');
+    setMissingLabels([]);
   };
 
   useEffect(() => {
@@ -106,7 +113,8 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
     try {
       const data = await parseExcelFile(file);
       if (data.headers.length === 0) {
-        setError('The file appears empty or has no headers.');
+        setPendingFile(file);
+        setStep('headers-missing');
         return;
       }
       const autoMap = autoMapColumns(data.headers);
@@ -129,6 +137,48 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
       setError('Failed to parse the file. Make sure it is a valid .xlsx, .xls, or .csv file.');
     }
   }, []);
+
+  const handleUserLabels = useCallback(async () => {
+    if (!pendingFile) return;
+    const labels = userLabels
+      .split(/[\n,]+/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (labels.length === 0) {
+      setError('Enter at least one column header name.');
+      return;
+    }
+    setError('');
+    try {
+      const { parsed: data, missingLabels: missing } = await parseExcelFileWithLabels(
+        pendingFile,
+        labels,
+      );
+      if (data.headers.length === 0) {
+        setError('None of the column names were found. Check the spelling and try again.');
+        return;
+      }
+      const autoMap = autoMapColumns(data.headers);
+      setParsed(data);
+      setMapping({
+        itemName: autoMap.itemName ?? null,
+        category: autoMap.category ?? null,
+        itemIdTag: autoMap.itemIdTag ?? null,
+        dimensions: autoMap.dimensions ?? null,
+        qty: autoMap.qty ?? null,
+        unitCostDollars: autoMap.unitCostDollars ?? null,
+        status: autoMap.status ?? null,
+        leadTime: autoMap.leadTime ?? null,
+        notes: autoMap.notes ?? null,
+        room: autoMap.room ?? null,
+        materials: autoMap.materials ?? null,
+      });
+      setMissingLabels(missing);
+      setStep('map');
+    } catch {
+      setError('Failed to scan the file. Please try again.');
+    }
+  }, [pendingFile, userLabels]);
 
   const handleDrop = useCallback(
     (event: DragEvent) => {
@@ -303,6 +353,41 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
             </p>
           )}
         </div>
+      ) : step === 'headers-missing' ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-600">
+            Column headers were not detected automatically. Enter the column header names exactly as
+            they appear in your spreadsheet.
+          </p>
+          <textarea
+            value={userLabels}
+            onChange={(e) => setUserLabels(e.target.value)}
+            placeholder={'Item Name\nQuantity\nUnit Cost\nRoom'}
+            rows={5}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+          />
+          <p className="text-xs text-gray-500">One column name per line, or separated by commas.</p>
+          {error && (
+            <p role="alert" className="text-sm text-danger-600">
+              {error}
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setStep('upload');
+                setError('');
+              }}
+            >
+              Back
+            </Button>
+            <Button type="button" onClick={() => void handleUserLabels()}>
+              Find Columns
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-600">
@@ -312,6 +397,13 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
           {error && (
             <p role="alert" className="text-sm text-danger-600">
               {error}
+            </p>
+          )}
+
+          {missingLabels.length > 0 && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+              Column{missingLabels.length !== 1 ? 's' : ''} not found in file:{' '}
+              {missingLabels.join(', ')}
             </p>
           )}
 
