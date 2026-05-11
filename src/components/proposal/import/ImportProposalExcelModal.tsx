@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react';
-import { ApiError, api, type CreateProposalItemInput } from '../../../lib/api';
+import { api, type CreateProposalItemInput } from '../../../lib/api';
 import {
   PROPOSAL_IMPORT_EMPTY_MAP,
   autoMapProposalColumns,
@@ -23,6 +23,8 @@ import {
 } from '../../../lib/import';
 import type { ProposalCategoryWithItems } from '../../../types';
 import { Button, Modal } from '../../primitives';
+import { ImportProgressBar } from '../../shared/ImportProgressBar';
+import { describeImportError, type ImportProgress } from '../../shared/importUtils';
 
 type Props = {
   open: boolean;
@@ -39,12 +41,6 @@ type ImportResult = {
   skipped: number;
   imagesImported: number;
   warnings: string[];
-};
-
-type ImportProgress = {
-  processed: number;
-  total: number;
-  startedAt: number | null;
 };
 
 const SKIP = '__skip__';
@@ -605,62 +601,12 @@ export function ImportProposalExcelModal({
             </div>
           </div>
           {importing && progress.total > 0 && (
-            <ImportProgressBar progress={progress} nowMs={nowMs} />
+            <ImportProgressBar progress={progress} nowMs={nowMs} label="Proposal import progress" />
           )}
         </div>
       )}
     </Modal>
   );
-}
-
-function ImportProgressBar({ progress, nowMs }: { progress: ImportProgress; nowMs: number }) {
-  const ratio = progress.total > 0 ? Math.min(1, progress.processed / progress.total) : 0;
-  const percent = Math.round(ratio * 100);
-  const elapsedMs = progress.startedAt ? Math.max(0, nowMs - progress.startedAt) : 0;
-  const remainingSteps = Math.max(0, progress.total - progress.processed);
-  const remainingMs =
-    progress.processed > 0
-      ? Math.round((elapsedMs / progress.processed) * remainingSteps)
-      : undefined;
-
-  return (
-    <div className="rounded-lg border border-gray-200 bg-surface-muted p-3">
-      <div className="mb-1 flex items-center justify-between text-xs text-gray-600">
-        <span>
-          Import progress: {progress.processed} of {progress.total}
-        </span>
-        <span>
-          {percent}%
-          {remainingMs !== undefined ? ` • ~${formatDuration(remainingMs)} remaining` : ''}
-        </span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-        <div
-          className="h-full rounded-full bg-brand-500 transition-all duration-300"
-          style={{ width: `${percent}%` }}
-          role="progressbar"
-          aria-label="Proposal import progress"
-          aria-valuemin={0}
-          aria-valuemax={progress.total}
-          aria-valuenow={progress.processed}
-        />
-      </div>
-    </div>
-  );
-}
-
-function formatDuration(ms: number): string {
-  const seconds = Math.max(0, Math.ceil(ms / 1000));
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return `${minutes}m ${remainder}s`;
-}
-
-function describeImportError(err: unknown): string {
-  if (err instanceof ApiError && err.message.trim().length > 0) return err.message;
-  if (err instanceof Error && err.message.trim().length > 0) return err.message;
-  return 'Upload failed';
 }
 
 function buildProposalItem(

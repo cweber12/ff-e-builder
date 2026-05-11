@@ -10,6 +10,8 @@ import {
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives/Button';
 import { Modal } from '../../primitives/Modal';
+import { ImportProgressBar } from '../../shared/ImportProgressBar';
+import { type ImportProgress } from '../../shared/importUtils';
 
 type Props = {
   open: boolean;
@@ -20,12 +22,6 @@ type Props = {
 };
 
 type Step = 'upload' | 'map';
-
-type ImportProgress = {
-  processed: number;
-  total: number;
-  startedAt: number | null;
-};
 
 const FIELD_LABELS: Record<keyof ColumnMap, string> = {
   itemName: 'Item Name *',
@@ -418,54 +414,10 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
             </div>
           </div>
           {importing && progress.total > 0 && (
-            <ImportProgressBar progress={progress} nowMs={nowMs} />
+            <ImportProgressBar progress={progress} nowMs={nowMs} label="FF&E import progress" />
           )}
         </div>
       )}
     </Modal>
   );
-}
-
-function ImportProgressBar({ progress, nowMs }: { progress: ImportProgress; nowMs: number }) {
-  const ratio = progress.total > 0 ? Math.min(1, progress.processed / progress.total) : 0;
-  const percent = Math.round(ratio * 100);
-  const elapsedMs = progress.startedAt ? Math.max(0, nowMs - progress.startedAt) : 0;
-  const remainingSteps = Math.max(0, progress.total - progress.processed);
-  const remainingMs =
-    progress.processed > 0
-      ? Math.round((elapsedMs / progress.processed) * remainingSteps)
-      : undefined;
-
-  return (
-    <div className="rounded-lg border border-gray-200 bg-surface-muted p-3">
-      <div className="mb-1 flex items-center justify-between text-xs text-gray-600">
-        <span>
-          Import progress: {progress.processed} of {progress.total}
-        </span>
-        <span>
-          {percent}%
-          {remainingMs !== undefined ? ` • ~${formatDuration(remainingMs)} remaining` : ''}
-        </span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-        <div
-          className="h-full rounded-full bg-brand-500 transition-all duration-300"
-          style={{ width: `${percent}%` }}
-          role="progressbar"
-          aria-label="FF&E import progress"
-          aria-valuemin={0}
-          aria-valuemax={progress.total}
-          aria-valuenow={progress.processed}
-        />
-      </div>
-    </div>
-  );
-}
-
-function formatDuration(ms: number): string {
-  const seconds = Math.max(0, Math.ceil(ms / 1000));
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return `${minutes}m ${remainder}s`;
 }
