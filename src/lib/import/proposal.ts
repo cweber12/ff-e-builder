@@ -1,5 +1,13 @@
 import type { Workbook as ExcelWorkbook, Worksheet } from 'exceljs';
 import * as XLSX from 'xlsx';
+import {
+  buildColumns,
+  columnsToRecord,
+  detectTableHeader,
+  isSummaryRow,
+  normalizeLabel,
+  type ImportColumn,
+} from './engine';
 
 export type ProposalImportField =
   | 'category'
@@ -16,11 +24,8 @@ export type ProposalImportField =
   | 'quantityUnit'
   | 'unitCost';
 
-export type ProposalImportColumn = {
-  key: string;
-  label: string;
-  columnNumber: number;
-};
+// Same shape as ImportColumn — re-exported for backward compatibility
+export type ProposalImportColumn = ImportColumn;
 
 export type ProposalImportColumnMap = Record<ProposalImportField, string | null>;
 
@@ -84,19 +89,6 @@ const FIELD_ALIASES: Record<ProposalImportField, string[]> = {
   unitCost: ['unit cost', 'cost', 'price', 'unit price'],
 };
 
-const HEADER_MATCH_THRESHOLD = 3;
-const SUMMARY_ROW_PATTERNS = [
-  /^total$/i,
-  /^all total$/i,
-  /^grand total$/i,
-  /shipping/i,
-  /dut(y|ies)/i,
-  /assembly/i,
-  /installation/i,
-  /sales tax/i,
-  /^tax$/i,
-];
-
 export const PROPOSAL_IMPORT_EMPTY_MAP: ProposalImportColumnMap = {
   category: null,
   rendering: null,
@@ -120,7 +112,9 @@ export function autoMapProposalColumns(columns: ProposalImportColumn[]): Proposa
   for (const field of Object.keys(FIELD_ALIASES) as ProposalImportField[]) {
     const match = columns.find((column) => {
       if (!unused.has(column.key)) return false;
-      return FIELD_ALIASES[field].includes(normalizeLabel(column.label));
+      return FIELD_ALIASES[field].some(
+        (alias) => normalizeLabel(alias) === normalizeLabel(column.label),
+      );
     });
     if (match) {
       result[field] = match.key;
@@ -158,10 +152,7 @@ export function rowHasImportableContent(
 }
 
 export function isSummaryProposalRow(row: ProposalParsedRow): boolean {
-  const content = Object.values(row.values).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
-
-  if (!content) return false;
-  return SUMMARY_ROW_PATTERNS.some((pattern) => pattern.test(content));
+  return isSummaryRow(Object.values(row.values));
 }
 
 export function imageToFile(image: ProposalImportImage, fallbackName: string): File {
@@ -171,6 +162,8 @@ export function imageToFile(image: ProposalImportImage, fallbackName: string): F
   const blob = new Blob([bytes], { type: image.contentType });
   return new File([blob], image.filename || fallbackName, { type: image.contentType });
 }
+
+// ─── XLSX parsing ─────────────────────────────────────────────────────────────
 
 async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalSpreadsheet> {
   const buffer = await file.arrayBuffer();
@@ -184,38 +177,48 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
   }
 
   const warnings: string[] = [];
-  const rowValues = readWorksheetRows(worksheet);
-  const headerRows = findHeaderRows(rowValues);
-  if (headerRows.length === 0) {
+  const rawRows = readWorksheetRowsDense(worksheet);
+  const images = extractWorksheetImages(workbook, worksheet);
+
+  const firstHeaderIndex = detectTableHeader(rawRows, 25);
+  if (firstHeaderIndex === null) {
     warnings.push('No Proposal header row was detected.');
-    return {
-      ...emptyParsedProposal(file, 'xlsx'),
-      sheetName: worksheet.name,
-      warnings,
-    };
+    return { ...emptyParsedProposal(file, 'xlsx'), sheetName: worksheet.name, warnings };
   }
 
-  const firstHeader = headerRows[0]!;
-  const columns = buildColumnsFromHeader(rowValues[firstHeader] ?? []);
-  const images = extractWorksheetImages(workbook, worksheet);
+  const sharedColumns = buildColumns(rawRows[firstHeaderIndex] ?? []);
+  const columnAliases = sharedColumns.map((c) => normalizeLabel(c.label));
+  const allHeaderIndices = [
+    firstHeaderIndex,
+    ...findRepeatHeaderIndices(rawRows, firstHeaderIndex + 1, columnAliases),
+  ];
+
   const sections: ProposalImportSection[] = [];
   const rows: ProposalParsedRow[] = [];
 
-  for (let sectionIndex = 0; sectionIndex < headerRows.length; sectionIndex++) {
-    const headerRowNumber = headerRows[sectionIndex]!;
-    const nextHeaderRowNumber = headerRows[sectionIndex + 1] ?? worksheet.rowCount + 1;
-    const categoryName =
-      findCategoryName(rowValues, headerRowNumber) || `Category ${sectionIndex + 1}`;
-    const startRow = headerRowNumber + 1;
+  for (let sectionIndex = 0; sectionIndex < allHeaderIndices.length; sectionIndex++) {
+    const headerIndex = allHeaderIndices[sectionIndex]!;
+    const nextHeaderIndex = allHeaderIndices[sectionIndex + 1] ?? rawRows.length;
+    const headerRowNumber = headerIndex + 1; // 1-based for display and ExcelJS image coordinates
+    const categoryName = findCategoryName(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
     const sectionRows: ProposalParsedRow[] = [];
 
-    for (let rowNumber = startRow; rowNumber < nextHeaderRowNumber; rowNumber++) {
-      const values = rowValues[rowNumber] ?? [];
-      if (isHeaderLikeRow(values)) continue;
+    for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
+      const rowArray = rawRows[i] ?? [];
+      if (isRepeatHeader(rowArray, columnAliases)) continue;
 
-      const record = columnsToRecord(columns, values);
-      const imagesByColumn = assignImagesByColumn(images, rowNumber, columns);
-      const rowImages = assignRowImages(imagesByColumn, columns);
+      const record = columnsToRecord(sharedColumns, rowArray);
+      const rowNumber = i + 1; // 1-based to match ExcelJS image coordinates
+      const imagesByColumn = assignImagesByColumn(images, rowNumber, sharedColumns);
+      const rowImages = assignRowImages(imagesByColumn, sharedColumns);
+
+      const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
+      const hasImages =
+        rowImages.rendering.length > 0 ||
+        rowImages.plan.length > 0 ||
+        rowImages.swatches.length > 0;
+      if (!hasRawContent && !hasImages) continue;
+
       const parsedRow: ProposalParsedRow = {
         id: `${sectionIndex}:${rowNumber}`,
         rowNumber,
@@ -225,13 +228,6 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
         images: rowImages,
         sourceSectionIndex: sectionIndex,
       };
-
-      const hasRawContent = Object.values(record).some((value) => value.trim().length > 0);
-      const hasImages =
-        rowImages.rendering.length > 0 ||
-        rowImages.plan.length > 0 ||
-        rowImages.swatches.length > 0;
-      if (!hasRawContent && !hasImages) continue;
 
       if (isSummaryProposalRow(parsedRow)) {
         parsedRow.skippedReason = 'Summary row';
@@ -245,7 +241,7 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
       index: sectionIndex,
       categoryName,
       headerRowNumber,
-      rowCount: sectionRows.filter((row) => !row.skippedReason).length,
+      rowCount: sectionRows.filter((r) => !r.skippedReason).length,
     });
   }
 
@@ -253,13 +249,15 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
     filename: file.name,
     sheetName: worksheet.name,
     fileType: 'xlsx',
-    columns,
+    columns: sharedColumns,
     rows,
     sections,
-    projectImages: extractProjectImages(images, headerRows[0]!),
+    projectImages: extractProjectImages(images, firstHeaderIndex + 1),
     warnings,
   };
 }
+
+// ─── Flat file parsing (CSV / XLS) ───────────────────────────────────────────
 
 async function parseFlatProposalSpreadsheet(
   file: File,
@@ -274,13 +272,10 @@ async function parseFlatProposalSpreadsheet(
   if (!sheet) return emptyParsedProposal(file, fileType);
 
   const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-  const rowValues: string[][] = [];
-  raw.forEach((row, index) => {
-    rowValues[index + 1] = row.map(spreadsheetValueToString);
-  });
+  const rawRows: string[][] = raw.map((row) => row.map(spreadsheetValueToString));
 
-  const headerRows = findHeaderRows(rowValues);
-  if (headerRows.length === 0) {
+  const firstHeaderIndex = detectTableHeader(rawRows, 25);
+  if (firstHeaderIndex === null) {
     return {
       ...emptyParsedProposal(file, fileType),
       sheetName,
@@ -288,19 +283,31 @@ async function parseFlatProposalSpreadsheet(
     };
   }
 
-  const columns = buildColumnsFromHeader(rowValues[headerRows[0]!] ?? []);
+  const sharedColumns = buildColumns(rawRows[firstHeaderIndex] ?? []);
+  const columnAliases = sharedColumns.map((c) => normalizeLabel(c.label));
+  const allHeaderIndices = [
+    firstHeaderIndex,
+    ...findRepeatHeaderIndices(rawRows, firstHeaderIndex + 1, columnAliases),
+  ];
+
   const sections: ProposalImportSection[] = [];
   const rows: ProposalParsedRow[] = [];
 
-  for (let sectionIndex = 0; sectionIndex < headerRows.length; sectionIndex++) {
-    const headerRowNumber = headerRows[sectionIndex]!;
-    const nextHeaderRowNumber = headerRows[sectionIndex + 1] ?? rowValues.length + 1;
-    const categoryName =
-      findCategoryName(rowValues, headerRowNumber) || `Category ${sectionIndex + 1}`;
+  for (let sectionIndex = 0; sectionIndex < allHeaderIndices.length; sectionIndex++) {
+    const headerIndex = allHeaderIndices[sectionIndex]!;
+    const nextHeaderIndex = allHeaderIndices[sectionIndex + 1] ?? rawRows.length;
+    const headerRowNumber = headerIndex + 1;
+    const categoryName = findCategoryName(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
     const sectionRows: ProposalParsedRow[] = [];
 
-    for (let rowNumber = headerRowNumber + 1; rowNumber < nextHeaderRowNumber; rowNumber++) {
-      const record = columnsToRecord(columns, rowValues[rowNumber] ?? []);
+    for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
+      const rowArray = rawRows[i] ?? [];
+      if (isRepeatHeader(rowArray, columnAliases)) continue;
+
+      const record = columnsToRecord(sharedColumns, rowArray);
+      if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
+
+      const rowNumber = i + 1;
       const parsedRow: ProposalParsedRow = {
         id: `${sectionIndex}:${rowNumber}`,
         rowNumber,
@@ -310,7 +317,7 @@ async function parseFlatProposalSpreadsheet(
         images: { rendering: [], plan: [], swatches: [] },
         sourceSectionIndex: sectionIndex,
       };
-      if (!Object.values(record).some((value) => value.trim().length > 0)) continue;
+
       if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
       sectionRows.push(parsedRow);
       rows.push(parsedRow);
@@ -320,7 +327,7 @@ async function parseFlatProposalSpreadsheet(
       index: sectionIndex,
       categoryName,
       headerRowNumber,
-      rowCount: sectionRows.filter((row) => !row.skippedReason).length,
+      rowCount: sectionRows.filter((r) => !r.skippedReason).length,
     });
   }
 
@@ -328,13 +335,15 @@ async function parseFlatProposalSpreadsheet(
     filename: file.name,
     sheetName,
     fileType,
-    columns,
+    columns: sharedColumns,
     rows,
     sections,
     projectImages: [],
     warnings: fileType === 'csv' ? ['CSV imports support image URLs only.'] : [],
   };
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function emptyParsedProposal(
   file: File,
@@ -352,14 +361,15 @@ function emptyParsedProposal(
   };
 }
 
-function readWorksheetRows(worksheet: Worksheet): string[][] {
+// Returns a 0-based dense array; rowNumber from eachRow is 1-based so we subtract 1
+function readWorksheetRowsDense(worksheet: Worksheet): string[][] {
   const rows: string[][] = [];
   worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
     const values: string[] = [];
     row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {
       values[columnNumber - 1] = spreadsheetValueToString(cell.value);
     });
-    rows[rowNumber] = values;
+    rows[rowNumber - 1] = values;
   });
   return rows;
 }
@@ -386,71 +396,39 @@ function spreadsheetValueToString(value: unknown): string {
   return '';
 }
 
-function normalizeLabel(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-function isHeaderLikeRow(values: string[]): boolean {
-  let matches = 0;
-  for (const value of values) {
-    const normalized = normalizeLabel(value);
-    if (!normalized) continue;
-    if (Object.values(FIELD_ALIASES).some((aliases) => aliases.includes(normalized))) {
-      matches += 1;
-    }
+// Find all rows whose cell values match ≥ threshold of the shared column aliases
+function findRepeatHeaderIndices(
+  rows: string[][],
+  startIndex: number,
+  columnAliases: string[],
+): number[] {
+  const threshold = Math.min(3, columnAliases.length);
+  const result: number[] = [];
+  for (let i = startIndex; i < rows.length; i++) {
+    if (isRepeatHeader(rows[i] ?? [], columnAliases, threshold)) result.push(i);
   }
-  return matches >= HEADER_MATCH_THRESHOLD;
+  return result;
 }
 
-function findHeaderRows(rowValues: string[][]): number[] {
-  const rows: number[] = [];
-  for (let rowNumber = 1; rowNumber < rowValues.length; rowNumber++) {
-    if (isHeaderLikeRow(rowValues[rowNumber] ?? [])) rows.push(rowNumber);
-  }
-  return rows;
+function isRepeatHeader(
+  row: string[],
+  columnAliases: string[],
+  threshold = Math.min(3, columnAliases.length),
+): boolean {
+  const matchCount = row.filter((v) => columnAliases.includes(normalizeLabel(v))).length;
+  return matchCount >= threshold;
 }
 
-function buildColumnsFromHeader(headerValues: string[]): ProposalImportColumn[] {
-  const used = new Map<string, number>();
-  return headerValues.flatMap((rawLabel, index) => {
-    const label = rawLabel.trim();
-    if (!label) return [];
-    const normalized = normalizeLabel(label) || `column ${index + 1}`;
-    const count = used.get(normalized) ?? 0;
-    used.set(normalized, count + 1);
-    const suffix = count === 0 ? '' : ` ${count + 1}`;
-    const key = `${label}${suffix}__${index + 1}`;
-    const display = count === 0 ? label : `${label} (${count + 1})`;
-    return [{ key, label: display, columnNumber: index + 1 }];
-  });
-}
-
-function columnsToRecord(
-  columns: ProposalImportColumn[],
-  values: string[],
-): Record<string, string> {
-  const record: Record<string, string> = {};
-  for (const column of columns) {
-    record[column.key] = values[column.columnNumber - 1]?.trim() ?? '';
-  }
-  return record;
-}
-
-function findCategoryName(rowValues: string[][], headerRowNumber: number): string {
-  for (
-    let rowNumber = headerRowNumber - 1;
-    rowNumber >= Math.max(1, headerRowNumber - 4);
-    rowNumber--
-  ) {
-    const values = (rowValues[rowNumber] ?? []).map((value) => value.trim()).filter(Boolean);
-    if (values.length === 1 && !isHeaderLikeRow(values)) return values[0]!;
+// Look backward from headerIndex for a row with exactly one non-empty cell (category name)
+function findCategoryName(rows: string[][], headerIndex: number): string {
+  for (let i = headerIndex - 1; i >= Math.max(0, headerIndex - 4); i--) {
+    const values = (rows[i] ?? []).map((v) => v.trim()).filter(Boolean);
+    if (values.length === 1) return values[0]!;
   }
   return '';
 }
+
+// ─── Image handling ───────────────────────────────────────────────────────────
 
 function extractWorksheetImages(
   workbook: ExcelWorkbook,
@@ -529,7 +507,9 @@ function findColumnByAliases(
   columns: ProposalImportColumn[],
   aliases: readonly string[],
 ): ProposalImportColumn | undefined {
-  return columns.find((column) => aliases.includes(normalizeLabel(column.label)));
+  return columns.find((column) =>
+    aliases.some((alias) => normalizeLabel(alias) === normalizeLabel(column.label)),
+  );
 }
 
 function largestColumnOverlap(
@@ -557,6 +537,7 @@ function getColumnOverlap(image: ProposalImportImage, columnNumber: number): num
   return Math.max(0, overlapEnd - overlapStart);
 }
 
+// firstHeaderRowNumber is 1-based (matching ExcelJS image coordinates)
 function extractProjectImages(
   images: ProposalImportImage[],
   firstHeaderRowNumber: number,
