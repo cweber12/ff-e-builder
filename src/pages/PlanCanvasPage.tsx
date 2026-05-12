@@ -5,12 +5,15 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
-  type ReactNode,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { MeasuredAreaSelect } from '../components/plans/MeasuredAreaSelect';
 import { LineOverlay, RectOverlay } from '../components/plans/overlays';
+import { getPlanToolLabel } from '../components/plans/planToolDefinitions';
+import { PlanToolRail } from '../components/plans/PlanToolRail';
+import type { MeasurementItemRef, PlanToolId } from '../components/plans/types';
 import { Button } from '../components/primitives';
 import {
   useCreatePlanLengthLine,
@@ -59,67 +62,12 @@ type PlanCanvasPageProps = {
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
 };
 
-type ToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
-
-type MeasurementItemRef = {
-  key: string;
-  targetKind: Measurement['targetKind'];
-  targetItemId: string;
-  targetTagSnapshot: string;
-  primaryLabel: string;
-  secondaryLabel: string;
-  containerLabel: string;
-  containerId: string;
-  version: number;
-  dimensions?: string | null;
-  quantity?: number;
-  quantityUnit?: string;
-};
-
 type MeasurementApplicationMode =
   | 'reference-only'
   | 'proposal-horizontal'
   | 'proposal-vertical'
   | 'proposal-area'
   | 'ffe-dimensions';
-
-const TOOL_DEFINITIONS: Array<{
-  id: ToolId;
-  label: string;
-  description: string;
-  icon: ReactNode;
-}> = [
-  {
-    id: 'calibrate',
-    label: 'Calibrate',
-    description: 'Set the plan scale from a reference line.',
-    icon: <CalibrateIcon />,
-  },
-  {
-    id: 'length',
-    label: 'Length Line',
-    description: 'Measure and save linear spans on the plan.',
-    icon: <LengthLineIcon />,
-  },
-  {
-    id: 'rectangle',
-    label: 'Rectangle',
-    description: 'Capture an item footprint and associate it with an item.',
-    icon: <RectangleIcon />,
-  },
-  {
-    id: 'crop',
-    label: 'Crop',
-    description: 'Refine the derived plan image framing.',
-    icon: <CropIcon />,
-  },
-  {
-    id: 'pan',
-    label: 'Pan',
-    description: 'Drag to move around the plan at any zoom level.',
-    icon: <PanIcon />,
-  },
-];
 
 const UNIT_OPTIONS: PlanMeasurementUnit[] = ['ft', 'in', 'm', 'cm', 'mm'];
 const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
@@ -139,7 +87,7 @@ export function PlanCanvasPage({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
-  const [activeTool, setActiveTool] = useState<ToolId>('calibrate');
+  const [activeTool, setActiveTool] = useState<PlanToolId>('calibrate');
   const [calibrationDraft, setCalibrationDraft] = useState<LineDraft | null>(null);
   const [calibrationLengthInput, setCalibrationLengthInput] = useState('1');
   const [calibrationUnit, setCalibrationUnit] = useState<PlanMeasurementUnit>('ft');
@@ -782,35 +730,11 @@ export function PlanCanvasPage({
       </header>
 
       <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[72px_minmax(0,1fr)_340px]">
-        <aside className="overflow-y-auto border-r border-black/10 bg-[#fbfaf6]/80 p-2.5 backdrop-blur">
-          <div className="flex flex-col gap-2">
-            {TOOL_DEFINITIONS.map((tool) => {
-              const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
-              const active = activeTool === tool.id;
-              return (
-                <button
-                  key={tool.id}
-                  type="button"
-                  aria-label={tool.label}
-                  title={`${tool.label}: ${tool.description}`}
-                  disabled={disabled}
-                  onClick={() => setActiveTool(tool.id)}
-                  className={[
-                    'flex h-11 w-11 items-center justify-center rounded-lg border transition',
-                    active
-                      ? 'border-neutral-950 bg-neutral-950 text-white shadow-sm'
-                      : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200 hover:bg-white hover:text-neutral-950',
-                    disabled &&
-                      'cursor-not-allowed border-transparent bg-transparent text-neutral-300',
-                  ].join(' ')}
-                >
-                  <span className="sr-only">{tool.label}</span>
-                  {tool.icon}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
+        <PlanToolRail
+          activeTool={activeTool}
+          isCalibrated={isCalibrated}
+          onToolChange={setActiveTool}
+        />
 
         <main className="min-h-0 overflow-hidden">
           <PlanViewport
@@ -849,7 +773,7 @@ export function PlanCanvasPage({
                 Inspector
               </p>
               <h2 className="mt-1 font-display text-lg font-semibold text-neutral-950">
-                {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.label ?? 'Measure'}
+                {getPlanToolLabel(activeTool)}
               </h2>
             </div>
 
@@ -1506,61 +1430,6 @@ function MetricRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MeasuredAreaSelect({
-  measurements,
-  measurementItemsByMeasurementId,
-  measurementsLoading,
-  selectedMeasurementId,
-  onSelect,
-  onClear,
-}: {
-  measurements: Measurement[];
-  measurementItemsByMeasurementId: Map<string, MeasurementItemRef>;
-  measurementsLoading: boolean;
-  selectedMeasurementId: string | null;
-  onSelect: (measurementId: string, item: MeasurementItemRef | null) => void;
-  onClear: () => void;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-        Measured area
-      </span>
-      <select
-        value={selectedMeasurementId ?? ''}
-        disabled={measurementsLoading || measurements.length === 0}
-        onChange={(event) => {
-          const measurementId = event.target.value;
-          if (!measurementId) {
-            onClear();
-            return;
-          }
-          onSelect(measurementId, measurementItemsByMeasurementId.get(measurementId) ?? null);
-        }}
-        className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400 disabled:bg-neutral-100 disabled:text-neutral-400"
-      >
-        <option value="">
-          {measurementsLoading
-            ? 'Loading measured areas'
-            : measurements.length === 0
-              ? 'No measured areas'
-              : 'Select an area'}
-        </option>
-        {measurements.map((measurement) => {
-          const item = measurementItemsByMeasurementId.get(measurement.id);
-          return (
-            <option key={measurement.id} value={measurement.id}>
-              {item
-                ? `${item.primaryLabel} - ${item.secondaryLabel} - ${item.containerLabel}`
-                : measurement.targetTagSnapshot}
-            </option>
-          );
-        })}
-      </select>
-    </label>
-  );
-}
-
 function PlanViewport({
   projectId,
   plan,
@@ -1583,7 +1452,7 @@ function PlanViewport({
 }: {
   projectId: string;
   plan: MeasuredPlan;
-  activeTool: ToolId;
+  activeTool: PlanToolId;
   calibration: PlanCalibration | null | undefined;
   calibrationDraft: LineDraft | null;
   onCalibrationDraftChange: (draft: LineDraft | null) => void;
@@ -2514,7 +2383,7 @@ function getLiveMeasurementLabel({
   measurementDraft,
   cropDraft,
 }: {
-  activeTool: ToolId;
+  activeTool: PlanToolId;
   calibration: PlanCalibration | null | undefined;
   calibrationDraft: LineDraft | null;
   lengthLineDraft: LineDraft | null;
@@ -2627,69 +2496,6 @@ function formatDisplayNumber(value: number) {
   if (value >= 100) return value.toFixed(0);
   if (value >= 10) return value.toFixed(1).replace(/\.0$/, '');
   return value.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
-}
-
-function ToolbarIcon({ children }: { children: ReactNode }) {
-  return <span className="h-5 w-5">{children}</span>;
-}
-
-function CalibrateIcon() {
-  return (
-    <ToolbarIcon>
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M3 15 15 3" />
-        <circle cx="4" cy="16" r="2" fill="currentColor" stroke="none" />
-        <circle cx="16" cy="4" r="2" fill="currentColor" stroke="none" />
-      </svg>
-    </ToolbarIcon>
-  );
-}
-
-function LengthLineIcon() {
-  return (
-    <ToolbarIcon>
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M3 10h14" />
-        <path d="M5 7v6M9 8.5v3M13 8.5v3M17 7v6" />
-      </svg>
-    </ToolbarIcon>
-  );
-}
-
-function RectangleIcon() {
-  return (
-    <ToolbarIcon>
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <rect x="4" y="5" width="12" height="10" rx="1.5" />
-      </svg>
-    </ToolbarIcon>
-  );
-}
-
-function CropIcon() {
-  return (
-    <ToolbarIcon>
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M6 3v11a2 2 0 0 0 2 2h9" />
-        <path d="M3 6h11a2 2 0 0 1 2 2v9" />
-      </svg>
-    </ToolbarIcon>
-  );
-}
-
-function PanIcon() {
-  return (
-    <ToolbarIcon>
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M10 3v14M3 10h14" strokeLinecap="round" />
-        <path
-          d="m8 5 2-2 2 2M15 8l2 2-2 2M12 15l-2 2-2-2M5 12l-2-2 2-2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </ToolbarIcon>
-  );
 }
 
 function ViewControlIcon({ type }: { type: 'zoom-in' | 'zoom-out' | 'rotate' | 'reset' }) {

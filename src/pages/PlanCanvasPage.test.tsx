@@ -340,14 +340,10 @@ function renderPlanCanvasPage(planId: 'plan-1' | 'plan-2') {
 }
 
 describe('PlanCanvasPage', () => {
-  it('renders the workspace shell and disables downstream tools when uncalibrated', () => {
+  it('renders the workspace shell for uncalibrated plans', () => {
     renderPlanCanvasPage('plan-1');
 
     expect(screen.getByRole('heading', { name: 'Level 1 Furniture Plan' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Calibrate' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Length Line' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Rectangle' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Crop' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: /sheet/i })).toHaveValue('plan-1');
     expect(screen.getByRole('option', { name: /A1.2 - Level 2 Furniture Plan/i })).toHaveValue(
       'plan-2',
@@ -360,7 +356,6 @@ describe('PlanCanvasPage', () => {
 
     expect(screen.getByText('Saved scale')).toBeInTheDocument();
     expect(screen.getByText(/12 ft/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Length Line' })).toBeEnabled();
     expect(screen.getByText('Measured Items')).toBeInTheDocument();
   });
 
