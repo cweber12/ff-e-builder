@@ -21,6 +21,7 @@ export type ProposalImportField =
   | 'drawings'
   | 'location'
   | 'description'
+  | 'notes'
   | 'sizeLabel'
   | 'swatches'
   | 'cbm'
@@ -80,6 +81,7 @@ export type ParsedProposalSpreadsheet = {
 const FIELD_ALIASES: Record<ProposalImportField, string[]> = {
   category: ['category', 'table category', 'section'],
   rendering: ['rendering', 'render', 'image', 'product image'],
+  notes: ['notes', 'note', 'comments', 'comment', 'remarks', 'memo'],
   productTag: [
     'product tag',
     'tag',
@@ -113,6 +115,7 @@ export const PROPOSAL_IMPORT_EMPTY_MAP: ProposalImportColumnMap = {
   drawings: null,
   location: null,
   description: null,
+  notes: null,
   sizeLabel: null,
   swatches: null,
   cbm: null,

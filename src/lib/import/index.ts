@@ -1,5 +1,6 @@
 export {
   buildColumns,
+  canonicalColumnLabel,
   columnsToRecord,
   detectTable,
   detectTableHeader,

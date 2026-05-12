@@ -39,6 +39,27 @@ export function normalizeLabel(value: string): string {
     .trim();
 }
 
+// Synonym groups for custom column labels.
+// First entry in each group is the canonical label used when creating column defs.
+const COLUMN_LABEL_SYNONYMS: string[][] = [
+  ['Vendor', 'manufacturer', 'mfr', 'mfg', 'brand', 'make', 'supplier'],
+  ['Model', 'model number', 'model no', 'model no.', 'model #', 'part number', 'part no'],
+];
+
+/**
+ * Returns the canonical label for a column, resolving known synonyms.
+ * e.g. "MANUFACTURER" → "Vendor", "Model No." → "Model"
+ */
+export function canonicalColumnLabel(label: string): string {
+  const normalized = normalizeLabel(label);
+  for (const group of COLUMN_LABEL_SYNONYMS) {
+    if (group.some((syn) => normalizeLabel(syn) === normalized)) {
+      return group[0]!;
+    }
+  }
+  return label;
+}
+
 export function isSummaryRow(values: string[]): boolean {
   const nonEmpty = values.map((v) => v.trim()).filter(Boolean);
   if (nonEmpty.length === 0) return false;

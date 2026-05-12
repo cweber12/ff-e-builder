@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEv
 import { api } from '../../../lib/api';
 import {
   autoMapColumns,
+  canonicalColumnLabel,
   parseFFESpreadsheet,
   transformRows,
   type ColumnMap,
@@ -111,7 +112,11 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
       };
 
       const usedKeys = new Set(Object.values(mapping).filter(Boolean) as string[]);
-      const unmappedCols = parsed.columns.filter((col) => !usedKeys.has(col.key));
+      const allRows = parsed.sections.flatMap((s) => s.rows);
+      const unmappedCols = parsed.columns.filter((col) => {
+        if (usedKeys.has(col.key)) return false;
+        return allRows.some((row) => (row[col.key] ?? '').trim().length > 0);
+      });
       const customDataKeyMap = new Map<string, string>();
 
       if (unmappedCols.length > 0) {
@@ -119,16 +124,17 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         const existingByLabel = new Map(existingDefs.map((d) => [d.label.toLowerCase(), d]));
 
         for (const col of unmappedCols) {
-          const existing = existingByLabel.get(col.label.toLowerCase());
+          const defLabel = canonicalColumnLabel(col.label);
+          const existing = existingByLabel.get(defLabel.toLowerCase());
           if (existing) {
             customDataKeyMap.set(col.key, existing.id);
           } else {
             const created = await api.columnDefs.create(projectId, {
-              label: col.label,
+              label: defLabel,
               sortOrder: existingDefs.length + customDataKeyMap.size,
               tableType: 'ffe',
             });
-            existingByLabel.set(col.label.toLowerCase(), created);
+            existingByLabel.set(defLabel.toLowerCase(), created);
             customDataKeyMap.set(col.key, created.id);
           }
         }

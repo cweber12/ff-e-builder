@@ -42,6 +42,13 @@ function writeConfig(projectId: string, tableKey: string, config: ColumnConfig) 
   }
 }
 
+function insertBeforeAnchor(order: string[], ids: string[], anchorId?: string): string[] {
+  if (!anchorId) return [...order, ...ids];
+  const anchorIndex = order.indexOf(anchorId);
+  if (anchorIndex === -1) return [...order, ...ids];
+  return [...order.slice(0, anchorIndex), ...ids, ...order.slice(anchorIndex)];
+}
+
 /**
  * Manages column order and visibility for a table, backed by localStorage.
  *
@@ -52,12 +59,16 @@ function writeConfig(projectId: string, tableKey: string, config: ColumnConfig) 
  * `customDefs` — live list of user-created `CustomColumnDef` records for this
  *   project, sorted by `sortOrder`. Pass `[]` for tables that don't support
  *   custom columns yet.
+ *
+ * `insertBeforeId` — when new custom column defs are discovered, insert them
+ *   before this default column ID instead of appending to the end.
  */
 export function useColumnConfig(
   projectId: string,
   tableKey: string,
   defaultColumnIds: readonly string[],
   customDefs: CustomColumnDef[],
+  insertBeforeId?: string,
 ) {
   const [config, setConfig] = useState<ColumnConfig>(() => {
     const saved = readConfig(projectId, tableKey);
@@ -70,7 +81,7 @@ export function useColumnConfig(
       const newCustom = customDefs.map((d) => d.id).filter((id) => !knownIds.has(id));
       if (newDefaults.length > 0 || newCustom.length > 0) {
         const merged: ColumnConfig = {
-          order: [...saved.order, ...newDefaults, ...newCustom],
+          order: insertBeforeAnchor([...saved.order, ...newDefaults], newCustom, insertBeforeId),
           hidden: saved.hidden,
         };
         writeConfig(projectId, tableKey, merged);
@@ -78,9 +89,13 @@ export function useColumnConfig(
       }
       return saved;
     }
-    // First load: order = all defaults + custom defs sorted by sortOrder.
+    // First load: order = defaults with custom defs inserted before anchor.
     const initial: ColumnConfig = {
-      order: [...defaultColumnIds, ...customDefs.map((d) => d.id)],
+      order: insertBeforeAnchor(
+        [...defaultColumnIds],
+        customDefs.map((d) => d.id),
+        insertBeforeId,
+      ),
       hidden: [],
     };
     writeConfig(projectId, tableKey, initial);
@@ -105,11 +120,14 @@ export function useColumnConfig(
         ? customDefIdsKey.split(',').filter((id) => id && !known.has(id))
         : [];
       if (newIds.length === 0) return current;
-      const next: ColumnConfig = { ...current, order: [...current.order, ...newIds] };
+      const next: ColumnConfig = {
+        ...current,
+        order: insertBeforeAnchor(current.order, newIds, insertBeforeId),
+      };
       writeConfig(projectId, tableKey, next);
       return next;
     });
-  }, [customDefIdsKey, projectId, tableKey]);
+  }, [customDefIdsKey, insertBeforeId, projectId, tableKey]);
 
   /** Move a column by ID (used on drag-end). */
   const moveColumn = useCallback(

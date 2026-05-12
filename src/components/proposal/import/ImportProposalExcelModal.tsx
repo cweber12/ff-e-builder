@@ -10,6 +10,7 @@ import {
 import { api, type CreateProposalItemInput } from '../../../lib/api';
 import {
   autoMapProposalColumns,
+  canonicalColumnLabel,
   imageToFile,
   isSummaryProposalRow,
   parseProposalSpreadsheet,
@@ -156,7 +157,10 @@ export function ImportProposalExcelModal({
       );
 
       const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
-      const unmappedCols = parsed.columns.filter((col) => !usedKeys.has(col.key));
+      const unmappedCols = parsed.columns.filter((col) => {
+        if (usedKeys.has(col.key)) return false;
+        return importableRows.some((row) => (row.values[col.key] ?? '').trim().length > 0);
+      });
       const customDataKeyMap = new Map<string, string>();
 
       if (unmappedCols.length > 0) {
@@ -164,16 +168,17 @@ export function ImportProposalExcelModal({
         const existingByLabel = new Map(existingDefs.map((d) => [d.label.toLowerCase(), d]));
 
         for (const col of unmappedCols) {
-          const existing = existingByLabel.get(col.label.toLowerCase());
+          const defLabel = canonicalColumnLabel(col.label);
+          const existing = existingByLabel.get(defLabel.toLowerCase());
           if (existing) {
             customDataKeyMap.set(col.key, existing.id);
           } else {
             const created = await api.columnDefs.create(projectId, {
-              label: col.label,
+              label: defLabel,
               sortOrder: existingDefs.length + customDataKeyMap.size,
               tableType: 'proposal',
             });
-            existingByLabel.set(col.label.toLowerCase(), created);
+            existingByLabel.set(defLabel.toLowerCase(), created);
             customDataKeyMap.set(col.key, created.id);
           }
         }
@@ -569,6 +574,7 @@ function buildProposalItem(
     drawings: getValue(row, mapping.drawings),
     location: getValue(row, mapping.location),
     description: getValue(row, mapping.description),
+    notes: getValue(row, mapping.notes),
     sizeLabel: getValue(row, mapping.sizeLabel),
     cbm: parseNumber(getValue(row, mapping.cbm)),
     quantity: parseNumber(getValue(row, mapping.quantity), 1),

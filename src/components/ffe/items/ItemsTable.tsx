@@ -1393,7 +1393,7 @@ function RoomItemsSection({
   const createColumnDef = useCreateItemColumnDef(projectId);
   const updateColumnDef = useUpdateItemColumnDef(projectId);
   const deleteColumnDef = useDeleteItemColumnDef(projectId);
-  const columnConfig = useColumnConfig(projectId, 'ffe', DEFAULT_COLUMN_IDS, columnDefs);
+  const columnConfig = useColumnConfig(projectId, 'ffe', DEFAULT_COLUMN_IDS, columnDefs, 'qty');
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);

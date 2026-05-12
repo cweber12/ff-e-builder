@@ -157,6 +157,7 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
     'proposal',
     PROPOSAL_HIDEABLE_IDS,
     customColumnDefs,
+    'quantity',
   );
   const hiddenColumnDefaults = useMemo(
     () =>
