@@ -15,6 +15,8 @@ const makeProject = (overrides?: Partial<Project>): Project => ({
   companyName: 'ChillDesignStudio',
   projectLocation: 'Los Angeles, CA',
   budgetCents: 25_000_000,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2024-01-01T00:00:00Z',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-02T00:00:00Z',
   ...overrides,

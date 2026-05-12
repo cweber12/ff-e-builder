@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import type { Project } from '../types';
 import { ProjectSnapshotPage } from './ProjectSnapshotPage';
 
 vi.mock('../hooks', () => ({
@@ -12,7 +13,7 @@ vi.mock('../components/shared/ImageFrame', () => ({
   ImageFrame: ({ alt }: { alt: string }) => <div>{alt}</div>,
 }));
 
-const project = {
+const project: Project = {
   id: 'project-1',
   ownerUid: 'uid-1',
   name: 'Sunset Tower',
@@ -23,6 +24,8 @@ const project = {
   budgetCents: 50_000_00,
   ffeBudgetCents: 20_000_00,
   proposalBudgetCents: 15_000_00,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2026-05-01T00:00:00Z',
   createdAt: '2026-05-01T00:00:00Z',
   updatedAt: '2026-05-05T00:00:00Z',
 };

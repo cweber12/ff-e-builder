@@ -26,6 +26,8 @@ const project: Project = {
   budgetCents: 50_000_00,
   ffeBudgetCents: 20_000_00,
   proposalBudgetCents: 15_000_00,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2026-05-01T00:00:00Z',
   createdAt: '2026-05-01T00:00:00Z',
   updatedAt: '2026-05-05T00:00:00Z',
 };

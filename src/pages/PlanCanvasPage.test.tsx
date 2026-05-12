@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import type { Project } from '../types';
 
 vi.mock('../components/plans/PlanViewport', () => ({
   PlanViewport: vi.fn(() => <div data-testid="plan-viewport" />),
@@ -9,7 +10,7 @@ vi.mock('../components/plans/PlanViewport', () => ({
 
 import { PlanCanvasPage } from './PlanCanvasPage';
 
-const project = {
+const project: Project = {
   id: 'project-1',
   ownerUid: 'user-1',
   name: 'Hotel Renovation',
@@ -20,6 +21,8 @@ const project = {
   budgetCents: 0,
   ffeBudgetCents: 0,
   proposalBudgetCents: 0,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2026-05-01T00:00:00Z',
   createdAt: '2026-05-01T00:00:00Z',
   updatedAt: '2026-05-06T00:00:00Z',
 };

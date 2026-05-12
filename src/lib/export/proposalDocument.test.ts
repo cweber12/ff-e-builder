@@ -18,6 +18,8 @@ const makeProject = (overrides: Partial<Project> = {}): Project => ({
   budgetMode: 'individual',
   budgetCents: 200000,
   proposalBudgetCents: 150000,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2024-01-01T00:00:00Z',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
   ...overrides,

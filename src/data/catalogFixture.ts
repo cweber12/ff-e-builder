@@ -10,6 +10,8 @@ export const catalogProjectFixture: Project = {
   name: 'Ocean House',
   clientName: 'Harbor & Pine',
   budgetCents: 250_000_00,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2026-01-01T00:00:00Z',
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-08T00:00:00Z',
 };

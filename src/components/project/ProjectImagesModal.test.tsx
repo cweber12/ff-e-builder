@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProjectImagesModal } from './ProjectImagesModal';
-import type { ImageAsset } from '../../types';
+import type { ImageAsset, Project } from '../../types';
 
 const { mockUploadMutate, mockDeleteMutate, mockPrimaryMutate, mockUseImages } = vi.hoisted(() => ({
   mockUploadMutate: vi.fn(),
@@ -46,7 +46,7 @@ const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   ...overrides,
 });
 
-const PROJECT = {
+const PROJECT: Project = {
   id: '00000000-0000-0000-0000-000000000001',
   ownerUid: 'uid-1',
   name: 'Sample Project',
@@ -57,6 +57,8 @@ const PROJECT = {
   budgetCents: 0,
   ffeBudgetCents: 0,
   proposalBudgetCents: 0,
+  proposalStatus: 'in_progress',
+  proposalStatusUpdatedAt: '2026-05-03T00:00:00Z',
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',
 };
