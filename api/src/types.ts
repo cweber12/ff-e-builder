@@ -285,7 +285,7 @@ export const CreateItemSchema = z.object({
   unit_cost_cents: z.number().int().nonnegative().default(0),
   lead_time: z.string().max(100).nullable().default(null),
   status: z.enum(itemStatuses).default('pending'),
-  custom_data: z.record(z.string().uuid(), z.string().max(2000)).default({}),
+  custom_data: z.record(z.string().max(255), z.string().max(2000)).default({}),
   sort_order: z.number().int().nonnegative().default(0),
 });
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
@@ -363,7 +363,7 @@ export const CreateProposalItemSchema = z.object({
   quantity_unit: z.string().max(50).default('unit'),
   unit_cost_cents: z.number().int().nonnegative().default(0),
   sort_order: z.number().int().nonnegative().default(0),
-  custom_data: z.record(z.string().uuid(), z.string().max(2000)).default({}),
+  custom_data: z.record(z.string().max(255), z.string().max(2000)).default({}),
 });
 export type CreateProposalItemInput = z.infer<typeof CreateProposalItemSchema>;
 

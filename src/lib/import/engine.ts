@@ -12,37 +12,10 @@ export type DetectedTable = {
   rows: Record<string, string>[];
 };
 
-export type SecondPassResult = {
-  headerRowIndex: number;
-  foundColumns: ImportColumn[];
-  missingLabels: string[];
-};
-
-export type GroupedRow = {
-  rowStart: number; // 1-based, first raw row of this logical item
-  rowEnd: number; // 1-based, last raw row of this logical item
-  values: string[]; // merged column values — sub-row non-empty values joined with '\n'
-};
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SCAN_LIMIT = 25;
-const MIN_HEADER_CELLS = 2;
-const CONSISTENCY_ROWS = 3;
-const MIN_SCORE = 0.25;
-const ID_DETECTION_THRESHOLD = 3;
-
-export const ITEM_ID_PATTERN = /^[A-Za-z]+-?\s*\d+$/;
-
-const ID_COLUMN_ALIASES = [
-  'id',
-  'item id',
-  'item no',
-  'item number',
-  'item tag',
-  'ref',
-  'reference',
-];
+const MIN_HEADER_CELLS = 3;
 
 export const SUMMARY_ROW_PATTERNS = [
   /^total$/i,
@@ -111,181 +84,85 @@ export function columnsToRecord(columns: ImportColumn[], values: string[]): Reco
 
 // ─── Header detection ─────────────────────────────────────────────────────────
 
-function scoreHeaderCandidate(
-  rows: string[][],
-  rowIndex: number,
-  skipColumns?: Set<number>,
-): number {
-  const row = rows[rowIndex] ?? [];
-
-  const labelCols: number[] = [];
-  for (let i = 0; i < row.length; i++) {
-    if (skipColumns?.has(i)) continue;
-    const cell = row[i]?.trim() ?? '';
-    if (cell && !isPurelyNumeric(cell)) labelCols.push(i);
-  }
-  if (labelCols.length < MIN_HEADER_CELLS) return 0;
-
-  let consistentCols = 0;
-  for (const colIndex of labelCols) {
-    let hits = 0;
-    for (let r = rowIndex + 1; r <= rowIndex + CONSISTENCY_ROWS; r++) {
-      if ((rows[r]?.[colIndex] ?? '').trim()) hits++;
-    }
-    if (hits >= 1) consistentCols++;
-  }
-
-  const labelScore = Math.min(1, labelCols.length / 5);
-  const consistencyScore = consistentCols / labelCols.length;
-  return labelScore * 0.4 + consistencyScore * 0.6;
-}
-
+// Returns the index of the first row in the top `scanLimit` rows that has
+// at least MIN_HEADER_CELLS non-empty, non-numeric cells (excluding skipColumns)
+// and is immediately followed by a non-empty row.
 export function detectTableHeader(
   rows: string[][],
   scanLimit = SCAN_LIMIT,
   skipColumns?: Set<number>,
 ): number | null {
-  let bestIndex = -1;
-  let bestScore = 0;
   const limit = Math.min(rows.length, scanLimit);
-
   for (let i = 0; i < limit; i++) {
-    const score = scoreHeaderCandidate(rows, i, skipColumns);
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = i;
+    const row = rows[i] ?? [];
+    let labelCols = 0;
+    for (let j = 0; j < row.length; j++) {
+      if (skipColumns?.has(j)) continue;
+      const cell = row[j]?.trim() ?? '';
+      if (cell && !isPurelyNumeric(cell)) labelCols++;
     }
+    if (labelCols < MIN_HEADER_CELLS) continue;
+    const nextRow = rows[i + 1] ?? [];
+    if (nextRow.some((cell) => cell?.trim())) return i;
   }
-
-  return bestScore >= MIN_SCORE ? bestIndex : null;
+  return null;
 }
 
 // ─── Row extraction ───────────────────────────────────────────────────────────
 
-export function extractTableRows(rows: string[][], startIndex: number): string[][] {
+// Extracts data rows starting at startIndex, skipping empty rows and stopping
+// at the first summary row or stopIndex (exclusive). Empty rows within the
+// data block are skipped rather than treated as end-of-table.
+export function extractTableRows(
+  rows: string[][],
+  startIndex: number,
+  stopIndex?: number,
+): string[][] {
   const result: string[][] = [];
-  for (let i = startIndex; i < rows.length; i++) {
+  const limit = stopIndex ?? rows.length;
+  for (let i = startIndex; i < limit; i++) {
     const row = rows[i] ?? [];
-    if (isEmptyRow(row)) break;
     if (isSummaryRow(row)) break;
-    result.push(row);
+    if (!isEmptyRow(row)) result.push(row);
   }
   return result;
 }
 
-// ─── ID column detection ──────────────────────────────────────────────────────
+// ─── Section utilities ────────────────────────────────────────────────────────
 
-// Returns the column key of the item ID column, or null if none found.
-// Strategy A: header alias match. Strategy B: pattern scan fallback.
-export function detectIdColumn(columns: ImportColumn[], dataRows: string[][]): string | null {
-  const aliasMatch = columns.find((col) => ID_COLUMN_ALIASES.includes(normalizeLabel(col.label)));
-  if (aliasMatch) return aliasMatch.key;
-
-  let bestKey: string | null = null;
-  let bestCount = 0;
-  for (const col of columns) {
-    const colIndex = col.columnNumber - 1;
-    const count = dataRows.filter((row) =>
-      ITEM_ID_PATTERN.test(row[colIndex]?.trim() ?? ''),
-    ).length;
-    if (count > bestCount) {
-      bestCount = count;
-      bestKey = col.key;
-    }
+// Returns the text of a single-cell row found within 4 rows above headerIndex,
+// used as the Table Group name (Room for FF&E, Proposal Category for Proposal).
+export function findSectionTitle(rows: string[][], headerIndex: number): string {
+  for (let i = headerIndex - 1; i >= Math.max(0, headerIndex - 4); i--) {
+    const values = (rows[i] ?? []).map((v) => v.trim()).filter(Boolean);
+    if (values.length === 1) return values[0]!;
   }
-  return bestCount >= ID_DETECTION_THRESHOLD ? bestKey : null;
+  return '';
 }
 
-// ─── ID-anchored row grouping ─────────────────────────────────────────────────
-
-// Groups raw rows into logical items using the ID column as the anchor.
-// Empty rows are skipped (not treated as item boundaries). Stops at summary
-// rows or stopIndex. Sub-row values are merged into the parent with '\n'.
-export function groupRowsById(
+// Returns 0-based indices of rows (starting at startIndex) that look like a
+// repeat of the column header row — at least `threshold` of their cells match
+// known column aliases. Used to detect section boundaries in multi-section sheets.
+export function findRepeatHeaderIndices(
   rows: string[][],
   startIndex: number,
-  idColumnIndex: number,
-  stopIndex?: number,
-): GroupedRow[] {
-  const grouped: GroupedRow[] = [];
-  let current: GroupedRow | null = null;
-  const limit = stopIndex ?? rows.length;
-
-  for (let i = startIndex; i < limit; i++) {
-    const row = rows[i] ?? [];
-    const rowNumber = i + 1; // 1-based
-
-    if (isEmptyRow(row)) continue;
-    if (isSummaryRow(row)) break;
-
-    const idCell = row[idColumnIndex]?.trim() ?? '';
-    const isNewItem = ITEM_ID_PATTERN.test(idCell);
-
-    if (isNewItem) {
-      if (current) grouped.push(current);
-      current = { rowStart: rowNumber, rowEnd: rowNumber, values: [...row] };
-    } else if (current) {
-      current.rowEnd = rowNumber;
-      const maxLen = Math.max(current.values.length, row.length);
-      for (let col = 0; col < maxLen; col++) {
-        const existing = current.values[col]?.trim() ?? '';
-        const newVal = row[col]?.trim() ?? '';
-        if (newVal) {
-          current.values[col] = existing ? `${existing}\n${newVal}` : newVal;
-        }
-      }
-    }
-    // sub-rows before the first ID are silently discarded
+  columnAliases: string[],
+): number[] {
+  const threshold = Math.min(3, columnAliases.length);
+  const result: number[] = [];
+  for (let i = startIndex; i < rows.length; i++) {
+    if (isRepeatHeader(rows[i] ?? [], columnAliases, threshold)) result.push(i);
   }
-
-  if (current) grouped.push(current);
-  return grouped;
+  return result;
 }
 
-// ─── Second-pass scan (user-entered headers) ──────────────────────────────────
-
-export function scanForExactHeaders(
-  rows: string[][],
-  targetLabels: string[],
-): SecondPassResult | null {
-  if (targetLabels.length === 0) return null;
-  const normalizedTargets = targetLabels.map(normalizeLabel);
-
-  let bestRowIndex = -1;
-  let bestMatchCount = 0;
-  let bestFoundColumns: ImportColumn[] = [];
-
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-    const row = rows[rowIndex] ?? [];
-    const found: ImportColumn[] = [];
-    const usedTargetIndices = new Set<number>();
-
-    for (let colIndex = 0; colIndex < row.length; colIndex++) {
-      const cellNorm = normalizeLabel(row[colIndex] ?? '');
-      const matchIndex = normalizedTargets.indexOf(cellNorm);
-      if (matchIndex !== -1 && !usedTargetIndices.has(matchIndex)) {
-        usedTargetIndices.add(matchIndex);
-        found.push({
-          key: `${targetLabels[matchIndex]}__${colIndex + 1}`,
-          label: targetLabels[matchIndex]!,
-          columnNumber: colIndex + 1,
-        });
-      }
-    }
-
-    if (found.length > bestMatchCount) {
-      bestMatchCount = found.length;
-      bestRowIndex = rowIndex;
-      bestFoundColumns = found;
-    }
-  }
-
-  if (bestRowIndex === -1 || bestMatchCount === 0) return null;
-
-  const foundNormalized = new Set(bestFoundColumns.map((c) => normalizeLabel(c.label)));
-  const missingLabels = targetLabels.filter((l) => !foundNormalized.has(normalizeLabel(l)));
-
-  return { headerRowIndex: bestRowIndex, foundColumns: bestFoundColumns, missingLabels };
+export function isRepeatHeader(
+  row: string[],
+  columnAliases: string[],
+  threshold = Math.min(3, columnAliases.length),
+): boolean {
+  const matchCount = row.filter((v) => columnAliases.includes(normalizeLabel(v))).length;
+  return matchCount >= threshold;
 }
 
 // ─── High-level convenience ───────────────────────────────────────────────────

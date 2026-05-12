@@ -150,9 +150,21 @@ _Avoid_: Rendering, Swatch, Measured Plan when referring to the item-level deriv
 The shared scale definition for one Measured Plan. Plan Calibration is established from a known-length line on that Measured Plan, includes the unit context for that plan, and is reused by every Measurement taken from it.
 _Avoid_: Per-item scale, temporary ruler state
 
+**Spreadsheet Import**:
+The shared workflow for importing external spreadsheets into the FF&E or Proposal table. The engine auto-detects the column header row within the first 25 rows, extracts all columns in order, and creates a Table Group from the Import Section title. Columns that match known fields are mapped automatically; unrecognized columns become custom data. No user-facing column mapping step is shown.
+_Avoid_: Template-only import, raw upload, column mapping wizard
+
+**FF&E Spreadsheet Import**:
+A Spreadsheet Import targeting the FF&E table. Each Import Section title becomes a Room name; if the Room does not exist it is created. All columns are imported: recognized columns map to FF&E Item fields, unrecognized columns land in custom data.
+_Avoid_: Proposal import when referring to FF&E context
+
 **Proposal Spreadsheet Import**:
-The workflow that turns an external Proposal spreadsheet into Project Images, Proposal Categories, Proposal Items, Renderings, Plan Images, and Swatches. Header rows may appear below presentation content, single-cell headings can become Proposal Categories, and unmapped spreadsheet data is omitted.
-_Avoid_: Raw upload, template-only import
+A Spreadsheet Import targeting the Proposal table. Each Import Section title becomes a Proposal Category name; if the Category does not exist it is created. All columns are imported: recognized columns map to Proposal Item fields, unrecognized columns land in custom data. Embedded swatch images are extracted as a separate post-processing step and added to the Finish Library.
+_Avoid_: Raw upload, template-only import, column mapping wizard
+
+**Import Section**:
+A single named table block within a spreadsheet — one title row (single non-empty cell) followed by a column header row and one or more data rows. A spreadsheet may contain multiple Import Sections separated by repeat header rows. The Import Section title becomes the Table Group name (Room for FF&E, Proposal Category for Proposal). If no title row is found above the header, the sheet name is used.
+_Avoid_: Category, room, sheet (when referring to the logical import block)
 
 ## Relationships
 
@@ -175,8 +187,11 @@ _Avoid_: Raw upload, template-only import
 - A **Project Header** shows only included **Project** identity values and navigation between project tools.
 - **Plans** is a first-class Project tool in the Project Header navigation.
 - **Project Options** are available from both Project Cards and the **Project Header** so Project data can be updated without making header fields inline-editable.
-- A **Proposal Spreadsheet Import** can create missing **Proposal Categories** from detected category headings or mapped category values.
-- A **Proposal Spreadsheet Import** skips subtotal and financial summary rows instead of creating **Proposal Items** from them.
+- A **Spreadsheet Import** auto-detects the column header row within the first 25 rows; no user-facing mapping step is required.
+- A **Spreadsheet Import** skips financial summary rows (Total, Grand Total, Shipping, Tax, etc.) instead of creating items from them.
+- A **Spreadsheet Import** supports multi-section sheets: each **Import Section** creates one **Table Group** (Room or Proposal Category).
+- An **FF&E Spreadsheet Import** creates missing **Rooms** from detected **Import Section** titles.
+- A **Proposal Spreadsheet Import** creates missing **Proposal Categories** from detected **Import Section** titles.
 - A **Proposal Spreadsheet Import** migrates embedded swatch images into the **Finish Library** as **Materials** assigned to the imported **Proposal Items**.
 - A **Measured Plan** can produce derived **Plan Images** attached to either **FF&E Items** or **Proposal Items** after a user confirms the measured item association.
 - A **Measured Plan** owns one shared **Plan Calibration**, and all **Measurements** taken from that plan reuse that calibration.

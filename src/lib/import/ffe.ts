@@ -1,7 +1,7 @@
-import * as XLSX from 'xlsx';
+import { normalizeLabel, type ImportColumn } from './engine';
+import { parseFileToRawRows, parseRawRowsToSections } from './parser';
 import type { CreateItemInput } from '../api';
 import { itemStatuses } from '../../types';
-import { detectTableHeader, extractTableRows, normalizeLabel, scanForExactHeaders } from './engine';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,20 +19,16 @@ export type ColumnMap = {
   materials: string | null;
 };
 
-export type ParsedSpreadsheet = {
-  headers: string[];
-  rows: Record<string, string>[];
+export type ParsedFFESpreadsheet = {
+  filename: string;
+  sheetName: string;
+  fileType: 'xlsx' | 'xls' | 'csv';
+  columns: ImportColumn[];
+  sections: Array<{ title: string; rows: Record<string, string>[] }>;
+  warnings: string[];
 };
 
 export type ImportedItem = CreateItemInput & { roomName: string | null; materialsRaw: string };
-
-function spreadsheetValueToString(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (value instanceof Date) return value.toISOString();
-  return '';
-}
 
 // ─── Field aliases for auto-mapping ──────────────────────────────────────────
 
@@ -90,91 +86,33 @@ const FIELD_ALIASES: Record<keyof ColumnMap, string[]> = {
 
 // ─── Parsing ──────────────────────────────────────────────────────────────────
 
-export async function parseExcelFile(file: File): Promise<ParsedSpreadsheet> {
-  const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { type: 'array' });
-  const sheetName = wb.SheetNames[0];
-  if (!sheetName) return { headers: [], rows: [] };
+export async function parseFFESpreadsheet(file: File): Promise<ParsedFFESpreadsheet> {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  const fileType: ParsedFFESpreadsheet['fileType'] =
+    extension === 'xlsx' ? 'xlsx' : extension === 'csv' ? 'csv' : 'xls';
 
-  const sheet = wb.Sheets[sheetName];
-  if (!sheet) return { headers: [], rows: [] };
-  const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-  if (raw.length === 0) return { headers: [], rows: [] };
+  const { sheetName, rawRows } = await parseFileToRawRows(file);
 
-  const allRows: string[][] = raw.map((rowArray) => rowArray.map(spreadsheetValueToString));
+  const warnings: string[] = [];
+  const { columns, sections } = parseRawRowsToSections(rawRows, {
+    fallbackTitle: (i) => (i === 0 ? sheetName || 'Sheet 1' : `Section ${i + 1}`),
+  });
 
-  const headerRowIndex = detectTableHeader(allRows);
-  if (headerRowIndex === null) return { headers: [], rows: [] };
+  if (sections.length === 0) warnings.push('No table header was detected in this file.');
 
-  const headers = (allRows[headerRowIndex] ?? []).map((h) => h.trim());
-  const nonEmptyHeaders = headers.filter(Boolean);
-  if (nonEmptyHeaders.length === 0) return { headers: [], rows: [] };
-
-  const dataRows = extractTableRows(allRows, headerRowIndex + 1);
-  const rows: Record<string, string>[] = [];
-
-  for (const rowArray of dataRows) {
-    const record: Record<string, string> = {};
-    let hasContent = false;
-    for (let j = 0; j < headers.length; j++) {
-      const header = headers[j];
-      if (!header) continue;
-      const cell = rowArray[j]?.trim() ?? '';
-      record[header] = cell;
-      if (cell) hasContent = true;
-    }
-    if (hasContent) rows.push(record);
-  }
-
-  return { headers: nonEmptyHeaders, rows };
+  return { filename: file.name, sheetName, fileType, columns, sections, warnings };
 }
 
-export async function parseExcelFileWithLabels(
-  file: File,
-  labels: string[],
-): Promise<{ parsed: ParsedSpreadsheet; missingLabels: string[] }> {
-  const empty = { parsed: { headers: [], rows: [] } as ParsedSpreadsheet, missingLabels: labels };
-  const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { type: 'array' });
-  const sheetName = wb.SheetNames[0];
-  if (!sheetName) return empty;
-  const sheet = wb.Sheets[sheetName];
-  if (!sheet) return empty;
+// ─── Column auto-mapping ──────────────────────────────────────────────────────
 
-  const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-  const allRows: string[][] = raw.map((row) => row.map(spreadsheetValueToString));
-  const secondPass = scanForExactHeaders(allRows, labels);
-  if (!secondPass) return empty;
-
-  const headers = secondPass.foundColumns.map((c) => c.label);
-  const dataRows = extractTableRows(allRows, secondPass.headerRowIndex + 1);
-  const rows: Record<string, string>[] = [];
-
-  for (const rowArray of dataRows) {
-    const record: Record<string, string> = {};
-    let hasContent = false;
-    for (const column of secondPass.foundColumns) {
-      const cell = rowArray[column.columnNumber - 1]?.trim() ?? '';
-      record[column.label] = cell;
-      if (cell) hasContent = true;
-    }
-    if (hasContent) rows.push(record);
-  }
-
-  return { parsed: { headers, rows }, missingLabels: secondPass.missingLabels };
-}
-
-export function autoMapColumns(headers: string[]): Partial<ColumnMap> {
+export function autoMapColumns(columns: ImportColumn[]): Partial<ColumnMap> {
   const result: Partial<ColumnMap> = {};
 
   for (const [field, aliases] of Object.entries(FIELD_ALIASES) as [keyof ColumnMap, string[]][]) {
-    const match = headers.findIndex((h) =>
-      aliases.some((alias) => normalizeLabel(alias) === normalizeLabel(h)),
+    const match = columns.find((col) =>
+      aliases.some((alias) => normalizeLabel(alias) === normalizeLabel(col.label)),
     );
-    if (match !== -1) {
-      const header = headers[match];
-      if (header !== undefined) result[field] = header;
-    }
+    if (match) result[field] = match.key;
   }
 
   return result;
@@ -205,7 +143,11 @@ function normalizeStatus(raw: string): (typeof itemStatuses)[number] | null {
   return null;
 }
 
-export function transformRow(row: Record<string, string>, mapping: ColumnMap): ImportedItem | null {
+export function transformRow(
+  row: Record<string, string>,
+  mapping: ColumnMap,
+  columns?: ImportColumn[],
+): ImportedItem | null {
   const get = (field: keyof ColumnMap): string => {
     const col = mapping[field];
     return col ? (row[col] ?? '').trim() : '';
@@ -214,10 +156,20 @@ export function transformRow(row: Record<string, string>, mapping: ColumnMap): I
   const itemName = get('itemName');
   if (!itemName) return null;
 
+  const recognizedKeys = new Set(Object.values(mapping).filter(Boolean) as string[]);
+  const customData: Record<string, string> = {};
+  if (columns) {
+    for (const col of columns) {
+      if (!recognizedKeys.has(col.key)) {
+        const val = (row[col.key] ?? '').trim();
+        if (val) customData[col.label] = val;
+      }
+    }
+  }
+
   const unitCostRaw = get('unitCostDollars');
   const qtyRaw = get('qty');
   const statusRaw = get('status');
-  const roomName = get('room') || null;
 
   return {
     itemName,
@@ -229,14 +181,19 @@ export function transformRow(row: Record<string, string>, mapping: ColumnMap): I
     status: statusRaw ? (normalizeStatus(statusRaw) ?? 'pending') : 'pending',
     leadTime: get('leadTime') || null,
     notes: get('notes') || null,
-    roomName,
+    ...(Object.keys(customData).length > 0 && { customData }),
+    roomName: get('room') || null,
     materialsRaw: get('materials'),
   };
 }
 
-export function transformRows(rows: Record<string, string>[], mapping: ColumnMap): ImportedItem[] {
+export function transformRows(
+  rows: Record<string, string>[],
+  mapping: ColumnMap,
+  columns?: ImportColumn[],
+): ImportedItem[] {
   return rows.flatMap((row) => {
-    const result = transformRow(row, mapping);
+    const result = transformRow(row, mapping, columns);
     return result ? [result] : [];
   });
 }

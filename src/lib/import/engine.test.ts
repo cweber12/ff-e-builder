@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   buildColumns,
   columnsToRecord,
-  detectIdColumn,
   detectTable,
   detectTableHeader,
   extractTableRows,
-  groupRowsById,
+  findRepeatHeaderIndices,
+  findSectionTitle,
   isSummaryRow,
+  isRepeatHeader,
   normalizeLabel,
-  scanForExactHeaders,
 } from './engine';
 
 // ─── normalizeLabel ───────────────────────────────────────────────────────────
@@ -131,7 +131,7 @@ describe('detectTableHeader', () => {
     expect(detectTableHeader(rows)).toBe(0);
   });
 
-  it('skips title rows and finds header further down', () => {
+  it('skips single-cell title rows and finds header further down', () => {
     const rows = [
       ['Acme Furniture — 2024 Product List'],
       [''],
@@ -142,7 +142,7 @@ describe('detectTableHeader', () => {
     expect(detectTableHeader(rows)).toBe(2);
   });
 
-  it('skips company header row and finds data header', () => {
+  it('skips two-cell key-value metadata rows and finds the real header', () => {
     const rows = [
       ['Project Name', 'Spring Hotel FF&E'],
       ['Client', 'Acme Corp'],
@@ -183,30 +183,34 @@ describe('detectTableHeader', () => {
       ['Item', 'Qty', 'Cost', 'Description'],
       ['Chair', '2', '1200', 'note'],
     ];
-    // header is at index 3, scanLimit=2 should miss it
     expect(detectTableHeader(rows, 2)).toBeNull();
     expect(detectTableHeader(rows, 5)).toBe(3);
   });
 
-  it('skips columns in skipColumns when scoring', () => {
-    // Row 0: real header with an IMAGE col (col index 2) that has no data below
-    // Row 1: first data row — without skip, IMAGE penalty could make row 1 win
+  it('excludes skipColumns from the qualifying-cell count', () => {
+    // Row 0 is the real header; cols 0 and 3 are image-only columns with no text.
+    // With skipColumns={0,3} the remaining 5 text cells still qualify.
     const rows = [
       ['', 'ID', 'Manufacturer', 'IMAGE', 'Type', 'Description', 'Location'],
       ['', 'PL-1', 'Herman Miller', '', 'Chair', 'Aeron', 'Office'],
       ['', 'PL-2', 'Knoll', '', 'Table', 'Saarinen', 'Dining'],
-      ['', 'PL-3', 'Herman Miller', '', 'Sofa', 'Eames', 'Lounge'],
     ];
-    // Without skipColumns, IMAGE col (index 3) in row 0 has no data below → possible score dip
-    // With skipColumns={3}, row 0 should reliably win
     expect(detectTableHeader(rows, 25, new Set([0, 3]))).toBe(0);
+  });
+
+  it('requires the next row to be non-empty', () => {
+    const rows = [
+      ['Item', 'Qty', 'Cost', 'Description'],
+      // no next row
+    ];
+    expect(detectTableHeader(rows)).toBeNull();
   });
 });
 
 // ─── extractTableRows ─────────────────────────────────────────────────────────
 
 describe('extractTableRows', () => {
-  it('extracts rows until empty row', () => {
+  it('skips empty rows rather than stopping at them', () => {
     const rows = [
       ['Chair', '2', '1200'],
       ['Table', '1', '800'],
@@ -214,9 +218,10 @@ describe('extractTableRows', () => {
       ['Lamp', '4', '200'],
     ];
     const result = extractTableRows(rows, 0);
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0]![0]).toBe('Chair');
     expect(result[1]![0]).toBe('Table');
+    expect(result[2]![0]).toBe('Lamp');
   });
 
   it('stops at a summary row', () => {
@@ -250,64 +255,121 @@ describe('extractTableRows', () => {
     expect(result).toHaveLength(2);
     expect(result[0]![0]).toBe('Chair');
   });
+
+  it('respects stopIndex and does not read past it', () => {
+    const rows = [
+      ['Chair', '2', '1200'],
+      ['Table', '1', '800'],
+      ['Lamp', '4', '200'],
+    ];
+    const result = extractTableRows(rows, 0, 2);
+    expect(result).toHaveLength(2);
+    expect(result[1]![0]).toBe('Table');
+  });
 });
 
-// ─── scanForExactHeaders ──────────────────────────────────────────────────────
+// ─── findSectionTitle ─────────────────────────────────────────────────────────
 
-describe('scanForExactHeaders', () => {
-  it('finds all target labels in the correct row', () => {
-    const rows = [['Project Info'], ['Product Name', 'Qty', 'Unit Cost'], ['Chair', '2', '1200']];
-    const result = scanForExactHeaders(rows, ['Product Name', 'Qty', 'Unit Cost']);
-    expect(result).not.toBeNull();
-    expect(result!.headerRowIndex).toBe(1);
-    expect(result!.missingLabels).toHaveLength(0);
-    expect(result!.foundColumns).toHaveLength(3);
-  });
-
-  it('is case-insensitive', () => {
+describe('findSectionTitle', () => {
+  it('returns the single-cell row immediately above the header', () => {
     const rows = [
-      ['PRODUCT NAME', 'QTY', 'UNIT COST'],
-      ['Chair', '2', '1200'],
+      ['Master Bedroom'],
+      ['Item', 'Qty', 'Cost', 'Description'],
+      ['Chair', '2', '1200', ''],
     ];
-    const result = scanForExactHeaders(rows, ['product name', 'qty', 'unit cost']);
-    expect(result).not.toBeNull();
-    expect(result!.missingLabels).toHaveLength(0);
+    expect(findSectionTitle(rows, 1)).toBe('Master Bedroom');
   });
 
-  it('reports missing labels', () => {
+  it('returns the single-cell row up to 4 rows above', () => {
     const rows = [
-      ['Product Name', 'Qty'],
-      ['Chair', '2'],
+      ['Living Room'],
+      [''],
+      [''],
+      [''],
+      ['Item', 'Qty', 'Cost', 'Description'],
+      ['Sofa', '1', '3000', ''],
     ];
-    const result = scanForExactHeaders(rows, ['Product Name', 'Qty', 'Unit Cost']);
-    expect(result).not.toBeNull();
-    expect(result!.missingLabels).toContain('Unit Cost');
-    expect(result!.foundColumns).toHaveLength(2);
+    expect(findSectionTitle(rows, 4)).toBe('Living Room');
   });
 
-  it('returns null for empty input', () => {
-    expect(scanForExactHeaders([], ['Item'])).toBeNull();
-    expect(scanForExactHeaders([['Item']], [])).toBeNull();
-  });
-
-  it('picks the row with the most matches when multiple rows partially match', () => {
+  it('returns empty string when no single-cell row is found', () => {
     const rows = [
-      ['Item', 'Cost'],
-      ['Item', 'Cost', 'Qty', 'Description'],
-      ['Chair', '1200', '2', 'lounge'],
+      ['Project Name', 'Spring Hotel'],
+      ['Item', 'Qty', 'Cost', 'Description'],
     ];
-    const result = scanForExactHeaders(rows, ['Item', 'Cost', 'Qty', 'Description']);
-    expect(result!.headerRowIndex).toBe(1);
+    expect(findSectionTitle(rows, 1)).toBe('');
   });
 
-  it('assigns correct columnNumbers to found columns', () => {
-    const rows = [['', 'Product Name', '', 'Qty']];
-    const result = scanForExactHeaders(rows, ['Product Name', 'Qty']);
-    expect(result).not.toBeNull();
-    const productCol = result!.foundColumns.find((c) => c.label === 'Product Name');
-    const qtyCol = result!.foundColumns.find((c) => c.label === 'Qty');
-    expect(productCol!.columnNumber).toBe(2);
-    expect(qtyCol!.columnNumber).toBe(4);
+  it('returns empty string when header is at row 0', () => {
+    const rows = [
+      ['Item', 'Qty', 'Cost', 'Description'],
+      ['Chair', '2', '1200', ''],
+    ];
+    expect(findSectionTitle(rows, 0)).toBe('');
+  });
+
+  it('ignores rows more than 4 rows above', () => {
+    const rows = [['Too Far Away'], [''], [''], [''], [''], ['Item', 'Qty', 'Cost', 'Description']];
+    expect(findSectionTitle(rows, 5)).toBe('');
+  });
+});
+
+// ─── findRepeatHeaderIndices / isRepeatHeader ─────────────────────────────────
+
+describe('findRepeatHeaderIndices', () => {
+  const aliases = ['item name', 'qty', 'cost', 'description'];
+
+  it('finds a single repeat header row', () => {
+    const rows = [
+      ['Chair', '2', '1200', 'Lounge'],
+      ['Item Name', 'Qty', 'Cost', 'Description'],
+      ['Table', '1', '800', 'Dining'],
+    ];
+    expect(findRepeatHeaderIndices(rows, 0, aliases)).toEqual([1]);
+  });
+
+  it('finds multiple repeat header rows', () => {
+    const rows = [
+      ['Chair', '2', '1200', 'Lounge'],
+      ['Item Name', 'Qty', 'Cost', 'Description'],
+      ['Table', '1', '800', 'Dining'],
+      ['Item Name', 'Qty', 'Cost', 'Description'],
+      ['Lamp', '4', '200', 'Task'],
+    ];
+    expect(findRepeatHeaderIndices(rows, 0, aliases)).toEqual([1, 3]);
+  });
+
+  it('respects startIndex', () => {
+    const rows = [
+      ['Item Name', 'Qty', 'Cost', 'Description'],
+      ['Chair', '2', '1200', 'Lounge'],
+      ['Item Name', 'Qty', 'Cost', 'Description'],
+    ];
+    expect(findRepeatHeaderIndices(rows, 1, aliases)).toEqual([2]);
+  });
+
+  it('returns empty array when no repeat headers exist', () => {
+    const rows = [
+      ['Chair', '2', '1200', 'Lounge'],
+      ['Table', '1', '800', 'Dining'],
+    ];
+    expect(findRepeatHeaderIndices(rows, 0, aliases)).toEqual([]);
+  });
+});
+
+describe('isRepeatHeader', () => {
+  const aliases = ['item name', 'qty', 'cost', 'description'];
+
+  it('returns true when enough cells match aliases', () => {
+    expect(isRepeatHeader(['Item Name', 'Qty', 'Cost', 'Description'], aliases)).toBe(true);
+  });
+
+  it('returns false when too few cells match', () => {
+    expect(isRepeatHeader(['Item Name', 'Qty'], aliases)).toBe(false);
+  });
+
+  it('is case-insensitive via normalizeLabel', () => {
+    expect(isRepeatHeader(['ITEM NAME', 'QTY', 'COST', 'DESCRIPTION'], aliases)).toBe(true);
   });
 });
 
@@ -351,7 +413,7 @@ describe('detectTable', () => {
     expect(detectTable([])).toBeNull();
   });
 
-  it('stops data extraction at empty row', () => {
+  it('skips empty rows within data', () => {
     const rows = [
       ['Item', 'Qty', 'Cost'],
       ['Chair', '2', '1200'],
@@ -359,7 +421,7 @@ describe('detectTable', () => {
       ['Lamp', '4', '200'],
     ];
     const result = detectTable(rows);
-    expect(result!.rows).toHaveLength(1);
+    expect(result!.rows).toHaveLength(2);
   });
 
   it('stops data extraction at summary row', () => {
@@ -370,150 +432,5 @@ describe('detectTable', () => {
     ];
     const result = detectTable(rows);
     expect(result!.rows).toHaveLength(1);
-  });
-});
-
-// ─── detectIdColumn ───────────────────────────────────────────────────────────
-
-describe('detectIdColumn', () => {
-  const cols = buildColumns(['ID', 'Manufacturer', 'Description', 'Location']);
-  const dataRows = [
-    ['PL-1', 'Herman Miller', 'Aeron Chair', 'Office'],
-    ['PL-2', 'Knoll', 'Barcelona Chair', 'Lounge'],
-    ['PL-3', 'Vitra', 'Eames Lounge', 'Living Room'],
-  ];
-
-  it('finds ID column by alias match', () => {
-    expect(detectIdColumn(cols, dataRows)).toBe('ID__1');
-  });
-
-  it('alias match is case-insensitive', () => {
-    const cols2 = buildColumns(['Item ID', 'Manufacturer']);
-    expect(detectIdColumn(cols2, dataRows)).toBe('Item ID__1');
-  });
-
-  it('falls back to pattern scan when header alias not found', () => {
-    const cols2 = buildColumns(['Reference', 'Make', 'Model']);
-    // 'reference' is in the alias list, so this tests that path too
-    expect(detectIdColumn(cols2, dataRows)).toBe('Reference__1');
-  });
-
-  it('uses pattern scan when alias does not match', () => {
-    const cols2 = buildColumns(['Tag No.', 'Make', 'Model']);
-    const rows = [
-      ['FF-1', 'Knoll', 'Saarinen'],
-      ['FF-2', 'Herman Miller', 'Aeron'],
-      ['FF-3', 'Vitra', 'Panton'],
-      ['FF-4', 'Cassina', 'LC2'],
-    ];
-    expect(detectIdColumn(cols2, rows)).toBe('Tag No.__1');
-  });
-
-  it('returns null when fewer than 3 pattern matches are found', () => {
-    const cols2 = buildColumns(['Code', 'Make', 'Model']);
-    const sparseRows = [
-      ['FF-1', 'Knoll', 'Saarinen'],
-      ['not an id', 'Herman Miller', 'Aeron'],
-      ['also not', 'Vitra', 'Panton'],
-    ];
-    expect(detectIdColumn(cols2, sparseRows)).toBeNull();
-  });
-});
-
-// ─── groupRowsById ────────────────────────────────────────────────────────────
-
-describe('groupRowsById', () => {
-  // Columns: 0=ID, 1=Manufacturer, 2=Description, 3=Location
-  // idColumnIndex = 0
-
-  it('groups a simple two-item table', () => {
-    const rows = [
-      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
-      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
-    ];
-    const grouped = groupRowsById(rows, 0, 0);
-    expect(grouped).toHaveLength(2);
-    expect(grouped[0]!.values[0]).toBe('PL-1');
-    expect(grouped[1]!.values[0]).toBe('PL-2');
-  });
-
-  it('merges sub-rows into parent with newline separator', () => {
-    const rows = [
-      ['PL-1', 'Herman Miller', 'Aeron Chair', 'Office'],
-      ['', '', 'Task chair, adjustable arms', ''],
-      ['', '', 'Lead time: 12 weeks', ''],
-      ['PL-2', 'Knoll', 'Barcelona Chair', 'Lounge'],
-    ];
-    const grouped = groupRowsById(rows, 0, 0);
-    expect(grouped).toHaveLength(2);
-    expect(grouped[0]!.values[2]).toBe(
-      'Aeron Chair\nTask chair, adjustable arms\nLead time: 12 weeks',
-    );
-    expect(grouped[0]!.rowStart).toBe(1);
-    expect(grouped[0]!.rowEnd).toBe(3);
-  });
-
-  it('skips empty rows without stopping', () => {
-    const rows = [
-      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
-      ['', '', '', ''],
-      ['', '', '', ''],
-      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
-    ];
-    const grouped = groupRowsById(rows, 0, 0);
-    expect(grouped).toHaveLength(2);
-  });
-
-  it('stops at a summary row', () => {
-    const rows = [
-      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
-      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
-      ['Total', '', '', ''],
-      ['PL-3', 'Vitra', 'Panton', 'Dining'],
-    ];
-    const grouped = groupRowsById(rows, 0, 0);
-    expect(grouped).toHaveLength(2);
-  });
-
-  it('respects stopIndex boundary', () => {
-    const rows = [
-      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
-      ['PL-2', 'Knoll', 'Barcelona', 'Lounge'],
-      ['PL-3', 'Vitra', 'Panton', 'Dining'],
-    ];
-    const grouped = groupRowsById(rows, 0, 0, 2); // stop before row index 2
-    expect(grouped).toHaveLength(2);
-    expect(grouped[1]!.values[0]).toBe('PL-2');
-  });
-
-  it('discards orphan sub-rows before the first ID', () => {
-    const rows = [
-      ['', 'orphan sub-row', '', ''],
-      ['PL-1', 'Herman Miller', 'Aeron', 'Office'],
-    ];
-    const grouped = groupRowsById(rows, 0, 0);
-    expect(grouped).toHaveLength(1);
-    expect(grouped[0]!.values[0]).toBe('PL-1');
-  });
-
-  it('returns empty array when no ID rows are found', () => {
-    const rows = [
-      ['', 'no id', '', ''],
-      ['', 'no id', '', ''],
-    ];
-    expect(groupRowsById(rows, 0, 0)).toHaveLength(0);
-  });
-
-  it('uses 1-based row numbers in GroupedRow', () => {
-    const rows = [
-      ['PL-1', 'Knoll', 'Chair', 'Office'], // startIndex=0 → rowStart=1
-      ['', '', 'Sub-row detail', ''], // rowEnd=2
-      ['PL-2', 'Vitra', 'Table', 'Dining'], // rowStart=3
-    ];
-    const grouped = groupRowsById(rows, 0, 0);
-    expect(grouped[0]!.rowStart).toBe(1);
-    expect(grouped[0]!.rowEnd).toBe(2);
-    expect(grouped[1]!.rowStart).toBe(3);
-    expect(grouped[1]!.rowEnd).toBe(3);
   });
 });

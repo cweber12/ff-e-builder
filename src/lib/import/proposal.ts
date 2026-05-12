@@ -3,15 +3,14 @@ import * as XLSX from 'xlsx';
 import {
   buildColumns,
   columnsToRecord,
-  detectIdColumn,
   detectTableHeader,
   extractTableRows,
-  groupRowsById,
+  findRepeatHeaderIndices,
+  findSectionTitle,
   isSummaryRow,
+  isRepeatHeader,
   normalizeLabel,
-  scanForExactHeaders,
   type ImportColumn,
-  type SecondPassResult,
 } from './engine';
 
 export type ProposalImportField =
@@ -200,15 +199,6 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
     ...findRepeatHeaderIndices(rawRows, firstHeaderIndex + 1, columnAliases),
   ];
 
-  const dataRowsForIdDetection = rawRows.slice(firstHeaderIndex + 1);
-  const idColumnKey = detectIdColumn(sharedColumns, dataRowsForIdDetection);
-  const idColumn = idColumnKey ? sharedColumns.find((c) => c.key === idColumnKey) : null;
-  if (!idColumn) {
-    warnings.push(
-      'No item ID column detected — rows will not be grouped. Add item IDs (e.g. PL-1) to enable multi-row merging.',
-    );
-  }
-
   const sections: ProposalImportSection[] = [];
   const rows: ProposalParsedRow[] = [];
 
@@ -216,86 +206,38 @@ async function parseXlsxProposalSpreadsheet(file: File): Promise<ParsedProposalS
     const headerIndex = allHeaderIndices[sectionIndex]!;
     const nextHeaderIndex = allHeaderIndices[sectionIndex + 1] ?? rawRows.length;
     const headerRowNumber = headerIndex + 1; // 1-based for display and ExcelJS image coordinates
-    const categoryName = findCategoryName(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
+    const categoryName = findSectionTitle(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
     const sectionRows: ProposalParsedRow[] = [];
 
-    if (idColumn) {
-      const grouped = groupRowsById(
-        rawRows,
-        headerIndex + 1,
-        idColumn.columnNumber - 1,
-        nextHeaderIndex,
-      );
+    const dataRows = extractTableRows(rawRows, headerIndex + 1, nextHeaderIndex);
+    for (const rowArray of dataRows) {
+      if (isRepeatHeader(rowArray, columnAliases)) continue;
 
-      for (const g of grouped) {
-        if (isRepeatHeader(g.values, columnAliases)) continue;
+      const record = columnsToRecord(sharedColumns, rowArray);
+      const rowNumber = rawRows.indexOf(rowArray) + 1;
+      const imagesByColumn = assignImagesByColumnRange(images, rowNumber, rowNumber, sharedColumns);
+      const rowImages = assignRowImages(imagesByColumn, sharedColumns);
 
-        const record = columnsToRecord(sharedColumns, g.values);
-        const imagesByColumn = assignImagesByColumnRange(
-          images,
-          g.rowStart,
-          g.rowEnd,
-          sharedColumns,
-        );
-        const rowImages = assignRowImages(imagesByColumn, sharedColumns);
+      const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
+      const hasImages =
+        rowImages.rendering.length > 0 ||
+        rowImages.plan.length > 0 ||
+        rowImages.swatches.length > 0;
+      if (!hasRawContent && !hasImages) continue;
 
-        const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
-        const hasImages =
-          rowImages.rendering.length > 0 ||
-          rowImages.plan.length > 0 ||
-          rowImages.swatches.length > 0;
-        if (!hasRawContent && !hasImages) continue;
+      const parsedRow: ProposalParsedRow = {
+        id: `${sectionIndex}:${rowNumber}`,
+        rowNumber,
+        categoryName,
+        values: record,
+        imagesByColumn,
+        images: rowImages,
+        sourceSectionIndex: sectionIndex,
+      };
 
-        const parsedRow: ProposalParsedRow = {
-          id: `${sectionIndex}:${g.rowStart}`,
-          rowNumber: g.rowStart,
-          categoryName,
-          values: record,
-          imagesByColumn,
-          images: rowImages,
-          sourceSectionIndex: sectionIndex,
-        };
-
-        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
-        sectionRows.push(parsedRow);
-        rows.push(parsedRow);
-      }
-    } else {
-      for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
-        const rowArray = rawRows[i] ?? [];
-        if (isRepeatHeader(rowArray, columnAliases)) continue;
-
-        const record = columnsToRecord(sharedColumns, rowArray);
-        const rowNumber = i + 1;
-        const imagesByColumn = assignImagesByColumnRange(
-          images,
-          rowNumber,
-          rowNumber,
-          sharedColumns,
-        );
-        const rowImages = assignRowImages(imagesByColumn, sharedColumns);
-
-        const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
-        const hasImages =
-          rowImages.rendering.length > 0 ||
-          rowImages.plan.length > 0 ||
-          rowImages.swatches.length > 0;
-        if (!hasRawContent && !hasImages) continue;
-
-        const parsedRow: ProposalParsedRow = {
-          id: `${sectionIndex}:${rowNumber}`,
-          rowNumber,
-          categoryName,
-          values: record,
-          imagesByColumn,
-          images: rowImages,
-          sourceSectionIndex: sectionIndex,
-        };
-
-        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
-        sectionRows.push(parsedRow);
-        rows.push(parsedRow);
-      }
+      if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+      sectionRows.push(parsedRow);
+      rows.push(parsedRow);
     }
 
     sections.push({
@@ -351,16 +293,7 @@ async function parseFlatProposalSpreadsheet(
     ...findRepeatHeaderIndices(rawRows, firstHeaderIndex + 1, columnAliases),
   ];
 
-  const dataRowsForIdDetection = rawRows.slice(firstHeaderIndex + 1);
-  const idColumnKey = detectIdColumn(sharedColumns, dataRowsForIdDetection);
-  const idColumn = idColumnKey ? sharedColumns.find((c) => c.key === idColumnKey) : null;
-
   const warnings: string[] = [];
-  if (!idColumn) {
-    warnings.push(
-      'No item ID column detected — rows will not be grouped. Add item IDs (e.g. PL-1) to enable multi-row merging.',
-    );
-  }
   if (fileType === 'csv') warnings.push('CSV imports support image URLs only.');
 
   const sections: ProposalImportSection[] = [];
@@ -370,60 +303,30 @@ async function parseFlatProposalSpreadsheet(
     const headerIndex = allHeaderIndices[sectionIndex]!;
     const nextHeaderIndex = allHeaderIndices[sectionIndex + 1] ?? rawRows.length;
     const headerRowNumber = headerIndex + 1;
-    const categoryName = findCategoryName(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
+    const categoryName = findSectionTitle(rawRows, headerIndex) || `Category ${sectionIndex + 1}`;
     const sectionRows: ProposalParsedRow[] = [];
 
-    if (idColumn) {
-      const grouped = groupRowsById(
-        rawRows,
-        headerIndex + 1,
-        idColumn.columnNumber - 1,
-        nextHeaderIndex,
-      );
+    const dataRows = extractTableRows(rawRows, headerIndex + 1, nextHeaderIndex);
+    for (const rowArray of dataRows) {
+      if (isRepeatHeader(rowArray, columnAliases)) continue;
 
-      for (const g of grouped) {
-        if (isRepeatHeader(g.values, columnAliases)) continue;
+      const record = columnsToRecord(sharedColumns, rowArray);
+      if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
 
-        const record = columnsToRecord(sharedColumns, g.values);
-        if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
+      const rowNumber = rawRows.indexOf(rowArray) + 1;
+      const parsedRow: ProposalParsedRow = {
+        id: `${sectionIndex}:${rowNumber}`,
+        rowNumber,
+        categoryName,
+        values: record,
+        imagesByColumn: {},
+        images: { rendering: [], plan: [], swatches: [] },
+        sourceSectionIndex: sectionIndex,
+      };
 
-        const parsedRow: ProposalParsedRow = {
-          id: `${sectionIndex}:${g.rowStart}`,
-          rowNumber: g.rowStart,
-          categoryName,
-          values: record,
-          imagesByColumn: {},
-          images: { rendering: [], plan: [], swatches: [] },
-          sourceSectionIndex: sectionIndex,
-        };
-
-        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
-        sectionRows.push(parsedRow);
-        rows.push(parsedRow);
-      }
-    } else {
-      for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
-        const rowArray = rawRows[i] ?? [];
-        if (isRepeatHeader(rowArray, columnAliases)) continue;
-
-        const record = columnsToRecord(sharedColumns, rowArray);
-        if (!Object.values(record).some((v) => v.trim().length > 0)) continue;
-
-        const rowNumber = i + 1;
-        const parsedRow: ProposalParsedRow = {
-          id: `${sectionIndex}:${rowNumber}`,
-          rowNumber,
-          categoryName,
-          values: record,
-          imagesByColumn: {},
-          images: { rendering: [], plan: [], swatches: [] },
-          sourceSectionIndex: sectionIndex,
-        };
-
-        if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
-        sectionRows.push(parsedRow);
-        rows.push(parsedRow);
-      }
+      if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
+      sectionRows.push(parsedRow);
+      rows.push(parsedRow);
     }
 
     sections.push({
@@ -443,147 +346,6 @@ async function parseFlatProposalSpreadsheet(
     sections,
     projectImages: [],
     warnings,
-  };
-}
-
-// ─── Second-pass parsing (user-provided labels) ───────────────────────────────
-
-export async function parseProposalSpreadsheetWithLabels(
-  file: File,
-  labels: string[],
-): Promise<{ parsed: ParsedProposalSpreadsheet; missingLabels: string[] }> {
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-  if (extension === 'xlsx') return parseXlsxProposalWithLabels(file, labels);
-  return parseFlatProposalWithLabels(file, labels, extension === 'csv' ? 'csv' : 'xls');
-}
-
-async function parseXlsxProposalWithLabels(
-  file: File,
-  labels: string[],
-): Promise<{ parsed: ParsedProposalSpreadsheet; missingLabels: string[] }> {
-  const buffer = await file.arrayBuffer();
-  const ExcelJS = await import('exceljs');
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer);
-  const worksheet = workbook.worksheets[0];
-  if (!worksheet) return { parsed: emptyParsedProposal(file, 'xlsx'), missingLabels: labels };
-
-  const rawRows = readWorksheetRowsDense(worksheet);
-  const images = extractWorksheetImages(workbook, worksheet);
-  const secondPass = scanForExactHeaders(rawRows, labels);
-  if (!secondPass || secondPass.foundColumns.length === 0) {
-    return {
-      parsed: { ...emptyParsedProposal(file, 'xlsx'), sheetName: worksheet.name },
-      missingLabels: labels,
-    };
-  }
-  return buildProposalFromSecondPass({
-    file,
-    fileType: 'xlsx',
-    sheetName: worksheet.name,
-    rawRows,
-    images,
-    secondPass,
-  });
-}
-
-async function parseFlatProposalWithLabels(
-  file: File,
-  labels: string[],
-  fileType: 'csv' | 'xls',
-): Promise<{ parsed: ParsedProposalSpreadsheet; missingLabels: string[] }> {
-  const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: 'array' });
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) return { parsed: emptyParsedProposal(file, fileType), missingLabels: labels };
-  const sheet = workbook.Sheets[sheetName];
-  if (!sheet) return { parsed: emptyParsedProposal(file, fileType), missingLabels: labels };
-
-  const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-  const rawRows: string[][] = raw.map((row) => row.map(spreadsheetValueToString));
-  const secondPass = scanForExactHeaders(rawRows, labels);
-  if (!secondPass || secondPass.foundColumns.length === 0) {
-    return { parsed: { ...emptyParsedProposal(file, fileType), sheetName }, missingLabels: labels };
-  }
-  return buildProposalFromSecondPass({
-    file,
-    fileType,
-    sheetName,
-    rawRows,
-    images: [],
-    secondPass,
-  });
-}
-
-function buildProposalFromSecondPass({
-  file,
-  fileType,
-  sheetName,
-  rawRows,
-  images,
-  secondPass,
-}: {
-  file: File;
-  fileType: 'xlsx' | 'csv' | 'xls';
-  sheetName: string;
-  rawRows: string[][];
-  images: ProposalImportImage[];
-  secondPass: SecondPassResult;
-}): { parsed: ParsedProposalSpreadsheet; missingLabels: string[] } {
-  const sharedColumns = secondPass.foundColumns;
-  const headerRowNumber = secondPass.headerRowIndex + 1;
-  const categoryName = findCategoryName(rawRows, secondPass.headerRowIndex) || 'Imported';
-  const dataRows = extractTableRows(rawRows, secondPass.headerRowIndex + 1);
-  const rows: ProposalParsedRow[] = [];
-
-  for (let i = 0; i < dataRows.length; i++) {
-    const rowArray = dataRows[i] ?? [];
-    const record = columnsToRecord(sharedColumns, rowArray);
-    const rowNumber = secondPass.headerRowIndex + 2 + i;
-    const imagesByColumn = assignImagesByColumnRange(images, rowNumber, rowNumber, sharedColumns);
-    const rowImages = assignRowImages(imagesByColumn, sharedColumns);
-    const hasRawContent = Object.values(record).some((v) => v.trim().length > 0);
-    const hasImages =
-      rowImages.rendering.length > 0 || rowImages.plan.length > 0 || rowImages.swatches.length > 0;
-    if (!hasRawContent && !hasImages) continue;
-
-    const parsedRow: ProposalParsedRow = {
-      id: `0:${rowNumber}`,
-      rowNumber,
-      categoryName,
-      values: record,
-      imagesByColumn,
-      images: rowImages,
-      sourceSectionIndex: 0,
-    };
-    if (isSummaryProposalRow(parsedRow)) parsedRow.skippedReason = 'Summary row';
-    rows.push(parsedRow);
-  }
-
-  const sections: ProposalImportSection[] = [
-    {
-      index: 0,
-      categoryName,
-      headerRowNumber,
-      rowCount: rows.filter((r) => !r.skippedReason).length,
-    },
-  ];
-
-  const warnings: string[] = [];
-  if (fileType === 'csv') warnings.push('CSV imports support image URLs only.');
-
-  return {
-    parsed: {
-      filename: file.name,
-      sheetName,
-      fileType,
-      columns: sharedColumns,
-      rows,
-      sections,
-      projectImages: extractProjectImages(images, headerRowNumber),
-      warnings,
-    },
-    missingLabels: secondPass.missingLabels,
   };
 }
 
@@ -609,7 +371,10 @@ function readWorksheetRowsDense(worksheet: Worksheet): string[][] {
   worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
     const values: string[] = [];
     row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {
-      values[columnNumber - 1] = spreadsheetValueToString(cell.value);
+      // ExcelJS propagates a merged cell's value to every cell in the range.
+      // Treat non-master cells as empty so a wide title doesn't qualify as a header row.
+      const isMergeFollower = cell.isMerged && cell.master.address !== cell.address;
+      values[columnNumber - 1] = isMergeFollower ? '' : spreadsheetValueToString(cell.value);
     });
     rows[rowNumber - 1] = values;
   });
@@ -634,38 +399,6 @@ function spreadsheetValueToString(value: unknown): string {
       return String(record['result']).trim();
     }
     if (typeof record['hyperlink'] === 'string') return record['hyperlink'].trim();
-  }
-  return '';
-}
-
-// Find all rows whose cell values match ≥ threshold of the shared column aliases
-function findRepeatHeaderIndices(
-  rows: string[][],
-  startIndex: number,
-  columnAliases: string[],
-): number[] {
-  const threshold = Math.min(3, columnAliases.length);
-  const result: number[] = [];
-  for (let i = startIndex; i < rows.length; i++) {
-    if (isRepeatHeader(rows[i] ?? [], columnAliases, threshold)) result.push(i);
-  }
-  return result;
-}
-
-function isRepeatHeader(
-  row: string[],
-  columnAliases: string[],
-  threshold = Math.min(3, columnAliases.length),
-): boolean {
-  const matchCount = row.filter((v) => columnAliases.includes(normalizeLabel(v))).length;
-  return matchCount >= threshold;
-}
-
-// Look backward from headerIndex for a row with exactly one non-empty cell (category name)
-function findCategoryName(rows: string[][], headerIndex: number): string {
-  for (let i = headerIndex - 1; i >= Math.max(0, headerIndex - 4); i--) {
-    const values = (rows[i] ?? []).map((v) => v.trim()).filter(Boolean);
-    if (values.length === 1) return values[0]!;
   }
   return '';
 }

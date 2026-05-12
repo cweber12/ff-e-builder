@@ -1,27 +1,23 @@
 export {
   buildColumns,
   columnsToRecord,
-  detectIdColumn,
   detectTable,
   detectTableHeader,
   extractTableRows,
-  groupRowsById,
+  findRepeatHeaderIndices,
+  findSectionTitle,
+  isRepeatHeader,
   isSummaryRow,
   normalizeLabel,
-  scanForExactHeaders,
-  ITEM_ID_PATTERN,
   SUMMARY_ROW_PATTERNS,
 } from './engine';
-export type { DetectedTable, GroupedRow, ImportColumn, SecondPassResult } from './engine';
+export type { DetectedTable, ImportColumn } from './engine';
 
-export {
-  autoMapColumns,
-  parseExcelFile,
-  parseExcelFileWithLabels,
-  transformRow,
-  transformRows,
-} from './ffe';
-export type { ColumnMap, ImportedItem, ParsedSpreadsheet } from './ffe';
+export { parseFileToRawRows, parseRawRowsToSections, spreadsheetStringify } from './parser';
+export type { ParsedSection, ParsedSections } from './parser';
+
+export { autoMapColumns, parseFFESpreadsheet, transformRow, transformRows } from './ffe';
+export type { ColumnMap, ImportedItem, ParsedFFESpreadsheet } from './ffe';
 
 export {
   PROPOSAL_IMPORT_EMPTY_MAP,
@@ -29,7 +25,6 @@ export {
   imageToFile,
   isSummaryProposalRow,
   parseProposalSpreadsheet,
-  parseProposalSpreadsheetWithLabels,
   rowHasImportableContent,
 } from './proposal';
 export type {
