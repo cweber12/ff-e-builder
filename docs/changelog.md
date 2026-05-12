@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(plans): move the Measured Plan upload form into a dedicated Plans module with colocated upload-panel coverage
 - refactor(plans): move the opened-plan viewport into a dedicated Plans component and keep page tests focused on shell orchestration
 - refactor(plans): move opened-plan inspector UI into a dedicated Plans module and share measurement formatting helpers from `src/lib/plans`
 - refactor(plans): move first-pass Plans library and opened-plan tool selector UI into focused `src/components/plans` modules

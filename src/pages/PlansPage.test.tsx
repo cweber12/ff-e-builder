@@ -1,6 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('../components/plans/PlanUploadPanel', () => ({
+  PlanUploadPanel: vi.fn(() => <aside data-testid="plan-upload-panel">Upload panel</aside>),
+}));
+
 import { PlansPage } from './PlansPage';
 
 const project = {
@@ -61,7 +66,7 @@ vi.mock('../lib/api', () => ({
 }));
 
 describe('PlansPage', () => {
-  it('renders the plans library and upload form', () => {
+  it('renders the plans library and upload panel', () => {
     render(
       <MemoryRouter>
         <PlansPage project={project} />
@@ -70,16 +75,6 @@ describe('PlansPage', () => {
 
     expect(screen.getByText('Architectural plan library')).toBeInTheDocument();
     expect(screen.getByText('Level 1 Furniture Plan')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Upload plan' })).toBeInTheDocument();
-  });
-
-  it('keeps the upload action disabled until a plan image is selected', () => {
-    render(
-      <MemoryRouter>
-        <PlansPage project={project} />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByRole('button', { name: 'Upload plan' })).toBeDisabled();
+    expect(screen.getByTestId('plan-upload-panel')).toBeInTheDocument();
   });
 });
