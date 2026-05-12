@@ -17,8 +17,8 @@ export type { DetectedTable, ImportColumn } from './engine';
 export { parseFileToRawRows, parseRawRowsToSections, spreadsheetStringify } from './parser';
 export type { ParsedSection, ParsedSections } from './parser';
 
-export { autoMapColumns, parseFFESpreadsheet, transformRow, transformRows } from './ffe';
-export type { ColumnMap, ImportedItem, ParsedFFESpreadsheet } from './ffe';
+export { autoMapColumns, parseFFESpreadsheet, transformRow, transformRows } from './formats/ffe';
+export type { ColumnMap, ImportedItem, ParsedFFESpreadsheet } from './formats/ffe';
 
 export {
   PROPOSAL_IMPORT_EMPTY_MAP,
@@ -27,7 +27,7 @@ export {
   isSummaryProposalRow,
   parseProposalSpreadsheet,
   rowHasImportableContent,
-} from './proposal';
+} from './formats/proposal';
 export type {
   ParsedProposalSpreadsheet,
   ProposalImportColumn,
@@ -36,4 +36,4 @@ export type {
   ProposalImportImage,
   ProposalImportSection,
   ProposalParsedRow,
-} from './proposal';
+} from './formats/proposal';

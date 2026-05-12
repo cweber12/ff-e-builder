@@ -5,7 +5,7 @@ import type {
   Project,
   ProposalCategoryWithItems,
   RoomWithItems,
-} from '../types';
+} from '../../types';
 import {
   buildBudgetSummary,
   buildFfeSummary,
@@ -13,7 +13,7 @@ import {
   buildProjectSummary,
   buildProposalSummary,
   buildStatusBreakdown,
-} from './projectSnapshot';
+} from './index';
 
 const project: Project = {
   id: 'project-1',

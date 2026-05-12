@@ -5,24 +5,24 @@ import {
   exportSummaryCsv,
   exportProposalCsv,
   exportMaterialsExcel,
-} from './export';
-import { buildCatalogPdfPageModel, pickCatalogPdfOptionLayout } from './export/catalogPdf';
+} from './index';
+import { buildCatalogPdfPageModel, pickCatalogPdfOptionLayout } from './catalogPdf';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,
   proposalSubtotalLabelColumnIndex,
   type ProposalAssetBundle,
-} from './export/proposalDocument';
-import type { Material, Project, ProposalCategoryWithItems, ProposalItem } from '../types';
-import type { RoomWithItems } from '../types';
-import type { Item } from '../types/item';
+} from './proposalDocument';
+import type { Material, Project, ProposalCategoryWithItems, ProposalItem } from '../../types';
+import type { RoomWithItems } from '../../types';
+import type { Item } from '../../types/item';
 
 const apiMocks = vi.hoisted(() => ({
   imagesList: vi.fn(() => Promise.resolve([])),
   getContentBlob: vi.fn(),
 }));
 
-vi.mock('./api', () => ({
+vi.mock('../api', () => ({
   api: {
     images: {
       list: apiMocks.imagesList,

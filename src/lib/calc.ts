@@ -1,2 +1,2 @@
-// Compatibility shim — canonical module is budgetCalc.ts
-export * from './budgetCalc';
+// Compatibility shim — canonical module is money/index.ts
+export * from './money';

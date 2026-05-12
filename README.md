@@ -81,7 +81,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   ├── components/    # Domain-aware UI components (ItemsTable, CatalogView, …)
 │   │   └── primitives/  # Generic design-system atoms (Button, Modal, Drawer, …)
 │   ├── hooks/         # Custom React hooks, query keys, and optimistic cache helpers with barrel export (index.ts)
-│   ├── lib/           # Client-side utilities (API client modules/tests, calc, export/import modules, …)
+│   ├── lib/           # Client-side utilities grouped by concern (api, auth, export, images, import, money, projectSnapshot, query, utils)
 │   ├── types/         # Shared TypeScript types with barrel export (index.ts)
 │   ├── data/          # Static fixture data (demo seed)
 │   ├── test/          # Vitest global setup

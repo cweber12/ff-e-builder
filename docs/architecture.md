@@ -85,6 +85,7 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - The client never imports API worker code and never talks to Neon or R2 directly.
 - The frontend API client is exposed through `src/lib/api.ts`; domain namespaces are incrementally implemented in `src/lib/api/` and re-exported through the facade so hooks can keep importing from `src/lib/api`.
 - API client tests live alongside the focused `src/lib/api/` modules, with facade-level transport/auth coverage kept in `src/lib/api.test.ts`.
+- Client utility modules are grouped by concern under `src/lib/` subfolders such as `api/`, `auth/`, `export/`, `images/`, `import/`, `money/`, `projectSnapshot/`, `query/`, and `utils/`; root-level files are kept as thin compatibility facades while callers migrate.
 - Route modules live under `api/src/routes/`: `projects`, `plans`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
@@ -98,6 +99,7 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Proposal categories start empty for new projects and are created explicitly by users or imports.
 - Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.
+- Spreadsheet import code keeps generic table parsing in `src/lib/import/engine.ts` and `src/lib/import/parser.ts`, with FF&E and Proposal adapters under `src/lib/import/formats/`.
 - React Query cache keys are centralized in `src/hooks/queryKeys.ts`; hook callers import keys through the hooks barrels while implementation modules use the canonical definitions directly.
 - Optimistic list mutation helpers live in `src/hooks/optimisticList.ts` so FF&E room/item hooks share snapshot, rollback, and list transform behavior.
 

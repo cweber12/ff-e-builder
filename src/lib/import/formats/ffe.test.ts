@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { autoMapColumns, transformRow, transformRows } from './import/ffe';
-import type { ColumnMap } from './import/ffe';
-import type { ImportColumn } from './import/engine';
+import { autoMapColumns, transformRow, transformRows } from './ffe';
+import type { ColumnMap } from './ffe';
+import type { ImportColumn } from '../engine';
 
 function cols(...labels: string[]): ImportColumn[] {
   return labels.map((label, index) => ({

@@ -11,7 +11,7 @@ import {
   isRepeatHeader,
   normalizeLabel,
   type ImportColumn,
-} from './engine';
+} from '../engine';
 
 export type ProposalImportField =
   | 'category'

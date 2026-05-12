@@ -1,2 +1,2 @@
-// Compatibility shim — canonical module is import/ffe.ts
-export * from './import/ffe';
+// Compatibility shim — canonical module is import/formats/ffe.ts
+export * from './import/formats/ffe';

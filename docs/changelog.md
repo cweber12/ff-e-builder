@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(lib): move money, image compression, query client, project snapshot, and export test modules into focused `src/lib/*` subfolders while keeping root compatibility facades
+- refactor(imports): move FF&E and Proposal spreadsheet import adapters under `src/lib/import/formats` while keeping generic parsing modules at the import root
+
 - feat(proposal): add persisted Proposal Item notes with inline table editing and CSV/Excel/PDF export support
 
 - feat(plans): add canvas click-to-select for measured areas plus temporary Space+drag pan in the fullscreen measurement workspace without changing active tool mode

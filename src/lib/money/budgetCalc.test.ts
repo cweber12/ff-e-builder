@@ -6,8 +6,8 @@ import {
   proposalLineTotalCents,
   proposalProjectTotalCents,
 } from './budgetCalc';
-import type { Item } from '../types/item';
-import type { ProposalItem } from '../types/proposal';
+import type { Item } from '../../types/item';
+import type { ProposalItem } from '../../types/proposal';
 
 const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'i1',

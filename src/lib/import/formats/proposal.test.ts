@@ -5,7 +5,7 @@ import {
   isSummaryProposalRow,
   rowHasImportableContent,
   type ProposalParsedRow,
-} from './import/proposal';
+} from './proposal';
 
 const BASE_ROW: ProposalParsedRow = {
   id: '0:9',
