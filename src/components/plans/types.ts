@@ -2,6 +2,13 @@ import type { Measurement } from '../../types';
 
 export type PlanToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
 
+export type MeasurementApplicationMode =
+  | 'reference-only'
+  | 'proposal-horizontal'
+  | 'proposal-vertical'
+  | 'proposal-area'
+  | 'ffe-dimensions';
+
 export type MeasurementItemRef = {
   key: string;
   targetKind: Measurement['targetKind'];
@@ -15,4 +22,11 @@ export type MeasurementItemRef = {
   dimensions?: string | null;
   quantity?: number;
   quantityUnit?: string;
+};
+
+export type MeasurementDisplay = {
+  horizontal: number;
+  vertical: number;
+  area: number;
+  dimensionsText: string;
 };

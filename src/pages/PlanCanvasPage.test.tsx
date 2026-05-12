@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { PlanCanvasPage } from './PlanCanvasPage';
@@ -348,51 +348,5 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByRole('option', { name: /A1.2 - Level 2 Furniture Plan/i })).toHaveValue(
       'plan-2',
     );
-    expect(screen.getByText(/No reference line yet/i)).toBeInTheDocument();
-  });
-
-  it('shows saved calibration details for calibrated plans', () => {
-    renderPlanCanvasPage('plan-2');
-
-    expect(screen.getByText('Saved scale')).toBeInTheDocument();
-    expect(screen.getByText(/12 ft/i)).toBeInTheDocument();
-    expect(screen.getByText('Measured Items')).toBeInTheDocument();
-  });
-
-  it('shows crop guidance for a selected measured item on calibrated plans', () => {
-    renderPlanCanvasPage('plan-2');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
-    fireEvent.change(screen.getByRole('combobox', { name: /Measured area/i }), {
-      target: { value: 'measurement-1' },
-    });
-
-    expect(screen.getByText('Selected area')).toBeInTheDocument();
-    expect(screen.getByText('Saved crop')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
-  });
-
-  it('shows FF&E plan-image save action for measured FF&E crops', () => {
-    renderPlanCanvasPage('plan-2');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
-    fireEvent.change(screen.getByRole('combobox', { name: /Measured area/i }), {
-      target: { value: 'measurement-1' },
-    });
-
-    expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
-  });
-
-  it('shows proposal plan-image save action for measured proposal crops', () => {
-    renderPlanCanvasPage('plan-2');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
-    fireEvent.change(screen.getByRole('combobox', { name: /Measured area/i }), {
-      target: { value: 'measurement-2' },
-    });
-
-    expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
   });
 });

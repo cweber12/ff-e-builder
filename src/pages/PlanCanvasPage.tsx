@@ -9,12 +9,14 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { MeasuredAreaSelect } from '../components/plans/MeasuredAreaSelect';
 import { LineOverlay, RectOverlay } from '../components/plans/overlays';
-import { getPlanToolLabel } from '../components/plans/planToolDefinitions';
+import { PlanInspector } from '../components/plans/PlanInspector';
 import { PlanToolRail } from '../components/plans/PlanToolRail';
-import type { MeasurementItemRef, PlanToolId } from '../components/plans/types';
-import { Button } from '../components/primitives';
+import type {
+  MeasurementApplicationMode,
+  MeasurementItemRef,
+  PlanToolId,
+} from '../components/plans/types';
 import {
   useCreatePlanLengthLine,
   useCreatePlanMeasurement,
@@ -32,9 +34,14 @@ import { api } from '../lib/api';
 import { ApiError } from '../lib/api/transport';
 import {
   buildRectPolygonPoints,
+  convertBaseToPlanUnits,
+  convertPlanUnitsToBase,
+  formatDisplayNumber,
+  formatPlanLength,
   getLineLength,
   measurementToRectBounds,
   normalizeRectDraft,
+  parseFeetAndInches,
   pointInRect,
   type ImagePoint,
   type LineDraft,
@@ -60,22 +67,6 @@ type PlanCanvasPageProps = {
   planId: string;
   roomsWithItems: RoomWithItems[];
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
-};
-
-type MeasurementApplicationMode =
-  | 'reference-only'
-  | 'proposal-horizontal'
-  | 'proposal-vertical'
-  | 'proposal-area'
-  | 'ffe-dimensions';
-
-const UNIT_OPTIONS: PlanMeasurementUnit[] = ['ft', 'in', 'm', 'cm', 'mm'];
-const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
-  ft: 304.8,
-  in: 25.4,
-  mm: 1,
-  cm: 10,
-  m: 1000,
 };
 
 export function PlanCanvasPage({
@@ -766,666 +757,104 @@ export function PlanCanvasPage({
           />
         </main>
 
-        <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-[#fbfaf6]/92 px-4 py-3 backdrop-blur">
-          <div className="space-y-4">
-            <div className="pb-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                Inspector
-              </p>
-              <h2 className="mt-1 font-display text-lg font-semibold text-neutral-950">
-                {getPlanToolLabel(activeTool)}
-              </h2>
-            </div>
-
-            <section className={activeTool === 'calibrate' ? 'block' : 'hidden'}>
-              <div className="flex w-full items-center justify-between gap-3 text-left">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  Calibration
-                </span>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                  {calibrationLoading ? 'Loading' : isCalibrated ? 'Set' : 'Needed'}
-                </span>
-              </div>
-              {activeTool === 'calibrate' ? (
-                <>
-                  <p className="mt-3 text-sm font-medium text-neutral-800">
-                    {isCalibrated ? 'Calibrated' : 'Needs calibration'}
-                  </p>
-
-                  {calibration ? (
-                    <div className="mt-3">
-                      <MetricRow
-                        label="Saved scale"
-                        value={`${formatDisplayNumber(calibration.realWorldLength)} ${calibration.unit}`}
-                      />
-                      <p className="mt-1 text-xs text-neutral-500">
-                        {formatDisplayNumber(calibration.pixelsPerUnit)} px per {calibration.unit}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {activeTool === 'calibrate' ? (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-sm leading-6 text-neutral-500">
-                        {calibrationDraft
-                          ? 'Reference line captured. Enter the documented full-size length below to save or replace this plan calibration.'
-                          : calibration
-                            ? 'Draw a new line on the plan if you want to replace the saved calibration.'
-                            : 'No reference line yet. Draw directly on the plan to start calibration.'}
-                      </p>
-
-                      {calibrationDraft ? (
-                        <>
-                          <MetricRow
-                            label="Reference line"
-                            value={`${formatDisplayNumber(calibrationPixelLength ?? 0)} px`}
-                          />
-
-                          <label className="block">
-                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                              Unit
-                            </span>
-                            <select
-                              value={calibrationUnit}
-                              onChange={(event) =>
-                                setCalibrationUnit(event.target.value as PlanMeasurementUnit)
-                              }
-                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                            >
-                              {UNIT_OPTIONS.map((unit) => (
-                                <option key={unit} value={unit}>
-                                  {unit}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          {calibrationUnit === 'ft' ? (
-                            <div>
-                              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                                Real-world length
-                              </span>
-                              <div className="grid grid-cols-2 gap-2">
-                                <label className="block">
-                                  <span className="mb-1 block text-xs text-neutral-500">Feet</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    value={calibrationFeetInput}
-                                    onChange={(event) =>
-                                      setCalibrationFeetInput(event.target.value)
-                                    }
-                                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                                  />
-                                </label>
-                                <label className="block">
-                                  <span className="mb-1 block text-xs text-neutral-500">
-                                    Inches
-                                  </span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.125"
-                                    value={calibrationInchesInput}
-                                    onChange={(event) =>
-                                      setCalibrationInchesInput(event.target.value)
-                                    }
-                                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                                  />
-                                </label>
-                              </div>
-                              <p className="mt-1 text-xs text-neutral-500">
-                                Saved internally as{' '}
-                                {Number.isFinite(calibrationLengthValue)
-                                  ? formatDisplayNumber(calibrationLengthValue)
-                                  : '0'}{' '}
-                                ft.
-                              </p>
-                            </div>
-                          ) : (
-                            <label className="block">
-                              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                                Real-world length
-                              </span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={calibrationLengthInput}
-                                onChange={(event) => setCalibrationLengthInput(event.target.value)}
-                                className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                              />
-                            </label>
-                          )}
-
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              onClick={() => void handleSaveCalibration()}
-                              disabled={!canSaveCalibration}
-                            >
-                              {setCalibration.isPending ? 'Saving…' : 'Save calibration'}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setCalibrationDraft(null)}
-                              disabled={setCalibration.isPending}
-                            >
-                              Clear line
-                            </Button>
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-            </section>
-
-            <section className={activeTool === 'length' ? 'block' : 'hidden'}>
-              <div className="flex w-full items-center justify-between gap-3 text-left">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  Length Lines
-                </span>
-                <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                  <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
-                    {lengthLines.length}
-                  </span>
-                </span>
-              </div>
-              {activeTool === 'length' ? (
-                <>
-                  {activeTool === 'length' ? (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-sm leading-6 text-neutral-500">
-                        {lengthLineDraft
-                          ? selectedLengthLine
-                            ? 'Replacement span captured. Save to update the selected line.'
-                            : 'Span captured. Save it to create a reusable Length Line.'
-                          : 'Draw a span directly on the plan to capture a measured line.'}
-                      </p>
-
-                      {lengthLineDraft ? (
-                        <>
-                          <MetricRow
-                            label="Draft span"
-                            value={
-                              draftLengthInPlanUnits !== null && calibration
-                                ? formatPlanLength(draftLengthInPlanUnits, calibration.unit)
-                                : `${formatDisplayNumber(lengthLinePixelLength ?? 0)} px`
-                            }
-                          />
-
-                          <label className="block">
-                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                              Label
-                            </span>
-                            <input
-                              type="text"
-                              value={lengthLineLabelInput}
-                              onChange={(event) => setLengthLineLabelInput(event.target.value)}
-                              placeholder="Optional note"
-                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                            />
-                          </label>
-
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              onClick={() => void handleSaveLengthLine()}
-                              disabled={!canSaveLengthLine}
-                            >
-                              {createLengthLine.isPending || updateLengthLine.isPending
-                                ? 'Saving…'
-                                : selectedLengthLine
-                                  ? 'Update line'
-                                  : 'Save line'}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setLengthLineDraft(null)}
-                              disabled={createLengthLine.isPending || updateLengthLine.isPending}
-                            >
-                              Clear draft
-                            </Button>
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className="mt-4 space-y-2">
-                    {lengthLinesLoading ? (
-                      <p className="text-sm text-neutral-500">Loading saved Length Lines…</p>
-                    ) : lengthLines.length === 0 ? (
-                      <p className="text-sm text-neutral-500">No saved Length Lines yet.</p>
-                    ) : (
-                      lengthLines.map((line) => {
-                        const active = line.id === selectedLengthLineId;
-                        const displayLength =
-                          calibration && line.measuredLengthBase !== null
-                            ? convertBaseToPlanUnits(line.measuredLengthBase, calibration.unit)
-                            : null;
-                        return (
-                          <button
-                            key={line.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedLengthLineId(line.id);
-                              setActiveTool('length');
-                              setLengthLineDraft(null);
-                              setLengthLineLabelInput(line.label ?? '');
-                            }}
-                            className={[
-                              'block w-full rounded-xl px-3 py-2 text-left transition',
-                              active
-                                ? 'bg-brand-50 ring-1 ring-inset ring-brand-300'
-                                : 'hover:bg-neutral-50',
-                            ].join(' ')}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-neutral-900">
-                                  {line.label?.trim() || `Length Line ${line.id.slice(0, 4)}`}
-                                </p>
-                                <p className="mt-1 text-xs text-neutral-500">
-                                  {displayLength !== null && calibration
-                                    ? formatPlanLength(displayLength, calibration.unit)
-                                    : 'Measured span'}
-                                </p>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {selectedLengthLine ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedLengthLineId(null);
-                          setLengthLineDraft(null);
-                          setLengthLineLabelInput('');
-                        }}
-                      >
-                        Clear selection
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="danger"
-                        size="sm"
-                        onClick={() => void handleDeleteLengthLine()}
-                        disabled={deleteLengthLine.isPending}
-                      >
-                        {deleteLengthLine.isPending ? 'Deleting…' : 'Delete line'}
-                      </Button>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-            </section>
-
-            <section
-              className={activeTool === 'rectangle' || activeTool === 'crop' ? 'block' : 'hidden'}
-            >
-              <div className="flex w-full items-center justify-between gap-3 text-left">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  {activeTool === 'crop' ? 'Crop Image' : 'Measured Items'}
-                </span>
-                <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                  <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
-                    {measurements.length}
-                  </span>
-                </span>
-              </div>
-
-              {activeTool === 'rectangle' || activeTool === 'crop' ? (
-                <>
-                  {activeTool === 'rectangle' ? (
-                    <div className="mt-3 space-y-3">
-                      {normalizedMeasurementDraft ? (
-                        <>
-                          <MetricRow
-                            label="Draft area"
-                            value={
-                              calibration &&
-                              draftMeasurementWidthPlanUnits !== null &&
-                              draftMeasurementHeightPlanUnits !== null
-                                ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits)} ${calibration.unit} x ${formatDisplayNumber(draftMeasurementHeightPlanUnits)} ${calibration.unit}`
-                                : `${formatDisplayNumber(normalizedMeasurementDraft.width)} x ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
-                            }
-                          />
-
-                          <label className="block">
-                            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                              Associate with item
-                            </span>
-                            <select
-                              value={selectedMeasurementTargetKey}
-                              onChange={(event) =>
-                                setSelectedMeasurementTargetKey(event.target.value)
-                              }
-                              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
-                            >
-                              <option value="">Choose an item</option>
-                              {measurementItems.map((item) => (
-                                <option key={item.key} value={item.key}>
-                                  {item.primaryLabel} - {item.secondaryLabel} -{' '}
-                                  {item.containerLabel}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              onClick={() => void handleSaveMeasurement()}
-                              disabled={!canSaveMeasurement}
-                            >
-                              {createMeasurement.isPending || updateMeasurement.isPending
-                                ? 'Saving…'
-                                : selectedMeasurement
-                                  ? 'Update measurement'
-                                  : 'Save measurement'}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setMeasurementDraft(null)}
-                              disabled={createMeasurement.isPending || updateMeasurement.isPending}
-                            >
-                              Clear draft
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-sm text-neutral-500">No draft area.</p>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {activeTool === 'crop' ? (
-                    <div className="mt-3 space-y-3">
-                      <MeasuredAreaSelect
-                        measurements={measurements}
-                        measurementItemsByMeasurementId={measurementItemsByMeasurementId}
-                        measurementsLoading={measurementsLoading}
-                        selectedMeasurementId={selectedMeasurementId}
-                        onSelect={(measurementId, item) => {
-                          setSelectedMeasurementId(measurementId);
-                          setMeasurementDraft(null);
-                          setCropDraft(null);
-                          if (item) setSelectedMeasurementTargetKey(item.key);
-                        }}
-                        onClear={() => {
-                          setSelectedMeasurementId(null);
-                          setMeasurementDraft(null);
-                          setCropDraft(null);
-                          setSelectedMeasurementTargetKey('');
-                        }}
-                      />
-
-                      {selectedMeasurementRect ? (
-                        <MetricRow
-                          label="Selected area"
-                          value={
-                            calibration && selectedMeasurement
-                              ? `${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, calibration.unit))} ${calibration.unit} x ${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit))} ${calibration.unit}`
-                              : `${formatDisplayNumber(selectedMeasurementRect.width)} x ${formatDisplayNumber(selectedMeasurementRect.height)} px`
-                          }
-                        />
-                      ) : null}
-
-                      {normalizedCropDraft ? (
-                        <MetricRow
-                          label="Draft crop"
-                          value={
-                            calibration &&
-                            draftCropWidthPlanUnits !== null &&
-                            draftCropHeightPlanUnits !== null
-                              ? `${formatDisplayNumber(draftCropWidthPlanUnits)} ${calibration.unit} x ${formatDisplayNumber(draftCropHeightPlanUnits)} ${calibration.unit}`
-                              : `${formatDisplayNumber(normalizedCropDraft.width)} x ${formatDisplayNumber(normalizedCropDraft.height)} px`
-                          }
-                        />
-                      ) : null}
-
-                      {selectedMeasurement &&
-                      selectedMeasurement.cropWidth !== null &&
-                      selectedMeasurement.cropHeight !== null ? (
-                        <MetricRow
-                          label="Saved crop"
-                          value={`${formatDisplayNumber(selectedMeasurement.cropWidth)} x ${formatDisplayNumber(selectedMeasurement.cropHeight)} px`}
-                        />
-                      ) : null}
-
-                      {normalizedCropDraft ? (
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            variant="primary"
-                            size="sm"
-                            onClick={() => void handleSaveCropAndPlanImage()}
-                            disabled={!canSaveCropAndPlanImage}
-                          >
-                            {isSavingPlanImage ? 'Adding plan image…' : 'Save crop to item'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => void handleSaveCrop()}
-                            disabled={!canSaveCrop}
-                          >
-                            {updateMeasurement.isPending ? 'Saving…' : 'Save crop only'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setCropDraft(null)}
-                            disabled={updateMeasurement.isPending}
-                          >
-                            Clear draft
-                          </Button>
-                        </div>
-                      ) : selectedMeasurement &&
-                        selectedMeasurement.cropWidth !== null &&
-                        selectedMeasurement.cropHeight !== null ? (
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => void handleSavePlanImage()}
-                            disabled={!canSavePlanImage}
-                          >
-                            {isSavingPlanImage ? 'Saving plan image…' : 'Publish saved crop'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => void handleClearSavedCrop()}
-                            disabled={updateMeasurement.isPending}
-                          >
-                            Remove saved crop
-                          </Button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  {selectedMeasurement && selectedMeasurementItem && selectedMeasurementDisplay ? (
-                    <div className="mt-4 border-t border-neutral-200 pt-3">
-                      <label className="block">
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                          Apply measurement
-                        </span>
-                        <select
-                          value={measurementApplicationMode}
-                          onChange={(event) =>
-                            setMeasurementApplicationMode(
-                              event.target.value as MeasurementApplicationMode,
-                            )
-                          }
-                          className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
-                        >
-                          {selectedMeasurementItem.targetKind === 'proposal' ? (
-                            <>
-                              <option value="proposal-area">
-                                Use area - {formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
-                                {formatAreaUnit(calibration?.unit ?? 'ft')}
-                              </option>
-                              <option value="proposal-horizontal">
-                                Use horizontal -{' '}
-                                {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
-                                {calibration?.unit ?? 'ft'}
-                              </option>
-                              <option value="proposal-vertical">
-                                Use vertical -{' '}
-                                {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
-                                {calibration?.unit ?? 'ft'}
-                              </option>
-                            </>
-                          ) : (
-                            <option value="ffe-dimensions">
-                              Update dimensions - {selectedMeasurementDisplay.dimensionsText}
-                            </option>
-                          )}
-                          <option value="reference-only">Reference only</option>
-                        </select>
-                      </label>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="mt-3"
-                        onClick={() => void handleApplyMeasurement()}
-                        disabled={
-                          isApplyingMeasurement || measurementApplicationMode === 'reference-only'
-                        }
-                      >
-                        {isApplyingMeasurement ? 'Applying…' : 'Apply to item'}
-                      </Button>
-                    </div>
-                  ) : null}
-
-                  {activeTool === 'rectangle' ? (
-                    <div className="mt-4 border-t border-neutral-200 pt-3">
-                      <MeasuredAreaSelect
-                        measurements={measurements}
-                        measurementItemsByMeasurementId={measurementItemsByMeasurementId}
-                        measurementsLoading={measurementsLoading}
-                        selectedMeasurementId={selectedMeasurementId}
-                        onSelect={(measurementId, item) => {
-                          setSelectedMeasurementId(measurementId);
-                          setMeasurementDraft(null);
-                          setCropDraft(null);
-                          if (item) setSelectedMeasurementTargetKey(item.key);
-                        }}
-                        onClear={() => {
-                          setSelectedMeasurementId(null);
-                          setMeasurementDraft(null);
-                          setCropDraft(null);
-                          setSelectedMeasurementTargetKey('');
-                        }}
-                      />
-                    </div>
-                  ) : null}
-
-                  {selectedMeasurement ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {activeTool === 'rectangle' ? (
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={() => {
-                            setActiveTool('crop');
-                            setCropDraft(null);
-                          }}
-                        >
-                          Crop plan image
-                        </Button>
-                      ) : null}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedMeasurementId(null);
-                          setMeasurementDraft(null);
-                          setCropDraft(null);
-                          setSelectedMeasurementTargetKey('');
-                        }}
-                      >
-                        Clear selection
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="danger"
-                        size="sm"
-                        onClick={() => void handleDeleteMeasurement()}
-                        disabled={deleteMeasurement.isPending}
-                      >
-                        {deleteMeasurement.isPending ? 'Deleting…' : 'Delete measurement'}
-                      </Button>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-            </section>
-
-            {activeTool === 'pan' ? (
-              <section className="border-t border-neutral-200 pt-4">
-                <div className="grid gap-3 text-sm leading-6 text-neutral-600">
-                  <p>
-                    Drag the plan to inspect details. Scroll to zoom and double-click the canvas to
-                    reset.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
-                    <div className="rounded-lg border border-neutral-200 bg-white/70 px-3 py-2">
-                      {lengthLines.length} lines
-                    </div>
-                    <div className="rounded-lg border border-neutral-200 bg-white/70 px-3 py-2">
-                      {measurements.length} items
-                    </div>
-                  </div>
-                </div>
-              </section>
-            ) : null}
-          </div>
-        </aside>
+        <PlanInspector
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
+          calibration={calibration}
+          calibrationLoading={calibrationLoading}
+          isCalibrated={isCalibrated}
+          calibrationDraft={calibrationDraft}
+          calibrationPixelLength={calibrationPixelLength}
+          calibrationUnit={calibrationUnit}
+          onCalibrationUnitChange={setCalibrationUnit}
+          calibrationFeetInput={calibrationFeetInput}
+          onCalibrationFeetInputChange={setCalibrationFeetInput}
+          calibrationInchesInput={calibrationInchesInput}
+          onCalibrationInchesInputChange={setCalibrationInchesInput}
+          calibrationLengthInput={calibrationLengthInput}
+          onCalibrationLengthInputChange={setCalibrationLengthInput}
+          calibrationLengthValue={calibrationLengthValue}
+          canSaveCalibration={canSaveCalibration}
+          savingCalibration={setCalibration.isPending}
+          onSaveCalibration={() => void handleSaveCalibration()}
+          onClearCalibrationDraft={() => setCalibrationDraft(null)}
+          lengthLines={lengthLines}
+          lengthLinesLoading={lengthLinesLoading}
+          selectedLengthLine={selectedLengthLine}
+          selectedLengthLineId={selectedLengthLineId}
+          lengthLineDraft={lengthLineDraft}
+          lengthLinePixelLength={lengthLinePixelLength}
+          draftLengthInPlanUnits={draftLengthInPlanUnits}
+          lengthLineLabelInput={lengthLineLabelInput}
+          onLengthLineLabelInputChange={setLengthLineLabelInput}
+          canSaveLengthLine={canSaveLengthLine}
+          savingLengthLine={createLengthLine.isPending || updateLengthLine.isPending}
+          deletingLengthLine={deleteLengthLine.isPending}
+          onSaveLengthLine={() => void handleSaveLengthLine()}
+          onClearLengthLineDraft={() => setLengthLineDraft(null)}
+          onSelectLengthLine={(line) => {
+            setSelectedLengthLineId(line.id);
+            setActiveTool('length');
+            setLengthLineDraft(null);
+            setLengthLineLabelInput(line.label ?? '');
+          }}
+          onClearLengthLineSelection={() => {
+            setSelectedLengthLineId(null);
+            setLengthLineDraft(null);
+            setLengthLineLabelInput('');
+          }}
+          onDeleteLengthLine={() => void handleDeleteLengthLine()}
+          measurements={measurements}
+          measurementsLoading={measurementsLoading}
+          measurementItems={measurementItems}
+          measurementItemsByMeasurementId={measurementItemsByMeasurementId}
+          normalizedMeasurementDraft={normalizedMeasurementDraft}
+          selectedMeasurementId={selectedMeasurementId}
+          selectedMeasurement={selectedMeasurement}
+          selectedMeasurementItem={selectedMeasurementItem}
+          selectedMeasurementRect={selectedMeasurementRect}
+          selectedMeasurementDisplay={selectedMeasurementDisplay}
+          selectedMeasurementTargetKey={selectedMeasurementTargetKey}
+          onMeasurementTargetKeyChange={setSelectedMeasurementTargetKey}
+          draftMeasurementWidthPlanUnits={draftMeasurementWidthPlanUnits}
+          draftMeasurementHeightPlanUnits={draftMeasurementHeightPlanUnits}
+          canSaveMeasurement={canSaveMeasurement}
+          savingMeasurement={createMeasurement.isPending || updateMeasurement.isPending}
+          deletingMeasurement={deleteMeasurement.isPending}
+          onSaveMeasurement={() => void handleSaveMeasurement()}
+          onClearMeasurementDraft={() => setMeasurementDraft(null)}
+          onSelectMeasurement={(measurementId, item) => {
+            setSelectedMeasurementId(measurementId);
+            setMeasurementDraft(null);
+            setCropDraft(null);
+            if (item) setSelectedMeasurementTargetKey(item.key);
+          }}
+          onClearMeasurementSelection={() => {
+            setSelectedMeasurementId(null);
+            setMeasurementDraft(null);
+            setCropDraft(null);
+            setSelectedMeasurementTargetKey('');
+          }}
+          onDeleteMeasurement={() => void handleDeleteMeasurement()}
+          normalizedCropDraft={normalizedCropDraft}
+          draftCropWidthPlanUnits={draftCropWidthPlanUnits}
+          draftCropHeightPlanUnits={draftCropHeightPlanUnits}
+          canSaveCrop={canSaveCrop}
+          canSaveCropAndPlanImage={canSaveCropAndPlanImage}
+          canSavePlanImage={canSavePlanImage}
+          savingPlanImage={isSavingPlanImage}
+          savingCrop={updateMeasurement.isPending}
+          onSaveCropAndPlanImage={() => void handleSaveCropAndPlanImage()}
+          onSaveCrop={() => void handleSaveCrop()}
+          onClearCropDraft={() => setCropDraft(null)}
+          onSavePlanImage={() => void handleSavePlanImage()}
+          onClearSavedCrop={() => void handleClearSavedCrop()}
+          measurementApplicationMode={measurementApplicationMode}
+          onMeasurementApplicationModeChange={setMeasurementApplicationMode}
+          applyingMeasurement={isApplyingMeasurement}
+          onApplyMeasurement={() => void handleApplyMeasurement()}
+        />
       </div>
-    </div>
-  );
-}
-
-function MetricRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-neutral-200/80 pb-2 text-sm">
-      <span className="font-medium text-neutral-700">{label}</span>
-      <span className="text-right text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
-        {value}
-      </span>
     </div>
   );
 }
@@ -2420,82 +1849,6 @@ function getLiveMeasurementLabel({
   }
 
   return null;
-}
-
-function convertPlanUnitsToBase(value: number, unit: PlanMeasurementUnit) {
-  return value * MILLIMETERS_PER_UNIT[unit];
-}
-
-function convertBaseToPlanUnits(value: number, unit: PlanMeasurementUnit) {
-  return value / MILLIMETERS_PER_UNIT[unit];
-}
-
-function parseFeetAndInches(feetInput: string, inchesInput: string) {
-  const feet = Number(feetInput);
-  const inches = Number(inchesInput);
-
-  if (!Number.isFinite(feet) || !Number.isFinite(inches)) return Number.NaN;
-  return feet + inches / 12;
-}
-
-function formatPlanLength(value: number, unit: PlanMeasurementUnit) {
-  if (unit !== 'ft') return `${formatDisplayNumber(value)} ${unit}`;
-  return formatFeetAndFractionalInches(value);
-}
-
-function formatFeetAndFractionalInches(decimalFeet: number) {
-  if (!Number.isFinite(decimalFeet)) return '0 in';
-
-  const sign = decimalFeet < 0 ? '-' : '';
-  const totalSixteenths = Math.round(Math.abs(decimalFeet) * 12 * 16);
-  const feet = Math.floor(totalSixteenths / (12 * 16));
-  const remainingSixteenths = totalSixteenths - feet * 12 * 16;
-  const wholeInches = Math.floor(remainingSixteenths / 16);
-  const fractionSixteenths = remainingSixteenths % 16;
-  const fraction = formatInchFraction(fractionSixteenths);
-  const inchParts = [
-    wholeInches > 0 || feet === 0 || fraction ? String(wholeInches) : '',
-    fraction,
-  ].filter(Boolean);
-
-  const feetText = feet > 0 ? `${sign}${feet} ft` : sign ? `${sign}0 ft` : '';
-  const inchesText = inchParts.length > 0 ? `${inchParts.join(' ')} in` : '';
-
-  return [feetText, inchesText].filter(Boolean).join(' ') || '0 in';
-}
-
-function formatInchFraction(sixteenths: number) {
-  if (sixteenths === 0) return '';
-
-  const divisor = greatestCommonDivisor(sixteenths, 16);
-  return `${sixteenths / divisor}/${16 / divisor}`;
-}
-
-function greatestCommonDivisor(a: number, b: number): number {
-  let left = Math.abs(a);
-  let right = Math.abs(b);
-
-  while (right !== 0) {
-    const next = left % right;
-    left = right;
-    right = next;
-  }
-
-  return left || 1;
-}
-
-function formatAreaUnit(unit: PlanMeasurementUnit) {
-  if (unit === 'ft') return 'sq ft';
-  if (unit === 'in') return 'sq in';
-  if (unit === 'm') return 'sq m';
-  if (unit === 'cm') return 'sq cm';
-  return 'sq mm';
-}
-
-function formatDisplayNumber(value: number) {
-  if (value >= 100) return value.toFixed(0);
-  if (value >= 10) return value.toFixed(1).replace(/\.0$/, '');
-  return value.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
 }
 
 function ViewControlIcon({ type }: { type: 'zoom-in' | 'zoom-out' | 'rotate' | 'reset' }) {

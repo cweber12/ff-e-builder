@@ -82,7 +82,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 │   │   ├── plans/       # Plans workspace UI modules for Measured Plan cards, tools, and selectors
 │   │   └── primitives/  # Generic design-system atoms (Button, Modal, Drawer, …)
 │   ├── hooks/         # Custom React hooks, query keys, and optimistic cache helpers with barrel export (index.ts)
-│   ├── lib/           # Client-side utilities grouped by concern (api, auth, export, images, import, items, money, projectSnapshot, query, theme, utils) with only a small set of active root compatibility facades
+│   ├── lib/           # Client-side utilities grouped by concern (api, auth, export, images, import, items, money, plans, projectSnapshot, query, theme, utils) with only a small set of active root compatibility facades
 │   ├── types/         # Shared TypeScript types with barrel export (index.ts)
 │   ├── data/          # Static fixture data (demo seed)
 │   ├── test/          # Vitest global setup
