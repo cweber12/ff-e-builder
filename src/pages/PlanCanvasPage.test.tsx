@@ -2,6 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('../components/plans/PlanViewport', () => ({
+  PlanViewport: vi.fn(() => <div data-testid="plan-viewport" />),
+}));
+
 import { PlanCanvasPage } from './PlanCanvasPage';
 
 const project = {
@@ -348,5 +353,6 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByRole('option', { name: /A1.2 - Level 2 Furniture Plan/i })).toHaveValue(
       'plan-2',
     );
+    expect(screen.getByTestId('plan-viewport')).toBeInTheDocument();
   });
 });
