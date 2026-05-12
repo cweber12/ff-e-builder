@@ -159,7 +159,6 @@ export function PlanCanvasPage({
   const [measurementApplicationMode, setMeasurementApplicationMode] =
     useState<MeasurementApplicationMode>('reference-only');
   const [isApplyingMeasurement, setIsApplyingMeasurement] = useState(false);
-  const [itemSearch, setItemSearch] = useState('');
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
 
   const selectedPlan = useMemo(
@@ -196,17 +195,6 @@ export function PlanCanvasPage({
     () => new Map(measurementItems.map((item) => [item.key, item])),
     [measurementItems],
   );
-  const filteredMeasurementItems = useMemo(() => {
-    const query = itemSearch.trim().toLocaleLowerCase();
-    if (query.length === 0) return measurementItems;
-
-    return measurementItems.filter((item) =>
-      [item.primaryLabel, item.secondaryLabel, item.containerLabel, item.targetKind]
-        .join(' ')
-        .toLocaleLowerCase()
-        .includes(query),
-    );
-  }, [itemSearch, measurementItems]);
   const measurementItemsByMeasurementId = useMemo(() => {
     const result = new Map<string, MeasurementItemRef>();
     for (const measurement of measurements) {
@@ -259,7 +247,6 @@ export function PlanCanvasPage({
     setSelectedMeasurementId(null);
     setSelectedMeasurementTargetKey('');
     setMeasurementApplicationMode('reference-only');
-    setItemSearch('');
     setLengthLineLabelInput('');
   }, [selectedPlanId]);
 
@@ -794,7 +781,7 @@ export function PlanCanvasPage({
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-0 xl:grid-cols-[72px_minmax(0,1fr)_360px]">
+      <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[72px_minmax(0,1fr)_340px]">
         <aside className="overflow-y-auto border-r border-black/10 bg-[#fbfaf6]/80 p-2.5 backdrop-blur">
           <div className="flex flex-col gap-2">
             {TOOL_DEFINITIONS.map((tool) => {
@@ -825,7 +812,7 @@ export function PlanCanvasPage({
           </div>
         </aside>
 
-        <main className="min-h-0 overflow-hidden p-2 md:p-3">
+        <main className="min-h-0 overflow-hidden">
           <PlanViewport
             projectId={project.id}
             plan={selectedPlan}
@@ -855,26 +842,15 @@ export function PlanCanvasPage({
           />
         </main>
 
-        <aside className="overflow-y-auto border-l border-black/10 bg-[#fbfaf6]/92 px-4 py-4 backdrop-blur md:px-5">
-          <div className="space-y-5">
-            <div className="border-b border-neutral-200 pb-4">
+        <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-[#fbfaf6]/92 px-4 py-3 backdrop-blur">
+          <div className="space-y-4">
+            <div className="pb-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
                 Inspector
               </p>
-              <h2 className="mt-1 font-display text-xl font-semibold text-neutral-950">
+              <h2 className="mt-1 font-display text-lg font-semibold text-neutral-950">
                 {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.label ?? 'Measure'}
               </h2>
-              <p className="mt-1 text-sm leading-5 text-neutral-500">
-                {activeTool === 'calibrate'
-                  ? 'Draw one known span, then enter its real length.'
-                  : activeTool === 'length'
-                    ? 'Capture reusable linear spans on the plan.'
-                    : activeTool === 'rectangle'
-                      ? 'Draw an item footprint and link it to FF&E or Proposal work.'
-                      : activeTool === 'crop'
-                        ? 'Frame the plan image that will publish back to the selected item.'
-                        : 'Drag the sheet without changing measurement tools.'}
-              </p>
             </div>
 
             <section className={activeTool === 'calibrate' ? 'block' : 'hidden'}>
@@ -891,44 +867,35 @@ export function PlanCanvasPage({
                   <p className="mt-3 text-sm font-medium text-neutral-800">
                     {isCalibrated ? 'Calibrated' : 'Needs calibration'}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-neutral-500">
-                    {activeTool === 'calibrate'
-                      ? 'Draw a reference line directly on the plan, then enter the documented full-size length.'
-                      : 'Saved calibration is reused for all line and rectangle measurements on this plan.'}
-                  </p>
 
                   {calibration ? (
-                    <div className="mt-4 grid gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 text-sm text-emerald-900">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-semibold">Saved scale</span>
-                        <span className="text-xs uppercase tracking-[0.18em] text-emerald-700">
-                          {formatDisplayNumber(calibration.realWorldLength)} {calibration.unit}
-                        </span>
-                      </div>
-                      <div className="text-xs leading-5 text-emerald-800">
+                    <div className="mt-3">
+                      <MetricRow
+                        label="Saved scale"
+                        value={`${formatDisplayNumber(calibration.realWorldLength)} ${calibration.unit}`}
+                      />
+                      <p className="mt-1 text-xs text-neutral-500">
                         {formatDisplayNumber(calibration.pixelsPerUnit)} px per {calibration.unit}
-                      </div>
+                      </p>
                     </div>
                   ) : null}
 
                   {activeTool === 'calibrate' ? (
                     <div className="mt-4 space-y-3">
-                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                      <p className="text-sm leading-6 text-neutral-500">
                         {calibrationDraft
                           ? 'Reference line captured. Enter the documented full-size length below to save or replace this plan calibration.'
                           : calibration
                             ? 'Draw a new line on the plan if you want to replace the saved calibration.'
                             : 'No reference line yet. Draw directly on the plan to start calibration.'}
-                      </div>
+                      </p>
 
                       {calibrationDraft ? (
                         <>
-                          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="font-semibold">Reference line</span>
-                              <span>{formatDisplayNumber(calibrationPixelLength ?? 0)} px</span>
-                            </div>
-                          </div>
+                          <MetricRow
+                            label="Reference line"
+                            value={`${formatDisplayNumber(calibrationPixelLength ?? 0)} px`}
+                          />
 
                           <label className="block">
                             <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
@@ -1051,27 +1018,24 @@ export function PlanCanvasPage({
                 <>
                   {activeTool === 'length' ? (
                     <div className="mt-4 space-y-3">
-                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
+                      <p className="text-sm leading-6 text-neutral-500">
                         {lengthLineDraft
                           ? selectedLengthLine
                             ? 'Replacement span captured. Save to update the selected line.'
                             : 'Span captured. Save it to create a reusable Length Line.'
                           : 'Draw a span directly on the plan to capture a measured line.'}
-                      </div>
+                      </p>
 
                       {lengthLineDraft ? (
                         <>
-                          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="font-semibold">Draft span</span>
-                              <span>{formatDisplayNumber(lengthLinePixelLength ?? 0)} px</span>
-                            </div>
-                            <div className="mt-2 text-xs text-brand-800">
-                              {draftLengthInPlanUnits !== null && calibration
+                          <MetricRow
+                            label="Draft span"
+                            value={
+                              draftLengthInPlanUnits !== null && calibration
                                 ? formatPlanLength(draftLengthInPlanUnits, calibration.unit)
-                                : 'Waiting for calibration'}
-                            </div>
-                          </div>
+                                : `${formatDisplayNumber(lengthLinePixelLength ?? 0)} px`
+                            }
+                          />
 
                           <label className="block">
                             <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
@@ -1117,13 +1081,9 @@ export function PlanCanvasPage({
 
                   <div className="mt-4 space-y-2">
                     {lengthLinesLoading ? (
-                      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
-                        Loading saved Length Lines…
-                      </div>
+                      <p className="text-sm text-neutral-500">Loading saved Length Lines…</p>
                     ) : lengthLines.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-500">
-                        No saved Length Lines yet.
-                      </div>
+                      <p className="text-sm text-neutral-500">No saved Length Lines yet.</p>
                     ) : (
                       lengthLines.map((line) => {
                         const active = line.id === selectedLengthLineId;
@@ -1212,84 +1172,40 @@ export function PlanCanvasPage({
               {activeTool === 'rectangle' || activeTool === 'crop' ? (
                 <>
                   {activeTool === 'rectangle' ? (
-                    <div className="mt-4 space-y-3">
-                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
-                        {measurementDraft
-                          ? selectedMeasurement
-                            ? 'Replacement rectangle captured. Choose the item and save to update.'
-                            : 'Rectangle captured. Choose the item and save to create a measured area.'
-                          : 'Draw a rectangle directly on the plan, then associate it with an item below.'}
-                      </div>
-
+                    <div className="mt-3 space-y-3">
                       {normalizedMeasurementDraft ? (
                         <>
-                          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="font-semibold">Draft area</span>
-                              <span>
-                                {formatDisplayNumber(normalizedMeasurementDraft.width)} ×{' '}
-                                {formatDisplayNumber(normalizedMeasurementDraft.height)} px
-                              </span>
-                            </div>
-                            {calibration ? (
-                              <div className="mt-2 text-xs text-brand-800">
-                                {draftMeasurementWidthPlanUnits !== null &&
-                                draftMeasurementHeightPlanUnits !== null
-                                  ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits)} ${calibration.unit} × ${formatDisplayNumber(draftMeasurementHeightPlanUnits)} ${calibration.unit}`
-                                  : 'Waiting for calibration'}
-                              </div>
-                            ) : null}
-                          </div>
+                          <MetricRow
+                            label="Draft area"
+                            value={
+                              calibration &&
+                              draftMeasurementWidthPlanUnits !== null &&
+                              draftMeasurementHeightPlanUnits !== null
+                                ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits)} ${calibration.unit} x ${formatDisplayNumber(draftMeasurementHeightPlanUnits)} ${calibration.unit}`
+                                : `${formatDisplayNumber(normalizedMeasurementDraft.width)} x ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
+                            }
+                          />
 
-                          <div className="block">
-                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                          <label className="block">
+                            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
                               Associate with item
                             </span>
-                            <input
-                              value={itemSearch}
-                              onChange={(event) => setItemSearch(event.target.value)}
-                              className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                              placeholder="Search tag, item, room, or category"
-                            />
-                            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-1 shadow-sm">
-                              {filteredMeasurementItems.length > 0 ? (
-                                filteredMeasurementItems.map((item) => {
-                                  const active = item.key === selectedMeasurementTargetKey;
-                                  return (
-                                    <button
-                                      key={item.key}
-                                      type="button"
-                                      onClick={() => setSelectedMeasurementTargetKey(item.key)}
-                                      className={[
-                                        'block w-full rounded-xl px-3 py-2 text-left transition',
-                                        active
-                                          ? 'bg-brand-50 text-brand-900'
-                                          : 'hover:bg-neutral-50',
-                                      ].join(' ')}
-                                    >
-                                      <span className="flex items-start justify-between gap-3">
-                                        <span className="min-w-0">
-                                          <span className="block truncate text-sm font-semibold">
-                                            {item.primaryLabel}
-                                          </span>
-                                          <span className="mt-0.5 block truncate text-xs text-neutral-500">
-                                            {item.secondaryLabel} • {item.containerLabel}
-                                          </span>
-                                        </span>
-                                        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                                          {item.targetKind === 'ffe' ? 'FF&E' : 'Proposal'}
-                                        </span>
-                                      </span>
-                                    </button>
-                                  );
-                                })
-                              ) : (
-                                <div className="px-3 py-4 text-sm text-neutral-500">
-                                  No matching items.
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            <select
+                              value={selectedMeasurementTargetKey}
+                              onChange={(event) =>
+                                setSelectedMeasurementTargetKey(event.target.value)
+                              }
+                              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
+                            >
+                              <option value="">Choose an item</option>
+                              {measurementItems.map((item) => (
+                                <option key={item.key} value={item.key}>
+                                  {item.primaryLabel} - {item.secondaryLabel} -{' '}
+                                  {item.containerLabel}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
 
                           <div className="flex flex-wrap gap-2">
                             <Button
@@ -1316,116 +1232,100 @@ export function PlanCanvasPage({
                             </Button>
                           </div>
                         </>
-                      ) : null}
+                      ) : (
+                        <p className="text-sm text-neutral-500">No draft area.</p>
+                      )}
                     </div>
                   ) : null}
 
                   {activeTool === 'crop' ? (
-                    <div className="mt-4 space-y-3">
-                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
-                        {!selectedMeasurement
-                          ? 'Select a measured item below, then draw a crop rectangle to frame the final plan image.'
-                          : normalizedCropDraft
-                            ? 'Crop area captured. Save it to define the final plan image framing for this item.'
-                            : selectedMeasurement.cropWidth !== null &&
-                                selectedMeasurement.cropHeight !== null
-                              ? 'A saved crop already exists for this measured item. Draw a new one to replace it.'
-                              : 'Draw a crop rectangle anywhere on the plan to define the final item image. The measured area highlight will be included in the exported crop.'}
-                      </div>
+                    <div className="mt-3 space-y-3">
+                      <MeasuredAreaSelect
+                        measurements={measurements}
+                        measurementItemsByMeasurementId={measurementItemsByMeasurementId}
+                        measurementsLoading={measurementsLoading}
+                        selectedMeasurementId={selectedMeasurementId}
+                        onSelect={(measurementId, item) => {
+                          setSelectedMeasurementId(measurementId);
+                          setMeasurementDraft(null);
+                          setCropDraft(null);
+                          if (item) setSelectedMeasurementTargetKey(item.key);
+                        }}
+                        onClear={() => {
+                          setSelectedMeasurementId(null);
+                          setMeasurementDraft(null);
+                          setCropDraft(null);
+                          setSelectedMeasurementTargetKey('');
+                        }}
+                      />
 
                       {selectedMeasurementRect ? (
-                        <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 px-4 py-3 text-sm text-neutral-700">
-                          <div className="flex items-baseline justify-between gap-3">
-                            <span className="font-semibold">Selected area</span>
-                            <span>
-                              {formatDisplayNumber(selectedMeasurementRect.width)} ×{' '}
-                              {formatDisplayNumber(selectedMeasurementRect.height)} px
-                            </span>
-                          </div>
-                          {calibration && selectedMeasurement ? (
-                            <div className="mt-2 text-xs text-neutral-500">
-                              {`${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, calibration.unit))} ${calibration.unit} × ${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit))} ${calibration.unit}`}
-                            </div>
-                          ) : null}
-                        </div>
+                        <MetricRow
+                          label="Selected area"
+                          value={
+                            calibration && selectedMeasurement
+                              ? `${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, calibration.unit))} ${calibration.unit} x ${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit))} ${calibration.unit}`
+                              : `${formatDisplayNumber(selectedMeasurementRect.width)} x ${formatDisplayNumber(selectedMeasurementRect.height)} px`
+                          }
+                        />
                       ) : null}
 
                       {normalizedCropDraft ? (
-                        <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                          <div className="flex items-baseline justify-between gap-3">
-                            <span className="font-semibold">Draft crop</span>
-                            <span>
-                              {formatDisplayNumber(normalizedCropDraft.width)} ×{' '}
-                              {formatDisplayNumber(normalizedCropDraft.height)} px
-                            </span>
-                          </div>
-                          {calibration ? (
-                            <div className="mt-2 text-xs text-brand-800">
-                              {draftCropWidthPlanUnits !== null && draftCropHeightPlanUnits !== null
-                                ? `${formatDisplayNumber(draftCropWidthPlanUnits)} ${calibration.unit} × ${formatDisplayNumber(draftCropHeightPlanUnits)} ${calibration.unit}`
-                                : 'Waiting for calibration'}
-                            </div>
-                          ) : null}
-                        </div>
+                        <MetricRow
+                          label="Draft crop"
+                          value={
+                            calibration &&
+                            draftCropWidthPlanUnits !== null &&
+                            draftCropHeightPlanUnits !== null
+                              ? `${formatDisplayNumber(draftCropWidthPlanUnits)} ${calibration.unit} x ${formatDisplayNumber(draftCropHeightPlanUnits)} ${calibration.unit}`
+                              : `${formatDisplayNumber(normalizedCropDraft.width)} x ${formatDisplayNumber(normalizedCropDraft.height)} px`
+                          }
+                        />
                       ) : null}
 
                       {selectedMeasurement &&
                       selectedMeasurement.cropWidth !== null &&
                       selectedMeasurement.cropHeight !== null ? (
-                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900">
-                          <div className="flex items-baseline justify-between gap-3">
-                            <span className="font-semibold">Saved crop</span>
-                            <span>
-                              {formatDisplayNumber(selectedMeasurement.cropWidth)} ×{' '}
-                              {formatDisplayNumber(selectedMeasurement.cropHeight)} px
-                            </span>
-                          </div>
-                        </div>
+                        <MetricRow
+                          label="Saved crop"
+                          value={`${formatDisplayNumber(selectedMeasurement.cropWidth)} x ${formatDisplayNumber(selectedMeasurement.cropHeight)} px`}
+                        />
                       ) : null}
 
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={() => void handleSaveCropAndPlanImage()}
-                          disabled={!canSaveCropAndPlanImage}
-                        >
-                          {isSavingPlanImage ? 'Adding plan image…' : 'Save crop to item'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => void handleSaveCrop()}
-                          disabled={!canSaveCrop}
-                        >
-                          {updateMeasurement.isPending ? 'Saving…' : 'Save crop only'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setCropDraft(null)}
-                          disabled={!normalizedCropDraft || updateMeasurement.isPending}
-                        >
-                          Clear draft
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => void handleClearSavedCrop()}
-                          disabled={
-                            !selectedMeasurement ||
-                            selectedMeasurement.cropWidth === null ||
-                            selectedMeasurement.cropHeight === null ||
-                            updateMeasurement.isPending
-                          }
-                        >
-                          Remove saved crop
-                        </Button>
-                        {selectedMeasurement ? (
+                      {normalizedCropDraft ? (
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            onClick={() => void handleSaveCropAndPlanImage()}
+                            disabled={!canSaveCropAndPlanImage}
+                          >
+                            {isSavingPlanImage ? 'Adding plan image…' : 'Save crop to item'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => void handleSaveCrop()}
+                            disabled={!canSaveCrop}
+                          >
+                            {updateMeasurement.isPending ? 'Saving…' : 'Save crop only'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCropDraft(null)}
+                            disabled={updateMeasurement.isPending}
+                          >
+                            Clear draft
+                          </Button>
+                        </div>
+                      ) : selectedMeasurement &&
+                        selectedMeasurement.cropWidth !== null &&
+                        selectedMeasurement.cropHeight !== null ? (
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             type="button"
                             variant="secondary"
@@ -1435,77 +1335,60 @@ export function PlanCanvasPage({
                           >
                             {isSavingPlanImage ? 'Saving plan image…' : 'Publish saved crop'}
                           </Button>
-                        ) : null}
-                      </div>
-                      {selectedMeasurement ? (
-                        <p className="text-xs leading-5 text-neutral-500">
-                          Save crop to item stores this crop and adds it to the{' '}
-                          {selectedMeasurement.targetKind === 'proposal'
-                            ? 'Proposal item'
-                            : 'FF&E item'}
-                          &apos;s Plan column. The published image includes the measured area
-                          highlight. Any existing Plan image for that item will be replaced.
-                        </p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => void handleClearSavedCrop()}
+                            disabled={updateMeasurement.isPending}
+                          >
+                            Remove saved crop
+                          </Button>
+                        </div>
                       ) : null}
                     </div>
                   ) : null}
 
                   {selectedMeasurement && selectedMeasurementItem && selectedMeasurementDisplay ? (
-                    <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                            Apply Measurement
-                          </p>
-                          <p className="mt-1 text-sm text-neutral-700">
-                            {selectedMeasurementItem.targetKind === 'proposal'
-                              ? 'Update this Proposal item quantity from the measured area.'
-                              : 'Update this FF&E item size text without assigning L, D, or W yet.'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid gap-2">
-                        {selectedMeasurementItem.targetKind === 'proposal' ? (
-                          <>
-                            <MeasurementApplicationOption
-                              value="proposal-area"
-                              selected={measurementApplicationMode}
-                              onSelect={setMeasurementApplicationMode}
-                              label="Use area"
-                              detail={`${formatDisplayNumber(selectedMeasurementDisplay.area)} ${formatAreaUnit(calibration?.unit ?? 'ft')}`}
-                            />
-                            <MeasurementApplicationOption
-                              value="proposal-horizontal"
-                              selected={measurementApplicationMode}
-                              onSelect={setMeasurementApplicationMode}
-                              label="Use horizontal span"
-                              detail={`${formatDisplayNumber(selectedMeasurementDisplay.horizontal)} ${calibration?.unit ?? 'ft'}`}
-                            />
-                            <MeasurementApplicationOption
-                              value="proposal-vertical"
-                              selected={measurementApplicationMode}
-                              onSelect={setMeasurementApplicationMode}
-                              label="Use vertical span"
-                              detail={`${formatDisplayNumber(selectedMeasurementDisplay.vertical)} ${calibration?.unit ?? 'ft'}`}
-                            />
-                          </>
-                        ) : (
-                          <MeasurementApplicationOption
-                            value="ffe-dimensions"
-                            selected={measurementApplicationMode}
-                            onSelect={setMeasurementApplicationMode}
-                            label="Update dimensions"
-                            detail={selectedMeasurementDisplay.dimensionsText}
-                          />
-                        )}
-                        <MeasurementApplicationOption
-                          value="reference-only"
-                          selected={measurementApplicationMode}
-                          onSelect={setMeasurementApplicationMode}
-                          label="Reference only"
-                          detail="Keep item fields unchanged."
-                        />
-                      </div>
+                    <div className="mt-4 border-t border-neutral-200 pt-3">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                          Apply measurement
+                        </span>
+                        <select
+                          value={measurementApplicationMode}
+                          onChange={(event) =>
+                            setMeasurementApplicationMode(
+                              event.target.value as MeasurementApplicationMode,
+                            )
+                          }
+                          className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
+                        >
+                          {selectedMeasurementItem.targetKind === 'proposal' ? (
+                            <>
+                              <option value="proposal-area">
+                                Use area - {formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
+                                {formatAreaUnit(calibration?.unit ?? 'ft')}
+                              </option>
+                              <option value="proposal-horizontal">
+                                Use horizontal -{' '}
+                                {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
+                                {calibration?.unit ?? 'ft'}
+                              </option>
+                              <option value="proposal-vertical">
+                                Use vertical -{' '}
+                                {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
+                                {calibration?.unit ?? 'ft'}
+                              </option>
+                            </>
+                          ) : (
+                            <option value="ffe-dimensions">
+                              Update dimensions - {selectedMeasurementDisplay.dimensionsText}
+                            </option>
+                          )}
+                          <option value="reference-only">Reference only</option>
+                        </select>
+                      </label>
                       <Button
                         type="button"
                         variant="secondary"
@@ -1521,72 +1404,44 @@ export function PlanCanvasPage({
                     </div>
                   ) : null}
 
-                  <div className="mt-4 space-y-2">
-                    {measurementsLoading ? (
-                      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
-                        Loading measured items…
-                      </div>
-                    ) : measurements.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-500">
-                        No measured items yet.
-                      </div>
-                    ) : (
-                      measurements.map((measurement) => {
-                        const item = measurementItemsByMeasurementId.get(measurement.id);
-                        const active = measurement.id === selectedMeasurementId;
-                        return (
-                          <button
-                            key={measurement.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedMeasurementId(measurement.id);
-                              setActiveTool((currentTool) =>
-                                currentTool === 'crop' ? 'crop' : 'rectangle',
-                              );
-                              setMeasurementDraft(null);
-                              setCropDraft(null);
-                              if (item) setSelectedMeasurementTargetKey(item.key);
-                            }}
-                            className={[
-                              'block w-full rounded-xl px-3 py-2 text-left transition',
-                              active
-                                ? 'bg-brand-50 ring-1 ring-inset ring-brand-300'
-                                : 'hover:bg-neutral-50',
-                            ].join(' ')}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-neutral-900">
-                                  {item?.primaryLabel ?? measurement.targetTagSnapshot}
-                                </p>
-                                <p className="mt-1 text-xs text-neutral-500">
-                                  {item
-                                    ? `${item.secondaryLabel} • ${item.containerLabel}`
-                                    : measurement.targetKind === 'ffe'
-                                      ? 'FF&E item'
-                                      : 'Proposal item'}
-                                </p>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
+                  {activeTool === 'rectangle' ? (
+                    <div className="mt-4 border-t border-neutral-200 pt-3">
+                      <MeasuredAreaSelect
+                        measurements={measurements}
+                        measurementItemsByMeasurementId={measurementItemsByMeasurementId}
+                        measurementsLoading={measurementsLoading}
+                        selectedMeasurementId={selectedMeasurementId}
+                        onSelect={(measurementId, item) => {
+                          setSelectedMeasurementId(measurementId);
+                          setMeasurementDraft(null);
+                          setCropDraft(null);
+                          if (item) setSelectedMeasurementTargetKey(item.key);
+                        }}
+                        onClear={() => {
+                          setSelectedMeasurementId(null);
+                          setMeasurementDraft(null);
+                          setCropDraft(null);
+                          setSelectedMeasurementTargetKey('');
+                        }}
+                      />
+                    </div>
+                  ) : null}
 
                   {selectedMeasurement ? (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                          setActiveTool('crop');
-                          setCropDraft(null);
-                        }}
-                      >
-                        Crop plan image
-                      </Button>
+                      {activeTool === 'rectangle' ? (
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            setActiveTool('crop');
+                            setCropDraft(null);
+                          }}
+                        >
+                          Crop plan image
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         variant="ghost"
@@ -1637,6 +1492,72 @@ export function PlanCanvasPage({
         </aside>
       </div>
     </div>
+  );
+}
+
+function MetricRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-neutral-200/80 pb-2 text-sm">
+      <span className="font-medium text-neutral-700">{label}</span>
+      <span className="text-right text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function MeasuredAreaSelect({
+  measurements,
+  measurementItemsByMeasurementId,
+  measurementsLoading,
+  selectedMeasurementId,
+  onSelect,
+  onClear,
+}: {
+  measurements: Measurement[];
+  measurementItemsByMeasurementId: Map<string, MeasurementItemRef>;
+  measurementsLoading: boolean;
+  selectedMeasurementId: string | null;
+  onSelect: (measurementId: string, item: MeasurementItemRef | null) => void;
+  onClear: () => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        Measured area
+      </span>
+      <select
+        value={selectedMeasurementId ?? ''}
+        disabled={measurementsLoading || measurements.length === 0}
+        onChange={(event) => {
+          const measurementId = event.target.value;
+          if (!measurementId) {
+            onClear();
+            return;
+          }
+          onSelect(measurementId, measurementItemsByMeasurementId.get(measurementId) ?? null);
+        }}
+        className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400 disabled:bg-neutral-100 disabled:text-neutral-400"
+      >
+        <option value="">
+          {measurementsLoading
+            ? 'Loading measured areas'
+            : measurements.length === 0
+              ? 'No measured areas'
+              : 'Select an area'}
+        </option>
+        {measurements.map((measurement) => {
+          const item = measurementItemsByMeasurementId.get(measurement.id);
+          return (
+            <option key={measurement.id} value={measurement.id}>
+              {item
+                ? `${item.primaryLabel} - ${item.secondaryLabel} - ${item.containerLabel}`
+                : measurement.targetTagSnapshot}
+            </option>
+          );
+        })}
+      </select>
+    </label>
   );
 }
 
@@ -2139,7 +2060,7 @@ function PlanViewport({
     <div className="h-full min-h-0">
       <div
         ref={containerRef}
-        className="relative h-full overflow-hidden rounded-xl border border-black/10 bg-[#e3ded2] shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
+        className="relative h-full overflow-hidden bg-[#e3ded2]"
         style={{
           cursor: imageUrl
             ? activeTool === 'calibrate' ||
@@ -2706,38 +2627,6 @@ function formatDisplayNumber(value: number) {
   if (value >= 100) return value.toFixed(0);
   if (value >= 10) return value.toFixed(1).replace(/\.0$/, '');
   return value.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
-}
-
-function MeasurementApplicationOption({
-  value,
-  selected,
-  onSelect,
-  label,
-  detail,
-}: {
-  value: MeasurementApplicationMode;
-  selected: MeasurementApplicationMode;
-  onSelect: (value: MeasurementApplicationMode) => void;
-  label: string;
-  detail: string;
-}) {
-  const active = value === selected;
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(value)}
-      className={[
-        'rounded-xl border px-3 py-2 text-left transition',
-        active
-          ? 'border-brand-300 bg-white text-brand-900 shadow-sm'
-          : 'border-neutral-200 bg-white/70 text-neutral-700 hover:border-brand-200',
-      ].join(' ')}
-    >
-      <span className="block text-sm font-semibold">{label}</span>
-      <span className="mt-0.5 block text-xs text-neutral-500">{detail}</span>
-    </button>
-  );
 }
 
 function ToolbarIcon({ children }: { children: ReactNode }) {

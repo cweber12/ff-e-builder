@@ -368,40 +368,36 @@ describe('PlanCanvasPage', () => {
     renderPlanCanvasPage('plan-2');
 
     fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
-    fireEvent.click(screen.getByRole('button', { name: /A-101/ }));
+    fireEvent.change(screen.getByRole('combobox', { name: /Measured area/i }), {
+      target: { value: 'measurement-1' },
+    });
 
     expect(screen.getByText('Selected area')).toBeInTheDocument();
-    expect(
-      screen.getByText(/A saved crop already exists for this measured item/i),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save crop only' })).toBeDisabled();
+    expect(screen.getByText('Saved crop')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
   });
 
   it('shows FF&E plan-image save action for measured FF&E crops', () => {
     renderPlanCanvasPage('plan-2');
 
     fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
-    fireEvent.click(screen.getByRole('button', { name: /A-101/ }));
+    fireEvent.change(screen.getByRole('combobox', { name: /Measured area/i }), {
+      target: { value: 'measurement-1' },
+    });
 
     expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
-    expect(
-      screen.getByText(
-        /Save crop to item stores this crop and adds it to the FF&E item's Plan column/i,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
   });
 
   it('shows proposal plan-image save action for measured proposal crops', () => {
     renderPlanCanvasPage('plan-2');
 
     fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
-    fireEvent.click(screen.getByRole('button', { name: /P-42/ }));
+    fireEvent.change(screen.getByRole('combobox', { name: /Measured area/i }), {
+      target: { value: 'measurement-2' },
+    });
 
     expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
-    expect(
-      screen.getByText(
-        /Save crop to item stores this crop and adds it to the Proposal item's Plan column/i,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
   });
 });

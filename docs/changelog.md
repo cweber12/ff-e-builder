@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): tighten the Measured Plan inspector with dropdown-based item/area selection and a full-bleed center canvas
 - feat(plans): simplify the Measured Plan workspace into a compact canvas-first workbench with contextual tool inspector and top-bar sheet switching
 - feat(plans): add PDF-backed Measured Plan uploads with page selection, rendered-page measurement, and explicit measurement-to-item application controls
 - feat(plans): add a guided crop-to-item flow for measured plan images and surface FF&E Plan Images in a default table column
