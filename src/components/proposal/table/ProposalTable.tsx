@@ -37,6 +37,7 @@ import {
   useCreateProposalItem,
   useDeleteProposalCategory,
   useDeleteProposalItem,
+  useMoveProposalItem,
   useProposalWithItems,
   useUpdateProposalCategory,
   useUpdateProposalItem,
@@ -45,6 +46,7 @@ import {
   useCreateColumnDef,
   useUpdateColumnDef,
   useDeleteColumnDef,
+  useIsMobileViewport,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -226,38 +228,10 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
                   project,
                   categoriesWithItems,
                   userProfile,
-                  {},
+                  { mode: 'continuous' },
                   customColumnDefs,
                 )
               }
-              pdfOptions={[
-                {
-                  label: 'Continuous',
-                  onSelect: () =>
-                    void exportProposalPdf(
-                      project,
-                      categoriesWithItems,
-                      userProfile,
-                      {
-                        mode: 'continuous',
-                      },
-                      customColumnDefs,
-                    ),
-                },
-                {
-                  label: 'Separated',
-                  onSelect: () =>
-                    void exportProposalPdf(
-                      project,
-                      categoriesWithItems,
-                      userProfile,
-                      {
-                        mode: 'separated',
-                      },
-                      customColumnDefs,
-                    ),
-                },
-              ]}
             />
           )}
           {onImport && (
@@ -289,6 +263,7 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           categoryId={category.id}
           categoryName={category.name}
           items={category.items}
+          otherCategories={categoriesWithItems.filter((c) => c.id !== category.id)}
           subtotalCents={proposalCategorySubtotalCents(category.items)}
           collapsed={collapsed[category.id] ?? false}
           onToggle={() => toggleCollapsed(category.id)}
@@ -705,6 +680,7 @@ function ProposalCategorySection({
   categoryId,
   categoryName,
   items,
+  otherCategories,
   subtotalCents,
   collapsed,
   onToggle,
@@ -726,6 +702,7 @@ function ProposalCategorySection({
   categoryId: string;
   categoryName: string;
   items: ProposalItem[];
+  otherCategories: { id: string; name: string }[];
   subtotalCents: number;
   collapsed: boolean;
   onToggle: () => void;
@@ -745,7 +722,9 @@ function ProposalCategorySection({
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
+  const moveItem = useMoveProposalItem();
   const updateItem = useUpdateProposalItem();
+  const isMobile = useIsMobileViewport();
   const [isExpanded, setIsExpanded] = useState(false);
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items]);
@@ -845,7 +824,7 @@ function ProposalCategorySection({
         </div>
       </GroupedTableHeader>
 
-      {!collapsed && (
+      {!collapsed && !isMobile && (
         <div className="overflow-x-auto">
           <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
             <thead className="bg-white text-xs uppercase tracking-wide text-gray-500">
@@ -924,8 +903,40 @@ function ProposalCategorySection({
                       projectId={projectId}
                       categoryId={categoryId}
                       item={item}
+                      otherCategories={otherCategories}
                       onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                       onDelete={() => deleteItem.mutate(item.id)}
+                      onDuplicate={() =>
+                        createItem.mutate({
+                          productTag: item.productTag,
+                          description: item.description,
+                          plan: item.plan,
+                          drawings: item.drawings,
+                          location: item.location,
+                          sizeLabel: item.sizeLabel,
+                          sizeMode: item.sizeMode,
+                          sizeUnit: item.sizeUnit,
+                          sizeW: item.sizeW,
+                          sizeD: item.sizeD,
+                          sizeH: item.sizeH,
+                          cbm: item.cbm,
+                          quantity: item.quantity,
+                          quantityUnit: item.quantityUnit,
+                          unitCostCents: item.unitCostCents,
+                          sortOrder: item.sortOrder + 0.5,
+                          ...(Object.keys(item.customData).length > 0 && {
+                            customData: item.customData,
+                          }),
+                        })
+                      }
+                      onMove={(toCategoryId) =>
+                        moveItem.mutate({
+                          id: item.id,
+                          fromCategoryId: categoryId,
+                          toCategoryId,
+                          version: item.version,
+                        })
+                      }
                       onRowClick={() => onItemClick(item)}
                       visibleColOrder={visibleColOrder}
                       customColumnDefs={customColumnDefs}
@@ -935,6 +946,46 @@ function ProposalCategorySection({
               </DndContext>
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!collapsed && isMobile && (
+        <div className="p-3">
+          <MobileProposalCards
+            items={sortedItems}
+            otherCategories={otherCategories}
+            onDelete={(item) => deleteItem.mutate(item.id)}
+            onDuplicate={(item) =>
+              createItem.mutate({
+                productTag: item.productTag,
+                description: item.description,
+                plan: item.plan,
+                drawings: item.drawings,
+                location: item.location,
+                sizeLabel: item.sizeLabel,
+                sizeMode: item.sizeMode,
+                sizeUnit: item.sizeUnit,
+                sizeW: item.sizeW,
+                sizeD: item.sizeD,
+                sizeH: item.sizeH,
+                cbm: item.cbm,
+                quantity: item.quantity,
+                quantityUnit: item.quantityUnit,
+                unitCostCents: item.unitCostCents,
+                sortOrder: item.sortOrder + 0.5,
+                ...(Object.keys(item.customData).length > 0 && { customData: item.customData }),
+              })
+            }
+            onMove={(item, toCategoryId) =>
+              moveItem.mutate({
+                id: item.id,
+                fromCategoryId: categoryId,
+                toCategoryId,
+                version: item.version,
+              })
+            }
+            onItemClick={onItemClick}
+          />
         </div>
       )}
 
@@ -1046,8 +1097,40 @@ function ProposalCategorySection({
                           projectId={projectId}
                           categoryId={categoryId}
                           item={item}
+                          otherCategories={otherCategories}
                           onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
                           onDelete={() => deleteItem.mutate(item.id)}
+                          onDuplicate={() =>
+                            createItem.mutate({
+                              productTag: item.productTag,
+                              description: item.description,
+                              plan: item.plan,
+                              drawings: item.drawings,
+                              location: item.location,
+                              sizeLabel: item.sizeLabel,
+                              sizeMode: item.sizeMode,
+                              sizeUnit: item.sizeUnit,
+                              sizeW: item.sizeW,
+                              sizeD: item.sizeD,
+                              sizeH: item.sizeH,
+                              cbm: item.cbm,
+                              quantity: item.quantity,
+                              quantityUnit: item.quantityUnit,
+                              unitCostCents: item.unitCostCents,
+                              sortOrder: item.sortOrder + 0.5,
+                              ...(Object.keys(item.customData).length > 0 && {
+                                customData: item.customData,
+                              }),
+                            })
+                          }
+                          onMove={(toCategoryId) =>
+                            moveItem.mutate({
+                              id: item.id,
+                              fromCategoryId: categoryId,
+                              toCategoryId,
+                              version: item.version,
+                            })
+                          }
                           onRowClick={() => onItemClick(item)}
                           visibleColOrder={visibleColOrder}
                           customColumnDefs={customColumnDefs}
@@ -1074,8 +1157,11 @@ function ProposalRow({
   projectId,
   categoryId,
   item,
+  otherCategories,
   onSave,
   onDelete,
+  onDuplicate,
+  onMove,
   onRowClick,
   visibleColOrder,
   customColumnDefs,
@@ -1083,8 +1169,11 @@ function ProposalRow({
   projectId: string;
   categoryId: string;
   item: ProposalItem;
+  otherCategories: { id: string; name: string }[];
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onDelete: () => void;
+  onDuplicate: () => void;
+  onMove: (toCategoryId: string) => void;
   onRowClick: () => void;
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
@@ -1251,6 +1340,9 @@ function ProposalRow({
         </button>
         <ProposalItemActionsMenu
           itemName={item.productTag || item.description || 'item'}
+          otherCategories={otherCategories}
+          onDuplicate={onDuplicate}
+          onMove={onMove}
           onDelete={onDelete}
         />
       </td>
@@ -1260,12 +1352,19 @@ function ProposalRow({
 
 function ProposalItemActionsMenu({
   itemName,
+  otherCategories,
+  onDuplicate,
+  onMove,
   onDelete,
 }: {
   itemName: string;
+  otherCategories: { id: string; name: string }[];
+  onDuplicate: () => void;
+  onMove: (toCategoryId: string) => void;
   onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1273,6 +1372,7 @@ function ProposalItemActionsMenu({
     const handler = (event: globalThis.MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
+        setMoveOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -1281,6 +1381,7 @@ function ProposalItemActionsMenu({
 
   const runAction = (action: () => void) => {
     setOpen(false);
+    setMoveOpen(false);
     action();
   };
 
@@ -1305,6 +1406,48 @@ function ProposalItemActionsMenu({
           <button
             type="button"
             role="menuitem"
+            className={menuItemClassName}
+            onClick={() => runAction(onDuplicate)}
+          >
+            Duplicate
+          </button>
+          {otherCategories.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={moveOpen}
+                className={menuItemClassName}
+                onClick={() => setMoveOpen((v) => !v)}
+              >
+                Move to...
+                <span className="ml-auto text-xs text-gray-400">{'>'}</span>
+              </button>
+              {moveOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-full top-0 z-40 mr-1 min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                >
+                  {otherCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      role="menuitem"
+                      className={menuItemClassName}
+                      onClick={() => runAction(() => onMove(cat.id))}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="my-1 h-px bg-gray-100" />
+          <button
+            type="button"
+            role="menuitem"
             className={cn(menuItemClassName, 'text-danger-600')}
             onClick={() => runAction(onDelete)}
           >
@@ -1312,6 +1455,104 @@ function ProposalItemActionsMenu({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function MobileProposalCards({
+  items,
+  otherCategories,
+  onDelete,
+  onDuplicate,
+  onMove,
+  onItemClick,
+}: {
+  items: ProposalItem[];
+  otherCategories: { id: string; name: string }[];
+  onDelete: (item: ProposalItem) => void;
+  onDuplicate: (item: ProposalItem) => void;
+  onMove: (item: ProposalItem, toCategoryId: string) => void;
+  onItemClick: (item: ProposalItem) => void;
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+        Add first item -&gt;
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {items.map((item) => {
+        const lineTotal = proposalLineTotalCents(item);
+        return (
+          <article
+            key={item.id}
+            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <ImageFrame
+                  entityType="proposal_item"
+                  entityId={item.id}
+                  alt={item.productTag || 'item'}
+                  fallbackUrl={null}
+                  className="h-14 aspect-[117/75] shrink-0"
+                  compact
+                />
+                <div className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => onItemClick(item)}
+                    className="truncate text-base font-semibold text-gray-950 hover:underline text-left"
+                  >
+                    {item.productTag || item.description || 'Unnamed item'}
+                  </button>
+                  {item.location && (
+                    <p className="mt-0.5 truncate text-sm text-gray-500">{item.location}</p>
+                  )}
+                </div>
+              </div>
+              <ProposalItemActionsMenu
+                itemName={item.productTag || item.description || 'item'}
+                otherCategories={otherCategories}
+                onDuplicate={() => onDuplicate(item)}
+                onMove={(toCategoryId) => onMove(item, toCategoryId)}
+                onDelete={() => onDelete(item)}
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <MobileField label="Quantity">
+                <span>
+                  {item.quantity} {item.quantityUnit}
+                </span>
+              </MobileField>
+              <MobileField label="Unit Cost">
+                <span>{formatMoney(cents(item.unitCostCents))}</span>
+              </MobileField>
+              <MobileField label="Total">
+                <span className="font-semibold tabular-nums">{formatMoney(cents(lineTotal))}</span>
+              </MobileField>
+              {item.sizeLabel && (
+                <MobileField label="Size">
+                  <span>{item.sizeLabel}</span>
+                </MobileField>
+              )}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function MobileField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
+      <div className="mt-1 text-gray-950">{children}</div>
     </div>
   );
 }

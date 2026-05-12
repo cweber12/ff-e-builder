@@ -13,7 +13,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthGate, SignInPage } from './components/shared/AuthGate';
 import { CatalogView } from './components/ffe/catalog/CatalogView';
-import { ItemsTable } from './components/ffe/items/ItemsTable';
+import { FfeTable } from './components/ffe/items';
 import { MaterialsView } from './components/materials/MaterialsView';
 import { BudgetView } from './components/project/BudgetView';
 import { DeleteProjectModal } from './components/project/DeleteProjectModal';
@@ -446,7 +446,7 @@ function ProjectRedirectTo({ target }: { target: string }) {
 function ProjectTableRoute() {
   const { project, roomsWithItems, onImport } = useProjectContext();
   return (
-    <ItemsTable
+    <FfeTable
       projectId={project.id}
       project={project}
       roomsWithItems={roomsWithItems}

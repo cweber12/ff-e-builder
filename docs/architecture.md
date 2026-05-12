@@ -314,7 +314,7 @@ pnpm --filter ffe-api test
 Focused checks are preferred while iterating, for example:
 
 ```bash
-pnpm exec vitest run src/components/ItemsTable.test.tsx
+pnpm exec vitest run src/components/FfeTable.test.tsx
 pnpm exec vitest run src/lib/export.test.ts
 ```
 

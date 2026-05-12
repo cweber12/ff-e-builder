@@ -78,7 +78,7 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 ```
 /
 ├── src/               # React + Vite front-end (TypeScript)
-│   ├── components/    # Domain-aware UI components (ItemsTable, CatalogView, …)
+│   ├── components/    # Domain-aware UI components (FfeTable, CatalogView, …)
 │   │   ├── plans/       # Plans workspace UI modules for Measured Plan cards, upload, viewport, inspector, tools, and selectors
 │   │   └── primitives/  # Generic design-system atoms (Button, Modal, Drawer, …)
 │   ├── hooks/         # Custom React hooks, query keys, and optimistic cache helpers with barrel export (index.ts)

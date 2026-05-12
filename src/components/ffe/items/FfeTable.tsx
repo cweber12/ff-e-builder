@@ -45,6 +45,7 @@ import {
   useDeleteItemColumnDef,
   useUpdateItemColumnDef,
   useColumnConfig,
+  useIsMobileViewport,
 } from '../../../hooks';
 import {
   cents,
@@ -108,6 +109,13 @@ const DEFAULT_COLUMN_IDS = [
 
 type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
 
+const stickyTotalHeaderClassName = 'sticky right-24 z-20 bg-white';
+const stickyActionsHeaderClassName = 'sticky right-0 z-30 bg-white w-24 min-w-24';
+const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white';
+const stickyActionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
+const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
+const stickyActionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
+
 /** Human-readable labels for default columns shown in the restore picker. */
 const DEFAULT_COLUMN_LABELS: Record<DefaultColumnId, string> = {
   drag: 'Drag',
@@ -128,7 +136,7 @@ const DEFAULT_COLUMN_LABELS: Record<DefaultColumnId, string> = {
   actions: 'Actions',
 };
 
-type ItemsTableProps = {
+type FfeTableProps = {
   roomsWithItems: RoomWithItems[];
   projectId: string;
   project?: Project;
@@ -812,27 +820,6 @@ function useCollapsedRoomImages(rooms: RoomWithItems[]) {
   return { collapsed, toggle };
 }
 
-function useIsMobileViewport() {
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-    return window.matchMedia('(max-width: 767px)').matches;
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const updateViewport = () => setIsMobile(mediaQuery.matches);
-
-    updateViewport();
-    mediaQuery.addEventListener('change', updateViewport);
-
-    return () => mediaQuery.removeEventListener('change', updateViewport);
-  }, []);
-
-  return isMobile;
-}
-
 function ItemsErrorState({ onReload }: { onReload?: (() => void) | undefined }) {
   return (
     <div className="flex min-h-[18rem] flex-col items-center justify-center gap-4 rounded-lg border border-danger-500/30 bg-white px-6 py-10 text-center">
@@ -1026,6 +1013,8 @@ function SortableItemRow({
           className={cn(
             'px-3 py-3 text-gray-700',
             cell.column.id === 'description' ? 'min-w-64 whitespace-normal' : 'whitespace-nowrap',
+            cell.column.id === 'lineTotal' && stickyTotalCellClassName,
+            cell.column.id === 'actions' && stickyActionsCellClassName,
           )}
         >
           {cell.column.id === 'drag' ? (
@@ -1732,25 +1721,42 @@ function RoomItemsSection({
                       <tr key={headerGroup.id}>
                         <SortableContext
                           items={columnConfig.visibleOrder.filter(
-                            (id) => id !== 'drag' && id !== 'actions',
+                            (id) => id !== 'drag' && id !== 'actions' && id !== 'lineTotal',
                           )}
                           strategy={horizontalListSortingStrategy}
                         >
                           {headerGroup.headers.map((header) => {
                             const colId = header.column.id;
-                            if (colId === 'drag' || colId === 'actions') {
+                            if (colId === 'drag') {
                               return (
                                 <th
                                   key={header.id}
                                   className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                />
+                              );
+                            }
+                            if (colId === 'lineTotal') {
+                              return (
+                                <th
+                                  key={header.id}
+                                  className={cn(
+                                    'border-b border-gray-100 px-3 py-3 font-semibold',
+                                    stickyTotalHeaderClassName,
+                                  )}
                                 >
-                                  {header.isPlaceholder
-                                    ? null
-                                    : flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext(),
-                                      )}
+                                  {flexRender(header.column.columnDef.header, header.getContext())}
                                 </th>
+                              );
+                            }
+                            if (colId === 'actions') {
+                              return (
+                                <th
+                                  key={header.id}
+                                  className={cn(
+                                    'border-b border-gray-100 px-3 py-3 font-semibold',
+                                    stickyActionsHeaderClassName,
+                                  )}
+                                />
                               );
                             }
                             if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
@@ -1870,25 +1876,45 @@ function RoomItemsSection({
                           <tr key={headerGroup.id}>
                             <SortableContext
                               items={columnConfig.visibleOrder.filter(
-                                (id) => id !== 'drag' && id !== 'actions',
+                                (id) => id !== 'drag' && id !== 'actions' && id !== 'lineTotal',
                               )}
                               strategy={horizontalListSortingStrategy}
                             >
                               {headerGroup.headers.map((header) => {
                                 const colId = header.column.id;
-                                if (colId === 'drag' || colId === 'actions') {
+                                if (colId === 'drag') {
                                   return (
                                     <th
                                       key={header.id}
                                       className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                    />
+                                  );
+                                }
+                                if (colId === 'lineTotal') {
+                                  return (
+                                    <th
+                                      key={header.id}
+                                      className={cn(
+                                        'border-b border-gray-100 px-3 py-3 font-semibold',
+                                        stickyTotalExpandedHeaderClassName,
+                                      )}
                                     >
-                                      {header.isPlaceholder
-                                        ? null
-                                        : flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext(),
-                                          )}
+                                      {flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                      )}
                                     </th>
+                                  );
+                                }
+                                if (colId === 'actions') {
+                                  return (
+                                    <th
+                                      key={header.id}
+                                      className={cn(
+                                        'border-b border-gray-100 px-3 py-3 font-semibold',
+                                        stickyActionsExpandedHeaderClassName,
+                                      )}
+                                    />
                                   );
                                 }
                                 if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
@@ -1970,7 +1996,7 @@ function RoomItemsSection({
   );
 }
 
-export function ItemsTableView({
+export function FfeTableView({
   roomsWithItems,
   projectId,
   project,
@@ -2098,13 +2124,13 @@ export function ItemsTableView({
   );
 }
 
-export function ItemsTable(props: ItemsTableProps) {
+export function FfeTable(props: FfeTableProps) {
   const queryClient = useQueryClient();
   const reload = () => void queryClient.invalidateQueries();
 
   return (
     <ItemsRenderErrorBoundary queryClient={queryClient}>
-      <ItemsTableView
+      <FfeTableView
         roomsWithItems={props.roomsWithItems}
         projectId={props.projectId}
         {...(props.project !== undefined ? { project: props.project } : {})}

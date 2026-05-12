@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { ImageFrame } from '../../shared/ImageFrame';
+import { PanZoomFrame } from '../../shared/PanZoomFrame';
 import { StatusBadge } from '../../primitives/StatusBadge';
 import { cents, formatMoney } from '../../../types';
 import { lineTotalCents } from '../../../lib/budgetCalc';
@@ -63,12 +64,10 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
               />
             </ImageSection>
             <ImageSection label="Plan">
-              <ImageFrame
+              <PanZoomFrame
                 entityType="item_plan"
                 entityId={item.id}
                 alt={`${item.itemName} plan`}
-                className="w-full aspect-[103/75] rounded-lg"
-                disabled
               />
             </ImageSection>
             <ImageSection label="Options">

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { ItemsTable } from './ItemsTable';
+import { FfeTable } from './FfeTable';
 import { roomSubtotalCents, projectTotalCents } from '../../../lib/budgetCalc';
 import { getSortOrderPatches } from '../../../lib/itemSort';
 import { cents, formatMoney, type Item, type Room, type RoomWithItems } from '../../../types';
@@ -56,6 +56,7 @@ vi.mock('../../../hooks', () => ({
     visibleOrder: [
       'drag',
       'image',
+      'plan',
       'itemIdTag',
       'itemName',
       'description',
@@ -77,6 +78,7 @@ vi.mock('../../../hooks', () => ({
     addCustomColumn: vi.fn(),
     removeCustomColumn: vi.fn(),
   }),
+  useIsMobileViewport: () => false,
   isPersistedImageEntityId: () => true,
 }));
 
@@ -174,7 +176,7 @@ function renderTable(roomsWithItems = fixture) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <ItemsTable roomsWithItems={roomsWithItems} projectId="project-1" />
+      <FfeTable roomsWithItems={roomsWithItems} projectId="project-1" />
     </QueryClientProvider>,
   );
 }
@@ -188,7 +190,7 @@ async function openLivingRoomAddItem(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('menuitem', { name: 'Add item' }));
 }
 
-describe('ItemsTable', () => {
+describe('FfeTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUpdateMutateAsync.mockResolvedValue(makeItem());
@@ -276,7 +278,7 @@ describe('ItemsTable', () => {
   it('renders five shimmer rows while loading', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <ItemsTable roomsWithItems={[]} projectId="project-1" isLoading />
+        <FfeTable roomsWithItems={[]} projectId="project-1" isLoading />
       </QueryClientProvider>,
     );
 
@@ -324,7 +326,7 @@ describe('ItemsTable', () => {
     let rooms = makeRoomsWithStatus('pending', 1);
     const tableForCurrentStatus = () => (
       <QueryClientProvider client={new QueryClient()}>
-        <ItemsTable key={rooms[0]!.items[0]!.status} roomsWithItems={rooms} projectId="project-1" />
+        <FfeTable key={rooms[0]!.items[0]!.status} roomsWithItems={rooms} projectId="project-1" />
       </QueryClientProvider>
     );
 

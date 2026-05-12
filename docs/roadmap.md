@@ -77,14 +77,14 @@ _Items flagged in senior frontend review (May 2026). No new data fields required
 
 ### Catalog
 
-- **Previous/Next use `&lt;` / `&gt;` HTML entities** — replace with ChevronIcon (already exists in ItemsTable.tsx).
+- **Previous/Next use `&lt;` / `&gt;` HTML entities** — replace with ChevronIcon (already exists in FfeTable.tsx).
 - **Approval section uses web form checkboxes** — `<input type="checkbox">` looks like a browser form, not a printed sign-off page. Replace with print-appropriate styled signature lines and approval boxes. Relates to the planned "Customer approval" workflow.
 - **Jump-to-item dropdown** — native `<select>` sitting in a polished sticky nav. Consider a styled combobox or at least bring it visually in line with the surrounding nav.
 
 ### Finish Library
 
 - **"No material ID" placeholder** — verbose. Replace with `—`.
-- **Delete button has no confirmation** — MaterialGridCard calls `onDelete` directly on click with no modal. Add a confirmation step matching ItemsTable's pattern.
+- **Delete button has no confirmation** — MaterialGridCard calls `onDelete` directly on click with no modal. Add a confirmation step matching FfeTable's pattern.
 - **Swatch `rounded-full` in table view** — circular crop destroys rectangular texture/fabric images. Use `rounded-md` instead.
 
 ## Deferred from Import Engine session (2026-05-11)

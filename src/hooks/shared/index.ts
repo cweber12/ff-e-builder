@@ -22,3 +22,4 @@ export {
   useUpdateColumnDef,
   useDeleteColumnDef,
 } from './useColumnDefs';
+export { useIsMobileViewport } from './useIsMobileViewport';

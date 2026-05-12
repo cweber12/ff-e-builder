@@ -6,6 +6,8 @@ import {
   appendListItem,
   appendUniqueListItem,
   removeListItem,
+  restoreQueryList,
+  snapshotQueryList,
   updateListItem,
 } from '../optimisticList';
 import type {
@@ -114,6 +116,51 @@ export function useUpdateProposalItem() {
       );
     },
     onError: (err) => toast.error(`Proposal item save failed: ${err.message}`),
+  });
+}
+
+export function useMoveProposalItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      toCategoryId,
+      version,
+    }: {
+      id: string;
+      fromCategoryId: string;
+      toCategoryId: string;
+      version: number;
+    }) => api.proposal.updateItem(id, { categoryId: toCategoryId, version }),
+    onMutate: async ({ id, fromCategoryId, toCategoryId }) => {
+      const fromKey = proposalKeys.items(fromCategoryId);
+      const toKey = proposalKeys.items(toCategoryId);
+      const previousFrom = await snapshotQueryList<ProposalItem>(queryClient, fromKey);
+      const previousTo = await snapshotQueryList<ProposalItem>(queryClient, toKey);
+      const itemToMove = previousFrom?.find((item) => item.id === id);
+
+      queryClient.setQueryData<ProposalItem[]>(fromKey, (old) => removeListItem(old, id));
+      if (itemToMove) {
+        queryClient.setQueryData<ProposalItem[]>(toKey, (old) =>
+          appendListItem(old, { ...itemToMove, categoryId: toCategoryId }),
+        );
+      }
+      return { previousFrom, previousTo };
+    },
+    onError: (_err, variables, ctx) => {
+      restoreQueryList(
+        queryClient,
+        proposalKeys.items(variables.fromCategoryId),
+        ctx?.previousFrom,
+      );
+      restoreQueryList(queryClient, proposalKeys.items(variables.toCategoryId), ctx?.previousTo);
+    },
+    onSettled: (_data, _error, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: proposalKeys.items(variables.fromCategoryId),
+      });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.items(variables.toCategoryId) });
+    },
   });
 }
 
