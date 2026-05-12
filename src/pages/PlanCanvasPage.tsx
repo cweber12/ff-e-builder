@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LineOverlay, RectOverlay } from '../components/plans/overlays';
 import { Button } from '../components/primitives';
@@ -130,19 +130,13 @@ const MILLIMETERS_PER_UNIT: Record<PlanMeasurementUnit, number> = {
   m: 1000,
 };
 
-function sectionForTool(tool: ToolId) {
-  if (tool === 'calibrate') return 'calibration';
-  if (tool === 'length') return 'length';
-  if (tool === 'rectangle' || tool === 'crop') return 'items';
-  return 'calibration';
-}
-
 export function PlanCanvasPage({
   project,
   planId,
   roomsWithItems,
   proposalCategoriesWithItems,
 }: PlanCanvasPageProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
   const [activeTool, setActiveTool] = useState<ToolId>('calibrate');
@@ -166,7 +160,6 @@ export function PlanCanvasPage({
     useState<MeasurementApplicationMode>('reference-only');
   const [isApplyingMeasurement, setIsApplyingMeasurement] = useState(false);
   const [itemSearch, setItemSearch] = useState('');
-  const [openSection, setOpenSection] = useState<string>('calibration');
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
 
   const selectedPlan = useMemo(
@@ -257,10 +250,6 @@ export function PlanCanvasPage({
   }, [isCalibrated, selectedPlan]);
 
   useEffect(() => {
-    setOpenSection(sectionForTool(activeTool));
-  }, [activeTool]);
-
-  useEffect(() => {
     setCalibrationDraft(null);
     setLengthLineDraft(null);
     setMeasurementDraft(null);
@@ -272,7 +261,6 @@ export function PlanCanvasPage({
     setMeasurementApplicationMode('reference-only');
     setItemSearch('');
     setLengthLineLabelInput('');
-    setOpenSection(sectionForTool('calibrate'));
   }, [selectedPlanId]);
 
   useEffect(() => {
@@ -683,15 +671,17 @@ export function PlanCanvasPage({
     setIsApplyingMeasurement(true);
     try {
       if (selectedMeasurementItem.targetKind === 'proposal') {
+        const horizontalFeet = convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, 'ft');
+        const verticalFeet = convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, 'ft');
         const quantity =
           measurementApplicationMode === 'proposal-horizontal'
             ? selectedMeasurementDisplay.horizontal
             : measurementApplicationMode === 'proposal-vertical'
               ? selectedMeasurementDisplay.vertical
-              : selectedMeasurementDisplay.area;
+              : horizontalFeet * verticalFeet;
         const quantityUnit =
           measurementApplicationMode === 'proposal-area'
-            ? formatAreaUnit(calibration?.unit ?? 'ft')
+            ? 'sq ft'
             : calibration?.unit === 'ft'
               ? 'ln ft'
               : calibration?.unit === 'in'
@@ -754,46 +744,58 @@ export function PlanCanvasPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f3f1ea]">
-      <header className="border-b border-black/5 bg-white/88 px-4 py-3 backdrop-blur md:px-6">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0">
-            <Link
-              to={`/projects/${project.id}/plans`}
-              className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400 hover:text-brand-600"
-            >
-              Plans Library
-            </Link>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#efede6]">
+      <header className="border-b border-black/10 bg-[#fbfaf6]/95 px-4 py-2.5 backdrop-blur md:px-5">
+        <div className="flex min-h-10 flex-wrap items-center gap-3">
+          <Link
+            to={`/projects/${project.id}/plans`}
+            className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400 transition hover:text-brand-700"
+          >
+            Plans
+          </Link>
+          <div className="h-5 w-px bg-neutral-200" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h1
-                className="max-w-[20ch] truncate font-display text-2xl font-semibold text-neutral-900"
+                className="max-w-[28ch] truncate font-display text-lg font-semibold text-neutral-950"
                 title={selectedPlan.name}
               >
                 {selectedPlan.name}
               </h1>
-              <span className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+              <span className="rounded-full border border-neutral-200 bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
                 {selectedPlan.sheetReference || 'No sheet ref'}
               </span>
               <span
                 className={[
-                  'rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
-                  isCalibrated ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]',
+                  isCalibrated
+                    ? 'bg-emerald-100/80 text-emerald-800'
+                    : 'bg-amber-100/80 text-amber-800',
                 ].join(' ')}
               >
                 {isCalibrated ? 'calibrated' : 'uncalibrated'}
               </span>
             </div>
-            <p className="mt-2 text-sm text-neutral-500">
-              This workspace is now fixed-height and full-window so plan geometry stays visually
-              stable while you measure. Use the icon rail to calibrate, save line spans, or link a
-              measured rectangle to an item.
-            </p>
           </div>
+          <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            Sheet
+            <select
+              value={selectedPlan.id}
+              onChange={(event) => navigate(`/projects/${project.id}/plans/${event.target.value}`)}
+              className="min-w-44 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium normal-case tracking-normal text-neutral-800 outline-none transition focus:border-brand-400"
+            >
+              {(plans ?? []).map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.sheetReference ? `${plan.sheetReference} - ${plan.name}` : plan.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-0 xl:grid-cols-[84px_minmax(0,1fr)_380px]">
-        <aside className="overflow-y-auto border-r border-black/5 bg-white/72 p-3 backdrop-blur">
+      <div className="grid min-h-0 flex-1 gap-0 xl:grid-cols-[72px_minmax(0,1fr)_360px]">
+        <aside className="overflow-y-auto border-r border-black/10 bg-[#fbfaf6]/80 p-2.5 backdrop-blur">
           <div className="flex flex-col gap-2">
             {TOOL_DEFINITIONS.map((tool) => {
               const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
@@ -807,12 +809,12 @@ export function PlanCanvasPage({
                   disabled={disabled}
                   onClick={() => setActiveTool(tool.id)}
                   className={[
-                    'flex h-14 w-14 items-center justify-center rounded-2xl border transition',
+                    'flex h-11 w-11 items-center justify-center rounded-lg border transition',
                     active
-                      ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm'
-                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-brand-200 hover:text-brand-700',
+                      ? 'border-neutral-950 bg-neutral-950 text-white shadow-sm'
+                      : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200 hover:bg-white hover:text-neutral-950',
                     disabled &&
-                      'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400',
+                      'cursor-not-allowed border-transparent bg-transparent text-neutral-300',
                   ].join(' ')}
                 >
                   <span className="sr-only">{tool.label}</span>
@@ -823,7 +825,7 @@ export function PlanCanvasPage({
           </div>
         </aside>
 
-        <main className="min-h-0 overflow-hidden p-4 md:p-6">
+        <main className="min-h-0 overflow-hidden p-2 md:p-3">
           <PlanViewport
             projectId={project.id}
             plan={selectedPlan}
@@ -844,72 +846,47 @@ export function PlanCanvasPage({
             onMeasurementSelect={(measurementId) => {
               const item = measurementItemsByMeasurementId.get(measurementId);
               setSelectedMeasurementId(measurementId);
+              setActiveTool((currentTool) => (currentTool === 'crop' ? 'crop' : 'rectangle'));
               setMeasurementDraft(null);
               setCropDraft(null);
               if (item) setSelectedMeasurementTargetKey(item.key);
-              setOpenSection('items');
             }}
             onNaturalSizeChange={setPlanNaturalSize}
           />
         </main>
 
-        <aside className="overflow-y-auto border-l border-black/5 bg-white/72 p-4 backdrop-blur md:p-5">
+        <aside className="overflow-y-auto border-l border-black/10 bg-[#fbfaf6]/92 px-4 py-4 backdrop-blur md:px-5">
           <div className="space-y-5">
-            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <div className="border-b border-neutral-200 pb-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                Plan Selector
+                Inspector
               </p>
-              <div className="mt-3 space-y-2">
-                {(plans ?? []).map((plan) => {
-                  const active = plan.id === selectedPlan.id;
-                  return (
-                    <Link
-                      key={plan.id}
-                      to={`/projects/${project.id}/plans/${plan.id}`}
-                      className={[
-                        'block rounded-xl px-3 py-2 transition',
-                        active
-                          ? 'bg-brand-50 ring-1 ring-inset ring-brand-300'
-                          : 'hover:bg-neutral-50',
-                      ].join(' ')}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-neutral-900">
-                            {plan.name}
-                          </p>
-                          <p className="mt-1 text-xs text-neutral-500">
-                            {plan.sheetReference || 'No sheet reference'}
-                          </p>
-                        </div>
-                        <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                          {plan.measurementCount}
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
+              <h2 className="mt-1 font-display text-xl font-semibold text-neutral-950">
+                {TOOL_DEFINITIONS.find((tool) => tool.id === activeTool)?.label ?? 'Measure'}
+              </h2>
+              <p className="mt-1 text-sm leading-5 text-neutral-500">
+                {activeTool === 'calibrate'
+                  ? 'Draw one known span, then enter its real length.'
+                  : activeTool === 'length'
+                    ? 'Capture reusable linear spans on the plan.'
+                    : activeTool === 'rectangle'
+                      ? 'Draw an item footprint and link it to FF&E or Proposal work.'
+                      : activeTool === 'crop'
+                        ? 'Frame the plan image that will publish back to the selected item.'
+                        : 'Drag the sheet without changing measurement tools.'}
+              </p>
+            </div>
 
-            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setOpenSection('calibration')}
-                className="flex w-full items-center justify-between gap-3 text-left"
-              >
+            <section className={activeTool === 'calibrate' ? 'block' : 'hidden'}>
+              <div className="flex w-full items-center justify-between gap-3 text-left">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
                   Calibration
                 </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                  {calibrationLoading
-                    ? 'Loading…'
-                    : openSection === 'calibration'
-                      ? 'Hide'
-                      : 'Show'}
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                  {calibrationLoading ? 'Loading' : isCalibrated ? 'Set' : 'Needed'}
                 </span>
-              </button>
-              {openSection === 'calibration' ? (
+              </div>
+              {activeTool === 'calibrate' ? (
                 <>
                   <p className="mt-3 text-sm font-medium text-neutral-800">
                     {isCalibrated ? 'Calibrated' : 'Needs calibration'}
@@ -1059,12 +1036,8 @@ export function PlanCanvasPage({
               ) : null}
             </section>
 
-            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setOpenSection('length')}
-                className="flex w-full items-center justify-between gap-3 text-left"
-              >
+            <section className={activeTool === 'length' ? 'block' : 'hidden'}>
+              <div className="flex w-full items-center justify-between gap-3 text-left">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
                   Length Lines
                 </span>
@@ -1072,10 +1045,9 @@ export function PlanCanvasPage({
                   <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
                     {lengthLines.length}
                   </span>
-                  <span>{openSection === 'length' ? 'Hide' : 'Show'}</span>
                 </span>
-              </button>
-              {openSection === 'length' ? (
+              </div>
+              {activeTool === 'length' ? (
                 <>
                   {activeTool === 'length' ? (
                     <div className="mt-4 space-y-3">
@@ -1223,24 +1195,21 @@ export function PlanCanvasPage({
               ) : null}
             </section>
 
-            <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setOpenSection('items')}
-                className="flex w-full items-center justify-between gap-3 text-left"
-              >
+            <section
+              className={activeTool === 'rectangle' || activeTool === 'crop' ? 'block' : 'hidden'}
+            >
+              <div className="flex w-full items-center justify-between gap-3 text-left">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                  Measured Items
+                  {activeTool === 'crop' ? 'Crop Image' : 'Measured Items'}
                 </span>
                 <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
                   <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
                     {measurements.length}
                   </span>
-                  <span>{openSection === 'items' ? 'Hide' : 'Show'}</span>
                 </span>
-              </button>
+              </div>
 
-              {openSection === 'items' ? (
+              {activeTool === 'rectangle' || activeTool === 'crop' ? (
                 <>
                   {activeTool === 'rectangle' ? (
                     <div className="mt-4 space-y-3">
@@ -1613,7 +1582,6 @@ export function PlanCanvasPage({
                         size="sm"
                         onClick={() => {
                           setActiveTool('crop');
-                          setOpenSection('items');
                           setCropDraft(null);
                         }}
                       >
@@ -1646,6 +1614,25 @@ export function PlanCanvasPage({
                 </>
               ) : null}
             </section>
+
+            {activeTool === 'pan' ? (
+              <section className="border-t border-neutral-200 pt-4">
+                <div className="grid gap-3 text-sm leading-6 text-neutral-600">
+                  <p>
+                    Drag the plan to inspect details. Scroll to zoom and double-click the canvas to
+                    reset.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                    <div className="rounded-lg border border-neutral-200 bg-white/70 px-3 py-2">
+                      {lengthLines.length} lines
+                    </div>
+                    <div className="rounded-lg border border-neutral-200 bg-white/70 px-3 py-2">
+                      {measurements.length} items
+                    </div>
+                  </div>
+                </div>
+              </section>
+            ) : null}
           </div>
         </aside>
       </div>
@@ -2152,7 +2139,7 @@ function PlanViewport({
     <div className="h-full min-h-0">
       <div
         ref={containerRef}
-        className="relative h-full overflow-hidden rounded-[28px] border border-black/5 bg-[#e7dfd1] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
+        className="relative h-full overflow-hidden rounded-xl border border-black/10 bg-[#e3ded2] shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
         style={{
           cursor: imageUrl
             ? activeTool === 'calibrate' ||
@@ -2174,7 +2161,7 @@ function PlanViewport({
         onPointerLeave={handlePointerLeave}
         onDoubleClick={resetView}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.42),transparent_54%),linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2),rgba(255,255,255,0))]" />
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white/80 px-4 py-2 text-sm text-neutral-500 backdrop-blur">
@@ -2344,18 +2331,18 @@ function PlanViewport({
               </div>
             ) : null}
 
-            <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
+            <div className="pointer-events-none absolute left-3 top-3 rounded-md border border-white/70 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500 backdrop-blur">
               {activeTool === 'calibrate'
-                ? 'Draw calibration line • hold Space + drag to pan • scroll to zoom • double-click to reset'
+                ? 'Draw calibration line'
                 : activeTool === 'length'
-                  ? 'Draw measured line • hold Space + drag to pan • scroll to zoom • double-click to reset'
+                  ? 'Draw measured line'
                   : activeTool === 'rectangle'
-                    ? 'Draw measured area • click existing area to select • hold Space + drag to pan • scroll to zoom • double-click to reset'
+                    ? 'Draw measured area'
                     : activeTool === 'crop'
                       ? selectedMeasurement
-                        ? 'Draw final plan image crop • measured area stays highlighted in the saved image • click existing area to re-select • hold Space + drag to pan • scroll to zoom • double-click to reset'
-                        : 'Select a measured item first • click a measured area to select • hold Space + drag to pan • scroll to zoom • double-click to reset'
-                      : 'Drag to pan • click measured areas to select • scroll to zoom • double-click to reset'}
+                        ? 'Draw item image crop'
+                        : 'Select a measured item'
+                      : 'Drag to pan'}
             </div>
 
             <div className="pointer-events-none absolute right-3 top-3 flex flex-col gap-1.5">

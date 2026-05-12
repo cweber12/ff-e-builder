@@ -348,9 +348,9 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByRole('button', { name: 'Length Line' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Rectangle' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Crop' })).toBeDisabled();
-    expect(screen.getByRole('link', { name: /Level 2 Furniture Plan/i })).toHaveAttribute(
-      'href',
-      '/projects/project-1/plans/plan-2',
+    expect(screen.getByRole('combobox', { name: /sheet/i })).toHaveValue('plan-1');
+    expect(screen.getByRole('option', { name: /A1.2 - Level 2 Furniture Plan/i })).toHaveValue(
+      'plan-2',
     );
     expect(screen.getByText(/No reference line yet/i)).toBeInTheDocument();
   });

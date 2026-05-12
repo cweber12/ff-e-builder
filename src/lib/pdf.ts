@@ -1,19 +1,4 @@
-type PdfViewport = {
-  width: number;
-  height: number;
-};
-
-type PdfRenderTask = {
-  promise: Promise<unknown>;
-};
-
-type PdfPageProxy = {
-  view: number[];
-  rotate: number;
-  getViewport: (params: { scale: number }) => PdfViewport;
-  render: (params: { canvas: HTMLCanvasElement; viewport: PdfViewport }) => PdfRenderTask;
-  cleanup: () => void;
-};
+import type { PageViewport, PDFPageProxy } from 'pdfjs-dist';
 
 export type PdfPagePreview = {
   pageNumber: number;
@@ -127,7 +112,7 @@ async function loadPdfJs() {
   return pdfJsPromise;
 }
 
-function getPdfPageSize(page: PdfPageProxy) {
+function getPdfPageSize(page: PDFPageProxy) {
   const [x1 = 0, y1 = 0, x2 = 0, y2 = 0] = page.view;
 
   return {
@@ -136,7 +121,7 @@ function getPdfPageSize(page: PdfPageProxy) {
   };
 }
 
-async function renderPageToCanvas(page: PdfPageProxy, viewport: PdfViewport) {
+async function renderPageToCanvas(page: PDFPageProxy, viewport: PageViewport) {
   const canvas = document.createElement('canvas');
   canvas.width = Math.ceil(viewport.width);
   canvas.height = Math.ceil(viewport.height);
