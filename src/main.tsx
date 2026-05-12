@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './lib/auth';
 import { RootErrorBoundary } from './components/shared/RootErrorBoundary';
-import { queryClient } from './lib/queryClient';
+import { queryClient } from './lib/query';
 import './index.css';
 import App from './App';
 

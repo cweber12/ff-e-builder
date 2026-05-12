@@ -85,7 +85,7 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - The client never imports API worker code and never talks to Neon or R2 directly.
 - The frontend API client is exposed through `src/lib/api.ts`; domain namespaces are incrementally implemented in `src/lib/api/` and re-exported through the facade so hooks can keep importing from `src/lib/api`.
 - API client tests live alongside the focused `src/lib/api/` modules, with facade-level transport/auth coverage kept in `src/lib/api.test.ts`.
-- Client utility modules are grouped by concern under `src/lib/` subfolders such as `api/`, `auth/`, `export/`, `images/`, `import/`, `money/`, `projectSnapshot/`, `query/`, and `utils/`; only still-used root facades remain while callers migrate to canonical subfolder paths.
+- Client utility modules are grouped by concern under `src/lib/` subfolders such as `api/`, `auth/`, `export/`, `images/`, `import/`, `items/`, `money/`, `projectSnapshot/`, `query/`, `theme/`, and `utils/`; only still-used root facades remain while callers migrate to canonical subfolder paths.
 - Route modules live under `api/src/routes/`: `projects`, `plans`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).

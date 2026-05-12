@@ -1,4 +1,4 @@
-import { compressImage } from '../compress-image';
+import { compressImage } from '../images';
 import { apiFetch, apiFetchResponse } from './transport';
 import { mapImageAsset, type RawImageAsset } from './mappers';
 import type { CropParams, ImageAsset, ImageEntityType } from '../../types';

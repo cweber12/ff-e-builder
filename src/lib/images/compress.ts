@@ -4,6 +4,9 @@ const WEBP_QUALITY = 0.85;
 export async function compressImage(file: File): Promise<File> {
   // GIF may be animated — skip conversion to avoid losing frames
   if (file.type === 'image/gif') return file;
+  if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') {
+    return file;
+  }
 
   const bitmap = await createImageBitmap(file);
   const { width, height } = bitmap;

@@ -1,1 +1,2 @@
-export const BRAND_RGB: [number, number, number] = [75, 127, 171];
+// Compatibility shim — canonical module is theme/constants.ts
+export * from './theme/constants';

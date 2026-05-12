@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { jsonResponse, mockAuth, setupApiTest } from './api/test-utils';
-import { api, ApiError } from './api';
+import { jsonResponse, mockAuth, setupApiTest } from './test-utils';
+import { api, ApiError } from '../api';
 
 setupApiTest();
 
