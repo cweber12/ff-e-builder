@@ -42,7 +42,7 @@ export function parseRawRowsToSections(
     fallbackTitle?: (sectionIndex: number) => string;
   },
 ): ParsedSections {
-  const { skipColumns, fallbackTitle = (i) => `Section ${i + 1}` } = options ?? {};
+  const { skipColumns, fallbackTitle = (i: number) => `Section ${i + 1}` } = options ?? {};
 
   const firstHeaderIndex = detectTableHeader(rawRows, 25, skipColumns);
   if (firstHeaderIndex === null) return { columns: [], sections: [] };

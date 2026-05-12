@@ -1,12 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { autoMapColumns, transformRow, transformRows } from './import/ffe';
 import type { ColumnMap } from './import/ffe';
+import type { ImportColumn } from './import/engine';
+
+function cols(...labels: string[]): ImportColumn[] {
+  return labels.map((label, index) => ({
+    key: label
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim(),
+    label,
+    columnNumber: index + 1,
+  }));
+}
 
 // ─── autoMapColumns ───────────────────────────────────────────────────────────
 
 describe('autoMapColumns', () => {
   it('maps exact field names', () => {
-    const result = autoMapColumns(['item name', 'category', 'qty', 'notes']);
+    const result = autoMapColumns(cols('item name', 'category', 'qty', 'notes'));
     expect(result.itemName).toBe('item name');
     expect(result.category).toBe('category');
     expect(result.qty).toBe('qty');
@@ -14,7 +26,7 @@ describe('autoMapColumns', () => {
   });
 
   it('maps common aliases', () => {
-    const result = autoMapColumns(['name', 'type', 'units', 'comments']);
+    const result = autoMapColumns(cols('name', 'type', 'units', 'comments'));
     expect(result.itemName).toBe('name');
     expect(result.category).toBe('type');
     expect(result.qty).toBe('units');
@@ -22,30 +34,30 @@ describe('autoMapColumns', () => {
   });
 
   it('maps cost column', () => {
-    const result = autoMapColumns(['cost', 'quantity', 'room']);
+    const result = autoMapColumns(cols('cost', 'quantity', 'room'));
     expect(result.unitCostDollars).toBe('cost');
     expect(result.qty).toBe('quantity');
     expect(result.room).toBe('room');
   });
 
-  it('maps markup column', () => {
-    const result = autoMapColumns(['lead time']);
+  it('maps lead time column', () => {
+    const result = autoMapColumns(cols('lead time'));
     expect(result.leadTime).toBe('lead time');
   });
 
   it('returns empty partial for unrecognized columns', () => {
-    const result = autoMapColumns(['foo', 'bar', 'baz']);
+    const result = autoMapColumns(cols('foo', 'bar', 'baz'));
     expect(Object.keys(result)).toHaveLength(0);
   });
 
   it('is case insensitive', () => {
-    const result = autoMapColumns(['ITEM NAME', 'Category']);
-    expect(result.itemName).toBe('ITEM NAME');
-    expect(result.category).toBe('Category');
+    const result = autoMapColumns(cols('ITEM NAME', 'Category'));
+    expect(result.itemName).toBe('item name');
+    expect(result.category).toBe('category');
   });
 
   it('maps room column', () => {
-    const result = autoMapColumns(['item name', 'room', 'space']);
+    const result = autoMapColumns(cols('item name', 'room', 'space'));
     expect(result.room).toBe('room');
   });
 });
@@ -141,6 +153,27 @@ describe('transformRow', () => {
     const map: ColumnMap = { ...FULL_MAP, room: null };
     const row = { Item: 'Chair' };
     expect(transformRow(row, map)!.roomName).toBeNull();
+  });
+
+  it('stores unmapped columns in customData using keyMap IDs', () => {
+    const columns: ImportColumn[] = [
+      { key: 'Item', label: 'Item', columnNumber: 1 },
+      { key: 'vendor', label: 'Vendor', columnNumber: 2 },
+    ];
+    const keyMap = new Map([['vendor', 'uuid-vendor-def']]);
+    const row = { Item: 'Chair', vendor: 'Acme' };
+    const result = transformRow(row, FULL_MAP, columns, keyMap);
+    expect(result!.customData).toEqual({ 'uuid-vendor-def': 'Acme' });
+  });
+
+  it('falls back to column label when no keyMap provided', () => {
+    const columns: ImportColumn[] = [
+      { key: 'Item', label: 'Item', columnNumber: 1 },
+      { key: 'vendor', label: 'Vendor', columnNumber: 2 },
+    ];
+    const row = { Item: 'Chair', vendor: 'Acme' };
+    const result = transformRow(row, FULL_MAP, columns);
+    expect(result!.customData).toEqual({ Vendor: 'Acme' });
   });
 });
 

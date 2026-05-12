@@ -155,6 +155,30 @@ export function ImportProposalExcelModal({
         categories.map((category) => [category.name.toLowerCase(), category.id]),
       );
 
+      const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
+      const unmappedCols = parsed.columns.filter((col) => !usedKeys.has(col.key));
+      const customDataKeyMap = new Map<string, string>();
+
+      if (unmappedCols.length > 0) {
+        const existingDefs = await api.columnDefs.list(projectId, 'proposal');
+        const existingByLabel = new Map(existingDefs.map((d) => [d.label.toLowerCase(), d]));
+
+        for (const col of unmappedCols) {
+          const existing = existingByLabel.get(col.label.toLowerCase());
+          if (existing) {
+            customDataKeyMap.set(col.key, existing.id);
+          } else {
+            const created = await api.columnDefs.create(projectId, {
+              label: col.label,
+              sortOrder: existingDefs.length + customDataKeyMap.size,
+              tableType: 'proposal',
+            });
+            existingByLabel.set(col.label.toLowerCase(), created);
+            customDataKeyMap.set(col.key, created.id);
+          }
+        }
+      }
+
       if (parsed.projectImages.length > 0) {
         const existingProjectImages = await api.images.list({
           entityType: 'project',
@@ -208,7 +232,7 @@ export function ImportProposalExcelModal({
         try {
           const item = await api.proposal.createItem(
             categoryId,
-            buildProposalItem(row, mapping, parsed.columns),
+            buildProposalItem(row, mapping, parsed.columns, customDataKeyMap),
           );
 
           const rowImageUploads = [
@@ -525,13 +549,17 @@ function buildProposalItem(
   row: ProposalParsedRow,
   mapping: ProposalImportColumnMap,
   allColumns: ProposalImportColumn[],
+  customDataKeyMap?: Map<string, string>,
 ): CreateProposalItemInput {
   const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
   const customData: Record<string, string> = {};
   for (const col of allColumns) {
     if (!usedKeys.has(col.key)) {
       const val = (row.values[col.key] ?? '').trim();
-      if (val) customData[col.label] = val;
+      if (val) {
+        const key = customDataKeyMap?.get(col.key) ?? col.label;
+        customData[key] = val;
+      }
     }
   }
 

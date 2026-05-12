@@ -110,6 +110,30 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         materials: autoMap.materials ?? null,
       };
 
+      const usedKeys = new Set(Object.values(mapping).filter(Boolean) as string[]);
+      const unmappedCols = parsed.columns.filter((col) => !usedKeys.has(col.key));
+      const customDataKeyMap = new Map<string, string>();
+
+      if (unmappedCols.length > 0) {
+        const existingDefs = await api.columnDefs.list(projectId, 'ffe');
+        const existingByLabel = new Map(existingDefs.map((d) => [d.label.toLowerCase(), d]));
+
+        for (const col of unmappedCols) {
+          const existing = existingByLabel.get(col.label.toLowerCase());
+          if (existing) {
+            customDataKeyMap.set(col.key, existing.id);
+          } else {
+            const created = await api.columnDefs.create(projectId, {
+              label: col.label,
+              sortOrder: existingDefs.length + customDataKeyMap.size,
+              tableType: 'ffe',
+            });
+            existingByLabel.set(col.label.toLowerCase(), created);
+            customDataKeyMap.set(col.key, created.id);
+          }
+        }
+      }
+
       const roomNameToId = new Map<string, string>(rooms.map((r) => [r.name.toLowerCase(), r.id]));
       const createdRooms = new Map<string, string>();
       const totalItems = parsed.sections.reduce((acc, s) => acc + s.rows.length, 0);
@@ -133,7 +157,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
           roomId = newRoom.id;
         }
 
-        const items = transformRows(section.rows, mapping, parsed.columns);
+        const items = transformRows(section.rows, mapping, parsed.columns, customDataKeyMap);
 
         for (const item of items) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars

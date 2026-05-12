@@ -147,6 +147,7 @@ export function transformRow(
   row: Record<string, string>,
   mapping: ColumnMap,
   columns?: ImportColumn[],
+  customDataKeyMap?: Map<string, string>,
 ): ImportedItem | null {
   const get = (field: keyof ColumnMap): string => {
     const col = mapping[field];
@@ -162,7 +163,10 @@ export function transformRow(
     for (const col of columns) {
       if (!recognizedKeys.has(col.key)) {
         const val = (row[col.key] ?? '').trim();
-        if (val) customData[col.label] = val;
+        if (val) {
+          const key = customDataKeyMap?.get(col.key) ?? col.label;
+          customData[key] = val;
+        }
       }
     }
   }
@@ -191,9 +195,10 @@ export function transformRows(
   rows: Record<string, string>[],
   mapping: ColumnMap,
   columns?: ImportColumn[],
+  customDataKeyMap?: Map<string, string>,
 ): ImportedItem[] {
   return rows.flatMap((row) => {
-    const result = transformRow(row, mapping, columns);
+    const result = transformRow(row, mapping, columns, customDataKeyMap);
     return result ? [result] : [];
   });
 }

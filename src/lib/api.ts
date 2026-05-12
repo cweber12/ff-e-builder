@@ -1,3 +1,4 @@
+import { columnDefsApi } from './api/columnDefs';
 import { imagesApi } from './api/images';
 import { itemsApi } from './api/items';
 import { materialsApi } from './api/materials';
@@ -39,4 +40,5 @@ export const api = {
   images: imagesApi,
   materials: materialsApi,
   plans: plansApi,
+  columnDefs: columnDefsApi,
 };
