@@ -149,10 +149,22 @@ export interface MeasuredPlan {
   owner_uid: string;
   name: string;
   sheet_reference: string;
+  source_type: 'image' | 'pdf-page';
   image_r2_key: string;
   image_filename: string;
   image_content_type: string;
   image_byte_size: number;
+  pdf_r2_key: string | null;
+  pdf_filename: string | null;
+  pdf_content_type: string | null;
+  pdf_byte_size: number | null;
+  pdf_page_number: number | null;
+  pdf_page_width_pt: string | null;
+  pdf_page_height_pt: string | null;
+  pdf_render_scale: string | null;
+  pdf_rendered_width_px: number | null;
+  pdf_rendered_height_px: number | null;
+  pdf_rotation: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -375,6 +387,13 @@ export type UpdateProposalItemInput = z.infer<typeof UpdateProposalItemSchema>;
 export const CreateMeasuredPlanSchema = z.object({
   name: z.string().min(1).max(255),
   sheet_reference: z.string().max(100).default(''),
+  pdf_page_number: z.coerce.number().int().positive().optional(),
+  pdf_page_width_pt: z.coerce.number().positive().optional(),
+  pdf_page_height_pt: z.coerce.number().positive().optional(),
+  pdf_render_scale: z.coerce.number().positive().optional(),
+  pdf_rendered_width_px: z.coerce.number().int().positive().optional(),
+  pdf_rendered_height_px: z.coerce.number().int().positive().optional(),
+  pdf_rotation: z.coerce.number().int().optional(),
 });
 export type CreateMeasuredPlanInput = z.infer<typeof CreateMeasuredPlanSchema>;
 

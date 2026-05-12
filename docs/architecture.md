@@ -73,7 +73,7 @@ The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no
 - `/projects/:id/proposal/table` shows the editable Proposal grouped by Proposal Category.
 - `/projects/:id/proposal/materials` redirects to the shared project material library.
 - `/projects/:id/proposal/summary` redirects to the project budget view.
-- `/projects/:id/plans` shows the project-level Measured Plan library for architectural source images and calibration readiness.
+- `/projects/:id/plans` shows the project-level Measured Plan library for architectural source images, selected PDF pages, and calibration readiness.
 - `/projects/:id/plans/:planId` opens a project-scoped full-window plan workspace for protected-image viewing, plan switching, persisted calibration line editing, saved Length Line measurements, item-linked rectangle measurements, saved per-measurement crop framing, and derived plan-image saves for Proposal and FF&E items.
 
 Legacy project routes continue to redirect to their current FF&E equivalents for compatibility.
@@ -90,12 +90,12 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
 - Money is stored and transported as integer cents. See [money.md](money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
-- Project-level Measured Plan source-image metadata lives in Neon `measured_plans`; the source image bytes also live in the private R2 bucket `ffe-images`.
+- Project-level Measured Plan source-image metadata lives in Neon `measured_plans`; the source image bytes also live in the private R2 bucket `ffe-images`. PDF uploads are stored as durable original PDFs plus one rendered selected page image per Measured Plan, so the existing calibration, measurement, crop, and item Plan Image workflow still operates on stable image-pixel geometry.
 - Per-plan calibration metadata lives in Neon `plan_calibrations`; calibration line coordinates are stored in raw image-pixel space and downstream crop rectangles are also stored in raw image-pixel space on the associated measurement.
 - Saved Length Line measurements live in Neon `length_lines`; line geometry is stored in raw image-pixel space and measured values are normalized into a canonical base unit before display conversion back into the plan calibration unit.
 - Item-linked area measurements live in Neon `measurements`; rectangle geometry and optional crop framing are stored in raw image-pixel space, spans are normalized into the same canonical base unit, the client renders rotated highlight polygons from image-space corners rather than viewport-aligned rectangles, and saved crops can publish into `proposal_plan` or `item_plan` image surfaces.
 - R2 object keys are user/project scoped. Current image entity types are `project`, `room`, `item`, `item_plan`, `item_option`, `material`, `proposal_item`, `proposal_plan`, and `proposal_swatch`. In domain language, the primary image attached to an FF&E Item or Proposal Item row is a Rendering; `item_plan` and `proposal_plan` store derived plan-image outputs, and `item_option` stores up to three alternate FF&E option renderings with one current selection.
-- Measured Plan source images are not stored in `image_assets`; they are uploaded through `/api/v1/projects/:id/plans`, persisted on `measured_plans`, and stored in R2 under `users/{uid}/projects/{projectId}/plans/{planId}.{ext}`.
+- Measured Plan source images are not stored in `image_assets`; they are uploaded through `/api/v1/projects/:id/plans`, persisted on `measured_plans`, and stored in R2 under `users/{uid}/projects/{projectId}/plans/{planId}.{ext}`. For PDF-backed Measured Plans, the selected page is rendered client-side to a PNG at a stable scale and stored at that source-image key, while the original PDF is stored separately under the same user/project/plan scope for traceability.
 - Project images are limited to three per Project, with one `is_primary` image used as the preview image in the project list and as the primary Project Image in exports.
 - Proposal categories start empty for new projects and are created explicitly by users or imports.
 - Proposal spreadsheet import is client-mediated: the React importer parses `.xlsx` workbooks for headers, sections, row values, and embedded image anchors, then persists categories/items through the Worker API and stores imported images through the existing private image/R2 endpoints.

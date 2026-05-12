@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { LineOverlay, RectOverlay } from '../components/plans/overlays';
 import { Button } from '../components/primitives';
 import {
@@ -25,9 +26,9 @@ import {
   useUpdatePlanMeasurement,
 } from '../hooks';
 import { api } from '../lib/api';
+import { ApiError } from '../lib/api/transport';
 import {
   buildRectPolygonPoints,
-  clampPointToRect,
   getLineLength,
   measurementToRectBounds,
   normalizeRectDraft,
@@ -36,9 +37,10 @@ import {
   type LineDraft,
   type RectDraft,
 } from '../lib/plans';
-import { imageKeys } from '../hooks/queryKeys';
+import { imageKeys, itemKeys, proposalKeys } from '../hooks/queryKeys';
 import type {
   CropParams,
+  Item,
   LengthLine,
   Measurement,
   MeasuredPlan,
@@ -46,6 +48,7 @@ import type {
   PlanMeasurementUnit,
   Project,
   ProposalCategoryWithItems,
+  ProposalItem,
   RoomWithItems,
 } from '../types';
 
@@ -66,7 +69,19 @@ type MeasurementItemRef = {
   primaryLabel: string;
   secondaryLabel: string;
   containerLabel: string;
+  containerId: string;
+  version: number;
+  dimensions?: string | null;
+  quantity?: number;
+  quantityUnit?: string;
 };
+
+type MeasurementApplicationMode =
+  | 'reference-only'
+  | 'proposal-horizontal'
+  | 'proposal-vertical'
+  | 'proposal-area'
+  | 'ffe-dimensions';
 
 const TOOL_DEFINITIONS: Array<{
   id: ToolId;
@@ -139,12 +154,18 @@ export function PlanCanvasPage({
   const [lengthLineLabelInput, setLengthLineLabelInput] = useState('');
   const [measurementDraft, setMeasurementDraft] = useState<RectDraft | null>(null);
   const [cropDraft, setCropDraft] = useState<RectDraft | null>(null);
+  const [calibrationFeetInput, setCalibrationFeetInput] = useState('1');
+  const [calibrationInchesInput, setCalibrationInchesInput] = useState('0');
   const [planNaturalSize, setPlanNaturalSize] = useState<{ width: number; height: number }>({
     width: 0,
     height: 0,
   });
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
   const [selectedMeasurementTargetKey, setSelectedMeasurementTargetKey] = useState('');
+  const [measurementApplicationMode, setMeasurementApplicationMode] =
+    useState<MeasurementApplicationMode>('reference-only');
+  const [isApplyingMeasurement, setIsApplyingMeasurement] = useState(false);
+  const [itemSearch, setItemSearch] = useState('');
   const [openSection, setOpenSection] = useState<string>('calibration');
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
 
@@ -182,6 +203,17 @@ export function PlanCanvasPage({
     () => new Map(measurementItems.map((item) => [item.key, item])),
     [measurementItems],
   );
+  const filteredMeasurementItems = useMemo(() => {
+    const query = itemSearch.trim().toLocaleLowerCase();
+    if (query.length === 0) return measurementItems;
+
+    return measurementItems.filter((item) =>
+      [item.primaryLabel, item.secondaryLabel, item.containerLabel, item.targetKind]
+        .join(' ')
+        .toLocaleLowerCase()
+        .includes(query),
+    );
+  }, [itemSearch, measurementItems]);
   const measurementItemsByMeasurementId = useMemo(() => {
     const result = new Map<string, MeasurementItemRef>();
     for (const measurement of measurements) {
@@ -200,6 +232,22 @@ export function PlanCanvasPage({
   const selectedMeasurementItem = selectedMeasurement
     ? (measurementItemsByMeasurementId.get(selectedMeasurement.id) ?? null)
     : null;
+  const selectedMeasurementDisplay = useMemo(() => {
+    if (!selectedMeasurement || !calibration) return null;
+    const horizontal = convertBaseToPlanUnits(
+      selectedMeasurement.horizontalSpanBase,
+      calibration.unit,
+    );
+    const vertical = convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit);
+    const area = horizontal * vertical;
+
+    return {
+      horizontal,
+      vertical,
+      area,
+      dimensionsText: `Measured from plan: ${formatDisplayNumber(horizontal)} ${calibration.unit} x ${formatDisplayNumber(vertical)} ${calibration.unit}`,
+    };
+  }, [calibration, selectedMeasurement]);
 
   useEffect(() => {
     if (!selectedPlan) return;
@@ -221,6 +269,8 @@ export function PlanCanvasPage({
     setSelectedLengthLineId(null);
     setSelectedMeasurementId(null);
     setSelectedMeasurementTargetKey('');
+    setMeasurementApplicationMode('reference-only');
+    setItemSearch('');
     setLengthLineLabelInput('');
     setOpenSection(sectionForTool('calibrate'));
   }, [selectedPlanId]);
@@ -229,6 +279,12 @@ export function PlanCanvasPage({
     if (!calibration) return;
     setCalibrationLengthInput(formatDisplayNumber(calibration.realWorldLength));
     setCalibrationUnit(calibration.unit);
+    if (calibration.unit === 'ft') {
+      const feet = Math.floor(calibration.realWorldLength);
+      const inches = (calibration.realWorldLength - feet) * 12;
+      setCalibrationFeetInput(String(feet));
+      setCalibrationInchesInput(formatDisplayNumber(inches));
+    }
   }, [calibration]);
 
   useEffect(() => {
@@ -240,6 +296,17 @@ export function PlanCanvasPage({
     if (!selectedMeasurementItem || measurementDraft) return;
     setSelectedMeasurementTargetKey(selectedMeasurementItem.key);
   }, [measurementDraft, selectedMeasurementItem]);
+
+  useEffect(() => {
+    if (!selectedMeasurement) {
+      setMeasurementApplicationMode('reference-only');
+      return;
+    }
+
+    setMeasurementApplicationMode(
+      selectedMeasurement.targetKind === 'proposal' ? 'proposal-area' : 'ffe-dimensions',
+    );
+  }, [selectedMeasurement]);
 
   const calibrationPixelLength = useMemo(
     () => (calibrationDraft ? getLineLength(calibrationDraft) : null),
@@ -262,7 +329,10 @@ export function PlanCanvasPage({
     [selectedMeasurement],
   );
 
-  const calibrationLengthValue = Number(calibrationLengthInput);
+  const calibrationLengthValue =
+    calibrationUnit === 'ft'
+      ? parseFeetAndInches(calibrationFeetInput, calibrationInchesInput)
+      : Number(calibrationLengthInput);
   const canSaveCalibration =
     calibrationDraft !== null &&
     calibrationPixelLength !== null &&
@@ -330,18 +400,23 @@ export function PlanCanvasPage({
     normalizedCropDraft.width > 0 &&
     normalizedCropDraft.height > 0 &&
     !updateMeasurement.isPending;
+  const canSaveCropAndPlanImage =
+    canSaveCrop && planNaturalSize.width > 0 && planNaturalSize.height > 0 && !isSavingPlanImage;
   const savedCropParams =
     selectedMeasurement &&
     selectedMeasurement.cropX !== null &&
     selectedMeasurement.cropY !== null &&
     selectedMeasurement.cropWidth !== null &&
     selectedMeasurement.cropHeight !== null
-      ? ({
-          cropX: selectedMeasurement.cropX,
-          cropY: selectedMeasurement.cropY,
-          cropWidth: selectedMeasurement.cropWidth,
-          cropHeight: selectedMeasurement.cropHeight,
-        } satisfies CropParams)
+      ? measurementCropToPixelCrop(
+          {
+            cropX: selectedMeasurement.cropX,
+            cropY: selectedMeasurement.cropY,
+            cropWidth: selectedMeasurement.cropWidth,
+            cropHeight: selectedMeasurement.cropHeight,
+          },
+          planNaturalSize,
+        )
       : null;
   const canSavePlanImage =
     selectedMeasurement !== null &&
@@ -447,6 +522,8 @@ export function PlanCanvasPage({
 
   const handleSaveCrop = async () => {
     if (!selectedMeasurement || !normalizedCropDraft) return;
+    const measurementCrop = pixelCropToMeasurementCrop(normalizedCropDraft, planNaturalSize);
+    if (!measurementCrop) return;
 
     const updated = await updateMeasurement.mutateAsync({
       measurementId: selectedMeasurement.id,
@@ -460,10 +537,10 @@ export function PlanCanvasPage({
         rectHeight: selectedMeasurement.rectHeight,
         horizontalSpanBase: selectedMeasurement.horizontalSpanBase,
         verticalSpanBase: selectedMeasurement.verticalSpanBase,
-        cropX: normalizedCropDraft.x,
-        cropY: normalizedCropDraft.y,
-        cropWidth: normalizedCropDraft.width,
-        cropHeight: normalizedCropDraft.height,
+        cropX: measurementCrop.cropX,
+        cropY: measurementCrop.cropY,
+        cropWidth: measurementCrop.cropWidth,
+        cropHeight: measurementCrop.cropHeight,
       },
     });
 
@@ -497,6 +574,43 @@ export function PlanCanvasPage({
     setCropDraft(null);
   };
 
+  const savePlanImageForMeasurement = async (measurement: Measurement, cropParams: CropParams) => {
+    if (!selectedPlan || planNaturalSize.width <= 0 || planNaturalSize.height <= 0) return;
+
+    const entityType = measurement.targetKind === 'ffe' ? 'item_plan' : 'proposal_plan';
+    const existingImages = await api.images.list({
+      entityType,
+      entityId: measurement.targetItemId,
+    });
+
+    if (existingImages.length > 0) {
+      await Promise.all(existingImages.map((image) => api.images.delete(image.id)));
+    }
+
+    const sourceBlob = await api.plans.downloadContent(project.id, selectedPlanId);
+    const measurementRect = measurementToRectBounds(measurement);
+    const highlightedCropBlob = await createHighlightedPlanCrop({
+      sourceBlob,
+      crop: cropParams,
+      measurementRect,
+    });
+    const uploadFile = new File([highlightedCropBlob], `${selectedPlan.name}-plan.png`, {
+      type: 'image/png',
+    });
+
+    const uploadedImage = await api.images.upload({
+      entityType,
+      entityId: measurement.targetItemId,
+      file: uploadFile,
+      altText: `${measurement.targetTagSnapshot} plan image`,
+    });
+
+    queryClient.setQueryData(imageKeys.forEntity(entityType, measurement.targetItemId), [
+      uploadedImage,
+    ]);
+    restorePlanColumn(project.id, measurement.targetKind);
+  };
+
   const handleSavePlanImage = async () => {
     if (
       !selectedMeasurement ||
@@ -510,42 +624,114 @@ export function PlanCanvasPage({
 
     setIsSavingPlanImage(true);
     try {
-      const entityType = selectedMeasurement.targetKind === 'ffe' ? 'item_plan' : 'proposal_plan';
-      const existingImages = await api.images.list({
-        entityType,
-        entityId: selectedMeasurement.targetItemId,
-      });
-
-      if (existingImages.length > 0) {
-        await Promise.all(existingImages.map((image) => api.images.delete(image.id)));
-      }
-
-      const sourceBlob = await api.plans.downloadContent(project.id, selectedPlanId);
-      const sourceType = sourceBlob.type || selectedPlan.imageContentType || 'image/png';
-      const extension = sourceType.split('/')[1] || 'png';
-      const uploadFile = new File([sourceBlob], `${selectedPlan.name}-plan.${extension}`, {
-        type: sourceType,
-      });
-
-      const uploadedImage = await api.images.upload({
-        entityType,
-        entityId: selectedMeasurement.targetItemId,
-        file: uploadFile,
-        altText: `${selectedMeasurement.targetTagSnapshot} plan image`,
-      });
-
-      const croppedImage = await api.images.setCrop(uploadedImage.id, {
-        cropX: savedCropParams.cropX / planNaturalSize.width,
-        cropY: savedCropParams.cropY / planNaturalSize.height,
-        cropWidth: savedCropParams.cropWidth / planNaturalSize.width,
-        cropHeight: savedCropParams.cropHeight / planNaturalSize.height,
-      });
-
-      queryClient.setQueryData(imageKeys.forEntity(entityType, selectedMeasurement.targetItemId), [
-        croppedImage,
-      ]);
+      await savePlanImageForMeasurement(selectedMeasurement, savedCropParams);
     } finally {
       setIsSavingPlanImage(false);
+    }
+  };
+
+  const handleSaveCropAndPlanImage = async () => {
+    if (!selectedMeasurement || !normalizedCropDraft) return;
+    const measurementCrop = pixelCropToMeasurementCrop(normalizedCropDraft, planNaturalSize);
+    if (!measurementCrop) return;
+
+    setIsSavingPlanImage(true);
+    try {
+      const updated = await updateMeasurement.mutateAsync({
+        measurementId: selectedMeasurement.id,
+        input: {
+          targetKind: selectedMeasurement.targetKind,
+          targetItemId: selectedMeasurement.targetItemId,
+          targetTagSnapshot: selectedMeasurement.targetTagSnapshot,
+          rectX: selectedMeasurement.rectX,
+          rectY: selectedMeasurement.rectY,
+          rectWidth: selectedMeasurement.rectWidth,
+          rectHeight: selectedMeasurement.rectHeight,
+          horizontalSpanBase: selectedMeasurement.horizontalSpanBase,
+          verticalSpanBase: selectedMeasurement.verticalSpanBase,
+          cropX: measurementCrop.cropX,
+          cropY: measurementCrop.cropY,
+          cropWidth: measurementCrop.cropWidth,
+          cropHeight: measurementCrop.cropHeight,
+        },
+      });
+
+      setSelectedMeasurementId(updated.id);
+      setCropDraft(null);
+      await savePlanImageForMeasurement(updated, {
+        cropX: normalizedCropDraft.x,
+        cropY: normalizedCropDraft.y,
+        cropWidth: normalizedCropDraft.width,
+        cropHeight: normalizedCropDraft.height,
+      });
+      toast.success('Plan image added to item.');
+    } finally {
+      setIsSavingPlanImage(false);
+    }
+  };
+
+  const handleApplyMeasurement = async () => {
+    if (
+      !selectedMeasurement ||
+      !selectedMeasurementItem ||
+      !selectedMeasurementDisplay ||
+      measurementApplicationMode === 'reference-only'
+    ) {
+      return;
+    }
+
+    setIsApplyingMeasurement(true);
+    try {
+      if (selectedMeasurementItem.targetKind === 'proposal') {
+        const quantity =
+          measurementApplicationMode === 'proposal-horizontal'
+            ? selectedMeasurementDisplay.horizontal
+            : measurementApplicationMode === 'proposal-vertical'
+              ? selectedMeasurementDisplay.vertical
+              : selectedMeasurementDisplay.area;
+        const quantityUnit =
+          measurementApplicationMode === 'proposal-area'
+            ? formatAreaUnit(calibration?.unit ?? 'ft')
+            : calibration?.unit === 'ft'
+              ? 'ln ft'
+              : calibration?.unit === 'in'
+                ? 'ln in'
+                : calibration?.unit === 'm'
+                  ? 'ln m'
+                  : calibration?.unit === 'cm'
+                    ? 'ln cm'
+                    : 'ln mm';
+        const updated = await api.proposal.updateItem(selectedMeasurementItem.targetItemId, {
+          quantity: Number(quantity.toFixed(2)),
+          quantityUnit,
+          version: selectedMeasurementItem.version,
+        });
+        queryClient.setQueryData<ProposalItem[]>(
+          proposalKeys.items(selectedMeasurementItem.containerId),
+          (old) => (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
+        );
+      } else {
+        const dimensions = selectedMeasurementDisplay.dimensionsText;
+        const updated = await api.items.update(selectedMeasurementItem.targetItemId, {
+          dimensions,
+          version: selectedMeasurementItem.version,
+        });
+        queryClient.setQueryData<Item[]>(
+          itemKeys.forRoom(selectedMeasurementItem.containerId),
+          (old) => (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
+        );
+      }
+
+      toast.success('Measurement applied to item.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Measurement application failed.';
+      toast.error(
+        err instanceof ApiError && err.status === 409
+          ? 'This item changed elsewhere. Refresh the project and try again.'
+          : message,
+      );
+    } finally {
+      setIsApplyingMeasurement(false);
     }
   };
 
@@ -769,20 +955,6 @@ export function PlanCanvasPage({
 
                           <label className="block">
                             <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                              Real-world length
-                            </span>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={calibrationLengthInput}
-                              onChange={(event) => setCalibrationLengthInput(event.target.value)}
-                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                            />
-                          </label>
-
-                          <label className="block">
-                            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
                               Unit
                             </span>
                             <select
@@ -799,6 +971,65 @@ export function PlanCanvasPage({
                               ))}
                             </select>
                           </label>
+
+                          {calibrationUnit === 'ft' ? (
+                            <div>
+                              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                                Real-world length
+                              </span>
+                              <div className="grid grid-cols-2 gap-2">
+                                <label className="block">
+                                  <span className="mb-1 block text-xs text-neutral-500">Feet</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={calibrationFeetInput}
+                                    onChange={(event) =>
+                                      setCalibrationFeetInput(event.target.value)
+                                    }
+                                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                                  />
+                                </label>
+                                <label className="block">
+                                  <span className="mb-1 block text-xs text-neutral-500">
+                                    Inches
+                                  </span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.125"
+                                    value={calibrationInchesInput}
+                                    onChange={(event) =>
+                                      setCalibrationInchesInput(event.target.value)
+                                    }
+                                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                                  />
+                                </label>
+                              </div>
+                              <p className="mt-1 text-xs text-neutral-500">
+                                Saved internally as{' '}
+                                {Number.isFinite(calibrationLengthValue)
+                                  ? formatDisplayNumber(calibrationLengthValue)
+                                  : '0'}{' '}
+                                ft.
+                              </p>
+                            </div>
+                          ) : (
+                            <label className="block">
+                              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                                Real-world length
+                              </span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={calibrationLengthInput}
+                                onChange={(event) => setCalibrationLengthInput(event.target.value)}
+                                className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                              />
+                            </label>
+                          )}
 
                           <div className="flex flex-wrap gap-2">
                             <Button
@@ -865,7 +1096,7 @@ export function PlanCanvasPage({
                             </div>
                             <div className="mt-2 text-xs text-brand-800">
                               {draftLengthInPlanUnits !== null && calibration
-                                ? `${formatDisplayNumber(draftLengthInPlanUnits)} ${calibration.unit}`
+                                ? formatPlanLength(draftLengthInPlanUnits, calibration.unit)
                                 : 'Waiting for calibration'}
                             </div>
                           </div>
@@ -952,7 +1183,7 @@ export function PlanCanvasPage({
                                 </p>
                                 <p className="mt-1 text-xs text-neutral-500">
                                   {displayLength !== null && calibration
-                                    ? `${formatDisplayNumber(displayLength)} ${calibration.unit}`
+                                    ? formatPlanLength(displayLength, calibration.unit)
                                     : 'Measured span'}
                                 </p>
                               </div>
@@ -1041,25 +1272,55 @@ export function PlanCanvasPage({
                             ) : null}
                           </div>
 
-                          <label className="block">
+                          <div className="block">
                             <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
                               Associate with item
                             </span>
-                            <select
-                              value={selectedMeasurementTargetKey}
-                              onChange={(event) =>
-                                setSelectedMeasurementTargetKey(event.target.value)
-                              }
-                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
-                            >
-                              <option value="">Select an item</option>
-                              {measurementItems.map((item) => (
-                                <option key={item.key} value={item.key}>
-                                  {`${item.primaryLabel} — ${item.secondaryLabel} (${item.containerLabel})`}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
+                            <input
+                              value={itemSearch}
+                              onChange={(event) => setItemSearch(event.target.value)}
+                              className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                              placeholder="Search tag, item, room, or category"
+                            />
+                            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-1 shadow-sm">
+                              {filteredMeasurementItems.length > 0 ? (
+                                filteredMeasurementItems.map((item) => {
+                                  const active = item.key === selectedMeasurementTargetKey;
+                                  return (
+                                    <button
+                                      key={item.key}
+                                      type="button"
+                                      onClick={() => setSelectedMeasurementTargetKey(item.key)}
+                                      className={[
+                                        'block w-full rounded-xl px-3 py-2 text-left transition',
+                                        active
+                                          ? 'bg-brand-50 text-brand-900'
+                                          : 'hover:bg-neutral-50',
+                                      ].join(' ')}
+                                    >
+                                      <span className="flex items-start justify-between gap-3">
+                                        <span className="min-w-0">
+                                          <span className="block truncate text-sm font-semibold">
+                                            {item.primaryLabel}
+                                          </span>
+                                          <span className="mt-0.5 block truncate text-xs text-neutral-500">
+                                            {item.secondaryLabel} • {item.containerLabel}
+                                          </span>
+                                        </span>
+                                        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                                          {item.targetKind === 'ffe' ? 'FF&E' : 'Proposal'}
+                                        </span>
+                                      </span>
+                                    </button>
+                                  );
+                                })
+                              ) : (
+                                <div className="px-3 py-4 text-sm text-neutral-500">
+                                  No matching items.
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                           <div className="flex flex-wrap gap-2">
                             <Button
@@ -1094,13 +1355,13 @@ export function PlanCanvasPage({
                     <div className="mt-4 space-y-3">
                       <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-500">
                         {!selectedMeasurement
-                          ? 'Select a measured item below, then draw a crop rectangle inside its highlighted area.'
+                          ? 'Select a measured item below, then draw a crop rectangle to frame the final plan image.'
                           : normalizedCropDraft
-                            ? 'Crop area captured. Save it to refine the stored plan image framing for this item.'
+                            ? 'Crop area captured. Save it to define the final plan image framing for this item.'
                             : selectedMeasurement.cropWidth !== null &&
                                 selectedMeasurement.cropHeight !== null
                               ? 'A saved crop already exists for this measured item. Draw a new one to replace it.'
-                              : 'Draw a crop rectangle inside the selected measured area to define the plan image framing.'}
+                              : 'Draw a crop rectangle anywhere on the plan to define the final item image. The measured area highlight will be included in the exported crop.'}
                       </div>
 
                       {selectedMeasurementRect ? (
@@ -1158,10 +1419,19 @@ export function PlanCanvasPage({
                           type="button"
                           variant="primary"
                           size="sm"
+                          onClick={() => void handleSaveCropAndPlanImage()}
+                          disabled={!canSaveCropAndPlanImage}
+                        >
+                          {isSavingPlanImage ? 'Adding plan image…' : 'Save crop to item'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
                           onClick={() => void handleSaveCrop()}
                           disabled={!canSaveCrop}
                         >
-                          {updateMeasurement.isPending ? 'Saving…' : 'Save crop'}
+                          {updateMeasurement.isPending ? 'Saving…' : 'Save crop only'}
                         </Button>
                         <Button
                           type="button"
@@ -1194,19 +1464,91 @@ export function PlanCanvasPage({
                             onClick={() => void handleSavePlanImage()}
                             disabled={!canSavePlanImage}
                           >
-                            {isSavingPlanImage ? 'Saving plan image…' : 'Save as plan image'}
+                            {isSavingPlanImage ? 'Saving plan image…' : 'Publish saved crop'}
                           </Button>
                         ) : null}
                       </div>
                       {selectedMeasurement ? (
                         <p className="text-xs leading-5 text-neutral-500">
-                          This saves the selected crop as the{' '}
+                          Save crop to item stores this crop and adds it to the{' '}
                           {selectedMeasurement.targetKind === 'proposal'
                             ? 'Proposal item'
                             : 'FF&E item'}
-                          &apos;s Plan image so it appears in the matching detail surface.
+                          &apos;s Plan column. The published image includes the measured area
+                          highlight. Any existing Plan image for that item will be replaced.
                         </p>
                       ) : null}
+                    </div>
+                  ) : null}
+
+                  {selectedMeasurement && selectedMeasurementItem && selectedMeasurementDisplay ? (
+                    <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                            Apply Measurement
+                          </p>
+                          <p className="mt-1 text-sm text-neutral-700">
+                            {selectedMeasurementItem.targetKind === 'proposal'
+                              ? 'Update this Proposal item quantity from the measured area.'
+                              : 'Update this FF&E item size text without assigning L, D, or W yet.'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-2">
+                        {selectedMeasurementItem.targetKind === 'proposal' ? (
+                          <>
+                            <MeasurementApplicationOption
+                              value="proposal-area"
+                              selected={measurementApplicationMode}
+                              onSelect={setMeasurementApplicationMode}
+                              label="Use area"
+                              detail={`${formatDisplayNumber(selectedMeasurementDisplay.area)} ${formatAreaUnit(calibration?.unit ?? 'ft')}`}
+                            />
+                            <MeasurementApplicationOption
+                              value="proposal-horizontal"
+                              selected={measurementApplicationMode}
+                              onSelect={setMeasurementApplicationMode}
+                              label="Use horizontal span"
+                              detail={`${formatDisplayNumber(selectedMeasurementDisplay.horizontal)} ${calibration?.unit ?? 'ft'}`}
+                            />
+                            <MeasurementApplicationOption
+                              value="proposal-vertical"
+                              selected={measurementApplicationMode}
+                              onSelect={setMeasurementApplicationMode}
+                              label="Use vertical span"
+                              detail={`${formatDisplayNumber(selectedMeasurementDisplay.vertical)} ${calibration?.unit ?? 'ft'}`}
+                            />
+                          </>
+                        ) : (
+                          <MeasurementApplicationOption
+                            value="ffe-dimensions"
+                            selected={measurementApplicationMode}
+                            onSelect={setMeasurementApplicationMode}
+                            label="Update dimensions"
+                            detail={selectedMeasurementDisplay.dimensionsText}
+                          />
+                        )}
+                        <MeasurementApplicationOption
+                          value="reference-only"
+                          selected={measurementApplicationMode}
+                          onSelect={setMeasurementApplicationMode}
+                          label="Reference only"
+                          detail="Keep item fields unchanged."
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => void handleApplyMeasurement()}
+                        disabled={
+                          isApplyingMeasurement || measurementApplicationMode === 'reference-only'
+                        }
+                      >
+                        {isApplyingMeasurement ? 'Applying…' : 'Apply to item'}
+                      </Button>
                     </div>
                   ) : null}
 
@@ -1265,6 +1607,18 @@ export function PlanCanvasPage({
 
                   {selectedMeasurement ? (
                     <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          setActiveTool('crop');
+                          setOpenSection('items');
+                          setCropDraft(null);
+                        }}
+                      >
+                        Crop plan image
+                      </Button>
                       <Button
                         type="button"
                         variant="ghost"
@@ -1346,6 +1700,7 @@ function PlanViewport({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [crosshairPoint, setCrosshairPoint] = useState<ImagePoint | null>(null);
   const [isInteracting, setIsInteracting] = useState(false);
   const panDragStart = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -1362,6 +1717,12 @@ function PlanViewport({
   const selectedMeasurementRect = selectedMeasurement
     ? measurementToRectBounds(selectedMeasurement)
     : null;
+  const hasDrawingCursor =
+    imageUrl !== null &&
+    (activeTool === 'calibrate' ||
+      activeTool === 'length' ||
+      activeTool === 'rectangle' ||
+      (activeTool === 'crop' && selectedMeasurement !== null));
 
   const isInputLikeElement = useCallback((target: EventTarget | null) => {
     if (!(target instanceof HTMLElement)) return false;
@@ -1410,6 +1771,10 @@ function PlanViewport({
     async function loadImage() {
       setLoading(true);
       setImageUrl(null);
+      setNaturalSize({ width: 0, height: 0 });
+      setZoom(1);
+      setOffset({ x: 0, y: 0 });
+      setRotation(0);
       try {
         const blob = await api.plans.downloadContent(projectId, plan.id);
         if (disposed) return;
@@ -1500,6 +1865,22 @@ function PlanViewport({
     setZoom(1);
     setOffset({ x: 0, y: 0 });
   }, []);
+
+  const updateCrosshairFromEvent = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!hasDrawingCursor) {
+        setCrosshairPoint(null);
+        return;
+      }
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      setCrosshairPoint({
+        x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+        y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+      });
+    },
+    [hasDrawingCursor],
+  );
 
   const rotateClockwise = useCallback(() => {
     setRotation((current) => (current + 90) % 360);
@@ -1595,6 +1976,7 @@ function PlanViewport({
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!imageUrl || event.button !== 0) return;
+    updateCrosshairFromEvent(event);
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsInteracting(true);
     pointerStart.current = { clientX: event.clientX, clientY: event.clientY };
@@ -1640,14 +2022,13 @@ function PlanViewport({
           endX: point.x,
           endY: point.y,
         });
-      } else if (selectedMeasurementRect) {
-        const constrainedPoint = clampPointToRect(point, selectedMeasurementRect);
-        shapeStart.current = constrainedPoint;
+      } else if (selectedMeasurement) {
+        shapeStart.current = point;
         onCropDraftChange({
-          startX: constrainedPoint.x,
-          startY: constrainedPoint.y,
-          endX: constrainedPoint.x,
-          endY: constrainedPoint.y,
+          startX: point.x,
+          startY: point.y,
+          endX: point.x,
+          endY: point.y,
         });
       }
       return;
@@ -1655,6 +2036,8 @@ function PlanViewport({
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    updateCrosshairFromEvent(event);
+
     if (pointerStart.current) {
       const deltaX = event.clientX - pointerStart.current.clientX;
       const deltaY = event.clientY - pointerStart.current.clientY;
@@ -1688,13 +2071,12 @@ function PlanViewport({
           endX: point.x,
           endY: point.y,
         });
-      } else if (activeTool === 'crop' && selectedMeasurementRect) {
-        const constrainedPoint = clampPointToRect(point, selectedMeasurementRect);
+      } else if (activeTool === 'crop' && selectedMeasurement) {
         onCropDraftChange({
           startX: shapeStart.current.x,
           startY: shapeStart.current.y,
-          endX: constrainedPoint.x,
-          endY: constrainedPoint.y,
+          endX: point.x,
+          endY: point.y,
         });
       }
       return;
@@ -1738,13 +2120,33 @@ function PlanViewport({
     pointerStart.current = null;
     movedSincePointerDown.current = false;
     shapeStart.current = null;
+    setCrosshairPoint(null);
     setIsInteracting(false);
     setIsPanning(false);
+  };
+
+  const handlePointerLeave = () => {
+    if (!pointerStart.current) setCrosshairPoint(null);
   };
 
   const showReset = zoom > 1.01 || rotation !== 0 || offset.x !== 0 || offset.y !== 0;
   const draftMeasurementRect = measurementDraft ? normalizeRectDraft(measurementDraft) : null;
   const draftCropRect = cropDraft ? normalizeRectDraft(cropDraft) : null;
+  const liveMeasurementLabel = getLiveMeasurementLabel({
+    activeTool,
+    calibration,
+    calibrationDraft,
+    lengthLineDraft,
+    measurementDraft,
+    cropDraft,
+  });
+  const liveMeasurementPosition =
+    crosshairPoint && liveMeasurementLabel
+      ? {
+          x: Math.max(12, Math.min(containerSize.width - 220, crosshairPoint.x + 14)),
+          y: Math.max(12, Math.min(containerSize.height - 48, crosshairPoint.y + 14)),
+        }
+      : null;
 
   return (
     <div className="h-full min-h-0">
@@ -1757,7 +2159,7 @@ function PlanViewport({
               activeTool === 'length' ||
               activeTool === 'rectangle' ||
               (activeTool === 'crop' && selectedMeasurementRect !== null)
-              ? 'crosshair'
+              ? 'none'
               : activeTool === 'pan' || isSpacePressed
                 ? isPanning
                   ? 'grabbing'
@@ -1769,6 +2171,7 @@ function PlanViewport({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
+        onPointerLeave={handlePointerLeave}
         onDoubleClick={resetView}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.42),transparent_54%),linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0))]" />
@@ -1802,7 +2205,9 @@ function PlanViewport({
               className="pointer-events-none absolute left-1/2 top-1/2 select-none"
               style={{
                 width: naturalSize.width || undefined,
-                height: naturalSize.height || undefined,
+                height: 'auto',
+                maxWidth: 'none',
+                maxHeight: 'none',
                 transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${effectiveScale})`,
                 transformOrigin: 'center center',
                 transition: isInteracting ? 'none' : 'transform 0.08s ease-out',
@@ -1816,6 +2221,7 @@ function PlanViewport({
                   end={viewportPointFromImage({ x: calibration.endX, y: calibration.endY })}
                   strokeClassName="stroke-emerald-500"
                   dotClassName="fill-emerald-500"
+                  cap="tick"
                 />
               ) : null}
 
@@ -1875,6 +2281,7 @@ function PlanViewport({
                   })}
                   strokeClassName="stroke-brand-600"
                   dotClassName="fill-brand-600"
+                  cap="tick"
                   dashed
                 />
               ) : null}
@@ -1913,6 +2320,30 @@ function PlanViewport({
               ) : null}
             </svg>
 
+            {hasDrawingCursor && crosshairPoint ? (
+              <div className="pointer-events-none absolute inset-0">
+                <div
+                  className="absolute top-0 h-full w-px bg-neutral-950/35"
+                  style={{ left: crosshairPoint.x }}
+                />
+                <div
+                  className="absolute left-0 h-px w-full bg-neutral-950/35"
+                  style={{ top: crosshairPoint.y }}
+                />
+                {liveMeasurementPosition && liveMeasurementLabel ? (
+                  <div
+                    className="absolute rounded-full border border-white/60 bg-neutral-950/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white shadow-sm backdrop-blur"
+                    style={{
+                      left: liveMeasurementPosition.x,
+                      top: liveMeasurementPosition.y,
+                    }}
+                  >
+                    {liveMeasurementLabel}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500 backdrop-blur">
               {activeTool === 'calibrate'
                 ? 'Draw calibration line • hold Space + drag to pan • scroll to zoom • double-click to reset'
@@ -1921,8 +2352,8 @@ function PlanViewport({
                   : activeTool === 'rectangle'
                     ? 'Draw measured area • click existing area to select • hold Space + drag to pan • scroll to zoom • double-click to reset'
                     : activeTool === 'crop'
-                      ? selectedMeasurementRect
-                        ? 'Draw crop inside the selected measured area • click existing area to re-select • hold Space + drag to pan • scroll to zoom • double-click to reset'
+                      ? selectedMeasurement
+                        ? 'Draw final plan image crop • measured area stays highlighted in the saved image • click existing area to re-select • hold Space + drag to pan • scroll to zoom • double-click to reset'
                         : 'Select a measured item first • click a measured area to select • hold Space + drag to pan • scroll to zoom • double-click to reset'
                       : 'Drag to pan • click measured areas to select • scroll to zoom • double-click to reset'}
             </div>
@@ -1999,6 +2430,9 @@ function buildMeasurementItems(
         primaryLabel: item.itemIdTag?.trim() || item.itemName,
         secondaryLabel: item.itemName,
         containerLabel: room.name,
+        containerId: room.id,
+        version: item.version,
+        dimensions: item.dimensions,
       });
     }
   }
@@ -2013,11 +2447,202 @@ function buildMeasurementItems(
         primaryLabel: item.productTag?.trim() || item.description || 'Proposal item',
         secondaryLabel: item.description || item.location || 'Proposal item',
         containerLabel: category.name,
+        containerId: category.id,
+        version: item.version,
+        quantity: item.quantity,
+        quantityUnit: item.quantityUnit,
       });
     }
   }
 
   return items.sort((a, b) => a.primaryLabel.localeCompare(b.primaryLabel));
+}
+
+async function createHighlightedPlanCrop({
+  sourceBlob,
+  crop,
+  measurementRect,
+}: {
+  sourceBlob: Blob;
+  crop: CropParams;
+  measurementRect: { x: number; y: number; width: number; height: number };
+}) {
+  const image = await loadHtmlImage(sourceBlob);
+  const cropX = Math.max(0, Math.floor(crop.cropX));
+  const cropY = Math.max(0, Math.floor(crop.cropY));
+  const cropWidth = Math.max(1, Math.floor(crop.cropWidth));
+  const cropHeight = Math.max(1, Math.floor(crop.cropHeight));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = cropWidth;
+  canvas.height = cropHeight;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas export is not available in this browser.');
+  }
+
+  context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+  const highlightX = measurementRect.x - cropX;
+  const highlightY = measurementRect.y - cropY;
+
+  context.save();
+  context.fillStyle = 'rgba(201, 151, 35, 0.18)';
+  context.strokeStyle = '#c99723';
+  context.lineWidth = Math.max(2, Math.min(cropWidth, cropHeight) * 0.01);
+  context.setLineDash([10, 8]);
+  context.fillRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
+  context.strokeRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
+  context.restore();
+
+  return await canvasToBlob(canvas);
+}
+
+async function loadHtmlImage(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+
+  try {
+    const image = new Image();
+    image.decoding = 'async';
+
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error('Could not load the plan image for crop export.'));
+      image.src = url;
+    });
+
+    return image;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error('Could not create the cropped plan image.'));
+      }
+    }, 'image/png');
+  });
+}
+
+function pixelCropToMeasurementCrop(
+  crop: { x: number; y: number; width: number; height: number },
+  naturalSize: { width: number; height: number },
+): CropParams | null {
+  if (naturalSize.width <= 0 || naturalSize.height <= 0) return null;
+
+  return {
+    cropX: crop.x / naturalSize.width,
+    cropY: crop.y / naturalSize.height,
+    cropWidth: crop.width / naturalSize.width,
+    cropHeight: crop.height / naturalSize.height,
+  };
+}
+
+function measurementCropToPixelCrop(
+  crop: CropParams,
+  naturalSize: { width: number; height: number },
+): CropParams | null {
+  if (naturalSize.width <= 0 || naturalSize.height <= 0) return null;
+
+  return {
+    cropX: crop.cropX * naturalSize.width,
+    cropY: crop.cropY * naturalSize.height,
+    cropWidth: crop.cropWidth * naturalSize.width,
+    cropHeight: crop.cropHeight * naturalSize.height,
+  };
+}
+
+function restorePlanColumn(projectId: string, targetKind: Measurement['targetKind']) {
+  if (typeof window === 'undefined') return;
+
+  const tableKey = targetKind === 'ffe' ? 'ffe' : 'proposal';
+  const storageKey = `${projectId}:${tableKey}:columnConfig`;
+  const planColumnId = 'plan';
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      parsed === null ||
+      typeof parsed !== 'object' ||
+      !Array.isArray((parsed as { order?: unknown }).order) ||
+      !Array.isArray((parsed as { hidden?: unknown }).hidden)
+    ) {
+      return;
+    }
+
+    const config = parsed as { order: string[]; hidden: string[] };
+    const order = config.order.includes(planColumnId)
+      ? config.order
+      : insertAfterColumn(config.order, planColumnId, 'image');
+    const hidden = config.hidden.filter((id) => id !== planColumnId);
+
+    window.localStorage.setItem(storageKey, JSON.stringify({ order, hidden }));
+  } catch {
+    // Non-critical; the image is still saved and default columns restore on remount.
+  }
+}
+
+function insertAfterColumn(order: string[], columnId: string, anchorId: string) {
+  const anchorIndex = order.indexOf(anchorId);
+  if (anchorIndex === -1) return [...order, columnId];
+
+  return [...order.slice(0, anchorIndex + 1), columnId, ...order.slice(anchorIndex + 1)];
+}
+
+function getLiveMeasurementLabel({
+  activeTool,
+  calibration,
+  calibrationDraft,
+  lengthLineDraft,
+  measurementDraft,
+  cropDraft,
+}: {
+  activeTool: ToolId;
+  calibration: PlanCalibration | null | undefined;
+  calibrationDraft: LineDraft | null;
+  lengthLineDraft: LineDraft | null;
+  measurementDraft: RectDraft | null;
+  cropDraft: RectDraft | null;
+}) {
+  if (activeTool === 'calibrate' && calibrationDraft) {
+    return `${formatDisplayNumber(getLineLength(calibrationDraft))} px`;
+  }
+
+  if (activeTool === 'length' && lengthLineDraft) {
+    const pixelLength = getLineLength(lengthLineDraft);
+    if (!calibration) return `${formatDisplayNumber(pixelLength)} px`;
+
+    return formatPlanLength(pixelLength / calibration.pixelsPerUnit, calibration.unit);
+  }
+
+  if (activeTool === 'rectangle' && measurementDraft) {
+    const rect = normalizeRectDraft(measurementDraft);
+    if (!calibration) {
+      return `${formatDisplayNumber(rect.width)} x ${formatDisplayNumber(rect.height)} px`;
+    }
+
+    return `${formatPlanLength(rect.width / calibration.pixelsPerUnit, calibration.unit)} x ${formatPlanLength(rect.height / calibration.pixelsPerUnit, calibration.unit)}`;
+  }
+
+  if (activeTool === 'crop' && cropDraft) {
+    const rect = normalizeRectDraft(cropDraft);
+    if (!calibration) {
+      return `${formatDisplayNumber(rect.width)} x ${formatDisplayNumber(rect.height)} px`;
+    }
+
+    return `${formatPlanLength(rect.width / calibration.pixelsPerUnit, calibration.unit)} x ${formatPlanLength(rect.height / calibration.pixelsPerUnit, calibration.unit)}`;
+  }
+
+  return null;
 }
 
 function convertPlanUnitsToBase(value: number, unit: PlanMeasurementUnit) {
@@ -2028,10 +2653,104 @@ function convertBaseToPlanUnits(value: number, unit: PlanMeasurementUnit) {
   return value / MILLIMETERS_PER_UNIT[unit];
 }
 
+function parseFeetAndInches(feetInput: string, inchesInput: string) {
+  const feet = Number(feetInput);
+  const inches = Number(inchesInput);
+
+  if (!Number.isFinite(feet) || !Number.isFinite(inches)) return Number.NaN;
+  return feet + inches / 12;
+}
+
+function formatPlanLength(value: number, unit: PlanMeasurementUnit) {
+  if (unit !== 'ft') return `${formatDisplayNumber(value)} ${unit}`;
+  return formatFeetAndFractionalInches(value);
+}
+
+function formatFeetAndFractionalInches(decimalFeet: number) {
+  if (!Number.isFinite(decimalFeet)) return '0 in';
+
+  const sign = decimalFeet < 0 ? '-' : '';
+  const totalSixteenths = Math.round(Math.abs(decimalFeet) * 12 * 16);
+  const feet = Math.floor(totalSixteenths / (12 * 16));
+  const remainingSixteenths = totalSixteenths - feet * 12 * 16;
+  const wholeInches = Math.floor(remainingSixteenths / 16);
+  const fractionSixteenths = remainingSixteenths % 16;
+  const fraction = formatInchFraction(fractionSixteenths);
+  const inchParts = [
+    wholeInches > 0 || feet === 0 || fraction ? String(wholeInches) : '',
+    fraction,
+  ].filter(Boolean);
+
+  const feetText = feet > 0 ? `${sign}${feet} ft` : sign ? `${sign}0 ft` : '';
+  const inchesText = inchParts.length > 0 ? `${inchParts.join(' ')} in` : '';
+
+  return [feetText, inchesText].filter(Boolean).join(' ') || '0 in';
+}
+
+function formatInchFraction(sixteenths: number) {
+  if (sixteenths === 0) return '';
+
+  const divisor = greatestCommonDivisor(sixteenths, 16);
+  return `${sixteenths / divisor}/${16 / divisor}`;
+}
+
+function greatestCommonDivisor(a: number, b: number): number {
+  let left = Math.abs(a);
+  let right = Math.abs(b);
+
+  while (right !== 0) {
+    const next = left % right;
+    left = right;
+    right = next;
+  }
+
+  return left || 1;
+}
+
+function formatAreaUnit(unit: PlanMeasurementUnit) {
+  if (unit === 'ft') return 'sq ft';
+  if (unit === 'in') return 'sq in';
+  if (unit === 'm') return 'sq m';
+  if (unit === 'cm') return 'sq cm';
+  return 'sq mm';
+}
+
 function formatDisplayNumber(value: number) {
   if (value >= 100) return value.toFixed(0);
   if (value >= 10) return value.toFixed(1).replace(/\.0$/, '');
   return value.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
+}
+
+function MeasurementApplicationOption({
+  value,
+  selected,
+  onSelect,
+  label,
+  detail,
+}: {
+  value: MeasurementApplicationMode;
+  selected: MeasurementApplicationMode;
+  onSelect: (value: MeasurementApplicationMode) => void;
+  label: string;
+  detail: string;
+}) {
+  const active = value === selected;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      className={[
+        'rounded-xl border px-3 py-2 text-left transition',
+        active
+          ? 'border-brand-300 bg-white text-brand-900 shadow-sm'
+          : 'border-neutral-200 bg-white/70 text-neutral-700 hover:border-brand-200',
+      ].join(' ')}
+    >
+      <span className="block text-sm font-semibold">{label}</span>
+      <span className="mt-0.5 block text-xs text-neutral-500">{detail}</span>
+    </button>
+  );
 }
 
 function ToolbarIcon({ children }: { children: ReactNode }) {

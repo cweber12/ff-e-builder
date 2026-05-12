@@ -77,6 +77,70 @@ describe('plansApi', () => {
     expect(formData.get('file')).toBe(file);
   });
 
+  it('uploads a PDF-backed measured plan with rendered page metadata', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        plan: {
+          id: 'plan-1',
+          project_id: 'project-1',
+          owner_uid: 'user-1',
+          name: 'Level 1 Furniture Plan',
+          sheet_reference: 'A1.1',
+          source_type: 'pdf-page',
+          image_filename: 'level-1-page-001.png',
+          image_content_type: 'image/png',
+          image_byte_size: 12345,
+          pdf_filename: 'level-1.pdf',
+          pdf_content_type: 'application/pdf',
+          pdf_byte_size: 54321,
+          pdf_page_number: 1,
+          pdf_page_width_pt: '792.0000',
+          pdf_page_height_pt: '612.0000',
+          pdf_render_scale: '2.00000000',
+          pdf_rendered_width_px: 1584,
+          pdf_rendered_height_px: 1224,
+          pdf_rotation: 0,
+          calibration_status: 'uncalibrated',
+          measurement_count: 0,
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-06T00:00:00Z',
+        },
+      }),
+    );
+
+    const renderedPage = new File(['page'], 'level-1-page-001.png', { type: 'image/png' });
+    const sourcePdf = new File(['pdf'], 'level-1.pdf', { type: 'application/pdf' });
+    await expect(
+      plansApi.create('project-1', {
+        name: 'Level 1 Furniture Plan',
+        sheetReference: 'A1.1',
+        file: renderedPage,
+        sourcePdfFile: sourcePdf,
+        pdfPageNumber: 1,
+        pdfPageWidthPt: 792,
+        pdfPageHeightPt: 612,
+        pdfRenderScale: 2,
+        pdfRenderedWidthPx: 1584,
+        pdfRenderedHeightPx: 1224,
+        pdfRotation: 0,
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        sourceType: 'pdf-page',
+        pdfPageNumber: 1,
+        pdfRenderedWidthPx: 1584,
+      }),
+    );
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const formData = init?.body as FormData;
+    expect(formData.get('file')).toBe(renderedPage);
+    expect(formData.get('source_pdf')).toBe(sourcePdf);
+    expect(formData.get('pdf_page_number')).toBe('1');
+    expect(formData.get('pdf_render_scale')).toBe('2');
+    expect(formData.get('pdf_rendered_width_px')).toBe('1584');
+  });
+
   it('deletes a measured plan', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
 

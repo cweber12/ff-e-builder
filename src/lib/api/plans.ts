@@ -21,6 +21,14 @@ export type CreateMeasuredPlanInput = {
   name: string;
   sheetReference?: string;
   file: File;
+  sourcePdfFile?: File;
+  pdfPageNumber?: number;
+  pdfPageWidthPt?: number;
+  pdfPageHeightPt?: number;
+  pdfRenderScale?: number;
+  pdfRenderedWidthPx?: number;
+  pdfRenderedHeightPx?: number;
+  pdfRotation?: number;
 };
 
 export type UpdatePlanCalibrationInput = {
@@ -69,6 +77,28 @@ export const plansApi = {
     formData.set('name', input.name);
     formData.set('sheet_reference', input.sheetReference ?? '');
     formData.set('file', input.file);
+    if (input.sourcePdfFile) formData.set('source_pdf', input.sourcePdfFile);
+    if (input.pdfPageNumber !== undefined) {
+      formData.set('pdf_page_number', input.pdfPageNumber.toString());
+    }
+    if (input.pdfPageWidthPt !== undefined) {
+      formData.set('pdf_page_width_pt', input.pdfPageWidthPt.toString());
+    }
+    if (input.pdfPageHeightPt !== undefined) {
+      formData.set('pdf_page_height_pt', input.pdfPageHeightPt.toString());
+    }
+    if (input.pdfRenderScale !== undefined) {
+      formData.set('pdf_render_scale', input.pdfRenderScale.toString());
+    }
+    if (input.pdfRenderedWidthPx !== undefined) {
+      formData.set('pdf_rendered_width_px', input.pdfRenderedWidthPx.toString());
+    }
+    if (input.pdfRenderedHeightPx !== undefined) {
+      formData.set('pdf_rendered_height_px', input.pdfRenderedHeightPx.toString());
+    }
+    if (input.pdfRotation !== undefined) {
+      formData.set('pdf_rotation', input.pdfRotation.toString());
+    }
 
     return apiFetch<{ plan: RawMeasuredPlan }>(`/api/v1/projects/${projectId}/plans`, {
       method: 'POST',

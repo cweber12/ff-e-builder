@@ -5,6 +5,7 @@ export function LineOverlay({
   end,
   strokeClassName,
   dotClassName,
+  cap = 'dot',
   dashed = false,
   label,
 }: {
@@ -12,11 +13,13 @@ export function LineOverlay({
   end: ImagePoint;
   strokeClassName: string;
   dotClassName: string;
+  cap?: 'dot' | 'tick';
   dashed?: boolean;
   label?: string | undefined;
 }) {
   const midX = (start.x + end.x) / 2;
   const midY = (start.y + end.y) / 2;
+  const tick = getPerpendicularTick(start, end, 18);
 
   return (
     <>
@@ -30,8 +33,33 @@ export function LineOverlay({
         strokeDasharray={dashed ? '10 8' : undefined}
         strokeLinecap="round"
       />
-      <circle cx={start.x} cy={start.y} r={5} className={dotClassName} />
-      <circle cx={end.x} cy={end.y} r={5} className={dotClassName} />
+      {cap === 'tick' ? (
+        <>
+          <line
+            x1={start.x - tick.x}
+            y1={start.y - tick.y}
+            x2={start.x + tick.x}
+            y2={start.y + tick.y}
+            className={strokeClassName}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+          <line
+            x1={end.x - tick.x}
+            y1={end.y - tick.y}
+            x2={end.x + tick.x}
+            y2={end.y + tick.y}
+            className={strokeClassName}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </>
+      ) : (
+        <>
+          <circle cx={start.x} cy={start.y} r={5} className={dotClassName} />
+          <circle cx={end.x} cy={end.y} r={5} className={dotClassName} />
+        </>
+      )}
       {label ? (
         <g>
           <rect
@@ -57,6 +85,19 @@ export function LineOverlay({
       ) : null}
     </>
   );
+}
+
+function getPerpendicularTick(start: ImagePoint, end: ImagePoint, length: number) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const distance = Math.hypot(dx, dy);
+
+  if (distance <= 0) return { x: 0, y: length / 2 };
+
+  return {
+    x: (-dy / distance) * (length / 2),
+    y: (dx / distance) * (length / 2),
+  };
 }
 
 export function RectOverlay({

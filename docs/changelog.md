@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): add PDF-backed Measured Plan uploads with page selection, rendered-page measurement, and explicit measurement-to-item application controls
+- feat(plans): add a guided crop-to-item flow for measured plan images and surface FF&E Plan Images in a default table column
 - refactor(lib): move API facade tests into `src/lib/api`, move item sorting and brand constants into concern folders, and remove obsolete query, image, and project snapshot root facades
 - refactor(lib): remove unused root compatibility facades for auth state, calc aliasing, formatting, observability, import helpers, and sample-data re-exports
 - refactor(lib): move money, image compression, query client, project snapshot, and export test modules into focused `src/lib/*` subfolders while keeping root compatibility facades

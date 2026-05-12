@@ -6,6 +6,7 @@ export type {
   Measurement,
   MeasurementTargetKind,
   MeasuredPlan,
+  MeasuredPlanSourceType,
   PlanCalibration,
   PlanMeasurementUnit,
 } from './plan';

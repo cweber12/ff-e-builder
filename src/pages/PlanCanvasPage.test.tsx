@@ -100,9 +100,20 @@ vi.mock('../hooks', () => ({
         ownerUid: 'user-1',
         name: 'Level 1 Furniture Plan',
         sheetReference: 'A1.1',
+        sourceType: 'image' as const,
         imageFilename: 'plan.png',
         imageContentType: 'image/png',
         imageByteSize: 1024,
+        pdfFilename: null,
+        pdfContentType: null,
+        pdfByteSize: null,
+        pdfPageNumber: null,
+        pdfPageWidthPt: null,
+        pdfPageHeightPt: null,
+        pdfRenderScale: null,
+        pdfRenderedWidthPx: null,
+        pdfRenderedHeightPx: null,
+        pdfRotation: null,
         calibrationStatus: 'uncalibrated',
         measurementCount: 0,
         createdAt: '2026-05-06T00:00:00Z',
@@ -114,9 +125,20 @@ vi.mock('../hooks', () => ({
         ownerUid: 'user-1',
         name: 'Level 2 Furniture Plan',
         sheetReference: 'A1.2',
+        sourceType: 'image' as const,
         imageFilename: 'plan-2.png',
         imageContentType: 'image/png',
         imageByteSize: 2048,
+        pdfFilename: null,
+        pdfContentType: null,
+        pdfByteSize: null,
+        pdfPageNumber: null,
+        pdfPageWidthPt: null,
+        pdfPageHeightPt: null,
+        pdfRenderScale: null,
+        pdfRenderedWidthPx: null,
+        pdfRenderedHeightPx: null,
+        pdfRotation: null,
         calibrationStatus: 'calibrated',
         measurementCount: 3,
         createdAt: '2026-05-06T00:00:00Z',
@@ -352,7 +374,7 @@ describe('PlanCanvasPage', () => {
     expect(
       screen.getByText(/A saved crop already exists for this measured item/i),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save crop' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save crop only' })).toBeDisabled();
   });
 
   it('shows FF&E plan-image save action for measured FF&E crops', () => {
@@ -361,9 +383,11 @@ describe('PlanCanvasPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
     fireEvent.click(screen.getByRole('button', { name: /A-101/ }));
 
-    expect(screen.getByRole('button', { name: 'Save as plan image' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
     expect(
-      screen.getByText(/This saves the selected crop as the FF&E item's Plan image/i),
+      screen.getByText(
+        /Save crop to item stores this crop and adds it to the FF&E item's Plan column/i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -373,9 +397,11 @@ describe('PlanCanvasPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
     fireEvent.click(screen.getByRole('button', { name: /P-42/ }));
 
-    expect(screen.getByRole('button', { name: 'Save as plan image' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Publish saved crop' })).toBeDisabled();
     expect(
-      screen.getByText(/This saves the selected crop as the Proposal item's Plan image/i),
+      screen.getByText(
+        /Save crop to item stores this crop and adds it to the Proposal item's Plan column/i,
+      ),
     ).toBeInTheDocument();
   });
 });

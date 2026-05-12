@@ -21,7 +21,9 @@ import { deleteR2Keys } from '../lib/r2';
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_PDF_BYTES = 50 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const PDF_CONTENT_TYPE = 'application/pdf';
 
 function extensionForContentType(contentType: string): string {
   switch (contentType) {
@@ -45,6 +47,10 @@ function cleanFilename(filename: string): string {
 
 function buildMeasuredPlanKey(uid: string, projectId: string, planId: string, ext: string) {
   return `users/${uid}/projects/${projectId}/plans/${planId}.${ext}`;
+}
+
+function buildMeasuredPlanPdfKey(uid: string, projectId: string, planId: string) {
+  return `users/${uid}/projects/${projectId}/plans/${planId}-source.pdf`;
 }
 
 type RawMeasuredPlanListRow = MeasuredPlan & {
@@ -162,6 +168,13 @@ router.post('/:id/plans', async (c) => {
   const parsed = CreateMeasuredPlanSchema.safeParse({
     name: body['name'],
     sheet_reference: body['sheet_reference'] ?? '',
+    pdf_page_number: body['pdf_page_number'],
+    pdf_page_width_pt: body['pdf_page_width_pt'],
+    pdf_page_height_pt: body['pdf_page_height_pt'],
+    pdf_render_scale: body['pdf_render_scale'],
+    pdf_rendered_width_px: body['pdf_rendered_width_px'],
+    pdf_rendered_height_px: body['pdf_rendered_height_px'],
+    pdf_rotation: body['pdf_rotation'],
   });
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
@@ -174,9 +187,39 @@ router.post('/:id/plans', async (c) => {
     return c.json({ error: 'Image must be between 1 byte and 10 MB' }, 413);
   }
 
+  const sourcePdf = body['source_pdf'];
+  const sourcePdfFile = sourcePdf instanceof File ? sourcePdf : null;
+  const hasSourcePdf = sourcePdfFile !== null;
+  if (sourcePdfFile && sourcePdfFile.type !== PDF_CONTENT_TYPE) {
+    return c.json({ error: 'Unsupported PDF type' }, 415);
+  }
+  if (sourcePdfFile && (sourcePdfFile.size <= 0 || sourcePdfFile.size > MAX_PDF_BYTES)) {
+    return c.json({ error: 'PDF must be between 1 byte and 50 MB' }, 413);
+  }
+  if (hasSourcePdf && file.type !== 'image/png') {
+    return c.json({ error: 'PDF page render must be a PNG image' }, 415);
+  }
+
+  const pdfFields = [
+    parsed.data.pdf_page_number,
+    parsed.data.pdf_page_width_pt,
+    parsed.data.pdf_page_height_pt,
+    parsed.data.pdf_render_scale,
+    parsed.data.pdf_rendered_width_px,
+    parsed.data.pdf_rendered_height_px,
+    parsed.data.pdf_rotation,
+  ];
+  if (hasSourcePdf && pdfFields.some((value) => value === undefined)) {
+    return c.json({ error: 'PDF page metadata is required' }, 400);
+  }
+  if (!hasSourcePdf && pdfFields.some((value) => value !== undefined)) {
+    return c.json({ error: 'PDF metadata requires a source PDF' }, 400);
+  }
+
   const planId = crypto.randomUUID();
   const ext = extensionForContentType(file.type);
   const r2Key = buildMeasuredPlanKey(uid, projectId, planId, ext);
+  const pdfR2Key = hasSourcePdf ? buildMeasuredPlanPdfKey(uid, projectId, planId) : null;
 
   await c.env.IMAGES_BUCKET.put(r2Key, file.stream(), {
     httpMetadata: {
@@ -191,6 +234,26 @@ router.post('/:id/plans', async (c) => {
     },
   });
 
+  if (sourcePdfFile && pdfR2Key) {
+    try {
+      await c.env.IMAGES_BUCKET.put(pdfR2Key, sourcePdfFile.stream(), {
+        httpMetadata: {
+          contentType: PDF_CONTENT_TYPE,
+          cacheControl: 'private, max-age=3600',
+        },
+        customMetadata: {
+          ownerUid: uid,
+          projectId,
+          planId,
+          source: 'measured_plan_pdf',
+        },
+      });
+    } catch (err) {
+      await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+      throw err;
+    }
+  }
+
   const sql = getDb(c.env);
 
   try {
@@ -202,10 +265,22 @@ router.post('/:id/plans', async (c) => {
           owner_uid,
           name,
           sheet_reference,
+          source_type,
           image_r2_key,
           image_filename,
           image_content_type,
-          image_byte_size
+          image_byte_size,
+          pdf_r2_key,
+          pdf_filename,
+          pdf_content_type,
+          pdf_byte_size,
+          pdf_page_number,
+          pdf_page_width_pt,
+          pdf_page_height_pt,
+          pdf_render_scale,
+          pdf_rendered_width_px,
+          pdf_rendered_height_px,
+          pdf_rotation
         )
         VALUES (
           ${planId},
@@ -213,10 +288,22 @@ router.post('/:id/plans', async (c) => {
           ${uid},
           ${parsed.data.name},
           ${parsed.data.sheet_reference},
+          ${hasSourcePdf ? 'pdf-page' : 'image'},
           ${r2Key},
           ${cleanFilename(file.name)},
           ${file.type},
-          ${file.size}
+          ${file.size},
+          ${pdfR2Key},
+          ${sourcePdfFile ? cleanFilename(sourcePdfFile.name) : null},
+          ${hasSourcePdf ? PDF_CONTENT_TYPE : null},
+          ${sourcePdfFile ? sourcePdfFile.size : null},
+          ${parsed.data.pdf_page_number ?? null},
+          ${parsed.data.pdf_page_width_pt ?? null},
+          ${parsed.data.pdf_page_height_pt ?? null},
+          ${parsed.data.pdf_render_scale ?? null},
+          ${parsed.data.pdf_rendered_width_px ?? null},
+          ${parsed.data.pdf_rendered_height_px ?? null},
+          ${parsed.data.pdf_rotation ?? null}
         )
         RETURNING *
       )
@@ -230,6 +317,7 @@ router.post('/:id/plans', async (c) => {
     return c.json({ plan: rows[0] }, 201);
   } catch (err) {
     await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+    if (pdfR2Key) await c.env.IMAGES_BUCKET.delete(pdfR2Key).catch(() => undefined);
     throw err;
   }
 });
@@ -595,6 +683,9 @@ router.delete('/:projectId/plans/:planId', async (c) => {
       AND owner_uid = ${uid}
   `;
   await deleteR2Keys(c.env.IMAGES_BUCKET, [plan.image_r2_key]);
+  if (plan.pdf_r2_key) {
+    await deleteR2Keys(c.env.IMAGES_BUCKET, [plan.pdf_r2_key]);
+  }
 
   return c.body(null, 204);
 });

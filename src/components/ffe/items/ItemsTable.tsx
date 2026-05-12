@@ -90,6 +90,7 @@ import { SortableColHeader } from '../../shared/SortableColHeader';
 const DEFAULT_COLUMN_IDS = [
   'drag',
   'image',
+  'plan',
   'itemIdTag',
   'itemName',
   'description',
@@ -111,6 +112,7 @@ type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
 const DEFAULT_COLUMN_LABELS: Record<DefaultColumnId, string> = {
   drag: 'Drag',
   image: 'Rendering',
+  plan: 'Plan',
   itemIdTag: 'ID',
   itemName: 'Item',
   description: 'Product Description',
@@ -550,6 +552,20 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         alt={row.original.itemName}
         fallbackUrl={null}
         className="h-12 aspect-[117/75]"
+        compact
+      />
+    ),
+  },
+  {
+    id: 'plan',
+    header: 'Plan',
+    cell: ({ row }) => (
+      <ImageFrame
+        entityType="item_plan"
+        entityId={row.original.id}
+        alt={`${row.original.itemName} plan`}
+        fallbackUrl={null}
+        className="h-12 aspect-[103/75]"
         compact
       />
     ),

@@ -147,9 +147,20 @@ export interface RawMeasuredPlan {
   owner_uid: string;
   name: string;
   sheet_reference: string;
+  source_type: MeasuredPlan['sourceType'];
   image_filename: string;
   image_content_type: string;
   image_byte_size: number;
+  pdf_filename: string | null;
+  pdf_content_type: string | null;
+  pdf_byte_size: number | null;
+  pdf_page_number: number | null;
+  pdf_page_width_pt: string | null;
+  pdf_page_height_pt: string | null;
+  pdf_render_scale: string | null;
+  pdf_rendered_width_px: number | null;
+  pdf_rendered_height_px: number | null;
+  pdf_rotation: number | null;
   calibration_status: CalibrationStatus;
   measurement_count: number;
   created_at: string;
@@ -355,9 +366,20 @@ export const mapMeasuredPlan = (r: RawMeasuredPlan): MeasuredPlan => ({
   ownerUid: r.owner_uid,
   name: r.name,
   sheetReference: r.sheet_reference ?? '',
+  sourceType: r.source_type ?? 'image',
   imageFilename: r.image_filename,
   imageContentType: r.image_content_type,
   imageByteSize: r.image_byte_size,
+  pdfFilename: r.pdf_filename,
+  pdfContentType: r.pdf_content_type,
+  pdfByteSize: r.pdf_byte_size,
+  pdfPageNumber: r.pdf_page_number,
+  pdfPageWidthPt: r.pdf_page_width_pt === null ? null : Number(r.pdf_page_width_pt),
+  pdfPageHeightPt: r.pdf_page_height_pt === null ? null : Number(r.pdf_page_height_pt),
+  pdfRenderScale: r.pdf_render_scale === null ? null : Number(r.pdf_render_scale),
+  pdfRenderedWidthPx: r.pdf_rendered_width_px,
+  pdfRenderedHeightPx: r.pdf_rendered_height_px,
+  pdfRotation: r.pdf_rotation,
   calibrationStatus: r.calibration_status,
   measurementCount: r.measurement_count,
   createdAt: r.created_at,
