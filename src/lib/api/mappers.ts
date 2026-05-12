@@ -13,6 +13,7 @@ import type {
   Project,
   ProposalCategory,
   ProposalItem,
+  ProposalStatus,
   Room,
   UserProfile,
 } from '../../types';
@@ -28,6 +29,8 @@ export interface RawProject {
   budget_cents: number;
   ffe_budget_cents: number;
   proposal_budget_cents: number;
+  proposal_status: ProposalStatus;
+  proposal_status_updated_at: string;
   created_at: string;
   updated_at: string;
 }
@@ -226,6 +229,8 @@ export const mapProject = (r: RawProject): Project => ({
   budgetCents: r.budget_cents,
   ffeBudgetCents: r.ffe_budget_cents ?? 0,
   proposalBudgetCents: r.proposal_budget_cents ?? 0,
+  proposalStatus: r.proposal_status ?? 'in_progress',
+  proposalStatusUpdatedAt: r.proposal_status_updated_at ?? new Date().toISOString(),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

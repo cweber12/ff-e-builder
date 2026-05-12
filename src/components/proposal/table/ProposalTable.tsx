@@ -47,6 +47,7 @@ import {
   useUpdateColumnDef,
   useDeleteColumnDef,
   useIsMobileViewport,
+  useUpdateProject,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -58,6 +59,8 @@ import {
   type ProposalItem,
   type ProposalCategoryWithItems,
   type CustomColumnDef,
+  type ProposalStatus,
+  proposalStatuses,
 } from '../../../types';
 import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
 import { useUserProfile } from '../../../hooks';
@@ -80,6 +83,156 @@ import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
 import { AddColumnModal } from '../../shared/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
+
+// --- Proposal Status ---
+
+const proposalStatusConfig: Record<
+  ProposalStatus,
+  { label: string; bgClass: string; textClass: string; hoverClass: string }
+> = {
+  in_progress: {
+    label: 'In Progress',
+    bgClass: 'bg-blue-50',
+    textClass: 'text-blue-700',
+    hoverClass: 'hover:bg-blue-100',
+  },
+  pricing_complete: {
+    label: 'Pricing Complete',
+    bgClass: 'bg-amber-50',
+    textClass: 'text-amber-700',
+    hoverClass: 'hover:bg-amber-100',
+  },
+  submitted: {
+    label: 'Submitted',
+    bgClass: 'bg-purple-50',
+    textClass: 'text-purple-700',
+    hoverClass: 'hover:bg-purple-100',
+  },
+  approved: {
+    label: 'Approved',
+    bgClass: 'bg-emerald-50',
+    textClass: 'text-emerald-700',
+    hoverClass: 'hover:bg-emerald-100',
+  },
+};
+
+function formatStatusDate(isoString: string): string {
+  const date = new Date(isoString);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  });
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" aria-hidden="true">
+      <path
+        d="M4 6l4 4 4-4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CheckMarkIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+      <path
+        d="m3.5 8.2 3 3L12.8 5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ProposalStatusBadge({
+  status,
+  updatedAt,
+  onChangeRequest,
+}: {
+  status: ProposalStatus;
+  updatedAt: string;
+  onChangeRequest: (next: ProposalStatus) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(e: globalThis.MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [open]);
+
+  const cfg = proposalStatusConfig[status];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-medium transition-colors',
+          cfg.bgClass,
+          cfg.textClass,
+          cfg.hoverClass,
+        )}
+      >
+        {cfg.label}
+        <span className="opacity-60">· since {formatStatusDate(updatedAt)}</span>
+        <ChevronDownIcon />
+      </button>
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Change proposal status"
+          className="absolute left-0 top-full z-50 mt-1 min-w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+        >
+          {proposalStatuses.map((s) => {
+            const scfg = proposalStatusConfig[s];
+            return (
+              <button
+                key={s}
+                role="option"
+                aria-selected={s === status}
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                onClick={() => {
+                  setOpen(false);
+                  onChangeRequest(s);
+                }}
+              >
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-medium',
+                    scfg.bgClass,
+                    scfg.textClass,
+                  )}
+                >
+                  {scfg.label}
+                </span>
+                {s === status && <CheckMarkIcon />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // --- Proposal Table Column Definitions ---
 const PROPOSAL_HIDEABLE_IDS = [
@@ -182,6 +335,8 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
   const [selectedItem, setSelectedItem] = useState<ProposalItem | null>(null);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>(undefined);
   const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
+  const updateProject = useUpdateProject();
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
 
   const toggleCollapsed = (id: string) => {
@@ -199,15 +354,24 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
   return (
     <TableViewStack>
       <div className="flex items-center justify-between gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => setAddCategoryOpen(true)}
-        >
-          <PlusIcon />
-          Add category
-        </Button>
+        <div className="flex items-center gap-2">
+          {project && (
+            <ProposalStatusBadge
+              status={project.proposalStatus}
+              updatedAt={project.proposalStatusUpdatedAt}
+              onChangeRequest={setPendingStatus}
+            />
+          )}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setAddCategoryOpen(true)}
+          >
+            <PlusIcon />
+            Add category
+          </Button>
+        </div>
         <div className="flex items-center gap-2">
           {project && (
             <ExportMenu
@@ -332,6 +496,33 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           setCategoryToDelete(null);
         }}
       />
+      {pendingStatus && (
+        <Modal open onClose={() => setPendingStatus(null)} title="Change proposal status">
+          <p className="text-sm text-gray-600">
+            Change status to{' '}
+            <span className="font-medium text-gray-900">
+              {proposalStatusConfig[pendingStatus].label}
+            </span>
+            ?
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setPendingStatus(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                void updateProject.mutateAsync({
+                  id: projectId,
+                  patch: { proposalStatus: pendingStatus },
+                });
+                setPendingStatus(null);
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </Modal>
+      )}
     </TableViewStack>
   );
 }

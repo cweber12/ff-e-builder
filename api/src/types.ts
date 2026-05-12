@@ -39,6 +39,8 @@ export interface Project {
   ffe_budget_cents: number;
   /** Always integer cents - see /docs/money.md */
   proposal_budget_cents: number;
+  proposal_status: string;
+  proposal_status_updated_at: string;
   created_at: string;
   updated_at: string;
 }
@@ -256,6 +258,7 @@ import { z } from 'zod';
 // Intentionally duplicated from src/types/itemValidation to keep the API worker
 // self-contained and avoid cross-boundary imports from the React client bundle.
 const itemStatuses = ['pending', 'ordered', 'approved', 'received'] as const;
+const proposalStatuses = ['in_progress', 'pricing_complete', 'submitted', 'approved'] as const;
 const budgetModes = ['shared', 'individual'] as const;
 const sizeModes = ['imperial', 'metric'] as const;
 const calibrationStatuses = ['uncalibrated', 'calibrated'] as const;
@@ -270,6 +273,7 @@ export const CreateProjectSchema = z.object({
   budget_cents: z.number().int().nonnegative().default(0),
   ffe_budget_cents: z.number().int().nonnegative().default(0),
   proposal_budget_cents: z.number().int().nonnegative().default(0),
+  proposal_status: z.enum(proposalStatuses).default('in_progress'),
 });
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
 

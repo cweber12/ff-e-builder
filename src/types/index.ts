@@ -1,5 +1,7 @@
 export type { BudgetMode, Cents, Project } from './project';
 export { cents, dollarsToCents, formatMoney } from './project';
+export type { ProposalStatus } from './proposalValidation';
+export { proposalStatuses, ProposalStatusSchema } from './proposalValidation';
 export type {
   CalibrationStatus,
   LengthLine,

@@ -1,6 +1,7 @@
 import { apiFetch } from './transport';
 import { mapProject, type RawProject } from './mappers';
 import type { Project } from '../../types';
+import type { ProposalStatus } from '../../types';
 
 export type CreateProjectInput = {
   name: string;
@@ -22,6 +23,7 @@ export type UpdateProjectInput = {
   budgetCents?: number;
   ffeBudgetCents?: number;
   proposalBudgetCents?: number;
+  proposalStatus?: ProposalStatus;
 };
 
 export const projectsApi = {
@@ -57,6 +59,7 @@ export const projectsApi = {
         budget_cents: patch.budgetCents,
         ffe_budget_cents: patch.ffeBudgetCents,
         proposal_budget_cents: patch.proposalBudgetCents,
+        proposal_status: patch.proposalStatus,
       }),
     }).then((r) => mapProject(r.project)),
 

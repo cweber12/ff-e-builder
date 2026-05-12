@@ -13,6 +13,8 @@ export const formatMoney = (c: Cents): string =>
 
 // ─── Entity type ─────────────────────────────────────────────────────────────
 
+import type { ProposalStatus } from './proposalValidation';
+
 export type Project = {
   id: string;
   ownerUid: string;
@@ -25,6 +27,8 @@ export type Project = {
   budgetCents: number;
   ffeBudgetCents?: number;
   proposalBudgetCents?: number;
+  proposalStatus: ProposalStatus;
+  proposalStatusUpdatedAt: string;
   createdAt: string;
   updatedAt: string;
 };
