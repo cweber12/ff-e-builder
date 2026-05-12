@@ -111,8 +111,15 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         materials: autoMap.materials ?? null,
       };
 
-      const usedKeys = new Set(Object.values(mapping).filter(Boolean) as string[]);
       const allRows = parsed.sections.flatMap((s) => s.rows);
+      for (const field of Object.keys(mapping) as (keyof typeof mapping)[]) {
+        const key = mapping[field];
+        if (key && !allRows.some((row) => (row[key] ?? '').trim().length > 0)) {
+          mapping[field] = null;
+        }
+      }
+
+      const usedKeys = new Set(Object.values(mapping).filter(Boolean) as string[]);
       const unmappedCols = parsed.columns.filter((col) => {
         if (usedKeys.has(col.key)) return false;
         return allRows.some((row) => (row[col.key] ?? '').trim().length > 0);

@@ -42,6 +42,9 @@ const FIELD_ALIASES: Record<keyof ColumnMap, string[]> = {
     'product',
     'product name',
     'title',
+    'model no. / description',
+    'model no description',
+    'model description',
   ],
   category: ['category', 'type', 'item type', 'product type', 'classification'],
   itemIdTag: [

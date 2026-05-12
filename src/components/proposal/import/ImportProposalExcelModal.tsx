@@ -114,7 +114,7 @@ export function ImportProposalExcelModal({
     if (file) void handleFile(file);
   };
 
-  const mapping = useMemo<ProposalImportColumnMap>(
+  const rawMapping = useMemo<ProposalImportColumnMap>(
     () => (parsed ? autoMapProposalColumns(parsed.columns) : ({} as ProposalImportColumnMap)),
     [parsed],
   );
@@ -151,6 +151,20 @@ export function ImportProposalExcelModal({
         total: parsed.projectImages.length + importableRows.length,
         startedAt: Date.now(),
       });
+
+      const mapping: ProposalImportColumnMap = Object.fromEntries(
+        Object.entries(rawMapping).map(([field, key]) => [
+          field,
+          key &&
+          importableRows.some(
+            (row) =>
+              (row.values[key] ?? '').trim().length > 0 ||
+              (row.imagesByColumn[key]?.length ?? 0) > 0,
+          )
+            ? key
+            : null,
+        ]),
+      ) as ProposalImportColumnMap;
 
       const categoryNameToId = new Map(
         categories.map((category) => [category.name.toLowerCase(), category.id]),
