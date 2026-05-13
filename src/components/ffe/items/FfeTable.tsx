@@ -68,7 +68,7 @@ import { Button } from '../../primitives/Button';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
 import { Modal } from '../../primitives/Modal';
-import { AddItemDrawer, type AddItemMaterialSelection } from '../../AddItemDrawer';
+import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import { DimensionEditorModal } from '../../shared/DimensionEditorModal';

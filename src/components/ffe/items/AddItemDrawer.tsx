@@ -2,18 +2,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
-import type { CreateItemInput, CreateMaterialInput } from '../lib/api';
+import type { CreateItemInput, CreateMaterialInput } from '../../../lib/api';
 import {
   itemFormSchema,
   parseQtyInput,
   parseUnitCostDollarsInput,
   unitCostDollarsToCents,
   type ItemFormValues,
-} from '../types';
-import { emptyToNull } from '../lib/utils';
-import type { Material } from '../types';
-import { MaterialLibraryModal, MaterialSwatchImage } from './materials/MaterialLibraryModal';
-import { Button, Drawer } from './primitives';
+} from '../../../types';
+import { emptyToNull } from '../../../lib/utils';
+import type { Material } from '../../../types';
+import { MaterialLibraryModal, MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
+import { Button, Drawer } from '../../primitives';
 
 export type AddItemMaterialSelection =
   | { type: 'existing'; materialId: string }
