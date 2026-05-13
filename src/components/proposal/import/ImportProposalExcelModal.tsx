@@ -24,7 +24,7 @@ import {
 import type { ProposalCategoryWithItems } from '../../../types';
 import { Button, Modal } from '../../primitives';
 import { ImportProgressBar } from '../../shared/ImportProgressBar';
-import { describeImportError, type ImportProgress } from '../../shared/importUtils';
+import { describeImportError, type ImportProgress } from '../../../lib/import';
 
 type Props = {
   open: boolean;

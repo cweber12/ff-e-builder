@@ -1,4 +1,4 @@
-import { formatDuration, type ImportProgress } from './importUtils';
+import { formatDuration, type ImportProgress } from '../../lib/import';
 
 export function ImportProgressBar({
   progress,

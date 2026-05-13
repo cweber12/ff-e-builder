@@ -1,3 +1,6 @@
+export { formatDuration, describeImportError } from './utils';
+export type { ImportProgress } from './utils';
+
 export {
   buildColumns,
   canonicalColumnLabel,

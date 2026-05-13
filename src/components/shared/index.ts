@@ -14,5 +14,5 @@ export { AddGroupModal } from './AddGroupModal';
 export { SortableColHeader } from './SortableColHeader';
 export { CustomColumnHeader } from './CustomColumnHeader';
 export { ImportProgressBar } from './ImportProgressBar';
-export { formatDuration, describeImportError } from './importUtils';
-export type { ImportProgress } from './importUtils';
+export { formatDuration, describeImportError } from '../../lib/import';
+export type { ImportProgress } from '../../lib/import';

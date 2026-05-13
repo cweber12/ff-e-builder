@@ -12,7 +12,7 @@ import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives/Button';
 import { Modal } from '../../primitives/Modal';
 import { ImportProgressBar } from '../../shared/ImportProgressBar';
-import { type ImportProgress } from '../../shared/importUtils';
+import { type ImportProgress } from '../../../lib/import';
 
 type Props = {
   open: boolean;
