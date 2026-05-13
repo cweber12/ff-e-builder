@@ -10,11 +10,11 @@
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
-- **Never run `pnpm typecheck`, `pnpm lint`, `pnpm test`, or `pnpm build` yourself.** After completing a change, output the command `pnpm typecheck && pnpm lint && pnpm test && pnpm build` as a copy-pasteable prompt for the user or a cheap delegated model to run. Wait for the output to be reported before proceeding. Only draft the commit message after the user confirms all four pass.
+- **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
 
-- **Before any repo-wide search or verification run, pause and hand off to a cheap model.** If you need pattern discovery across the repo (`rg`, broad grep/search, “find all usages”) or need tests/typecheck/lint/build output, do not run it yourself. Instead, output a cheap-model prompt that says exactly what to inspect or run and exactly what format to return. Wait for the returned results before proceeding.
+- **Confirm `pnpm typecheck && pnpm lint && pnpm test && pnpm build` pass before drafting the commit message.**
 
-- **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_.
+- **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
@@ -29,6 +29,10 @@
 - **Money is stored and computed as integer minor units (cents).** See [/docs/money.md](/docs/money.md).
 
 - **Never call the Neon database directly from the client.** All DB access goes through the API worker. See [/docs/architecture.md](/docs/architecture.md).
+
+- **Database migrations run with `pnpm migrate` from the repo root.** Migration files live in `/db/migrations/` as SQL.
+
+- **Deploy the API worker with `pnpm --filter ffe-api deploy`.** Do not use raw `wrangler deploy`.
 
 ---
 
@@ -74,7 +78,7 @@ Pin these exact versions unless a version bump is explicitly requested.
 | Language          | TypeScript                                  | 5.x            |
 | Package manager   | pnpm                                        | 9.x            |
 | Runtime (Node)    | Node.js                                     | 20 LTS         |
-| Auth              | Firebase Auth                               | 10.x           |
+| Auth              | Firebase Auth                               | 12.x           |
 | API runtime       | Cloudflare Workers                          | (wrangler 3.x) |
 | API framework     | Hono                                        | 4.x            |
 | Database          | Neon (serverless Postgres)                  | —              |
@@ -85,6 +89,8 @@ Pin these exact versions unless a version bump is explicitly requested.
 | Testing           | Vitest + Testing Library                    | 2.x            |
 | Linting           | ESLint + Prettier                           | —              |
 
+> Verify exact versions against `package.json` and `api/package.json` — the table above reflects pinned majors, not patch-level pins.
+
 ---
 
 ## Definition of done
@@ -92,8 +98,8 @@ Pin these exact versions unless a version bump is explicitly requested.
 Every feature is done when **all** of the following are true:
 
 - [ ] **Types updated** — TypeScript interfaces/types reflect the change
-- [ ] **Tests added/updated** — unit or integration tests cover the new behavior
-- [ ] **Docs updated** — `/README.md`, `/docs/`, and any sub-folder README touched if relevant
+- [ ] **Tests added/updated** — unit or integration tests cover the new behavior (skip for style-only changes, copy edits, and config tweaks)
+- [ ] **Docs updated** — `/README.md`, `/docs/`, and any sub-folder README updated for user-visible features, API changes, or architectural decisions
 - [ ] **TypeScript compiles clean** — confirmed by user running `pnpm typecheck`
 - [ ] **Lint exits 0** — confirmed by user running `pnpm lint`
 - [ ] **All tests green** — confirmed by user running `pnpm test`
@@ -109,52 +115,3 @@ Every feature is done when **all** of the following are true:
 3. `CONTEXT.md` — canonical product and domain terminology; read before touching any domain-facing code or docs
 4. `docs/architecture.md` — system design, diagrams, decision rationale
 5. `docs/changelog.md` — what has changed recently and what is in flight
-
----
-
-## Delegating to cheaper models
-
-Heavy models (Claude Opus/Sonnet, GPT-4o) are expensive. Offload tasks that require no judgment to a cheap model (GPT-4o-mini, Claude Haiku) using the handoff protocol below.
-
-> **Structured delegation skill available.** When acting as the heavy agent, read `.agents/skills/heavy-agent-delegation/SKILL.md` for a decision table, prompt library, and response-evaluation criteria. Reusable light-agent prompt templates are in `.agents/skills/heavy-agent-delegation/prompts/`.
-
-### What cheap models can do reliably
-
-- Extract constants or values from a file: "Read `catalogPdf.ts` lines 1–30 and return all `const` declarations as JSON `{name, value}`"
-- Execute exact mechanical edits given explicit old/new strings
-- Run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` and return the full terminal output
-- Draft a conventional-commit message given a `git diff` output
-- List all occurrences of a pattern in a file with line numbers
-
-### What requires a heavy model
-
-- Comparing two representations (e.g. CSS layout vs jsPDF mm coordinates)
-- Deciding which value to change and by how much
-- Cross-file TypeScript type resolution
-- Understanding domain invariants and product-specific logic
-- Any task where the output is "decide what to do" rather than "do this specific thing"
-
-### Handoff protocol
-
-When a heavy model has completed analysis and produced an unambiguous edit, it should pause and output a prompt in this format instead of continuing:
-
-```text
-TASK FOR CHEAP MODEL:
-File: <path>
-Change: replace `<old string>` with `<new string>`
-Then run: pnpm typecheck && pnpm lint && pnpm test && pnpm build
-Return: full terminal output
-```
-
-The user pastes this to the cheap model, then pastes the output back. The heavy model resumes from the reported result.
-
-For repo-wide search or context gathering, use this format:
-
-```text
-TASK FOR CHEAP MODEL:
-Scope: <files or directories>
-Find: <pattern / question to answer>
-Return format:
-- <bullet or JSON format required>
-- Include exact file paths and line numbers when relevant
-```

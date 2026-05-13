@@ -6,11 +6,8 @@ Authoritative project rules live in [/AGENTS.md](/AGENTS.md). Read that file fir
 
 These items are not in AGENTS.md and apply only to Copilot:
 
-1. **Migrations are SQL-first.** Use `pnpm migrate` from repo root.
-2. **Client/API boundary is strict.** Client talks to `/api/v1/*`; no Neon imports in `/src`.
-3. **Deploy via script.** Use `pnpm --filter ffe-api deploy`.
-4. **Keep secrets server-side.** `FIREBASE_ADMIN_*` never belongs in client code.
-5. **Output a commit message after every logical unit of work** — do not wait to be asked. After completing a step or a set of related changes, immediately output the conventional-commits message as a fenced code block so the user can commit when ready.
+1. **Output a commit message after every logical unit of work** — do not wait to be asked. Immediately output the conventional-commits message as a fenced code block so the user can commit when ready.
+2. **Use native tools for search and verification.** Use `search_subagent`, `execution_subagent`, `grep_search`, `file_search`, and the `scout`/`Explore` agents for discovery, search, and running `pnpm typecheck && pnpm lint && pnpm test && pnpm build`. Do not pause and output a handoff prompt — run it directly.
 
 ## Local agent skills
 

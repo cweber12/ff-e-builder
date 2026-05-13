@@ -7,7 +7,7 @@ description: Grilling session that challenges your plan against the existing dom
 
 ## Pre-session: Scout the codebase
 
-Before asking the first question, invoke the scout agent (`.github/agents/scout.agent.md`) with the task description.
+Before asking the first question, use whatever codebase exploration mechanism your agent environment provides (e.g. a scout/search subagent, semantic search, or file search tools) with the task description.
 
 **Vagueness guard:** If the task description is fewer than ~15 words and names no specific feature, type, component, or file — skip the scout now. Proceed with the first question to sharpen scope, then invoke the scout once the task is concrete enough to search against.
 
