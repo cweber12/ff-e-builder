@@ -206,38 +206,98 @@ router.patch('/proposal/items/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await sql`
+  const d = parsed.data;
+
+  const clearDeferred = d.unit_cost_cents != null;
+  const setDeferred = d.cost_update_deferred === true && !clearDeferred;
+
+  const updateQuery = sql`
     UPDATE proposal_items
     SET
-      category_id = COALESCE(${parsed.data.category_id ?? null}, category_id),
-      product_tag = COALESCE(${parsed.data.product_tag ?? null}, product_tag),
-      plan = COALESCE(${parsed.data.plan ?? null}, plan),
-      drawings = COALESCE(${parsed.data.drawings ?? null}, drawings),
-      location = COALESCE(${parsed.data.location ?? null}, location),
-      description = COALESCE(${parsed.data.description ?? null}, description),
-      notes = COALESCE(${parsed.data.notes ?? null}, notes),
-      size_label = COALESCE(${parsed.data.size_label ?? null}, size_label),
-      size_mode = COALESCE(${parsed.data.size_mode ?? null}, size_mode),
-      size_w = COALESCE(${parsed.data.size_w ?? null}, size_w),
-      size_d = COALESCE(${parsed.data.size_d ?? null}, size_d),
-      size_h = COALESCE(${parsed.data.size_h ?? null}, size_h),
-      size_unit = COALESCE(${parsed.data.size_unit ?? null}, size_unit),
-      cbm = COALESCE(${parsed.data.cbm ?? null}, cbm),
-      quantity = COALESCE(${parsed.data.quantity ?? null}, quantity),
-      quantity_unit = COALESCE(${parsed.data.quantity_unit ?? null}, quantity_unit),
-      unit_cost_cents = COALESCE(${parsed.data.unit_cost_cents ?? null}, unit_cost_cents),
-      sort_order = COALESCE(${parsed.data.sort_order ?? null}, sort_order),
-      custom_data = CASE
-                      WHEN ${parsed.data.custom_data != null}::boolean
-                      THEN custom_data || ${JSON.stringify(parsed.data.custom_data ?? {})}::jsonb
-                      ELSE custom_data
-                    END,
-      version = version + 1
-    WHERE id = ${id} AND version = ${parsed.data.version}
+      category_id         = COALESCE(${d.category_id ?? null}, category_id),
+      product_tag         = COALESCE(${d.product_tag ?? null}, product_tag),
+      plan                = COALESCE(${d.plan ?? null}, plan),
+      drawings            = COALESCE(${d.drawings ?? null}, drawings),
+      location            = COALESCE(${d.location ?? null}, location),
+      description         = COALESCE(${d.description ?? null}, description),
+      notes               = COALESCE(${d.notes ?? null}, notes),
+      size_label          = COALESCE(${d.size_label ?? null}, size_label),
+      size_mode           = COALESCE(${d.size_mode ?? null}, size_mode),
+      size_w              = COALESCE(${d.size_w ?? null}, size_w),
+      size_d              = COALESCE(${d.size_d ?? null}, size_d),
+      size_h              = COALESCE(${d.size_h ?? null}, size_h),
+      size_unit           = COALESCE(${d.size_unit ?? null}, size_unit),
+      cbm                 = COALESCE(${d.cbm ?? null}, cbm),
+      quantity            = COALESCE(${d.quantity ?? null}, quantity),
+      quantity_unit       = COALESCE(${d.quantity_unit ?? null}, quantity_unit),
+      unit_cost_cents     = COALESCE(${d.unit_cost_cents ?? null}, unit_cost_cents),
+      sort_order          = COALESCE(${d.sort_order ?? null}, sort_order),
+      custom_data         = CASE
+                              WHEN ${d.custom_data != null}::boolean
+                              THEN custom_data || ${JSON.stringify(d.custom_data ?? {})}::jsonb
+                              ELSE custom_data
+                            END,
+      cost_update_deferred = CASE
+                               WHEN ${clearDeferred}::boolean THEN false
+                               WHEN ${setDeferred}::boolean   THEN true
+                               ELSE cost_update_deferred
+                             END,
+      version             = version + 1
+    WHERE id = ${id} AND version = ${d.version}
     RETURNING *
   `;
-  if (!rows[0]) return c.json({ error: 'Conflict or not found' }, 409);
-  return c.json({ item: rows[0] });
+
+  if (!d.change_log) {
+    const rows = await updateQuery;
+    if (!rows[0]) return c.json({ error: 'Conflict or not found' }, 409);
+    return c.json({ item: rows[0] });
+  }
+
+  const cl = d.change_log;
+  const changeId = crypto.randomUUID();
+
+  const insertPrimary = sql`
+    INSERT INTO proposal_item_changelog
+      (id, proposal_item_id, column_key, previous_value, new_value, notes, proposal_status)
+    VALUES
+      (${changeId}, ${id}, ${cl.column_key}, ${cl.previous_value}, ${cl.new_value},
+       ${cl.notes ?? null}, ${cl.proposal_status})
+  `;
+
+  const queries: ReturnType<typeof sql>[] = [updateQuery, insertPrimary];
+
+  if (cl.linked_unit_cost_change) {
+    const luc = cl.linked_unit_cost_change;
+    queries.push(sql`
+      INSERT INTO proposal_item_changelog
+        (proposal_item_id, column_key, previous_value, new_value, proposal_status, related_change_id)
+      VALUES
+        (${id}, 'unit_cost_cents', ${luc.previous_value}, ${luc.new_value},
+         ${cl.proposal_status}, ${changeId})
+    `);
+  }
+
+  const results = await sql.transaction(queries);
+  const updatedItem = (results[0] as (typeof results)[0])[0];
+  if (!updatedItem) return c.json({ error: 'Conflict or not found' }, 409);
+  return c.json({ item: updatedItem });
+});
+
+router.get('/proposal/items/:id/changelog', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+  try {
+    await assertProposalItemOwnership(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+  const sql = getDb(c.env);
+  const rows = await sql`
+    SELECT * FROM proposal_item_changelog
+    WHERE proposal_item_id = ${id}
+    ORDER BY changed_at DESC
+  `;
+  return c.json({ changelog: rows });
 });
 
 router.delete('/proposal/items/:id', async (c) => {

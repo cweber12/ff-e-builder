@@ -80,7 +80,7 @@ router.patch('/:id', async (c) => {
       ),
       proposal_status = COALESCE(${parsed.data.proposal_status ?? null}, proposal_status),
       proposal_status_updated_at = CASE
-        WHEN ${parsed.data.proposal_status ?? null} IS NOT NULL THEN NOW()
+        WHEN ${parsed.data.proposal_status ?? null}::text IS NOT NULL THEN NOW()
         ELSE proposal_status_updated_at
       END
     WHERE id = ${id} AND owner_uid = ${uid}

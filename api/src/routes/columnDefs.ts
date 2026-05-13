@@ -114,10 +114,20 @@ router.delete('/:id/column-defs/:defId', async (c) => {
   }
 
   const sql = getDb(c.env);
-  await sql`
-    DELETE FROM item_column_defs
-    WHERE id = ${defId} AND project_id = ${projectId}
-  `;
+  await sql.transaction([
+    sql`
+      DELETE FROM proposal_item_changelog clg
+      USING proposal_items pi, proposal_categories pc
+      WHERE clg.column_key    = ${defId}
+        AND clg.proposal_item_id = pi.id
+        AND pi.category_id    = pc.id
+        AND pc.project_id     = ${projectId}
+    `,
+    sql`
+      DELETE FROM item_column_defs
+      WHERE id = ${defId} AND project_id = ${projectId}
+    `,
+  ]);
   return c.body(null, 204);
 });
 
