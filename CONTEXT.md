@@ -106,6 +106,18 @@ _Avoid_: FF&E item, product only
 The unit of measure attached to a Proposal Item quantity, such as unit, sq ft, or ln ft.
 _Avoid_: Size unit
 
+**Proposal Item Change**:
+A per-field audit record created when a tracked Proposal Item field is edited while the proposal is in `pricing_complete`, `submitted`, or `approved` status. Each change records the previous and new value as plain text, optional user notes, and a snapshot of the proposal status at the time of the change.
+_Avoid_: audit log, change history, diff
+
+**Price-Affecting Column**:
+A Proposal Item field — `quantity`, `size`, or `cbm` — whose change is expected to require a corresponding unit cost update. Editing a Price-Affecting Column prompts the user to add a new cost, defer the cost update, or skip price action.
+_Avoid_: cost column, financial field
+
+**Deferred Cost**:
+The state of a Proposal Item when a Price-Affecting Column was changed but the unit cost update was intentionally postponed. Displayed as a sticky banner above the proposal table listing affected product tags, and as an amber highlight on the unit cost cell. Resolved automatically when the item's unit cost is next confirmed and saved.
+_Avoid_: pending cost, cost flag, unresolved cost
+
 ### Shared Table UI
 
 **Table Group**:
@@ -175,6 +187,10 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A **Company** can define one active **Company Theme** used as the default for document exports.
 - A **Room** contains zero or more **FF&E Items**.
 - A **Proposal Category** contains zero or more **Proposal Items**.
+- A **Proposal Item** can have zero or more **Proposal Item Changes**, one per tracked field edit while the proposal is not `in_progress`.
+- A **Proposal Item Change** snapshots the **Proposal Status** at the time of the edit to preserve the display color for that entry.
+- A **Proposal Item Change** for `unitCostCents` may reference a triggering **Proposal Item Change** via `related_change_id` when a price update was confirmed alongside a Price-Affecting Column change.
+- A **Proposal Item** carries a **Deferred Cost** flag when a Price-Affecting Column was changed without a corresponding unit cost update.
 - A **Project** owns a **Finish Library** — a single pool of **Materials** accessible from both **FF&E** and **Proposal** views.
 - All **Finish Library** entries are **Materials**. There is no separate Swatch type; the same **Material** can be assigned to FF&E Items, Proposal Items, or both without any re-classification.
 - An **FF&E Item** can reference multiple **Materials** from the **Finish Library**.

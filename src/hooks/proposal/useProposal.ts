@@ -16,7 +16,12 @@ import type {
   UpdateProposalCategoryInput,
   UpdateProposalItemInput,
 } from '../../lib/api';
-import type { ProposalCategory, ProposalCategoryWithItems, ProposalItem } from '../../types';
+import type {
+  ProposalCategory,
+  ProposalCategoryWithItems,
+  ProposalItem,
+  ProposalItemChangelogEntry,
+} from '../../types';
 
 export function useProposalCategories(projectId: string) {
   return useQuery({
@@ -114,8 +119,17 @@ export function useUpdateProposalItem() {
       queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(item.categoryId), (old) =>
         updateListItem(old, item.id, () => item),
       );
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.changelog(item.id) });
     },
     onError: (err) => toast.error(`Proposal item save failed: ${err.message}`),
+  });
+}
+
+export function useProposalItemChangelog(itemId: string) {
+  return useQuery<ProposalItemChangelogEntry[]>({
+    queryKey: proposalKeys.changelog(itemId),
+    queryFn: () => api.proposal.itemChangelog(itemId),
+    enabled: Boolean(itemId),
   });
 }
 

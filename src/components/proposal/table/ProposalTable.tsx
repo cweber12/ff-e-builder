@@ -41,6 +41,7 @@ import {
   useProposalWithItems,
   useUpdateProposalCategory,
   useUpdateProposalItem,
+  useProposalItemChangelog,
   useColumnConfig,
   useColumnDefs,
   useCreateColumnDef,
@@ -83,38 +84,114 @@ import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
 import { AddColumnModal } from '../../shared/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
+import { proposalStatusConfig } from '../proposalStatusConfig';
+import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
+
+// --- Changelog helpers ---
+
+type ChangeInfo = {
+  columnKey: string;
+  columnLabel: string;
+  previousValue: string;
+  newValue: string;
+  isPriceAffecting: boolean;
+};
+
+function formatSizeDisplay(item: {
+  sizeW?: string;
+  sizeD?: string;
+  sizeH?: string;
+  sizeUnit?: string;
+}): string {
+  const parts = [
+    item.sizeW && `${item.sizeW}W`,
+    item.sizeD && `${item.sizeD}D`,
+    item.sizeH && `${item.sizeH}H`,
+  ].filter(Boolean);
+  return parts.length ? `${parts.join(' × ')} ${item.sizeUnit ?? ''}`.trim() : '';
+}
+
+function patchToChangeInfo(
+  patch: Omit<UpdateProposalItemInput, 'version'>,
+  item: ProposalItem,
+  customColumnDefs: CustomColumnDef[],
+): ChangeInfo | null {
+  const sizeFields = ['sizeW', 'sizeD', 'sizeH', 'sizeLabel', 'sizeMode', 'sizeUnit'] as const;
+  if (sizeFields.some((f) => f in patch)) {
+    return {
+      columnKey: 'size',
+      columnLabel: 'Size',
+      previousValue: formatSizeDisplay(item),
+      newValue: formatSizeDisplay({ ...item, ...patch }),
+      isPriceAffecting: true,
+    };
+  }
+  if ('quantity' in patch) {
+    return {
+      columnKey: 'quantity',
+      columnLabel: 'Quantity',
+      previousValue: `${item.quantity} ${item.quantityUnit}`,
+      newValue: `${patch.quantity ?? ''} ${item.quantityUnit}`,
+      isPriceAffecting: true,
+    };
+  }
+  if ('cbm' in patch) {
+    return {
+      columnKey: 'cbm',
+      columnLabel: 'CBM',
+      previousValue: String(item.cbm),
+      newValue: String(patch.cbm ?? ''),
+      isPriceAffecting: true,
+    };
+  }
+  if ('unitCostCents' in patch) {
+    return {
+      columnKey: 'unitCostCents',
+      columnLabel: 'Unit Cost',
+      previousValue: formatMoney(cents(item.unitCostCents)),
+      newValue: formatMoney(cents(patch.unitCostCents ?? 0)),
+      isPriceAffecting: false,
+    };
+  }
+  const textFields: { key: keyof typeof patch; label: string }[] = [
+    { key: 'productTag', label: 'Product Tag' },
+    { key: 'plan', label: 'Plan' },
+    { key: 'drawings', label: 'Drawings' },
+    { key: 'location', label: 'Location' },
+    { key: 'description', label: 'Description' },
+    { key: 'notes', label: 'Notes' },
+    { key: 'quantityUnit', label: 'Quantity Unit' },
+  ];
+  for (const { key, label } of textFields) {
+    if (key in patch) {
+      const prevVal = item[key as keyof ProposalItem];
+      const newVal = (patch as Record<string, unknown>)[key];
+      return {
+        columnKey: key,
+        columnLabel: label,
+        previousValue: typeof prevVal === 'string' ? prevVal : '',
+        newValue: typeof newVal === 'string' ? newVal : '',
+        isPriceAffecting: false,
+      };
+    }
+  }
+  if ('customData' in patch && patch.customData) {
+    const changedKey = Object.keys(patch.customData)[0];
+    if (changedKey) {
+      const def = customColumnDefs.find((d) => d.id === changedKey);
+      return {
+        columnKey: changedKey,
+        columnLabel: def?.label ?? 'Custom Field',
+        previousValue: item.customData[changedKey] ?? '',
+        newValue: patch.customData[changedKey] ?? '',
+        isPriceAffecting: false,
+      };
+    }
+  }
+  return null;
+}
 
 // --- Proposal Status ---
-
-const proposalStatusConfig: Record<
-  ProposalStatus,
-  { label: string; bgClass: string; textClass: string; hoverClass: string }
-> = {
-  in_progress: {
-    label: 'In Progress',
-    bgClass: 'bg-blue-50',
-    textClass: 'text-blue-700',
-    hoverClass: 'hover:bg-blue-100',
-  },
-  pricing_complete: {
-    label: 'Pricing Complete',
-    bgClass: 'bg-amber-50',
-    textClass: 'text-amber-700',
-    hoverClass: 'hover:bg-amber-100',
-  },
-  submitted: {
-    label: 'Submitted',
-    bgClass: 'bg-purple-50',
-    textClass: 'text-purple-700',
-    hoverClass: 'hover:bg-purple-100',
-  },
-  approved: {
-    label: 'Approved',
-    bgClass: 'bg-emerald-50',
-    textClass: 'text-emerald-700',
-    hoverClass: 'hover:bg-emerald-100',
-  },
-};
 
 function formatStatusDate(isoString: string): string {
   const date = new Date(isoString);
@@ -228,6 +305,96 @@ function ProposalStatusBadge({
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DeferredCostBanner({
+  categoriesWithItems,
+}: {
+  categoriesWithItems: ProposalCategoryWithItems[];
+}) {
+  const deferredItems = categoriesWithItems.flatMap((c) =>
+    c.items
+      .filter((item) => item.costUpdateDeferred)
+      .map((item) => ({ item, categoryName: c.name })),
+  );
+  if (deferredItems.length === 0) return null;
+
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
+      <div>
+        <p className="font-medium">Cost updates pending</p>
+        <p className="mt-0.5 text-xs text-amber-700">
+          {deferredItems
+            .map(({ item }) => item.productTag || item.description || item.id)
+            .join(', ')}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: string }) {
+  const { data: changelog = [] } = useProposalItemChangelog(itemId);
+  const entries = changelog.filter((e) => e.columnKey === columnKey);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(e: globalThis.MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [open]);
+
+  if (entries.length === 0) return null;
+
+  const latest = entries[0]!;
+  const cfg = proposalStatusConfig[latest.proposalStatus];
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        title="View change history"
+        className={cn('h-2 w-2 rounded-full flex-shrink-0', cfg.dotClass)}
+      />
+      {open && (
+        <div className="absolute left-0 top-4 z-50 min-w-56 max-w-xs rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
+            Change history
+          </div>
+          <ul className="max-h-56 overflow-y-auto divide-y divide-gray-50">
+            {entries.map((entry) => (
+              <li key={entry.id} className="px-3 py-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      'h-1.5 w-1.5 rounded-full flex-shrink-0',
+                      proposalStatusConfig[entry.proposalStatus].dotClass,
+                    )}
+                  />
+                  <span className="text-gray-400">{formatStatusDate(entry.changedAt)}</span>
+                </div>
+                <div className="mt-0.5 flex items-baseline gap-1">
+                  <span className="text-gray-400 line-through">{entry.previousValue || '—'}</span>
+                  <span className="text-gray-300">→</span>
+                  <span className="font-medium text-gray-700">{entry.newValue || '—'}</span>
+                </div>
+                {entry.notes && <p className="mt-0.5 text-gray-500 italic">{entry.notes}</p>}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
@@ -411,6 +578,8 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
         </div>
       </div>
 
+      <DeferredCostBanner categoriesWithItems={categoriesWithItems} />
+
       {categoriesWithItems.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
           <p className="text-sm font-semibold text-gray-900">No Proposal Categories yet</p>
@@ -453,6 +622,7 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           onAddCustomColumn={async (label) => {
             await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
           }}
+          proposalStatus={project?.proposalStatus ?? 'in_progress'}
         />
       ))}
 
@@ -888,6 +1058,7 @@ function ProposalCategorySection({
   hiddenDefaults,
   onRestoreDefault,
   onAddCustomColumn,
+  proposalStatus,
 }: {
   projectId: string;
   categoryId: string;
@@ -910,12 +1081,60 @@ function ProposalCategorySection({
   hiddenDefaults: { id: string; label: string }[];
   onRestoreDefault: (id: string) => void;
   onAddCustomColumn: (label: string) => Promise<void>;
+  proposalStatus: ProposalStatus;
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const moveItem = useMoveProposalItem();
   const updateItem = useUpdateProposalItem();
   const isMobile = useIsMobileViewport();
+
+  type PendingChange = ChangeInfo & {
+    item: ProposalItem;
+    patch: Omit<UpdateProposalItemInput, 'version'>;
+  };
+  const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
+
+  function handleItemSave(item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) {
+    if (proposalStatus === 'in_progress') {
+      onItemSave(item, { ...patch, version: item.version });
+      return;
+    }
+    const changeInfo = patchToChangeInfo(patch, item, customColumnDefs);
+    if (!changeInfo) {
+      onItemSave(item, { ...patch, version: item.version });
+      return;
+    }
+    setPendingChange({ ...changeInfo, item, patch });
+  }
+
+  function handleConfirm(result: ChangeConfirmResult) {
+    if (!pendingChange) return;
+    const { item, patch, columnKey, previousValue, newValue } = pendingChange;
+    const changeLog: NonNullable<UpdateProposalItemInput['changeLog']> = {
+      columnKey,
+      previousValue,
+      newValue,
+      proposalStatus,
+    };
+    if (result.notes) changeLog.notes = result.notes;
+    const fullPatch: UpdateProposalItemInput = {
+      ...patch,
+      version: item.version,
+      changeLog,
+    };
+    if (result.deferCost) {
+      fullPatch.costUpdateDeferred = true;
+    } else if (result.newUnitCostCents !== undefined) {
+      fullPatch.unitCostCents = result.newUnitCostCents;
+      changeLog.linkedUnitCostChange = {
+        previousValue: formatMoney(cents(item.unitCostCents)),
+        newValue: formatMoney(cents(result.newUnitCostCents)),
+      };
+    }
+    onItemSave(item, fullPatch);
+    setPendingChange(null);
+  }
   const [isExpanded, setIsExpanded] = useState(false);
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items]);
@@ -1095,7 +1314,7 @@ function ProposalCategorySection({
                       categoryId={categoryId}
                       item={item}
                       otherCategories={otherCategories}
-                      onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
+                      onSave={(patch) => handleItemSave(item, patch)}
                       onDelete={() => deleteItem.mutate(item.id)}
                       onDuplicate={() =>
                         createItem.mutate({
@@ -1131,6 +1350,7 @@ function ProposalCategorySection({
                       onRowClick={() => onItemClick(item)}
                       visibleColOrder={visibleColOrder}
                       customColumnDefs={customColumnDefs}
+                      proposalStatus={proposalStatus}
                     />
                   ))}
                 </SortableContext>
@@ -1289,7 +1509,7 @@ function ProposalCategorySection({
                           categoryId={categoryId}
                           item={item}
                           otherCategories={otherCategories}
-                          onSave={(patch) => onItemSave(item, { ...patch, version: item.version })}
+                          onSave={(patch) => handleItemSave(item, patch)}
                           onDelete={() => deleteItem.mutate(item.id)}
                           onDuplicate={() =>
                             createItem.mutate({
@@ -1325,6 +1545,7 @@ function ProposalCategorySection({
                           onRowClick={() => onItemClick(item)}
                           visibleColOrder={visibleColOrder}
                           customColumnDefs={customColumnDefs}
+                          proposalStatus={proposalStatus}
                         />
                       ))}
                     </SortableContext>
@@ -1340,6 +1561,19 @@ function ProposalCategorySection({
         onClose={() => setAddColumnModalOpen(false)}
         onSubmit={onAddCustomColumn}
       />
+
+      {pendingChange && (
+        <ChangeConfirmModal
+          columnLabel={pendingChange.columnLabel}
+          previousValue={pendingChange.previousValue}
+          newValue={pendingChange.newValue}
+          proposalStatus={proposalStatus}
+          isPriceAffecting={pendingChange.isPriceAffecting}
+          currentUnitCostCents={pendingChange.item.unitCostCents ?? 0}
+          onConfirm={handleConfirm}
+          onCancel={() => setPendingChange(null)}
+        />
+      )}
     </GroupedTableSection>
   );
 }
@@ -1356,6 +1590,7 @@ function ProposalRow({
   onRowClick,
   visibleColOrder,
   customColumnDefs,
+  proposalStatus,
 }: {
   projectId: string;
   categoryId: string;
@@ -1368,6 +1603,7 @@ function ProposalRow({
   onRowClick: () => void;
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
+  proposalStatus: ProposalStatus;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -1377,6 +1613,10 @@ function ProposalRow({
   const [swatchOpen, setSwatchOpen] = useState(false);
   const lineTotal = proposalLineTotalCents(item);
   const stopProp = (e: MouseEvent) => e.stopPropagation();
+
+  const showDots = proposalStatus !== 'in_progress';
+  const dot = (columnKey: string) =>
+    showDots ? <ChangeHistoryDot itemId={item.id} columnKey={columnKey} /> : null;
 
   const cellRenderMap: Record<string, ReactNode> = {
     rendering: (
@@ -1391,7 +1631,11 @@ function ProposalRow({
       </td>
     ),
     productTag: (
-      <EditableCell value={item.productTag} onSave={(productTag) => onSave({ productTag })} />
+      <EditableCell
+        value={item.productTag}
+        onSave={(productTag) => onSave({ productTag })}
+        indicator={dot('productTag')}
+      />
     ),
     plan: (
       <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
@@ -1404,32 +1648,53 @@ function ProposalRow({
         />
       </td>
     ),
-    drawings: <EditableCell value={item.drawings} onSave={(drawings) => onSave({ drawings })} />,
-    location: <EditableCell value={item.location} onSave={(location) => onSave({ location })} />,
+    drawings: (
+      <EditableCell
+        value={item.drawings}
+        onSave={(drawings) => onSave({ drawings })}
+        indicator={dot('drawings')}
+      />
+    ),
+    location: (
+      <EditableCell
+        value={item.location}
+        onSave={(location) => onSave({ location })}
+        indicator={dot('location')}
+      />
+    ),
     description: (
       <EditableCell
         value={item.description}
         onSave={(description) => onSave({ description })}
         className="min-w-64"
+        indicator={dot('description')}
       />
     ),
     notes: (
-      <EditableCell value={item.notes} onSave={(notes) => onSave({ notes })} className="min-w-48" />
+      <EditableCell
+        value={item.notes}
+        onSave={(notes) => onSave({ notes })}
+        className="min-w-48"
+        indicator={dot('notes')}
+      />
     ),
     size: (
       <td className="px-3 py-2" onClick={stopProp}>
-        <button
-          type="button"
-          onClick={() => setSizeOpen(true)}
-          className={cn(
-            'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-            item.sizeLabel
-              ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
-              : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
-          )}
-        >
-          {item.sizeLabel || 'Set size'}
-        </button>
+        <div className="flex items-start justify-between gap-1">
+          <button
+            type="button"
+            onClick={() => setSizeOpen(true)}
+            className={cn(
+              'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+              item.sizeLabel
+                ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
+                : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
+            )}
+          >
+            {item.sizeLabel || 'Set size'}
+          </button>
+          {dot('size')}
+        </div>
         <SizeModal
           item={item}
           open={sizeOpen}
@@ -1460,6 +1725,7 @@ function ProposalRow({
         step="0.001"
         onSave={(cbm) => onSave({ cbm })}
         className="w-24"
+        indicator={dot('cbm')}
       />
     ),
     quantity: (
@@ -1468,12 +1734,14 @@ function ProposalRow({
         quantityUnit={item.quantityUnit}
         onSaveQuantity={(quantity) => onSave({ quantity })}
         onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+        indicator={dot('quantity')}
       />
     ),
     unitCost: (
       <MoneyCell
         valueCents={item.unitCostCents}
         onSave={(unitCostCents) => onSave({ unitCostCents })}
+        indicator={dot('unitCostCents')}
       />
     ),
     ...Object.fromEntries(
@@ -1484,6 +1752,7 @@ function ProposalRow({
           onSave={(value) => {
             onSave({ customData: { ...item.customData, [def.id]: value } });
           }}
+          indicator={dot(def.id)}
         />,
       ]),
     ),
@@ -1752,10 +2021,12 @@ function EditableCell({
   value,
   onSave,
   className,
+  indicator,
 }: {
   value: string;
   onSave: (value: string) => void;
   className?: string;
+  indicator?: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -1783,6 +2054,7 @@ function EditableCell({
     const isEmpty = !value;
     return (
       <td className={cn('px-3 py-2', className)} onClick={(e) => e.stopPropagation()}>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
           tabIndex={0}
@@ -1834,11 +2106,13 @@ function NumberCell({
   onSave,
   step,
   className,
+  indicator,
 }: {
   value: number;
   onSave: (value: number) => void;
   step: string;
   className?: string;
+  indicator?: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
@@ -1861,6 +2135,7 @@ function NumberCell({
   if (!editing) {
     return (
       <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
           tabIndex={0}
@@ -1911,9 +2186,11 @@ function NumberCell({
 function MoneyCell({
   valueCents,
   onSave,
+  indicator,
 }: {
   valueCents: number;
   onSave: (value: number) => void;
+  indicator?: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState((valueCents / 100).toString());
@@ -1939,6 +2216,7 @@ function MoneyCell({
   if (!editing) {
     return (
       <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
           tabIndex={0}
@@ -1993,17 +2271,20 @@ function QuantityCell({
   quantityUnit,
   onSaveQuantity,
   onSaveUnit,
+  indicator,
 }: {
   quantity: number;
   quantityUnit: string;
   onSaveQuantity: (value: number) => void;
   onSaveUnit: (value: string) => void;
+  indicator?: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
 
   if (!editing) {
     return (
       <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
           tabIndex={0}

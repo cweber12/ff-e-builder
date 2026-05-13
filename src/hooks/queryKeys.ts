@@ -42,6 +42,7 @@ export const materialKeys = {
 export const proposalKeys = {
   categories: (projectId: string) => ['proposal', projectId, 'categories'] as const,
   items: (categoryId: string) => ['proposal', 'category', categoryId, 'items'] as const,
+  changelog: (itemId: string) => ['proposal', 'item', itemId, 'changelog'] as const,
 };
 
 export const columnDefKeys = {

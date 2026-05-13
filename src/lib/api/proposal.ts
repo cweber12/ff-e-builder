@@ -5,7 +5,12 @@ import {
   type RawProposalCategory,
   type RawProposalItem,
 } from './mappers';
-import type { ProposalCategory, ProposalItem } from '../../types';
+import type {
+  ProposalCategory,
+  ProposalItem,
+  ProposalItemChangelogEntry,
+  ProposalStatus,
+} from '../../types';
 
 export type CreateProposalCategoryInput = {
   name: string;
@@ -41,6 +46,15 @@ export type CreateProposalItemInput = {
 export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
   categoryId?: string;
   version: number;
+  costUpdateDeferred?: boolean;
+  changeLog?: {
+    columnKey: string;
+    previousValue: string;
+    newValue: string;
+    notes?: string;
+    proposalStatus: ProposalStatus;
+    linkedUnitCostChange?: { previousValue: string; newValue: string };
+  };
 };
 
 const proposalCategoryCreatePayload = (input: CreateProposalCategoryInput) => ({
@@ -95,6 +109,22 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
   sort_order: patch.sortOrder,
   custom_data: patch.customData,
   version: patch.version,
+  cost_update_deferred: patch.costUpdateDeferred,
+  change_log: patch.changeLog
+    ? {
+        column_key: patch.changeLog.columnKey,
+        previous_value: patch.changeLog.previousValue,
+        new_value: patch.changeLog.newValue,
+        notes: patch.changeLog.notes,
+        proposal_status: patch.changeLog.proposalStatus,
+        linked_unit_cost_change: patch.changeLog.linkedUnitCostChange
+          ? {
+              previous_value: patch.changeLog.linkedUnitCostChange.previousValue,
+              new_value: patch.changeLog.linkedUnitCostChange.newValue,
+            }
+          : undefined,
+      }
+    : undefined,
 });
 
 export const proposalApi = {
@@ -143,4 +173,21 @@ export const proposalApi = {
 
   deleteItem: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
+
+  itemChangelog: (itemId: string): Promise<ProposalItemChangelogEntry[]> =>
+    apiFetch<{ changelog: Record<string, unknown>[] }>(
+      `/api/v1/proposal/items/${itemId}/changelog`,
+    ).then((r) =>
+      r.changelog.map((row) => ({
+        id: row.id as string,
+        proposalItemId: row.proposal_item_id as string,
+        columnKey: row.column_key as string,
+        previousValue: row.previous_value as string,
+        newValue: row.new_value as string,
+        notes: (row.notes as string | null) ?? null,
+        proposalStatus: row.proposal_status as ProposalStatus,
+        relatedChangeId: (row.related_change_id as string | null) ?? null,
+        changedAt: row.changed_at as string,
+      })),
+    ),
 };

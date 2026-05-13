@@ -23,6 +23,7 @@ export type {
   ProposalCategory,
   ProposalCategoryWithItems,
   ProposalItem,
+  ProposalItemChangelogEntry,
   ProposalQuantityUnit,
   UserProfile,
 } from './proposal';

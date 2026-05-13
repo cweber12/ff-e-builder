@@ -127,6 +127,7 @@ export interface RawProposalItem {
   quantity_unit: string;
   unit_cost_cents: number;
   sort_order: number;
+  cost_update_deferred: boolean;
   custom_data: Record<string, string>;
   version: number;
   created_at: string;
@@ -349,6 +350,7 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   unitCostCents: r.unit_cost_cents,
   sortOrder: r.sort_order,
   customData: r.custom_data ?? {},
+  costUpdateDeferred: r.cost_update_deferred ?? false,
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,

@@ -1,4 +1,5 @@
 import type { Material } from './material';
+import type { ProposalStatus } from './proposalValidation';
 
 export type SizeMode = 'imperial' | 'metric';
 export type MeasurementUnit = 'ft/in' | 'mm' | 'cm' | 'm';
@@ -47,9 +48,22 @@ export type ProposalItem = {
   sortOrder: number;
   /** User-defined custom column values keyed by CustomColumnDef id */
   customData: Record<string, string>;
+  costUpdateDeferred: boolean;
   version: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ProposalItemChangelogEntry = {
+  id: string;
+  proposalItemId: string;
+  columnKey: string;
+  previousValue: string;
+  newValue: string;
+  notes: string | null;
+  proposalStatus: ProposalStatus;
+  relatedChangeId: string | null;
+  changedAt: string;
 };
 
 export type ProposalCategoryWithItems = ProposalCategory & {

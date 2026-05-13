@@ -6,6 +6,7 @@ export {
   useDeleteProposalCategory,
   useCreateProposalItem,
   useUpdateProposalItem,
+  useProposalItemChangelog,
   useMoveProposalItem,
   useDeleteProposalItem,
 } from './useProposal';
