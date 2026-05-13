@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { FfeTable } from './FfeTable';
 import { roomSubtotalCents, projectTotalCents } from '../../../lib/money';
-import { getSortOrderPatches } from '../../../lib/items/itemSort';
+import { getSortOrderPatches } from '../../../lib/items';
 import { cents, formatMoney, type Item, type Room, type RoomWithItems } from '../../../types';
 
 const {

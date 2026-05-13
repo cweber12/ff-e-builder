@@ -29,7 +29,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/money';
-import { getSortOrderPatches } from '../../../lib/items/itemSort';
+import { getSortOrderPatches } from '../../../lib/items';
 import {
   useItemMaterialActions,
   useCreateItem,
