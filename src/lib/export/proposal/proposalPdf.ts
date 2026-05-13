@@ -1,8 +1,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { BRAND_RGB } from '../theme/constants';
-import type { Project, ProposalCategoryWithItems, UserProfile } from '../../types';
-import { cropDataUrlToCover } from './imageHelpers';
+import { BRAND_RGB } from '../../theme/constants';
+import type { Project, ProposalCategoryWithItems, UserProfile } from '../../../types';
+import { cropDataUrlToCover } from '../imageHelpers';
 import { buildProposalAssetBundle } from './proposalAssets';
 import {
   buildProposalExportDocument,
@@ -13,7 +13,7 @@ import {
   type ProposalExportColumn,
   type ProposalExportDocument,
 } from './proposalDocument';
-import { fmtMoney, safeName } from './shared';
+import { fmtMoney, safeName } from '../shared';
 
 const BRAND = BRAND_RGB;
 type ProposalPdfMode = 'continuous' | 'separated';
@@ -335,7 +335,7 @@ export async function exportProposalPdf(
   categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
   options: ProposalPdfOptions = {},
-  customColumnDefs: import('../../types').CustomColumnDef[] = [],
+  customColumnDefs: import('../../../types').CustomColumnDef[] = [],
 ): Promise<void> {
   const mode = options.mode ?? 'continuous';
   const exportCategories = filteredProposalCategories(categories);

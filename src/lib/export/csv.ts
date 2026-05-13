@@ -6,7 +6,7 @@ import type {
   ProposalItem,
   RoomWithItems,
 } from '../../types';
-import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
+import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffe/ffeRows';
 import { csvCell, fmtMoney, safeName, triggerDownload } from './shared';
 
 const PROPOSAL_CSV_HEADERS = [

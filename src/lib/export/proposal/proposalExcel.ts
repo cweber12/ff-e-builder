@@ -4,16 +4,16 @@ import {
   filteredProposalCategories,
   proposalSubtotalLabelColumnIndex,
 } from './proposalDocument';
-import type { Project, ProposalCategoryWithItems, UserProfile } from '../../types';
+import type { Project, ProposalCategoryWithItems, UserProfile } from '../../../types';
 import {
   addExcelCircularCoverImage,
   addExcelContainImage,
   addExcelCoverImage,
   excelEqualWidthSlotPlacement,
   excelPaddedCellPlacement,
-} from './imageHelpers';
-import { fmtMoney, safeName, triggerDownload } from './shared';
-import { thinBorder } from './excelStyles';
+} from '../imageHelpers';
+import { fmtMoney, safeName, triggerDownload } from '../shared';
+import { thinBorder } from '../excelStyles';
 
 const PROPOSAL_EXCEL_ROW_HEIGHT = 56;
 const PROPOSAL_SWATCH_LIMIT = 4;
@@ -21,7 +21,7 @@ export async function exportProposalExcel(
   project: Project,
   categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
-  customColumnDefs: import('../../types').CustomColumnDef[] = [],
+  customColumnDefs: import('../../../types').CustomColumnDef[] = [],
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const exportCategories = filteredProposalCategories(categories);

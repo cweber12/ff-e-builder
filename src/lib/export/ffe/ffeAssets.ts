@@ -1,6 +1,6 @@
-import { api } from '../api';
-import type { RoomWithItems } from '../../types';
-import { imageAssetToPngDataUrl } from './imageHelpers';
+import { api } from '../../api';
+import type { RoomWithItems } from '../../../types';
+import { imageAssetToPngDataUrl } from '../imageHelpers';
 // Fetches the primary image data URL for each item in the given rooms.
 export async function buildFfeItemImages(
   rooms: RoomWithItems[],

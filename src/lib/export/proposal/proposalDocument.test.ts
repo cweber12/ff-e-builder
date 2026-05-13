@@ -6,7 +6,7 @@ import {
   proposalSubtotalLabelColumnIndex,
   type ProposalAssetBundle,
 } from './proposalDocument';
-import type { Project, ProposalCategoryWithItems, ProposalItem } from '../../types';
+import type { Project, ProposalCategoryWithItems, ProposalItem } from '../../../types';
 
 const makeProject = (overrides: Partial<Project> = {}): Project => ({
   id: 'p1',

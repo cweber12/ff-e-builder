@@ -6,13 +6,13 @@ import {
   exportProposalCsv,
   exportMaterialsExcel,
 } from './index';
-import { buildCatalogPdfPageModel, pickCatalogPdfOptionLayout } from './catalogPdf';
+import { buildCatalogPdfPageModel, pickCatalogPdfOptionLayout } from './ffe/catalogPdf';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,
   proposalSubtotalLabelColumnIndex,
   type ProposalAssetBundle,
-} from './proposalDocument';
+} from './proposal/proposalDocument';
 import type { Material, Project, ProposalCategoryWithItems, ProposalItem } from '../../types';
 import type { RoomWithItems } from '../../types';
 import type { Item } from '../../types/item';

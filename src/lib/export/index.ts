@@ -1,8 +1,8 @@
 export { safeName } from './shared';
 export { exportProposalCsv, exportSummaryCsv, exportTableCsv } from './csv';
-export { exportSummaryExcel, exportTableExcel } from './ffeExcel';
-export { exportSummaryPdf, exportTablePdf } from './ffePdf';
-export { exportProposalExcel } from './proposalExcel';
-export { exportProposalPdf } from './proposalPdf';
+export { exportSummaryExcel, exportTableExcel } from './ffe/ffeExcel';
+export { exportSummaryPdf, exportTablePdf } from './ffe/ffePdf';
+export { exportProposalExcel } from './proposal/proposalExcel';
+export { exportProposalPdf } from './proposal/proposalPdf';
 export { exportMaterialsExcel, exportMaterialsPdf } from './materials';
-export { exportCatalogItemPdf, exportCatalogPdf } from './catalogPdf';
+export { exportCatalogItemPdf, exportCatalogPdf } from './ffe/catalogPdf';

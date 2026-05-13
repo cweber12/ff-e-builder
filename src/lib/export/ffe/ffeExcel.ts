@@ -1,11 +1,11 @@
 import * as XLSX from 'xlsx';
-import { projectTotalCents, roomSubtotalCents } from '../money';
-import type { CustomColumnDef, Project, RoomWithItems } from '../../types';
-import { addExcelContainImage, excelPaddedCellPlacement } from './imageHelpers';
+import { projectTotalCents, roomSubtotalCents } from '../../money';
+import type { CustomColumnDef, Project, RoomWithItems } from '../../../types';
+import { addExcelContainImage, excelPaddedCellPlacement } from '../imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';
 import { buildStatusBreakdown, sortedItems } from './ffeRows';
-import { fmtMoney, safeName, triggerDownload } from './shared';
-import { thinBorder } from './excelStyles';
+import { fmtMoney, safeName, triggerDownload } from '../shared';
+import { thinBorder } from '../excelStyles';
 
 const BRAND_ARGB = 'FF4B7FAB';
 const BRAND_FILL_ARGB = 'FFE8F0F7';

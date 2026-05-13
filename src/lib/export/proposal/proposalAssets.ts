@@ -1,6 +1,6 @@
-import { api } from '../api';
-import type { ImageAsset, ProposalCategoryWithItems } from '../../types';
-import { imageAssetToPngDataUrl } from './imageHelpers';
+import { api } from '../../api';
+import type { ImageAsset, ProposalCategoryWithItems } from '../../../types';
+import { imageAssetToPngDataUrl } from '../imageHelpers';
 import type { ProposalAssetBundle } from './proposalDocument';
 
 export async function buildProposalAssetBundle(

@@ -1,12 +1,12 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { projectTotalCents, roomSubtotalCents } from '../money';
-import { BRAND_RGB } from '../theme/constants';
-import type { CustomColumnDef, Item, Project, RoomWithItems } from '../../types';
-import { cropDataUrlToCover } from './imageHelpers';
+import { projectTotalCents, roomSubtotalCents } from '../../money';
+import { BRAND_RGB } from '../../theme/constants';
+import type { CustomColumnDef, Item, Project, RoomWithItems } from '../../../types';
+import { cropDataUrlToCover } from '../imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';
 import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
-import { fmtMoney, safeName } from './shared';
+import { fmtMoney, safeName } from '../shared';
 
 const BRAND = BRAND_RGB;
 const FFE_PDF_IMAGE_COL_WIDTH = 18; // mm

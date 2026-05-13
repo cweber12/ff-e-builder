@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
-import type { Item, RoomWithItems } from '../../types';
+import type { Item, RoomWithItems } from '../../../types';
 
 const makeItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'i1',
