@@ -1,6 +1,6 @@
-import { Button } from '../primitives/Button';
-import { Modal } from '../primitives/Modal';
-import type { Project } from '../../types';
+import { Button } from '../../primitives/Button';
+import { Modal } from '../../primitives/Modal';
+import type { Project } from '../../../types';
 
 type DeleteProjectModalProps = {
   project: Project | null;

@@ -1,8 +1,8 @@
-import { Modal } from '../primitives';
-import { ExportMenu } from '../shared/ExportMenu';
-import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../lib/money';
-import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../lib/export';
-import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../types';
+import { Modal } from '../../primitives';
+import { ExportMenu } from '../../shared/ExportMenu';
+import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/money';
+import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
+import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../../types';
 
 type Props = {
   open: boolean;

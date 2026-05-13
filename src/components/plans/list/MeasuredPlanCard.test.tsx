@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MeasuredPlanCard } from './MeasuredPlanCard';
 
-vi.mock('../../lib/api', () => ({
+vi.mock('../../../lib/api', () => ({
   api: {
     plans: {
       downloadContent: vi.fn(() => Promise.resolve(new Blob(['preview']))),

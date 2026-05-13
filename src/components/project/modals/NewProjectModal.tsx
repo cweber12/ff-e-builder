@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal } from '../primitives/Modal';
-import { Button } from '../primitives/Button';
-import { dollarsToCents, parseUnitCostDollarsInput } from '../../types';
-import { createProjectWithSampleContent } from '../../data/sampleProject';
+import { Modal } from '../../primitives/Modal';
+import { Button } from '../../primitives/Button';
+import { dollarsToCents, parseUnitCostDollarsInput } from '../../../types';
+import { createProjectWithSampleContent } from '../../../data/sampleProject';
 
 interface NewProjectModalProps {
   open: boolean;

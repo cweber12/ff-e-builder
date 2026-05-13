@@ -25,19 +25,19 @@ vi.mock('../hooks', () => ({
   useUserProfile: vi.fn(() => ({ data: { name: 'Casey Designer' } })),
 }));
 
-vi.mock('../components/project/NewProjectModal', () => ({
+vi.mock('../components/project/modals/NewProjectModal', () => ({
   NewProjectModal: () => null,
 }));
 
-vi.mock('../components/project/EditProjectModal', () => ({
+vi.mock('../components/project/modals/EditProjectModal', () => ({
   EditProjectModal: () => null,
 }));
 
-vi.mock('../components/project/DeleteProjectModal', () => ({
+vi.mock('../components/project/modals/DeleteProjectModal', () => ({
   DeleteProjectModal: () => null,
 }));
 
-vi.mock('../components/project/ProjectImagesModal', () => ({
+vi.mock('../components/project/modals/ProjectImagesModal', () => ({
   ProjectImagesModal: () => null,
 }));
 

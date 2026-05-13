@@ -1,4 +1,4 @@
-import type { Project } from '../../types';
+import type { Project } from '../../../types';
 
 export function ProjectSummaryCard({ project }: { project: Project }) {
   const meta = [project.clientName, project.companyName, project.projectLocation].filter(Boolean);

@@ -1,7 +1,9 @@
 export { ProjectHeader } from './ProjectHeader';
 export { ProjectSwitcher } from './ProjectSwitcher';
-export { NewProjectModal } from './NewProjectModal';
-export { EditProjectModal } from './EditProjectModal';
-export { DeleteProjectModal } from './DeleteProjectModal';
-export { ProjectImagesModal } from './ProjectImagesModal';
 export { ProjectOptionsMenu } from './ProjectOptionsMenu';
+export { NewProjectModal } from './modals/NewProjectModal';
+export { EditProjectModal } from './modals/EditProjectModal';
+export { DeleteProjectModal } from './modals/DeleteProjectModal';
+export { ProjectImagesModal } from './modals/ProjectImagesModal';
+export { FfeBudgetModal } from './modals/FfeBudgetModal';
+export { ProposalBudgetModal } from './modals/ProposalBudgetModal';

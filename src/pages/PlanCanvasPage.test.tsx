@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
 
-vi.mock('../components/plans/PlanViewport', () => ({
+vi.mock('../components/plans/canvas/PlanViewport', () => ({
   PlanViewport: vi.fn(() => <div data-testid="plan-viewport" />),
 }));
 

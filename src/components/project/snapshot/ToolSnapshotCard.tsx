@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { cents, formatMoney, itemStatuses, type ItemStatus } from '../../types';
-import type { SnapshotToolSummary } from '../../lib/projectSnapshot';
+import { cents, formatMoney, itemStatuses, type ItemStatus } from '../../../types';
+import type { SnapshotToolSummary } from '../../../lib/projectSnapshot';
 
 const STATUS_COLORS: Record<ItemStatus, string> = {
   pending: 'bg-warning-500',

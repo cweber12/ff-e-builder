@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
 
-vi.mock('../components/plans/PlanUploadPanel', () => ({
+vi.mock('../components/plans/list/PlanUploadPanel', () => ({
   PlanUploadPanel: vi.fn(() => <aside data-testid="plan-upload-panel">Upload panel</aside>),
 }));
 

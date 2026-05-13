@@ -1,4 +1,4 @@
-import type { Measurement } from '../../types';
+import type { Measurement } from '../../../types';
 
 export type PlanToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
 

@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { PlanInspector } from '../components/plans/PlanInspector';
-import { PlanToolRail } from '../components/plans/PlanToolRail';
-import { PlanViewport } from '../components/plans/PlanViewport';
+import { PlanInspector } from '../components/plans/canvas/PlanInspector';
+import { PlanToolRail } from '../components/plans/canvas/PlanToolRail';
+import { PlanViewport } from '../components/plans/canvas/PlanViewport';
 import type {
   MeasurementApplicationMode,
   MeasurementItemRef,
   PlanToolId,
-} from '../components/plans/types';
+} from '../components/plans/canvas/types';
 import {
   useCreatePlanLengthLine,
   useCreatePlanMeasurement,

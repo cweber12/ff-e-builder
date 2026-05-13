@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { DeleteProjectModal } from '../components/project/DeleteProjectModal';
-import { EditProjectModal } from '../components/project/EditProjectModal';
-import { NewProjectModal } from '../components/project/NewProjectModal';
-import { ProjectImagesModal } from '../components/project/ProjectImagesModal';
+import { DeleteProjectModal } from '../components/project/modals/DeleteProjectModal';
+import { EditProjectModal } from '../components/project/modals/EditProjectModal';
+import { NewProjectModal } from '../components/project/modals/NewProjectModal';
+import { ProjectImagesModal } from '../components/project/modals/ProjectImagesModal';
 import { ProjectOptionsMenu } from '../components/project/ProjectOptionsMenu';
 import { ImageFrame } from '../components/shared/image/ImageFrame';
 import { useProjects, useUpdateProject, useDeleteProject, useUserProfile } from '../hooks';

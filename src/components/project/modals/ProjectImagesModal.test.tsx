@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProjectImagesModal } from './ProjectImagesModal';
-import type { ImageAsset, Project } from '../../types';
+import type { ImageAsset, Project } from '../../../types';
 
 const { mockUploadMutate, mockDeleteMutate, mockPrimaryMutate, mockUseImages } = vi.hoisted(() => ({
   mockUploadMutate: vi.fn(),
@@ -11,7 +11,7 @@ const { mockUploadMutate, mockDeleteMutate, mockPrimaryMutate, mockUseImages } =
   mockUseImages: vi.fn(() => ({ data: [] as ImageAsset[], isLoading: false })),
 }));
 
-vi.mock('../../hooks', () => ({
+vi.mock('../../../hooks', () => ({
   useImages: mockUseImages,
   useUploadImage: vi.fn(() => ({ mutate: mockUploadMutate, isPending: false })),
   useDeleteImage: vi.fn(() => ({ mutate: mockDeleteMutate, isPending: false })),
@@ -19,7 +19,7 @@ vi.mock('../../hooks', () => ({
   useUpdateImageCrop: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));
 
-vi.mock('../../lib/api', () => ({
+vi.mock('../../../lib/api', () => ({
   api: { images: { getContentBlob: vi.fn().mockResolvedValue(new Blob()) } },
 }));
 

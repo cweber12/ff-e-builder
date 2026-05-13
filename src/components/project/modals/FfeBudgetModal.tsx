@@ -1,8 +1,8 @@
-import { Modal } from '../primitives';
-import { ExportMenu } from '../shared/ExportMenu';
-import { StatusBadge } from '../primitives';
-import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../lib/money';
-import { exportSummaryCsv, exportSummaryExcel, exportSummaryPdf } from '../../lib/export';
+import { Modal } from '../../primitives';
+import { ExportMenu } from '../../shared/ExportMenu';
+import { StatusBadge } from '../../primitives';
+import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/money';
+import { exportSummaryCsv, exportSummaryExcel, exportSummaryPdf } from '../../../lib/export';
 import {
   cents,
   formatMoney,
@@ -10,7 +10,7 @@ import {
   type Item,
   type Project,
   type RoomWithItems,
-} from '../../types';
+} from '../../../types';
 
 type Props = {
   open: boolean;

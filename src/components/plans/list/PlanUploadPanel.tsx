@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { CreateMeasuredPlanInput } from '../../lib/api';
-import { renderPdfPageAsPngFile, renderPdfThumbnails, type PdfPagePreview } from '../../lib/pdf';
-import { Button } from '../primitives';
+import type { CreateMeasuredPlanInput } from '../../../lib/api';
+import { renderPdfPageAsPngFile, renderPdfThumbnails, type PdfPagePreview } from '../../../lib/pdf';
+import { Button } from '../../primitives';
 
 type PlanUploadPanelProps = {
   creating: boolean;

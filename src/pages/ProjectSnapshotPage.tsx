@@ -1,7 +1,7 @@
-import { BudgetSnapshotCard } from '../components/project/BudgetSnapshotCard';
-import { FinishLibrarySnapshotCard } from '../components/project/FinishLibrarySnapshotCard';
-import { ProjectSummaryCard } from '../components/project/ProjectSummaryCard';
-import { ToolSnapshotCard } from '../components/project/ToolSnapshotCard';
+import { BudgetSnapshotCard } from '../components/project/snapshot/BudgetSnapshotCard';
+import { FinishLibrarySnapshotCard } from '../components/project/snapshot/FinishLibrarySnapshotCard';
+import { ProjectSummaryCard } from '../components/project/snapshot/ProjectSummaryCard';
+import { ToolSnapshotCard } from '../components/project/snapshot/ToolSnapshotCard';
 import { useMaterials } from '../hooks';
 import {
   buildFfeSummary,

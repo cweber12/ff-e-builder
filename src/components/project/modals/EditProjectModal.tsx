@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Modal } from '../primitives/Modal';
-import { Button } from '../primitives/Button';
-import { cents, dollarsToCents, parseUnitCostDollarsInput } from '../../types';
-import type { Project } from '../../types';
-import type { UpdateProjectInput } from '../../lib/api';
+import { Modal } from '../../primitives/Modal';
+import { Button } from '../../primitives/Button';
+import { cents, dollarsToCents, parseUnitCostDollarsInput } from '../../../types';
+import type { Project } from '../../../types';
+import type { UpdateProjectInput } from '../../../lib/api';
 
 type EditProjectModalProps = {
   project: Project | null;

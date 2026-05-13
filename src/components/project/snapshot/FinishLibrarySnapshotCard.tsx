@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { SnapshotMaterialsSummary } from '../../lib/projectSnapshot';
+import type { SnapshotMaterialsSummary } from '../../../lib/projectSnapshot';
 
 export function FinishLibrarySnapshotCard({
   projectId,

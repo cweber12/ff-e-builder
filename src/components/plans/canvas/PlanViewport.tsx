@@ -6,7 +6,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
-import { api } from '../../lib/api';
+import { api } from '../../../lib/api';
 import {
   buildRectPolygonPoints,
   formatDisplayNumber,
@@ -18,9 +18,9 @@ import {
   type ImagePoint,
   type LineDraft,
   type RectDraft,
-} from '../../lib/plans';
-import type { LengthLine, Measurement, MeasuredPlan, PlanCalibration } from '../../types';
-import { LineOverlay, RectOverlay } from './overlays';
+} from '../../../lib/plans';
+import type { LengthLine, Measurement, MeasuredPlan, PlanCalibration } from '../../../types';
+import { LineOverlay, RectOverlay } from './PlanOverlays';
 import type { PlanToolId } from './types';
 
 export function PlanViewport({

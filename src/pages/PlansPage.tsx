@@ -1,6 +1,6 @@
-import { MeasuredPlanCard } from '../components/plans/MeasuredPlanCard';
-import { PlanGridSkeleton } from '../components/plans/PlanGridSkeleton';
-import { PlanUploadPanel } from '../components/plans/PlanUploadPanel';
+import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
+import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
+import { PlanUploadPanel } from '../components/plans/list/PlanUploadPanel';
 import { useCreateMeasuredPlan, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
 import type { MeasuredPlan, Project } from '../types';
 

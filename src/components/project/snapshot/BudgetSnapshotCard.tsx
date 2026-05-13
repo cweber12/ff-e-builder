@@ -5,8 +5,8 @@ import {
   type Project,
   type ProposalCategoryWithItems,
   type RoomWithItems,
-} from '../../types';
-import { buildBudgetSummary } from '../../lib/projectSnapshot';
+} from '../../../types';
+import { buildBudgetSummary } from '../../../lib/projectSnapshot';
 
 export function BudgetSnapshotCard({
   project,

@@ -3,8 +3,8 @@ import { useUpdateProject } from '../hooks';
 import { formatMoney, cents } from '../types';
 import type { Project } from '../types';
 import { Button } from '../components/primitives';
-import { EditProjectModal } from '../components/project/EditProjectModal';
-import { ProjectImagesPanel } from '../components/project/ProjectImagesModal';
+import { EditProjectModal } from '../components/project/modals/EditProjectModal';
+import { ProjectImagesPanel } from '../components/project/modals/ProjectImagesModal';
 
 type ProjectOverviewPageProps = {
   project: Project;
