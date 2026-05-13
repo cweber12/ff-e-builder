@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthGate, SignInPage } from './shared/AuthGate';
+import { AuthGate, SignInPage } from './AuthGate';
 
 const authMocks = vi.hoisted(() => ({
   createAccountWithEmailPassword: vi.fn(),
@@ -12,7 +12,7 @@ const authMocks = vi.hoisted(() => ({
   useAuthUser: vi.fn(),
 }));
 
-vi.mock('../lib/auth', () => ({
+vi.mock('../../lib/auth', () => ({
   createAccountWithEmailPassword: authMocks.createAccountWithEmailPassword,
   getCurrentIdToken: vi.fn(() => undefined),
   signInWithEmailPassword: authMocks.signInWithEmailPassword,
