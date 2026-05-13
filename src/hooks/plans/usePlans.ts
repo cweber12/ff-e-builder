@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import { removeListItem } from '../optimisticList';
-import { planKeys } from '../queryKeys';
+import { planKeys } from '../../lib/query';
 import type {
   CreateMeasuredPlanInput,
   UpdatePlanCalibrationInput,

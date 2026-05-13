@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api, ApiError } from '../../lib/api';
 import { recordItemCreated } from '../../lib/utils';
-import { itemKeys } from '../queryKeys';
+import { itemKeys } from '../../lib/query';
 import {
   appendListItem,
   removeListItem,

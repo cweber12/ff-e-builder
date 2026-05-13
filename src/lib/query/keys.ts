@@ -1,4 +1,4 @@
-import type { ImageEntityType } from '../types';
+import type { ImageEntityType } from '../../types';
 
 export const projectKeys = {
   all: ['projects'] as const,

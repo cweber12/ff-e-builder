@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import type { CreateMaterialInput, UpdateMaterialInput } from '../../lib/api';
 import type { Material } from '../../types';
-import { imageKeys, itemKeys, materialKeys, proposalKeys } from '../queryKeys';
+import { imageKeys, itemKeys, materialKeys, proposalKeys } from '../../lib/query';
 import { appendListItem, removeListItem } from '../optimisticList';
 
 export type MaterialContext =

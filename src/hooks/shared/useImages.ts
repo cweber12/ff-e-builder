@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { imageKeys } from '../queryKeys';
+import { imageKeys } from '../../lib/query';
 import { removeListItem, replaceListItem } from '../optimisticList';
 import type { CropParams, ImageAsset, ImageEntityType } from '../../types';
 

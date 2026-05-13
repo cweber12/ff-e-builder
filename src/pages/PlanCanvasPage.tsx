@@ -36,7 +36,7 @@ import {
   type LineDraft,
   type RectDraft,
 } from '../lib/plans';
-import { imageKeys, itemKeys, proposalKeys } from '../hooks/queryKeys';
+import { imageKeys, itemKeys, proposalKeys } from '../lib/query';
 import type {
   CropParams,
   Item,

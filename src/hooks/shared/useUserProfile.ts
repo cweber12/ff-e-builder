@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { userProfileKeys } from '../queryKeys';
+import { userProfileKeys } from '../../lib/query';
 import type { UpsertUserProfileInput } from '../../lib/api';
 import type { UserProfile } from '../../types';
 

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { roomKeys } from '../queryKeys';
+import { roomKeys } from '../../lib/query';
 import {
   appendListItem,
   removeListItem,

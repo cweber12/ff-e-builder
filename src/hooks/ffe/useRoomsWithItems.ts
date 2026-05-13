@@ -1,6 +1,6 @@
 import { useQueries } from '@tanstack/react-query';
 import { useRooms } from './useRooms';
-import { itemKeys } from '../queryKeys';
+import { itemKeys } from '../../lib/query';
 import { api } from '../../lib/api';
 import type { RoomWithItems } from '../../types';
 

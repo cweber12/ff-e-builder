@@ -5,7 +5,7 @@ import {
   type CreateColumnDefInput,
   type UpdateColumnDefInput,
 } from '../../lib/api/columnDefs';
-import { columnDefKeys } from '../queryKeys';
+import { columnDefKeys } from '../../lib/query';
 import type { CustomColumnDef } from '../../types';
 
 export function useColumnDefs(projectId: string, tableType: 'ffe' | 'proposal') {

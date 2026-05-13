@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { projectKeys } from '../queryKeys';
+import { projectKeys } from '../../lib/query';
 import { removeListItem, updateListItem } from '../optimisticList';
 import type { CreateProjectInput, UpdateProjectInput } from '../../lib/api';
 import type { Project } from '../../types';
