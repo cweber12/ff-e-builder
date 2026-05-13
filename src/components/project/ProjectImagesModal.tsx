@@ -16,8 +16,8 @@ import {
 import type { CropParams, ImageAsset, Project } from '../../types';
 import { CROP_ASPECT } from '../../types';
 import { Button, Modal } from '../primitives';
-import { ImageOptionsMenu } from '../shared/ImageOptionsMenu';
-import { CropModal } from '../shared/CropModal';
+import { ImageOptionsMenu } from '../shared/image/ImageOptionsMenu';
+import { CropModal } from '../shared/image/CropModal';
 
 type ProjectImagesModalProps = {
   project: Project | null;

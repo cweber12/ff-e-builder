@@ -9,7 +9,7 @@ import {
 } from '../../hooks';
 import type { Material, Project, RoomWithItems, ProposalCategoryWithItems } from '../../types';
 import { Button } from '../primitives';
-import { ImageFrame } from '../shared/ImageFrame';
+import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
 import { MaterialForm, MaterialSwatchImage } from './MaterialLibraryModal';
 

@@ -13,8 +13,8 @@ import {
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
-import { ImageFrame } from '../../shared/ImageFrame';
-import { ImageOptionsMenu } from '../../shared/ImageOptionsMenu';
+import { ImageFrame } from '../../shared/image/ImageFrame';
+import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
 import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
 import { api } from '../../../lib/api';
 import type { ImageAsset } from '../../../types';

@@ -5,7 +5,7 @@ import { EditProjectModal } from '../components/project/EditProjectModal';
 import { NewProjectModal } from '../components/project/NewProjectModal';
 import { ProjectImagesModal } from '../components/project/ProjectImagesModal';
 import { ProjectOptionsMenu } from '../components/project/ProjectOptionsMenu';
-import { ImageFrame } from '../components/shared/ImageFrame';
+import { ImageFrame } from '../components/shared/image/ImageFrame';
 import { useProjects, useUpdateProject, useDeleteProject, useUserProfile } from '../hooks';
 import type { Project } from '../types';
 

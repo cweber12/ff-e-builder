@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CustomColumnDef } from '../../types';
+import type { CustomColumnDef } from '../../../types';
 
 type CustomColumnHeaderProps = {
   /** The custom column definition this header represents. */

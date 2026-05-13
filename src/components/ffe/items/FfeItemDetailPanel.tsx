@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { ImageFrame } from '../../shared/ImageFrame';
-import { PanZoomFrame } from '../../shared/PanZoomFrame';
+import { ImageFrame } from '../../shared/image/ImageFrame';
+import { PanZoomFrame } from '../../shared/image/PanZoomFrame';
 import { StatusBadge } from '../../primitives/StatusBadge';
 import { cents, formatMoney } from '../../../types';
 import { lineTotalCents } from '../../../lib/money';

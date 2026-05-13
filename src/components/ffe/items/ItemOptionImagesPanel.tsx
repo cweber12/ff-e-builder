@@ -9,8 +9,8 @@ import {
   useUploadImage,
 } from '../../../hooks';
 import type { CropParams, ImageAsset } from '../../../types';
-import { CropModal } from '../../shared/CropModal';
-import { ImageOptionsMenu } from '../../shared/ImageOptionsMenu';
+import { CropModal } from '../../shared/image/CropModal';
+import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
 
 const OPTION_SLOT_COUNT = 3;
 const accept = 'image/jpeg,image/png,image/webp,image/gif';

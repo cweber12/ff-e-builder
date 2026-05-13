@@ -69,20 +69,20 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
 import { Modal } from '../../primitives/Modal';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
-import { ImageFrame } from '../../shared/ImageFrame';
+import { ImageFrame } from '../../shared/image/ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
-import { DimensionEditorModal } from '../../shared/DimensionEditorModal';
+import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import {
   GroupedTableHeader,
   GroupedTableSection,
   StickyGrandTotal,
   TableViewStack,
-} from '../../shared/TableViewWrappers';
-import { AddGroupModal } from '../../shared/AddGroupModal';
+} from '../../shared/table/TableViewWrappers';
+import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
-import { AddColumnModal } from '../../shared/AddColumnModal';
-import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
-import { SortableColHeader } from '../../shared/SortableColHeader';
+import { AddColumnModal } from '../../shared/modals/AddColumnModal';
+import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { SortableColHeader } from '../../shared/table/SortableColHeader';
 
 /**
  * Stable IDs for built-in columns — used as keys in useColumnConfig.

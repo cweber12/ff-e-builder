@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../primitives/Button';
-import { Modal } from '../primitives/Modal';
+import { Button } from '../../primitives/Button';
+import { Modal } from '../../primitives/Modal';
 
 type AddGroupModalProps = {
   open: boolean;

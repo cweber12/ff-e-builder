@@ -11,7 +11,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AuthGate, SignInPage } from './components/shared/AuthGate';
+import { AuthGate, SignInPage } from './components/shared/auth/AuthGate';
 import { CatalogView } from './components/ffe/catalog/CatalogView';
 import { FfeTable } from './components/ffe/items';
 import { MaterialsView } from './components/materials/MaterialsView';

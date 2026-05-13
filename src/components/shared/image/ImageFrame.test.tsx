@@ -7,7 +7,7 @@ const { mockUploadMutate, mockDeleteMutate } = vi.hoisted(() => ({
   mockDeleteMutate: vi.fn(),
 }));
 
-vi.mock('../../hooks', () => ({
+vi.mock('../../../hooks', () => ({
   useImages: vi.fn(() => ({ data: [], isLoading: false })),
   useUploadImage: vi.fn(() => ({ mutate: mockUploadMutate, isPending: false })),
   useDeleteImage: vi.fn(() => ({ mutate: mockDeleteMutate, isPending: false })),
@@ -15,7 +15,7 @@ vi.mock('../../hooks', () => ({
   isPersistedImageEntityId: vi.fn(() => true),
 }));
 
-vi.mock('../../lib/api', () => ({
+vi.mock('../../../lib/api', () => ({
   api: { images: { getContentBlob: vi.fn() } },
 }));
 

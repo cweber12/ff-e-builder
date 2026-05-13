@@ -6,17 +6,17 @@ import {
   type ClipboardEvent as ReactClipboardEvent,
   type ReactNode,
 } from 'react';
-import { cn } from '../../lib/utils';
-import { api } from '../../lib/api';
+import { cn } from '../../../lib/utils';
+import { api } from '../../../lib/api';
 import {
   isPersistedImageEntityId,
   useDeleteImage,
   useImages,
   useUpdateImageCrop,
   useUploadImage,
-} from '../../hooks';
-import type { CropParams, ImageEntityType } from '../../types';
-import { CROP_ASPECT, CROPPABLE_ENTITY_TYPES } from '../../types';
+} from '../../../hooks';
+import type { CropParams, ImageEntityType } from '../../../types';
+import { CROP_ASPECT, CROPPABLE_ENTITY_TYPES } from '../../../types';
 import { ImageOptionsMenu } from './ImageOptionsMenu';
 import { CropModal } from './CropModal';
 

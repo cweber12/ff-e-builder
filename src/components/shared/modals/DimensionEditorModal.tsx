@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Modal } from '../primitives';
-import type { SizeMode } from '../../types';
+import { Button, Modal } from '../../primitives';
+import type { SizeMode } from '../../../types';
 
 const fractions = ['', '1/8', '1/4', '3/8', '1/2', '5/8', '3/4', '7/8'] as const;
 const metricUnits = ['mm', 'cm', 'm'] as const;

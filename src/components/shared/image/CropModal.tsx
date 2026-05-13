@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
-import { Button, Modal } from '../primitives';
-import type { CropParams } from '../../types';
+import { Button, Modal } from '../../primitives';
+import type { CropParams } from '../../../types';
 
 type CropModalProps = {
   open: boolean;

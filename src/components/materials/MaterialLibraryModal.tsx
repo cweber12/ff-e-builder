@@ -8,7 +8,7 @@ import {
 } from '../../hooks';
 import type { Item, Material, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';
-import { ImageFrame } from '../shared/ImageFrame';
+import { ImageFrame } from '../shared/image/ImageFrame';
 
 type FfeContext = {
   context: 'ffe';

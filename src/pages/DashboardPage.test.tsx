@@ -41,7 +41,7 @@ vi.mock('../components/project/ProjectImagesModal', () => ({
   ProjectImagesModal: () => null,
 }));
 
-vi.mock('../components/shared/ImageFrame', () => ({
+vi.mock('../components/shared/image/ImageFrame', () => ({
   ImageFrame: ({ alt }: { alt: string }) => <div>{alt}</div>,
 }));
 

@@ -12,7 +12,7 @@ const authMocks = vi.hoisted(() => ({
   useAuthUser: vi.fn(),
 }));
 
-vi.mock('../../lib/auth', () => ({
+vi.mock('../../../lib/auth', () => ({
   createAccountWithEmailPassword: authMocks.createAccountWithEmailPassword,
   getCurrentIdToken: vi.fn(() => undefined),
   signInWithEmailPassword: authMocks.signInWithEmailPassword,

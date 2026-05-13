@@ -31,7 +31,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
-import { ImageFrame } from '../../shared/ImageFrame';
+import { ImageFrame } from '../../shared/image/ImageFrame';
 import {
   useCreateProposalCategory,
   useCreateProposalItem,
@@ -71,17 +71,17 @@ import {
   proposalProjectTotalCents,
 } from '../../../lib/money';
 import type { UpdateProposalItemInput } from '../../../lib/api';
-import { DimensionEditorModal } from '../../shared/DimensionEditorModal';
+import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import {
   GroupedTableHeader,
   GroupedTableSection,
   StickyGrandTotal,
   TableViewStack,
-} from '../../shared/TableViewWrappers';
-import { AddGroupModal } from '../../shared/AddGroupModal';
-import { SortableColHeader } from '../../shared/SortableColHeader';
-import { CustomColumnHeader } from '../../shared/CustomColumnHeader';
-import { AddColumnModal } from '../../shared/AddColumnModal';
+} from '../../shared/table/TableViewWrappers';
+import { AddGroupModal } from '../../shared/modals/AddGroupModal';
+import { SortableColHeader } from '../../shared/table/SortableColHeader';
+import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
 import { proposalStatusConfig } from '../proposalStatusConfig';

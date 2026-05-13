@@ -7,11 +7,11 @@ import {
   signInWithGoogle,
   signOut,
   useAuthUser,
-} from '../../lib/auth';
-import { seedExampleProject } from '../../data/seed';
-import { useUserProfile } from '../../hooks';
-import { UserProfileModal } from './UserProfileModal';
-import { DemoPage } from '../../pages/DemoPage';
+} from '../../../lib/auth';
+import { seedExampleProject } from '../../../data/seed';
+import { useUserProfile } from '../../../hooks';
+import { UserProfileModal } from '../modals/UserProfileModal';
+import { DemoPage } from '../../../pages/DemoPage';
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 

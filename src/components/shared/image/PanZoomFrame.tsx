@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { api } from '../../lib/api';
-import { useImages } from '../../hooks';
+import { api } from '../../../lib/api';
+import { useImages } from '../../../hooks';
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 6;

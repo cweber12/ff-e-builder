@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useUpdateUserProfile, useUserProfile } from '../../hooks';
-import { Button, Modal } from '../primitives';
+import { useUpdateUserProfile, useUserProfile } from '../../../hooks';
+import { Button, Modal } from '../../primitives';
 
 export function UserProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: profile } = useUserProfile();
