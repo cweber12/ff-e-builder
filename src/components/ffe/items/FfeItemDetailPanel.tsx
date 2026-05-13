@@ -4,7 +4,7 @@ import { ImageFrame } from '../../shared/ImageFrame';
 import { PanZoomFrame } from '../../shared/PanZoomFrame';
 import { StatusBadge } from '../../primitives/StatusBadge';
 import { cents, formatMoney } from '../../../types';
-import { lineTotalCents } from '../../../lib/budgetCalc';
+import { lineTotalCents } from '../../../lib/money';
 import type { Item } from '../../../types';
 import { ItemOptionImagesPanel } from './ItemOptionImagesPanel';
 

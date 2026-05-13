@@ -1,6 +1,6 @@
 import jsPDF, { AcroFormCheckBox, AcroFormTextField } from 'jspdf';
 import { api } from '../api';
-import { BRAND_RGB } from '../constants';
+import { BRAND_RGB } from '../theme/constants';
 import type { ImageAsset, Item, Material, Project, RoomWithItems } from '../../types';
 import { imageAssetToPngDataUrl } from './imageHelpers';
 import { fmtMoney, safeName } from './shared';

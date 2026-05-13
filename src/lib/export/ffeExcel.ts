@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { projectTotalCents, roomSubtotalCents } from '../budgetCalc';
+import { projectTotalCents, roomSubtotalCents } from '../money';
 import type { CustomColumnDef, Project, RoomWithItems } from '../../types';
 import { addExcelContainImage, excelPaddedCellPlacement } from './imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';

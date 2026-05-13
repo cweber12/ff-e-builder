@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { BRAND_RGB } from '../constants';
+import { BRAND_RGB } from '../theme/constants';
 import type { Project, ProposalCategoryWithItems, UserProfile } from '../../types';
 import { cropDataUrlToCover } from './imageHelpers';
 import { buildProposalAssetBundle } from './proposalAssets';

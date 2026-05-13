@@ -1,4 +1,4 @@
-import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/budgetCalc';
+import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/money';
 import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../../types';
 
 type ProposalSummaryViewProps = {

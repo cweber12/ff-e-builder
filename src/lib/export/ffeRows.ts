@@ -1,4 +1,4 @@
-import { lineTotalCents } from '../budgetCalc';
+import { lineTotalCents } from '../money';
 import type { Item, RoomWithItems } from '../../types';
 import { fmtMoney } from './shared';
 

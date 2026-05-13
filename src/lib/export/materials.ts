@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { api } from '../api';
-import { BRAND_RGB } from '../constants';
+import { BRAND_RGB } from '../theme/constants';
 import type { Material, Project } from '../../types';
 import { csvCell, safeName, triggerDownload } from './shared';
 

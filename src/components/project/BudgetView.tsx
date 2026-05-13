@@ -4,7 +4,7 @@ import {
   roomSubtotalCents,
   proposalCategorySubtotalCents,
   proposalProjectTotalCents,
-} from '../../lib/budgetCalc';
+} from '../../lib/money';
 import {
   cents,
   formatMoney,

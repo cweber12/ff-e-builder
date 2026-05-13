@@ -3,8 +3,8 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { FfeTable } from './FfeTable';
-import { roomSubtotalCents, projectTotalCents } from '../../../lib/budgetCalc';
-import { getSortOrderPatches } from '../../../lib/itemSort';
+import { roomSubtotalCents, projectTotalCents } from '../../../lib/money';
+import { getSortOrderPatches } from '../../../lib/items/itemSort';
 import { cents, formatMoney, type Item, type Room, type RoomWithItems } from '../../../types';
 
 const {
