@@ -58,9 +58,19 @@ const config: Config = {
         xl: 'var(--shadow-xl)',
       },
       spacing: {
+        '13': '3.25rem',
         '18': '4.5rem',
         '112': '28rem',
         '128': '32rem',
+      },
+      keyframes: {
+        'flash-success': {
+          '0%': { backgroundColor: 'rgb(var(--color-success-500) / 0.08)' },
+          '100%': { backgroundColor: 'transparent' },
+        },
+      },
+      animation: {
+        'flash-success': 'flash-success 600ms ease-out forwards',
       },
       borderRadius: {
         pill: '999px',

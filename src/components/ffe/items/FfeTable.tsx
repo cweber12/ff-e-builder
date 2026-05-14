@@ -46,6 +46,9 @@ import {
   useUpdateItemColumnDef,
   useColumnConfig,
   useIsMobileViewport,
+  useTableDensity,
+  densityRowClass,
+  type TableDensity,
 } from '../../../hooks';
 import {
   cents,
@@ -63,7 +66,8 @@ import {
 } from '../../../types';
 import type { CreateMaterialInput, UpdateItemInput } from '../../../lib/api';
 import { exportTableCsv, exportTableExcel, exportTablePdf } from '../../../lib/export';
-import { StatusBadge } from '../../primitives/StatusBadge';
+import { ItemStatusChip } from '../../shared/ItemStatusChip';
+import { TotalsBar } from '../../shared/TotalsBar';
 import { Button } from '../../primitives/Button';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
@@ -72,12 +76,7 @@ import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
-import {
-  GroupedTableHeader,
-  GroupedTableSection,
-  StickyGrandTotal,
-  TableViewStack,
-} from '../../shared/table/TableViewWrappers';
+import { GroupedTableHeader, GroupedTableSection } from '../../shared/table/TableViewWrappers';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
@@ -109,12 +108,15 @@ const DEFAULT_COLUMN_IDS = [
 
 type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
 
-const stickyTotalHeaderClassName = 'sticky right-24 z-20 bg-white';
-const stickyActionsHeaderClassName = 'sticky right-0 z-30 bg-white w-24 min-w-24';
-const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white';
-const stickyActionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
-const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
-const stickyActionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
+const stickyTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-[120px] min-w-[120px]';
+const stickyActionsHeaderClassName = 'sticky right-0 z-40 bg-surface w-10 min-w-10';
+const stickyTotalExpandedHeaderClassName =
+  'sticky top-0 right-10 z-50 bg-surface w-[120px] min-w-[120px]';
+const stickyActionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-surface w-10 min-w-10';
+const stickyTotalCellClassName =
+  'sticky right-10 z-20 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+const stickyActionsCellClassName =
+  'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
 
 /** Human-readable labels for default columns shown in the restore picker. */
 const DEFAULT_COLUMN_LABELS: Record<DefaultColumnId, string> = {
@@ -145,6 +147,9 @@ type FfeTableProps = {
   onReload?: (() => void) | undefined;
   onImport?: (() => void) | undefined;
   className?: string | undefined;
+  /** Controlled-mode: if provided, external caller manages Add Room modal open state. */
+  addRoomOpen?: boolean;
+  onAddRoomOpenChange?: (open: boolean) => void;
 };
 
 interface ErrorBoundaryProps {
@@ -274,10 +279,11 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
     >
       <button
         type="button"
+        aria-label={`Status: ${item.status.charAt(0).toUpperCase()}${item.status.slice(1)} — click to advance`}
         onClick={() => void saveStatus(nextStatus(item.status))}
         className="rounded-pill focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        <StatusBadge status={item.status} />
+        <ItemStatusChip status={item.status} />
       </button>
       <button
         type="button"
@@ -308,7 +314,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
               }}
               className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
-              <StatusBadge status={status} />
+              <ItemStatusChip status={status} />
             </button>
           ))}
         </div>
@@ -476,33 +482,6 @@ function MoreIcon() {
       <circle cx="5" cy="10" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="15" cy="10" r="1.5" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M10 4.5v11M4.5 10h11"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function UploadIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M10 12.5V4.5m0 0L7 7.5m3-3 3 3M4.5 13.5v1a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-1"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
@@ -836,22 +815,20 @@ function ItemsErrorState({ onReload }: { onReload?: (() => void) | undefined }) 
 
 function ItemsLoadingState() {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 bg-gray-50 px-4 py-3">
-        <div className="h-4 w-40 animate-pulse rounded bg-gray-200" />
-      </div>
-      <div className="divide-y divide-gray-100">
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="h-9 border-b border-neutral-200 bg-neutral-50" />
+      <div>
         {Array.from({ length: 5 }, (_, index) => (
           <div
             key={index}
             data-testid="items-table-shimmer-row"
-            className="grid grid-cols-6 gap-4 px-4 py-4"
+            className="grid h-13 grid-cols-6 items-center gap-4 border-b border-neutral-200/60 px-4"
           >
-            <div className="col-span-2 h-4 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 animate-pulse rounded bg-gray-100" />
-            <div className="h-4 animate-pulse rounded bg-gray-100" />
-            <div className="h-4 animate-pulse rounded bg-gray-100" />
-            <div className="h-4 animate-pulse rounded bg-gray-200" />
+            <div className="col-span-2 h-3 rounded bg-neutral-100" />
+            <div className="h-3 rounded bg-neutral-100" />
+            <div className="h-3 rounded bg-neutral-100" />
+            <div className="h-3 rounded bg-neutral-100" />
+            <div className="h-3 rounded bg-neutral-100" />
           </div>
         ))}
       </div>
@@ -861,10 +838,10 @@ function ItemsLoadingState() {
 
 function EmptyProjectState({ onAddRoom }: { onAddRoom?: (() => void) | undefined }) {
   return (
-    <div className="flex min-h-[22rem] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
+    <div className="flex flex-1 items-center justify-center px-6 py-12 text-center">
       <div className="flex flex-col items-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-950">No rooms yet</h2>
-        <p className="mt-2 max-w-md text-sm text-gray-600">
+        <h2 className="font-display text-2xl text-neutral-900">No rooms yet</h2>
+        <p className="max-w-md text-sm text-neutral-600">
           Rooms and FF&amp;E items will appear here once this project has a room schedule.
         </p>
         {onAddRoom && (
@@ -988,9 +965,11 @@ function DeleteRoomModal({
 
 function SortableItemRow({
   row,
+  density,
   onItemClick,
 }: {
   row: Row<Item>;
+  density: TableDensity;
   onItemClick?: (item: Item) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -1005,7 +984,11 @@ function SortableItemRow({
     <tr
       ref={setNodeRef}
       style={style}
-      className={cn('hover:bg-brand-50/40', isDragging && 'bg-brand-50 shadow-md')}
+      className={cn(
+        'group border-b border-neutral-200/60',
+        densityRowClass(density),
+        isDragging && 'bg-brand-50 shadow-md',
+      )}
     >
       {row.getVisibleCells().map((cell) => (
         <td
@@ -1399,6 +1382,7 @@ function RoomItemsSection({
   const updateColumnDef = useUpdateItemColumnDef(projectId);
   const deleteColumnDef = useDeleteItemColumnDef(projectId);
   const columnConfig = useColumnConfig(projectId, 'ffe', DEFAULT_COLUMN_IDS, columnDefs, 'qty');
+  const { density } = useTableDensity();
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1711,7 +1695,7 @@ function RoomItemsSection({
               onDragEnd={handleDragEnd}
             >
               <table className="w-full min-w-[1180px] border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
+                <thead className="sticky top-0 z-30 text-left bg-surface">
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -1731,7 +1715,7 @@ function RoomItemsSection({
                               return (
                                 <th
                                   key={header.id}
-                                  className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                  className="h-10 border-y border-neutral-200 w-10 min-w-10"
                                 />
                               );
                             }
@@ -1740,7 +1724,7 @@ function RoomItemsSection({
                                 <th
                                   key={header.id}
                                   className={cn(
-                                    'border-b border-gray-100 px-3 py-3 font-semibold',
+                                    'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
                                     stickyTotalHeaderClassName,
                                   )}
                                 >
@@ -1753,7 +1737,7 @@ function RoomItemsSection({
                                 <th
                                   key={header.id}
                                   className={cn(
-                                    'border-b border-gray-100 px-3 py-3 font-semibold',
+                                    'h-10 border-y border-neutral-200',
                                     stickyActionsHeaderClassName,
                                   )}
                                 />
@@ -1765,7 +1749,7 @@ function RoomItemsSection({
                                   key={header.id}
                                   colId={colId}
                                   label={header.column.columnDef.header as string}
-                                  className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                  className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface"
                                   onHide={() => columnConfig.hideDefaultColumn(colId)}
                                 />
                               );
@@ -1774,7 +1758,7 @@ function RoomItemsSection({
                               <SortableColHeader
                                 key={header.id}
                                 colId={colId}
-                                className="border-b border-gray-100 px-3 py-3 font-semibold min-w-36"
+                                className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                               >
                                 {flexRender(header.column.columnDef.header, header.getContext())}
                               </SortableColHeader>
@@ -1785,13 +1769,14 @@ function RoomItemsSection({
                     ))}
                   </DndContext>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {table.getRowModel().rows.length === 0 ? (
                     <tr>
-                      <td colSpan={columns.length} className="p-3">
-                        <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-                          Add first item -&gt;
-                        </div>
+                      <td
+                        colSpan={columns.length}
+                        className="px-4 py-3 text-sm italic text-neutral-400"
+                      >
+                        No items — add one via the room menu.
                       </td>
                     </tr>
                   ) : (
@@ -1803,6 +1788,7 @@ function RoomItemsSection({
                         <SortableItemRow
                           key={row.original.id}
                           row={row}
+                          density={density}
                           onItemClick={(item) => setDetailItem(item)}
                         />
                       ))}
@@ -1866,7 +1852,7 @@ function RoomItemsSection({
                   onDragEnd={handleDragEnd}
                 >
                   <table className="w-full min-w-[1180px] border-collapse text-sm">
-                    <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
+                    <thead className="sticky top-0 z-30 text-left bg-surface">
                       <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
@@ -1886,7 +1872,7 @@ function RoomItemsSection({
                                   return (
                                     <th
                                       key={header.id}
-                                      className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                      className="h-10 border-y border-neutral-200 w-10 min-w-10"
                                     />
                                   );
                                 }
@@ -1895,7 +1881,7 @@ function RoomItemsSection({
                                     <th
                                       key={header.id}
                                       className={cn(
-                                        'border-b border-gray-100 px-3 py-3 font-semibold',
+                                        'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
                                         stickyTotalExpandedHeaderClassName,
                                       )}
                                     >
@@ -1911,7 +1897,7 @@ function RoomItemsSection({
                                     <th
                                       key={header.id}
                                       className={cn(
-                                        'border-b border-gray-100 px-3 py-3 font-semibold',
+                                        'h-10 border-y border-neutral-200',
                                         stickyActionsExpandedHeaderClassName,
                                       )}
                                     />
@@ -1923,7 +1909,7 @@ function RoomItemsSection({
                                       key={header.id}
                                       colId={colId}
                                       label={header.column.columnDef.header as string}
-                                      className="border-b border-gray-100 px-3 py-3 font-semibold"
+                                      className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface"
                                       onHide={() => columnConfig.hideDefaultColumn(colId)}
                                     />
                                   );
@@ -1932,7 +1918,7 @@ function RoomItemsSection({
                                   <SortableColHeader
                                     key={header.id}
                                     colId={colId}
-                                    className="border-b border-gray-100 px-3 py-3 font-semibold min-w-36"
+                                    className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                                   >
                                     {flexRender(
                                       header.column.columnDef.header,
@@ -1946,13 +1932,14 @@ function RoomItemsSection({
                         ))}
                       </DndContext>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody>
                       {table.getRowModel().rows.length === 0 ? (
                         <tr>
-                          <td colSpan={columns.length} className="p-3">
-                            <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-                              Add first item -&gt;
-                            </div>
+                          <td
+                            colSpan={columns.length}
+                            className="px-4 py-3 text-sm italic text-neutral-400"
+                          >
+                            No items — add one via the room menu.
                           </td>
                         </tr>
                       ) : (
@@ -1964,6 +1951,7 @@ function RoomItemsSection({
                             <SortableItemRow
                               key={row.original.id}
                               row={row}
+                              density={density}
                               onItemClick={(item) => setDetailItem(item)}
                             />
                           ))}
@@ -2003,8 +1991,10 @@ export function FfeTableView({
   isLoading = false,
   error = null,
   onReload,
-  onImport,
+  onImport: _onImport,
   className,
+  addRoomOpen: addRoomOpenProp,
+  onAddRoomOpenChange,
 }: {
   roomsWithItems: RoomWithItems[];
   projectId: string;
@@ -2014,13 +2004,18 @@ export function FfeTableView({
   onReload?: (() => void) | undefined;
   onImport?: (() => void) | undefined;
   className?: string | undefined;
+  addRoomOpen?: boolean;
+  onAddRoomOpenChange?: (open: boolean) => void;
 }) {
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
   const { collapsed: imageCollapsed, toggle: toggleImage } = useCollapsedRoomImages(roomsWithItems);
   const createRoom = useCreateRoom(projectId);
   const deleteRoom = useDeleteRoom(projectId);
   const moveItem = useMoveItem();
-  const [addRoomOpen, setAddRoomOpen] = useState(false);
+  const [addRoomOpenInternal, setAddRoomOpenInternal] = useState(false);
+  const isControlledAddRoom = addRoomOpenProp !== undefined && onAddRoomOpenChange !== undefined;
+  const addRoomOpen = isControlledAddRoom ? (addRoomOpenProp ?? false) : addRoomOpenInternal;
+  const setAddRoomOpen = isControlledAddRoom ? onAddRoomOpenChange : setAddRoomOpenInternal;
   const [roomToDelete, setRoomToDelete] = useState<RoomWithItems | null>(null);
   const sortedRooms = useMemo(
     () =>
@@ -2028,6 +2023,7 @@ export function FfeTableView({
     [roomsWithItems],
   );
   const grandTotal = projectTotalCents(sortedRooms);
+  const totalItemCount = sortedRooms.reduce((sum, room) => sum + room.items.length, 0);
 
   if (isLoading) return <ItemsLoadingState />;
   if (error) return <ItemsErrorState onReload={onReload} />;
@@ -2048,26 +2044,7 @@ export function FfeTableView({
   }
 
   return (
-    <TableViewStack className={className}>
-      <div className="flex items-center justify-between gap-2">
-        <Button type="button" variant="secondary" size="sm" onClick={() => setAddRoomOpen(true)}>
-          <PlusIcon />
-          Add room
-        </Button>
-        <div className="flex items-center gap-2">
-          {onImport && (
-            <button
-              type="button"
-              onClick={onImport}
-              className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-            >
-              <UploadIcon />
-              Import
-            </button>
-          )}
-        </div>
-      </div>
-
+    <div className={cn('flex flex-1 flex-col overflow-auto', className)}>
       {sortedRooms.map((room) => (
         <RoomItemsSection
           key={room.id}
@@ -2083,7 +2060,12 @@ export function FfeTableView({
         />
       ))}
 
-      <StickyGrandTotal value={formatMoney(cents(grandTotal))} />
+      <TotalsBar
+        itemCount={totalItemCount}
+        groupCount={sortedRooms.length}
+        groupLabel="rooms"
+        grandTotal={formatMoney(cents(grandTotal))}
+      />
 
       <AddGroupModal
         groupLabel="Room"
@@ -2120,7 +2102,7 @@ export function FfeTableView({
           }
         }}
       />
-    </TableViewStack>
+    </div>
   );
 }
 
@@ -2139,6 +2121,10 @@ export function FfeTable(props: FfeTableProps) {
         onReload={props.onReload ?? reload}
         onImport={props.onImport}
         className={props.className}
+        {...(props.addRoomOpen !== undefined ? { addRoomOpen: props.addRoomOpen } : {})}
+        {...(props.onAddRoomOpenChange !== undefined
+          ? { onAddRoomOpenChange: props.onAddRoomOpenChange }
+          : {})}
       />
     </ItemsRenderErrorBoundary>
   );

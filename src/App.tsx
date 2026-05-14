@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import {
   Link,
   Navigate,
-  NavLink,
   Outlet,
   Route,
   Routes,
@@ -26,15 +25,12 @@ import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProjectImagesModal } from './components/project/modals/ProjectImagesModal';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
+import { FfeActions, ProposalActions } from './components/project/AppBarActions';
 import { recordSession } from './lib/utils';
 import {
   exportSummaryCsv,
   exportSummaryExcel,
   exportSummaryPdf,
-  exportTableCsv,
-  exportTableExcel,
-  exportTablePdf,
-  exportCatalogPdf,
   exportProposalCsv,
   exportProposalExcel,
   exportProposalPdf,
@@ -58,6 +54,12 @@ type ProjectContext = {
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
   onImport: () => void;
   onProposalImport: () => void;
+  /** Controlled Add Room modal state (lifted to ProjectLayout). */
+  addRoomOpen: boolean;
+  onAddRoomOpenChange: (open: boolean) => void;
+  /** Controlled Add Category modal state (lifted to ProjectLayout). */
+  addCategoryOpen: boolean;
+  onAddCategoryOpenChange: (open: boolean) => void;
 };
 
 function App() {
@@ -120,17 +122,56 @@ function ProjectLayout() {
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [imageProject, setImageProject] = useState<Project | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
+  // Lifted modal state for table routes
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
+  const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
+  const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
+  const isProposalRoute = !!id && location.pathname.includes(`/projects/${id}/proposal`);
+  const isTableRoute = isFfeRoute || isProposalRoute;
+  const isCatalogRoute = location.pathname.includes('/ffe/catalog');
+  const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
 
   const isLoading = projectsLoading || dataLoading || proposalLoading;
+
+  // Action cluster rendered in the app bar's right side
+  const headerActions =
+    !isLoading && project ? (
+      isFfeRoute ? (
+        <FfeActions
+          project={project}
+          roomsWithItems={roomsWithItems}
+          isCatalog={isCatalogRoute}
+          onAddRoom={() => setAddRoomOpen(true)}
+          onImport={() => setImportOpen(true)}
+        />
+      ) : isProposalRoute ? (
+        <ProposalActions
+          project={project}
+          categoriesWithItems={proposalCategoriesWithItems}
+          onAddCategory={() => setAddCategoryOpen(true)}
+          onImport={() => setProposalImportOpen(true)}
+        />
+      ) : isBudgetRoute ? (
+        <BudgetPageActions
+          project={project}
+          roomsWithItems={roomsWithItems}
+          proposalCategoriesWithItems={proposalCategoriesWithItems}
+        />
+      ) : null
+    ) : null;
+
   return (
     <main
       className={[
-        'flex flex-col bg-surface-muted',
-        isPlanCanvasRoute ? 'h-screen overflow-hidden' : 'min-h-screen',
+        'flex flex-col',
+        isPlanCanvasRoute || isTableRoute
+          ? 'h-screen overflow-hidden bg-neutral-50'
+          : 'min-h-screen bg-surface-muted',
       ].join(' ')}
     >
       {isPlanCanvasRoute ? (
@@ -151,6 +192,10 @@ function ProjectLayout() {
                     proposalCategoriesWithItems,
                     onImport: () => setImportOpen(true),
                     onProposalImport: () => setProposalImportOpen(true),
+                    addRoomOpen,
+                    onAddRoomOpenChange: setAddRoomOpen,
+                    addCategoryOpen,
+                    onAddCategoryOpenChange: setAddCategoryOpen,
                   } satisfies ProjectContext
                 }
               />
@@ -161,7 +206,6 @@ function ProjectLayout() {
         <>
           <ProjectHeader
             project={project}
-            showToolNavigation={false}
             optionsOpen={headerMenuOpen}
             onToggleOptions={() => setHeaderMenuOpen((open) => !open)}
             onEditProject={() => {
@@ -176,71 +220,54 @@ function ProjectLayout() {
               setHeaderMenuOpen(false);
               if (project) setPendingDelete(project);
             }}
+            actions={headerActions}
           />
           {isLoading ? (
             <div className="flex justify-center py-24">
-              <div className="h-8 w-8 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
             </div>
           ) : project ? (
             <>
               <h1 className="sr-only">{project.name}</h1>
-              <nav
-                aria-label="Project sections"
-                className="no-print border-b border-gray-200 bg-white px-4 md:px-6"
-              >
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <div className="flex min-w-0 gap-1 overflow-x-auto">
-                      {(
-                        [
-                          [`/projects/${project.id}/ffe`, 'FF&E', false],
-                          [`/projects/${project.id}/proposal/table`, 'Proposal', false],
-                          [`/projects/${project.id}/plans`, 'Plans', true],
-                          [`/projects/${project.id}/materials`, 'Materials', true],
-                          [`/projects/${project.id}/budget`, 'Budget', true],
-                        ] as const
-                      ).map(([to, label, end]) => (
-                        <NavLink
-                          key={to}
-                          to={to}
-                          end={end}
-                          className={({ isActive }) =>
-                            [
-                              'whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors',
-                              isActive
-                                ? 'border-brand-500 text-brand-700'
-                                : 'border-transparent text-gray-600 hover:text-brand-700',
-                            ].join(' ')
-                          }
-                        >
-                          {label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  </div>
-                  {project && (
-                    <ProjectTabActions
-                      activePath={location.pathname}
-                      project={project}
-                      roomsWithItems={roomsWithItems}
-                      proposalCategoriesWithItems={proposalCategoriesWithItems}
-                    />
-                  )}
+              {isTableRoute ? (
+                // Full-width flush layout for FF&E and Proposal table routes
+                <div className="flex flex-1 flex-col overflow-hidden bg-surface">
+                  <Outlet
+                    context={
+                      {
+                        project,
+                        roomsWithItems,
+                        proposalCategoriesWithItems,
+                        onImport: () => setImportOpen(true),
+                        onProposalImport: () => setProposalImportOpen(true),
+                        addRoomOpen,
+                        onAddRoomOpenChange: setAddRoomOpen,
+                        addCategoryOpen,
+                        onAddCategoryOpenChange: setAddCategoryOpen,
+                      } satisfies ProjectContext
+                    }
+                  />
                 </div>
-              </nav>
-              <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
-                <Outlet
-                  context={
-                    {
-                      project,
-                      roomsWithItems,
-                      proposalCategoriesWithItems,
-                      onImport: () => setImportOpen(true),
-                      onProposalImport: () => setProposalImportOpen(true),
-                    } satisfies ProjectContext
-                  }
-                />
-              </section>
+              ) : (
+                // Padded layout for other routes (Budget, Materials, Plans, Overview)
+                <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
+                  <Outlet
+                    context={
+                      {
+                        project,
+                        roomsWithItems,
+                        proposalCategoriesWithItems,
+                        onImport: () => setImportOpen(true),
+                        onProposalImport: () => setProposalImportOpen(true),
+                        addRoomOpen,
+                        onAddRoomOpenChange: setAddRoomOpen,
+                        addCategoryOpen,
+                        onAddCategoryOpenChange: setAddCategoryOpen,
+                      } satisfies ProjectContext
+                    }
+                  />
+                </section>
+              )}
               {project && (
                 <>
                   <ImportExcelModal
@@ -295,89 +322,6 @@ function ProjectLayout() {
   );
 }
 
-function ProjectTabActions({
-  activePath,
-  project,
-  roomsWithItems,
-  proposalCategoriesWithItems,
-}: {
-  activePath: string;
-  project: Project;
-  roomsWithItems: RoomWithItems[];
-  proposalCategoriesWithItems: ProposalCategoryWithItems[];
-}) {
-  if (activePath.endsWith('/budget')) {
-    return (
-      <BudgetPageActions
-        project={project}
-        roomsWithItems={roomsWithItems}
-        proposalCategoriesWithItems={proposalCategoriesWithItems}
-      />
-    );
-  }
-
-  if (activePath.includes(`/projects/${project.id}/ffe/`)) {
-    return (
-      <FfeTabActions project={project} activePath={activePath} roomsWithItems={roomsWithItems} />
-    );
-  }
-
-  return <div className="min-h-8" />;
-}
-
-const ffeToggleClassName =
-  'rounded px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
-const ffeToggleActiveClassName =
-  'rounded bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
-
-function FfeTabActions({
-  project,
-  activePath,
-  roomsWithItems,
-}: {
-  project: Project;
-  activePath: string;
-  roomsWithItems: RoomWithItems[];
-}) {
-  const isCatalog = activePath.includes('/ffe/catalog');
-  const hasItems = roomsWithItems.some((r) => r.items.length > 0);
-  return (
-    <div className="flex items-center gap-2">
-      <div className="inline-flex rounded-md border border-gray-200 bg-white p-1">
-        <Link
-          to={`/projects/${project.id}/ffe/catalog`}
-          className={isCatalog ? ffeToggleActiveClassName : ffeToggleClassName}
-        >
-          Catalog
-        </Link>
-        <Link
-          to={`/projects/${project.id}/ffe/table`}
-          className={!isCatalog ? ffeToggleActiveClassName : ffeToggleClassName}
-        >
-          Table
-        </Link>
-      </div>
-      {isCatalog ? (
-        <ExportMenu
-          label="Export"
-          size="sm"
-          disabled={!hasItems}
-          onPdf={() => void exportCatalogPdf(project, roomsWithItems)}
-        />
-      ) : (
-        <ExportMenu
-          label="Export"
-          size="sm"
-          disabled={!hasItems}
-          onCsv={() => exportTableCsv(project, roomsWithItems)}
-          onExcel={() => void exportTableExcel(project, roomsWithItems)}
-          onPdf={() => void exportTablePdf(project, roomsWithItems)}
-        />
-      )}
-    </div>
-  );
-}
-
 function BudgetPageActions({
   project,
   roomsWithItems,
@@ -395,14 +339,14 @@ function BudgetPageActions({
       <button
         type="button"
         onClick={() => setFfeOpen(true)}
-        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        className="rounded-md border border-neutral-200 bg-surface px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
       >
         FF&amp;E Budget
       </button>
       <button
         type="button"
         onClick={() => setProposalOpen(true)}
-        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        className="rounded-md border border-neutral-200 bg-surface px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
       >
         Proposal Budget
       </button>
@@ -444,13 +388,16 @@ function ProjectRedirectTo({ target }: { target: string }) {
 }
 
 function ProjectTableRoute() {
-  const { project, roomsWithItems, onImport } = useProjectContext();
+  const { project, roomsWithItems, onImport, addRoomOpen, onAddRoomOpenChange } =
+    useProjectContext();
   return (
     <FfeTable
       projectId={project.id}
       project={project}
       roomsWithItems={roomsWithItems}
       onImport={onImport}
+      addRoomOpen={addRoomOpen}
+      onAddRoomOpenChange={onAddRoomOpenChange}
     />
   );
 }
@@ -467,8 +414,17 @@ function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'proposal' }) {
 }
 
 function ProjectProposalRoute() {
-  const { project, onProposalImport } = useProjectContext();
-  return <ProposalTable projectId={project.id} project={project} onImport={onProposalImport} />;
+  const { project, onProposalImport, addCategoryOpen, onAddCategoryOpenChange } =
+    useProjectContext();
+  return (
+    <ProposalTable
+      projectId={project.id}
+      project={project}
+      onImport={onProposalImport}
+      addCategoryOpen={addCategoryOpen}
+      onAddCategoryOpenChange={onAddCategoryOpenChange}
+    />
+  );
 }
 
 function ProjectCatalogRoute() {

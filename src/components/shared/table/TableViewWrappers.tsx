@@ -8,7 +8,9 @@ export function TableViewStack({
   children: ReactNode;
   className?: string | undefined;
 }) {
-  return <div className={cn('relative flex flex-col gap-4 pb-16', className)}>{children}</div>;
+  return (
+    <div className={cn('relative flex flex-1 flex-col overflow-auto', className)}>{children}</div>
+  );
 }
 
 export function GroupedTableSection({
@@ -19,12 +21,7 @@ export function GroupedTableSection({
   className?: string | undefined;
 }) {
   return (
-    <section
-      className={cn(
-        'overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm',
-        className,
-      )}
-    >
+    <section className={cn('border-b border-neutral-200 bg-surface', className)}>
       {children}
     </section>
   );
@@ -40,7 +37,7 @@ export function GroupedTableHeader({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 border-b border-gray-100 bg-surface-muted px-4 py-3',
+        'flex h-9 items-center justify-between gap-3 border-y border-neutral-200 bg-neutral-50 px-3',
         className,
       )}
     >

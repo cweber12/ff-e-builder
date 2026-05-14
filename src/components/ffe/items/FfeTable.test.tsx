@@ -80,6 +80,8 @@ vi.mock('../../../hooks', () => ({
   }),
   useIsMobileViewport: () => false,
   isPersistedImageEntityId: () => true,
+  useTableDensity: () => ({ density: 'default', setDensity: vi.fn() }),
+  densityRowClass: () => 'h-13',
 }));
 
 vi.mock('../../../lib/export', () => ({
@@ -222,7 +224,7 @@ describe('FfeTable', () => {
     expect(screen.getByText('Lounge Chair')).toBeInTheDocument();
     expect(screen.getByText('Floor Lamp')).toBeInTheDocument();
     expect(screen.getByText('Dining Table')).toBeInTheDocument();
-    expect(screen.getByText('Add first item ->')).toBeInTheDocument();
+    expect(screen.getByText('No items — add one via the room menu.')).toBeInTheDocument();
   });
 
   it('renders room subtotals matching roomSubtotalCents', () => {

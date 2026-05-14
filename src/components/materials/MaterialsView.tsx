@@ -38,7 +38,7 @@ const emptyDraft: MaterialDraft = {
 
 export function MaterialsView({
   project,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   tool: _tool = 'ffe',
   roomsWithItems = [],
   proposalCategoriesWithItems = [],

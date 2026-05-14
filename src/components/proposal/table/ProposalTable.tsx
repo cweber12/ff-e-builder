@@ -29,7 +29,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
-import { ExportMenu } from '../../shared/ExportMenu';
+import { DeferredCostBanner } from '../../shared/DeferredCostBanner';
+import { TotalsBar } from '../../shared/TotalsBar';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import {
@@ -48,7 +49,6 @@ import {
   useUpdateColumnDef,
   useDeleteColumnDef,
   useIsMobileViewport,
-  useUpdateProject,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -61,10 +61,7 @@ import {
   type ProposalCategoryWithItems,
   type CustomColumnDef,
   type ProposalStatus,
-  proposalStatuses,
 } from '../../../types';
-import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
-import { useUserProfile } from '../../../hooks';
 import {
   proposalCategorySubtotalCents,
   proposalLineTotalCents,
@@ -75,7 +72,6 @@ import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import {
   GroupedTableHeader,
   GroupedTableSection,
-  StickyGrandTotal,
   TableViewStack,
 } from '../../shared/table/TableViewWrappers';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
@@ -203,141 +199,6 @@ function formatStatusDate(isoString: string): string {
   });
 }
 
-function ChevronDownIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" aria-hidden="true">
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function CheckMarkIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
-      <path
-        d="m3.5 8.2 3 3L12.8 5"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ProposalStatusBadge({
-  status,
-  updatedAt,
-  onChangeRequest,
-}: {
-  status: ProposalStatus;
-  updatedAt: string;
-  onChangeRequest: (next: ProposalStatus) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handleOutside(e: globalThis.MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [open]);
-
-  const cfg = proposalStatusConfig[status];
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        className={cn(
-          'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-medium transition-colors',
-          cfg.bgClass,
-          cfg.textClass,
-          cfg.hoverClass,
-        )}
-      >
-        {cfg.label}
-        <span className="opacity-60">· since {formatStatusDate(updatedAt)}</span>
-        <ChevronDownIcon />
-      </button>
-      {open && (
-        <div
-          role="listbox"
-          aria-label="Change proposal status"
-          className="absolute left-0 top-full z-50 mt-1 min-w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-        >
-          {proposalStatuses.map((s) => {
-            const scfg = proposalStatusConfig[s];
-            return (
-              <button
-                key={s}
-                role="option"
-                aria-selected={s === status}
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                onClick={() => {
-                  setOpen(false);
-                  onChangeRequest(s);
-                }}
-              >
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-medium',
-                    scfg.bgClass,
-                    scfg.textClass,
-                  )}
-                >
-                  {scfg.label}
-                </span>
-                {s === status && <CheckMarkIcon />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DeferredCostBanner({
-  categoriesWithItems,
-}: {
-  categoriesWithItems: ProposalCategoryWithItems[];
-}) {
-  const deferredItems = categoriesWithItems.flatMap((c) =>
-    c.items
-      .filter((item) => item.costUpdateDeferred)
-      .map((item) => ({ item, categoryName: c.name })),
-  );
-  if (deferredItems.length === 0) return null;
-
-  return (
-    <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-      <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
-      <div>
-        <p className="font-medium">Cost updates pending</p>
-        <p className="mt-0.5 text-xs text-amber-700">
-          {deferredItems
-            .map(({ item }) => item.productTag || item.description || item.id)
-            .join(', ')}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: string }) {
   const { data: changelog = [] } = useProposalItemChangelog(itemId);
   const entries = changelog.filter((e) => e.columnKey === columnKey);
@@ -437,12 +298,15 @@ const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className:
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
   'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
-const stickyTotalHeaderClassName = 'sticky right-24 z-20 bg-white';
-const stickyOptionsHeaderClassName = 'sticky right-0 z-30 bg-white w-24 min-w-24';
-const stickyTotalExpandedHeaderClassName = 'sticky top-0 right-24 z-50 bg-white';
-const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-white w-24 min-w-24';
-const stickyTotalCellClassName = 'sticky right-24 z-10 bg-white';
-const stickyOptionsCellClassName = 'sticky right-0 z-20 bg-white w-24 min-w-24';
+const stickyTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-[120px] min-w-[120px]';
+const stickyOptionsHeaderClassName = 'sticky right-0 z-40 bg-surface w-10 min-w-10';
+const stickyTotalExpandedHeaderClassName =
+  'sticky top-0 right-10 z-50 bg-surface w-[120px] min-w-[120px]';
+const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-surface w-10 min-w-10';
+const stickyTotalCellClassName =
+  'sticky right-10 z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+const stickyOptionsCellClassName =
+  'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
 
 function GripIcon() {
   return (
@@ -461,11 +325,19 @@ type ProposalTableProps = {
   projectId: string;
   project?: Project;
   onImport?: (() => void) | undefined;
+  /** Controlled-mode: if provided, external caller manages Add Category modal open state. */
+  addCategoryOpen?: boolean;
+  onAddCategoryOpenChange?: (open: boolean) => void;
 };
 
-export function ProposalTable({ projectId, project, onImport }: ProposalTableProps) {
+export function ProposalTable({
+  projectId,
+  project,
+  onImport: _onImport,
+  addCategoryOpen: addCategoryOpenProp,
+  onAddCategoryOpenChange,
+}: ProposalTableProps) {
   const { categoriesWithItems, isLoading } = useProposalWithItems(projectId);
-  const { data: userProfile } = useUserProfile();
   const createCategory = useCreateProposalCategory(projectId);
   const updateCategory = useUpdateProposalCategory(projectId);
   const deleteCategory = useDeleteProposalCategory(projectId);
@@ -497,14 +369,25 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
     (id: string) => columnConfig.hideDefaultColumn(id),
     [columnConfig],
   );
-  const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [addCategoryOpenInternal, setAddCategoryOpenInternal] = useState(false);
+  const isControlledAddCategory =
+    addCategoryOpenProp !== undefined && onAddCategoryOpenChange !== undefined;
+  const addCategoryOpen = isControlledAddCategory
+    ? (addCategoryOpenProp ?? false)
+    : addCategoryOpenInternal;
+  const setAddCategoryOpen = isControlledAddCategory
+    ? onAddCategoryOpenChange
+    : setAddCategoryOpenInternal;
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [selectedItem, setSelectedItem] = useState<ProposalItem | null>(null);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>(undefined);
   const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
-  const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
-  const updateProject = useUpdateProject();
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
+  const totalItemCount = categoriesWithItems.reduce((sum, c) => sum + c.items.length, 0);
+  const deferredCount = categoriesWithItems.reduce(
+    (sum, c) => sum + c.items.filter((i) => i.costUpdateDeferred).length,
+    0,
+  );
 
   const toggleCollapsed = (id: string) => {
     setCollapsed((current) => ({ ...current, [id]: !current[id] }));
@@ -512,80 +395,38 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="h-9 border-b border-neutral-200 bg-neutral-50" />
+        <div>
+          {Array.from({ length: 5 }, (_, index) => (
+            <div
+              key={index}
+              className="grid h-13 grid-cols-6 items-center gap-4 border-b border-neutral-200/60 px-4"
+            >
+              <div className="col-span-2 h-3 rounded bg-neutral-100" />
+              <div className="h-3 rounded bg-neutral-100" />
+              <div className="h-3 rounded bg-neutral-100" />
+              <div className="h-3 rounded bg-neutral-100" />
+              <div className="h-3 rounded bg-neutral-100" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <TableViewStack>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {project && (
-            <ProposalStatusBadge
-              status={project.proposalStatus}
-              updatedAt={project.proposalStatusUpdatedAt}
-              onChangeRequest={setPendingStatus}
-            />
-          )}
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setAddCategoryOpen(true)}
-          >
-            <PlusIcon />
-            Add category
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          {project && (
-            <ExportMenu
-              label="Export"
-              size="sm"
-              disabled={categoriesWithItems.every((c) => c.items.length === 0)}
-              onCsv={() => exportProposalCsv(project, categoriesWithItems, customColumnDefs)}
-              onExcel={() =>
-                void exportProposalExcel(
-                  project,
-                  categoriesWithItems,
-                  userProfile,
-                  customColumnDefs,
-                )
-              }
-              onPdf={() =>
-                void exportProposalPdf(
-                  project,
-                  categoriesWithItems,
-                  userProfile,
-                  { mode: 'continuous' },
-                  customColumnDefs,
-                )
-              }
-            />
-          )}
-          {onImport && (
-            <button
-              type="button"
-              onClick={onImport}
-              className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-            >
-              <UploadIcon />
-              Import
-            </button>
-          )}
-        </div>
-      </div>
-
-      <DeferredCostBanner categoriesWithItems={categoriesWithItems} />
+      <DeferredCostBanner deferredCount={deferredCount} />
 
       {categoriesWithItems.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-semibold text-gray-900">No Proposal Categories yet</p>
-          <p className="mt-1 text-sm text-gray-500">
-            Create a category to start your Proposal Table.
-          </p>
+        <div className="flex flex-1 items-center justify-center px-6 py-12 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <h2 className="font-display text-2xl text-neutral-900">No categories yet</h2>
+            <p className="max-w-md text-sm text-neutral-600">
+              Create a category to start your Proposal Table.
+            </p>
+          </div>
         </div>
       ) : null}
 
@@ -626,7 +467,12 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
         />
       ))}
 
-      <StickyGrandTotal value={formatMoney(cents(grandTotal))} />
+      <TotalsBar
+        itemCount={totalItemCount}
+        groupCount={categoriesWithItems.length}
+        groupLabel="categories"
+        grandTotal={formatMoney(cents(grandTotal))}
+      />
 
       <AddGroupModal
         groupLabel="Category"
@@ -666,33 +512,6 @@ export function ProposalTable({ projectId, project, onImport }: ProposalTablePro
           setCategoryToDelete(null);
         }}
       />
-      {pendingStatus && (
-        <Modal open onClose={() => setPendingStatus(null)} title="Change proposal status">
-          <p className="text-sm text-gray-600">
-            Change status to{' '}
-            <span className="font-medium text-gray-900">
-              {proposalStatusConfig[pendingStatus].label}
-            </span>
-            ?
-          </p>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setPendingStatus(null)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                void updateProject.mutateAsync({
-                  id: projectId,
-                  patch: { proposalStatus: pendingStatus },
-                });
-                setPendingStatus(null);
-              }}
-            >
-              Confirm
-            </Button>
-          </div>
-        </Modal>
-      )}
     </TableViewStack>
   );
 }
@@ -839,33 +658,6 @@ function MoreIcon() {
       <circle cx="5" cy="10" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="15" cy="10" r="1.5" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M10 4.5v11M4.5 10h11"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function UploadIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M10 12.5V4.5m0 0L7 7.5m3-3 3 3M4.5 13.5v1a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-1"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
@@ -1237,14 +1029,14 @@ function ProposalCategorySection({
       {!collapsed && !isMobile && (
         <div className="overflow-x-auto">
           <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
-            <thead className="bg-white text-xs uppercase tracking-wide text-gray-500">
+            <thead className="sticky top-0 z-30 bg-surface text-xs">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleColumnDragEnd}
               >
                 <tr>
-                  <th className="border-b border-gray-200 w-8 min-w-8 px-1 py-2" />
+                  <th className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1" />
                   <SortableContext items={visibleColOrder} strategy={horizontalListSortingStrategy}>
                     {visibleColOrder.map((colId) => {
                       const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
@@ -1255,7 +1047,7 @@ function ProposalCategorySection({
                             colId={colId}
                             label={meta.label}
                             className={cn(
-                              'border-b border-gray-200 px-3 py-2 font-semibold',
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                               meta.className,
                             )}
                             onHide={() => onHideColumn(colId)}
@@ -1268,7 +1060,7 @@ function ProposalCategorySection({
                         <SortableColHeader
                           key={colId}
                           colId={colId}
-                          className="border-b border-gray-200 px-3 py-2 font-semibold min-w-36"
+                          className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                           onHide={() => onHideColumn(colId)}
                         >
                           <CustomColumnHeader
@@ -1282,17 +1074,14 @@ function ProposalCategorySection({
                   </SortableContext>
                   <th
                     className={cn(
-                      'border-b border-gray-200 px-3 py-2 font-semibold w-32 min-w-32',
+                      'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                       stickyTotalHeaderClassName,
                     )}
                   >
                     Total Cost
                   </th>
                   <th
-                    className={cn(
-                      'border-b border-gray-200 font-semibold',
-                      stickyOptionsHeaderClassName,
-                    )}
+                    className={cn('h-10 border-y border-neutral-200', stickyOptionsHeaderClassName)}
                   />
                 </tr>
               </DndContext>
@@ -1429,14 +1218,14 @@ function ProposalCategorySection({
               className="min-w-0 overflow-auto flex-1"
             >
               <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
-                <thead className="sticky top-0 z-40 bg-white text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
+                <thead className="sticky top-0 z-30 bg-surface text-xs">
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={handleColumnDragEnd}
                   >
                     <tr>
-                      <th className="border-b border-gray-100 w-8 min-w-8 px-1 py-3" />
+                      <th className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1" />
                       <SortableContext
                         items={visibleColOrder}
                         strategy={horizontalListSortingStrategy}
@@ -1450,7 +1239,7 @@ function ProposalCategorySection({
                                 colId={colId}
                                 label={meta.label}
                                 className={cn(
-                                  'border-b border-gray-100 px-3 py-3 font-semibold',
+                                  'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                                   meta.className,
                                 )}
                                 onHide={() => onHideColumn(colId)}
@@ -1463,7 +1252,7 @@ function ProposalCategorySection({
                             <SortableColHeader
                               key={colId}
                               colId={colId}
-                              className="border-b border-gray-100 px-3 py-3 font-semibold min-w-36"
+                              className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                               onHide={() => onHideColumn(colId)}
                             >
                               <CustomColumnHeader
@@ -1477,7 +1266,7 @@ function ProposalCategorySection({
                       </SortableContext>
                       <th
                         className={cn(
-                          'border-b border-gray-100 px-3 py-3 font-semibold w-32 min-w-32',
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           stickyTotalExpandedHeaderClassName,
                         )}
                       >
@@ -1485,7 +1274,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'border-b border-gray-100 font-semibold',
+                          'h-10 border-y border-neutral-200',
                           stickyOptionsExpandedHeaderClassName,
                         )}
                       />
@@ -1763,7 +1552,7 @@ function ProposalRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'cursor-pointer border-b border-gray-100 align-top last:border-b-0 hover:bg-brand-50/30',
+        'group cursor-pointer border-b border-neutral-200/60 align-top last:border-b-0',
         isDragging && 'bg-brand-50 shadow-md opacity-80',
       )}
       onClick={onRowClick}

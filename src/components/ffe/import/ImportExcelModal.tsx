@@ -173,7 +173,6 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         const items = transformRows(section.rows, mapping, parsed.columns, customDataKeyMap);
 
         for (const item of items) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { roomName: _rn, materialsRaw, ...itemInput } = item;
 
           try {

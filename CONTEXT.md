@@ -118,6 +118,10 @@ _Avoid_: cost column, financial field
 The state of a Proposal Item when a Price-Affecting Column was changed but the unit cost update was intentionally postponed. Displayed as a sticky banner above the proposal table listing affected product tags, and as an amber highlight on the unit cost cell. Resolved automatically when the item's unit cost is next confirmed and saved.
 _Avoid_: pending cost, cost flag, unresolved cost
 
+**Proposal Status**:
+The lifecycle state of a Project's Proposal workspace. One status per Project; there is no per-item status. Valid values: `in_progress`, `pricing_complete`, `submitted`, `approved`. Stored as `proposal_status` on the `projects` table. Changing status while in `pricing_complete`, `submitted`, or `approved` triggers Proposal Item Change records for tracked fields.
+_Avoid_: item status, per-row status, status per item
+
 ### Shared Table UI
 
 **Table Group**:
@@ -257,3 +261,4 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - "Category" is overloaded. Use **Proposal Category** for table groupings and describe FF&E item category as an item attribute.
 - "Swatch" is no longer a separate entity type. All Finish Library entries are **Materials**. "Swatch Cell" remains valid as a rendering term for the Proposal export column — but it describes the column format, not the entry type.
 - "FF&E Builder" is the historical repo name. The product shell is **ChillDesignStudio**, and **FF&E** is one tool inside it.
+- **FF&E Items carry per-item status** (`pending | ordered | approved | received`). This is separate from Proposal Status. **Proposal Items do not carry per-item status.** The only proposal lifecycle value is **Proposal Status**, which is a single field on the Project.

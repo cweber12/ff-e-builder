@@ -24,9 +24,10 @@ const makeProject = (overrides?: Partial<Project>): Project => ({
 
 describe('ProjectHeader', () => {
   it('shows shimmer skeleton while project is undefined', () => {
-    const { container } = render(<ProjectHeader project={undefined} />);
+    const { container } = renderWithRouter(<ProjectHeader project={undefined} />);
 
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+    // SkeletonBar uses bg-neutral-200 animated placeholders (no animate-pulse class in new design)
+    expect(container.querySelector('[class*="bg-neutral-200"]')).toBeInTheDocument();
     expect(screen.queryByText('Living Room Reno')).not.toBeInTheDocument();
   });
 
@@ -40,17 +41,17 @@ describe('ProjectHeader', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />);
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Budget/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Set budget/i)).not.toBeInTheDocument();
   });
 
-  it('renders project tool navigation', () => {
+  it('renders project tab navigation', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />);
 
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Snapshot' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'FF&E' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Proposal' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Plans' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Materials' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Budget' })).toBeInTheDocument();
   });
 
   it('renders project options when handlers are provided', () => {

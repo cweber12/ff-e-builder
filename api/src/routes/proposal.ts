@@ -264,7 +264,7 @@ router.patch('/proposal/items/:id', async (c) => {
        ${cl.notes ?? null}, ${cl.proposal_status})
   `;
 
-  const queries: ReturnType<typeof sql>[] = [updateQuery, insertPrimary];
+  const queries: Parameters<typeof sql.transaction>[0] = [updateQuery, insertPrimary];
 
   if (cl.linked_unit_cost_change) {
     const luc = cl.linked_unit_cost_change;

@@ -21,3 +21,15 @@ export { CustomColumnHeader } from './table/CustomColumnHeader';
 export { ImportProgressBar } from './ImportProgressBar';
 export { formatDuration, describeImportError } from '../../lib/import';
 export type { ImportProgress } from '../../lib/import';
+export { ItemStatusChip } from './ItemStatusChip';
+export { TotalsBar } from './TotalsBar';
+export { BulkActionBar } from './BulkActionBar';
+export type { BulkAction } from './BulkActionBar';
+export { DeferredCostBanner } from './DeferredCostBanner';
+export { SaveStatusIndicator } from './SaveStatusIndicator';
+export {
+  ProposalStatusSelect,
+  ProposalStatusDots,
+  ProposalStatusConfirmModal,
+  PROPOSAL_STATUS_CONFIG,
+} from './ProposalStatusSelect';
