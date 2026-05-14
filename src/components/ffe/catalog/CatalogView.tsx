@@ -379,226 +379,231 @@ export function CatalogPage({
         </div>
       </header>
 
-      <section className="catalog-main">
-        <div className="catalog-main-left">
-          <div className="catalog-image-block">
-            <div className="catalog-rendering-square">
-              <ImageFrame
-                entityType="item"
-                entityId={item.id}
-                alt={item.itemName}
-                fallbackUrl={null}
-                className="border-0 shadow-none h-full w-full rounded-none"
-                imageClassName="catalog-image"
-                placeholderClassName="catalog-placeholder"
-                placeholderContent={<span>{initials(item.itemName)}</span>}
-              />
-            </div>
-
-            <div className="catalog-qty-band">
-              <div className="catalog-qty-cell">
-                <span className="catalog-qty-label">PRODUCT QTY</span>
-                <span className="catalog-qty-rule" />
-                <span className="catalog-qty-value">{item.qty}</span>
+      <div className="catalog-content-block">
+        <section className="catalog-main">
+          <div className="catalog-main-left">
+            <div className="catalog-image-block">
+              <div className="catalog-rendering-square">
+                <ImageFrame
+                  entityType="item"
+                  entityId={item.id}
+                  alt={item.itemName}
+                  fallbackUrl={null}
+                  className="border-0 shadow-none h-full w-full rounded-none"
+                  imageClassName="catalog-image"
+                  placeholderClassName="catalog-placeholder"
+                  placeholderContent={<span>{initials(item.itemName)}</span>}
+                />
               </div>
-              <div className="catalog-qty-cell">
-                <span className="catalog-qty-label">PRICE PER ITEM</span>
-                <span className="catalog-qty-rule" />
-                <span className="catalog-qty-value">
-                  {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
-                </span>
-              </div>
-              <div className="catalog-qty-cell">
-                <span className="catalog-qty-label">TOTAL</span>
-                <span className="catalog-qty-rule" />
-                <span className="catalog-qty-value">
-                  {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="catalog-main-right">
-          <h2 className="catalog-spec-heading">PRODUCT SPECIFICATIONS</h2>
-
-          <div className="catalog-spec-dim">
-            <InlineTextEdit
-              value={item.dimensions ?? ''}
-              aria-label={`Dimensions for ${item.itemName}`}
-              inputClassName="w-full text-sm text-gray-700"
-              onSave={(value) => saveField('dimensions', value)}
-              renderDisplay={(value) =>
-                value.trim() ? (
-                  <span className="catalog-spec-dim-text">{value}</span>
-                ) : (
-                  <span className="catalog-spec-dim-text catalog-placeholder-text">
-                    W __&quot; x D __&quot; x H __&quot;
+              <div className="catalog-qty-band">
+                <div className="catalog-qty-cell">
+                  <span className="catalog-qty-label">PRODUCT QTY</span>
+                  <span className="catalog-qty-rule" />
+                  <span className="catalog-qty-value">{item.qty}</span>
+                </div>
+                <div className="catalog-qty-cell">
+                  <span className="catalog-qty-label">PRICE PER ITEM</span>
+                  <span className="catalog-qty-rule" />
+                  <span className="catalog-qty-value">
+                    {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
                   </span>
-                )
-              }
-            />
+                </div>
+                <div className="catalog-qty-cell">
+                  <span className="catalog-qty-label">TOTAL</span>
+                  <span className="catalog-qty-rule" />
+                  <span className="catalog-qty-value">
+                    {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="catalog-spec-desc">
-            <InlineTextEdit
-              value={item.description ?? ''}
-              aria-label={`Description for ${item.itemName}`}
-              className="block"
-              multiline
-              rows={3}
-              inputClassName="w-full text-sm text-gray-700 leading-snug resize-none"
-              onSave={(value) => saveField('description', value)}
-              renderDisplay={(value) =>
-                value.trim() ? (
-                  <p className="catalog-spec-desc-text">{value}</p>
-                ) : (
-                  <p className="catalog-spec-desc-text catalog-placeholder-text">
-                    Click to add a description.
-                  </p>
-                )
-              }
-            />
-          </div>
+          <div className="catalog-main-right">
+            <h2 className="catalog-spec-heading">PRODUCT SPECIFICATIONS</h2>
 
-          <div className="catalog-vendor-block">
-            <div className="catalog-vendor-line">
+            <div className="catalog-spec-dim">
               <InlineTextEdit
-                value={vendor}
-                aria-label="Vendor"
-                className="min-w-0 flex-1"
-                inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
-                onSave={(value) => setVendor(value.trim())}
+                value={item.dimensions ?? ''}
+                aria-label={`Dimensions for ${item.itemName}`}
+                inputClassName="w-full text-sm text-gray-700"
+                onSave={(value) => saveField('dimensions', value)}
                 renderDisplay={(value) =>
                   value.trim() ? (
-                    <span className="catalog-vendor-text">{value}</span>
+                    <span className="catalog-spec-dim-text">{value}</span>
                   ) : (
-                    <span className="catalog-vendor-text catalog-placeholder-text">
-                      VENDOR IF ANY
+                    <span className="catalog-spec-dim-text catalog-placeholder-text">
+                      W __&quot; x D __&quot; x H __&quot;
                     </span>
                   )
                 }
               />
             </div>
-            <div className="catalog-vendor-line">
+
+            <div className="catalog-spec-desc">
               <InlineTextEdit
-                value={vendorUrl}
-                aria-label="Vendor link"
-                className="min-w-0 flex-1"
-                inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
-                onSave={(value) => setVendorUrl(value.trim())}
+                value={item.description ?? ''}
+                aria-label={`Description for ${item.itemName}`}
+                className="block"
+                multiline
+                rows={3}
+                inputClassName="w-full text-sm text-gray-700 leading-snug resize-none"
+                onSave={(value) => saveField('description', value)}
                 renderDisplay={(value) =>
                   value.trim() ? (
-                    <span className="catalog-vendor-text">{value}</span>
+                    <p className="catalog-spec-desc-text">{value}</p>
                   ) : (
-                    <span className="catalog-vendor-text catalog-placeholder-text">
-                      LINK IF ANY
-                    </span>
+                    <p className="catalog-spec-desc-text catalog-placeholder-text">
+                      Click to add a description.
+                    </p>
                   )
                 }
               />
-              {vendorUrl.trim() ? (
-                <a
-                  href={vendorUrl.trim()}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="catalog-vendor-link"
-                  aria-label="Open vendor link"
-                >
-                  <LinkIcon />
-                </a>
-              ) : (
-                <span className="catalog-vendor-link catalog-vendor-link-empty" aria-hidden="true">
-                  <LinkIcon />
-                </span>
-              )}
             </div>
-          </div>
 
-          <p className="catalog-section-subhead">SPACE FOR ADDITIONAL NOTES OR FIELDS</p>
-          <div className="catalog-notes-block">
-            <InlineTextEdit
-              value={item.notes ?? ''}
-              aria-label={`Notes for ${item.itemName}`}
-              className="block w-full"
-              multiline
-              rows={3}
-              inputClassName="w-full min-h-16 resize-none text-sm leading-snug text-gray-700"
-              onSave={(value) => saveField('notes', value)}
-              renderDisplay={(value) =>
-                value.trim() ? (
-                  <p className="catalog-notes-text">{value}</p>
+            <div className="catalog-vendor-block">
+              <div className="catalog-vendor-line">
+                <InlineTextEdit
+                  value={vendor}
+                  aria-label="Vendor"
+                  className="min-w-0 flex-1"
+                  inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
+                  onSave={(value) => setVendor(value.trim())}
+                  renderDisplay={(value) =>
+                    value.trim() ? (
+                      <span className="catalog-vendor-text">{value}</span>
+                    ) : (
+                      <span className="catalog-vendor-text catalog-placeholder-text">
+                        VENDOR IF ANY
+                      </span>
+                    )
+                  }
+                />
+              </div>
+              <div className="catalog-vendor-line">
+                <InlineTextEdit
+                  value={vendorUrl}
+                  aria-label="Vendor link"
+                  className="min-w-0 flex-1"
+                  inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
+                  onSave={(value) => setVendorUrl(value.trim())}
+                  renderDisplay={(value) =>
+                    value.trim() ? (
+                      <span className="catalog-vendor-text">{value}</span>
+                    ) : (
+                      <span className="catalog-vendor-text catalog-placeholder-text">
+                        LINK IF ANY
+                      </span>
+                    )
+                  }
+                />
+                {vendorUrl.trim() ? (
+                  <a
+                    href={vendorUrl.trim()}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="catalog-vendor-link"
+                    aria-label="Open vendor link"
+                  >
+                    <LinkIcon />
+                  </a>
                 ) : (
-                  <p className="catalog-notes-text catalog-placeholder-text">NOTES</p>
-                )
-              }
-            />
-          </div>
+                  <span
+                    className="catalog-vendor-link catalog-vendor-link-empty"
+                    aria-hidden="true"
+                  >
+                    <LinkIcon />
+                  </span>
+                )}
+              </div>
+            </div>
 
-          <h2 className="catalog-spec-heading catalog-finish-heading">FINISH SCHEDULE</h2>
-          <div className="catalog-materials-row">
-            {item.materials.length > 0
-              ? item.materials.slice(0, 4).map((material) => (
-                  <div key={material.id} className="catalog-material-cell">
-                    <span className="catalog-material-id">{material.materialId || 'ID'}</span>
-                    <div className="catalog-material-swatch">
-                      <MaterialSwatchImage material={material} />
+            <p className="catalog-section-subhead">SPACE FOR ADDITIONAL NOTES OR FIELDS</p>
+            <div className="catalog-notes-block">
+              <InlineTextEdit
+                value={item.notes ?? ''}
+                aria-label={`Notes for ${item.itemName}`}
+                className="block w-full"
+                multiline
+                rows={3}
+                inputClassName="w-full min-h-16 resize-none text-sm leading-snug text-gray-700"
+                onSave={(value) => saveField('notes', value)}
+                renderDisplay={(value) =>
+                  value.trim() ? (
+                    <p className="catalog-notes-text">{value}</p>
+                  ) : (
+                    <p className="catalog-notes-text catalog-placeholder-text">NOTES</p>
+                  )
+                }
+              />
+            </div>
+
+            <h2 className="catalog-spec-heading catalog-finish-heading">FINISH SCHEDULE</h2>
+            <div className="catalog-materials-row">
+              {item.materials.length > 0
+                ? item.materials.slice(0, 4).map((material) => (
+                    <div key={material.id} className="catalog-material-cell">
+                      <span className="catalog-material-id">{material.materialId || 'ID'}</span>
+                      <div className="catalog-material-swatch">
+                        <MaterialSwatchImage material={material} />
+                      </div>
+                      <span className="catalog-material-name">
+                        {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
+                      </span>
                     </div>
-                    <span className="catalog-material-name">
-                      {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
-                    </span>
-                  </div>
-                ))
-              : Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="catalog-material-cell catalog-material-cell-empty">
-                    <span className="catalog-material-id">ID</span>
-                    <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
-                    <span className="catalog-material-name">MATERIAL</span>
-                    <span className="catalog-material-color">COLOR</span>
-                  </div>
-                ))}
+                  ))
+                : Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="catalog-material-cell catalog-material-cell-empty">
+                      <span className="catalog-material-id">ID</span>
+                      <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
+                      <span className="catalog-material-name">MATERIAL</span>
+                      <span className="catalog-material-color">COLOR</span>
+                    </div>
+                  ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="catalog-bottom-row">
-        <CatalogOptionRenderings
-          itemId={item.id}
-          optionImages={optionImages}
-          itemName={item.itemName}
-          isBusy={isBusy}
-          onUpload={(file, index) =>
-            upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
-          }
-          onDelete={(imageId) => deleteImage.mutate(imageId)}
-          onAdd={(file) =>
-            upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
-          }
-        />
-        <div className="catalog-location-block">
-          <div className="catalog-location-content">
-            <p className="catalog-location-label">
-              <span className="catalog-location-key">LOCATION:</span>{' '}
-              <span className="catalog-location-value">{room.name}</span>
-            </p>
-            <p className="catalog-location-sub">LOCATION AND SNIPPET ARE OPTIONAL</p>
-            <div className="catalog-plan-frame">
-              <ImageFrame
-                entityType="item_plan"
-                entityId={item.id}
-                alt={`${item.itemName} plan`}
-                fallbackUrl={null}
-                className="border-0 shadow-none h-full w-full rounded-none"
-                placeholderClassName="catalog-plan-placeholder"
-                placeholderContent={
-                  <span className="catalog-plan-placeholder-text">
-                    LOCATION
-                    <br />
-                    SNIPPET
-                  </span>
-                }
-                disabled
-              />
+        <div className="catalog-bottom-row">
+          <CatalogOptionRenderings
+            itemId={item.id}
+            optionImages={optionImages}
+            itemName={item.itemName}
+            isBusy={isBusy}
+            onUpload={(file, index) =>
+              upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
+            }
+            onDelete={(imageId) => deleteImage.mutate(imageId)}
+            onAdd={(file) =>
+              upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
+            }
+          />
+          <div className="catalog-location-block">
+            <div className="catalog-location-content">
+              <p className="catalog-location-label">
+                <span className="catalog-location-key">LOCATION:</span>{' '}
+                <span className="catalog-location-value">{room.name}</span>
+              </p>
+              <p className="catalog-location-sub">LOCATION AND SNIPPET ARE OPTIONAL</p>
+              <div className="catalog-plan-frame">
+                <ImageFrame
+                  entityType="item_plan"
+                  entityId={item.id}
+                  alt={`${item.itemName} plan`}
+                  fallbackUrl={null}
+                  className="border-0 shadow-none h-full w-full rounded-none"
+                  placeholderClassName="catalog-plan-placeholder"
+                  placeholderContent={
+                    <span className="catalog-plan-placeholder-text">
+                      LOCATION
+                      <br />
+                      SNIPPET
+                    </span>
+                  }
+                  disabled
+                />
+              </div>
             </div>
           </div>
         </div>
