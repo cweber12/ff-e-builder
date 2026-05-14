@@ -6,14 +6,17 @@ import { imageAssetToPngDataUrl } from '../imageHelpers';
 import { fmtMoney, safeName } from '../shared';
 
 const BRAND = BRAND_RGB;
+// Letter size in millimetres (215.9 x 279.4)
+const PAGE_W = 215.9;
+const PAGE_H = 279.4;
 const PAGE_PADDING = 13;
-const CONTENT_W = 210 - PAGE_PADDING * 2;
+const CONTENT_W = PAGE_W - PAGE_PADDING * 2;
 const HEADER_TEXT_Y = PAGE_PADDING + 5;
 const HEADER_RULE_Y = PAGE_PADDING + 13;
 const TOP_SECTION_Y = HEADER_RULE_Y + 7;
 const SECTION_GAP = 7;
 const COLUMN_GAP = 5;
-const FOOTER_RULE_Y = 287;
+const FOOTER_RULE_Y = PAGE_H - 10;
 const FOOTER_TEXT_Y = FOOTER_RULE_Y + 5;
 const MAX_OPTION_IMAGES = 2;
 const MAX_MATERIALS = 8;
@@ -628,7 +631,7 @@ export async function exportCatalogPdf(project: Project, rooms: RoomWithItems[])
   if (entries.length === 0) return;
 
   const assets = await buildCatalogAssets(entries);
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ unit: 'mm', format: 'letter' });
 
   for (const [index, entry] of entries.entries()) {
     if (index > 0) doc.addPage();
@@ -656,7 +659,7 @@ export async function exportCatalogItemPdf(
 
   const entry = entries[entryIndex]!;
   const assets = await buildCatalogAssets([entry]);
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ unit: 'mm', format: 'letter' });
   drawCatalogPage(
     doc,
     project,
