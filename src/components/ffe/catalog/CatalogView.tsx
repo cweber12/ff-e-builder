@@ -397,21 +397,16 @@ export function CatalogPage({
               </div>
 
               <div className="catalog-qty-band">
-                <div className="catalog-qty-cell">
+                <div className="catalog-qty-label-row">
                   <span className="catalog-qty-label">PRODUCT QTY</span>
-                  <span className="catalog-qty-rule" />
-                  <span className="catalog-qty-value">{item.qty}</span>
-                </div>
-                <div className="catalog-qty-cell">
                   <span className="catalog-qty-label">PRICE PER ITEM</span>
-                  <span className="catalog-qty-rule" />
+                  <span className="catalog-qty-label">TOTAL</span>
+                </div>
+                <div className="catalog-qty-value-row">
+                  <span className="catalog-qty-value">{item.qty}</span>
                   <span className="catalog-qty-value">
                     {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
                   </span>
-                </div>
-                <div className="catalog-qty-cell">
-                  <span className="catalog-qty-label">TOTAL</span>
-                  <span className="catalog-qty-rule" />
                   <span className="catalog-qty-value">
                     {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
                   </span>
@@ -519,7 +514,6 @@ export function CatalogPage({
               </div>
             </div>
 
-            <p className="catalog-section-subhead">SPACE FOR ADDITIONAL NOTES OR FIELDS</p>
             <div className="catalog-notes-block">
               <InlineTextEdit
                 value={item.notes ?? ''}
@@ -538,29 +532,33 @@ export function CatalogPage({
                 }
               />
             </div>
-
-            <h2 className="catalog-spec-heading catalog-finish-heading">FINISH SCHEDULE</h2>
-            <div className="catalog-materials-row">
-              {item.materials.length > 0
-                ? item.materials.slice(0, 4).map((material) => (
-                    <div key={material.id} className="catalog-material-cell">
-                      <span className="catalog-material-id">{material.materialId || 'ID'}</span>
-                      <div className="catalog-material-swatch">
-                        <MaterialSwatchImage material={material} />
+            <div className="justify-self-end">
+              <h2 className="catalog-spec-heading catalog-sub-heading">FINISH SCHEDULE</h2>
+              <div className="catalog-materials-row">
+                {item.materials.length > 0
+                  ? item.materials.slice(0, 4).map((material) => (
+                      <div key={material.id} className="catalog-material-cell">
+                        <span className="catalog-material-id">{material.materialId || 'ID'}</span>
+                        <div className="catalog-material-swatch">
+                          <MaterialSwatchImage material={material} />
+                        </div>
+                        <span className="catalog-material-name">
+                          {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
+                        </span>
                       </div>
-                      <span className="catalog-material-name">
-                        {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
-                      </span>
-                    </div>
-                  ))
-                : Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="catalog-material-cell catalog-material-cell-empty">
-                      <span className="catalog-material-id">ID</span>
-                      <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
-                      <span className="catalog-material-name">MATERIAL</span>
-                      <span className="catalog-material-color">COLOR</span>
-                    </div>
-                  ))}
+                    ))
+                  : Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="catalog-material-cell catalog-material-cell-empty"
+                      >
+                        <span className="catalog-material-id">ID</span>
+                        <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
+                        <span className="catalog-material-name">MATERIAL</span>
+                        <span className="catalog-material-color">COLOR</span>
+                      </div>
+                    ))}
+              </div>
             </div>
           </div>
         </section>
@@ -1043,9 +1041,9 @@ function CatalogApprovalSection({ shown, onToggle }: { shown: boolean; onToggle:
           />
         </svg>
       </button>
-      <div className="catalog-section-label catalog-approval-label">Client Approval</div>
       <div className="catalog-approval-row">
-        <div className="catalog-approval-field">
+        <div className="catalog-approval-field catalog-signature-field">
+          <div className="catalog-section-label catalog-approval-label">Client Approval</div>
           <div className="catalog-approval-line" />
           <span>Authorized Signature</span>
         </div>

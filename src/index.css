@@ -178,12 +178,11 @@
   .catalog-content-block {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     min-height: 0;
   }
 
   .catalog-main {
-    flex: 1;
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 32px;
@@ -228,18 +227,26 @@
 
   /* ---------- Qty / Price / Total band ---------- */
   .catalog-qty-band {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, max-content));
-    justify-content: space-between;
-    gap: 12px;
-    border: 1px solid theme('colors.brand.300');
-    padding: 10px 14px;
-  }
-
-  .catalog-qty-cell {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    border: 1px solid theme('colors.brand.300');
+    overflow: hidden;
+  }
+
+  .catalog-qty-label-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    background: theme('colors.brand.600');
+    padding: 6px 14px;
+  }
+
+  .catalog-qty-value-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    background: white;
+    padding: 8px 14px;
   }
 
   .catalog-qty-label {
@@ -247,7 +254,7 @@
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: theme('colors.brand.500');
+    color: white;
   }
 
   .catalog-qty-rule {
@@ -287,7 +294,7 @@
     color: theme('colors.gray.700');
   }
 
-  .catalog-finish-heading {
+  .catalog-sub-heading {
     margin-top: 6px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -527,7 +534,7 @@
   .catalog-item-name {
     min-width: 0;
     margin: 0;
-    font-family: 'Lora Variable', serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 30px;
     font-weight: 600;
     line-height: 1.05;
@@ -904,13 +911,13 @@
     border: 1px solid theme('colors.brand.200');
     background: theme('colors.brand.50');
     padding: 14px 18px;
-    border-radius: 6px;
+    border-radius: 24px;
   }
 
   .catalog-approval-remove {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 14px;
+    right: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -932,13 +939,15 @@
   }
 
   .catalog-approval-label {
-    margin-bottom: 2px;
+    font-size: 18px;
+    max-height: fit-content;
   }
 
   .catalog-approval-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(120px, 0.55fr) minmax(0, 0.95fr);
-    gap: 18px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
     align-items: end;
   }
 
@@ -956,12 +965,16 @@
   }
 
   .catalog-approval-line {
-    height: 32px;
+    height: 24px;
     border-bottom: 1px solid theme('colors.gray.400');
   }
 
   .catalog-approval-date {
-    max-width: 140px;
+    width: 140px;
+  }
+
+  .catalog-signature-field {
+    width: 320px;
   }
 
   .catalog-approval-checks {
