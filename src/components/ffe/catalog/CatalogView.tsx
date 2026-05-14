@@ -330,6 +330,9 @@ export function CatalogPage({
   // For now these are stored in localStorage keyed by item id so authors can preview the layout.
   const [vendor, setVendor] = useCatalogPlaceholder(`ffe-catalog-vendor:${item.id}`);
   const [vendorUrl, setVendorUrl] = useCatalogPlaceholder(`ffe-catalog-vendor-url:${item.id}`);
+  const [approvalHidden, setApprovalHidden] = useCatalogPlaceholder(
+    `ffe-catalog-approval-hidden:${item.id}`,
+  );
 
   const lineTotalCents = item.unitCostCents * item.qty;
 
@@ -359,10 +362,12 @@ export function CatalogPage({
           <p
             className={cn(
               'catalog-header-subtitle',
-              !project.clientName && 'catalog-header-subtitle-empty',
+              !project.projectLocation && 'catalog-header-subtitle-empty',
             )}
           >
-            {project.clientName ? project.clientName.toUpperCase() : 'PROJECT DETAILS - OPTIONAL'}
+            {project.projectLocation
+              ? project.projectLocation.toUpperCase()
+              : 'PROJECT DETAILS - OPTIONAL'}
           </p>
         </div>
       </header>
@@ -586,7 +591,10 @@ export function CatalogPage({
         </div>
       </section>
 
-      <CatalogApprovalSection />
+      <CatalogApprovalSection
+        shown={approvalHidden !== 'hidden'}
+        onToggle={() => setApprovalHidden(approvalHidden === 'hidden' ? '' : 'hidden')}
+      />
 
       <footer className="catalog-footer">
         <span />
@@ -929,9 +937,42 @@ function CatalogOptionCard({
   );
 }
 
-function CatalogApprovalSection() {
+function CatalogApprovalSection({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+  if (!shown) {
+    return (
+      <div className="no-print flex">
+        <button type="button" className="catalog-add-approval-btn" onClick={onToggle}>
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-4 w-4">
+            <path
+              d="M8 3v10M3 8h10"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span>Add client approval</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <section className="catalog-approval-band">
+      <button
+        type="button"
+        className="no-print catalog-approval-remove"
+        aria-label="Remove client approval section"
+        onClick={onToggle}
+      >
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+          <path
+            d="M3 3l10 10M13 3L3 13"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
       <div className="catalog-section-label catalog-approval-label">Client Approval</div>
       <div className="catalog-approval-row">
         <div className="catalog-approval-field">

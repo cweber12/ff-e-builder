@@ -739,7 +739,8 @@
   }
 
   .catalog-add-option-btn,
-  .catalog-add-notes-btn {
+  .catalog-add-notes-btn,
+  .catalog-add-approval-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -758,7 +759,8 @@
   }
 
   .catalog-add-option-btn:hover:not(:disabled),
-  .catalog-add-notes-btn:hover {
+  .catalog-add-notes-btn:hover,
+  .catalog-add-approval-btn:hover {
     border-color: theme('colors.brand.500');
     background: rgb(var(--color-brand-100));
   }
@@ -867,11 +869,36 @@
   }
 
   .catalog-approval-band {
+    position: relative;
     display: grid;
     gap: 10px;
     border: 1px solid theme('colors.gray.200');
     background: theme('colors.gray.50');
     padding: 14px 18px;
+  }
+
+  .catalog-approval-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: theme('colors.gray.400');
+    cursor: pointer;
+    transition:
+      color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .catalog-approval-remove:hover {
+    color: theme('colors.gray.700');
+    background: theme('colors.gray.200');
   }
 
   .catalog-approval-label {
