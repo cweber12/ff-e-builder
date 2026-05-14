@@ -107,11 +107,12 @@
 
   .catalog-page {
     box-sizing: border-box;
-    width: 794px;
-    height: 1123px;
-    grid-template-rows: auto auto auto 1fr auto auto;
+    display: grid;
+    width: 816px;
+    height: 1056px;
+    grid-template-rows: auto 1fr auto auto;
     gap: 20px;
-    padding: 48px;
+    padding: 48px 52px;
   }
 
   .catalog-header {
@@ -119,26 +120,353 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 24px;
-    border-bottom: 1px solid theme('colors.brand.500');
-    padding-bottom: 12px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.16em;
+    border-bottom: 1.5px solid theme('colors.brand.500');
+    padding-bottom: 8px;
+    color: theme('colors.brand.700');
+  }
+
+  .catalog-header-left {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .catalog-header-right {
+    text-align: right;
+  }
+
+  .catalog-header-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
     text-transform: uppercase;
     color: theme('colors.brand.700');
   }
 
-  .catalog-header > span {
-    padding-top: 1px;
-    text-align: right;
+  .catalog-header-id {
+    margin-right: 6px;
   }
 
-  .catalog-client-line {
+  .catalog-header-name {
+    display: inline;
+  }
+
+  .catalog-header-project {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: theme('colors.brand.700');
+  }
+
+  .catalog-header-subtitle {
+    margin: 2px 0 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: theme('colors.brand.600');
+  }
+
+  .catalog-header-subtitle-empty {
+    color: theme('colors.brand.300');
+  }
+
+  /* ---------- Main two-column layout ---------- */
+  .catalog-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 28px;
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .catalog-main-left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .catalog-main-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .catalog-rendering-square {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    background: theme('colors.brand.50');
+    overflow: hidden;
+  }
+
+  .catalog-rendering-square > div {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---------- Qty / Price / Total band ---------- */
+  .catalog-qty-band {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, max-content));
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid theme('colors.brand.300');
+    padding: 10px 14px;
+  }
+
+  .catalog-qty-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .catalog-qty-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: theme('colors.brand.500');
+  }
+
+  .catalog-qty-rule {
+    height: 1.5px;
+    width: 36px;
+    background: theme('colors.brand.400');
+  }
+
+  .catalog-qty-value {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: theme('colors.gray.700');
+  }
+
+  /* ---------- Option image row ---------- */
+  .catalog-option-row {
+    flex: 0 0 auto;
+  }
+
+  /* ---------- Right column: spec & finish ---------- */
+  .catalog-spec-heading {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: theme('colors.gray.700');
+  }
+
+  .catalog-finish-heading {
     margin-top: 6px;
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: theme('colors.gray.600');
+  }
+
+  .catalog-spec-dim {
+    margin-top: -2px;
+  }
+
+  .catalog-spec-dim-text {
+    font-size: 13px;
+    color: theme('colors.gray.700');
+  }
+
+  .catalog-spec-desc-text {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: theme('colors.gray.700');
+  }
+
+  .catalog-vendor-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 6px;
+  }
+
+  .catalog-vendor-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .catalog-vendor-text {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: theme('colors.gray.500');
+  }
+
+  .catalog-vendor-link {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: theme('colors.gray.500');
+  }
+
+  .catalog-vendor-link:hover {
+    color: theme('colors.brand.600');
+  }
+
+  .catalog-vendor-link-empty {
+    color: theme('colors.gray.300');
+  }
+
+  .catalog-placeholder-text {
+    color: theme('colors.gray.400');
+  }
+
+  .catalog-section-subhead {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: theme('colors.gray.700');
+  }
+
+  .catalog-notes-block {
+    min-height: 36px;
+  }
+
+  .catalog-notes-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: theme('colors.gray.600');
+    white-space: pre-wrap;
+  }
+
+  /* ---------- Materials row (horizontal cells) ---------- */
+  .catalog-materials-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .catalog-material-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .catalog-material-id {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: theme('colors.gray.500');
+  }
+
+  .catalog-material-swatch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .catalog-material-swatch-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: theme('colors.gray.100');
+    border: 1px solid theme('colors.gray.200');
+  }
+
+  .catalog-material-name,
+  .catalog-material-color {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: theme('colors.gray.500');
+    line-height: 1.25;
+  }
+
+  .catalog-material-color {
+    color: theme('colors.gray.400');
+  }
+
+  .catalog-material-cell-empty .catalog-material-id,
+  .catalog-material-cell-empty .catalog-material-name,
+  .catalog-material-cell-empty .catalog-material-color {
+    color: theme('colors.gray.300');
+  }
+
+  /* ---------- Location & plan thumbnail ---------- */
+  .catalog-location-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 14px;
+  }
+
+  .catalog-location-label {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: theme('colors.gray.600');
+  }
+
+  .catalog-location-key {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .catalog-location-value {
+    text-transform: none;
+    color: theme('colors.gray.700');
+  }
+
+  .catalog-location-sub {
+    margin: 0 0 4px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: theme('colors.gray.400');
+  }
+
+  .catalog-plan-frame {
+    position: relative;
+    width: 100%;
+    max-width: 180px;
+    aspect-ratio: 4/3;
+    background: theme('colors.gray.100');
+    overflow: hidden;
+  }
+
+  /* ImageFrame renders a div.grid wrapper — give it height so h-full children fill the frame */
+  .catalog-plan-frame > div {
+    height: 100%;
+  }
+
+  .catalog-plan-placeholder {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: theme('colors.gray.400');
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .catalog-plan-placeholder-text {
+    text-align: center;
+    line-height: 1.3;
   }
 
   .catalog-top-section {
@@ -398,9 +726,10 @@
 
   .catalog-option-card {
     position: relative;
-    aspect-ratio: 1.45;
+    aspect-ratio: 1;
     min-height: 0;
     overflow: hidden;
+    background: theme('colors.gray.100');
   }
 
   .catalog-option-card img {
@@ -435,6 +764,38 @@
   }
 
   .catalog-add-option-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Square dashed upload area used inside the option grid for empty slots */
+  .catalog-upload-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    gap: 6px;
+    border: 1.5px dashed theme('colors.brand.300');
+    background: theme('colors.brand.50');
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: theme('colors.brand.500');
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .catalog-upload-slot:hover:not(:disabled) {
+    border-color: theme('colors.brand.500');
+    background: rgb(var(--color-brand-100));
+  }
+
+  .catalog-upload-slot:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
@@ -594,20 +955,22 @@
 
   .catalog-footer {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 2fr 1fr;
     align-items: end;
-    border-top: 1px solid theme('colors.gray.200');
-    padding-top: 14px;
-    font-size: 12px;
-    color: theme('colors.gray.500');
+    padding-top: 8px;
+    font-size: 10px;
+    color: theme('colors.gray.400');
   }
 
-  .catalog-footer span:nth-child(2) {
+  .catalog-footer-center {
     text-align: center;
   }
 
-  .catalog-footer span:nth-child(3) {
+  .catalog-footer-page {
     text-align: right;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: theme('colors.gray.500');
   }
 
   .print-only {
@@ -641,7 +1004,7 @@
 
 @media print {
   @page {
-    size: A4;
+    size: letter;
     margin: 0;
   }
 
@@ -674,8 +1037,8 @@
   }
 
   .catalog-page {
-    width: 794px;
-    height: 1123px;
+    width: 816px;
+    height: 1056px;
     box-shadow: none !important;
     break-after: page;
     page-break-after: always;

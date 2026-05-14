@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../../../lib/utils';
 import { api } from '../../../lib/api';
-import {
-  useDeleteImage,
-  useImages,
-  useSetPrimaryImage,
-  useUpdateImageCrop,
-  useUploadImage,
-} from '../../../hooks';
+import { useDeleteImage, useImages, useUpdateImageCrop, useUploadImage } from '../../../hooks';
 import type { CropParams, ImageAsset } from '../../../types';
 import { CropModal } from '../../shared/image/CropModal';
 import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
@@ -74,9 +68,9 @@ function ItemOptionImageSlot({
   const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const upload = useUploadImage('item_option', itemId);
   const deleteImage = useDeleteImage('item_option', itemId);
-  const setPrimary = useSetPrimaryImage('item_option', itemId);
   const updateCrop = useUpdateImageCrop('item_option', itemId);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cropOpen, setCropOpen] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -109,22 +103,7 @@ function ItemOptionImageSlot({
     };
   }, [image]);
 
-  const cropParams: CropParams | null =
-    image &&
-    image.cropX !== null &&
-    image.cropY !== null &&
-    image.cropWidth !== null &&
-    image.cropHeight !== null
-      ? {
-          cropX: image.cropX,
-          cropY: image.cropY,
-          cropWidth: image.cropWidth,
-          cropHeight: image.cropHeight,
-        }
-      : null;
-
-  const isBusy =
-    upload.isPending || deleteImage.isPending || setPrimary.isPending || updateCrop.isPending;
+  const isBusy = upload.isPending || deleteImage.isPending || updateCrop.isPending;
 
   const handleFile = (file: File | null | undefined) => {
     if (!file || image || disabled) return;
@@ -160,11 +139,8 @@ function ItemOptionImageSlot({
           <label className="absolute right-3 top-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
             <input
               type="checkbox"
-              checked={image.isPrimary}
-              disabled={disabled || setPrimary.isPending}
-              onChange={() => {
-                if (!image.isPrimary) setPrimary.mutate(image.id);
-              }}
+              checked={checked}
+              onChange={() => setChecked((c) => !c)}
               className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
             />
             Selected
@@ -226,7 +202,6 @@ function ItemOptionImageSlot({
           onClose={() => setCropOpen(false)}
           imageUrl={previewUrl}
           aspect={117 / 75}
-          initialCrop={cropParams}
           onSave={handleCropSave}
           isSaving={updateCrop.isPending}
         />

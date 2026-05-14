@@ -241,7 +241,6 @@ function ProjectImageSlot({
               onClose={() => setCropModalOpen(false)}
               imageUrl={url}
               aspect={CROP_ASPECT.project ?? 4 / 3}
-              initialCrop={cropParams}
               onSave={(params) => {
                 onCropSave(image.id, params);
                 setCropModalOpen(false);

@@ -9,7 +9,6 @@ type CropModalProps = {
   onClose: () => void;
   imageUrl: string;
   aspect: number;
-  initialCrop?: CropParams | null;
   onSave: (params: CropParams) => void;
   isSaving?: boolean;
 };
@@ -19,28 +18,23 @@ export function CropModal({
   onClose,
   imageUrl,
   aspect,
-  initialCrop,
   onSave,
   isSaving = false,
 }: CropModalProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [pendingParams, setPendingParams] = useState<CropParams | null>(initialCrop ?? null);
+  const [pendingParams, setPendingParams] = useState<CropParams | null>(null);
 
-  const initialCroppedAreaPercentages = initialCrop
-    ? {
-        x: initialCrop.cropX * 100,
-        y: initialCrop.cropY * 100,
-        width: initialCrop.cropWidth * 100,
-        height: initialCrop.cropHeight * 100,
-      }
-    : undefined;
+  // Bail out when x/y are unchanged. react-easy-crop fires onCropChange with a new object
+  // reference every cycle even when the position hasn't moved — that new reference triggers
+  // componentDidUpdate → recomputeCropPosition → onCropChange → setCrop → re-render → loop.
+  const handleCropChange = useCallback(
+    (newCrop: { x: number; y: number }) =>
+      setCrop((prev) => (prev.x === newCrop.x && prev.y === newCrop.y ? prev : newCrop)),
+    [],
+  );
 
-  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
-    void croppedAreaPixels;
-  }, []);
-
-  const onCropCompleteWithPercentages = useCallback((croppedArea: Area) => {
+  const handleCropComplete = useCallback((croppedArea: Area) => {
     setPendingParams({
       cropX: croppedArea.x / 100,
       cropY: croppedArea.y / 100,
@@ -62,13 +56,9 @@ export function CropModal({
             crop={crop}
             zoom={zoom}
             aspect={aspect}
-            onCropChange={setCrop}
+            onCropChange={handleCropChange}
             onZoomChange={setZoom}
-            onCropComplete={(croppedArea, croppedAreaPixels) => {
-              onCropComplete(croppedArea, croppedAreaPixels);
-              onCropCompleteWithPercentages(croppedArea);
-            }}
-            {...(initialCroppedAreaPercentages ? { initialCroppedAreaPercentages } : {})}
+            onCropComplete={(croppedArea) => handleCropComplete(croppedArea)}
             objectFit="contain"
           />
         </div>

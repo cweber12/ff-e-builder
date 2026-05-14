@@ -322,7 +322,6 @@ export function CatalogPage({
   const optionCount = optionImages.length;
   const isBusy = upload.isPending || deleteImage.isPending;
 
-  const projectSlug = slugify(project.name);
   const saveField = (field: EditableCatalogField, value: string, required = false) =>
     updateItem
       .mutateAsync({
@@ -334,185 +333,315 @@ export function CatalogPage({
       })
       .then(() => undefined);
 
-  const hasMaterials = item.materials.length > 0;
-  const hasThirdSection = optionCount > 0 || hasMaterials;
+  // TODO: persist vendor + vendorUrl as Item columns in a follow-up iteration.
+  // For now these are stored in localStorage keyed by item id so authors can preview the layout.
+  const [vendor, setVendor] = useCatalogPlaceholder(`ffe-catalog-vendor:${item.id}`);
+  const [vendorUrl, setVendorUrl] = useCatalogPlaceholder(`ffe-catalog-vendor-url:${item.id}`);
+
+  const lineTotalCents = item.unitCostCents * item.qty;
 
   return (
     <article
-      className={cn(
-        'catalog-page mx-auto grid bg-white text-gray-950 shadow-xl',
-        optionCount === 2 && 'catalog-page--two-options',
-      )}
+      className="catalog-page mx-auto bg-white text-gray-950 shadow-xl"
       aria-label={`${item.itemName} catalog page`}
     >
       <header className="catalog-header">
-        <div className="min-w-0">
-          <p>{project.name}</p>
-          {project.clientName ? <p className="catalog-client-line">{project.clientName}</p> : null}
+        <div className="catalog-header-left">
+          <h1 className="catalog-header-title">
+            {item.itemIdTag ? <span className="catalog-header-id">{item.itemIdTag}</span> : null}
+            <InlineTextEdit
+              value={item.itemName}
+              aria-label={`Item name for ${item.itemName}`}
+              className="min-w-0 inline-block"
+              inputClassName="w-full text-[22px] font-bold uppercase tracking-wide text-brand-700"
+              onSave={(value) => saveField('itemName', value, true)}
+              renderDisplay={(value) => (
+                <span className="catalog-header-name">{value.toUpperCase()}</span>
+              )}
+            />
+          </h1>
         </div>
-        <span>{room.name}</span>
+        <div className="catalog-header-right">
+          <p className="catalog-header-project">{project.name.toUpperCase()}</p>
+          <p
+            className={cn(
+              'catalog-header-subtitle',
+              !project.clientName && 'catalog-header-subtitle-empty',
+            )}
+          >
+            {project.clientName ? project.clientName.toUpperCase() : 'PROJECT DETAILS - OPTIONAL'}
+          </p>
+        </div>
       </header>
 
-      <section className="catalog-top-section">
-        <div className="catalog-title-row">
-          {item.itemIdTag ? (
-            <span className="catalog-item-id">{item.itemIdTag}</span>
-          ) : (
-            <span className="catalog-item-id catalog-item-id-empty">No ID</span>
-          )}
-          <InlineTextEdit
-            value={item.itemName}
-            aria-label={`Item name for ${item.itemName}`}
-            className="min-w-0 flex-1"
-            inputClassName="w-full text-[30px] font-semibold leading-tight text-gray-900"
-            onSave={(value) => saveField('itemName', value, true)}
-            renderDisplay={(value) => <h1 className="catalog-item-name">{value}</h1>}
-          />
-        </div>
-
-        <div className="catalog-dimensions-row">
-          <InlineTextEdit
-            value={item.dimensions ?? ''}
-            aria-label={`Dimensions for ${item.itemName}`}
-            inputClassName="text-sm text-gray-600"
-            onSave={(value) => saveField('dimensions', value)}
-            renderDisplay={(value) =>
-              value.trim() ? (
-                <span className="catalog-dimensions-text">{value}</span>
-              ) : (
-                <span className="catalog-dimensions-text text-gray-400 italic">
-                  Click to add dimensions
-                </span>
-              )
-            }
-          />
-        </div>
-      </section>
-
-      <section className="catalog-second-section">
-        <div className="catalog-rendering-panel">
-          <div className="catalog-rendering-frame">
+      <section className="catalog-main">
+        <div className="catalog-main-left">
+          <div className="catalog-rendering-square">
             <ImageFrame
               entityType="item"
               entityId={item.id}
               alt={item.itemName}
               fallbackUrl={null}
-              className="border-0 shadow-none"
+              className="border-0 shadow-none h-full w-full"
               imageClassName="catalog-image"
               placeholderClassName="catalog-placeholder"
               placeholderContent={<span>{initials(item.itemName)}</span>}
             />
           </div>
-        </div>
 
-        <div className="catalog-notes-panel">
-          <div className="catalog-description-row">
-            <InlineTextEdit
-              value={item.description ?? ''}
-              aria-label={`Description for ${item.itemName}`}
-              className="block"
-              inputClassName="w-full text-sm text-gray-600"
-              onSave={(value) => saveField('description', value)}
-              renderDisplay={(value) =>
-                value.trim() ? (
-                  <p className="catalog-description-summary">{value}</p>
-                ) : (
-                  <p className="catalog-description-summary text-gray-400 italic">
-                    Click to add a description
-                  </p>
-                )
+          <div className="catalog-qty-band">
+            <div className="catalog-qty-cell">
+              <span className="catalog-qty-label">PRODUCT QTY</span>
+              <span className="catalog-qty-rule" />
+              <span className="catalog-qty-value">{item.qty}</span>
+            </div>
+            <div className="catalog-qty-cell">
+              <span className="catalog-qty-label">PRICE PER ITEM</span>
+              <span className="catalog-qty-rule" />
+              <span className="catalog-qty-value">
+                {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
+              </span>
+            </div>
+            <div className="catalog-qty-cell">
+              <span className="catalog-qty-label">TOTAL</span>
+              <span className="catalog-qty-rule" />
+              <span className="catalog-qty-value">
+                {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
+              </span>
+            </div>
+          </div>
+
+          <div className="catalog-option-row">
+            <CatalogOptionRenderings
+              optionImages={optionImages}
+              itemName={item.itemName}
+              isBusy={isBusy}
+              onSelect={(imageId) => setPrimary.mutate(imageId)}
+              onUpload={(file, index) =>
+                upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
+              }
+              onDelete={(imageId) => deleteImage.mutate(imageId)}
+              onAdd={(file) =>
+                upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
               }
             />
           </div>
-          <div className="catalog-section-label">Notes</div>
-          <div className="catalog-notes-content">
+        </div>
+
+        <div className="catalog-main-right">
+          <h2 className="catalog-spec-heading">PRODUCT SPECIFICATIONS</h2>
+
+          <div className="catalog-spec-dim">
             <InlineTextEdit
-              value={item.notes ?? ''}
-              aria-label={`Notes for ${item.itemName}`}
-              className="block h-full w-full"
-              multiline
-              rows={7}
-              inputClassName="h-full min-h-24 w-full resize-none overflow-y-auto text-sm leading-6 text-gray-600"
-              onSave={(value) => saveField('notes', value)}
+              value={item.dimensions ?? ''}
+              aria-label={`Dimensions for ${item.itemName}`}
+              inputClassName="w-full text-sm text-gray-700"
+              onSave={(value) => saveField('dimensions', value)}
               renderDisplay={(value) =>
                 value.trim() ? (
-                  <p className="catalog-notes h-full overflow-y-auto whitespace-pre-wrap">
-                    {value}
-                  </p>
+                  <span className="catalog-spec-dim-text">{value}</span>
                 ) : (
-                  <span className="no-print catalog-add-notes-btn">
-                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-                      <path
-                        d="M8 3v10M3 8h10"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    Add notes
+                  <span className="catalog-spec-dim-text catalog-placeholder-text">
+                    W __&quot; x D __&quot; x H __&quot;
                   </span>
                 )
               }
             />
           </div>
-          {item.unitCostCents > 0 ? (
-            <div className="catalog-cost-row">
-              <span>Unit cost</span>
-              <strong>{formatMoney(cents(item.unitCostCents))}</strong>
-            </div>
-          ) : null}
-        </div>
-      </section>
 
-      <section className={cn('catalog-third-section', !hasThirdSection && 'no-print')}>
-        <CatalogOptionRenderings
-          optionImages={optionImages}
-          itemName={item.itemName}
-          isBusy={isBusy}
-          onSelect={(imageId) => setPrimary.mutate(imageId)}
-          onUpload={(file, index) =>
-            upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
-          }
-          onDelete={(imageId) => deleteImage.mutate(imageId)}
-          onAdd={(file) =>
-            upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
-          }
-        />
-        {hasMaterials && (
-          <div className="catalog-materials-strip">
-            <div className="catalog-section-label">Materials</div>
-            <div className="catalog-materials-grid">
-              {item.materials.map((material) => (
-                <div key={material.id} className="catalog-material-card">
-                  <MaterialSwatchImage material={material} size="lg" />
-                  <span className="catalog-material-label">{material.name}</span>
-                </div>
-              ))}
+          <div className="catalog-spec-desc">
+            <InlineTextEdit
+              value={item.description ?? ''}
+              aria-label={`Description for ${item.itemName}`}
+              className="block"
+              multiline
+              rows={3}
+              inputClassName="w-full text-sm text-gray-700 leading-snug resize-none"
+              onSave={(value) => saveField('description', value)}
+              renderDisplay={(value) =>
+                value.trim() ? (
+                  <p className="catalog-spec-desc-text">{value}</p>
+                ) : (
+                  <p className="catalog-spec-desc-text catalog-placeholder-text">
+                    Click to add a description.
+                  </p>
+                )
+              }
+            />
+          </div>
+
+          <div className="catalog-vendor-block">
+            <div className="catalog-vendor-line">
+              <InlineTextEdit
+                value={vendor}
+                aria-label="Vendor"
+                className="min-w-0 flex-1"
+                inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
+                onSave={(value) => setVendor(value.trim())}
+                renderDisplay={(value) =>
+                  value.trim() ? (
+                    <span className="catalog-vendor-text">{value}</span>
+                  ) : (
+                    <span className="catalog-vendor-text catalog-placeholder-text">
+                      VENDOR IF ANY
+                    </span>
+                  )
+                }
+              />
+            </div>
+            <div className="catalog-vendor-line">
+              <InlineTextEdit
+                value={vendorUrl}
+                aria-label="Vendor link"
+                className="min-w-0 flex-1"
+                inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
+                onSave={(value) => setVendorUrl(value.trim())}
+                renderDisplay={(value) =>
+                  value.trim() ? (
+                    <span className="catalog-vendor-text">{value}</span>
+                  ) : (
+                    <span className="catalog-vendor-text catalog-placeholder-text">
+                      LINK IF ANY
+                    </span>
+                  )
+                }
+              />
+              {vendorUrl.trim() ? (
+                <a
+                  href={vendorUrl.trim()}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="catalog-vendor-link"
+                  aria-label="Open vendor link"
+                >
+                  <LinkIcon />
+                </a>
+              ) : (
+                <span className="catalog-vendor-link catalog-vendor-link-empty" aria-hidden="true">
+                  <LinkIcon />
+                </span>
+              )}
             </div>
           </div>
-        )}
+
+          <p className="catalog-section-subhead">SPACE FOR ADDITIONAL NOTES OR FIELDS</p>
+          <div className="catalog-notes-block">
+            <InlineTextEdit
+              value={item.notes ?? ''}
+              aria-label={`Notes for ${item.itemName}`}
+              className="block w-full"
+              multiline
+              rows={3}
+              inputClassName="w-full min-h-16 resize-none text-sm leading-snug text-gray-700"
+              onSave={(value) => saveField('notes', value)}
+              renderDisplay={(value) =>
+                value.trim() ? (
+                  <p className="catalog-notes-text">{value}</p>
+                ) : (
+                  <p className="catalog-notes-text catalog-placeholder-text">NOTES</p>
+                )
+              }
+            />
+          </div>
+
+          <h2 className="catalog-spec-heading catalog-finish-heading">FINISH SCHEDULE</h2>
+          <div className="catalog-materials-row">
+            {item.materials.length > 0
+              ? item.materials.slice(0, 4).map((material) => (
+                  <div key={material.id} className="catalog-material-cell">
+                    <span className="catalog-material-id">{material.materialId || 'ID'}</span>
+                    <div className="catalog-material-swatch">
+                      <MaterialSwatchImage material={material} size="lg" />
+                    </div>
+                    <span className="catalog-material-name">{material.name || 'MATERIAL'}</span>
+                  </div>
+                ))
+              : Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="catalog-material-cell catalog-material-cell-empty">
+                    <span className="catalog-material-id">ID</span>
+                    <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
+                    <span className="catalog-material-name">MATERIAL</span>
+                    <span className="catalog-material-color">COLOR</span>
+                  </div>
+                ))}
+          </div>
+
+          <div className="catalog-location-block">
+            <p className="catalog-location-label">
+              <span className="catalog-location-key">LOCATION:</span>{' '}
+              <span className="catalog-location-value">{room.name}</span>
+            </p>
+            <p className="catalog-location-sub">LOCATION AND SNIPPET ARE OPTIONAL</p>
+            <div className="catalog-plan-frame">
+              <ImageFrame
+                entityType="item_plan"
+                entityId={item.id}
+                alt={`${item.itemName} plan`}
+                fallbackUrl={null}
+                className="border-0 shadow-none h-full w-full"
+                placeholderClassName="catalog-plan-placeholder"
+                placeholderContent={
+                  <span className="catalog-plan-placeholder-text">
+                    LOCATION
+                    <br />
+                    SNIPPET
+                  </span>
+                }
+                disabled
+              />
+            </div>
+          </div>
+        </div>
       </section>
 
       <CatalogApprovalSection />
 
       <footer className="catalog-footer">
-        <span>
-          {pageNumber} of {pageCount}
+        <span />
+        <span className="catalog-footer-center">contact email or company logo - optional</span>
+        <span className="catalog-footer-page">
+          PAGE {pageNumber} of {pageCount}
         </span>
-        <span>{projectSlug}</span>
-        <InlineTextEdit
-          value={item.itemIdTag ?? ''}
-          aria-label={`Item ID for ${item.itemName}`}
-          className="justify-self-end"
-          inputClassName="w-28 text-right font-mono text-xs text-gray-500"
-          onSave={(value) => saveField('itemIdTag', value)}
-          renderDisplay={(value) => (
-            <span className="font-mono text-xs text-gray-500">{value.trim() || '-'}</span>
-          )}
-        />
       </footer>
     </article>
   );
+}
+
+function LinkIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M11.5 8.5l-3 3M8.5 6l1.4-1.4a3 3 0 014.24 4.24L12.74 10.3M11.5 14l-1.4 1.4a3 3 0 01-4.24-4.24L7.26 9.7"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// Persistent localStorage-backed placeholder for the vendor / vendor link fields.
+// TODO: Replace with a real Item column (and migration) in a follow-up iteration.
+function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
+  const [value, setValue] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      return window.localStorage.getItem(key) ?? '';
+    } catch {
+      return '';
+    }
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (value) window.localStorage.setItem(key, value);
+      else window.localStorage.removeItem(key);
+    } catch {
+      /* storage unavailable — silently ignore */
+    }
+  }, [key, value]);
+  return [value, setValue];
 }
 
 function CatalogOptionRenderings({
@@ -532,93 +661,130 @@ function CatalogOptionRenderings({
   onDelete: (imageId: string) => void;
   onAdd: (file: File) => void;
 }) {
-  const addInputRef = useRef<HTMLInputElement>(null);
-  const addPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
+  const slot0 = optionImages[0] ?? null;
+  const slot1 = optionImages[1] ?? null;
   const canAddMore = optionImages.length < 2;
+
+  return (
+    <div className="catalog-options-strip">
+      <div className="catalog-option-grid">
+        {/* Slot 0: image card, or big upload area when no options yet (spans both cols via :only-child CSS) */}
+        <div className="catalog-option-slot">
+          {slot0 ? (
+            <>
+              <CatalogOptionCard
+                image={slot0}
+                itemName={itemName}
+                index={0}
+                disabled={isBusy}
+                onSelect={onSelect}
+                onUpload={(file) => onUpload(file, 0)}
+                onDelete={onDelete}
+              />
+              <p className="catalog-option-label">Option 1</p>
+            </>
+          ) : (
+            <CatalogUploadSlot label="Add option" disabled={isBusy} onFile={onAdd} />
+          )}
+        </div>
+
+        {/* Slot 1: only added to the grid when it actually has an image.
+            When absent, slot 0 is :only-child and expands to fill both columns. */}
+        {slot1 && (
+          <div className="catalog-option-slot">
+            <CatalogOptionCard
+              image={slot1}
+              itemName={itemName}
+              index={1}
+              disabled={isBusy}
+              onSelect={onSelect}
+              onUpload={(file) => onUpload(file, 1)}
+              onDelete={onDelete}
+            />
+            <p className="catalog-option-label">Option 2</p>
+          </div>
+        )}
+      </div>
+
+      {/* Compact "Add option 2" button shown below the full-width option 1 image */}
+      {slot0 && canAddMore && (
+        <CatalogUploadSlot label="Add option 2" compact disabled={isBusy} onFile={onAdd} />
+      )}
+    </div>
+  );
+}
+
+function CatalogUploadSlot({
+  label,
+  disabled,
+  onFile,
+  compact = false,
+}: {
+  label: string;
+  disabled?: boolean;
+  onFile: (file: File) => void;
+  compact?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const pasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
 
   useEffect(
     () => () => {
-      const handler = addPasteHandlerRef.current;
+      const handler = pasteHandlerRef.current;
       if (handler) document.removeEventListener('paste', handler);
     },
     [],
   );
 
-  const enableAddPaste = () => {
-    if (!canAddMore || isBusy || addPasteHandlerRef.current) return;
+  const enablePaste = () => {
+    if (disabled || pasteHandlerRef.current) return;
     const handler = (event: ClipboardEvent) => {
       const file = Array.from(event.clipboardData?.items ?? [])
         .find((item) => item.kind === 'file' && item.type.startsWith('image/'))
         ?.getAsFile();
       if (!file) return;
       event.preventDefault();
-      onAdd(file);
+      onFile(file);
     };
-    addPasteHandlerRef.current = handler;
+    pasteHandlerRef.current = handler;
     document.addEventListener('paste', handler);
   };
 
-  const disableAddPaste = () => {
-    const handler = addPasteHandlerRef.current;
+  const disablePaste = () => {
+    const handler = pasteHandlerRef.current;
     if (!handler) return;
     document.removeEventListener('paste', handler);
-    addPasteHandlerRef.current = null;
+    pasteHandlerRef.current = null;
   };
 
   return (
-    <div className="catalog-options-strip">
-      {optionImages.length > 0 && (
-        <div className="catalog-option-grid">
-          {optionImages.map((image, index) => (
-            <div key={image.id} className="catalog-option-slot">
-              <CatalogOptionCard
-                image={image}
-                itemName={itemName}
-                index={index}
-                disabled={isBusy}
-                onSelect={onSelect}
-                onUpload={(file) => onUpload(file, index)}
-                onDelete={onDelete}
-              />
-              <p className="catalog-option-label">Option {index + 1}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      {canAddMore && (
-        <>
-          <button
-            type="button"
-            className="no-print catalog-add-option-btn"
-            disabled={isBusy}
-            onClick={() => addInputRef.current?.click()}
-            onMouseEnter={enableAddPaste}
-            onMouseLeave={disableAddPaste}
-          >
-            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-              <path
-                d="M8 3v10M3 8h10"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-            Add option
-          </button>
-          <input
-            ref={addInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            className="sr-only"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file && !isBusy) onAdd(file);
-              event.currentTarget.value = '';
-            }}
-          />
-        </>
-      )}
-    </div>
+    <>
+      <button
+        type="button"
+        className={compact ? 'no-print catalog-add-option-btn' : 'no-print catalog-upload-slot'}
+        disabled={disabled}
+        onClick={() => inputRef.current?.click()}
+        onMouseEnter={enablePaste}
+        onMouseLeave={disablePaste}
+        aria-label={label}
+      >
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-4 w-4">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        <span>{label}</span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file && !disabled) onFile(file);
+          event.currentTarget.value = '';
+        }}
+      />
+    </>
   );
 }
 
@@ -819,12 +985,4 @@ function initials(value: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
-}
-
-function slugify(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
 }

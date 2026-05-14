@@ -224,16 +224,32 @@ export function ImageFrame({
   };
 
   const imageElement = displayUrl ? (
-    <img
-      src={displayUrl}
-      alt={primaryImage?.altText || alt}
-      className={cn(
-        'h-full w-full',
-        entityType === 'project' ? 'object-cover' : 'object-contain',
-        'object-center',
-        imageClassName,
-      )}
-    />
+    cropParams ? (
+      // Scale and offset the image so the saved crop region fills the container exactly.
+      // The container is already position:relative + overflow:hidden.
+      <img
+        src={displayUrl}
+        alt={primaryImage?.altText || alt}
+        style={{
+          position: 'absolute',
+          width: `${(1 / cropParams.cropWidth) * 100}%`,
+          height: `${(1 / cropParams.cropHeight) * 100}%`,
+          left: `${(-cropParams.cropX / cropParams.cropWidth) * 100}%`,
+          top: `${(-cropParams.cropY / cropParams.cropHeight) * 100}%`,
+        }}
+      />
+    ) : (
+      <img
+        src={displayUrl}
+        alt={primaryImage?.altText || alt}
+        className={cn(
+          'h-full w-full',
+          entityType === 'project' ? 'object-cover' : 'object-contain',
+          'object-center',
+          imageClassName,
+        )}
+      />
+    )
   ) : (
     <div
       className={cn(
@@ -342,7 +358,6 @@ export function ImageFrame({
           onClose={() => setCropModalOpen(false)}
           imageUrl={displayUrl}
           aspect={cropAspect}
-          initialCrop={cropParams}
           onSave={handleCropSave}
           isSaving={updateCrop.isPending}
         />
