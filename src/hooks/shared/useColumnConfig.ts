@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { CustomColumnDef } from '../../types';
 
@@ -40,6 +40,12 @@ function writeConfig(projectId: string, tableKey: string, config: ColumnConfig) 
   } catch {
     // storage quota exceeded — silently ignore
   }
+}
+
+const CONFIG_EVENT = 'ffe:column-config-changed';
+
+function dispatchConfigEvent(key: string) {
+  window.dispatchEvent(new CustomEvent(CONFIG_EVENT, { detail: { key } }));
 }
 
 function insertBeforeAnchor(order: string[], ids: string[], anchorId?: string): string[] {
@@ -106,9 +112,25 @@ export function useColumnConfig(
     (next: ColumnConfig) => {
       setConfig(next);
       writeConfig(projectId, tableKey, next);
+      dispatchConfigEvent(storageKey(projectId, tableKey));
     },
     [projectId, tableKey],
   );
+
+  // Keep in sync when another mounted instance (e.g. AppBarActions popover) changes config.
+  const configRef = useRef(config);
+  configRef.current = config;
+  useEffect(() => {
+    const key = storageKey(projectId, tableKey);
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ key: string }>).detail;
+      if (detail?.key !== key) return;
+      const fresh = readConfig(projectId, tableKey);
+      if (fresh) setConfig(fresh);
+    };
+    window.addEventListener(CONFIG_EVENT, handler);
+    return () => window.removeEventListener(CONFIG_EVENT, handler);
+  }, [projectId, tableKey]);
 
   // Sync any custom def IDs added after mount (e.g. after createItemColumnDef resolves).
   // Using a stable string key avoids re-running when React Query returns a new array reference.

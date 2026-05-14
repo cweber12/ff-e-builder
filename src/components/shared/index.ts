@@ -33,3 +33,4 @@ export {
   ProposalStatusConfirmModal,
   PROPOSAL_STATUS_CONFIG,
 } from './ProposalStatusSelect';
+export { ColumnVisibilityPopover } from './ColumnVisibilityPopover';

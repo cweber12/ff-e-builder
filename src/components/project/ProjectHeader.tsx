@@ -26,33 +26,6 @@ function SkeletonBar() {
 }
 
 // ---------------------------------------------------------------------------
-// Keyboard hint strip
-// ---------------------------------------------------------------------------
-function Kbd({ children }: { children: ReactNode }) {
-  return (
-    <kbd className="inline-block min-w-[14px] rounded-sm border border-neutral-200 bg-neutral-100 px-1 py-0.5 text-[9px] text-neutral-600">
-      {children}
-    </kbd>
-  );
-}
-
-function KeyboardHints() {
-  return (
-    <div className="ml-3 hidden items-center gap-3 font-mono text-[10px] text-neutral-400 lg:inline-flex">
-      <span>
-        <Kbd>↑↓</Kbd> nav
-      </span>
-      <span>
-        <Kbd>↵</Kbd> edit
-      </span>
-      <span>
-        <Kbd>⌘K</Kbd> find
-      </span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Tab configuration
 // ---------------------------------------------------------------------------
 const TABS = [
@@ -131,10 +104,8 @@ export function ProjectHeader({
   if (!project) return <SkeletonBar />;
 
   const isFfeRoute = location.pathname.includes(`/projects/${project.id}/ffe`);
-  const isProposalRoute = location.pathname.includes(`/projects/${project.id}/proposal`);
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
   const showViewToggle = isFfeRoute;
-  const showKeyboardHints = isFfeRoute || isProposalRoute;
 
   return (
     <header className="no-print relative z-10 shrink-0 overflow-visible">
@@ -208,7 +179,6 @@ export function ProjectHeader({
         <div className="ml-auto flex items-center gap-1">
           <SaveStatusIndicator state={saveState} relTime={saveRelTime} errorAction={onSaveRetry} />
           {actions}
-          {showKeyboardHints && <KeyboardHints />}
         </div>
       </div>
     </header>

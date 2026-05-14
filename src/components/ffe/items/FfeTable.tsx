@@ -263,11 +263,25 @@ function EditableTextCell({
 
 function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatch }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const saveStatus = (status: ItemStatus) =>
     saveValidatedPatch(onSave, item, {
       status,
     });
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (event: MouseEvent) => {
+      if (!triggerRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  const menuRect = triggerRef.current?.getBoundingClientRect();
 
   return (
     <span
@@ -286,6 +300,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
         <ItemStatusChip status={item.status} />
       </button>
       <button
+        ref={triggerRef}
         type="button"
         aria-label={`Choose status for ${item.itemName}`}
         aria-expanded={menuOpen}
@@ -298,27 +313,35 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
       >
         <MoreIcon />
       </button>
-      {menuOpen && (
-        <div
-          role="menu"
-          className="absolute left-0 top-full z-20 mt-1 min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-md"
-        >
-          {itemStatuses.map((status) => (
-            <button
-              key={status}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuOpen(false);
-                void saveStatus(status);
-              }}
-              className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-            >
-              <ItemStatusChip status={status} />
-            </button>
-          ))}
-        </div>
-      )}
+      {menuOpen &&
+        menuRect &&
+        createPortal(
+          <div
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: menuRect.bottom + 4,
+              left: menuRect.left,
+            }}
+            className="z-[100] min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+          >
+            {itemStatuses.map((status) => (
+              <button
+                key={status}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  void saveStatus(status);
+                }}
+                className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                <ItemStatusChip status={status} />
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </span>
   );
 }
@@ -996,6 +1019,7 @@ function SortableItemRow({
           className={cn(
             'px-3 py-3 text-gray-700',
             cell.column.id === 'description' ? 'min-w-64 whitespace-normal' : 'whitespace-nowrap',
+            cell.column.id === 'plan' && 'w-24 min-w-24 max-w-24 overflow-hidden',
             cell.column.id === 'lineTotal' && stickyTotalCellClassName,
             cell.column.id === 'actions' && stickyActionsCellClassName,
           )}
@@ -1265,7 +1289,8 @@ function RoomActionsMenu({
                   style={{
                     position: 'fixed',
                     top: columnTriggerRef.current.getBoundingClientRect().top,
-                    left: columnTriggerRef.current.getBoundingClientRect().right + 4,
+                    right:
+                      window.innerWidth - columnTriggerRef.current.getBoundingClientRect().left + 4,
                   }}
                   className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
                 >
@@ -1749,7 +1774,10 @@ function RoomItemsSection({
                                   key={header.id}
                                   colId={colId}
                                   label={header.column.columnDef.header as string}
-                                  className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface"
+                                  className={cn(
+                                    'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                    colId === 'plan' && 'w-24 min-w-24 max-w-24',
+                                  )}
                                   onHide={() => columnConfig.hideDefaultColumn(colId)}
                                 />
                               );
@@ -1909,7 +1937,10 @@ function RoomItemsSection({
                                       key={header.id}
                                       colId={colId}
                                       label={header.column.columnDef.header as string}
-                                      className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface"
+                                      className={cn(
+                                        'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                        colId === 'plan' && 'w-24 min-w-24 max-w-24',
+                                      )}
                                       onHide={() => columnConfig.hideDefaultColumn(colId)}
                                     />
                                   );

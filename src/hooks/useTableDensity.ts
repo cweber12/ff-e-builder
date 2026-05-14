@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export type TableDensity = 'compact' | 'default' | 'tall';
 
 const STORAGE_KEY = 'table-density';
+const DENSITY_EVENT = 'ffe:density-changed';
 
 function readDensity(): TableDensity {
   try {
@@ -21,9 +22,22 @@ export function useTableDensity() {
     setDensityState(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
+      window.dispatchEvent(new CustomEvent(DENSITY_EVENT));
     } catch {
       // ignore
     }
+  }, []);
+
+  // Keep in sync when another mounted instance changes density.
+  const densityRef = useRef(density);
+  densityRef.current = density;
+  useEffect(() => {
+    const handler = () => {
+      const fresh = readDensity();
+      if (fresh !== densityRef.current) setDensityState(fresh);
+    };
+    window.addEventListener(DENSITY_EVENT, handler);
+    return () => window.removeEventListener(DENSITY_EVENT, handler);
   }, []);
 
   return { density, setDensity };

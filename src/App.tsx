@@ -129,8 +129,8 @@ function ProjectLayout() {
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
   const isProposalRoute = !!id && location.pathname.includes(`/projects/${id}/proposal`);
-  const isTableRoute = isFfeRoute || isProposalRoute;
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
+  const isTableRoute = (isFfeRoute && !isCatalogRoute) || isProposalRoute;
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
 
   // Projects loaded but this ID doesn't exist → 404

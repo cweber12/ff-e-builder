@@ -777,7 +777,8 @@ function CategoryActionsMenu({
                   style={{
                     position: 'fixed',
                     top: columnTriggerRef.current.getBoundingClientRect().top,
-                    left: columnTriggerRef.current.getBoundingClientRect().right + 4,
+                    right:
+                      window.innerWidth - columnTriggerRef.current.getBoundingClientRect().left + 4,
                   }}
                   className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
                 >
@@ -1574,22 +1575,11 @@ function ProposalRow({
       <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
         {formatMoney(cents(lineTotal))}
       </td>
-      <td
-        className={cn('flex items-center gap-1 px-3 py-2', stickyOptionsCellClassName)}
-        onClick={stopProp}
-      >
-        <button
-          type="button"
-          aria-label={`View details for ${item.productTag || item.description || 'item'}`}
-          title="View details"
-          onClick={onRowClick}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-        >
-          <EyeIcon />
-        </button>
+      <td className={cn('px-1 py-2', stickyOptionsCellClassName)} onClick={stopProp}>
         <ProposalItemActionsMenu
           itemName={item.productTag || item.description || 'item'}
           otherCategories={otherCategories}
+          onViewDetails={onRowClick}
           onDuplicate={onDuplicate}
           onMove={onMove}
           onDelete={onDelete}
@@ -1602,12 +1592,14 @@ function ProposalRow({
 function ProposalItemActionsMenu({
   itemName,
   otherCategories,
+  onViewDetails,
   onDuplicate,
   onMove,
   onDelete,
 }: {
   itemName: string;
   otherCategories: { id: string; name: string }[];
+  onViewDetails: () => void;
   onDuplicate: () => void;
   onMove: (toCategoryId: string) => void;
   onDelete: () => void;
@@ -1652,6 +1644,15 @@ function ProposalItemActionsMenu({
           role="menu"
           className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
         >
+          <button
+            type="button"
+            role="menuitem"
+            className={menuItemClassName}
+            onClick={() => runAction(onViewDetails)}
+          >
+            View details
+          </button>
+          <div className="my-1 h-px bg-gray-100" />
           <button
             type="button"
             role="menuitem"
@@ -1766,6 +1767,7 @@ function MobileProposalCards({
               <ProposalItemActionsMenu
                 itemName={item.productTag || item.description || 'item'}
                 otherCategories={otherCategories}
+                onViewDetails={() => onItemClick(item)}
                 onDuplicate={() => onDuplicate(item)}
                 onMove={(toCategoryId) => onMove(item, toCategoryId)}
                 onDelete={() => onDelete(item)}
@@ -2169,18 +2171,4 @@ function SizeModal({
 function onNumberChange(event: ChangeEvent<HTMLInputElement>, onSave: (value: number) => void) {
   const value = Number(event.target.value);
   if (Number.isFinite(value) && value >= 0) onSave(value);
-}
-
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  );
 }
