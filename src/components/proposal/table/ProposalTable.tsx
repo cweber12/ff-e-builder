@@ -203,12 +203,15 @@ function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: st
   const { data: changelog = [] } = useProposalItemChangelog(itemId);
   const entries = changelog.filter((e) => e.columnKey === columnKey);
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     function handleOutside(e: globalThis.MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const inTrigger = triggerRef.current?.contains(e.target as Node) ?? false;
+      const inPopup = popupRef.current?.contains(e.target as Node) ?? false;
+      if (!inTrigger && !inPopup) setOpen(false);
     }
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
@@ -218,10 +221,12 @@ function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: st
 
   const latest = entries[0]!;
   const cfg = proposalStatusConfig[latest.proposalStatus];
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
 
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div className="inline-flex">
       <button
+        ref={triggerRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
@@ -230,34 +235,45 @@ function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: st
         title="View change history"
         className={cn('h-2 w-2 rounded-full flex-shrink-0', cfg.dotClass)}
       />
-      {open && (
-        <div className="absolute left-0 top-4 z-50 min-w-56 max-w-xs rounded-lg border border-gray-200 bg-white shadow-lg">
-          <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
-            Change history
-          </div>
-          <ul className="max-h-56 overflow-y-auto divide-y divide-gray-50">
-            {entries.map((entry) => (
-              <li key={entry.id} className="px-3 py-2 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={cn(
-                      'h-1.5 w-1.5 rounded-full flex-shrink-0',
-                      proposalStatusConfig[entry.proposalStatus].dotClass,
-                    )}
-                  />
-                  <span className="text-gray-400">{formatStatusDate(entry.changedAt)}</span>
-                </div>
-                <div className="mt-0.5 flex items-baseline gap-1">
-                  <span className="text-gray-400 line-through">{entry.previousValue || '—'}</span>
-                  <span className="text-gray-300">→</span>
-                  <span className="font-medium text-gray-700">{entry.newValue || '—'}</span>
-                </div>
-                {entry.notes && <p className="mt-0.5 text-gray-500 italic">{entry.notes}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {open &&
+        triggerRect &&
+        createPortal(
+          <div
+            ref={popupRef}
+            style={{
+              position: 'fixed',
+              top: triggerRect.bottom + 4,
+              left: triggerRect.left,
+            }}
+            className="z-[100] min-w-56 max-w-xs rounded-lg border border-gray-200 bg-white shadow-lg"
+          >
+            <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
+              Change history
+            </div>
+            <ul className="max-h-56 overflow-y-auto divide-y divide-gray-50">
+              {entries.map((entry) => (
+                <li key={entry.id} className="px-3 py-2 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full flex-shrink-0',
+                        proposalStatusConfig[entry.proposalStatus].dotClass,
+                      )}
+                    />
+                    <span className="text-gray-400">{formatStatusDate(entry.changedAt)}</span>
+                  </div>
+                  <div className="mt-0.5 flex items-baseline gap-1">
+                    <span className="text-gray-400 line-through">{entry.previousValue || '—'}</span>
+                    <span className="text-gray-300">→</span>
+                    <span className="font-medium text-gray-700">{entry.newValue || '—'}</span>
+                  </div>
+                  {entry.notes && <p className="mt-0.5 text-gray-500 italic">{entry.notes}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -706,16 +722,18 @@ function CategoryActionsMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [columnSubmenuOpen, setColumnSubmenuOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const columnTriggerRef = useRef<HTMLButtonElement>(null);
   const columnSubmenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (event: globalThis.MouseEvent) => {
-      const inMain = ref.current?.contains(event.target as Node) ?? false;
+      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
+      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
       const inSubmenu = columnSubmenuRef.current?.contains(event.target as Node) ?? false;
-      if (!inMain && !inSubmenu) {
+      if (!inTrigger && !inMenu && !inSubmenu) {
         setOpen(false);
         setColumnSubmenuOpen(false);
       }
@@ -729,9 +747,12 @@ function CategoryActionsMenu({
     action();
   };
 
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div className="inline-flex">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -742,89 +763,100 @@ function CategoryActionsMenu({
       >
         <MoreIcon />
       </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className={menuItemClassName}
-            onClick={() => runAction(onAddItem)}
+      {open &&
+        triggerRect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: triggerRect.bottom + 4,
+              right: window.innerWidth - triggerRect.right,
+            }}
+            className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
           >
-            Add item
-          </button>
-          <div className="relative">
             <button
-              ref={columnTriggerRef}
               type="button"
               role="menuitem"
-              aria-haspopup="menu"
-              aria-expanded={columnSubmenuOpen}
-              className={cn(menuItemClassName, 'justify-between')}
-              onClick={() => setColumnSubmenuOpen((v) => !v)}
+              className={menuItemClassName}
+              onClick={() => runAction(onAddItem)}
             >
-              Add column
-              <ChevronIcon direction="right" />
+              Add item
             </button>
-            {columnSubmenuOpen &&
-              columnTriggerRef.current &&
-              createPortal(
-                <div
-                  ref={columnSubmenuRef}
-                  role="menu"
-                  style={{
-                    position: 'fixed',
-                    top: columnTriggerRef.current.getBoundingClientRect().top,
-                    right:
-                      window.innerWidth - columnTriggerRef.current.getBoundingClientRect().left + 4,
-                  }}
-                  className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
-                >
-                  {hiddenDefaults.map((col) => (
+            <div className="relative">
+              <button
+                ref={columnTriggerRef}
+                type="button"
+                role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={columnSubmenuOpen}
+                className={cn(menuItemClassName, 'justify-between')}
+                onClick={() => setColumnSubmenuOpen((v) => !v)}
+              >
+                Add column
+                <ChevronIcon direction="right" />
+              </button>
+              {columnSubmenuOpen &&
+                columnTriggerRef.current &&
+                createPortal(
+                  <div
+                    ref={columnSubmenuRef}
+                    role="menu"
+                    style={{
+                      position: 'fixed',
+                      top: columnTriggerRef.current.getBoundingClientRect().top,
+                      right:
+                        window.innerWidth -
+                        columnTriggerRef.current.getBoundingClientRect().left +
+                        4,
+                    }}
+                    className="z-[100] min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                  >
+                    {hiddenDefaults.map((col) => (
+                      <button
+                        key={col.id}
+                        type="button"
+                        role="menuitem"
+                        className={menuItemClassName}
+                        onClick={() => {
+                          setColumnSubmenuOpen(false);
+                          setOpen(false);
+                          onRestoreDefault(col.id);
+                        }}
+                      >
+                        {col.label}
+                      </button>
+                    ))}
+                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
                     <button
-                      key={col.id}
                       type="button"
                       role="menuitem"
                       className={menuItemClassName}
                       onClick={() => {
                         setColumnSubmenuOpen(false);
                         setOpen(false);
-                        onRestoreDefault(col.id);
+                        onOpenAddColumnModal();
                       }}
                     >
-                      {col.label}
+                      Add custom column...
                     </button>
-                  ))}
-                  {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={menuItemClassName}
-                    onClick={() => {
-                      setColumnSubmenuOpen(false);
-                      setOpen(false);
-                      onOpenAddColumnModal();
-                    }}
-                  >
-                    Add custom column...
-                  </button>
-                </div>,
-                document.body,
-              )}
-          </div>
-          <div className="my-1 h-px bg-gray-100" />
-          <button
-            type="button"
-            role="menuitem"
-            className={cn(menuItemClassName, 'text-danger-600')}
-            onClick={() => runAction(onCategoryDelete)}
-          >
-            Delete category
-          </button>
-        </div>
-      )}
+                  </div>,
+                  document.body,
+                )}
+            </div>
+            <div className="my-1 h-px bg-gray-100" />
+            <button
+              type="button"
+              role="menuitem"
+              className={cn(menuItemClassName, 'text-danger-600')}
+              onClick={() => runAction(onCategoryDelete)}
+            >
+              Delete category
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -1606,12 +1638,18 @@ function ProposalItemActionsMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const moveTriggerRef = useRef<HTMLButtonElement>(null);
+  const moveMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (event: globalThis.MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
+      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
+      const inMoveMenu = moveMenuRef.current?.contains(event.target as Node) ?? false;
+      if (!inTrigger && !inMenu && !inMoveMenu) {
         setOpen(false);
         setMoveOpen(false);
       }
@@ -1626,9 +1664,12 @@ function ProposalItemActionsMenu({
     action();
   };
 
+  const menuRect = triggerRef.current?.getBoundingClientRect();
+
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div className="inline-flex">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -1639,72 +1680,94 @@ function ProposalItemActionsMenu({
       >
         <MoreIcon />
       </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className={menuItemClassName}
-            onClick={() => runAction(onViewDetails)}
+      {open &&
+        menuRect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: menuRect.bottom + 4,
+              right: window.innerWidth - menuRect.right,
+            }}
+            className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
           >
-            View details
-          </button>
-          <div className="my-1 h-px bg-gray-100" />
-          <button
-            type="button"
-            role="menuitem"
-            className={menuItemClassName}
-            onClick={() => runAction(onDuplicate)}
-          >
-            Duplicate
-          </button>
-          {otherCategories.length > 0 && (
-            <div className="relative">
-              <button
-                type="button"
-                role="menuitem"
-                aria-haspopup="menu"
-                aria-expanded={moveOpen}
-                className={menuItemClassName}
-                onClick={() => setMoveOpen((v) => !v)}
-              >
-                Move to...
-                <span className="ml-auto text-xs text-gray-400">{'>'}</span>
-              </button>
-              {moveOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-full top-0 z-40 mr-1 min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+            <button
+              type="button"
+              role="menuitem"
+              className={menuItemClassName}
+              onClick={() => runAction(onViewDetails)}
+            >
+              View details
+            </button>
+            <div className="my-1 h-px bg-gray-100" />
+            <button
+              type="button"
+              role="menuitem"
+              className={menuItemClassName}
+              onClick={() => runAction(onDuplicate)}
+            >
+              Duplicate
+            </button>
+            {otherCategories.length > 0 && (
+              <div className="relative">
+                <button
+                  ref={moveTriggerRef}
+                  type="button"
+                  role="menuitem"
+                  aria-haspopup="menu"
+                  aria-expanded={moveOpen}
+                  className={menuItemClassName}
+                  onClick={() => setMoveOpen((v) => !v)}
                 >
-                  {otherCategories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      role="menuitem"
-                      className={menuItemClassName}
-                      onClick={() => runAction(() => onMove(cat.id))}
+                  Move to...
+                  <span className="ml-auto text-xs text-gray-400">{'>'}</span>
+                </button>
+                {moveOpen &&
+                  moveTriggerRef.current &&
+                  createPortal(
+                    <div
+                      ref={moveMenuRef}
+                      role="menu"
+                      style={{
+                        position: 'fixed',
+                        top: moveTriggerRef.current.getBoundingClientRect().top,
+                        right:
+                          window.innerWidth -
+                          moveTriggerRef.current.getBoundingClientRect().left +
+                          4,
+                      }}
+                      className="z-[100] min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
                     >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          <div className="my-1 h-px bg-gray-100" />
-          <button
-            type="button"
-            role="menuitem"
-            className={cn(menuItemClassName, 'text-danger-600')}
-            onClick={() => runAction(onDelete)}
-          >
-            Delete item
-          </button>
-        </div>
-      )}
+                      {otherCategories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          role="menuitem"
+                          className={menuItemClassName}
+                          onClick={() => runAction(() => onMove(cat.id))}
+                        >
+                          {cat.name}
+                        </button>
+                      ))}
+                    </div>,
+                    document.body,
+                  )}
+              </div>
+            )}
+            <div className="my-1 h-px bg-gray-100" />
+            <button
+              type="button"
+              role="menuitem"
+              className={cn(menuItemClassName, 'text-danger-600')}
+              onClick={() => runAction(onDelete)}
+            >
+              Delete item
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

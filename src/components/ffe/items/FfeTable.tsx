@@ -377,12 +377,28 @@ function EditableDimensionsCell({ item, onSave }: { item: Item; onSave: SaveItem
 function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }) {
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const targetRooms = actions.rooms.filter((room) => room.id !== item.roomId);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
+      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
+      if (!inTrigger && !inMenu) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const menuRect = triggerRef.current?.getBoundingClientRect();
 
   return (
     <>
-      <span className="relative inline-flex items-center">
+      <span className="inline-flex items-center">
         <button
+          ref={triggerRef}
           type="button"
           aria-label={`Open item actions for ${item.itemName}`}
           aria-expanded={open}
@@ -392,56 +408,65 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
         >
           <MoreIcon />
         </button>
-        {open && (
-          <div
-            role="menu"
-            className="absolute right-0 top-full z-20 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-md"
-          >
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                void actions.onDuplicate(item);
+        {open &&
+          menuRect &&
+          createPortal(
+            <div
+              ref={menuRef}
+              role="menu"
+              style={{
+                position: 'fixed',
+                top: menuRect.bottom + 4,
+                right: window.innerWidth - menuRect.right,
               }}
-              className={menuItemClassName}
+              className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-md"
             >
-              Duplicate
-            </button>
-            {targetRooms.length > 0 && (
-              <div className="border-t border-gray-100 pt-1">
-                <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  Move to room
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  void actions.onDuplicate(item);
+                }}
+                className={menuItemClassName}
+              >
+                Duplicate
+              </button>
+              {targetRooms.length > 0 && (
+                <div className="border-t border-gray-100 pt-1">
+                  <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Move to room
+                  </div>
+                  {targetRooms.map((room) => (
+                    <button
+                      key={room.id}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setOpen(false);
+                        void actions.onMove(item, room.id);
+                      }}
+                      className={menuItemClassName}
+                    >
+                      {room.name}
+                    </button>
+                  ))}
                 </div>
-                {targetRooms.map((room) => (
-                  <button
-                    key={room.id}
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setOpen(false);
-                      void actions.onMove(item, room.id);
-                    }}
-                    className={menuItemClassName}
-                  >
-                    {room.name}
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                setConfirmDelete(true);
-              }}
-              className={cn(menuItemClassName, 'text-danger-600')}
-            >
-              Delete
-            </button>
-          </div>
-        )}
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  setConfirmDelete(true);
+                }}
+                className={cn(menuItemClassName, 'text-danger-600')}
+              >
+                Delete
+              </button>
+            </div>,
+            document.body,
+          )}
       </span>
       <Modal
         open={confirmDelete}

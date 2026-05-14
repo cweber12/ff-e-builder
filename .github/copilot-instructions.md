@@ -7,7 +7,8 @@ Authoritative project rules live in [/AGENTS.md](/AGENTS.md). Read that file fir
 These items are not in AGENTS.md and apply only to Copilot:
 
 1. **When work is planned in named slices, pause after each slice.** Output the commit message as a fenced code block and wait for the user to confirm before starting the next slice. Do not run multiple slices back-to-back without confirmation.
-2. **Use native tools for search and verification.** Use `search_subagent`, `execution_subagent`, `grep_search`, `file_search`, and the `scout`/`Explore` agents for discovery, search, and running `pnpm typecheck && pnpm lint && pnpm test && pnpm build`. Do not pause and output a handoff prompt — run it directly.
+2. **After every code change, output a commit message.** Always end the response with a commit message in a fenced code block, formatted per the style in `/memories/commit-style.md`. Do not commit automatically — just output the message so the user can copy it.
+3. **Use native tools for search and verification.** Use `search_subagent`, `execution_subagent`, `grep_search`, `file_search`, and the `scout`/`Explore` agents for discovery, search, and running `pnpm typecheck && pnpm lint && pnpm test && pnpm build`. Do not pause and output a handoff prompt — run it directly.
 
 ## Local agent skills
 
