@@ -417,22 +417,6 @@ export function CatalogPage({
               </div>
             </div>
           </div>
-
-          <div className="catalog-option-row">
-            <CatalogOptionRenderings
-              itemId={item.id}
-              optionImages={optionImages}
-              itemName={item.itemName}
-              isBusy={isBusy}
-              onUpload={(file, index) =>
-                upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
-              }
-              onDelete={(imageId) => deleteImage.mutate(imageId)}
-              onAdd={(file) =>
-                upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
-              }
-            />
-          </div>
         </div>
 
         <div className="catalog-main-right">
@@ -560,7 +544,9 @@ export function CatalogPage({
                     <div className="catalog-material-swatch">
                       <MaterialSwatchImage material={material} />
                     </div>
-                    <span className="catalog-material-name">{material.name || 'MATERIAL'}</span>
+                    <span className="catalog-material-name">
+                      {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
+                    </span>
                   </div>
                 ))
               : Array.from({ length: 4 }).map((_, index) => (
@@ -572,8 +558,25 @@ export function CatalogPage({
                   </div>
                 ))}
           </div>
+        </div>
+      </section>
 
-          <div className="catalog-location-block">
+      <div className="catalog-bottom-row">
+        <CatalogOptionRenderings
+          itemId={item.id}
+          optionImages={optionImages}
+          itemName={item.itemName}
+          isBusy={isBusy}
+          onUpload={(file, index) =>
+            upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
+          }
+          onDelete={(imageId) => deleteImage.mutate(imageId)}
+          onAdd={(file) =>
+            upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
+          }
+        />
+        <div className="catalog-location-block">
+          <div className="catalog-location-content">
             <p className="catalog-location-label">
               <span className="catalog-location-key">LOCATION:</span>{' '}
               <span className="catalog-location-value">{room.name}</span>
@@ -599,7 +602,7 @@ export function CatalogPage({
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <CatalogApprovalSection
         shown={approvalHidden !== 'hidden'}
@@ -676,33 +679,33 @@ function CatalogOptionRenderings({
   const slot1 = optionImages[1] ?? null;
 
   return (
-    <div className="catalog-options-strip">
-      <div className="catalog-option-grid">
-        {/* Slot 0: image card, or big upload area when no options yet (spans both cols via :only-child CSS) */}
-        <div className="catalog-option-slot">
-          {slot0 ? (
-            <>
-              <CatalogOptionCard
-                image={slot0}
-                itemId={itemId}
-                itemName={itemName}
-                index={0}
-                disabled={isBusy}
-                checked={selectedId === slot0.id}
-                onSelect={(id) => setSelectedId(id)}
-                onUpload={(file) => onUpload(file, 0)}
-                onDelete={onDelete}
-              />
-              <p className="catalog-option-label">Option 1</p>
-            </>
-          ) : (
-            <CatalogUploadSlot label="Add option" disabled={isBusy} onFile={onAdd} />
-          )}
-        </div>
+    <div className="catalog-option-grid">
+      {/* Slot 0: card when filled, upload slot when empty */}
+      <div className="catalog-option-slot">
+        {slot0 ? (
+          <>
+            <CatalogOptionCard
+              image={slot0}
+              itemId={itemId}
+              itemName={itemName}
+              index={0}
+              disabled={isBusy}
+              checked={selectedId === slot0.id}
+              onSelect={(id) => setSelectedId(id)}
+              onUpload={(file) => onUpload(file, 0)}
+              onDelete={onDelete}
+            />
+            <p className="catalog-option-label">Option 1</p>
+          </>
+        ) : (
+          <CatalogUploadSlot label="Add option" disabled={isBusy} onFile={onAdd} />
+        )}
+      </div>
 
-        {/* Slot 1: image card when present; upload slot when slot0 exists but slot1 is empty */}
+      {/* Slot 1: always in DOM — card, upload slot, or transparent ghost */}
+      <div className="catalog-option-slot">
         {slot1 ? (
-          <div className="catalog-option-slot">
+          <>
             <CatalogOptionCard
               image={slot1}
               itemId={itemId}
@@ -715,12 +718,12 @@ function CatalogOptionRenderings({
               onDelete={onDelete}
             />
             <p className="catalog-option-label">Option 2</p>
-          </div>
+          </>
         ) : slot0 ? (
-          <div className="catalog-option-slot">
-            <CatalogUploadSlot label="Add option 2" disabled={isBusy} onFile={onAdd} />
-          </div>
-        ) : null}
+          <CatalogUploadSlot label="Add option 2" disabled={isBusy} onFile={onAdd} />
+        ) : (
+          <div className="catalog-option-ghost" />
+        )}
       </div>
     </div>
   );
