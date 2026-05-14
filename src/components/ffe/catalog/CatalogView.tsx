@@ -3,15 +3,22 @@ import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
-import { useDeleteImage, useImages, useUpdateItem, useUploadImage } from '../../../hooks';
+import {
+  useDeleteImage,
+  useImages,
+  useUpdateImageCrop,
+  useUpdateItem,
+  useUploadImage,
+} from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
+import { CropModal } from '../../shared/image/CropModal';
 import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
 import { api } from '../../../lib/api';
-import type { ImageAsset } from '../../../types';
+import type { CropParams, ImageAsset } from '../../../types';
 
 type CatalogEntry = {
   item: Item;
@@ -413,6 +420,7 @@ export function CatalogPage({
 
           <div className="catalog-option-row">
             <CatalogOptionRenderings
+              itemId={item.id}
               optionImages={optionImages}
               itemName={item.itemName}
               isBusy={isBusy}
@@ -550,7 +558,7 @@ export function CatalogPage({
                   <div key={material.id} className="catalog-material-cell">
                     <span className="catalog-material-id">{material.materialId || 'ID'}</span>
                     <div className="catalog-material-swatch">
-                      <MaterialSwatchImage material={material} size="lg" />
+                      <MaterialSwatchImage material={material} />
                     </div>
                     <span className="catalog-material-name">{material.name || 'MATERIAL'}</span>
                   </div>
@@ -647,6 +655,7 @@ function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
 }
 
 function CatalogOptionRenderings({
+  itemId,
   optionImages,
   itemName,
   isBusy,
@@ -654,6 +663,7 @@ function CatalogOptionRenderings({
   onDelete,
   onAdd,
 }: {
+  itemId: string;
   optionImages: ImageAsset[];
   itemName: string;
   isBusy: boolean;
@@ -664,7 +674,6 @@ function CatalogOptionRenderings({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const slot0 = optionImages[0] ?? null;
   const slot1 = optionImages[1] ?? null;
-  const canAddMore = optionImages.length < 2;
 
   return (
     <div className="catalog-options-strip">
@@ -675,6 +684,7 @@ function CatalogOptionRenderings({
             <>
               <CatalogOptionCard
                 image={slot0}
+                itemId={itemId}
                 itemName={itemName}
                 index={0}
                 disabled={isBusy}
@@ -690,12 +700,12 @@ function CatalogOptionRenderings({
           )}
         </div>
 
-        {/* Slot 1: only added to the grid when it actually has an image.
-            When absent, slot 0 is :only-child and expands to fill both columns. */}
-        {slot1 && (
+        {/* Slot 1: image card when present; upload slot when slot0 exists but slot1 is empty */}
+        {slot1 ? (
           <div className="catalog-option-slot">
             <CatalogOptionCard
               image={slot1}
+              itemId={itemId}
               itemName={itemName}
               index={1}
               disabled={isBusy}
@@ -706,13 +716,12 @@ function CatalogOptionRenderings({
             />
             <p className="catalog-option-label">Option 2</p>
           </div>
-        )}
+        ) : slot0 ? (
+          <div className="catalog-option-slot">
+            <CatalogUploadSlot label="Add option 2" disabled={isBusy} onFile={onAdd} />
+          </div>
+        ) : null}
       </div>
-
-      {/* Compact "Add option 2" button shown below the full-width option 1 image */}
-      {slot0 && canAddMore && (
-        <CatalogUploadSlot label="Add option 2" compact disabled={isBusy} onFile={onAdd} />
-      )}
     </div>
   );
 }
@@ -793,6 +802,7 @@ function CatalogUploadSlot({
 
 function CatalogOptionCard({
   image,
+  itemId,
   itemName,
   index,
   disabled,
@@ -802,6 +812,7 @@ function CatalogOptionCard({
   onDelete,
 }: {
   image: ImageAsset;
+  itemId: string;
   itemName: string;
   index: number;
   disabled?: boolean;
@@ -812,8 +823,23 @@ function CatalogOptionCard({
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
+  const updateCrop = useUpdateImageCrop('item_option', itemId);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
+
+  const cropParams: CropParams | null =
+    image.cropX != null &&
+    image.cropY != null &&
+    image.cropWidth != null &&
+    image.cropHeight != null
+      ? {
+          cropX: image.cropX,
+          cropY: image.cropY,
+          cropWidth: image.cropWidth,
+          cropHeight: image.cropHeight,
+        }
+      : null;
   const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
 
   useEffect(() => {
@@ -853,6 +879,10 @@ function CatalogOptionCard({
   const handleFile = (file: File | null | undefined) => {
     if (!file || disabled) return;
     onUpload(file);
+  };
+
+  const handleCropSave = (params: CropParams) => {
+    updateCrop.mutate({ imageId: image.id, params }, { onSuccess: () => setCropOpen(false) });
   };
 
   const enablePaste = () => {
@@ -897,11 +927,25 @@ function CatalogOptionCard({
           onClick={() => setMenuOpen((o) => !o)}
           className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
-          <img
-            src={previewUrl}
-            alt={`${itemName} option ${index + 1}`}
-            className="h-full w-full object-contain object-center"
-          />
+          {cropParams ? (
+            <img
+              src={previewUrl}
+              alt={`${itemName} option ${index + 1}`}
+              style={{
+                position: 'absolute',
+                width: `${(1 / cropParams.cropWidth) * 100}%`,
+                height: `${(1 / cropParams.cropHeight) * 100}%`,
+                left: `${(-cropParams.cropX / cropParams.cropWidth) * 100}%`,
+                top: `${(-cropParams.cropY / cropParams.cropHeight) * 100}%`,
+              }}
+            />
+          ) : (
+            <img
+              src={previewUrl}
+              alt={`${itemName} option ${index + 1}`}
+              className="h-full w-full object-contain object-center"
+            />
+          )}
         </button>
       ) : (
         <div className="catalog-option-empty">
@@ -914,10 +958,15 @@ function CatalogOptionCard({
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         canUpdate={!disabled}
+        canCrop={!disabled}
         canDelete={!disabled}
         onUpdate={() => {
           setMenuOpen(false);
           inputRef.current?.click();
+        }}
+        onCrop={() => {
+          setMenuOpen(false);
+          setCropOpen(true);
         }}
         onDelete={() => {
           setMenuOpen(false);
@@ -935,6 +984,17 @@ function CatalogOptionCard({
           event.currentTarget.value = '';
         }}
       />
+
+      {cropOpen && previewUrl ? (
+        <CropModal
+          open={cropOpen}
+          onClose={() => setCropOpen(false)}
+          imageUrl={previewUrl}
+          aspect={1}
+          onSave={handleCropSave}
+          isSaving={updateCrop.isPending}
+        />
+      ) : null}
     </div>
   );
 }
