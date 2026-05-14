@@ -374,38 +374,40 @@ export function CatalogPage({
 
       <section className="catalog-main">
         <div className="catalog-main-left">
-          <div className="catalog-rendering-square">
-            <ImageFrame
-              entityType="item"
-              entityId={item.id}
-              alt={item.itemName}
-              fallbackUrl={null}
-              className="border-0 shadow-none h-full w-full"
-              imageClassName="catalog-image"
-              placeholderClassName="catalog-placeholder"
-              placeholderContent={<span>{initials(item.itemName)}</span>}
-            />
-          </div>
+          <div className="catalog-image-block">
+            <div className="catalog-rendering-square">
+              <ImageFrame
+                entityType="item"
+                entityId={item.id}
+                alt={item.itemName}
+                fallbackUrl={null}
+                className="border-0 shadow-none h-full w-full rounded-none"
+                imageClassName="catalog-image"
+                placeholderClassName="catalog-placeholder"
+                placeholderContent={<span>{initials(item.itemName)}</span>}
+              />
+            </div>
 
-          <div className="catalog-qty-band">
-            <div className="catalog-qty-cell">
-              <span className="catalog-qty-label">PRODUCT QTY</span>
-              <span className="catalog-qty-rule" />
-              <span className="catalog-qty-value">{item.qty}</span>
-            </div>
-            <div className="catalog-qty-cell">
-              <span className="catalog-qty-label">PRICE PER ITEM</span>
-              <span className="catalog-qty-rule" />
-              <span className="catalog-qty-value">
-                {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
-              </span>
-            </div>
-            <div className="catalog-qty-cell">
-              <span className="catalog-qty-label">TOTAL</span>
-              <span className="catalog-qty-rule" />
-              <span className="catalog-qty-value">
-                {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
-              </span>
+            <div className="catalog-qty-band">
+              <div className="catalog-qty-cell">
+                <span className="catalog-qty-label">PRODUCT QTY</span>
+                <span className="catalog-qty-rule" />
+                <span className="catalog-qty-value">{item.qty}</span>
+              </div>
+              <div className="catalog-qty-cell">
+                <span className="catalog-qty-label">PRICE PER ITEM</span>
+                <span className="catalog-qty-rule" />
+                <span className="catalog-qty-value">
+                  {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
+                </span>
+              </div>
+              <div className="catalog-qty-cell">
+                <span className="catalog-qty-label">TOTAL</span>
+                <span className="catalog-qty-rule" />
+                <span className="catalog-qty-value">
+                  {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -575,7 +577,7 @@ export function CatalogPage({
                 entityId={item.id}
                 alt={`${item.itemName} plan`}
                 fallbackUrl={null}
-                className="border-0 shadow-none h-full w-full"
+                className="border-0 shadow-none h-full w-full rounded-none"
                 placeholderClassName="catalog-plan-placeholder"
                 placeholderContent={
                   <span className="catalog-plan-placeholder-text">

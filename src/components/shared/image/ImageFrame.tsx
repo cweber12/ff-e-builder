@@ -294,7 +294,9 @@ export function ImageFrame({
         }}
         title={canUpload ? 'Upload, paste, or update image' : undefined}
         className={cn(
-          'relative overflow-hidden rounded-md',
+          'relative overflow-hidden',
+          // Allow callers to override the border-radius via className; default to rounded-md
+          !/rounded-/.test(className ?? '') && 'rounded-md',
           canUpload &&
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
           isRoomImage ? 'bg-transparent' : 'border border-gray-200 bg-surface-muted shadow-sm',
