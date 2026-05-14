@@ -1243,16 +1243,18 @@ function RoomActionsMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [columnSubmenuOpen, setColumnSubmenuOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const columnTriggerRef = useRef<HTMLButtonElement>(null);
   const columnSubmenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (event: MouseEvent) => {
-      const inMain = ref.current?.contains(event.target as Node) ?? false;
+      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
+      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
       const inSubmenu = columnSubmenuRef.current?.contains(event.target as Node) ?? false;
-      if (!inMain && !inSubmenu) {
+      if (!inTrigger && !inMenu && !inSubmenu) {
         setOpen(false);
         setColumnSubmenuOpen(false);
       }
@@ -1266,9 +1268,12 @@ function RoomActionsMenu({
     action();
   };
 
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div className="inline-flex">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -1279,122 +1284,133 @@ function RoomActionsMenu({
       >
         <MoreIcon />
       </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className={menuItemClassName}
-            onClick={() => runAction(onAddItem)}
+      {open &&
+        triggerRect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: triggerRect.bottom + 4,
+              right: window.innerWidth - triggerRect.right,
+            }}
+            className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
           >
-            Add item
-          </button>
-          <div className="relative">
             <button
-              ref={columnTriggerRef}
               type="button"
               role="menuitem"
-              aria-haspopup="menu"
-              aria-expanded={columnSubmenuOpen}
-              className={cn(menuItemClassName, 'justify-between')}
-              onClick={() => setColumnSubmenuOpen((v) => !v)}
+              className={menuItemClassName}
+              onClick={() => runAction(onAddItem)}
             >
-              Add column
-              <ChevronIcon direction="right" />
+              Add item
             </button>
-            {columnSubmenuOpen &&
-              columnTriggerRef.current &&
-              createPortal(
-                <div
-                  ref={columnSubmenuRef}
-                  role="menu"
-                  style={{
-                    position: 'fixed',
-                    top: columnTriggerRef.current.getBoundingClientRect().top,
-                    right:
-                      window.innerWidth - columnTriggerRef.current.getBoundingClientRect().left + 4,
-                  }}
-                  className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
-                >
-                  {hiddenDefaults.map((col) => (
+            <div className="relative">
+              <button
+                ref={columnTriggerRef}
+                type="button"
+                role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={columnSubmenuOpen}
+                className={cn(menuItemClassName, 'justify-between')}
+                onClick={() => setColumnSubmenuOpen((v) => !v)}
+              >
+                Add column
+                <ChevronIcon direction="right" />
+              </button>
+              {columnSubmenuOpen &&
+                columnTriggerRef.current &&
+                createPortal(
+                  <div
+                    ref={columnSubmenuRef}
+                    role="menu"
+                    style={{
+                      position: 'fixed',
+                      top: columnTriggerRef.current.getBoundingClientRect().top,
+                      right:
+                        window.innerWidth -
+                        columnTriggerRef.current.getBoundingClientRect().left +
+                        4,
+                    }}
+                    className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                  >
+                    {hiddenDefaults.map((col) => (
+                      <button
+                        key={col.id}
+                        type="button"
+                        role="menuitem"
+                        className={menuItemClassName}
+                        onClick={() => {
+                          setColumnSubmenuOpen(false);
+                          setOpen(false);
+                          onRestoreDefault(col.id);
+                        }}
+                      >
+                        {col.label}
+                      </button>
+                    ))}
+                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
                     <button
-                      key={col.id}
                       type="button"
                       role="menuitem"
                       className={menuItemClassName}
                       onClick={() => {
                         setColumnSubmenuOpen(false);
                         setOpen(false);
-                        onRestoreDefault(col.id);
+                        onOpenAddColumnModal();
                       }}
                     >
-                      {col.label}
+                      Add custom column...
                     </button>
-                  ))}
-                  {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={menuItemClassName}
-                    onClick={() => {
-                      setColumnSubmenuOpen(false);
-                      setOpen(false);
-                      onOpenAddColumnModal();
-                    }}
-                  >
-                    Add custom column...
-                  </button>
-                </div>,
-                document.body,
-              )}
-          </div>
-          <div className="my-1 h-px bg-gray-100" />
-          {project && (
-            <>
-              <button
-                type="button"
-                role="menuitem"
-                className={menuItemClassName}
-                onClick={() => runAction(() => exportTableCsv(project, rooms, room, columnDefs))}
-              >
-                Export CSV
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className={menuItemClassName}
-                onClick={() =>
-                  runAction(() => void exportTableExcel(project, rooms, room, columnDefs))
-                }
-              >
-                Export Excel
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className={menuItemClassName}
-                onClick={() =>
-                  runAction(() => void exportTablePdf(project, rooms, room, columnDefs))
-                }
-              >
-                Export PDF
-              </button>
-              <div className="my-1 h-px bg-gray-100" />
-            </>
-          )}
-          <button
-            type="button"
-            role="menuitem"
-            className={cn(menuItemClassName, 'text-danger-600')}
-            onClick={() => runAction(onDeleteRoom)}
-          >
-            Delete room
-          </button>
-        </div>
-      )}
+                  </div>,
+                  document.body,
+                )}
+            </div>
+            <div className="my-1 h-px bg-gray-100" />
+            {project && (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={menuItemClassName}
+                  onClick={() => runAction(() => exportTableCsv(project, rooms, room, columnDefs))}
+                >
+                  Export CSV
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={menuItemClassName}
+                  onClick={() =>
+                    runAction(() => void exportTableExcel(project, rooms, room, columnDefs))
+                  }
+                >
+                  Export Excel
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={menuItemClassName}
+                  onClick={() =>
+                    runAction(() => void exportTablePdf(project, rooms, room, columnDefs))
+                  }
+                >
+                  Export PDF
+                </button>
+                <div className="my-1 h-px bg-gray-100" />
+              </>
+            )}
+            <button
+              type="button"
+              role="menuitem"
+              className={cn(menuItemClassName, 'text-danger-600')}
+              onClick={() => runAction(onDeleteRoom)}
+            >
+              Delete room
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../../../lib/utils';
 import type { ProposalStatus } from '../../../types';
 import { proposalStatuses } from '../../../types';
@@ -20,6 +21,7 @@ export function ProposalStatusSelect({
 }: ProposalStatusSelectProps) {
   const [open, setOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const cfg = PROPOSAL_STATUS_CONFIG[status];
 
@@ -42,10 +44,13 @@ export function ProposalStatusSelect({
     setPendingStatus(null);
   }
 
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+
   return (
     <>
-      <div className={cn('relative', className)}>
+      <div className={className}>
         <button
+          ref={triggerRef}
           type="button"
           disabled={disabled}
           aria-haspopup="listbox"
@@ -61,47 +66,60 @@ export function ProposalStatusSelect({
           <ChevronDownIcon />
         </button>
 
-        {open && (
-          <>
-            {/* Backdrop */}
-            <div className="fixed inset-0 z-40" aria-hidden="true" onClick={() => setOpen(false)} />
-            {/* Dropdown */}
-            <div
-              role="listbox"
-              aria-label="Select proposal status"
-              className="absolute left-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-md border border-neutral-200 bg-surface shadow-md"
-            >
-              {proposalStatuses.map((s) => {
-                const sCfg = PROPOSAL_STATUS_CONFIG[s];
-                const isActive = s === status;
-                return (
-                  <button
-                    key={s}
-                    role="option"
-                    aria-selected={isActive}
-                    type="button"
-                    onClick={() => handleOptionClick(s)}
-                    className={cn(
-                      'relative flex h-9 w-full items-center gap-2.5 px-3 text-left text-sm hover:bg-neutral-50',
-                      isActive && 'bg-neutral-50',
-                    )}
-                  >
-                    {isActive && (
-                      <span
-                        className="absolute inset-y-0 left-0 w-1 rounded-r-sm bg-brand-500"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <ProposalStatusDots status={s} />
-                    <span className="text-neutral-700">
-                      {sCfg.label.charAt(0) + sCfg.label.slice(1).toLowerCase().replace(/_/g, ' ')}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
+        {open &&
+          triggerRect &&
+          createPortal(
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-[99]"
+                aria-hidden="true"
+                onClick={() => setOpen(false)}
+              />
+              {/* Dropdown */}
+              <div
+                role="listbox"
+                aria-label="Select proposal status"
+                style={{
+                  position: 'fixed',
+                  top: triggerRect.bottom + 4,
+                  left: triggerRect.left,
+                }}
+                className="z-[100] w-56 overflow-hidden rounded-md border border-neutral-200 bg-surface shadow-md"
+              >
+                {proposalStatuses.map((s) => {
+                  const sCfg = PROPOSAL_STATUS_CONFIG[s];
+                  const isActive = s === status;
+                  return (
+                    <button
+                      key={s}
+                      role="option"
+                      aria-selected={isActive}
+                      type="button"
+                      onClick={() => handleOptionClick(s)}
+                      className={cn(
+                        'relative flex h-9 w-full items-center gap-2.5 px-3 text-left text-sm hover:bg-neutral-50',
+                        isActive && 'bg-neutral-50',
+                      )}
+                    >
+                      {isActive && (
+                        <span
+                          className="absolute inset-y-0 left-0 w-1 rounded-r-sm bg-brand-500"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <ProposalStatusDots status={s} />
+                      <span className="text-neutral-700">
+                        {sCfg.label.charAt(0) +
+                          sCfg.label.slice(1).toLowerCase().replace(/_/g, ' ')}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>,
+            document.body,
+          )}
       </div>
 
       {pendingStatus && (
