@@ -3,13 +3,7 @@ import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
-import {
-  useDeleteImage,
-  useImages,
-  useSetPrimaryImage,
-  useUpdateItem,
-  useUploadImage,
-} from '../../../hooks';
+import { useDeleteImage, useImages, useUpdateItem, useUploadImage } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
@@ -316,7 +310,6 @@ export function CatalogPage({
         .slice(0, 2),
     [optionImagesQuery.data],
   );
-  const setPrimary = useSetPrimaryImage('item_option', item.id);
   const upload = useUploadImage('item_option', item.id);
   const deleteImage = useDeleteImage('item_option', item.id);
   const optionCount = optionImages.length;
@@ -416,7 +409,6 @@ export function CatalogPage({
               optionImages={optionImages}
               itemName={item.itemName}
               isBusy={isBusy}
-              onSelect={(imageId) => setPrimary.mutate(imageId)}
               onUpload={(file, index) =>
                 upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
               }
@@ -648,7 +640,6 @@ function CatalogOptionRenderings({
   optionImages,
   itemName,
   isBusy,
-  onSelect,
   onUpload,
   onDelete,
   onAdd,
@@ -656,11 +647,11 @@ function CatalogOptionRenderings({
   optionImages: ImageAsset[];
   itemName: string;
   isBusy: boolean;
-  onSelect: (imageId: string) => void;
   onUpload: (file: File, index: number) => void;
   onDelete: (imageId: string) => void;
   onAdd: (file: File) => void;
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const slot0 = optionImages[0] ?? null;
   const slot1 = optionImages[1] ?? null;
   const canAddMore = optionImages.length < 2;
@@ -677,7 +668,8 @@ function CatalogOptionRenderings({
                 itemName={itemName}
                 index={0}
                 disabled={isBusy}
-                onSelect={onSelect}
+                checked={selectedId === slot0.id}
+                onSelect={(id) => setSelectedId(id)}
                 onUpload={(file) => onUpload(file, 0)}
                 onDelete={onDelete}
               />
@@ -697,7 +689,8 @@ function CatalogOptionRenderings({
               itemName={itemName}
               index={1}
               disabled={isBusy}
-              onSelect={onSelect}
+              checked={selectedId === slot1.id}
+              onSelect={(id) => setSelectedId(id)}
               onUpload={(file) => onUpload(file, 1)}
               onDelete={onDelete}
             />
@@ -793,6 +786,7 @@ function CatalogOptionCard({
   itemName,
   index,
   disabled,
+  checked,
   onSelect,
   onUpload,
   onDelete,
@@ -801,6 +795,7 @@ function CatalogOptionCard({
   itemName: string;
   index: number;
   disabled?: boolean;
+  checked: boolean;
   onSelect: (imageId: string) => void;
   onUpload: (file: File) => void;
   onDelete: (imageId: string) => void;
@@ -876,9 +871,9 @@ function CatalogOptionCard({
       <label className="catalog-option-check">
         <input
           type="checkbox"
-          checked={Boolean(image.isPrimary)}
+          checked={checked}
           onChange={() => {
-            if (!image.isPrimary) onSelect(image.id);
+            if (!checked) onSelect(image.id);
           }}
         />
       </label>
