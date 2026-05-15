@@ -9,7 +9,9 @@ import type {
   ProposalCategory,
   ProposalItem,
   ProposalItemChangelogEntry,
+  ProposalRevision,
   ProposalStatus,
+  RevisionSnapshot,
 } from '../../types';
 
 export type CreateProposalCategoryInput = {
@@ -46,14 +48,12 @@ export type CreateProposalItemInput = {
 export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
   categoryId?: string;
   version: number;
-  costUpdateDeferred?: boolean;
   changeLog?: {
     columnKey: string;
     previousValue: string;
     newValue: string;
     notes?: string;
     proposalStatus: ProposalStatus;
-    linkedUnitCostChange?: { previousValue: string; newValue: string };
   };
 };
 
@@ -109,7 +109,6 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
   sort_order: patch.sortOrder,
   custom_data: patch.customData,
   version: patch.version,
-  cost_update_deferred: patch.costUpdateDeferred,
   change_log: patch.changeLog
     ? {
         column_key: patch.changeLog.columnKey,
@@ -117,12 +116,6 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
         new_value: patch.changeLog.newValue,
         notes: patch.changeLog.notes,
         proposal_status: patch.changeLog.proposalStatus,
-        linked_unit_cost_change: patch.changeLog.linkedUnitCostChange
-          ? {
-              previous_value: patch.changeLog.linkedUnitCostChange.previousValue,
-              new_value: patch.changeLog.linkedUnitCostChange.newValue,
-            }
-          : undefined,
       }
     : undefined,
 });
@@ -187,7 +180,63 @@ export const proposalApi = {
         notes: (row.notes as string | null) ?? null,
         proposalStatus: row.proposal_status as ProposalStatus,
         relatedChangeId: (row.related_change_id as string | null) ?? null,
+        revisionId: (row.revision_id as string | null) ?? null,
         changedAt: row.changed_at as string,
       })),
+    ),
+
+  revisions: (
+    projectId: string,
+  ): Promise<{ revisions: ProposalRevision[]; snapshots: RevisionSnapshot[] }> =>
+    apiFetch<{
+      revisions: Record<string, unknown>[];
+      snapshots: Record<string, unknown>[];
+    }>(`/api/v1/projects/${projectId}/proposal/revisions`).then((r) => ({
+      revisions: r.revisions.map(
+        (row): ProposalRevision => ({
+          id: row.id as string,
+          projectId: row.project_id as string,
+          revisionMajor: row.revision_major as number,
+          revisionMinor: row.revision_minor as number,
+          label: `${String(row.revision_major)}.${String(row.revision_minor)}`,
+          triggeredAtStatus: row.triggered_at_status as
+            | 'pricing_complete'
+            | 'submitted'
+            | 'approved',
+          openedAt: row.opened_at as string,
+          closedAt: (row.closed_at as string | null) ?? null,
+        }),
+      ),
+      snapshots: r.snapshots.map(
+        (row): RevisionSnapshot => ({
+          revisionId: row.revision_id as string,
+          itemId: row.item_id as string,
+          quantity: row.quantity != null ? Number(row.quantity) : null,
+          unitCostCents: row.unit_cost_cents != null ? (row.unit_cost_cents as number) : null,
+          costStatus: row.cost_status as 'none' | 'flagged' | 'resolved',
+        }),
+      ),
+    })),
+
+  updateRevisionItemCost: (
+    revisionId: string,
+    itemId: string,
+    unitCostCents: number,
+  ): Promise<RevisionSnapshot> =>
+    apiFetch<{ snapshot: Record<string, unknown> }>(
+      `/api/v1/proposal/revisions/${revisionId}/items/${itemId}/cost`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ unit_cost_cents: unitCostCents }),
+      },
+    ).then(
+      (r): RevisionSnapshot => ({
+        revisionId: r.snapshot.revision_id as string,
+        itemId: r.snapshot.item_id as string,
+        quantity: r.snapshot.quantity != null ? Number(r.snapshot.quantity) : null,
+        unitCostCents:
+          r.snapshot.unit_cost_cents != null ? (r.snapshot.unit_cost_cents as number) : null,
+        costStatus: r.snapshot.cost_status as 'none' | 'flagged' | 'resolved',
+      }),
     ),
 };

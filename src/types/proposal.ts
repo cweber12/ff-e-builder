@@ -48,7 +48,6 @@ export type ProposalItem = {
   sortOrder: number;
   /** User-defined custom column values keyed by CustomColumnDef id */
   customData: Record<string, string>;
-  costUpdateDeferred: boolean;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -63,7 +62,30 @@ export type ProposalItemChangelogEntry = {
   notes: string | null;
   proposalStatus: ProposalStatus;
   relatedChangeId: string | null;
+  revisionId: string | null;
   changedAt: string;
+};
+
+export type RevisionCostStatus = 'none' | 'flagged' | 'resolved';
+
+export type RevisionSnapshot = {
+  revisionId: string;
+  itemId: string;
+  quantity: number | null;
+  unitCostCents: number | null;
+  costStatus: RevisionCostStatus;
+};
+
+export type ProposalRevision = {
+  id: string;
+  projectId: string;
+  revisionMajor: number;
+  revisionMinor: number;
+  /** e.g. "1.2" */
+  label: string;
+  triggeredAtStatus: 'pricing_complete' | 'submitted' | 'approved';
+  openedAt: string;
+  closedAt: string | null;
 };
 
 export type ProposalCategoryWithItems = ProposalCategory & {

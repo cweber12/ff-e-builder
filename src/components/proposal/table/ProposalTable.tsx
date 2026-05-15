@@ -29,7 +29,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
-import { DeferredCostBanner } from '../../shared/DeferredCostBanner';
 import { TotalsBar } from '../../shared/TotalsBar';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ImageFrame } from '../../shared/image/ImageFrame';
@@ -400,10 +399,6 @@ export function ProposalTable({
   const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
   const totalItemCount = categoriesWithItems.reduce((sum, c) => sum + c.items.length, 0);
-  const deferredCount = categoriesWithItems.reduce(
-    (sum, c) => sum + c.items.filter((i) => i.costUpdateDeferred).length,
-    0,
-  );
 
   const toggleCollapsed = (id: string) => {
     setCollapsed((current) => ({ ...current, [id]: !current[id] }));
@@ -433,8 +428,6 @@ export function ProposalTable({
 
   return (
     <TableViewStack>
-      <DeferredCostBanner deferredCount={deferredCount} />
-
       {categoriesWithItems.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-6 py-12 text-center">
           <div className="flex flex-col items-center gap-4">
@@ -949,13 +942,9 @@ function ProposalCategorySection({
       changeLog,
     };
     if (result.deferCost) {
-      fullPatch.costUpdateDeferred = true;
+      // no-op: deferred cost model replaced by Revision Rounds (Slice 5 will remove deferCost)
     } else if (result.newUnitCostCents !== undefined) {
       fullPatch.unitCostCents = result.newUnitCostCents;
-      changeLog.linkedUnitCostChange = {
-        previousValue: formatMoney(cents(item.unitCostCents)),
-        newValue: formatMoney(cents(result.newUnitCostCents)),
-      };
     }
     onItemSave(item, fullPatch);
     setPendingChange(null);

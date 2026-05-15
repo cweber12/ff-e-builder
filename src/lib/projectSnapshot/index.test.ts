@@ -141,7 +141,6 @@ const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
         version: 1,
         createdAt: '',
         updatedAt: '',
-        costUpdateDeferred: false,
         customData: {},
       },
       {
@@ -168,7 +167,6 @@ const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
         version: 1,
         createdAt: '',
         updatedAt: '',
-        costUpdateDeferred: false,
         customData: {},
       },
       {
@@ -195,7 +193,6 @@ const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
         version: 1,
         createdAt: '',
         updatedAt: '',
-        costUpdateDeferred: false,
         customData: {},
       },
     ],

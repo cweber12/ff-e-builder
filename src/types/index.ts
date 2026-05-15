@@ -25,6 +25,9 @@ export type {
   ProposalItem,
   ProposalItemChangelogEntry,
   ProposalQuantityUnit,
+  RevisionCostStatus,
+  RevisionSnapshot,
+  ProposalRevision,
   UserProfile,
 } from './proposal';
 export {
