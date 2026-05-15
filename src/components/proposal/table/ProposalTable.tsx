@@ -1028,7 +1028,7 @@ function ProposalCategorySection({
   const updateItem = useUpdateProposalItem();
   const isMobile = useIsMobileViewport();
   const { data: revisionsData } = useProposalRevisions(projectId);
-  const revisions = revisionsData?.revisions ?? [];
+  const revisions = useMemo(() => revisionsData?.revisions ?? [], [revisionsData]);
   const snapshotsByRevThenItem = useMemo(() => {
     const map = new Map<string, Map<string, RevisionSnapshot>>();
     for (const snap of revisionsData?.snapshots ?? []) {
@@ -1059,18 +1059,36 @@ function ProposalCategorySection({
   const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
 
   function handleItemSave(item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) {
+    // Normal in_progress (no open revision): direct save, no changelog.
     if (proposalStatus === 'in_progress' && !hasOpenRevision) {
-      onItemSave(item, { ...patch, version: item.version });
-      return;
-    }
-    // Quantity is always a direct edit during in_progress, even when a revision is open.
-    if (proposalStatus === 'in_progress' && ('quantity' in patch || 'quantityUnit' in patch)) {
       onItemSave(item, { ...patch, version: item.version });
       return;
     }
     const changeInfo = patchToChangeInfo(patch, item, customColumnDefs);
     if (!changeInfo) {
       onItemSave(item, { ...patch, version: item.version });
+      return;
+    }
+    // Quantity change during open revision (in_progress): send changeLog immediately
+    // without showing the modal. The API routes the new qty to the revision snapshot
+    // and flags cost_status so the PM can review the revised total.
+    // proposal_items.quantity stays locked as the baseline reference value.
+    if (
+      proposalStatus === 'in_progress' &&
+      hasOpenRevision &&
+      changeInfo.columnKey === 'quantity'
+    ) {
+      onItemSave(item, {
+        ...patch,
+        version: item.version,
+        changeLog: {
+          columnKey: changeInfo.columnKey,
+          previousValue: changeInfo.previousValue,
+          newValue: changeInfo.newValue,
+          proposalStatus,
+          isPriceAffecting: true,
+        },
+      });
       return;
     }
     setPendingChange({ ...changeInfo, item, patch });
@@ -1759,7 +1777,7 @@ function ProposalCategorySection({
           previousValue={pendingChange.previousValue}
           newValue={pendingChange.newValue}
           proposalStatus={proposalStatus}
-          openRevisionLabel={openRev?.label}
+          {...(openRev ? { openRevisionLabel: openRev.label } : {})}
           isPriceAffecting={pendingChange.isPriceAffecting}
           onConfirm={handleConfirm}
           onCancel={() => setPendingChange(null)}
@@ -1973,14 +1991,15 @@ function ProposalRow({
           const revEntries = changelogByItemId.get(item.id) ?? [];
           return (
             <>
-              {/* Qty remains editable during revision — only UC and Total are locked */}
-              <QuantityCell
-                quantity={item.quantity}
-                quantityUnit={item.quantityUnit}
-                onSaveQuantity={(quantity) => onSave({ quantity })}
-                onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
-                tdClassName={stickyLockedQtyCellClassName}
-              />
+              {/* Locked baseline: qty/UC/Total are all read-only reference values */}
+              <td
+                className={cn(
+                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                  stickyLockedQtyCellClassName,
+                )}
+              >
+                {item.quantity} {item.quantityUnit}
+              </td>
               <td
                 className={cn(
                   'px-3 py-2 text-sm tabular-nums text-neutral-400',
@@ -2004,6 +2023,7 @@ function ProposalRow({
                 snapshot={snap}
                 currentQuantity={item.quantity}
                 currentUnit={item.quantityUnit}
+                onSaveQuantity={(quantity) => onSave({ quantity })}
                 tdClassName={stickyRevQtyCellClassName}
               />
               <RevisionCostCell

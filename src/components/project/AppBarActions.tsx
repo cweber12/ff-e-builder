@@ -250,7 +250,9 @@ export function ProposalActions({
         status={project.proposalStatus}
         onChange={handleStatusChange}
         disabled={updateProject.isPending}
-        revisionGuard={openRev ? { openRevisionLabel: openRev.label, unresolvedCount } : undefined}
+        {...(openRev
+          ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
+          : {})}
       />
 
       <button

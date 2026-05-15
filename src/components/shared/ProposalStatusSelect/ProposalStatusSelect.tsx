@@ -128,7 +128,7 @@ export function ProposalStatusSelect({
         <ProposalStatusConfirmModal
           from={status}
           to={pendingStatus}
-          revisionGuard={status === 'in_progress' ? revisionGuard : undefined}
+          {...(status === 'in_progress' && revisionGuard ? { revisionGuard } : {})}
           onConfirm={handleConfirm}
           onCancel={handleCancelConfirm}
         />
