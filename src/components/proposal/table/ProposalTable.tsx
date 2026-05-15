@@ -207,9 +207,38 @@ function formatStatusDate(isoString: string): string {
   });
 }
 
-function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: string }) {
+function ChangeHistoryDot({
+  itemId,
+  columnKey,
+  revisions,
+}: {
+  itemId: string;
+  columnKey: string;
+  revisions: ProposalRevision[];
+}) {
   const { data: changelog = [] } = useProposalItemChangelog(itemId);
   const entries = changelog.filter((e) => e.columnKey === columnKey);
+  const revisionLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const rev of revisions) map.set(rev.id, rev.label);
+    return map;
+  }, [revisions]);
+  type EntryGroup = { label: string; entries: typeof entries };
+  const groupedEntries = useMemo(() => {
+    const groups: EntryGroup[] = [];
+    const seen = new Map<string | null, EntryGroup>();
+    for (const entry of entries) {
+      const key = entry.revisionId ?? null;
+      const label = key ? (revisionLabelMap.get(key) ?? 'Unknown') : 'General';
+      if (!seen.has(key)) {
+        const g: EntryGroup = { label, entries: [] };
+        groups.push(g);
+        seen.set(key, g);
+      }
+      seen.get(key)!.entries.push(entry);
+    }
+    return groups;
+  }, [entries, revisionLabelMap]);
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -258,25 +287,34 @@ function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: st
             <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
               Change history
             </div>
-            <ul className="max-h-56 overflow-y-auto divide-y divide-gray-50">
-              {entries.map((entry) => (
-                <li key={entry.id} className="px-3 py-2 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={cn(
-                        'h-1.5 w-1.5 rounded-full flex-shrink-0',
-                        proposalStatusConfig[entry.proposalStatus].dotClass,
-                      )}
-                    />
-                    <span className="text-gray-400">{formatStatusDate(entry.changedAt)}</span>
-                  </div>
-                  <div className="mt-0.5 flex items-baseline gap-1">
-                    <span className="text-gray-400 line-through">{entry.previousValue || '—'}</span>
-                    <span className="text-gray-300">→</span>
-                    <span className="font-medium text-gray-700">{entry.newValue || '—'}</span>
-                  </div>
-                  {entry.notes && <p className="mt-0.5 text-gray-500 italic">{entry.notes}</p>}
-                </li>
+            <ul className="max-h-56 overflow-y-auto">
+              {groupedEntries.map((group) => (
+                <Fragment key={group.label}>
+                  <li className="sticky top-0 border-b border-gray-100 bg-gray-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    {group.label !== 'General' ? `Round ${group.label}` : 'General'}
+                  </li>
+                  {group.entries.map((entry) => (
+                    <li key={entry.id} className="divide-y divide-gray-50 px-3 py-2 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            'h-1.5 w-1.5 rounded-full flex-shrink-0',
+                            proposalStatusConfig[entry.proposalStatus].dotClass,
+                          )}
+                        />
+                        <span className="text-gray-400">{formatStatusDate(entry.changedAt)}</span>
+                      </div>
+                      <div className="mt-0.5 flex items-baseline gap-1">
+                        <span className="text-gray-400 line-through">
+                          {entry.previousValue || '—'}
+                        </span>
+                        <span className="text-gray-300">→</span>
+                        <span className="font-medium text-gray-700">{entry.newValue || '—'}</span>
+                      </div>
+                      {entry.notes && <p className="mt-0.5 text-gray-500 italic">{entry.notes}</p>}
+                    </li>
+                  ))}
+                </Fragment>
               ))}
             </ul>
           </div>,
@@ -1504,7 +1542,9 @@ function ProposalRow({
 
   const showDots = proposalStatus !== 'in_progress';
   const dot = (columnKey: string) =>
-    showDots ? <ChangeHistoryDot itemId={item.id} columnKey={columnKey} /> : null;
+    showDots ? (
+      <ChangeHistoryDot itemId={item.id} columnKey={columnKey} revisions={revisions} />
+    ) : null;
 
   const cellRenderMap: Record<string, ReactNode> = {
     rendering: (
