@@ -34,6 +34,7 @@ function getModalCopy(from: ProposalStatus, to: ProposalStatus) {
 interface ProposalStatusConfirmModalProps {
   from: ProposalStatus;
   to: ProposalStatus;
+  revisionGuard?: { openRevisionLabel: string; unresolvedCount: number };
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 }
@@ -41,12 +42,16 @@ interface ProposalStatusConfirmModalProps {
 export function ProposalStatusConfirmModal({
   from,
   to,
+  revisionGuard,
   onConfirm,
   onCancel,
 }: ProposalStatusConfirmModalProps) {
   const { title, cta, bodyText, isBackward } = getModalCopy(from, to);
   const fromCfg = PROPOSAL_STATUS_CONFIG[from];
   const toCfg = PROPOSAL_STATUS_CONFIG[to];
+
+  const isRevisionClose = from === 'in_progress' && revisionGuard != null;
+  const isBlocked = isRevisionClose && revisionGuard.unresolvedCount > 0;
 
   return (
     <Modal open onClose={onCancel} title={title}>
@@ -71,6 +76,25 @@ export function ProposalStatusConfirmModal({
 
         {bodyText && <p className="text-sm text-neutral-600">{bodyText}</p>}
 
+        {isRevisionClose && (
+          <div className="space-y-2">
+            <p className="text-sm text-neutral-600">
+              This will close Revision {revisionGuard.openRevisionLabel}.
+            </p>
+            {isBlocked && (
+              <div className="flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                <span aria-hidden="true">⚠</span>
+                <span>
+                  {revisionGuard.unresolvedCount === 1
+                    ? '1 item still has'
+                    : `${revisionGuard.unresolvedCount} items still have`}{' '}
+                  an unresolved cost — enter a unit cost before advancing status.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-end gap-2 pt-1">
           <button
@@ -83,11 +107,14 @@ export function ProposalStatusConfirmModal({
           <button
             type="button"
             onClick={() => void onConfirm()}
+            disabled={isBlocked}
             className={cn(
               'inline-flex h-8 items-center rounded-md px-3 text-sm font-medium',
-              isBackward
-                ? 'border border-warning-500/40 text-warning-500 hover:bg-warning-500/5'
-                : 'bg-brand-500 text-white hover:bg-brand-600',
+              isBlocked
+                ? 'cursor-not-allowed bg-neutral-200 text-neutral-400'
+                : isBackward
+                  ? 'border border-warning-500/40 text-warning-500 hover:bg-warning-500/5'
+                  : 'bg-brand-500 text-white hover:bg-brand-600',
             )}
           >
             {cta}

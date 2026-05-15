@@ -76,19 +76,9 @@ router.patch('/:id', async (c) => {
     const currentStatus = (current[0] as { proposal_status: string } | undefined)?.proposal_status;
 
     // Close any open Revision Round when status advances away from in_progress.
-    // Before closing, auto-resolve any snapshots still flagged with no unit cost
-    // by setting their cost to 0 (PM accepted the change without entering a price).
+    // The client is responsible for blocking the advance when unresolved flagged
+    // snapshots exist; the server no longer silently auto-resolves them.
     if (currentStatus === 'in_progress' && nextStatus !== 'in_progress') {
-      await sql`
-        UPDATE proposal_revision_snapshots s
-        SET    unit_cost_cents = COALESCE(s.unit_cost_cents, 0),
-               cost_status = 'resolved'
-        FROM   proposal_revisions r
-        WHERE  r.id = s.revision_id
-          AND  r.project_id = ${id}
-          AND  r.closed_at IS NULL
-          AND  s.cost_status = 'flagged'
-      `;
       await closeOpenRevision(sql, id);
     }
 

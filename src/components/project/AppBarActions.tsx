@@ -18,7 +18,7 @@ import {
 import { useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
-import { useUpdateProject } from '../../hooks';
+import { useUpdateProject, useProposalRevisions } from '../../hooks';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
 
 // ---------------------------------------------------------------------------
@@ -227,7 +227,15 @@ export function ProposalActions({
   const { data: userProfile } = useUserProfile();
   const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
   const updateProject = useUpdateProject();
+  const { data: revisionsData } = useProposalRevisions(project.id);
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
+
+  const openRev = revisionsData?.revisions.find((r) => r.closedAt === null) ?? null;
+  const unresolvedCount = openRev
+    ? (revisionsData?.snapshots ?? []).filter(
+        (s) => s.revisionId === openRev.id && s.costStatus === 'flagged',
+      ).length
+    : 0;
 
   async function handleStatusChange(next: ProposalStatus) {
     await updateProject.mutateAsync({
@@ -242,6 +250,7 @@ export function ProposalActions({
         status={project.proposalStatus}
         onChange={handleStatusChange}
         disabled={updateProject.isPending}
+        revisionGuard={openRev ? { openRevisionLabel: openRev.label, unresolvedCount } : undefined}
       />
 
       <button

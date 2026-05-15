@@ -11,6 +11,7 @@ interface ProposalStatusSelectProps {
   onChange: (next: ProposalStatus) => void | Promise<void>;
   disabled?: boolean;
   className?: string;
+  revisionGuard?: { openRevisionLabel: string; unresolvedCount: number };
 }
 
 export function ProposalStatusSelect({
@@ -18,6 +19,7 @@ export function ProposalStatusSelect({
   onChange,
   disabled,
   className,
+  revisionGuard,
 }: ProposalStatusSelectProps) {
   const [open, setOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
@@ -126,6 +128,7 @@ export function ProposalStatusSelect({
         <ProposalStatusConfirmModal
           from={status}
           to={pendingStatus}
+          revisionGuard={status === 'in_progress' ? revisionGuard : undefined}
           onConfirm={handleConfirm}
           onCancel={handleCancelConfirm}
         />
