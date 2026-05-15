@@ -54,6 +54,7 @@ export type UpdateProposalItemInput = Partial<CreateProposalItemInput> & {
     newValue: string;
     notes?: string;
     proposalStatus: ProposalStatus;
+    isPriceAffecting?: boolean;
   };
 };
 
@@ -116,6 +117,7 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
         new_value: patch.changeLog.newValue,
         notes: patch.changeLog.notes,
         proposal_status: patch.changeLog.proposalStatus,
+        is_price_affecting: patch.changeLog.isPriceAffecting ?? false,
       }
     : undefined,
 });

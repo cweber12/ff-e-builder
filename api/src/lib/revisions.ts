@@ -6,22 +6,13 @@ import type { getDb } from './db';
 
 type Sql = ReturnType<typeof getDb>;
 
-// Price-Affecting Columns — editing one of these while the proposal is not
-// `in_progress` triggers a new Revision Round (or sub-revision). Editing one
-// while a revision is open writes to the snapshot, not to proposal_items.
-export const PRICE_AFFECTING_COLUMNS: ReadonlySet<string> = new Set([
-  'quantity',
-  'size_w',
-  'size_d',
-  'size_h',
-  'size_unit',
-  'size_mode',
-  'size_label',
-  'cbm',
-]);
-
-export function isPriceAffectingColumn(columnKey: string): boolean {
-  return PRICE_AFFECTING_COLUMNS.has(columnKey);
+// Every column is potentially price-affecting: any confirmed change while the
+// proposal is not `in_progress` opens a Revision Round (or sub-revision) and
+// flags the snapshot for cost review. Only `quantity` and `unit_cost_cents`
+// are locked in proposal_items during a revision (tracked in the snapshot);
+// all other fields update freely and simply flag the snapshot.
+export function isPriceAffectingColumn(): boolean {
+  return true;
 }
 
 export type RevisionRow = {

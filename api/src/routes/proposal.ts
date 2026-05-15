@@ -18,7 +18,7 @@ import {
   getOwnedMaterialContext,
   getOwnedProposalItemContext,
 } from '../lib/ownership';
-import { findOpenRevision, isPriceAffectingColumn, openRevision } from '../lib/revisions';
+import { findOpenRevision, openRevision } from '../lib/revisions';
 import {
   selectMaterialById,
   generateImportMaterialId,
@@ -226,7 +226,7 @@ router.patch('/proposal/items/:id', async (c) => {
   // Snapshot rather than to proposal_items? True when a revision is open or
   // about to be opened by this very edit.
   const cl = d.change_log;
-  const priceAffectingEdit = cl != null && isPriceAffectingColumn(cl.column_key);
+  const priceAffectingEdit = cl?.is_price_affecting === true;
   const willOpenRevision =
     !openRev &&
     priceAffectingEdit &&
@@ -256,20 +256,13 @@ router.patch('/proposal/items/:id', async (c) => {
       location            = COALESCE(${d.location ?? null}, location),
       description         = COALESCE(${d.description ?? null}, description),
       notes               = COALESCE(${d.notes ?? null}, notes),
-      size_label          = CASE WHEN ${lockPriceFields}::boolean THEN size_label
-                                 ELSE COALESCE(${d.size_label ?? null}, size_label) END,
-      size_mode           = CASE WHEN ${lockPriceFields}::boolean THEN size_mode
-                                 ELSE COALESCE(${d.size_mode ?? null}, size_mode) END,
-      size_w              = CASE WHEN ${lockPriceFields}::boolean THEN size_w
-                                 ELSE COALESCE(${d.size_w ?? null}, size_w) END,
-      size_d              = CASE WHEN ${lockPriceFields}::boolean THEN size_d
-                                 ELSE COALESCE(${d.size_d ?? null}, size_d) END,
-      size_h              = CASE WHEN ${lockPriceFields}::boolean THEN size_h
-                                 ELSE COALESCE(${d.size_h ?? null}, size_h) END,
-      size_unit           = CASE WHEN ${lockPriceFields}::boolean THEN size_unit
-                                 ELSE COALESCE(${d.size_unit ?? null}, size_unit) END,
-      cbm                 = CASE WHEN ${lockPriceFields}::boolean THEN cbm
-                                 ELSE COALESCE(${d.cbm ?? null}, cbm) END,
+      size_label          = COALESCE(${d.size_label ?? null}, size_label),
+      size_mode           = COALESCE(${d.size_mode ?? null}, size_mode),
+      size_w              = COALESCE(${d.size_w ?? null}, size_w),
+      size_d              = COALESCE(${d.size_d ?? null}, size_d),
+      size_h              = COALESCE(${d.size_h ?? null}, size_h),
+      size_unit           = COALESCE(${d.size_unit ?? null}, size_unit),
+      cbm                 = COALESCE(${d.cbm ?? null}, cbm),
       quantity            = CASE WHEN ${lockPriceFields}::boolean THEN quantity
                                  ELSE COALESCE(${d.quantity ?? null}, quantity) END,
       quantity_unit       = COALESCE(${d.quantity_unit ?? null}, quantity_unit),
@@ -298,10 +291,12 @@ router.patch('/proposal/items/:id', async (c) => {
         WHERE  revision_id = ${openRev.id} AND item_id = ${id}
       `;
     } else {
-      // Size/CBM changed: PM must enter a new unit cost manually. Flag it.
+      // Price-affecting change: PM must enter a new unit cost manually.
+      // Clear unit_cost_cents so the Revision column starts blank for PM input;
+      // the pre-revision value remains locked in proposal_items.
       await sql`
         UPDATE proposal_revision_snapshots
-        SET    cost_status = 'flagged'
+        SET    cost_status = 'flagged', unit_cost_cents = NULL
         WHERE  revision_id = ${openRev.id} AND item_id = ${id}
       `;
     }

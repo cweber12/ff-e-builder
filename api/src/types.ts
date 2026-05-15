@@ -389,6 +389,7 @@ export const ChangeLogEntrySchema = z.object({
   new_value: z.string().max(2000),
   notes: z.string().max(2000).optional(),
   proposal_status: z.enum(proposalStatuses),
+  is_price_affecting: z.boolean().default(false),
 });
 export type ChangeLogEntryInput = z.infer<typeof ChangeLogEntrySchema>;
 

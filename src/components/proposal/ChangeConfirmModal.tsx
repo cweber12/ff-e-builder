@@ -6,6 +6,7 @@ import type { ProposalStatus } from '../../types';
 
 export interface ChangeConfirmResult {
   notes?: string;
+  isPriceAffecting: boolean;
 }
 
 interface ChangeConfirmModalProps {
@@ -28,11 +29,12 @@ export function ChangeConfirmModal({
   onCancel,
 }: ChangeConfirmModalProps) {
   const [notes, setNotes] = useState('');
+  const [priceAffecting, setPriceAffecting] = useState(isPriceAffecting);
 
   const cfg = proposalStatusConfig[proposalStatus];
 
   function handleConfirm() {
-    const result: ChangeConfirmResult = {};
+    const result: ChangeConfirmResult = { isPriceAffecting: priceAffecting };
     const trimmedNotes = notes.trim();
     if (trimmedNotes) result.notes = trimmedNotes;
     onConfirm(result);
@@ -75,13 +77,29 @@ export function ChangeConfirmModal({
           />
         </div>
 
-        {isPriceAffecting && (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="price-affecting-toggle"
+            checked={priceAffecting}
+            onChange={(e) => setPriceAffecting(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 accent-brand-600 cursor-pointer"
+          />
+          <label
+            htmlFor="price-affecting-toggle"
+            className="text-sm text-gray-700 cursor-pointer select-none"
+          >
+            Flag as price change
+          </label>
+        </div>
+
+        {priceAffecting && (
           <div
             className={cn(
               'rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5 text-sm text-amber-800',
             )}
           >
-            <p className="font-medium">This field affects pricing.</p>
+            <p className="font-medium">This change affects pricing.</p>
             <p className="mt-0.5 text-amber-700">
               Saving will open a <span className="font-semibold">Revision Round</span> and flag this
               item's cost for review. You can update the quoted cost from the Revision panel.

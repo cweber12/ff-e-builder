@@ -1004,6 +1004,7 @@ function ProposalCategorySection({
       proposalStatus,
     };
     if (result.notes) changeLog.notes = result.notes;
+    changeLog.isPriceAffecting = result.isPriceAffecting;
     const fullPatch: UpdateProposalItemInput = {
       ...patch,
       version: item.version,
