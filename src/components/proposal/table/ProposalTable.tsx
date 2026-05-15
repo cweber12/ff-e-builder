@@ -1223,6 +1223,7 @@ function ProposalCategorySection({
                             key={colId}
                             colId={colId}
                             label={meta.label}
+                            rowSpan={hasOpenRevision ? 2 : 1}
                             className={cn(
                               'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                               meta.className,
@@ -1237,6 +1238,7 @@ function ProposalCategorySection({
                         <SortableColHeader
                           key={colId}
                           colId={colId}
+                          rowSpan={hasOpenRevision ? 2 : 1}
                           className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                           onHide={() => onHideColumn(colId)}
                         >
@@ -1335,12 +1337,7 @@ function ProposalCategorySection({
                 </tr>
                 {hasOpenRevision && (
                   <tr>
-                    {/* Placeholder spans the draggable cols area (drag + locked cols + notes are rowSpanned) */}
-                    <th
-                      colSpan={draggableColOrder.length}
-                      className="border-b border-neutral-200 bg-surface"
-                    />
-                    {/* Revision sub-headers (sticky) */}
+                    {/* Revision sub-headers — all other columns are rowSpan=2 */}
                     <th
                       className={cn(
                         'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
@@ -1533,6 +1530,7 @@ function ProposalCategorySection({
                                 key={colId}
                                 colId={colId}
                                 label={meta.label}
+                                rowSpan={hasOpenRevision ? 2 : 1}
                                 className={cn(
                                   'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                                   meta.className,
@@ -1547,6 +1545,7 @@ function ProposalCategorySection({
                             <SortableColHeader
                               key={colId}
                               colId={colId}
+                              rowSpan={hasOpenRevision ? 2 : 1}
                               className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                               onHide={() => onHideColumn(colId)}
                             >
@@ -1645,10 +1644,7 @@ function ProposalCategorySection({
                     </tr>
                     {hasOpenRevision && (
                       <tr>
-                        <th
-                          colSpan={draggableColOrder.length}
-                          className="border-b border-neutral-200 bg-surface"
-                        />
+                        {/* Revision sub-headers — all other columns are rowSpan=2 */}
                         <th
                           className={cn(
                             'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',

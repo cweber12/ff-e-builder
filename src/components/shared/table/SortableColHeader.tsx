@@ -10,6 +10,8 @@ type SortableColHeaderProps = {
   label?: string;
   /** Extra CSS classes applied to the <th> element. */
   className?: string;
+  /** HTML rowSpan attribute — pass 2 when the header spans a two-row thead. */
+  rowSpan?: number;
   /** Called when the user clicks the hide (×) button. Omit to suppress the button. */
   onHide?: () => void;
   /** Optional children to render in place of the label (e.g. CustomColumnHeader). */
@@ -27,6 +29,7 @@ export function SortableColHeader({
   colId,
   label,
   className,
+  rowSpan,
   onHide,
   children,
 }: SortableColHeaderProps) {
@@ -37,6 +40,7 @@ export function SortableColHeader({
     <th
       ref={setNodeRef}
       style={style}
+      rowSpan={rowSpan}
       className={cn(className, 'group cursor-grab active:cursor-grabbing')}
       {...attributes}
       {...listeners}
