@@ -286,7 +286,13 @@ export function ProposalActions({
           {
             label: 'Export Excel',
             onSelect: () =>
-              void exportProposalExcel(project, categoriesWithItems, userProfile, customColumnDefs),
+              void exportProposalExcel(
+                project,
+                categoriesWithItems,
+                userProfile,
+                customColumnDefs,
+                revisionsData,
+              ),
           },
           {
             label: 'Export CSV',

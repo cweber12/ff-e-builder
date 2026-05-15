@@ -4,6 +4,7 @@ import {
   filteredProposalCategories,
   proposalSubtotalLabelColumnIndex,
 } from './proposalDocument';
+import type { RevisionExportData } from './proposalDocument';
 import type { Project, ProposalCategoryWithItems, UserProfile } from '../../../types';
 import {
   addExcelCircularCoverImage,
@@ -22,6 +23,7 @@ export async function exportProposalExcel(
   categories: ProposalCategoryWithItems[],
   userProfile?: UserProfile | null,
   customColumnDefs: import('../../../types').CustomColumnDef[] = [],
+  revisionData?: RevisionExportData,
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const exportCategories = filteredProposalCategories(categories);
@@ -36,6 +38,7 @@ export async function exportProposalExcel(
     assets,
     userProfile,
     customColumnDefs,
+    revisionData,
   );
   const columns = exportDoc.columns;
 
@@ -159,7 +162,7 @@ export async function exportProposalExcel(
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FFECEFEA' },
+        fgColor: { argb: column.isRevision ? 'FFFEF3C7' : 'FFECEFEA' },
       };
       cell.border = thinBorder();
     });
@@ -171,7 +174,35 @@ export async function exportProposalExcel(
       row.height = PROPOSAL_EXCEL_ROW_HEIGHT;
       columns.forEach((column, index) => {
         const cell = row.getCell(index + 1);
-        cell.value = rowData.values[column.key];
+
+        // Revision annotation: original value in black, revised in red below.
+        const annotationKey =
+          column.key === 'quantity'
+            ? 'quantity'
+            : column.key === 'unitCost'
+              ? 'unitCost'
+              : column.key === 'totalCost'
+                ? 'totalCost'
+                : null;
+        const annotation = annotationKey ? rowData.revAnnotations[annotationKey] : undefined;
+        if (annotation) {
+          const originalText = rowData.values[column.key] ?? '';
+          cell.value = {
+            richText: [
+              {
+                text: originalText,
+                font: { name: 'Helvetica', size: 9, color: { argb: 'FF374151' } },
+              },
+              {
+                text: '\n' + annotation.revisedValue,
+                font: { name: 'Helvetica', size: 9, color: { argb: 'FFDC2626' } },
+              },
+            ],
+          };
+        } else {
+          cell.value = rowData.values[column.key];
+        }
+
         cell.font = { name: 'Helvetica', size: 9, color: { argb: 'FF374151' } };
         cell.alignment = {
           vertical: column.key === 'rendering' || column.key === 'swatch' ? 'middle' : 'top',
@@ -180,6 +211,9 @@ export async function exportProposalExcel(
             column.key === 'unit' ||
             column.key === 'unitCost' ||
             column.key === 'totalCost' ||
+            column.key === 'revQty' ||
+            column.key === 'revUnitCost' ||
+            column.key === 'revTotalCost' ||
             column.key === 'cbm'
               ? 'center'
               : 'left',
@@ -187,6 +221,19 @@ export async function exportProposalExcel(
           shrinkToFit: false,
         };
         cell.border = thinBorder();
+        // Amber highlight for flagged cost cells: both the original columns and the rev block.
+        const isCostFlagged =
+          rowData.revAnnotations.unitCost?.flagged === true ||
+          rowData.revAnnotations.totalCost?.flagged === true;
+        if (
+          isCostFlagged &&
+          (column.key === 'unitCost' ||
+            column.key === 'totalCost' ||
+            column.key === 'revUnitCost' ||
+            column.key === 'revTotalCost')
+        ) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF9C3' } };
+        }
       });
 
       const renderingColumn = columns.findIndex((column) => column.key === 'rendering');

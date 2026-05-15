@@ -8,6 +8,9 @@ import type {
   Project,
   ProposalCategoryWithItems,
   ProposalItem,
+  ProposalItemChangelogEntry,
+  ProposalRevision,
+  RevisionSnapshot,
   UserProfile,
 } from '../../../types';
 import { fmtMoney } from '../shared';
@@ -25,7 +28,11 @@ export type ProposalExportColumnKey =
   | 'quantity'
   | 'unit'
   | 'unitCost'
-  | 'totalCost';
+  | 'totalCost'
+  | 'revisionNotes'
+  | 'revQty'
+  | 'revUnitCost'
+  | 'revTotalCost';
 
 export type ProposalExportColumn = {
   key: string;
@@ -34,6 +41,23 @@ export type ProposalExportColumn = {
   excelWidth: number;
   alwaysVisible?: boolean;
   isCustom?: boolean;
+  /** Column belongs to the revision snapshot block — used for conditional formatting. */
+  isRevision?: boolean;
+};
+
+/** Revision data passed through to the export functions when a revision exists. */
+export type RevisionExportData = {
+  revisions: ProposalRevision[];
+  snapshots: RevisionSnapshot[];
+  changelog: ProposalItemChangelogEntry[];
+};
+
+/** Drives the red-below-original rich-text annotation in Excel for a single cell. */
+export type RevAnnotation = {
+  /** Revised value to display in red beneath the original. */
+  revisedValue: string;
+  /** True when cost_status='flagged' — drives amber cell highlighting. */
+  flagged: boolean;
 };
 
 export type ProposalAssetBundle = {
@@ -53,6 +77,12 @@ export type ProposalExportRow = {
   pdfRendering: string | null;
   pdfPlanImage: string | null;
   pdfSwatches: string[];
+  /** Per-cell revision annotations — original value in black on top, revised in red below. */
+  revAnnotations: {
+    quantity?: RevAnnotation;
+    unitCost?: RevAnnotation;
+    totalCost?: RevAnnotation;
+  };
 };
 
 export type ProposalExportCategorySection = {
@@ -72,6 +102,8 @@ export type ProposalExportDocument = {
   categories: ProposalExportCategorySection[];
   grandTotalCents: number;
   budgetTargetCents: number | null;
+  /** True when revision columns are included in this export. */
+  hasRevisionData: boolean;
 };
 
 const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
@@ -121,32 +153,100 @@ export function buildProposalExportDocument(
   assets: ProposalAssetBundle,
   userProfile?: UserProfile | null,
   customColumnDefs: CustomColumnDef[] = [],
+  revisionData?: RevisionExportData,
 ): ProposalExportDocument {
-  const columns = buildProposalVisibleColumns(categories, assets, customColumnDefs);
+  const openRev = revisionData?.revisions.find((r) => r.closedAt === null) ?? null;
+
+  // Build per-item maps for the open revision.
+  const snapshotMap = new Map<string, RevisionSnapshot>();
+  const changelogMap = new Map<string, ProposalItemChangelogEntry[]>();
+  if (openRev && revisionData) {
+    for (const snap of revisionData.snapshots) {
+      if (snap.revisionId === openRev.id) snapshotMap.set(snap.itemId, snap);
+    }
+    for (const entry of revisionData.changelog) {
+      if (entry.revisionId !== openRev.id) continue;
+      if (!changelogMap.has(entry.proposalItemId)) changelogMap.set(entry.proposalItemId, []);
+      changelogMap.get(entry.proposalItemId)!.push(entry);
+    }
+  }
+
+  const columns = buildProposalVisibleColumns(
+    categories,
+    assets,
+    customColumnDefs,
+    openRev !== null,
+  );
   const categorySections = categories.map((category) => ({
     category,
     subtotalCents: proposalCategorySubtotalCents(category.items),
     quantityTotal: category.items.reduce((sum, item) => sum + item.quantity, 0),
-    rows: category.items.map((item) => ({
-      item,
-      rendering: assets.renderingByItemId.get(item.id) ?? null,
-      planImage: assets.planByItemId.get(item.id) ?? null,
-      swatches: assets.swatchesByItemId.get(item.id) ?? [],
-      pdfRendering: null,
-      pdfPlanImage: null,
-      pdfSwatches: [] as string[],
-      values: {
-        ...Object.fromEntries(
-          PROPOSAL_EXPORT_COLUMNS.map((column) => [
-            column.key,
-            buildProposalRowValue(item, column.key as ProposalExportColumnKey),
-          ]),
-        ),
-        ...Object.fromEntries(
-          customColumnDefs.map((def) => [def.id, item.customData[def.id] ?? '']),
-        ),
-      },
-    })),
+    rows: category.items.map((item) => {
+      const snap = snapshotMap.get(item.id);
+      const isFlagged = snap?.costStatus === 'flagged';
+      const changelogEntries = changelogMap.get(item.id) ?? [];
+
+      // Compute per-cell annotations for the Excel rich-text overlay.
+      const revAnnotations: ProposalExportRow['revAnnotations'] = {};
+      if (openRev && snap) {
+        if (snap.quantity != null && snap.quantity !== item.quantity) {
+          revAnnotations.quantity = { revisedValue: String(snap.quantity), flagged: isFlagged };
+        }
+        if (
+          snap.unitCostCents != null &&
+          (snap.unitCostCents !== (item.unitCostCents || 0) || isFlagged)
+        ) {
+          revAnnotations.unitCost = {
+            revisedValue: fmtMoney(snap.unitCostCents),
+            flagged: isFlagged,
+          };
+        }
+        if (revAnnotations.quantity ?? revAnnotations.unitCost) {
+          const revQtyVal = snap.quantity ?? item.quantity;
+          const revCostVal = snap.unitCostCents ?? (item.unitCostCents || 0);
+          const revisedTotal = fmtMoney(Math.round(revQtyVal * revCostVal));
+          if (revisedTotal !== fmtMoney(proposalLineTotalCents(item))) {
+            revAnnotations.totalCost = { revisedValue: revisedTotal, flagged: isFlagged };
+          }
+        }
+      }
+
+      return {
+        item,
+        rendering: assets.renderingByItemId.get(item.id) ?? null,
+        planImage: assets.planByItemId.get(item.id) ?? null,
+        swatches: assets.swatchesByItemId.get(item.id) ?? [],
+        pdfRendering: null,
+        pdfPlanImage: null,
+        pdfSwatches: [] as string[],
+        revAnnotations,
+        values: {
+          ...Object.fromEntries(
+            PROPOSAL_EXPORT_COLUMNS.map((column) => [
+              column.key,
+              buildProposalRowValue(item, column.key as ProposalExportColumnKey),
+            ]),
+          ),
+          ...Object.fromEntries(
+            customColumnDefs.map((def) => [def.id, item.customData[def.id] ?? '']),
+          ),
+          ...(openRev
+            ? {
+                revisionNotes: changelogEntries
+                  .map((e) => e.notes)
+                  .filter((n): n is string => Boolean(n))
+                  .join('\n'),
+                revQty: snap?.quantity != null ? String(snap.quantity) : '',
+                revUnitCost: snap?.unitCostCents == null ? '' : fmtMoney(snap.unitCostCents),
+                revTotalCost:
+                  snap?.quantity == null || snap?.unitCostCents == null
+                    ? ''
+                    : fmtMoney(Math.round(snap.quantity * snap.unitCostCents)),
+              }
+            : {}),
+        },
+      };
+    }),
   }));
 
   return {
@@ -159,6 +259,7 @@ export function buildProposalExportDocument(
     categories: categorySections,
     grandTotalCents: proposalProjectTotalCents(categories),
     budgetTargetCents: getProposalBudgetTarget(project),
+    hasRevisionData: openRev !== null,
   };
 }
 
@@ -186,6 +287,7 @@ function buildProposalVisibleColumns(
   categories: ProposalCategoryWithItems[],
   assets: ProposalAssetBundle,
   customColumnDefs: CustomColumnDef[] = [],
+  hasRevision: boolean = false,
 ): ProposalExportColumn[] {
   const items = categories.flatMap((category) => category.items);
   const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
@@ -216,7 +318,28 @@ function buildProposalVisibleColumns(
       isCustom: true,
     }));
 
-  return [...fixedColumns, ...activeCustomColumns];
+  const revisionColumns: ProposalExportColumn[] = hasRevision
+    ? [
+        {
+          key: 'revisionNotes',
+          label: 'Rev Notes',
+          pdfWidth: 28,
+          excelWidth: 22,
+          isRevision: true,
+        },
+        { key: 'revQty', label: 'Rev Qty', pdfWidth: 12, excelWidth: 10, isRevision: true },
+        {
+          key: 'revUnitCost',
+          label: 'Rev Unit Cost',
+          pdfWidth: 15,
+          excelWidth: 13,
+          isRevision: true,
+        },
+        { key: 'revTotalCost', label: 'Rev Total', pdfWidth: 16, excelWidth: 14, isRevision: true },
+      ]
+    : [];
+
+  return [...fixedColumns, ...activeCustomColumns, ...revisionColumns];
 }
 
 function buildProposalRowValue(item: ProposalItem, key: ProposalExportColumnKey) {
@@ -287,6 +410,8 @@ function proposalCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
       return fmtMoney(proposalLineTotalCents(item));
     case 'rendering':
     case 'swatch':
+      return '';
+    default:
       return '';
   }
 }
