@@ -21,6 +21,8 @@ import type {
   ProposalCategoryWithItems,
   ProposalItem,
   ProposalItemChangelogEntry,
+  ProposalRevision,
+  RevisionSnapshot,
 } from '../../types';
 
 export function useProposalCategories(projectId: string) {
@@ -188,5 +190,34 @@ export function useDeleteProposalItem(categoryId: string) {
       );
     },
     onError: (err) => toast.error(`Proposal item delete failed: ${err.message}`),
+  });
+}
+
+// ─── Revision Rounds ────────────────────────────────────────────────────────
+
+export function useProposalRevisions(projectId: string) {
+  return useQuery<{ revisions: ProposalRevision[]; snapshots: RevisionSnapshot[] }>({
+    queryKey: proposalKeys.revisions(projectId),
+    queryFn: () => api.proposal.revisions(projectId),
+    enabled: Boolean(projectId),
+  });
+}
+
+export function useUpdateRevisionItemCost(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      revisionId,
+      itemId,
+      unitCostCents,
+    }: {
+      revisionId: string;
+      itemId: string;
+      unitCostCents: number;
+    }) => api.proposal.updateRevisionItemCost(revisionId, itemId, unitCostCents),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.revisions(projectId) });
+    },
+    onError: (err) => toast.error(`Revision cost update failed: ${err.message}`),
   });
 }

@@ -9,4 +9,6 @@ export {
   useProposalItemChangelog,
   useMoveProposalItem,
   useDeleteProposalItem,
+  useProposalRevisions,
+  useUpdateRevisionItemCost,
 } from './useProposal';
