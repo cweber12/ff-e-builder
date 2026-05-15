@@ -107,16 +107,28 @@ The unit of measure attached to a Proposal Item quantity, such as unit, sq ft, o
 _Avoid_: Size unit
 
 **Proposal Item Change**:
-A per-field audit record created when a tracked Proposal Item field is edited while the proposal is in `pricing_complete`, `submitted`, or `approved` status. Each change records the previous and new value as plain text, optional user notes, and a snapshot of the proposal status at the time of the change.
+A per-field audit record created when a tracked Proposal Item field is edited while the proposal is in `pricing_complete`, `submitted`, or `approved` status. Each change records the previous and new value as plain text, optional user notes, and the Revision Round it belongs to. Changes are associated with a Revision Round when one is open; otherwise they remain unassigned until the next Revision Round is triggered.
 _Avoid_: audit log, change history, diff
 
 **Price-Affecting Column**:
-A Proposal Item field — `quantity`, `size`, or `cbm` — whose change is expected to require a corresponding unit cost update. Editing a Price-Affecting Column prompts the user to add a new cost, defer the cost update, or skip price action.
+A Proposal Item field — `quantity`, `size`, or `cbm` — whose change is expected to require a corresponding unit cost update. Editing a Price-Affecting Column while the proposal is not `in_progress` triggers a new Revision Round (or Sub-Revision) and snaps the proposal status back to `in_progress`. For quantity-only changes, total cost updates automatically; for size or CBM changes, the item is flagged as requiring a manual cost update.
 _Avoid_: cost column, financial field
 
-**Deferred Cost**:
-The state of a Proposal Item when a Price-Affecting Column was changed but the unit cost update was intentionally postponed. Displayed as a sticky banner above the proposal table listing affected product tags, and as an amber highlight on the unit cost cell. Resolved automatically when the item's unit cost is next confirmed and saved.
-_Avoid_: pending cost, cost flag, unresolved cost
+**Revision Round**:
+A versioned bundle of Proposal Item Changes created when a Price-Affecting Column is edited after the proposal has advanced past `in_progress`. Revision Rounds are numbered `MAJOR.MINOR` (e.g. 1.1, 1.2, 2.1). The MAJOR number increments with each acceptance cycle (after `approved`); the MINOR number increments for each sub-round within one cycle. A Revision Round is open from the moment it is triggered until the proposal status advances again; while open, the proposal status is `in_progress`.
+_Avoid_: revision version, change set, audit round
+
+**Sub-Revision**:
+A Revision Round with a MINOR number greater than 1 (e.g. REVISION 1.2, 1.3). Triggered when a Price-Affecting Column is edited after the proposal has re-advanced to `pricing_complete` or `submitted` within the same acceptance cycle. Sub-Revisions share the same MAJOR number as the cycle they belong to.
+_Avoid_: revision increment, patch revision
+
+**Revision Snapshot**:
+A point-in-time record of a Proposal Item's quantity and unit cost captured for every item in the proposal when a Revision Round is triggered. Items not changed in a given round have their current values snapshotted unchanged. Revision Snapshots are displayed as sticky-right columns in the Proposal table and are deleted when the proposal is accepted.
+_Avoid_: item version, cost copy
+
+**Cost Flag**:
+The state of a Revision Snapshot item indicating that a Price-Affecting Column change (other than a quantity-only change) requires a manual unit cost update before the proposal can advance to `pricing_complete`. A flagged item shows an amber indicator in the revision unit cost cell; clicking it opens a cost-entry confirmation. Once the PM enters the new cost, the flag changes to resolved. Resolved items show a distinct green indicator.
+_Avoid_: Deferred Cost (legacy term for the superseded per-item deferral flag), pending cost, unresolved cost
 
 **Proposal Status**:
 The lifecycle state of a Project's Proposal workspace. One status per Project; there is no per-item status. Valid values: `in_progress`, `pricing_complete`, `submitted`, `approved`. Stored as `proposal_status` on the `projects` table. Changing status while in `pricing_complete`, `submitted`, or `approved` triggers Proposal Item Change records for tracked fields.
@@ -193,8 +205,9 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A **Proposal Category** contains zero or more **Proposal Items**.
 - A **Proposal Item** can have zero or more **Proposal Item Changes**, one per tracked field edit while the proposal is not `in_progress`.
 - A **Proposal Item Change** snapshots the **Proposal Status** at the time of the edit to preserve the display color for that entry.
-- A **Proposal Item Change** for `unitCostCents` may reference a triggering **Proposal Item Change** via `related_change_id` when a price update was confirmed alongside a Price-Affecting Column change.
-- A **Proposal Item** carries a **Deferred Cost** flag when a Price-Affecting Column was changed without a corresponding unit cost update.
+- A **Proposal Item Change** belongs to a **Revision Round** via `revision_id`; entries created before any Revision Round is triggered carry a null `revision_id` until the next round is opened.
+- A **Revision Round** owns zero or more **Revision Snapshots** — one per Proposal Item in the proposal.
+- A **Revision Snapshot** carries a **Cost Flag** status (`none`, `flagged`, or `resolved`) that gates progression to `pricing_complete`.
 - A **Project** owns a **Finish Library** — a single pool of **Materials** accessible from both **FF&E** and **Proposal** views.
 - All **Finish Library** entries are **Materials**. There is no separate Swatch type; the same **Material** can be assigned to FF&E Items, Proposal Items, or both without any re-classification.
 - An **FF&E Item** can reference multiple **Materials** from the **Finish Library**.
