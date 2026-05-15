@@ -48,6 +48,7 @@ import {
   useUpdateColumnDef,
   useDeleteColumnDef,
   useIsMobileViewport,
+  useProposalRevisions,
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
 import {
@@ -59,7 +60,9 @@ import {
   type ProposalItem,
   type ProposalCategoryWithItems,
   type CustomColumnDef,
+  type ProposalRevision,
   type ProposalStatus,
+  type RevisionSnapshot,
 } from '../../../types';
 import {
   proposalCategorySubtotalCents,
@@ -81,6 +84,12 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
 import { proposalStatusConfig } from '../proposalStatusConfig';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
+import {
+  RevisionColumnGroup,
+  RevisionCostCell,
+  RevisionQtyCell,
+  RevisionTotalCell,
+} from '../revision';
 
 // --- Changelog helpers ---
 
@@ -917,6 +926,16 @@ function ProposalCategorySection({
   const moveItem = useMoveProposalItem();
   const updateItem = useUpdateProposalItem();
   const isMobile = useIsMobileViewport();
+  const { data: revisionsData } = useProposalRevisions(projectId);
+  const revisions = revisionsData?.revisions ?? [];
+  const snapshotsByRevThenItem = useMemo(() => {
+    const map = new Map<string, Map<string, RevisionSnapshot>>();
+    for (const snap of revisionsData?.snapshots ?? []) {
+      if (!map.has(snap.revisionId)) map.set(snap.revisionId, new Map());
+      map.get(snap.revisionId)!.set(snap.itemId, snap);
+    }
+    return map;
+  }, [revisionsData?.snapshots]);
 
   type PendingChange = ChangeInfo & {
     item: ProposalItem;
@@ -1107,6 +1126,9 @@ function ProposalCategorySection({
                       );
                     })}
                   </SortableContext>
+                  {revisions.map((rev) => (
+                    <RevisionColumnGroup key={rev.id} revision={rev} />
+                  ))}
                   <th
                     className={cn(
                       'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
@@ -1191,6 +1213,8 @@ function ProposalCategorySection({
                       visibleColOrder={visibleColOrder}
                       customColumnDefs={customColumnDefs}
                       proposalStatus={proposalStatus}
+                      revisions={revisions}
+                      snapshotMap={snapshotsByRevThenItem}
                     />
                   ))}
                 </SortableContext>
@@ -1315,6 +1339,9 @@ function ProposalCategorySection({
                           );
                         })}
                       </SortableContext>
+                      {revisions.map((rev) => (
+                        <RevisionColumnGroup key={rev.id} revision={rev} />
+                      ))}
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
@@ -1402,6 +1429,8 @@ function ProposalCategorySection({
                           visibleColOrder={visibleColOrder}
                           customColumnDefs={customColumnDefs}
                           proposalStatus={proposalStatus}
+                          revisions={revisions}
+                          snapshotMap={snapshotsByRevThenItem}
                         />
                       ))}
                     </SortableContext>
@@ -1446,6 +1475,8 @@ function ProposalRow({
   visibleColOrder,
   customColumnDefs,
   proposalStatus,
+  revisions,
+  snapshotMap,
 }: {
   projectId: string;
   categoryId: string;
@@ -1459,6 +1490,8 @@ function ProposalRow({
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
   proposalStatus: ProposalStatus;
+  revisions: ProposalRevision[];
+  snapshotMap: Map<string, Map<string, RevisionSnapshot>>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -1622,6 +1655,25 @@ function ProposalRow({
       {visibleColOrder.map((colId) => (
         <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
       ))}
+      {revisions.map((rev) => {
+        const snap = snapshotMap.get(rev.id)?.get(item.id);
+        return (
+          <Fragment key={rev.id}>
+            <RevisionQtyCell
+              snapshot={snap}
+              currentQuantity={item.quantity}
+              currentUnit={item.quantityUnit}
+            />
+            <RevisionCostCell
+              snapshot={snap}
+              projectId={projectId}
+              revisionId={rev.id}
+              itemId={item.id}
+            />
+            <RevisionTotalCell snapshot={snap} />
+          </Fragment>
+        );
+      })}
       <QuantityCell
         quantity={item.quantity}
         quantityUnit={item.quantityUnit}

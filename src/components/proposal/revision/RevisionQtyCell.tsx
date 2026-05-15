@@ -1,0 +1,33 @@
+import { cn } from '../../../lib/utils';
+import type { RevisionSnapshot } from '../../../types';
+
+interface RevisionQtyCellProps {
+  snapshot: RevisionSnapshot | undefined;
+  currentQuantity: number;
+  currentUnit: string;
+}
+
+export function RevisionQtyCell({ snapshot, currentQuantity, currentUnit }: RevisionQtyCellProps) {
+  const qty = snapshot?.quantity;
+
+  if (qty === null || qty === undefined) {
+    return (
+      <td className="w-20 min-w-[80px] border-l-2 border-l-brand-200 px-3 py-2 text-sm text-neutral-300">
+        —
+      </td>
+    );
+  }
+
+  const changed = qty !== currentQuantity;
+
+  return (
+    <td
+      className={cn(
+        'w-20 min-w-[80px] border-l-2 border-l-brand-200 px-3 py-2 text-sm tabular-nums',
+        changed ? 'text-amber-600' : 'text-neutral-500',
+      )}
+    >
+      {qty} {currentUnit}
+    </td>
+  );
+}
