@@ -419,6 +419,31 @@ const stickyRevUnitCostCellClassName =
   'sticky right-[160px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
 const stickyRevTotalCellClassName =
   'sticky right-10 z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+// Locked baseline sticky block (open revision mode) — columns pinned to the LEFT of the
+// revision block so baseline and revised values stay visible side-by-side.
+// right offsets: notes=464(288+176), locked-total=624(464+160), locked-uc=744(624+120), locked-qty=872(744+128).
+const stickyLockedQtyHeaderClassName = 'sticky right-[872px] z-40 bg-surface w-44 min-w-[176px]';
+const stickyLockedUnitCostHeaderClassName =
+  'sticky right-[744px] z-40 bg-surface w-32 min-w-[128px]';
+const stickyLockedTotalHeaderClassName =
+  'sticky right-[624px] z-40 bg-surface w-[120px] min-w-[120px]';
+const stickyNotesHeaderClassName = 'sticky right-[464px] z-40 bg-surface min-w-[160px]';
+const stickyLockedQtyExpandedHeaderClassName =
+  'sticky top-0 right-[872px] z-50 bg-surface w-44 min-w-[176px]';
+const stickyLockedUnitCostExpandedHeaderClassName =
+  'sticky top-0 right-[744px] z-50 bg-surface w-32 min-w-[128px]';
+const stickyLockedTotalExpandedHeaderClassName =
+  'sticky top-0 right-[624px] z-50 bg-surface w-[120px] min-w-[120px]';
+const stickyNotesExpandedHeaderClassName =
+  'sticky top-0 right-[464px] z-50 bg-surface min-w-[160px]';
+const stickyLockedQtyCellClassName =
+  'sticky right-[872px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
+const stickyLockedUnitCostCellClassName =
+  'sticky right-[744px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
+const stickyLockedTotalCellClassName =
+  'sticky right-[624px] z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+const stickyNotesCellClassName =
+  'sticky right-[464px] z-10 bg-surface min-w-[160px] group-hover:bg-neutral-50/60';
 
 function GripIcon() {
   return (
@@ -1034,7 +1059,7 @@ function ProposalCategorySection({
   const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
 
   function handleItemSave(item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) {
-    if (proposalStatus === 'in_progress') {
+    if (proposalStatus === 'in_progress' && !hasOpenRevision) {
       onItemSave(item, { ...patch, version: item.version });
       return;
     }
@@ -1170,7 +1195,12 @@ function ProposalCategorySection({
 
       {!collapsed && !isMobile && (
         <div className="overflow-x-auto">
-          <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
+          <table
+            className={cn(
+              hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
+              'w-full border-collapse text-left text-sm',
+            )}
+          >
             <thead className="sticky top-0 z-30 bg-surface text-xs">
               <DndContext
                 sensors={sensors}
@@ -1222,28 +1252,40 @@ function ProposalCategorySection({
                   </SortableContext>
                   {hasOpenRevision ? (
                     <>
-                      {/* Locked baseline cols (non-sticky, scrollable) */}
+                      {/* Locked baseline cols (sticky, left of revision block) */}
                       <th
-                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-44 min-w-[176px]"
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyLockedQtyHeaderClassName,
+                        )}
                         rowSpan={2}
                       >
                         Qty
                       </th>
                       <th
-                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-32 min-w-[128px]"
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyLockedUnitCostHeaderClassName,
+                        )}
                         rowSpan={2}
                       >
                         Unit Cost
                       </th>
                       <th
-                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-[120px] min-w-[120px]"
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyLockedTotalHeaderClassName,
+                        )}
                         rowSpan={2}
                       >
                         Total
                       </th>
-                      {/* Rev Notes (non-sticky, scrollable) */}
+                      {/* Revision notes (sticky, between locked and revision blocks) */}
                       <th
-                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 min-w-[160px]"
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyNotesHeaderClassName,
+                        )}
                         rowSpan={2}
                       >
                         Notes
@@ -1463,7 +1505,12 @@ function ProposalCategorySection({
               aria-label={`${categoryName} expanded items table`}
               className="min-w-0 overflow-auto flex-1"
             >
-              <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
+              <table
+                className={cn(
+                  hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
+                  'w-full border-collapse text-left text-sm',
+                )}
+              >
                 <thead className="sticky top-0 z-30 bg-surface text-xs">
                   <DndContext
                     sensors={sensors}
@@ -1516,25 +1563,37 @@ function ProposalCategorySection({
                       {hasOpenRevision ? (
                         <>
                           <th
-                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-44 min-w-[176px]"
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyLockedQtyExpandedHeaderClassName,
+                            )}
                             rowSpan={2}
                           >
                             Qty
                           </th>
                           <th
-                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-32 min-w-[128px]"
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyLockedUnitCostExpandedHeaderClassName,
+                            )}
                             rowSpan={2}
                           >
                             Unit Cost
                           </th>
                           <th
-                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-[120px] min-w-[120px]"
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyLockedTotalExpandedHeaderClassName,
+                            )}
                             rowSpan={2}
                           >
                             Total
                           </th>
                           <th
-                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 min-w-[160px]"
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyNotesExpandedHeaderClassName,
+                            )}
                             rowSpan={2}
                           >
                             Notes
@@ -1699,6 +1758,7 @@ function ProposalCategorySection({
           previousValue={pendingChange.previousValue}
           newValue={pendingChange.newValue}
           proposalStatus={proposalStatus}
+          openRevisionLabel={openRev?.label}
           isPriceAffecting={pendingChange.isPriceAffecting}
           onConfirm={handleConfirm}
           onCancel={() => setPendingChange(null)}
@@ -1913,18 +1973,33 @@ function ProposalRow({
           const revEntries = changelogByItemId.get(item.id) ?? [];
           return (
             <>
-              {/* Locked baseline: item's current proposal_items values (read-only) */}
-              <td className="w-44 min-w-[176px] px-3 py-2 text-sm tabular-nums text-neutral-400">
+              {/* Locked baseline: sticky, left of revision block for easy comparison */}
+              <td
+                className={cn(
+                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                  stickyLockedQtyCellClassName,
+                )}
+              >
                 {item.quantity} {item.quantityUnit}
               </td>
-              <td className="w-32 min-w-[128px] px-3 py-2 text-sm tabular-nums text-neutral-400">
+              <td
+                className={cn(
+                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                  stickyLockedUnitCostCellClassName,
+                )}
+              >
                 {formatMoney(cents(item.unitCostCents))}
               </td>
-              <td className="w-[120px] min-w-[120px] px-3 py-2 text-sm tabular-nums text-neutral-400">
+              <td
+                className={cn(
+                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                  stickyLockedTotalCellClassName,
+                )}
+              >
                 {formatMoney(cents(lineTotal))}
               </td>
-              {/* Rev Notes (non-sticky, scrollable) */}
-              <RevisionNotesCell entries={revEntries} />
+              {/* Revision notes: sticky, between locked and revision blocks */}
+              <RevisionNotesCell entries={revEntries} tdClassName={stickyNotesCellClassName} />
               {/* Revision snapshot cells (sticky) */}
               <RevisionQtyCell
                 snapshot={snap}

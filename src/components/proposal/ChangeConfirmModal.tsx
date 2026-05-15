@@ -14,6 +14,8 @@ interface ChangeConfirmModalProps {
   previousValue: string;
   newValue: string;
   proposalStatus: ProposalStatus;
+  /** When set, shows a revision badge instead of the status badge. */
+  openRevisionLabel?: string;
   isPriceAffecting: boolean;
   onConfirm: (result: ChangeConfirmResult) => void;
   onCancel: () => void;
@@ -24,6 +26,7 @@ export function ChangeConfirmModal({
   previousValue,
   newValue,
   proposalStatus,
+  openRevisionLabel,
   isPriceAffecting,
   onConfirm,
   onCancel,
@@ -43,15 +46,21 @@ export function ChangeConfirmModal({
   return (
     <Modal open onClose={onCancel} title={`Change ${columnLabel}`}>
       <div className="space-y-4">
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium w-fit',
-            cfg.bgClass,
-            cfg.textClass,
-          )}
-        >
-          {cfg.label}
-        </div>
+        {openRevisionLabel ? (
+          <div className="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium w-fit bg-brand-50 text-brand-700">
+            Revision {openRevisionLabel}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              'flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium w-fit',
+              cfg.bgClass,
+              cfg.textClass,
+            )}
+          >
+            {cfg.label}
+          </div>
+        )}
 
         <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm">
           <div className="flex items-start gap-2">

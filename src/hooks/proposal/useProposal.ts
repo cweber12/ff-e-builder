@@ -131,11 +131,14 @@ export function useUpdateProposalItem() {
         updateListItem(old, item.id, () => item),
       );
       void queryClient.invalidateQueries({ queryKey: proposalKeys.changelog(item.id) });
-      // A price-affecting confirmed change may have opened a Revision Round
-      // on the server and reverted proposal_status to in_progress. Invalidate
-      // both caches so the revision sticky block and status badge refresh.
-      if (patch.changeLog?.isPriceAffecting && projectId) {
+      // Any confirmed change (price-affecting or notes-only) must refresh the
+      // revision block so the Notes column stays up to date.
+      if (patch.changeLog && projectId) {
         void queryClient.invalidateQueries({ queryKey: proposalKeys.revisions(projectId) });
+      }
+      // Only a price-affecting change can open a Revision Round and revert
+      // proposal_status to in_progress — refresh project cache for status badge.
+      if (patch.changeLog?.isPriceAffecting && projectId) {
         void queryClient.invalidateQueries({ queryKey: projectKeys.all });
       }
     },
