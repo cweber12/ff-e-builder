@@ -196,7 +196,11 @@ export function useDeleteProposalItem(categoryId: string) {
 // ─── Revision Rounds ────────────────────────────────────────────────────────
 
 export function useProposalRevisions(projectId: string) {
-  return useQuery<{ revisions: ProposalRevision[]; snapshots: RevisionSnapshot[] }>({
+  return useQuery<{
+    revisions: ProposalRevision[];
+    snapshots: RevisionSnapshot[];
+    changelog: ProposalItemChangelogEntry[];
+  }>({
     queryKey: proposalKeys.revisions(projectId),
     queryFn: () => api.proposal.revisions(projectId),
     enabled: Boolean(projectId),

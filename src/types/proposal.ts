@@ -63,6 +63,7 @@ export type ProposalItemChangelogEntry = {
   proposalStatus: ProposalStatus;
   relatedChangeId: string | null;
   revisionId: string | null;
+  isPriceAffecting: boolean;
   changedAt: string;
 };
 

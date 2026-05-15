@@ -111,7 +111,7 @@ A per-field audit record created when a tracked Proposal Item field is edited wh
 _Avoid_: audit log, change history, diff
 
 **Price-Affecting Column**:
-A Proposal Item field — `quantity`, `size`, or `cbm` — whose change is expected to require a corresponding unit cost update. Editing a Price-Affecting Column while the proposal is not `in_progress` triggers a new Revision Round (or Sub-Revision) and snaps the proposal status back to `in_progress`. For quantity-only changes, total cost updates automatically; for size or CBM changes, the item is flagged as requiring a manual cost update.
+A Proposal Item field — `quantity`, `size`, or `cbm` — whose change is expected to require a corresponding unit cost update. Editing a Price-Affecting Column while the proposal is not `in_progress` triggers a new Revision Round (or Sub-Revision) and snaps the proposal status back to `in_progress`. For **quantity-only** changes, the Revision Snapshot is immediately flagged (`cost_status = 'flagged'`) with the existing unit cost pre-filled so the PM can confirm or override it; total cost is not applied automatically. For **size or CBM** changes, the snapshot is likewise flagged and the unit cost must be entered manually before the proposal can advance.
 _Avoid_: cost column, financial field
 
 **Revision Round**:
@@ -123,11 +123,11 @@ A Revision Round with a MINOR number greater than 1 (e.g. REVISION 1.2, 1.3). Tr
 _Avoid_: revision increment, patch revision
 
 **Revision Snapshot**:
-A point-in-time record of a Proposal Item's quantity and unit cost captured for every item in the proposal when a Revision Round is triggered. Items not changed in a given round have their current values snapshotted unchanged. Revision Snapshots are displayed as sticky-right columns in the Proposal table and are deleted when the proposal is accepted.
+A point-in-time record of a Proposal Item's quantity and unit cost captured for every item in the proposal when a Revision Round is triggered. Items not changed in a given round have their current values snapshotted unchanged. Revision Snapshots are displayed as a **sticky right block** (REVISION X.X header) in the Proposal table while a Revision Round is open; the baseline editable columns remain visible and locked to the left. Snapshots belong to the Revision Round and are scoped to the current acceptance cycle (current MAJOR). Revision Rounds and their Snapshots are preserved indefinitely after the proposal is accepted — they are **never deleted**; `last_revision_major` on the project advances to mark the start of the next cycle.
 _Avoid_: item version, cost copy
 
 **Cost Flag**:
-The state of a Revision Snapshot item indicating that a Price-Affecting Column change (other than a quantity-only change) requires a manual unit cost update before the proposal can advance to `pricing_complete`. A flagged item shows an amber indicator in the revision unit cost cell; clicking it opens a cost-entry confirmation. Once the PM enters the new cost, the flag changes to resolved. Resolved items show a distinct green indicator.
+The state of a Revision Snapshot item (`cost_status = 'flagged'`) indicating that a Price-Affecting Column change requires PM confirmation of the unit cost before the proposal can advance to `pricing_complete`. Both **quantity-only** changes and **size/CBM** changes produce a flagged snapshot — for quantity changes the existing unit cost is pre-filled; for size/CBM changes the field is empty. A flagged item shows an amber indicator in the revision unit cost cell; clicking it opens a cost-entry confirmation. Once the PM enters or confirms the new cost, the flag changes to `resolved`. Resolved items show a distinct green indicator.
 _Avoid_: Deferred Cost (legacy term for the superseded per-item deferral flag), pending cost, unresolved cost
 
 **Proposal Status**:

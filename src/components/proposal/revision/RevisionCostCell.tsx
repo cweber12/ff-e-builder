@@ -9,6 +9,7 @@ interface RevisionCostCellProps {
   projectId: string;
   revisionId: string;
   itemId: string;
+  tdClassName?: string;
 }
 
 const inputClassName =
@@ -19,19 +20,14 @@ export function RevisionCostCell({
   projectId,
   revisionId,
   itemId,
+  tdClassName,
 }: RevisionCostCellProps) {
   const updateCost = useUpdateRevisionItemCost(projectId);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
 
-  const costCents = snapshot?.unitCostCents;
+  const costCents = snapshot?.unitCostCents ?? null;
   const costStatus = snapshot?.costStatus ?? 'none';
-
-  if (costCents === null || costCents === undefined) {
-    return <td className="w-[112px] min-w-[112px] px-3 py-2 text-sm text-neutral-300">—</td>;
-  }
-
-  // costCents is number after the guard above
   const isFlagged = costStatus === 'flagged';
   const isResolved = costStatus === 'resolved';
 
@@ -46,7 +42,7 @@ export function RevisionCostCell({
   if (isFlagged && editing) {
     return (
       <td
-        className="w-[112px] min-w-[112px] bg-amber-50 px-3 py-2"
+        className={cn('w-32 min-w-[128px] bg-amber-50 px-3 py-2', tdClassName)}
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -68,26 +64,36 @@ export function RevisionCostCell({
     );
   }
 
+  // Non-flagged null: static dash
+  if (!isFlagged && costCents === null) {
+    return (
+      <td className={cn('w-32 min-w-[128px] px-3 py-2 text-sm text-neutral-300', tdClassName)}>
+        —
+      </td>
+    );
+  }
+
   return (
     <td
       className={cn(
-        'w-[112px] min-w-[112px] px-3 py-2 text-sm tabular-nums',
+        'w-32 min-w-[128px] px-3 py-2 text-sm tabular-nums',
         isFlagged && 'cursor-pointer bg-amber-50 text-amber-700',
         isResolved && 'text-green-700',
         !isFlagged && !isResolved && 'text-neutral-500',
+        tdClassName,
       )}
       title={isFlagged ? 'Click to set approved cost' : undefined}
       onClick={
         isFlagged
           ? (e) => {
               e.stopPropagation();
-              setDraft((costCents / 100).toFixed(2));
+              setDraft(costCents !== null ? (costCents / 100).toFixed(2) : '');
               setEditing(true);
             }
           : undefined
       }
     >
-      {formatMoney(cents(costCents))}
+      {costCents !== null ? formatMoney(cents(costCents)) : '—'}
       {isFlagged && (
         <span className="ml-1 text-xs text-amber-500" aria-label="Flagged for review">
           ⚑

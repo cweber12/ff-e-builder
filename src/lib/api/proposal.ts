@@ -177,22 +177,28 @@ export const proposalApi = {
         id: row.id as string,
         proposalItemId: row.proposal_item_id as string,
         columnKey: row.column_key as string,
-        previousValue: row.previous_value as string,
-        newValue: row.new_value as string,
+        previousValue: (row.previous_value as string | null) ?? '',
+        newValue: (row.new_value as string | null) ?? '',
         notes: (row.notes as string | null) ?? null,
         proposalStatus: row.proposal_status as ProposalStatus,
         relatedChangeId: (row.related_change_id as string | null) ?? null,
         revisionId: (row.revision_id as string | null) ?? null,
+        isPriceAffecting: Boolean(row.is_price_affecting),
         changedAt: row.changed_at as string,
       })),
     ),
 
   revisions: (
     projectId: string,
-  ): Promise<{ revisions: ProposalRevision[]; snapshots: RevisionSnapshot[] }> =>
+  ): Promise<{
+    revisions: ProposalRevision[];
+    snapshots: RevisionSnapshot[];
+    changelog: ProposalItemChangelogEntry[];
+  }> =>
     apiFetch<{
       revisions: Record<string, unknown>[];
       snapshots: Record<string, unknown>[];
+      changelog: Record<string, unknown>[];
     }>(`/api/v1/projects/${projectId}/proposal/revisions`).then((r) => ({
       revisions: r.revisions.map(
         (row): ProposalRevision => ({
@@ -216,6 +222,21 @@ export const proposalApi = {
           quantity: row.quantity != null ? Number(row.quantity) : null,
           unitCostCents: row.unit_cost_cents != null ? (row.unit_cost_cents as number) : null,
           costStatus: row.cost_status as 'none' | 'flagged' | 'resolved',
+        }),
+      ),
+      changelog: r.changelog.map(
+        (row): ProposalItemChangelogEntry => ({
+          id: row.id as string,
+          proposalItemId: row.proposal_item_id as string,
+          columnKey: row.column_key as string,
+          previousValue: (row.previous_value as string | null) ?? '',
+          newValue: (row.new_value as string | null) ?? '',
+          notes: (row.notes as string | null) ?? null,
+          proposalStatus: row.proposal_status as ProposalStatus,
+          relatedChangeId: null,
+          revisionId: (row.revision_id as string | null) ?? null,
+          isPriceAffecting: Boolean(row.is_price_affecting),
+          changedAt: row.changed_at as string,
         }),
       ),
     })),

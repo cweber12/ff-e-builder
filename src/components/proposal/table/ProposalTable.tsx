@@ -58,6 +58,7 @@ import {
   parseUnitCostDollarsInput,
   type Project,
   type ProposalItem,
+  type ProposalItemChangelogEntry,
   type ProposalCategoryWithItems,
   type CustomColumnDef,
   type ProposalRevision,
@@ -85,8 +86,8 @@ import { cn } from '../../../lib/utils';
 import { proposalStatusConfig } from '../proposalStatusConfig';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
 import {
-  RevisionColumnGroup,
   RevisionCostCell,
+  RevisionNotesCell,
   RevisionQtyCell,
   RevisionTotalCell,
 } from '../revision';
@@ -217,19 +218,32 @@ function ChangeHistoryDot({
   revisions: ProposalRevision[];
 }) {
   const { data: changelog = [] } = useProposalItemChangelog(itemId);
-  const entries = changelog.filter((e) => e.columnKey === columnKey);
+
+  // Build a label map from the current-cycle revisions (already scoped by the
+  // GET endpoint to currentMajor). Filter changelog to only current-cycle entries
+  // so dots don't surface history from prior acceptance cycles after preservation.
   const revisionLabelMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const rev of revisions) map.set(rev.id, rev.label);
     return map;
   }, [revisions]);
+
+  const entries = useMemo(
+    () =>
+      changelog.filter(
+        (e) =>
+          e.columnKey === columnKey && e.revisionId !== null && revisionLabelMap.has(e.revisionId),
+      ),
+    [changelog, columnKey, revisionLabelMap],
+  );
+
   type EntryGroup = { label: string; entries: typeof entries };
   const groupedEntries = useMemo(() => {
     const groups: EntryGroup[] = [];
-    const seen = new Map<string | null, EntryGroup>();
+    const seen = new Map<string, EntryGroup>();
     for (const entry of entries) {
-      const key = entry.revisionId ?? null;
-      const label = key ? (revisionLabelMap.get(key) ?? 'Unknown') : 'General';
+      const key = entry.revisionId!;
+      const label = revisionLabelMap.get(key) ?? 'Unknown';
       if (!seen.has(key)) {
         const g: EntryGroup = { label, entries: [] };
         groups.push(g);
@@ -381,6 +395,30 @@ const stickyQtyCellClassName =
   'sticky right-[288px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
 const stickyUnitCostCellClassName =
   'sticky right-[160px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
+
+// Revision sticky block — same right offsets as editable block but for revision data.
+// When a revision is open the sticky block expands to show Rev Qty | Rev UC | Rev Total.
+// right offsets are identical: rev-qty=288px, rev-uc=160px, rev-total=40px (right-10).
+const stickyRevQtyHeaderClassName = 'sticky right-[288px] z-40 bg-surface w-44 min-w-[176px]';
+const stickyRevUnitCostHeaderClassName = 'sticky right-[160px] z-40 bg-surface w-32 min-w-[128px]';
+const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-[120px] min-w-[120px]';
+// Span header: covers all 3 revision cols (176+128+120=424px), anchored at right-10.
+const stickyRevSpanHeaderClassName =
+  'sticky right-10 z-40 bg-surface min-w-[424px] border-l-2 border-l-brand-300';
+const stickyRevQtyExpandedHeaderClassName =
+  'sticky top-0 right-[288px] z-50 bg-surface w-44 min-w-[176px]';
+const stickyRevUnitCostExpandedHeaderClassName =
+  'sticky top-0 right-[160px] z-50 bg-surface w-32 min-w-[128px]';
+const stickyRevTotalExpandedHeaderClassName =
+  'sticky top-0 right-10 z-50 bg-surface w-[120px] min-w-[120px]';
+const stickyRevSpanExpandedHeaderClassName =
+  'sticky top-0 right-10 z-50 bg-surface min-w-[424px] border-l-2 border-l-brand-300';
+const stickyRevQtyCellClassName =
+  'sticky right-[288px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
+const stickyRevUnitCostCellClassName =
+  'sticky right-[160px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
+const stickyRevTotalCellClassName =
+  'sticky right-10 z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
 
 function GripIcon() {
   return (
@@ -975,6 +1013,20 @@ function ProposalCategorySection({
     return map;
   }, [revisionsData?.snapshots]);
 
+  // Derive open revision and per-item changelog for the Notes column.
+  const openRev = useMemo(() => revisions.find((r) => r.closedAt === null) ?? null, [revisions]);
+  const hasOpenRevision = openRev !== null;
+  const changelogByItemId = useMemo(() => {
+    const map = new Map<string, ProposalItemChangelogEntry[]>();
+    if (!openRev) return map;
+    for (const entry of revisionsData?.changelog ?? []) {
+      if (entry.revisionId !== openRev.id) continue;
+      if (!map.has(entry.proposalItemId)) map.set(entry.proposalItemId, []);
+      map.get(entry.proposalItemId)!.push(entry);
+    }
+    return map;
+  }, [revisionsData?.changelog, openRev]);
+
   type PendingChange = ChangeInfo & {
     item: ProposalItem;
     patch: Omit<UpdateProposalItemInput, 'version'>;
@@ -1126,7 +1178,10 @@ function ProposalCategorySection({
                 onDragEnd={handleColumnDragEnd}
               >
                 <tr>
-                  <th className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1" />
+                  <th
+                    className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1"
+                    rowSpan={hasOpenRevision ? 2 : 1}
+                  />
                   <SortableContext
                     items={draggableColOrder}
                     strategy={horizontalListSortingStrategy}
@@ -1165,37 +1220,112 @@ function ProposalCategorySection({
                       );
                     })}
                   </SortableContext>
-                  {revisions.map((rev) => (
-                    <RevisionColumnGroup key={rev.id} revision={rev} />
-                  ))}
-                  <th
-                    className={cn(
-                      'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                      stickyQtyHeaderClassName,
-                    )}
-                  >
-                    Qty
-                  </th>
-                  <th
-                    className={cn(
-                      'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                      stickyUnitCostHeaderClassName,
-                    )}
-                  >
-                    Unit Cost
-                  </th>
-                  <th
-                    className={cn(
-                      'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                      stickyTotalHeaderClassName,
-                    )}
-                  >
-                    Total Cost
-                  </th>
+                  {hasOpenRevision ? (
+                    <>
+                      {/* Locked baseline cols (non-sticky, scrollable) */}
+                      <th
+                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-44 min-w-[176px]"
+                        rowSpan={2}
+                      >
+                        Qty
+                      </th>
+                      <th
+                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-32 min-w-[128px]"
+                        rowSpan={2}
+                      >
+                        Unit Cost
+                      </th>
+                      <th
+                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-[120px] min-w-[120px]"
+                        rowSpan={2}
+                      >
+                        Total
+                      </th>
+                      {/* Rev Notes (non-sticky, scrollable) */}
+                      <th
+                        className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 min-w-[160px]"
+                        rowSpan={2}
+                      >
+                        Notes
+                      </th>
+                      {/* Revision span header (sticky) */}
+                      <th
+                        colSpan={3}
+                        className={cn(
+                          'h-5 border-t border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-brand-600',
+                          stickyRevSpanHeaderClassName,
+                        )}
+                      >
+                        Revision {openRev?.label}
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyQtyHeaderClassName,
+                        )}
+                      >
+                        Qty
+                      </th>
+                      <th
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyUnitCostHeaderClassName,
+                        )}
+                      >
+                        Unit Cost
+                      </th>
+                      <th
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyTotalHeaderClassName,
+                        )}
+                      >
+                        Total Cost
+                      </th>
+                    </>
+                  )}
                   <th
                     className={cn('h-10 border-y border-neutral-200', stickyOptionsHeaderClassName)}
+                    rowSpan={hasOpenRevision ? 2 : 1}
                   />
                 </tr>
+                {hasOpenRevision && (
+                  <tr>
+                    {/* Placeholder spans the draggable cols area (drag + locked cols + notes are rowSpanned) */}
+                    <th
+                      colSpan={draggableColOrder.length}
+                      className="border-b border-neutral-200 bg-surface"
+                    />
+                    {/* Revision sub-headers (sticky) */}
+                    <th
+                      className={cn(
+                        'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
+                        stickyRevQtyHeaderClassName,
+                      )}
+                    >
+                      Qty
+                    </th>
+                    <th
+                      className={cn(
+                        'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
+                        stickyRevUnitCostHeaderClassName,
+                      )}
+                    >
+                      Cost
+                    </th>
+                    <th
+                      className={cn(
+                        'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
+                        stickyRevTotalHeaderClassName,
+                      )}
+                    >
+                      Total
+                    </th>
+                  </tr>
+                )}
               </DndContext>
             </thead>
             <tbody>
@@ -1254,6 +1384,8 @@ function ProposalCategorySection({
                       proposalStatus={proposalStatus}
                       revisions={revisions}
                       snapshotMap={snapshotsByRevThenItem}
+                      openRev={openRev}
+                      changelogByItemId={changelogByItemId}
                     />
                   ))}
                 </SortableContext>
@@ -1339,7 +1471,10 @@ function ProposalCategorySection({
                     onDragEnd={handleColumnDragEnd}
                   >
                     <tr>
-                      <th className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1" />
+                      <th
+                        className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1"
+                        rowSpan={hasOpenRevision ? 2 : 1}
+                      />
                       <SortableContext
                         items={draggableColOrder}
                         strategy={horizontalListSortingStrategy}
@@ -1378,40 +1513,110 @@ function ProposalCategorySection({
                           );
                         })}
                       </SortableContext>
-                      {revisions.map((rev) => (
-                        <RevisionColumnGroup key={rev.id} revision={rev} />
-                      ))}
-                      <th
-                        className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                          stickyQtyExpandedHeaderClassName,
-                        )}
-                      >
-                        Qty
-                      </th>
-                      <th
-                        className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                          stickyUnitCostExpandedHeaderClassName,
-                        )}
-                      >
-                        Unit Cost
-                      </th>
-                      <th
-                        className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                          stickyTotalExpandedHeaderClassName,
-                        )}
-                      >
-                        Total Cost
-                      </th>
+                      {hasOpenRevision ? (
+                        <>
+                          <th
+                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-44 min-w-[176px]"
+                            rowSpan={2}
+                          >
+                            Qty
+                          </th>
+                          <th
+                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-32 min-w-[128px]"
+                            rowSpan={2}
+                          >
+                            Unit Cost
+                          </th>
+                          <th
+                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 w-[120px] min-w-[120px]"
+                            rowSpan={2}
+                          >
+                            Total
+                          </th>
+                          <th
+                            className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 min-w-[160px]"
+                            rowSpan={2}
+                          >
+                            Notes
+                          </th>
+                          <th
+                            colSpan={3}
+                            className={cn(
+                              'h-5 border-t border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-brand-600',
+                              stickyRevSpanExpandedHeaderClassName,
+                            )}
+                          >
+                            Revision {openRev?.label}
+                          </th>
+                        </>
+                      ) : (
+                        <>
+                          <th
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyQtyExpandedHeaderClassName,
+                            )}
+                          >
+                            Qty
+                          </th>
+                          <th
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyUnitCostExpandedHeaderClassName,
+                            )}
+                          >
+                            Unit Cost
+                          </th>
+                          <th
+                            className={cn(
+                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              stickyTotalExpandedHeaderClassName,
+                            )}
+                          >
+                            Total Cost
+                          </th>
+                        </>
+                      )}
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200',
                           stickyOptionsExpandedHeaderClassName,
                         )}
+                        rowSpan={hasOpenRevision ? 2 : 1}
                       />
                     </tr>
+                    {hasOpenRevision && (
+                      <tr>
+                        <th
+                          colSpan={draggableColOrder.length}
+                          className="border-b border-neutral-200 bg-surface"
+                        />
+                        <th
+                          className={cn(
+                            'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
+                            stickyRevQtyExpandedHeaderClassName,
+                          )}
+                        >
+                          Qty
+                        </th>
+                        <th
+                          className={cn(
+                            'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
+                            stickyRevUnitCostExpandedHeaderClassName,
+                          )}
+                        >
+                          Cost
+                        </th>
+                        <th
+                          className={cn(
+                            'h-5 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-400',
+                            stickyRevTotalExpandedHeaderClassName,
+                          )}
+                        >
+                          Total
+                        </th>
+                      </tr>
+                    )}
                   </DndContext>
                 </thead>
                 <tbody>
@@ -1470,6 +1675,8 @@ function ProposalCategorySection({
                           proposalStatus={proposalStatus}
                           revisions={revisions}
                           snapshotMap={snapshotsByRevThenItem}
+                          openRev={openRev}
+                          changelogByItemId={changelogByItemId}
                         />
                       ))}
                     </SortableContext>
@@ -1516,6 +1723,8 @@ function ProposalRow({
   proposalStatus,
   revisions,
   snapshotMap,
+  openRev,
+  changelogByItemId,
 }: {
   projectId: string;
   categoryId: string;
@@ -1531,6 +1740,8 @@ function ProposalRow({
   proposalStatus: ProposalStatus;
   revisions: ProposalRevision[];
   snapshotMap: Map<string, Map<string, RevisionSnapshot>>;
+  openRev: ProposalRevision | null;
+  changelogByItemId: Map<string, ProposalItemChangelogEntry[]>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -1696,42 +1907,63 @@ function ProposalRow({
       {visibleColOrder.map((colId) => (
         <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
       ))}
-      {revisions.map((rev) => {
-        const snap = snapshotMap.get(rev.id)?.get(item.id);
-        return (
-          <Fragment key={rev.id}>
-            <RevisionQtyCell
-              snapshot={snap}
-              currentQuantity={item.quantity}
-              currentUnit={item.quantityUnit}
-            />
-            <RevisionCostCell
-              snapshot={snap}
-              projectId={projectId}
-              revisionId={rev.id}
-              itemId={item.id}
-            />
-            <RevisionTotalCell snapshot={snap} />
-          </Fragment>
-        );
-      })}
-      <QuantityCell
-        quantity={item.quantity}
-        quantityUnit={item.quantityUnit}
-        onSaveQuantity={(quantity) => onSave({ quantity })}
-        onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
-        indicator={dot('quantity')}
-        tdClassName={stickyQtyCellClassName}
-      />
-      <MoneyCell
-        valueCents={item.unitCostCents}
-        onSave={(unitCostCents) => onSave({ unitCostCents })}
-        indicator={dot('unitCostCents')}
-        tdClassName={stickyUnitCostCellClassName}
-      />
-      <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
-        {formatMoney(cents(lineTotal))}
-      </td>
+      {openRev ? (
+        (() => {
+          const snap = snapshotMap.get(openRev.id)?.get(item.id);
+          const revEntries = changelogByItemId.get(item.id) ?? [];
+          return (
+            <>
+              {/* Locked baseline: item's current proposal_items values (read-only) */}
+              <td className="w-44 min-w-[176px] px-3 py-2 text-sm tabular-nums text-neutral-400">
+                {item.quantity} {item.quantityUnit}
+              </td>
+              <td className="w-32 min-w-[128px] px-3 py-2 text-sm tabular-nums text-neutral-400">
+                {formatMoney(cents(item.unitCostCents))}
+              </td>
+              <td className="w-[120px] min-w-[120px] px-3 py-2 text-sm tabular-nums text-neutral-400">
+                {formatMoney(cents(lineTotal))}
+              </td>
+              {/* Rev Notes (non-sticky, scrollable) */}
+              <RevisionNotesCell entries={revEntries} />
+              {/* Revision snapshot cells (sticky) */}
+              <RevisionQtyCell
+                snapshot={snap}
+                currentQuantity={item.quantity}
+                currentUnit={item.quantityUnit}
+                tdClassName={stickyRevQtyCellClassName}
+              />
+              <RevisionCostCell
+                snapshot={snap}
+                projectId={projectId}
+                revisionId={openRev.id}
+                itemId={item.id}
+                tdClassName={stickyRevUnitCostCellClassName}
+              />
+              <RevisionTotalCell snapshot={snap} tdClassName={stickyRevTotalCellClassName} />
+            </>
+          );
+        })()
+      ) : (
+        <>
+          <QuantityCell
+            quantity={item.quantity}
+            quantityUnit={item.quantityUnit}
+            onSaveQuantity={(quantity) => onSave({ quantity })}
+            onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+            indicator={dot('quantity')}
+            tdClassName={stickyQtyCellClassName}
+          />
+          <MoneyCell
+            valueCents={item.unitCostCents}
+            onSave={(unitCostCents) => onSave({ unitCostCents })}
+            indicator={dot('unitCostCents')}
+            tdClassName={stickyUnitCostCellClassName}
+          />
+          <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
+            {formatMoney(cents(lineTotal))}
+          </td>
+        </>
+      )}
       <td className={cn('px-1 py-2', stickyOptionsCellClassName)} onClick={stopProp}>
         <ProposalItemActionsMenu
           itemName={item.productTag || item.description || 'item'}

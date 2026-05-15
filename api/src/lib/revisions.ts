@@ -50,32 +50,35 @@ export async function findOpenRevision(sql: Sql, projectId: string): Promise<Rev
 
 /**
  * Compute the next (revision_major, revision_minor) for a new Revision Round.
- * If any revisions already exist for this project, we are in an open
- * acceptance cycle → reuse that major, bump the minor. Otherwise this is a
- * fresh cycle starting after an acceptance (or first-ever): use
- * `last_revision_major + 1` for the major.
+ *
+ * The current acceptance cycle's MAJOR is always `last_revision_major + 1`.
+ * We look only at revisions whose MAJOR matches the current cycle so that
+ * preserved historical rounds from prior cycles (e.g. 1.x) do not affect
+ * the numbering of the new cycle (e.g. 2.x).
  */
 export async function nextRevisionNumber(
   sql: Sql,
   projectId: string,
 ): Promise<{ major: number; minor: number }> {
-  const existing = await sql`
-    SELECT revision_major, revision_minor
-    FROM   proposal_revisions
-    WHERE  project_id = ${projectId}
-    ORDER  BY revision_major DESC, revision_minor DESC
-    LIMIT  1
-  `;
-  if (existing[0]) {
-    const r = existing[0] as { revision_major: number; revision_minor: number };
-    return { major: r.revision_major, minor: r.revision_minor + 1 };
-  }
   const projectRows = await sql`
     SELECT last_revision_major FROM projects WHERE id = ${projectId}
   `;
-  const last =
+  const lastMajor =
     (projectRows[0] as { last_revision_major: number } | undefined)?.last_revision_major ?? 0;
-  return { major: last + 1, minor: 1 };
+  const currentMajor = lastMajor + 1;
+
+  const existing = await sql`
+    SELECT revision_minor
+    FROM   proposal_revisions
+    WHERE  project_id = ${projectId} AND revision_major = ${currentMajor}
+    ORDER  BY revision_minor DESC
+    LIMIT  1
+  `;
+  if (existing[0]) {
+    const r = existing[0] as { revision_minor: number };
+    return { major: currentMajor, minor: r.revision_minor + 1 };
+  }
+  return { major: currentMajor, minor: 1 };
 }
 
 /**
@@ -202,25 +205,16 @@ export async function bakeApprovedRevision(sql: Sql, projectId: string): Promise
       AND  s.item_id = pi.id
   `;
 
-  // Remember which major number we just closed out so the next cycle bumps.
+  // Remember which major number we just closed out so the next cycle bumps
+  // and so the GET revisions endpoint can filter to the current cycle.
   await sql`
     UPDATE projects
     SET    last_revision_major = ${rev.revision_major}
     WHERE  id = ${projectId}
   `;
 
-  // Delete revisions (cascades snapshots, SETs revision_id NULL on changelog).
-  await sql`
-    DELETE FROM proposal_revisions WHERE project_id = ${projectId}
-  `;
-
-  // Delete remaining changelog entries for items in this proposal. The cycle
-  // has been accepted; per spec, revision logs for the round are removed.
-  await sql`
-    DELETE FROM proposal_item_changelog cl
-    USING  proposal_items pi
-    JOIN   proposal_categories pc ON pc.id = pi.category_id
-    WHERE  cl.proposal_item_id = pi.id
-      AND  pc.project_id = ${projectId}
-  `;
+  // Revision rounds and changelog are intentionally preserved after baking.
+  // Historical data from this cycle (e.g. 1.x rounds) remains queryable for
+  // audit and export purposes. Cleanup happens when the next MAJOR cycle
+  // starts (the intercept-and-archive flow, deferred to a future slice).
 }

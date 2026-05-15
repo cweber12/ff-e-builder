@@ -283,11 +283,13 @@ router.patch('/proposal/items/:id', async (c) => {
   // Update the Revision Snapshot for this item when relevant.
   if (openRev && cl && priceAffectingEdit) {
     if (cl.column_key === 'quantity' && d.quantity != null) {
-      // Quantity-only price-affecting change: total cost updates automatically
-      // from quantity * unit_cost (no flag needed).
+      // Quantity-only change: total cost changes, so the PM must review and
+      // confirm the new total before advancing to pricing_complete. Flag it
+      // with the existing unit_cost_cents pre-filled (not null) so the cell
+      // shows the auto-calculated total and the PM can accept or override.
       await sql`
         UPDATE proposal_revision_snapshots
-        SET    quantity = ${d.quantity}, cost_status = 'none'
+        SET    quantity = ${d.quantity}, cost_status = 'flagged'
         WHERE  revision_id = ${openRev.id} AND item_id = ${id}
       `;
     } else {
@@ -358,8 +360,10 @@ router.patch('/proposal/revisions/:revisionId/items/:itemId/cost', async (c) => 
 });
 
 // GET /api/v1/projects/:projectId/proposal/revisions
-// Returns all Revision Rounds for a project with their snapshots, ordered
-// newest first.
+// Returns Revision Rounds for the CURRENT acceptance cycle only (revision_major
+// = last_revision_major + 1), with their snapshots and changelog entries.
+// Historical rounds from prior cycles are preserved in the DB for future
+// export but are not included here to keep the table view clean.
 router.get('/projects/:projectId/proposal/revisions', async (c) => {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
@@ -370,20 +374,46 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
   }
 
   const sql = getDb(c.env);
+
+  // Determine the current cycle's MAJOR number.
+  const projectRows = await sql`
+    SELECT last_revision_major FROM projects WHERE id = ${projectId}
+  `;
+  const lastMajor =
+    (projectRows[0] as { last_revision_major: number } | undefined)?.last_revision_major ?? 0;
+  const currentMajor = lastMajor + 1;
+
   const revisions = await sql`
     SELECT id, project_id, revision_major, revision_minor,
            triggered_at_status, opened_at, closed_at
     FROM   proposal_revisions
     WHERE  project_id = ${projectId}
-    ORDER  BY revision_major DESC, revision_minor DESC
+      AND  revision_major = ${currentMajor}
+    ORDER  BY revision_minor DESC
   `;
   const snapshots = await sql`
     SELECT s.revision_id, s.item_id, s.quantity, s.unit_cost_cents, s.cost_status
     FROM   proposal_revision_snapshots s
     JOIN   proposal_revisions r ON r.id = s.revision_id
     WHERE  r.project_id = ${projectId}
+      AND  r.revision_major = ${currentMajor}
   `;
-  return c.json({ revisions, snapshots });
+
+  // Include changelog entries for the open revision so the client can
+  // populate the Revision Notes column without a per-item fetch.
+  const changelog = await sql`
+    SELECT cl.id, cl.proposal_item_id, cl.column_key, cl.previous_value,
+           cl.new_value, cl.notes, cl.proposal_status, cl.revision_id,
+           cl.is_price_affecting, cl.changed_at
+    FROM   proposal_item_changelog cl
+    JOIN   proposal_revisions r ON r.id = cl.revision_id
+    WHERE  r.project_id = ${projectId}
+      AND  r.revision_major = ${currentMajor}
+      AND  r.closed_at IS NULL
+    ORDER  BY cl.changed_at ASC
+  `;
+
+  return c.json({ revisions, snapshots, changelog });
 });
 
 router.get('/proposal/items/:id/changelog', async (c) => {

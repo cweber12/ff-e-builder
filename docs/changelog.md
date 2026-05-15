@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(proposal): redesign revision table layout — Revision Snapshots now appear as a sticky right block (REVISION X.X header spanning Qty/UC/Total sub-columns) that replaces the editable baseline zone while a round is open; baseline columns become read-only locked cols; quantity-only snapshot changes are flagged (cost_status=flagged) with existing unit cost pre-filled for PM confirmation; revision history and changelog are preserved permanently after approval (never deleted); ChangeHistoryDot filters to current acceptance cycle only
+
 - feat(proposal): add Revision Rounds — MAJOR.MINOR-numbered snapshots of Qty and Unit Cost are stored per round, displayed as scrollable column groups to the left of the sticky Qty/Cost/Total zone, with inline flagged-cost editing and change history grouped by round
 
 - feat(ui): redesign project shell and table chrome — two-row editorial header with underline tabs, lifted Add Room/Category modal state, flush-edge table layout for FF&E and Proposal routes, new shared components (ItemStatusChip, ProposalStatusSelect, TotalsBar, BulkActionBar, DeferredCostBanner, SaveStatusIndicator), and new hooks (useRowSelection, useTableDensity, useSaveStatus)
