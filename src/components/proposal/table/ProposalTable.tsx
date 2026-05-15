@@ -2595,7 +2595,7 @@ function QuantityCell({
   return (
     <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
       <div
-        className="flex w-40 gap-2"
+        className="flex flex-col gap-1"
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget)) {
             setEditing(false);
