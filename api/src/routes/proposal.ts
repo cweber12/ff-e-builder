@@ -311,10 +311,11 @@ router.patch('/proposal/items/:id', async (c) => {
     await sql`
       INSERT INTO proposal_item_changelog
         (proposal_item_id, column_key, previous_value, new_value, notes,
-         proposal_status, revision_id)
+         proposal_status, revision_id, is_price_affecting)
       VALUES
         (${id}, ${cl.column_key}, ${cl.previous_value}, ${cl.new_value},
-         ${cl.notes ?? null}, ${cl.proposal_status}, ${openRev?.id ?? null})
+         ${cl.notes ?? null}, ${cl.proposal_status}, ${openRev?.id ?? null},
+         ${cl.is_price_affecting ?? false})
     `;
   }
 

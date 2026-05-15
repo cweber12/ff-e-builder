@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { proposalKeys } from '../../lib/query';
+import { projectKeys, proposalKeys } from '../../lib/query';
 import {
   appendListItem,
   appendUniqueListItem,
@@ -115,13 +115,29 @@ export function useCreateProposalItem(categoryId: string) {
 export function useUpdateProposalItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: UpdateProposalItemInput }) =>
-      api.proposal.updateItem(id, patch),
-    onSuccess: (item) => {
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: UpdateProposalItemInput;
+      /** Required when patch.changeLog.isPriceAffecting may be true so the
+       *  revision block and proposal status are refreshed after the API
+       *  opens (or updates) a Revision Round. */
+      projectId?: string;
+    }) => api.proposal.updateItem(id, patch),
+    onSuccess: (item, { patch, projectId }) => {
       queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(item.categoryId), (old) =>
         updateListItem(old, item.id, () => item),
       );
       void queryClient.invalidateQueries({ queryKey: proposalKeys.changelog(item.id) });
+      // A price-affecting confirmed change may have opened a Revision Round
+      // on the server and reverted proposal_status to in_progress. Invalidate
+      // both caches so the revision sticky block and status badge refresh.
+      if (patch.changeLog?.isPriceAffecting && projectId) {
+        void queryClient.invalidateQueries({ queryKey: proposalKeys.revisions(projectId) });
+        void queryClient.invalidateQueries({ queryKey: projectKeys.all });
+      }
     },
     onError: (err) => toast.error(`Proposal item save failed: ${err.message}`),
   });

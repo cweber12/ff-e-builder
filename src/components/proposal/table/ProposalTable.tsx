@@ -550,7 +550,7 @@ export function ProposalTable({
             updateCategory.mutate({ id: category.id, patch: { name: name.trim() } })
           }
           onCategoryDelete={() => setCategoryToDelete(category)}
-          onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch })}
+          onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch, projectId })}
           onItemClick={(item) => {
             setSelectedItem(item);
             setSelectedCategoryName(category.name);

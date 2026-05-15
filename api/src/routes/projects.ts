@@ -4,11 +4,7 @@ import { CreateProjectSchema, UpdateProjectSchema, CreateRoomSchema } from '../t
 import { assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
-import {
-  bakeApprovedRevision,
-  closeOpenRevision,
-  countFlaggedInOpenRevision,
-} from '../lib/revisions';
+import { bakeApprovedRevision, closeOpenRevision } from '../lib/revisions';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -79,26 +75,20 @@ router.patch('/:id', async (c) => {
     `;
     const currentStatus = (current[0] as { proposal_status: string } | undefined)?.proposal_status;
 
-    // Block advance to `pricing_complete` if any item in the open revision
-    // still has an unresolved Cost Flag.
-    if (nextStatus === 'pricing_complete') {
-      const flagged = await countFlaggedInOpenRevision(sql, id);
-      if (flagged > 0) {
-        return c.json(
-          {
-            error: 'flagged_costs_unresolved',
-            message:
-              'This proposal has revision items whose unit cost has not been set. ' +
-              'Resolve all flagged costs before moving to pricing_complete.',
-            flagged_count: flagged,
-          },
-          422,
-        );
-      }
-    }
-
     // Close any open Revision Round when status advances away from in_progress.
+    // Before closing, auto-resolve any snapshots still flagged with no unit cost
+    // by setting their cost to 0 (PM accepted the change without entering a price).
     if (currentStatus === 'in_progress' && nextStatus !== 'in_progress') {
+      await sql`
+        UPDATE proposal_revision_snapshots s
+        SET    unit_cost_cents = COALESCE(s.unit_cost_cents, 0),
+               cost_status = 'resolved'
+        FROM   proposal_revisions r
+        WHERE  r.id = s.revision_id
+          AND  r.project_id = ${id}
+          AND  r.closed_at IS NULL
+          AND  s.cost_status = 'flagged'
+      `;
       await closeOpenRevision(sql, id);
     }
 
