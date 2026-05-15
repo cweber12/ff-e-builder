@@ -373,77 +373,76 @@ const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className:
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
   'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
-const stickyTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-[120px] min-w-[120px]';
+const stickyTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-24 min-w-[96px]';
 const stickyOptionsHeaderClassName = 'sticky right-0 z-40 bg-surface w-10 min-w-10';
 const stickyTotalExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-surface w-[120px] min-w-[120px]';
+  'sticky top-0 right-10 z-50 bg-surface w-24 min-w-[96px]';
 const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-surface w-10 min-w-10';
 const stickyTotalCellClassName =
-  'sticky right-10 z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+  'sticky right-10 z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 const stickyOptionsCellClassName =
-  'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
+  'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50';
 // Qty and Unit Cost sticky-right columns (always visible, not draggable).
-// right offsets: qty = options(40) + total(120) + unitCost(128) = 288px
-//               unitCost = options(40) + total(120) = 160px
-const stickyQtyHeaderClassName = 'sticky right-[288px] z-40 bg-surface w-44 min-w-[176px]';
-const stickyUnitCostHeaderClassName = 'sticky right-[160px] z-40 bg-surface w-32 min-w-[128px]';
+// right offsets: unitCost = options(40) + total(96) = 136px
+//               qty = unitCost(136) + unitCost-width(96) = 232px
+const stickyQtyHeaderClassName = 'sticky right-[232px] z-40 bg-surface w-20 min-w-[80px]';
+const stickyUnitCostHeaderClassName = 'sticky right-[136px] z-40 bg-surface w-24 min-w-[96px]';
 const stickyQtyExpandedHeaderClassName =
-  'sticky top-0 right-[288px] z-50 bg-surface w-44 min-w-[176px]';
+  'sticky top-0 right-[232px] z-50 bg-surface w-20 min-w-[80px]';
 const stickyUnitCostExpandedHeaderClassName =
-  'sticky top-0 right-[160px] z-50 bg-surface w-32 min-w-[128px]';
+  'sticky top-0 right-[136px] z-50 bg-surface w-24 min-w-[96px]';
 const stickyQtyCellClassName =
-  'sticky right-[288px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
+  'sticky right-[232px] z-10 bg-surface w-20 min-w-[80px] group-hover:bg-neutral-50';
 const stickyUnitCostCellClassName =
-  'sticky right-[160px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
+  'sticky right-[136px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 
 // Revision sticky block — same right offsets as editable block but for revision data.
 // When a revision is open the sticky block expands to show Rev Qty | Rev UC | Rev Total.
-// right offsets are identical: rev-qty=288px, rev-uc=160px, rev-total=40px (right-10).
-const stickyRevQtyHeaderClassName = 'sticky right-[288px] z-40 bg-surface w-44 min-w-[176px]';
-const stickyRevUnitCostHeaderClassName = 'sticky right-[160px] z-40 bg-surface w-32 min-w-[128px]';
-const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-[120px] min-w-[120px]';
-// Span header: covers all 3 revision cols (176+128+120=424px), anchored at right-10.
+// right offsets are identical: rev-qty=232px, rev-uc=136px, rev-total=40px (right-10).
+const stickyRevQtyHeaderClassName = 'sticky right-[232px] z-40 bg-surface w-20 min-w-[80px]';
+const stickyRevUnitCostHeaderClassName = 'sticky right-[136px] z-40 bg-surface w-24 min-w-[96px]';
+const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-24 min-w-[96px]';
+// Span header: covers all 3 revision cols (80+96+96=272px), anchored at right-10.
 const stickyRevSpanHeaderClassName =
-  'sticky right-10 z-40 bg-surface min-w-[424px] border-l-2 border-l-brand-300';
+  'sticky right-10 z-40 bg-surface min-w-[272px] border-l-2 border-l-brand-300';
 const stickyRevQtyExpandedHeaderClassName =
-  'sticky top-0 right-[288px] z-50 bg-surface w-44 min-w-[176px]';
+  'sticky top-0 right-[232px] z-50 bg-surface w-20 min-w-[80px]';
 const stickyRevUnitCostExpandedHeaderClassName =
-  'sticky top-0 right-[160px] z-50 bg-surface w-32 min-w-[128px]';
+  'sticky top-0 right-[136px] z-50 bg-surface w-24 min-w-[96px]';
 const stickyRevTotalExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-surface w-[120px] min-w-[120px]';
+  'sticky top-0 right-10 z-50 bg-surface w-24 min-w-[96px]';
 const stickyRevSpanExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-surface min-w-[424px] border-l-2 border-l-brand-300';
+  'sticky top-0 right-10 z-50 bg-surface min-w-[272px] border-l-2 border-l-brand-300';
 const stickyRevQtyCellClassName =
-  'sticky right-[288px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
+  'sticky right-[232px] z-10 bg-surface w-20 min-w-[80px] group-hover:bg-neutral-50';
 const stickyRevUnitCostCellClassName =
-  'sticky right-[160px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
+  'sticky right-[136px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 const stickyRevTotalCellClassName =
-  'sticky right-10 z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+  'sticky right-10 z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 // Locked baseline sticky block (open revision mode) — columns pinned to the LEFT of the
 // revision block so baseline and revised values stay visible side-by-side.
-// right offsets: notes=464(288+176), locked-total=624(464+160), locked-uc=744(624+120), locked-qty=872(744+128).
-const stickyLockedQtyHeaderClassName = 'sticky right-[872px] z-40 bg-surface w-44 min-w-[176px]';
+// right offsets: notes=312(232+80), locked-total=472(312+160), locked-uc=568(472+96), locked-qty=648(568+80).
+const stickyLockedQtyHeaderClassName = 'sticky right-[648px] z-40 bg-surface w-20 min-w-[80px]';
 const stickyLockedUnitCostHeaderClassName =
-  'sticky right-[744px] z-40 bg-surface w-32 min-w-[128px]';
-const stickyLockedTotalHeaderClassName =
-  'sticky right-[624px] z-40 bg-surface w-[120px] min-w-[120px]';
-const stickyNotesHeaderClassName = 'sticky right-[464px] z-40 bg-surface min-w-[160px]';
+  'sticky right-[568px] z-40 bg-surface w-24 min-w-[96px]';
+const stickyLockedTotalHeaderClassName = 'sticky right-[472px] z-40 bg-surface w-24 min-w-[96px]';
+const stickyNotesHeaderClassName = 'sticky right-[312px] z-40 bg-surface min-w-[160px]';
 const stickyLockedQtyExpandedHeaderClassName =
-  'sticky top-0 right-[872px] z-50 bg-surface w-44 min-w-[176px]';
+  'sticky top-0 right-[648px] z-50 bg-surface w-20 min-w-[80px]';
 const stickyLockedUnitCostExpandedHeaderClassName =
-  'sticky top-0 right-[744px] z-50 bg-surface w-32 min-w-[128px]';
+  'sticky top-0 right-[568px] z-50 bg-surface w-24 min-w-[96px]';
 const stickyLockedTotalExpandedHeaderClassName =
-  'sticky top-0 right-[624px] z-50 bg-surface w-[120px] min-w-[120px]';
+  'sticky top-0 right-[472px] z-50 bg-surface w-24 min-w-[96px]';
 const stickyNotesExpandedHeaderClassName =
-  'sticky top-0 right-[464px] z-50 bg-surface min-w-[160px]';
+  'sticky top-0 right-[312px] z-50 bg-surface min-w-[160px]';
 const stickyLockedQtyCellClassName =
-  'sticky right-[872px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
+  'sticky right-[648px] z-10 bg-surface w-20 min-w-[80px] group-hover:bg-neutral-50';
 const stickyLockedUnitCostCellClassName =
-  'sticky right-[744px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
+  'sticky right-[568px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 const stickyLockedTotalCellClassName =
-  'sticky right-[624px] z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
+  'sticky right-[472px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 const stickyNotesCellClassName =
-  'sticky right-[464px] z-10 bg-surface min-w-[160px] group-hover:bg-neutral-50/60';
+  'sticky right-[312px] z-10 bg-surface min-w-[160px] group-hover:bg-neutral-50';
 
 function GripIcon() {
   return (
