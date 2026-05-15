@@ -24,6 +24,7 @@ export async function exportProposalExcel(
   userProfile?: UserProfile | null,
   customColumnDefs: import('../../../types').CustomColumnDef[] = [],
   revisionData?: RevisionExportData,
+  columnOrder?: string[],
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const exportCategories = filteredProposalCategories(categories);
@@ -39,6 +40,7 @@ export async function exportProposalExcel(
     userProfile,
     customColumnDefs,
     revisionData,
+    columnOrder,
   );
   const columns = exportDoc.columns;
 
@@ -176,15 +178,7 @@ export async function exportProposalExcel(
         const cell = row.getCell(index + 1);
 
         // Revision annotation: original value in black, revised in red below.
-        const annotationKey =
-          column.key === 'quantity'
-            ? 'quantity'
-            : column.key === 'unitCost'
-              ? 'unitCost'
-              : column.key === 'totalCost'
-                ? 'totalCost'
-                : null;
-        const annotation = annotationKey ? rowData.revAnnotations[annotationKey] : undefined;
+        const annotation = rowData.revAnnotations[column.key];
         if (annotation) {
           const originalText = rowData.values[column.key] ?? '';
           cell.value = {
@@ -221,16 +215,10 @@ export async function exportProposalExcel(
           shrinkToFit: false,
         };
         cell.border = thinBorder();
-        // Amber highlight for flagged cost cells: both the original columns and the rev block.
-        const isCostFlagged =
-          rowData.revAnnotations.unitCost?.flagged === true ||
-          rowData.revAnnotations.totalCost?.flagged === true;
+        // Amber highlight on rev cost cells when PM action is required.
         if (
-          isCostFlagged &&
-          (column.key === 'unitCost' ||
-            column.key === 'totalCost' ||
-            column.key === 'revUnitCost' ||
-            column.key === 'revTotalCost')
+          rowData.revCostFlagged &&
+          (column.key === 'revUnitCost' || column.key === 'revTotalCost')
         ) {
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF9C3' } };
         }

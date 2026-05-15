@@ -19,6 +19,7 @@ import { useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
 import { useUpdateProject, useProposalRevisions } from '../../hooks';
+import { useColumnConfig } from '../../hooks/shared';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
 
 // ---------------------------------------------------------------------------
@@ -208,6 +209,21 @@ export function FfeActions({
   );
 }
 
+// Default draggable column IDs for the proposal table (matches ProposalTable's PROPOSAL_HIDEABLE_IDS).
+// quantity and unitCost are sticky-right and not included here; they are always appended at export time.
+const PROPOSAL_DEFAULT_COLS = [
+  'rendering',
+  'productTag',
+  'plan',
+  'drawings',
+  'location',
+  'description',
+  'notes',
+  'size',
+  'swatch',
+  'cbm',
+] as const;
+
 // ---------------------------------------------------------------------------
 // Proposal action cluster
 // ---------------------------------------------------------------------------
@@ -228,6 +244,12 @@ export function ProposalActions({
   const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
   const updateProject = useUpdateProject();
   const { data: revisionsData } = useProposalRevisions(project.id);
+  const { visibleOrder } = useColumnConfig(
+    project.id,
+    'proposal',
+    PROPOSAL_DEFAULT_COLS,
+    customColumnDefs,
+  );
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
 
   const openRev = revisionsData?.revisions.find((r) => r.closedAt === null) ?? null;
@@ -292,6 +314,7 @@ export function ProposalActions({
                 userProfile,
                 customColumnDefs,
                 revisionsData,
+                visibleOrder,
               ),
           },
           {

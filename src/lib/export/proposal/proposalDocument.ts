@@ -77,12 +77,11 @@ export type ProposalExportRow = {
   pdfRendering: string | null;
   pdfPlanImage: string | null;
   pdfSwatches: string[];
-  /** Per-cell revision annotations — original value in black on top, revised in red below. */
-  revAnnotations: {
-    quantity?: RevAnnotation;
-    unitCost?: RevAnnotation;
-    totalCost?: RevAnnotation;
-  };
+  /** Per-cell revision annotations keyed by column key — original in black, revised in red below.
+   *  Cost columns are excluded: their changes surface only in the Rev block columns. */
+  revAnnotations: Record<string, RevAnnotation>;
+  /** True when the snapshot has cost_status='flagged' — drives amber fill on rev cost cells. */
+  revCostFlagged: boolean;
 };
 
 export type ProposalExportCategorySection = {
@@ -154,6 +153,7 @@ export function buildProposalExportDocument(
   userProfile?: UserProfile | null,
   customColumnDefs: CustomColumnDef[] = [],
   revisionData?: RevisionExportData,
+  columnOrder?: string[],
 ): ProposalExportDocument {
   const openRev = revisionData?.revisions.find((r) => r.closedAt === null) ?? null;
 
@@ -176,6 +176,7 @@ export function buildProposalExportDocument(
     assets,
     customColumnDefs,
     openRev !== null,
+    columnOrder,
   );
   const categorySections = categories.map((category) => ({
     category,
@@ -186,29 +187,11 @@ export function buildProposalExportDocument(
       const isFlagged = snap?.costStatus === 'flagged';
       const changelogEntries = changelogMap.get(item.id) ?? [];
 
-      // Compute per-cell annotations for the Excel rich-text overlay.
-      const revAnnotations: ProposalExportRow['revAnnotations'] = {};
-      if (openRev && snap) {
-        if (snap.quantity != null && snap.quantity !== item.quantity) {
-          revAnnotations.quantity = { revisedValue: String(snap.quantity), flagged: isFlagged };
-        }
-        if (
-          snap.unitCostCents != null &&
-          (snap.unitCostCents !== (item.unitCostCents || 0) || isFlagged)
-        ) {
-          revAnnotations.unitCost = {
-            revisedValue: fmtMoney(snap.unitCostCents),
-            flagged: isFlagged,
-          };
-        }
-        if (revAnnotations.quantity ?? revAnnotations.unitCost) {
-          const revQtyVal = snap.quantity ?? item.quantity;
-          const revCostVal = snap.unitCostCents ?? (item.unitCostCents || 0);
-          const revisedTotal = fmtMoney(Math.round(revQtyVal * revCostVal));
-          if (revisedTotal !== fmtMoney(proposalLineTotalCents(item))) {
-            revAnnotations.totalCost = { revisedValue: revisedTotal, flagged: isFlagged };
-          }
-        }
+      // Compute per-cell annotations: only non-cost fields get the inline overlay.
+      // Cost changes are surfaced exclusively through the Rev Unit Cost / Rev Total columns.
+      const revAnnotations: Record<string, RevAnnotation> = {};
+      if (openRev && snap && snap.quantity != null && snap.quantity !== item.quantity) {
+        revAnnotations.quantity = { revisedValue: String(snap.quantity), flagged: isFlagged };
       }
 
       return {
@@ -220,6 +203,7 @@ export function buildProposalExportDocument(
         pdfPlanImage: null,
         pdfSwatches: [] as string[],
         revAnnotations,
+        revCostFlagged: isFlagged,
         values: {
           ...Object.fromEntries(
             PROPOSAL_EXPORT_COLUMNS.map((column) => [
@@ -237,11 +221,18 @@ export function buildProposalExportDocument(
                   .filter((n): n is string => Boolean(n))
                   .join('\n'),
                 revQty: snap?.quantity != null ? String(snap.quantity) : '',
-                revUnitCost: snap?.unitCostCents == null ? '' : fmtMoney(snap.unitCostCents),
+                revUnitCost:
+                  !snap || snap.costStatus === 'none'
+                    ? fmtMoney(item.unitCostCents || 0)
+                    : snap.unitCostCents == null
+                      ? ''
+                      : fmtMoney(snap.unitCostCents),
                 revTotalCost:
-                  snap?.quantity == null || snap?.unitCostCents == null
-                    ? ''
-                    : fmtMoney(Math.round(snap.quantity * snap.unitCostCents)),
+                  !snap || snap.costStatus === 'none'
+                    ? fmtMoney(proposalLineTotalCents(item))
+                    : snap.unitCostCents == null
+                      ? ''
+                      : fmtMoney(Math.round((snap.quantity ?? item.quantity) * snap.unitCostCents)),
               }
             : {}),
         },
@@ -288,13 +279,14 @@ function buildProposalVisibleColumns(
   assets: ProposalAssetBundle,
   customColumnDefs: CustomColumnDef[] = [],
   hasRevision: boolean = false,
+  columnOrder?: string[],
 ): ProposalExportColumn[] {
   const items = categories.flatMap((category) => category.items);
   const hasRendering = items.some((item) => assets.renderingByItemId.has(item.id));
   const hasPlanImages = items.some((item) => assets.planByItemId.has(item.id));
   const hasSwatches = items.some((item) => (assets.swatchesByItemId.get(item.id)?.length ?? 0) > 0);
 
-  const fixedColumns = PROPOSAL_EXPORT_COLUMNS.filter((column) => {
+  const passesDataFilter = (column: ProposalExportColumn): boolean => {
     if (column.key === 'rendering') return hasRendering;
     if (column.key === 'plan')
       return (
@@ -304,7 +296,9 @@ function buildProposalVisibleColumns(
     if (column.key === 'swatch') return hasSwatches;
     if (column.alwaysVisible) return true;
     return items.some((item) => proposalColumnHasData(item, column.key as ProposalExportColumnKey));
-  });
+  };
+
+  const fixedColMap = new Map(PROPOSAL_EXPORT_COLUMNS.map((c) => [c.key, c]));
 
   const activeCustomColumns: ProposalExportColumn[] = customColumnDefs
     .slice()
@@ -339,6 +333,43 @@ function buildProposalVisibleColumns(
       ]
     : [];
 
+  if (columnOrder && columnOrder.length > 0) {
+    const activeCustomColMap = new Map(activeCustomColumns.map((c) => [c.key, c]));
+    const seen = new Set<string>();
+    const orderedCols: ProposalExportColumn[] = [];
+
+    for (const browserId of columnOrder) {
+      // 'drawings' and 'location' are separate browser columns merged into one export column.
+      const exportKey =
+        browserId === 'drawings' || browserId === 'location' ? 'drawingsLocation' : browserId;
+
+      // quantity and unitCost are always appended at the end of the standard block.
+      if (exportKey === 'quantity' || exportKey === 'unitCost') continue;
+
+      if (seen.has(exportKey)) continue;
+      seen.add(exportKey);
+
+      const fixedCol = fixedColMap.get(exportKey);
+      if (fixedCol) {
+        if (passesDataFilter(fixedCol)) orderedCols.push(fixedCol);
+        continue;
+      }
+
+      const customCol = activeCustomColMap.get(exportKey);
+      if (customCol) orderedCols.push(customCol);
+    }
+
+    // quantity, unit, unitCost, totalCost always appear at the end of the standard block.
+    for (const key of ['quantity', 'unit', 'unitCost', 'totalCost'] as const) {
+      const col = fixedColMap.get(key);
+      if (col) orderedCols.push(col);
+    }
+
+    return [...orderedCols, ...revisionColumns];
+  }
+
+  // Fallback: original fixed order.
+  const fixedColumns = PROPOSAL_EXPORT_COLUMNS.filter(passesDataFilter);
   return [...fixedColumns, ...activeCustomColumns, ...revisionColumns];
 }
 
