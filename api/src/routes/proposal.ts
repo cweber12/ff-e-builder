@@ -400,8 +400,8 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
       AND  r.revision_major = ${currentMajor}
   `;
 
-  // Include changelog entries for the open revision so the client can
-  // populate the Revision Notes column without a per-item fetch.
+  // Include changelog entries for all revisions in the current cycle so the
+  // client can show change history for both open and closed rounds.
   const changelog = await sql`
     SELECT cl.id, cl.proposal_item_id, cl.column_key, cl.previous_value,
            cl.new_value, cl.notes, cl.proposal_status, cl.revision_id,
@@ -410,7 +410,6 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
     JOIN   proposal_revisions r ON r.id = cl.revision_id
     WHERE  r.project_id = ${projectId}
       AND  r.revision_major = ${currentMajor}
-      AND  r.closed_at IS NULL
     ORDER  BY cl.changed_at ASC
   `;
 
