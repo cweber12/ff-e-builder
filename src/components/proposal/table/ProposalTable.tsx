@@ -278,6 +278,9 @@ function ChangeHistoryDot({ itemId, columnKey }: { itemId: string; columnKey: st
 }
 
 // --- Proposal Table Column Definitions ---
+// quantity and unitCost are fixed sticky-right columns — not draggable or hideable.
+const STICKY_RIGHT_COLUMN_IDS = new Set(['quantity', 'unitCost']);
+
 const PROPOSAL_HIDEABLE_IDS = [
   'rendering',
   'productTag',
@@ -289,8 +292,6 @@ const PROPOSAL_HIDEABLE_IDS = [
   'size',
   'swatch',
   'cbm',
-  'quantity',
-  'unitCost',
 ] as const;
 
 export type ProposalColumnId = (typeof PROPOSAL_HIDEABLE_IDS)[number];
@@ -306,8 +307,6 @@ const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className:
   size: { label: 'Size', className: 'w-44 min-w-44' },
   swatch: { label: 'Swatch', className: 'min-w-36' },
   cbm: { label: 'CBM', className: 'w-24 min-w-24' },
-  quantity: { label: 'Quantity', className: 'w-44 min-w-44' },
-  unitCost: { label: 'Unit Cost', className: 'w-32 min-w-32' },
 };
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
@@ -322,6 +321,19 @@ const stickyTotalCellClassName =
   'sticky right-10 z-10 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
 const stickyOptionsCellClassName =
   'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
+// Qty and Unit Cost sticky-right columns (always visible, not draggable).
+// right offsets: qty = options(40) + total(120) + unitCost(128) = 288px
+//               unitCost = options(40) + total(120) = 160px
+const stickyQtyHeaderClassName = 'sticky right-[288px] z-40 bg-surface w-44 min-w-[176px]';
+const stickyUnitCostHeaderClassName = 'sticky right-[160px] z-40 bg-surface w-32 min-w-[128px]';
+const stickyQtyExpandedHeaderClassName =
+  'sticky top-0 right-[288px] z-50 bg-surface w-44 min-w-[176px]';
+const stickyUnitCostExpandedHeaderClassName =
+  'sticky top-0 right-[160px] z-50 bg-surface w-32 min-w-[128px]';
+const stickyQtyCellClassName =
+  'sticky right-[288px] z-10 bg-surface w-44 min-w-[176px] group-hover:bg-neutral-50/60';
+const stickyUnitCostCellClassName =
+  'sticky right-[160px] z-10 bg-surface w-32 min-w-[128px] group-hover:bg-neutral-50/60';
 
 function GripIcon() {
   return (
@@ -366,7 +378,6 @@ export function ProposalTable({
     'proposal',
     PROPOSAL_HIDEABLE_IDS,
     customColumnDefs,
-    'quantity',
   );
   const hiddenColumnDefaults = useMemo(
     () =>
@@ -947,6 +958,10 @@ function ProposalCategorySection({
   const [isExpanded, setIsExpanded] = useState(false);
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items]);
+  const draggableColOrder = useMemo(
+    () => visibleColOrder.filter((id) => !STICKY_RIGHT_COLUMN_IDS.has(id)),
+    [visibleColOrder],
+  );
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -1054,8 +1069,11 @@ function ProposalCategorySection({
               >
                 <tr>
                   <th className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1" />
-                  <SortableContext items={visibleColOrder} strategy={horizontalListSortingStrategy}>
-                    {visibleColOrder.map((colId) => {
+                  <SortableContext
+                    items={draggableColOrder}
+                    strategy={horizontalListSortingStrategy}
+                  >
+                    {draggableColOrder.map((colId) => {
                       const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
                       if (meta) {
                         return (
@@ -1089,6 +1107,22 @@ function ProposalCategorySection({
                       );
                     })}
                   </SortableContext>
+                  <th
+                    className={cn(
+                      'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                      stickyQtyHeaderClassName,
+                    )}
+                  >
+                    Qty
+                  </th>
+                  <th
+                    className={cn(
+                      'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                      stickyUnitCostHeaderClassName,
+                    )}
+                  >
+                    Unit Cost
+                  </th>
                   <th
                     className={cn(
                       'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
@@ -1244,10 +1278,10 @@ function ProposalCategorySection({
                     <tr>
                       <th className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1" />
                       <SortableContext
-                        items={visibleColOrder}
+                        items={draggableColOrder}
                         strategy={horizontalListSortingStrategy}
                       >
-                        {visibleColOrder.map((colId) => {
+                        {draggableColOrder.map((colId) => {
                           const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
                           if (meta) {
                             return (
@@ -1281,6 +1315,22 @@ function ProposalCategorySection({
                           );
                         })}
                       </SortableContext>
+                      <th
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyQtyExpandedHeaderClassName,
+                        )}
+                      >
+                        Qty
+                      </th>
+                      <th
+                        className={cn(
+                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          stickyUnitCostExpandedHeaderClassName,
+                        )}
+                      >
+                        Unit Cost
+                      </th>
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
@@ -1533,22 +1583,7 @@ function ProposalRow({
         indicator={dot('cbm')}
       />
     ),
-    quantity: (
-      <QuantityCell
-        quantity={item.quantity}
-        quantityUnit={item.quantityUnit}
-        onSaveQuantity={(quantity) => onSave({ quantity })}
-        onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
-        indicator={dot('quantity')}
-      />
-    ),
-    unitCost: (
-      <MoneyCell
-        valueCents={item.unitCostCents}
-        onSave={(unitCostCents) => onSave({ unitCostCents })}
-        indicator={dot('unitCostCents')}
-      />
-    ),
+    // quantity and unitCost are rendered as fixed sticky-right cells below.
     ...Object.fromEntries(
       customColumnDefs.map((def) => [
         def.id,
@@ -1587,6 +1622,20 @@ function ProposalRow({
       {visibleColOrder.map((colId) => (
         <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
       ))}
+      <QuantityCell
+        quantity={item.quantity}
+        quantityUnit={item.quantityUnit}
+        onSaveQuantity={(quantity) => onSave({ quantity })}
+        onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+        indicator={dot('quantity')}
+        tdClassName={stickyQtyCellClassName}
+      />
+      <MoneyCell
+        valueCents={item.unitCostCents}
+        onSave={(unitCostCents) => onSave({ unitCostCents })}
+        indicator={dot('unitCostCents')}
+        tdClassName={stickyUnitCostCellClassName}
+      />
       <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
         {formatMoney(cents(lineTotal))}
       </td>
@@ -2024,10 +2073,12 @@ function MoneyCell({
   valueCents,
   onSave,
   indicator,
+  tdClassName,
 }: {
   valueCents: number;
   onSave: (value: number) => void;
   indicator?: ReactNode;
+  tdClassName?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState((valueCents / 100).toString());
@@ -2052,7 +2103,7 @@ function MoneyCell({
 
   if (!editing) {
     return (
-      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+      <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
         {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
@@ -2073,7 +2124,7 @@ function MoneyCell({
   }
 
   return (
-    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+    <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
       <div className="relative w-28">
         <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-gray-400">
           $
@@ -2109,18 +2160,20 @@ function QuantityCell({
   onSaveQuantity,
   onSaveUnit,
   indicator,
+  tdClassName,
 }: {
   quantity: number;
   quantityUnit: string;
   onSaveQuantity: (value: number) => void;
   onSaveUnit: (value: string) => void;
   indicator?: ReactNode;
+  tdClassName?: string;
 }) {
   const [editing, setEditing] = useState(false);
 
   if (!editing) {
     return (
-      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+      <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
         {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
@@ -2141,7 +2194,7 @@ function QuantityCell({
   }
 
   return (
-    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+    <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
       <div
         className="flex w-40 gap-2"
         onBlur={(e) => {
