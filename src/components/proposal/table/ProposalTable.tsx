@@ -941,11 +941,6 @@ function ProposalCategorySection({
       version: item.version,
       changeLog,
     };
-    if (result.deferCost) {
-      // no-op: deferred cost model replaced by Revision Rounds (Slice 5 will remove deferCost)
-    } else if (result.newUnitCostCents !== undefined) {
-      fullPatch.unitCostCents = result.newUnitCostCents;
-    }
     onItemSave(item, fullPatch);
     setPendingChange(null);
   }
@@ -1380,7 +1375,6 @@ function ProposalCategorySection({
           newValue={pendingChange.newValue}
           proposalStatus={proposalStatus}
           isPriceAffecting={pendingChange.isPriceAffecting}
-          currentUnitCostCents={pendingChange.item.unitCostCents ?? 0}
           onConfirm={handleConfirm}
           onCancel={() => setPendingChange(null)}
         />

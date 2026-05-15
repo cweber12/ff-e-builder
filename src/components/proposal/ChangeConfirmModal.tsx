@@ -2,13 +2,10 @@ import { useState } from 'react';
 import { Button, Modal } from '../primitives';
 import { proposalStatusConfig } from './proposalStatusConfig';
 import { cn } from '../../lib/utils';
-import { parseUnitCostDollarsInput, dollarsToCents, formatMoney, cents } from '../../types';
 import type { ProposalStatus } from '../../types';
 
 export interface ChangeConfirmResult {
   notes?: string;
-  newUnitCostCents?: number;
-  deferCost?: boolean;
 }
 
 interface ChangeConfirmModalProps {
@@ -17,12 +14,9 @@ interface ChangeConfirmModalProps {
   newValue: string;
   proposalStatus: ProposalStatus;
   isPriceAffecting: boolean;
-  currentUnitCostCents: number;
   onConfirm: (result: ChangeConfirmResult) => void;
   onCancel: () => void;
 }
-
-type PriceAction = 'add' | 'defer' | 'skip';
 
 export function ChangeConfirmModal({
   columnLabel,
@@ -30,14 +24,10 @@ export function ChangeConfirmModal({
   newValue,
   proposalStatus,
   isPriceAffecting,
-  currentUnitCostCents,
   onConfirm,
   onCancel,
 }: ChangeConfirmModalProps) {
   const [notes, setNotes] = useState('');
-  const [priceChecked, setPriceChecked] = useState(false);
-  const [priceAction, setPriceAction] = useState<PriceAction>('skip');
-  const [newCostInput, setNewCostInput] = useState((currentUnitCostCents / 100).toFixed(2));
 
   const cfg = proposalStatusConfig[proposalStatus];
 
@@ -45,22 +35,8 @@ export function ChangeConfirmModal({
     const result: ChangeConfirmResult = {};
     const trimmedNotes = notes.trim();
     if (trimmedNotes) result.notes = trimmedNotes;
-    if (isPriceAffecting && priceChecked) {
-      if (priceAction === 'defer') {
-        result.deferCost = true;
-      } else if (priceAction === 'add') {
-        const parsed = parseUnitCostDollarsInput(newCostInput);
-        if (parsed !== undefined) result.newUnitCostCents = dollarsToCents(parsed);
-      }
-    }
     onConfirm(result);
   }
-
-  const addCostInvalid =
-    isPriceAffecting &&
-    priceChecked &&
-    priceAction === 'add' &&
-    parseUnitCostDollarsInput(newCostInput) === undefined;
 
   return (
     <Modal open onClose={onCancel} title={`Change ${columnLabel}`}>
@@ -100,66 +76,16 @@ export function ChangeConfirmModal({
         </div>
 
         {isPriceAffecting && (
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-400"
-                checked={priceChecked}
-                onChange={(e) => {
-                  setPriceChecked(e.target.checked);
-                  if (!e.target.checked) setPriceAction('skip');
-                }}
-              />
-              <span className="text-sm font-medium text-gray-700">
-                This change affects the price
-              </span>
-            </label>
-
-            {priceChecked && (
-              <div className="ml-6 space-y-2 rounded-lg border border-amber-100 bg-amber-50 p-3">
-                <p className="text-xs font-medium text-amber-800 mb-2">
-                  Current unit cost: {formatMoney(cents(currentUnitCostCents))}
-                </p>
-
-                {(['add', 'defer', 'skip'] as PriceAction[]).map((action) => (
-                  <label key={action} className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="priceAction"
-                      className="mt-0.5 h-4 w-4 border-gray-300 text-brand-500 focus:ring-brand-400"
-                      checked={priceAction === action}
-                      onChange={() => setPriceAction(action)}
-                    />
-                    <span className="text-sm text-gray-700">
-                      {action === 'add' && 'Add new cost'}
-                      {action === 'defer' && 'Defer cost change'}
-                      {action === 'skip' && 'No price change'}
-                    </span>
-                  </label>
-                ))}
-
-                {priceAction === 'add' && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-sm text-gray-500">$</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      className={cn(
-                        'w-32 rounded-md border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400',
-                        addCostInvalid ? 'border-danger-400' : 'border-gray-200',
-                      )}
-                      value={newCostInput}
-                      onChange={(e) => setNewCostInput(e.target.value)}
-                      placeholder="0.00"
-                    />
-                    {addCostInvalid && (
-                      <span className="text-xs text-danger-600">Enter a valid amount</span>
-                    )}
-                  </div>
-                )}
-              </div>
+          <div
+            className={cn(
+              'rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5 text-sm text-amber-800',
             )}
+          >
+            <p className="font-medium">This field affects pricing.</p>
+            <p className="mt-0.5 text-amber-700">
+              Saving will open a <span className="font-semibold">Revision Round</span> and flag this
+              item's cost for review. You can update the quoted cost from the Revision panel.
+            </p>
           </div>
         )}
 
@@ -167,9 +93,7 @@ export function ChangeConfirmModal({
           <Button variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={addCostInvalid}>
-            Confirm
-          </Button>
+          <Button onClick={handleConfirm}>Confirm</Button>
         </div>
       </div>
     </Modal>
