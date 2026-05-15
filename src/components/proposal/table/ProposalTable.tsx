@@ -1949,10 +1949,9 @@ function ProposalRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group cursor-pointer border-b border-neutral-200/60 align-top last:border-b-0',
+        'group border-b border-neutral-200/60 align-top last:border-b-0',
         isDragging && 'bg-brand-50 shadow-md opacity-80',
       )}
-      onClick={onRowClick}
     >
       <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
         <button
