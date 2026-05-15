@@ -399,14 +399,15 @@ const stickyUnitCostCellClassName =
 // Revision sticky block — same right offsets as editable block but for revision data.
 // When a revision is open the sticky block expands to show Rev Qty | Rev UC | Rev Total.
 // right offsets are identical: rev-qty=232px, rev-uc=136px, rev-total=40px (right-10).
-const stickyRevQtyHeaderClassName = 'sticky right-[232px] z-40 bg-surface w-20 min-w-[80px]';
+const stickyRevQtyHeaderClassName =
+  'sticky right-[232px] z-40 bg-surface w-20 min-w-[80px] border-l-2 border-l-brand-300';
 const stickyRevUnitCostHeaderClassName = 'sticky right-[136px] z-40 bg-surface w-24 min-w-[96px]';
 const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-24 min-w-[96px]';
 // Span header: covers all 3 revision cols (80+96+96=272px), anchored at right-10.
 const stickyRevSpanHeaderClassName =
   'sticky right-10 z-40 bg-surface min-w-[272px] border-l-2 border-l-brand-300';
 const stickyRevQtyExpandedHeaderClassName =
-  'sticky top-0 right-[232px] z-50 bg-surface w-20 min-w-[80px]';
+  'sticky top-0 right-[232px] z-50 bg-surface w-20 min-w-[80px] border-l-2 border-l-brand-300';
 const stickyRevUnitCostExpandedHeaderClassName =
   'sticky top-0 right-[136px] z-50 bg-surface w-24 min-w-[96px]';
 const stickyRevTotalExpandedHeaderClassName =
@@ -2584,7 +2585,7 @@ function QuantityCell({
               setEditing(true);
             }
           }}
-          className="block w-40 cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
+          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
         >
           {quantity} {quantityUnit}
         </span>

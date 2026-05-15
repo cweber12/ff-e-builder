@@ -20,7 +20,7 @@ export function RevisionQtyCell({
     return (
       <td
         className={cn(
-          'w-44 min-w-[176px] border-l-2 border-l-brand-200 px-3 py-2 text-sm text-neutral-300',
+          'w-44 min-w-[176px] border-l-2 border-l-brand-300 px-3 py-2 text-sm text-neutral-300',
           tdClassName,
         )}
       >
@@ -34,7 +34,7 @@ export function RevisionQtyCell({
   return (
     <td
       className={cn(
-        'w-44 min-w-[176px] border-l-2 border-l-brand-200 px-3 py-2 text-sm tabular-nums',
+        'w-44 min-w-[176px] border-l-2 border-l-brand-300 px-3 py-2 text-sm tabular-nums',
         changed ? 'text-amber-600' : 'text-neutral-500',
         tdClassName,
       )}
