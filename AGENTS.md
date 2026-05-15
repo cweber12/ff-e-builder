@@ -16,6 +16,14 @@
 
 - **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 
+- **MANDATORY — Sliced-work flow.** When a multi-slice plan has been agreed with the user, follow this loop for **every** slice without exception:
+  1. Implement the slice.
+  2. **Do not run `pnpm test`, `pnpm typecheck`, `pnpm lint`, or `pnpm build` yourself** unless the user explicitly asks. The user runs them manually.
+  3. Output the commit message in a fenced code block and **STOP**.
+  4. Wait for the user to confirm their manual checks are green before starting the next slice.
+  5. If the user reports failures, fix them in the same slice and re-issue the commit message; do not advance.
+     This rule overrides any default urge to chain slices, run verification commands, or proceed without confirmation.
+
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
 - **After any change to file structure, dependencies, env vars, or public APIs:** update `/README.md`, `/docs/`, and any affected sub-folder README in the **same commit**.
