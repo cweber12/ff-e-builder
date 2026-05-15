@@ -389,18 +389,19 @@ export const ChangeLogEntrySchema = z.object({
   new_value: z.string().max(2000),
   notes: z.string().max(2000).optional(),
   proposal_status: z.enum(proposalStatuses),
-  linked_unit_cost_change: z
-    .object({ previous_value: z.string().max(2000), new_value: z.string().max(2000) })
-    .optional(),
 });
 export type ChangeLogEntryInput = z.infer<typeof ChangeLogEntrySchema>;
 
 export const UpdateProposalItemSchema = CreateProposalItemSchema.partial().extend({
   version: z.number().int().nonnegative(),
-  cost_update_deferred: z.boolean().optional(),
   change_log: ChangeLogEntrySchema.optional(),
 });
 export type UpdateProposalItemInput = z.infer<typeof UpdateProposalItemSchema>;
+
+export const UpdateRevisionItemCostSchema = z.object({
+  unit_cost_cents: z.number().int().nonnegative(),
+});
+export type UpdateRevisionItemCostInput = z.infer<typeof UpdateRevisionItemCostSchema>;
 
 export const CreateMeasuredPlanSchema = z.object({
   name: z.string().min(1).max(255),

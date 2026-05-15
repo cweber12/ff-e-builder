@@ -7,6 +7,7 @@ import {
   CreateProposalItemSchema,
   UpdateProposalCategorySchema,
   UpdateProposalItemSchema,
+  UpdateRevisionItemCostSchema,
 } from '../types';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
@@ -17,6 +18,7 @@ import {
   getOwnedMaterialContext,
   getOwnedProposalItemContext,
 } from '../lib/ownership';
+import { findOpenRevision, isPriceAffectingColumn, openRevision } from '../lib/revisions';
 import {
   selectMaterialById,
   generateImportMaterialId,
@@ -199,8 +201,9 @@ router.patch('/proposal/items/:id', async (c) => {
   const parsed = UpdateProposalItemSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
+  let ctx: { projectId: string; proposalItemId: string };
   try {
-    await assertProposalItemOwnership(c.env, id, uid);
+    ctx = await getOwnedProposalItemContext(c.env, id, uid);
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
@@ -208,10 +211,42 @@ router.patch('/proposal/items/:id', async (c) => {
   const sql = getDb(c.env);
   const d = parsed.data;
 
-  const clearDeferred = d.unit_cost_cents != null;
-  const setDeferred = d.cost_update_deferred === true && !clearDeferred;
+  // Read current project status + any open revision, so we can decide whether
+  // this edit triggers a new Revision Round or folds into an existing one.
+  const projectRows = await sql`
+    SELECT proposal_status FROM projects WHERE id = ${ctx.projectId}
+  `;
+  const proposalStatus = (projectRows[0] as { proposal_status: string } | undefined)
+    ?.proposal_status;
+  if (!proposalStatus) return c.json({ error: 'Not found' }, 404);
 
-  const updateQuery = sql`
+  let openRev = await findOpenRevision(sql, ctx.projectId);
+
+  // Should this edit's price-affecting changes be written to a Revision
+  // Snapshot rather than to proposal_items? True when a revision is open or
+  // about to be opened by this very edit.
+  const cl = d.change_log;
+  const priceAffectingEdit = cl != null && isPriceAffectingColumn(cl.column_key);
+  const willOpenRevision =
+    !openRev &&
+    priceAffectingEdit &&
+    (proposalStatus === 'pricing_complete' ||
+      proposalStatus === 'submitted' ||
+      proposalStatus === 'approved');
+
+  if (willOpenRevision) {
+    openRev = await openRevision(sql, ctx.projectId, proposalStatus);
+  }
+
+  // When a revision context exists, price-affecting fields are written to the
+  // snapshot, not to proposal_items. proposal_items keeps the pre-revision
+  // baseline until acceptance bakes the latest snapshot in.
+  const revisionContext = openRev != null;
+  const lockPriceFields = revisionContext;
+
+  // Build the proposal_items UPDATE. Always bump version for optimistic
+  // concurrency, even if only non-price fields are changing.
+  const updateRows = await sql`
     UPDATE proposal_items
     SET
       category_id         = COALESCE(${d.category_id ?? null}, category_id),
@@ -221,66 +256,139 @@ router.patch('/proposal/items/:id', async (c) => {
       location            = COALESCE(${d.location ?? null}, location),
       description         = COALESCE(${d.description ?? null}, description),
       notes               = COALESCE(${d.notes ?? null}, notes),
-      size_label          = COALESCE(${d.size_label ?? null}, size_label),
-      size_mode           = COALESCE(${d.size_mode ?? null}, size_mode),
-      size_w              = COALESCE(${d.size_w ?? null}, size_w),
-      size_d              = COALESCE(${d.size_d ?? null}, size_d),
-      size_h              = COALESCE(${d.size_h ?? null}, size_h),
-      size_unit           = COALESCE(${d.size_unit ?? null}, size_unit),
-      cbm                 = COALESCE(${d.cbm ?? null}, cbm),
-      quantity            = COALESCE(${d.quantity ?? null}, quantity),
+      size_label          = CASE WHEN ${lockPriceFields}::boolean THEN size_label
+                                 ELSE COALESCE(${d.size_label ?? null}, size_label) END,
+      size_mode           = CASE WHEN ${lockPriceFields}::boolean THEN size_mode
+                                 ELSE COALESCE(${d.size_mode ?? null}, size_mode) END,
+      size_w              = CASE WHEN ${lockPriceFields}::boolean THEN size_w
+                                 ELSE COALESCE(${d.size_w ?? null}, size_w) END,
+      size_d              = CASE WHEN ${lockPriceFields}::boolean THEN size_d
+                                 ELSE COALESCE(${d.size_d ?? null}, size_d) END,
+      size_h              = CASE WHEN ${lockPriceFields}::boolean THEN size_h
+                                 ELSE COALESCE(${d.size_h ?? null}, size_h) END,
+      size_unit           = CASE WHEN ${lockPriceFields}::boolean THEN size_unit
+                                 ELSE COALESCE(${d.size_unit ?? null}, size_unit) END,
+      cbm                 = CASE WHEN ${lockPriceFields}::boolean THEN cbm
+                                 ELSE COALESCE(${d.cbm ?? null}, cbm) END,
+      quantity            = CASE WHEN ${lockPriceFields}::boolean THEN quantity
+                                 ELSE COALESCE(${d.quantity ?? null}, quantity) END,
       quantity_unit       = COALESCE(${d.quantity_unit ?? null}, quantity_unit),
-      unit_cost_cents     = COALESCE(${d.unit_cost_cents ?? null}, unit_cost_cents),
+      unit_cost_cents     = CASE WHEN ${lockPriceFields}::boolean THEN unit_cost_cents
+                                 ELSE COALESCE(${d.unit_cost_cents ?? null}, unit_cost_cents) END,
       sort_order          = COALESCE(${d.sort_order ?? null}, sort_order),
       custom_data         = CASE
                               WHEN ${d.custom_data != null}::boolean
                               THEN custom_data || ${JSON.stringify(d.custom_data ?? {})}::jsonb
                               ELSE custom_data
                             END,
-      cost_update_deferred = CASE
-                               WHEN ${clearDeferred}::boolean THEN false
-                               WHEN ${setDeferred}::boolean   THEN true
-                               ELSE cost_update_deferred
-                             END,
       version             = version + 1
     WHERE id = ${id} AND version = ${d.version}
     RETURNING *
   `;
+  if (!updateRows[0]) return c.json({ error: 'Conflict or not found' }, 409);
 
-  if (!d.change_log) {
-    const rows = await updateQuery;
-    if (!rows[0]) return c.json({ error: 'Conflict or not found' }, 409);
-    return c.json({ item: rows[0] });
+  // Update the Revision Snapshot for this item when relevant.
+  if (openRev && cl && priceAffectingEdit) {
+    if (cl.column_key === 'quantity' && d.quantity != null) {
+      // Quantity-only price-affecting change: total cost updates automatically
+      // from quantity * unit_cost (no flag needed).
+      await sql`
+        UPDATE proposal_revision_snapshots
+        SET    quantity = ${d.quantity}, cost_status = 'none'
+        WHERE  revision_id = ${openRev.id} AND item_id = ${id}
+      `;
+    } else {
+      // Size/CBM changed: PM must enter a new unit cost manually. Flag it.
+      await sql`
+        UPDATE proposal_revision_snapshots
+        SET    cost_status = 'flagged'
+        WHERE  revision_id = ${openRev.id} AND item_id = ${id}
+      `;
+    }
   }
 
-  const cl = d.change_log;
-  const changeId = crypto.randomUUID();
-
-  const insertPrimary = sql`
-    INSERT INTO proposal_item_changelog
-      (id, proposal_item_id, column_key, previous_value, new_value, notes, proposal_status)
-    VALUES
-      (${changeId}, ${id}, ${cl.column_key}, ${cl.previous_value}, ${cl.new_value},
-       ${cl.notes ?? null}, ${cl.proposal_status})
-  `;
-
-  const queries: Parameters<typeof sql.transaction>[0] = [updateQuery, insertPrimary];
-
-  if (cl.linked_unit_cost_change) {
-    const luc = cl.linked_unit_cost_change;
-    queries.push(sql`
+  // Insert the changelog entry. revision_id ties it to the current revision
+  // (or NULL if no revision is open — non-price-affecting edits during a
+  // pre-revision status remain orphans until the next revision opens).
+  if (cl) {
+    await sql`
       INSERT INTO proposal_item_changelog
-        (proposal_item_id, column_key, previous_value, new_value, proposal_status, related_change_id)
+        (proposal_item_id, column_key, previous_value, new_value, notes,
+         proposal_status, revision_id)
       VALUES
-        (${id}, 'unit_cost_cents', ${luc.previous_value}, ${luc.new_value},
-         ${cl.proposal_status}, ${changeId})
-    `);
+        (${id}, ${cl.column_key}, ${cl.previous_value}, ${cl.new_value},
+         ${cl.notes ?? null}, ${cl.proposal_status}, ${openRev?.id ?? null})
+    `;
   }
 
-  const results = await sql.transaction(queries);
-  const updatedItem = (results[0] as (typeof results)[0])[0];
-  if (!updatedItem) return c.json({ error: 'Conflict or not found' }, 409);
-  return c.json({ item: updatedItem });
+  return c.json({ item: updateRows[0] });
+});
+
+// PATCH /api/v1/proposal/revisions/:revisionId/items/:itemId/cost
+// Resolves a Cost Flag by setting the snapshot's unit_cost_cents for one item
+// in the open revision. Refuses to update closed revisions.
+router.patch('/proposal/revisions/:revisionId/items/:itemId/cost', async (c) => {
+  const uid = c.get('uid');
+  const revisionId = c.req.param('revisionId');
+  const itemId = c.req.param('itemId');
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = UpdateRevisionItemCostSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  let ctx: { projectId: string; proposalItemId: string };
+  try {
+    ctx = await getOwnedProposalItemContext(c.env, itemId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  // Verify revision belongs to this project AND is still open.
+  const revRows = await sql`
+    SELECT id FROM proposal_revisions
+    WHERE  id = ${revisionId} AND project_id = ${ctx.projectId} AND closed_at IS NULL
+    LIMIT  1
+  `;
+  if (!revRows[0]) return c.json({ error: 'Revision not open or not found' }, 404);
+
+  const updated = await sql`
+    UPDATE proposal_revision_snapshots
+    SET    unit_cost_cents = ${parsed.data.unit_cost_cents},
+           cost_status = 'resolved'
+    WHERE  revision_id = ${revisionId} AND item_id = ${itemId}
+    RETURNING revision_id, item_id, quantity, unit_cost_cents, cost_status
+  `;
+  if (!updated[0]) return c.json({ error: 'Snapshot not found' }, 404);
+  return c.json({ snapshot: updated[0] });
+});
+
+// GET /api/v1/projects/:projectId/proposal/revisions
+// Returns all Revision Rounds for a project with their snapshots, ordered
+// newest first.
+router.get('/projects/:projectId/proposal/revisions', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  try {
+    await assertProjectOwnership(c.env, projectId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const revisions = await sql`
+    SELECT id, project_id, revision_major, revision_minor,
+           triggered_at_status, opened_at, closed_at
+    FROM   proposal_revisions
+    WHERE  project_id = ${projectId}
+    ORDER  BY revision_major DESC, revision_minor DESC
+  `;
+  const snapshots = await sql`
+    SELECT s.revision_id, s.item_id, s.quantity, s.unit_cost_cents, s.cost_status
+    FROM   proposal_revision_snapshots s
+    JOIN   proposal_revisions r ON r.id = s.revision_id
+    WHERE  r.project_id = ${projectId}
+  `;
+  return c.json({ revisions, snapshots });
 });
 
 router.get('/proposal/items/:id/changelog', async (c) => {

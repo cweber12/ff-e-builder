@@ -4,6 +4,11 @@ import { CreateProjectSchema, UpdateProjectSchema, CreateRoomSchema } from '../t
 import { assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
+import {
+  bakeApprovedRevision,
+  closeOpenRevision,
+  countFlaggedInOpenRevision,
+} from '../lib/revisions';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -64,6 +69,47 @@ router.patch('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const nextStatus = parsed.data.proposal_status;
+
+  // Revision-aware status guards. Read current status so we know whether this
+  // PATCH represents an advance away from `in_progress`.
+  if (nextStatus) {
+    const current = await sql`
+      SELECT proposal_status FROM projects WHERE id = ${id}
+    `;
+    const currentStatus = (current[0] as { proposal_status: string } | undefined)?.proposal_status;
+
+    // Block advance to `pricing_complete` if any item in the open revision
+    // still has an unresolved Cost Flag.
+    if (nextStatus === 'pricing_complete') {
+      const flagged = await countFlaggedInOpenRevision(sql, id);
+      if (flagged > 0) {
+        return c.json(
+          {
+            error: 'flagged_costs_unresolved',
+            message:
+              'This proposal has revision items whose unit cost has not been set. ' +
+              'Resolve all flagged costs before moving to pricing_complete.',
+            flagged_count: flagged,
+          },
+          422,
+        );
+      }
+    }
+
+    // Close any open Revision Round when status advances away from in_progress.
+    if (currentStatus === 'in_progress' && nextStatus !== 'in_progress') {
+      await closeOpenRevision(sql, id);
+    }
+
+    // On acceptance, bake the latest revision into proposal_items and clear
+    // the cycle's revision data. Per spec: client approval implies all
+    // revisions are resolved, so we proceed automatically.
+    if (nextStatus === 'approved') {
+      await bakeApprovedRevision(sql, id);
+    }
+  }
+
   const rows = await sql`
     UPDATE projects
     SET
