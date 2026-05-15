@@ -1062,6 +1062,11 @@ function ProposalCategorySection({
       onItemSave(item, { ...patch, version: item.version });
       return;
     }
+    // Quantity is always a direct edit during in_progress, even when a revision is open.
+    if (proposalStatus === 'in_progress' && ('quantity' in patch || 'quantityUnit' in patch)) {
+      onItemSave(item, { ...patch, version: item.version });
+      return;
+    }
     const changeInfo = patchToChangeInfo(patch, item, customColumnDefs);
     if (!changeInfo) {
       onItemSave(item, { ...patch, version: item.version });
@@ -1968,15 +1973,14 @@ function ProposalRow({
           const revEntries = changelogByItemId.get(item.id) ?? [];
           return (
             <>
-              {/* Locked baseline: sticky, left of revision block for easy comparison */}
-              <td
-                className={cn(
-                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
-                  stickyLockedQtyCellClassName,
-                )}
-              >
-                {item.quantity} {item.quantityUnit}
-              </td>
+              {/* Qty remains editable during revision — only UC and Total are locked */}
+              <QuantityCell
+                quantity={item.quantity}
+                quantityUnit={item.quantityUnit}
+                onSaveQuantity={(quantity) => onSave({ quantity })}
+                onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+                tdClassName={stickyLockedQtyCellClassName}
+              />
               <td
                 className={cn(
                   'px-3 py-2 text-sm tabular-nums text-neutral-400',
