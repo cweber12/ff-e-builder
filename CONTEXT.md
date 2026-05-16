@@ -1,6 +1,6 @@
 # ChillDesignStudio Context
 
-ChillDesignStudio is a project-first specification workspace for interior design teams. A single Project can carry both room-based FF&E work and category-based Proposal work without forcing those tools to share the same table model.
+ChillDesignStudio is a project-first specification workspace for interior design teams. A single Project can carry both room-based FF&E work and category-based Proposal work as different views of shared generated item data.
 
 ## Language
 
@@ -136,8 +136,16 @@ _Avoid_: item status, per-row status, status per item
 
 ### Shared Table UI
 
+**Generated Item**:
+The shared item record that can appear in both FF&E and Proposal views. FF&E and Proposal may show different default columns and group the same Generated Item differently, but table editing and generated item exports should converge on one item model.
+_Avoid_: Treating FF&E Item and Proposal Item as unrelated records when referring to long-term table/export behavior
+
+**Generated Item Table**:
+The shared table behavior behind FF&E and Proposal. FF&E is the room-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default.
+_Avoid_: Separate table engines, duplicated export table models
+
 **Table Group**:
-The unit of organisation inside a tool's table view — a **Room** in FF&E, a **Proposal Category** in Proposal. Both tools share table chrome primitives (group header, add-group button, grand total bar, export menu) but own their own column layout and row behaviour separately. The action to remove a Table Group is labelled "Delete room" or "Delete category" in the UI — never "Delete table."
+The unit of organisation inside a tool's table view — a **Room** in FF&E, a **Proposal Category** in Proposal. Table Groups are view-specific groupings over Generated Items, not separate table engines. The action to remove a Table Group is labelled "Delete room" or "Delete category" in the UI — never "Delete table."
 _Avoid_: Section, bucket, container, "delete table" (use "Delete room" or "Delete category" instead)
 
 ### Finish Library and Images
@@ -199,10 +207,11 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A **Project** belongs to exactly one authenticated user.
 - A **Project** can optionally be associated with one **Company**.
 - A **Project** can contain zero or more **Rooms** and zero or more **Proposal Categories**.
-- A **Project** has one **FF&E** workspace and one **Proposal** workspace; each can start empty and later be populated.
+- A **Project** has one **FF&E** workspace and one **Proposal** workspace; these are different views of shared generated item data.
 - A **Company** can define one active **Company Theme** used as the default for document exports.
-- A **Room** contains zero or more **FF&E Items**.
-- A **Proposal Category** contains zero or more **Proposal Items**.
+- A **Room** groups zero or more **Generated Items** in the FF&E view.
+- A **Proposal Category** groups zero or more **Generated Items** in the Proposal view.
+- Creating a furniture **Generated Item** in FF&E should make it visible in Proposal under the Furniture **Proposal Category** by default.
 - A **Proposal Item** can have zero or more **Proposal Item Changes**, one per tracked field edit while the proposal is not `in_progress`.
 - A **Proposal Item Change** snapshots the **Proposal Status** at the time of the edit to preserve the display color for that entry.
 - A **Proposal Item Change** belongs to a **Revision Round** via `revision_id`; entries created before any Revision Round is triggered carry a null `revision_id` until the next round is opened.

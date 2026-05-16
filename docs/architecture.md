@@ -68,6 +68,12 @@ pnpm arch:scan
 
 The generated map is descriptive only. It is intended to give agents current facts before architecture work; it does not enforce module seams or change runtime behavior.
 
+### Target Table And Export Direction
+
+ADR-0008 records the target direction for FF&E and Proposal table/export work: both tools should become different views over shared generated item data. FF&E groups Generated Items by Room and Proposal groups Generated Items by Proposal Category. The long-term table and generated item export modules should share item behavior, export document preparation, and CSV/Excel/PDF rendering, with view presets controlling grouping and default columns.
+
+The current implementation still has separate FF&E and Proposal tables, routes, hooks, and database tables. Future slices should migrate toward the shared Generated Item Table direction incrementally rather than treating FF&E and Proposal item-table coupling as an automatic architecture violation.
+
 ## 3. Frontend Routes
 
 - `/signin` is public.
@@ -354,9 +360,10 @@ pnpm --filter ffe-api dev
 
 Architecture decisions are recorded as ADRs in [adr/](adr/).
 
-| #                                              | Decision                                                                  | Status   |
-| ---------------------------------------------- | ------------------------------------------------------------------------- | -------- |
-| [0001](adr/0001-server-side-db-proxy.md)       | Server-side DB proxy between the client and Neon                          | Accepted |
-| [0002](adr/0002-manual-types-for-now.md)       | Hand-written TypeScript types; defer generation until schema pain is real | Accepted |
-| [0003](adr/0003-no-storybook-yet.md)           | No Storybook in v1; rely on focused tests and written design-system docs  | Accepted |
-| [0004](adr/0004-project-scoped-tool-models.md) | Keep FF&E and Proposal as separate project-scoped data models             | Accepted |
+| #                                               | Decision                                                                  | Status                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------- | ---------------------- |
+| [0001](adr/0001-server-side-db-proxy.md)        | Server-side DB proxy between the client and Neon                          | Accepted               |
+| [0002](adr/0002-manual-types-for-now.md)        | Hand-written TypeScript types; defer generation until schema pain is real | Accepted               |
+| [0003](adr/0003-no-storybook-yet.md)            | No Storybook in v1; rely on focused tests and written design-system docs  | Accepted               |
+| [0004](adr/0004-project-scoped-tool-models.md)  | Keep FF&E and Proposal as separate project-scoped data models             | Superseded by ADR-0008 |
+| [0008](adr/0008-shared-generated-item-table.md) | Treat FF&E and Proposal as shared Generated Item Table views              | Accepted               |

@@ -1,9 +1,9 @@
 # ADR-0004: Project-Scoped Tool Models
 
-| Field  | Value      |
-| ------ | ---------- |
-| Date   | 2026-05-03 |
-| Status | Accepted   |
+| Field  | Value                                             |
+| ------ | ------------------------------------------------- |
+| Date   | 2026-05-03                                        |
+| Status | Superseded by ADR-0008 for table/export refactors |
 
 ---
 
@@ -22,3 +22,7 @@ The Proposal model was originally named Take-Off. Migration `0012_proposal_renam
 - FF&E behavior can evolve without Proposal-specific columns or category rules leaking into room/item code.
 - Proposal can use category defaults, measurement units, CBM, drawing/location fields, and dedicated exports without bending the FF&E item model.
 - Shared project services still need careful seams, especially Materials, because FF&E and Proposal both assign entries from the unified Finish Library.
+
+## Superseded Direction
+
+ADR-0008 supersedes this decision for future table and generated item export refactors. The current target is for FF&E and Proposal to become different views over shared generated item data, with Room and Proposal Category as view-specific groupings.
