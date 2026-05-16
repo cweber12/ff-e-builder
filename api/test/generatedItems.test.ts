@@ -145,7 +145,21 @@ describe('Generated Item read model', () => {
   it('mirrors FF&E updates into a linked Proposal item', async () => {
     const sql = vi
       .fn()
+      .mockResolvedValueOnce([
+        {
+          project_id: 'project-1',
+          proposal_status: 'in_progress',
+          proposal_item_id: 'proposal-item-1',
+          item_name: 'Lounge chair',
+          item_id_tag: 'F-101',
+          dimensions: '',
+          notes: '',
+          qty: 2,
+          unit_cost_cents: 120000,
+        },
+      ])
       .mockResolvedValueOnce([{ id: 'item-1' }])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
     const item = await updateGeneratedItemFromFfe(
@@ -163,10 +177,68 @@ describe('Generated Item read model', () => {
     const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
       ([strings]) => Array.from(strings).join(' '),
     );
-    expect(statements[0]).toContain('UPDATE items');
-    expect(statements[0]).toContain('product_tag');
-    expect(statements[0]).toContain('quantity');
-    expect(statements[1]).toContain('UPDATE proposal_items pi');
-    expect(statements[1]).toContain('proposal_item_generated_item_links');
+    expect(statements[1]).toContain('UPDATE items');
+    expect(statements[1]).toContain('product_tag');
+    expect(statements[1]).toContain('quantity');
+    expect(statements[3]).toContain('UPDATE proposal_items pi');
+    expect(statements[3]).toContain('proposal_item_generated_item_links');
+  });
+
+  it('opens a revision and flags snapshot cost review for FF&E quantity edits after pricing', async () => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          project_id: 'project-1',
+          proposal_status: 'pricing_complete',
+          proposal_item_id: 'proposal-item-1',
+          item_name: 'Lounge chair',
+          item_id_tag: 'F-101',
+          dimensions: '',
+          notes: '',
+          qty: 2,
+          unit_cost_cents: 120000,
+        },
+      ])
+      .mockResolvedValueOnce([{ id: 'item-1' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ last_revision_major: 0 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'revision-1',
+          project_id: 'project-1',
+          revision_major: 1,
+          revision_minor: 1,
+          triggered_at_status: 'pricing_complete',
+          opened_at: '2026-05-16T00:00:00.000Z',
+          closed_at: null,
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    await updateGeneratedItemFromFfe(sql as unknown as ReturnType<typeof getDb>, 'item-1', {
+      qty: 3,
+      version: 1,
+    });
+
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(
+      statements.some((statement) => statement.includes('INSERT INTO proposal_revisions')),
+    ).toBe(true);
+    expect(
+      statements.some((statement) => statement.includes('INSERT INTO proposal_item_changelog')),
+    ).toBe(true);
+    expect(
+      statements.some((statement) => statement.includes('UPDATE proposal_revision_snapshots')),
+    ).toBe(true);
+    expect(statements.at(-1)).toContain('UPDATE proposal_items pi');
   });
 });

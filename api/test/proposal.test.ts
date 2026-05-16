@@ -69,4 +69,34 @@ describe('Proposal routes', () => {
     expect(statement).toContain('WHERE pi.category_id =');
     expect(statement).not.toContain('WITH canonical_items AS');
   });
+
+  it('deletes a category without deleting linked canonical Generated Items', async () => {
+    const sql = vi.fn().mockResolvedValue([]);
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      '/api/v1/proposal/categories/00000000-0000-0000-0000-000000000001',
+      {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer valid-token' },
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(204);
+
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements.some((statement) => statement.includes('UPDATE items'))).toBe(true);
+    expect(
+      statements.some((statement) => statement.includes('SET proposal_category_id = NULL')),
+    ).toBe(true);
+    expect(statements.some((statement) => statement.includes('DELETE FROM proposal_items'))).toBe(
+      true,
+    );
+    expect(
+      statements.some((statement) => statement.includes('DELETE FROM proposal_categories')),
+    ).toBe(true);
+  });
 });

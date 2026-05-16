@@ -109,19 +109,24 @@ export async function openRevision(
 
   // Snapshot all items currently in this proposal.
   await sql`
-    INSERT INTO proposal_revision_snapshots (revision_id, item_id, quantity, unit_cost_cents, cost_status)
-    SELECT ${rev.id}, pi.id, pi.quantity, pi.unit_cost_cents, 'none'
+    INSERT INTO proposal_revision_snapshots (
+      revision_id, item_id, generated_item_id, quantity, unit_cost_cents, cost_status
+    )
+    SELECT ${rev.id}, pi.id, link.item_id, pi.quantity, pi.unit_cost_cents, 'none'
     FROM   proposal_items pi
     JOIN   proposal_categories pc ON pc.id = pi.category_id
+    LEFT   JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
     WHERE  pc.project_id = ${projectId}
   `;
 
   // Fold any orphan changelog entries (no revision_id) into this new revision.
   await sql`
     UPDATE proposal_item_changelog cl
-    SET    revision_id = ${rev.id}
+    SET    revision_id = ${rev.id},
+           generated_item_id = COALESCE(cl.generated_item_id, link.item_id)
     FROM   proposal_items pi
     JOIN   proposal_categories pc ON pc.id = pi.category_id
+    LEFT   JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
     WHERE  cl.proposal_item_id = pi.id
       AND  pc.project_id = ${projectId}
       AND  cl.revision_id IS NULL
@@ -203,6 +208,17 @@ export async function bakeApprovedRevision(sql: Sql, projectId: string): Promise
     FROM   proposal_revision_snapshots s
     WHERE  s.revision_id = ${rev.id}
       AND  s.item_id = pi.id
+  `;
+
+  await sql`
+    UPDATE items i
+    SET    quantity = COALESCE(s.quantity, i.quantity),
+           qty = GREATEST(0, CEIL(COALESCE(s.quantity, i.quantity)))::int,
+           unit_cost_cents = COALESCE(s.unit_cost_cents, i.unit_cost_cents),
+           version = i.version + 1
+    FROM   proposal_revision_snapshots s
+    WHERE  s.revision_id = ${rev.id}
+      AND  s.generated_item_id = i.id
   `;
 
   // Remember which major number we just closed out so the next cycle bumps

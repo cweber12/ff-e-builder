@@ -111,6 +111,22 @@ router.delete('/proposal/categories/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const imageRows = await sql`
+    SELECT ia.r2_key
+    FROM image_assets ia
+    JOIN proposal_items pi ON pi.id = ia.proposal_item_id
+    WHERE pi.category_id = ${id}
+  `;
+  await deleteR2Keys(
+    c.env.IMAGES_BUCKET,
+    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
+  );
+  await sql`
+    UPDATE items
+    SET proposal_category_id = NULL
+    WHERE proposal_category_id = ${id}
+  `;
+  await sql`DELETE FROM proposal_items WHERE category_id = ${id}`;
   await sql`DELETE FROM proposal_categories WHERE id = ${id}`;
   return c.body(null, 204);
 });
@@ -264,12 +280,16 @@ router.patch('/proposal/items/:id', async (c) => {
   if (cl) {
     await sql`
       INSERT INTO proposal_item_changelog
-        (proposal_item_id, column_key, previous_value, new_value, notes,
+        (proposal_item_id, generated_item_id, column_key, previous_value, new_value, notes,
          proposal_status, revision_id, is_price_affecting)
       VALUES
-        (${id}, ${cl.column_key}, ${cl.previous_value}, ${cl.new_value},
+        (
+         ${id},
+         (SELECT item_id FROM proposal_item_generated_item_links WHERE proposal_item_id = ${id}),
+         ${cl.column_key}, ${cl.previous_value}, ${cl.new_value},
          ${cl.notes ?? null}, ${cl.proposal_status}, ${openRev?.id ?? null},
-         ${cl.is_price_affecting ?? false})
+         ${cl.is_price_affecting ?? false}
+        )
     `;
   }
 

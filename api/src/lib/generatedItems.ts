@@ -1,8 +1,100 @@
 import type { getDb } from './db';
 import type { CreateItemInput, CreateProposalItemInput, UpdateItemInput } from '../types';
+import { findOpenRevision, openRevision, type RevisionRow } from './revisions';
 
 type Sql = ReturnType<typeof getDb>;
 type DbRow = Record<string, unknown>;
+type ProposalStatus = 'in_progress' | 'pricing_complete' | 'submitted' | 'approved';
+type TrackedProposalStatus = Exclude<ProposalStatus, 'in_progress'>;
+
+const trackedProposalStatuses = new Set<ProposalStatus>([
+  'pricing_complete',
+  'submitted',
+  'approved',
+]);
+
+type FfeRevisionContext = {
+  projectId: string;
+  proposalStatus: ProposalStatus;
+  proposalItemId: string | null;
+  itemName: string;
+  itemIdTag: string | null;
+  dimensions: string | null;
+  notes: string | null;
+  qty: number;
+  unitCostCents: number;
+};
+
+type FfeChange = {
+  columnKey: string;
+  previousValue: string;
+  newValue: string;
+  isPriceAffecting: boolean;
+};
+
+function plain(value: unknown) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return value.toString();
+  }
+  return '';
+}
+
+function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionContext) {
+  const changes: FfeChange[] = [];
+
+  if (input.item_name != null && input.item_name !== before.itemName) {
+    changes.push({
+      columnKey: 'description',
+      previousValue: before.itemName,
+      newValue: input.item_name,
+      isPriceAffecting: false,
+    });
+  }
+  if (input.item_id_tag != null && input.item_id_tag !== before.itemIdTag) {
+    changes.push({
+      columnKey: 'product_tag',
+      previousValue: plain(before.itemIdTag),
+      newValue: input.item_id_tag,
+      isPriceAffecting: false,
+    });
+  }
+  if (input.notes != null && input.notes !== before.notes) {
+    changes.push({
+      columnKey: 'notes',
+      previousValue: plain(before.notes),
+      newValue: input.notes,
+      isPriceAffecting: false,
+    });
+  }
+  if (input.dimensions != null && input.dimensions !== before.dimensions) {
+    changes.push({
+      columnKey: 'size_label',
+      previousValue: plain(before.dimensions),
+      newValue: input.dimensions,
+      isPriceAffecting: true,
+    });
+  }
+  if (input.qty != null && input.qty !== before.qty) {
+    changes.push({
+      columnKey: 'quantity',
+      previousValue: String(before.qty),
+      newValue: String(input.qty),
+      isPriceAffecting: true,
+    });
+  }
+  if (input.unit_cost_cents != null && input.unit_cost_cents !== before.unitCostCents) {
+    changes.push({
+      columnKey: 'unit_cost_cents',
+      previousValue: String(before.unitCostCents),
+      newValue: String(input.unit_cost_cents),
+      isPriceAffecting: true,
+    });
+  }
+
+  return changes;
+}
 
 async function selectRoomProjectId(sql: Sql, roomId: string) {
   const rows = await sql`
@@ -121,6 +213,104 @@ async function insertProposalItemMirrorForGeneratedItem(
     VALUES (${row.id}, ${itemId})
     ON CONFLICT (proposal_item_id) DO NOTHING
   `;
+}
+
+async function selectFfeRevisionContext(sql: Sql, itemId: string) {
+  const rows = await sql`
+    SELECT
+      r.project_id,
+      p.proposal_status,
+      link.proposal_item_id,
+      i.item_name,
+      i.item_id_tag,
+      i.dimensions,
+      i.notes,
+      i.qty,
+      i.unit_cost_cents
+    FROM items i
+    JOIN rooms r ON r.id = i.room_id
+    JOIN projects p ON p.id = r.project_id
+    LEFT JOIN proposal_item_generated_item_links link ON link.item_id = i.id
+    WHERE i.id = ${itemId}
+    LIMIT 1
+  `;
+  const row = rows[0] as
+    | {
+        project_id?: string;
+        proposal_status?: ProposalStatus;
+        proposal_item_id?: string | null;
+        item_name?: string;
+        item_id_tag?: string | null;
+        dimensions?: string | null;
+        notes?: string | null;
+        qty?: number;
+        unit_cost_cents?: number;
+      }
+    | undefined;
+  if (!row?.project_id || !row.proposal_status || !row.item_name) return null;
+  return {
+    projectId: row.project_id,
+    proposalStatus: row.proposal_status,
+    proposalItemId: row.proposal_item_id ?? null,
+    itemName: row.item_name,
+    itemIdTag: row.item_id_tag ?? null,
+    dimensions: row.dimensions ?? null,
+    notes: row.notes ?? null,
+    qty: row.qty ?? 0,
+    unitCostCents: row.unit_cost_cents ?? 0,
+  } satisfies FfeRevisionContext;
+}
+
+async function ensureProposalItemMirrorForGeneratedItem(sql: Sql, itemId: string) {
+  const existing = await sql`
+    SELECT proposal_item_id
+    FROM proposal_item_generated_item_links
+    WHERE item_id = ${itemId}
+    LIMIT 1
+  `;
+  const existingRow = existing[0] as { proposal_item_id?: string } | undefined;
+  if (existingRow?.proposal_item_id) return existingRow.proposal_item_id;
+
+  const rows = await sql`
+    INSERT INTO proposal_items (
+      category_id, product_tag, plan, drawings, location, description, notes,
+      size_label, size_mode, size_w, size_d, size_h, size_unit,
+      cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
+    )
+    SELECT
+      i.proposal_category_id,
+      COALESCE(NULLIF(i.product_tag, ''), i.item_id_tag, ''),
+      i.plan,
+      i.drawings,
+      i.location,
+      i.item_name,
+      COALESCE(i.notes, ''),
+      COALESCE(i.dimensions, i.size_label, ''),
+      i.size_mode,
+      i.size_w,
+      i.size_d,
+      i.size_h,
+      i.size_unit,
+      i.cbm,
+      i.qty::numeric,
+      'unit',
+      i.unit_cost_cents,
+      i.sort_order,
+      i.custom_data
+    FROM items i
+    WHERE i.id = ${itemId}
+      AND i.proposal_category_id IS NOT NULL
+    RETURNING id
+  `;
+  const row = rows[0] as { id?: string } | undefined;
+  if (!row?.id) return null;
+
+  await sql`
+    INSERT INTO proposal_item_generated_item_links (proposal_item_id, item_id)
+    VALUES (${row.id}, ${itemId})
+    ON CONFLICT (proposal_item_id) DO NOTHING
+  `;
+  return row.id;
 }
 
 async function insertGeneratedItemMirrorForProposalItem(
@@ -267,7 +457,11 @@ export async function createGeneratedItemFromProposal(
   return rows[0] as DbRow;
 }
 
-export async function mirrorGeneratedItemToProposalItem(sql: Sql, itemId: string) {
+export async function mirrorGeneratedItemToProposalItem(
+  sql: Sql,
+  itemId: string,
+  options: { lockPriceFields?: boolean } = {},
+) {
   await sql`
     UPDATE proposal_items pi
     SET
@@ -276,9 +470,9 @@ export async function mirrorGeneratedItemToProposalItem(sql: Sql, itemId: string
       description      = i.item_name,
       notes            = COALESCE(i.notes, ''),
       size_label       = COALESCE(i.dimensions, ''),
-      quantity         = i.qty::numeric,
+      quantity         = CASE WHEN ${options.lockPriceFields === true}::boolean THEN pi.quantity ELSE i.qty::numeric END,
       quantity_unit    = 'unit',
-      unit_cost_cents  = i.unit_cost_cents,
+      unit_cost_cents  = CASE WHEN ${options.lockPriceFields === true}::boolean THEN pi.unit_cost_cents ELSE i.unit_cost_cents END,
       sort_order       = i.sort_order,
       custom_data      = i.custom_data,
       version          = pi.version + 1
@@ -325,7 +519,108 @@ export async function mirrorProposalItemToGeneratedItem(sql: Sql, proposalItemId
   `;
 }
 
+async function insertFfeRevisionChangelog(
+  sql: Sql,
+  itemId: string,
+  proposalItemId: string,
+  revision: RevisionRow | null,
+  proposalStatus: ProposalStatus,
+  changes: FfeChange[],
+) {
+  for (const change of changes) {
+    await sql`
+      INSERT INTO proposal_item_changelog
+        (proposal_item_id, generated_item_id, column_key, previous_value, new_value,
+         proposal_status, revision_id, is_price_affecting)
+      VALUES
+        (${proposalItemId}, ${itemId}, ${change.columnKey}, ${change.previousValue},
+         ${change.newValue}, ${proposalStatus}, ${revision?.id ?? null}, ${change.isPriceAffecting})
+    `;
+  }
+}
+
+async function updateFfeRevisionSnapshot(
+  sql: Sql,
+  proposalItemId: string,
+  revision: RevisionRow,
+  input: UpdateItemInput,
+  changes: FfeChange[],
+) {
+  const hasQuantityChange = changes.some((change) => change.columnKey === 'quantity');
+  const hasUnitCostChange = changes.some((change) => change.columnKey === 'unit_cost_cents');
+  const hasSizeChange = changes.some((change) => change.columnKey === 'size_label');
+
+  if (hasQuantityChange && input.qty != null) {
+    await sql`
+      UPDATE proposal_revision_snapshots
+      SET    quantity = ${input.qty}, cost_status = 'flagged'
+      WHERE  revision_id = ${revision.id} AND item_id = ${proposalItemId}
+    `;
+  }
+
+  if (hasUnitCostChange && input.unit_cost_cents != null) {
+    await sql`
+      UPDATE proposal_revision_snapshots
+      SET    unit_cost_cents = ${input.unit_cost_cents}, cost_status = 'flagged'
+      WHERE  revision_id = ${revision.id} AND item_id = ${proposalItemId}
+    `;
+  } else if (hasSizeChange) {
+    await sql`
+      UPDATE proposal_revision_snapshots
+      SET    unit_cost_cents = NULL, cost_status = 'flagged'
+      WHERE  revision_id = ${revision.id} AND item_id = ${proposalItemId}
+    `;
+  }
+}
+
+async function applyFfeRevisionEffects(
+  sql: Sql,
+  itemId: string,
+  input: UpdateItemInput,
+  before: FfeRevisionContext | null,
+) {
+  if (!before) return { lockPriceFields: false };
+
+  const changes = revisionChangesForFfePatch(input, before);
+  if (changes.length === 0) return { lockPriceFields: false };
+
+  let proposalItemId = before.proposalItemId;
+  if (!proposalItemId) {
+    proposalItemId = await ensureProposalItemMirrorForGeneratedItem(sql, itemId);
+  }
+  if (!proposalItemId) return { lockPriceFields: false };
+
+  let revision = await findOpenRevision(sql, before.projectId);
+  const shouldOpenRevision = !revision && trackedProposalStatuses.has(before.proposalStatus);
+
+  if (shouldOpenRevision) {
+    revision = await openRevision(
+      sql,
+      before.projectId,
+      before.proposalStatus as TrackedProposalStatus,
+    );
+  }
+
+  if (revision || trackedProposalStatuses.has(before.proposalStatus)) {
+    await insertFfeRevisionChangelog(
+      sql,
+      itemId,
+      proposalItemId,
+      revision,
+      before.proposalStatus,
+      changes,
+    );
+  }
+
+  if (revision) {
+    await updateFfeRevisionSnapshot(sql, proposalItemId, revision, input, changes);
+  }
+
+  return { lockPriceFields: revision != null };
+}
+
 export async function updateGeneratedItemFromFfe(sql: Sql, itemId: string, input: UpdateItemInput) {
+  const before = await selectFfeRevisionContext(sql, itemId);
   // COALESCE(provided ?? null, column) leaves each field unchanged when not included in the patch.
   // Note: explicitly sending null for a nullable field will also leave it unchanged (known limitation).
   const rows = await sql`
@@ -355,7 +650,12 @@ export async function updateGeneratedItemFromFfe(sql: Sql, itemId: string, input
     WHERE id = ${itemId} AND version = ${input.version}
     RETURNING *
   `;
-  if (rows[0]) await mirrorGeneratedItemToProposalItem(sql, itemId);
+  if (rows[0]) {
+    const revisionEffects = await applyFfeRevisionEffects(sql, itemId, input, before);
+    await mirrorGeneratedItemToProposalItem(sql, itemId, {
+      lockPriceFields: revisionEffects.lockPriceFields,
+    });
+  }
   return rows[0] as DbRow | undefined;
 }
 
