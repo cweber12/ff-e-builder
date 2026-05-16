@@ -72,7 +72,7 @@ The generated map is descriptive only. It is intended to give agents current fac
 
 ADR-0008 records the target direction for FF&E and Proposal table/export work: both tools should become different views over shared generated item data. FF&E groups Generated Items by Room and Proposal groups Generated Items by Proposal Category. The long-term table and generated item export modules should share item behavior, export document preparation, and CSV/Excel/PDF rendering, with view presets controlling grouping and default columns.
 
-The current implementation still has separate FF&E and Proposal tables, routes, hooks, and database tables. Migration `0027_shared_generated_item_schema.sql` stages Proposal-view columns on `items`, default Furniture/Unassigned groupings, and a legacy Proposal Item mapping table so future slices can migrate behavior incrementally. Until those slices run, `proposal_items` remains writable compatibility storage.
+The current implementation still has separate FF&E and Proposal write paths, hooks, and database tables. Migration `0027_shared_generated_item_schema.sql` stages Proposal-view columns on `items`, default Furniture/Unassigned groupings, and a legacy Proposal Item mapping table so future slices can migrate behavior incrementally. The API read bridge in `api/src/lib/generatedItems.ts` reads canonical `items` by Room or Proposal Category while keeping unlinked `proposal_items` as a compatibility fallback. Until write-bridge slices run, `proposal_items` remains writable compatibility storage.
 
 ## 3. Frontend Routes
 

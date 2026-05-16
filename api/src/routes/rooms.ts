@@ -4,6 +4,7 @@ import { UpdateRoomSchema, CreateItemSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
+import { selectGeneratedItemsByRoom } from '../lib/generatedItems';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -70,33 +71,7 @@ router.get('/:id/items', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await sql`
-    SELECT
-      i.*,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id', m.id,
-            'project_id', m.project_id,
-            'name', m.name,
-            'material_id', m.material_id,
-            'description', m.description,
-            'swatch_hex', m.swatch_hex,
-            'created_at', m.created_at,
-            'updated_at', m.updated_at
-          )
-          ORDER BY im.sort_order, lower(m.name)
-        )
-          FILTER (WHERE m.id IS NOT NULL),
-        '[]'::json
-      ) AS materials
-    FROM items i
-    LEFT JOIN item_materials im ON im.item_id = i.id
-    LEFT JOIN materials m ON m.id = im.material_id
-    WHERE i.room_id = ${id}
-    GROUP BY i.id
-    ORDER BY i.sort_order, i.created_at
-  `;
+  const rows = await selectGeneratedItemsByRoom(sql, id);
   return c.json({ items: rows });
 });
 

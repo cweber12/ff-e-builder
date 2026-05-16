@@ -45,7 +45,7 @@ describe('Proposal routes', () => {
     mockAssertProposalCategoryOwnership.mockResolvedValue(undefined);
   });
 
-  it('loads category items through the renamed proposal item-material join column', async () => {
+  it('loads category items through the Generated Item read bridge with legacy fallback', async () => {
     const sql = vi.fn().mockResolvedValue([]);
     mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
 
@@ -62,9 +62,11 @@ describe('Proposal routes', () => {
 
     const calls = sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>;
     const statement = Array.from(calls[0]?.[0] ?? []).join(' ');
-    expect(statement).toContain('FROM  proposal_items pi');
-    expect(statement).toContain(
-      'LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id',
-    );
+    expect(statement).toContain('WITH canonical_items AS');
+    expect(statement).toContain('WHERE i.proposal_category_id =');
+    expect(statement).toContain('proposal_item_generated_item_links');
+    expect(statement).toContain('FROM proposal_items pi');
+    expect(statement).toContain('WHERE pi.category_id =');
+    expect(statement).toContain('UNION ALL');
   });
 });

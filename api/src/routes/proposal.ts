@@ -11,6 +11,7 @@ import {
 } from '../types';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
+import { selectGeneratedItemsByProposalCategory } from '../lib/generatedItems';
 import {
   assertProjectOwnership,
   assertProposalCategoryOwnership,
@@ -120,31 +121,7 @@ router.get('/proposal/categories/:id/items', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await sql`
-    SELECT
-      pi.*,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id',          m.id,
-            'project_id',  m.project_id,
-            'name',        m.name,
-            'material_id', m.material_id,
-            'description', m.description,
-            'swatch_hex',  m.swatch_hex,
-            'created_at',  m.created_at,
-            'updated_at',  m.updated_at
-          ) ORDER BY pim.sort_order
-        ) FILTER (WHERE m.id IS NOT NULL),
-        '[]'::json
-      ) AS materials
-    FROM  proposal_items pi
-    LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id
-    LEFT  JOIN materials m                 ON m.id = pim.material_id
-    WHERE pi.category_id = ${id}
-    GROUP BY pi.id
-    ORDER BY pi.sort_order, pi.created_at
-  `;
+  const rows = await selectGeneratedItemsByProposalCategory(sql, id);
   return c.json({ items: rows });
 });
 

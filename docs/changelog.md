@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(api): add Generated Item read bridge for FF&E and Proposal groupings
+
 - refactor(db): stage shared Generated Item schema for FF&E and Proposal table consolidation
 
 - docs(architecture): record shared Generated Item Table direction for FF&E and Proposal views
