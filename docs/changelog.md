@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs(architecture): clarify generated architecture-map review signals for route composition, facades, shared dependencies, and unknown ownership
+
 - docs(architecture): make generated architecture maps product-module-aware with ownership heuristics and cross-area import summaries
 
 - docs(architecture): add generated architecture-map tooling and docs under `docs/generated`

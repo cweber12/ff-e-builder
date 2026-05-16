@@ -394,8 +394,14 @@ export async function exportProposalExcel(
       targetCell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor:
-          column.key === 'revisionNotes' ? 'FFFFF7ED' : column.isRevision ? 'FFFEF3C7' : 'FFF3F2F0',
+        fgColor: {
+          argb:
+            column.key === 'revisionNotes'
+              ? 'FFFFF7ED'
+              : column.isRevision
+                ? 'FFFEF3C7'
+                : 'FFF3F2F0',
+        },
       };
       targetCell.border = borderForColumn(tableBorder(), column, prevColumn, nextColumn, {
         isFirstColumn: index === 0,
