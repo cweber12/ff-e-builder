@@ -2,12 +2,38 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
+const productAreaOrder = [
+  'ffe',
+  'proposal',
+  'plans',
+  'finish-library',
+  'project-shell',
+  'shared-ui',
+  'shared-lib',
+  'api-worker',
+  'types',
+  'tests',
+  'tooling',
+  'unknown',
+] as const;
+
+type ProductArea = (typeof productAreaOrder)[number];
+type OwnershipConfidence = 'high' | 'medium' | 'low';
+
 type ProjectConfig = {
   name: string;
   tsconfigPath: string;
+  extraFiles?: string[];
 };
 
 type ImportKind = 'import' | 'export' | 'dynamic-import' | 'require' | 'import-type';
+
+type ProductClassification = {
+  area: ProductArea;
+  confidence: OwnershipConfidence;
+  reason: string;
+  ownerPath: string;
+};
 
 type ImportRecord = {
   importer: string;
@@ -22,6 +48,10 @@ type FileRecord = {
   path: string;
   project: string;
   module: string;
+  productArea: ProductArea;
+  ownershipConfidence: OwnershipConfidence;
+  ownershipReason: string;
+  ownerPath: string;
   imports: ImportRecord[];
 };
 
@@ -43,6 +73,38 @@ type ProjectRecord = {
   unresolvedImports: number;
 };
 
+type ProductAreaRecord = {
+  area: ProductArea;
+  files: number;
+  importsIn: number;
+  importsOut: number;
+  dependsOn: ProductArea[];
+  importedBy: ProductArea[];
+};
+
+type ProductCrossAreaImport = {
+  importer: string;
+  importerArea: ProductArea;
+  specifier: string;
+  resolved: string;
+  resolvedArea: ProductArea;
+  kind: ImportKind;
+  reviewNote: string;
+};
+
+type ProductCrossAreaImportGroup = {
+  from: ProductArea;
+  to: ProductArea;
+  imports: number;
+  reviewNote: string;
+  examples: ProductCrossAreaImport[];
+};
+
+type ProductPathSummary = {
+  area: ProductArea;
+  paths: Array<{ path: string; files: number }>;
+};
+
 const repoRoot = process.cwd();
 const generatedDir = path.join(repoRoot, 'docs', 'generated');
 const outputJsonPath = path.join(generatedDir, 'architecture-map.json');
@@ -50,9 +112,189 @@ const outputMdPath = path.join(generatedDir, 'architecture-map.md');
 
 const projectConfigs: ProjectConfig[] = [
   { name: 'React client', tsconfigPath: 'tsconfig.app.json' },
-  { name: 'Root tooling config', tsconfigPath: 'tsconfig.node.json' },
+  {
+    name: 'Root tooling config',
+    tsconfigPath: 'tsconfig.node.json',
+    extraFiles: ['scripts/architecture-map.ts'],
+  },
   { name: 'Cloudflare Workers API', tsconfigPath: 'api/tsconfig.json' },
 ];
+
+const classifierRules: Array<{
+  area: ProductArea;
+  confidence: OwnershipConfidence;
+  ownerPath: string;
+  reason: string;
+  match: (repoPath: string) => boolean;
+}> = [
+  {
+    area: 'tests',
+    confidence: 'high',
+    ownerPath: 'tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**',
+    reason: 'test or snapshot path',
+    match: (repoPath) =>
+      repoPath.startsWith('tests/') ||
+      repoPath.includes('/test/') ||
+      repoPath.includes('/__snapshots__/') ||
+      /\.(test|spec)\.[cm]?[jt]sx?$/.test(repoPath),
+  },
+  {
+    area: 'api-worker',
+    confidence: 'high',
+    ownerPath: 'api/src/**',
+    reason: 'Cloudflare Workers API source path',
+    match: (repoPath) => repoPath.startsWith('api/src/'),
+  },
+  {
+    area: 'types',
+    confidence: 'high',
+    ownerPath: 'src/types/**',
+    reason: 'shared domain type path',
+    match: (repoPath) => repoPath.startsWith('src/types/'),
+  },
+  {
+    area: 'ffe',
+    confidence: 'high',
+    ownerPath: 'src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**',
+    reason: 'FF&E-owned feature path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/components/ffe/') ||
+      repoPath.startsWith('src/hooks/ffe/') ||
+      repoPath.startsWith('src/lib/export/ffe/'),
+  },
+  {
+    area: 'ffe',
+    confidence: 'medium',
+    ownerPath: 'src/lib/items/**, src/lib/import/formats/ffe.ts',
+    reason: 'FF&E-oriented helper/import path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/lib/items/') || repoPath.startsWith('src/lib/import/formats/ffe.'),
+  },
+  {
+    area: 'proposal',
+    confidence: 'high',
+    ownerPath: 'src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**',
+    reason: 'Proposal-owned feature path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/components/proposal/') ||
+      repoPath.startsWith('src/hooks/proposal/') ||
+      repoPath.startsWith('src/lib/export/proposal/'),
+  },
+  {
+    area: 'proposal',
+    confidence: 'medium',
+    ownerPath: 'src/lib/import/formats/proposal.ts, src/lib/api/proposal.ts',
+    reason: 'Proposal-oriented API/import path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/lib/import/formats/proposal.') ||
+      repoPath === 'src/lib/api/proposal.ts',
+  },
+  {
+    area: 'plans',
+    confidence: 'high',
+    ownerPath:
+      'src/components/plans/**, src/hooks/plans/**, src/lib/plans/**, src/pages/Plans*.tsx, src/pages/PlanCanvas*.tsx',
+    reason: 'Plans-owned feature path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/components/plans/') ||
+      repoPath.startsWith('src/hooks/plans/') ||
+      repoPath.startsWith('src/lib/plans/') ||
+      repoPath.startsWith('src/pages/Plans') ||
+      repoPath.startsWith('src/pages/PlanCanvas'),
+  },
+  {
+    area: 'finish-library',
+    confidence: 'high',
+    ownerPath: 'src/components/materials/**, src/hooks/materials/**',
+    reason: 'Finish Library / Materials UI or hook path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/components/materials/') ||
+      repoPath.startsWith('src/hooks/materials/'),
+  },
+  {
+    area: 'finish-library',
+    confidence: 'medium',
+    ownerPath: 'src/lib/api/materials.ts, src/lib/export/materials.ts',
+    reason: 'Finish Library / Materials API or export path',
+    match: (repoPath) =>
+      repoPath === 'src/lib/api/materials.ts' || repoPath === 'src/lib/export/materials.ts',
+  },
+  {
+    area: 'project-shell',
+    confidence: 'high',
+    ownerPath: 'src/components/project/**, src/pages/Dashboard*.tsx, src/pages/Project*.tsx',
+    reason: 'Project shell UI/page path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/components/project/') ||
+      repoPath.startsWith('src/pages/Dashboard') ||
+      repoPath.startsWith('src/pages/Project'),
+  },
+  {
+    area: 'project-shell',
+    confidence: 'medium',
+    ownerPath:
+      'src/App.tsx, src/main.tsx, src/lib/projectSnapshot/**, src/lib/api/projects.ts, src/lib/api/users.ts',
+    reason: 'route shell, app bootstrap, or Project/User API path',
+    match: (repoPath) =>
+      repoPath === 'src/App.tsx' ||
+      repoPath === 'src/main.tsx' ||
+      repoPath.startsWith('src/lib/projectSnapshot/') ||
+      repoPath === 'src/lib/api/projects.ts' ||
+      repoPath === 'src/lib/api/users.ts',
+  },
+  {
+    area: 'shared-ui',
+    confidence: 'high',
+    ownerPath: 'src/components/shared/**, src/components/primitives/**',
+    reason: 'shared UI primitive/chrome path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/components/shared/') ||
+      repoPath.startsWith('src/components/primitives/'),
+  },
+  {
+    area: 'shared-lib',
+    confidence: 'high',
+    ownerPath:
+      'src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/query/**, src/lib/theme/**, src/lib/utils/**',
+    reason: 'shared client utility path',
+    match: (repoPath) =>
+      repoPath.startsWith('src/lib/auth/') ||
+      repoPath.startsWith('src/lib/images/') ||
+      repoPath.startsWith('src/lib/import/') ||
+      repoPath.startsWith('src/lib/money/') ||
+      repoPath.startsWith('src/lib/query/') ||
+      repoPath.startsWith('src/lib/theme/') ||
+      repoPath.startsWith('src/lib/utils/'),
+  },
+  {
+    area: 'shared-lib',
+    confidence: 'medium',
+    ownerPath: 'src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts',
+    reason: 'shared client API/export/hook path',
+    match: (repoPath) =>
+      repoPath === 'src/lib/api.ts' ||
+      repoPath.startsWith('src/lib/api/') ||
+      /^src\/lib\/export\/[^/]+\.ts$/.test(repoPath) ||
+      repoPath.startsWith('src/hooks/shared/') ||
+      /^src\/hooks\/[^/]+\.ts$/.test(repoPath),
+  },
+  {
+    area: 'tooling',
+    confidence: 'high',
+    ownerPath: 'scripts/**, *.config.ts',
+    reason: 'build, test, or repository tooling path',
+    match: (repoPath) => repoPath.startsWith('scripts/') || repoPath.endsWith('.config.ts'),
+  },
+];
+
+const ownedProductAreas = new Set<ProductArea>([
+  'ffe',
+  'proposal',
+  'plans',
+  'finish-library',
+  'project-shell',
+]);
+const sharedAreas = new Set<ProductArea>(['shared-ui', 'shared-lib']);
 
 function toRepoPath(absolutePath: string): string {
   return path.relative(repoRoot, absolutePath).replaceAll(path.sep, '/');
@@ -84,6 +326,15 @@ function readTsConfig(config: ProjectConfig): ts.ParsedCommandLine {
 
   if (parsed.errors.length > 0) {
     throw new Error(parsed.errors.map(formatDiagnostic).join('\n'));
+  }
+
+  if (config.extraFiles) {
+    parsed.fileNames = uniqueSorted([
+      ...parsed.fileNames,
+      ...config.extraFiles
+        .map((repoPath) => fromRepoPath(repoPath))
+        .filter((filePath) => fs.existsSync(filePath)),
+    ]);
   }
 
   return parsed;
@@ -196,6 +447,28 @@ function getArea(repoPath: string): string {
   return 'root';
 }
 
+function classifyProductArea(repoPath: string): ProductClassification {
+  const normalizedPath = repoPath.replaceAll('\\', '/');
+  const rule = classifierRules.find((candidate) => candidate.match(normalizedPath));
+
+  if (rule) {
+    return {
+      area: rule.area,
+      confidence: rule.confidence,
+      reason: rule.reason,
+      ownerPath: rule.ownerPath,
+    };
+  }
+
+  const parts = normalizedPath.split('/');
+  return {
+    area: 'unknown',
+    confidence: 'low',
+    reason: 'no product-area path heuristic matched',
+    ownerPath: parts.length > 1 ? parts.slice(0, 2).join('/') : normalizedPath,
+  };
+}
+
 function scanProject(config: ProjectConfig): FileRecord[] {
   const parsedConfig = readTsConfig(config);
   const host = ts.createCompilerHost(parsedConfig.options, true);
@@ -208,6 +481,7 @@ function scanProject(config: ProjectConfig): FileRecord[] {
       .filter((sourceFile) => isRepoSource(sourceFile.fileName))
       .map((sourceFile) => {
         const importer = toRepoPath(sourceFile.fileName);
+        const classification = classifyProductArea(importer);
         const imports = collectModuleSpecifiers(sourceFile).map(({ specifier, kind }) => {
           const resolved = ts.resolveModuleName(
             specifier,
@@ -234,6 +508,10 @@ function scanProject(config: ProjectConfig): FileRecord[] {
           path: importer,
           project: config.name,
           module: getModulePath(importer),
+          productArea: classification.area,
+          ownershipConfidence: classification.confidence,
+          ownershipReason: classification.reason,
+          ownerPath: classification.ownerPath,
           imports,
         };
       }),
@@ -242,6 +520,11 @@ function scanProject(config: ProjectConfig): FileRecord[] {
 
 function uniqueSorted(items: Iterable<string>): string[] {
   return [...new Set(items)].sort((a, b) => a.localeCompare(b));
+}
+
+function uniqueProductAreas(items: Iterable<ProductArea>): ProductArea[] {
+  const values = new Set(items);
+  return productAreaOrder.filter((area) => values.has(area));
 }
 
 function buildModules(files: FileRecord[]): ModuleRecord[] {
@@ -323,6 +606,179 @@ function buildProjectSummaries(files: FileRecord[]): ProjectRecord[] {
       ).length,
     };
   });
+}
+
+function buildProductAreaSummaries(files: FileRecord[]): ProductAreaRecord[] {
+  const filesByPath = new Map(files.map((file) => [file.path, file]));
+  const records = new Map<ProductArea, ProductAreaRecord>(
+    productAreaOrder.map((area) => [
+      area,
+      { area, files: 0, importsIn: 0, importsOut: 0, dependsOn: [], importedBy: [] },
+    ]),
+  );
+  const dependsOn = new Map<ProductArea, Set<ProductArea>>();
+  const importedBy = new Map<ProductArea, Set<ProductArea>>();
+
+  for (const file of files) {
+    records.get(file.productArea)!.files += 1;
+    records.get(file.productArea)!.importsOut += file.imports.filter(
+      (importRecord) => importRecord.resolved,
+    ).length;
+
+    for (const importRecord of file.imports) {
+      if (!importRecord.resolved) {
+        continue;
+      }
+
+      const targetArea = filesByPath.get(importRecord.resolved)?.productArea;
+      if (!targetArea) {
+        continue;
+      }
+
+      records.get(targetArea)!.importsIn += 1;
+
+      if (targetArea !== file.productArea) {
+        if (!dependsOn.has(file.productArea)) {
+          dependsOn.set(file.productArea, new Set());
+        }
+
+        if (!importedBy.has(targetArea)) {
+          importedBy.set(targetArea, new Set());
+        }
+
+        dependsOn.get(file.productArea)!.add(targetArea);
+        importedBy.get(targetArea)!.add(file.productArea);
+      }
+    }
+  }
+
+  for (const record of records.values()) {
+    record.dependsOn = uniqueProductAreas(dependsOn.get(record.area) ?? []);
+    record.importedBy = uniqueProductAreas(importedBy.get(record.area) ?? []);
+  }
+
+  return productAreaOrder.map((area) => records.get(area)!).filter((record) => record.files > 0);
+}
+
+function buildProductCrossAreaImports(files: FileRecord[]): ProductCrossAreaImport[] {
+  const filesByPath = new Map(files.map((file) => [file.path, file]));
+
+  return files
+    .flatMap((file) =>
+      file.imports
+        .filter((importRecord) => importRecord.resolved)
+        .map((importRecord) => {
+          const targetFile = filesByPath.get(importRecord.resolved!);
+          if (!targetFile || targetFile.productArea === file.productArea) {
+            return null;
+          }
+
+          return {
+            importer: file.path,
+            importerArea: file.productArea,
+            specifier: importRecord.specifier,
+            resolved: importRecord.resolved!,
+            resolvedArea: targetFile.productArea,
+            kind: importRecord.kind,
+            reviewNote: getProductImportReviewNote(file.productArea, targetFile.productArea),
+          };
+        })
+        .filter((importRecord): importRecord is ProductCrossAreaImport => Boolean(importRecord)),
+    )
+    .sort((a, b) => {
+      const areaCompare = a.importerArea.localeCompare(b.importerArea);
+      if (areaCompare !== 0) {
+        return areaCompare;
+      }
+
+      const targetCompare = a.resolvedArea.localeCompare(b.resolvedArea);
+      return targetCompare === 0 ? a.importer.localeCompare(b.importer) : targetCompare;
+    });
+}
+
+function getProductImportReviewNote(from: ProductArea, to: ProductArea): string {
+  if (from === 'tests' || to === 'tests') {
+    return 'test coverage dependency';
+  }
+
+  if (sharedAreas.has(from) && ownedProductAreas.has(to)) {
+    return 'review: shared code imports product-specific code';
+  }
+
+  if (ownedProductAreas.has(from) && ownedProductAreas.has(to)) {
+    return 'review: direct import between product modules';
+  }
+
+  if (ownedProductAreas.has(from) && (sharedAreas.has(to) || to === 'types')) {
+    return 'expected shared dependency';
+  }
+
+  if (from === 'api-worker' || to === 'api-worker') {
+    return 'review if this crosses the client/API seam';
+  }
+
+  return 'cross-area dependency';
+}
+
+function buildProductCrossAreaImportGroups(
+  imports: ProductCrossAreaImport[],
+): ProductCrossAreaImportGroup[] {
+  const groups = new Map<string, ProductCrossAreaImportGroup>();
+
+  for (const importRecord of imports) {
+    const key = `${importRecord.importerArea}->${importRecord.resolvedArea}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        from: importRecord.importerArea,
+        to: importRecord.resolvedArea,
+        imports: 0,
+        reviewNote: getProductImportReviewNote(
+          importRecord.importerArea,
+          importRecord.resolvedArea,
+        ),
+        examples: [],
+      });
+    }
+
+    const group = groups.get(key)!;
+    group.imports += 1;
+    const hasExample = group.examples.some(
+      (example) =>
+        example.importer === importRecord.importer && example.resolved === importRecord.resolved,
+    );
+    if (!hasExample && group.examples.length < 3) {
+      group.examples.push(importRecord);
+    }
+  }
+
+  return [...groups.values()].sort(
+    (a, b) =>
+      productAreaOrder.indexOf(a.from) - productAreaOrder.indexOf(b.from) ||
+      productAreaOrder.indexOf(a.to) - productAreaOrder.indexOf(b.to),
+  );
+}
+
+function buildProductPathSummaries(files: FileRecord[]): ProductPathSummary[] {
+  const counts = new Map<ProductArea, Map<string, number>>();
+
+  for (const file of files) {
+    if (!counts.has(file.productArea)) {
+      counts.set(file.productArea, new Map());
+    }
+
+    const areaCounts = counts.get(file.productArea)!;
+    areaCounts.set(file.ownerPath, (areaCounts.get(file.ownerPath) ?? 0) + 1);
+  }
+
+  return productAreaOrder
+    .map((area) => {
+      const paths = [...(counts.get(area)?.entries() ?? [])]
+        .map(([pathPattern, filesInPattern]) => ({ path: pathPattern, files: filesInPattern }))
+        .sort((a, b) => b.files - a.files || a.path.localeCompare(b.path));
+
+      return { area, paths };
+    })
+    .filter((summary) => summary.paths.length > 0);
 }
 
 function buildCycles(files: FileRecord[]): string[][] {
@@ -410,6 +866,10 @@ function buildMarkdown(data: {
   generatedAt: string;
   projects: ProjectRecord[];
   modules: ModuleRecord[];
+  productAreas: ProductAreaRecord[];
+  productPathSummaries: ProductPathSummary[];
+  productCrossAreaImportGroups: ProductCrossAreaImportGroup[];
+  unknownOwnership: FileRecord[];
   cycles: string[][];
   crossAreaImports: ImportRecord[];
   unresolvedImports: ImportRecord[];
@@ -423,11 +883,44 @@ function buildMarkdown(data: {
 
 ## Purpose
 
-This map gives agents and engineers current repo facts before planning module moves or architecture refactors. It reports TypeScript/JavaScript source files, import edges, module-level dependencies, cross-area imports, unresolved local imports, and circular dependency groups.
+This map gives agents and engineers current repo facts before planning module moves or architecture refactors. It reports TypeScript/JavaScript source files, import edges, module-level dependencies, product-area ownership heuristics, cross-area imports, unresolved local imports, and circular dependency groups.
 
 ## Tooling Choice
 
-This repo currently uses a custom scanner built on the TypeScript compiler API already present in dev dependencies. That is intentionally lighter than adding \`dependency-cruiser\` or \`madge\` in this slice: it avoids package and lockfile churn, reads the existing \`tsconfig\` files, resolves the \`@/*\` client alias, and emits both Markdown and JSON for agents. Boundary enforcement can still be added later once the audit has stable facts.
+This repo currently uses a custom scanner built on the TypeScript compiler API already present in dev dependencies. That is intentionally lighter than adding \`dependency-cruiser\` or \`madge\` in this slice: it avoids package and lockfile churn, reads the existing \`tsconfig\` files, resolves the \`@/*\` client alias, and emits both Markdown and JSON for agents. Product-area ownership is path-based and heuristic; use it as a review aid, not as a source of architectural truth or enforcement.
+
+## Product Module Summary
+
+| Product area | Files | Imports in | Imports out | Depends on | Imported by |
+| --- | ---: | ---: | ---: | --- | --- |
+${data.productAreas
+  .map(
+    (area) =>
+      `| \`${area.area}\` | ${area.files} | ${area.importsIn} | ${area.importsOut} | ${formatAreaList(area.dependsOn)} | ${formatAreaList(area.importedBy)} |`,
+  )
+  .join('\n')}
+
+## Product Cross-Area Imports
+
+Direct imports between generated product areas. Shared dependencies are expected; \`shared-ui\` or \`shared-lib\` importing product-specific code and direct product-module imports are the main review targets. Test coverage imports are kept in the JSON companion but omitted here.
+
+| From | To | Imports | Review note | Examples |
+| --- | --- | ---: | --- | --- |
+${formatProductCrossAreaImportGroups(data.productCrossAreaImportGroups.filter((group) => group.from !== 'tests' && group.to !== 'tests'))}
+
+## Likely Module-Owned Paths
+
+Generated from path heuristics, not business-logic inspection.
+
+${formatProductPathSummaries(data.productPathSummaries)}
+
+## Unknown / Ambiguous Ownership
+
+${formatUnknownOwnership(data.unknownOwnership)}
+
+## Product Path Summary
+
+${formatProductTree(data.productPathSummaries)}
 
 ## Projects
 
@@ -440,7 +933,7 @@ ${data.projects
   )
   .join('\n')}
 
-## Largest Modules
+## Largest Folder Modules
 
 | Module | Files | Imports in | Imports out | Internal dependencies |
 | --- | ---: | ---: | ---: | --- |
@@ -451,9 +944,9 @@ ${largestModules
   )
   .join('\n')}
 
-## Cross-Area Imports
+## Top-Level Cross-Area Imports
 
-${formatImportList(data.crossAreaImports, 'No cross-area imports found.')}
+${formatImportList(data.crossAreaImports, 'No top-level cross-area imports found.')}
 
 ## Circular Dependency Groups
 
@@ -473,6 +966,67 @@ ${formatImportList(data.unresolvedImports, 'No unresolved local imports found.')
 
 The full machine-readable graph is in [architecture-map.json](architecture-map.json).
 `;
+}
+
+function formatAreaList(areas: ProductArea[]): string {
+  return areas.map((area) => `\`${area}\``).join(', ') || '-';
+}
+
+function formatProductCrossAreaImportGroups(groups: ProductCrossAreaImportGroup[]): string {
+  if (groups.length === 0) {
+    return '| - | - | 0 | No product cross-area imports found. | - |';
+  }
+
+  return groups
+    .slice(0, 80)
+    .map((group) => {
+      const examples = group.examples
+        .map((example) => `\`${example.importer}\` -> \`${example.resolved}\``)
+        .join('<br>');
+      return `| \`${group.from}\` | \`${group.to}\` | ${group.imports} | ${group.reviewNote} | ${examples} |`;
+    })
+    .join('\n');
+}
+
+function formatProductPathSummaries(summaries: ProductPathSummary[]): string {
+  return summaries
+    .map((summary) => {
+      const paths = summary.paths
+        .slice(0, 8)
+        .map((pathSummary) => `\`${pathSummary.path}\` (${pathSummary.files})`)
+        .join(', ');
+      return `- \`${summary.area}\`: ${paths}`;
+    })
+    .join('\n');
+}
+
+function formatUnknownOwnership(files: FileRecord[]): string {
+  if (files.length === 0) {
+    return 'No unknown or low-confidence ownership files found.';
+  }
+
+  return files
+    .slice(0, 100)
+    .map(
+      (file) =>
+        `- \`${file.path}\` (${file.ownershipConfidence}; ${file.ownershipReason}; suggested owner path \`${file.ownerPath}\`)`,
+    )
+    .join('\n');
+}
+
+function formatProductTree(summaries: ProductPathSummary[]): string {
+  return summaries
+    .map((summary) => {
+      const paths = summary.paths
+        .slice(0, 12)
+        .map(
+          (pathSummary) =>
+            `  - \`${pathSummary.path}\` - ${pathSummary.files} ${pathSummary.files === 1 ? 'file' : 'files'}`,
+        )
+        .join('\n');
+      return `- \`${summary.area}\`\n${paths}`;
+    })
+    .join('\n');
 }
 
 function formatImportList(imports: ImportRecord[], emptyText: string): string {
@@ -504,6 +1058,13 @@ const files = projectConfigs.flatMap(scanProject);
 const imports = files.flatMap((file) => file.imports);
 const modules = buildModules(files);
 const projects = buildProjectSummaries(files);
+const productAreas = buildProductAreaSummaries(files);
+const productPathSummaries = buildProductPathSummaries(files);
+const productCrossAreaImports = buildProductCrossAreaImports(files);
+const productCrossAreaImportGroups = buildProductCrossAreaImportGroups(productCrossAreaImports);
+const unknownOwnership = files
+  .filter((file) => file.productArea === 'unknown' || file.ownershipConfidence === 'low')
+  .sort((a, b) => a.path.localeCompare(b.path));
 const cycles = buildCycles(files);
 const crossAreaImports = buildCrossAreaImports(files);
 const unresolvedImports = imports
@@ -530,15 +1091,31 @@ const topExternalPackages = [...externalPackageCounts.entries()]
   .slice(0, 30);
 
 const data = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedAt,
   generatedBy: 'pnpm arch:scan',
   source: 'scripts/architecture-map.ts',
+  classifier: {
+    description:
+      'Product areas are inferred from path heuristics only. They are intended to guide review before future module-seam work, not to enforce architecture.',
+    productAreaOrder,
+    rules: classifierRules.map(({ area, confidence, ownerPath, reason }) => ({
+      area,
+      confidence,
+      ownerPath,
+      reason,
+    })),
+  },
   projects,
+  productAreas,
+  productPathSummaries,
+  productCrossAreaImports,
+  productCrossAreaImportGroups,
+  unknownOwnership,
   modules,
   files,
   importEdges: imports,
-  crossAreaImports,
+  topLevelCrossAreaImports: crossAreaImports,
   cycles,
   unresolvedImports,
   topExternalPackages,
@@ -552,6 +1129,10 @@ fs.writeFileSync(
     generatedAt,
     projects,
     modules,
+    productAreas,
+    productPathSummaries,
+    productCrossAreaImportGroups,
+    unknownOwnership,
     cycles,
     crossAreaImports,
     unresolvedImports,

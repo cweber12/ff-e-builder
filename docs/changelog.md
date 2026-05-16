@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs(architecture): make generated architecture maps product-module-aware with ownership heuristics and cross-area import summaries
+
 - docs(architecture): add generated architecture-map tooling and docs under `docs/generated`
 
 - fix(exports): refine Proposal Excel table polish with centered image placement, stronger category/header borders, clearer revised-proposal headers, unit-aware quantities, and bold dimension separators in Size cells
