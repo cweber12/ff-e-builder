@@ -11,7 +11,11 @@ import {
 } from '../types';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
-import { selectCompatibleProposalItemsByCategory } from '../lib/generatedItems';
+import {
+  createGeneratedItemFromProposal,
+  mirrorProposalItemToGeneratedItem,
+  selectCompatibleProposalItemsByCategory,
+} from '../lib/generatedItems';
 import {
   assertProjectOwnership,
   assertProposalCategoryOwnership,
@@ -139,36 +143,8 @@ router.post('/proposal/categories/:id/items', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await sql`
-    INSERT INTO proposal_items (
-      category_id, product_tag, plan, drawings, location, description, notes,
-      size_label, size_mode, size_w, size_d, size_h, size_unit,
-      cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
-    )
-    VALUES (
-      ${categoryId},
-      ${parsed.data.product_tag},
-      ${parsed.data.plan},
-      ${parsed.data.drawings},
-      ${parsed.data.location},
-      ${parsed.data.description},
-      ${parsed.data.notes},
-      ${parsed.data.size_label},
-      ${parsed.data.size_mode},
-      ${parsed.data.size_w},
-      ${parsed.data.size_d},
-      ${parsed.data.size_h},
-      ${parsed.data.size_unit},
-      ${parsed.data.cbm},
-      ${parsed.data.quantity},
-      ${parsed.data.quantity_unit},
-      ${parsed.data.unit_cost_cents},
-      ${parsed.data.sort_order},
-      ${JSON.stringify(parsed.data.custom_data)}
-    )
-    RETURNING *
-  `;
-  return c.json({ item: rows[0] }, 201);
+  const item = await createGeneratedItemFromProposal(sql, categoryId, parsed.data);
+  return c.json({ item }, 201);
 });
 
 router.patch('/proposal/items/:id', async (c) => {
@@ -256,6 +232,7 @@ router.patch('/proposal/items/:id', async (c) => {
     RETURNING *
   `;
   if (!updateRows[0]) return c.json({ error: 'Conflict or not found' }, 409);
+  await mirrorProposalItemToGeneratedItem(sql, id);
 
   // Update the Revision Snapshot for this item when relevant.
   if (openRev && cl && priceAffectingEdit) {
@@ -420,11 +397,28 @@ router.delete('/proposal/items/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE proposal_item_id = ${id}`;
+  const imageRows = await sql`
+    SELECT r2_key
+    FROM image_assets
+    WHERE proposal_item_id = ${id}
+       OR item_id IN (
+         SELECT item_id
+         FROM proposal_item_generated_item_links
+         WHERE proposal_item_id = ${id}
+       )
+  `;
   await deleteR2Keys(
     c.env.IMAGES_BUCKET,
     (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
   );
+  await sql`
+    DELETE FROM items
+    WHERE id IN (
+      SELECT item_id
+      FROM proposal_item_generated_item_links
+      WHERE proposal_item_id = ${id}
+    )
+  `;
   await sql`DELETE FROM proposal_items WHERE id = ${id}`;
   return c.body(null, 204);
 });

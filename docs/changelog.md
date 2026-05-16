@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(api): mirror FF&E and Proposal item writes through linked Generated Item rows
+
 - refactor(api): keep Proposal reads legacy-compatible while staging Generated Item read bridge
 
 - refactor(api): add Generated Item read bridge for FF&E and Proposal groupings

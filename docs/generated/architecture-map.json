@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-16T18:30:39.789Z",
+  "generatedAt": "2026-05-16T20:11:33.634Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -150,9 +150,9 @@
     {
       "name": "Cloudflare Workers API",
       "tsconfig": "api/tsconfig.json",
-      "files": 22,
-      "internalImports": 79,
-      "externalImports": 18,
+      "files": 24,
+      "internalImports": 86,
+      "externalImports": 19,
       "unresolvedImports": 0
     }
   ],
@@ -233,9 +233,9 @@
     },
     {
       "area": "api-worker",
-      "files": 19,
-      "importsIn": 79,
-      "importsOut": 68,
+      "files": 20,
+      "importsIn": 86,
+      "importsOut": 73,
       "dependsOn": [],
       "importedBy": ["tests"]
     },
@@ -259,9 +259,9 @@
     },
     {
       "area": "tests",
-      "files": 46,
+      "files": 47,
       "importsIn": 0,
-      "importsOut": 87,
+      "importsOut": 89,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -382,7 +382,7 @@
       "paths": [
         {
           "path": "api/src/**",
-          "files": 19
+          "files": 20
         }
       ]
     },
@@ -400,7 +400,7 @@
       "paths": [
         {
           "path": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-          "files": 46
+          "files": 47
         }
       ]
     },
@@ -4409,6 +4409,26 @@
       "reviewSection": "Test Dependencies"
     },
     {
+      "importer": "api/test/generatedItems.test.ts",
+      "importerArea": "tests",
+      "specifier": "../src/lib/generatedItems",
+      "resolved": "api/src/lib/generatedItems.ts",
+      "resolvedArea": "api-worker",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
+      "importer": "api/test/generatedItems.test.ts",
+      "importerArea": "tests",
+      "specifier": "../src/lib/db",
+      "resolved": "api/src/lib/db.ts",
+      "resolvedArea": "api-worker",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
       "importer": "api/test/images.test.ts",
       "importerArea": "tests",
       "specifier": "../src/index",
@@ -6753,7 +6773,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "api-worker",
-      "imports": 11,
+      "imports": 13,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -6970,9 +6990,9 @@
     },
     {
       "path": "api/src/lib",
-      "files": 5,
-      "importsIn": 37,
-      "importsOut": 6,
+      "files": 6,
+      "importsIn": 43,
+      "importsOut": 8,
       "internalDependencies": ["api/src/types.ts"],
       "externalDependencies": ["@neondatabase/serverless"]
     },
@@ -6988,23 +7008,23 @@
       "path": "api/src/routes",
       "files": 10,
       "importsIn": 11,
-      "importsOut": 57,
+      "importsOut": 60,
       "internalDependencies": ["api/src/lib", "api/src/middleware", "api/src/types.ts"],
       "externalDependencies": ["hono"]
     },
     {
       "path": "api/src/types.ts",
       "files": 1,
-      "importsIn": 25,
+      "importsIn": 26,
       "importsOut": 1,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
     },
     {
       "path": "api/test",
-      "files": 3,
+      "files": 4,
       "importsIn": 0,
-      "importsOut": 14,
+      "importsOut": 17,
       "internalDependencies": ["api/src/index.ts", "api/src/lib"],
       "externalDependencies": ["vitest"]
     },
@@ -17873,6 +17893,33 @@
       ]
     },
     {
+      "path": "api/src/lib/generatedItems.ts",
+      "project": "Cloudflare Workers API",
+      "module": "api/src/lib",
+      "productArea": "api-worker",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Cloudflare Workers API source path",
+      "ownerPath": "api/src/**",
+      "imports": [
+        {
+          "importer": "api/src/lib/generatedItems.ts",
+          "specifier": "./db",
+          "kind": "import",
+          "resolved": "api/src/lib/db.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/lib/generatedItems.ts",
+          "specifier": "../types",
+          "kind": "import",
+          "resolved": "api/src/types.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "api/src/lib/ownership.ts",
       "project": "Cloudflare Workers API",
       "module": "api/src/lib",
@@ -18146,6 +18193,14 @@
           "specifier": "../lib/r2",
           "kind": "import",
           "resolved": "api/src/lib/r2.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/items.ts",
+          "specifier": "../lib/generatedItems",
+          "kind": "import",
+          "resolved": "api/src/lib/generatedItems.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -18422,6 +18477,14 @@
         },
         {
           "importer": "api/src/routes/proposal.ts",
+          "specifier": "../lib/generatedItems",
+          "kind": "import",
+          "resolved": "api/src/lib/generatedItems.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/proposal.ts",
           "specifier": "../lib/ownership",
           "kind": "import",
           "resolved": "api/src/lib/ownership.ts",
@@ -18500,6 +18563,14 @@
           "specifier": "../lib/r2",
           "kind": "import",
           "resolved": "api/src/lib/r2.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/rooms.ts",
+          "specifier": "../lib/generatedItems",
+          "kind": "import",
+          "resolved": "api/src/lib/generatedItems.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -18610,6 +18681,41 @@
         },
         {
           "importer": "api/test/auth.test.ts",
+          "specifier": "../src/lib/db",
+          "kind": "import",
+          "resolved": "api/src/lib/db.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "api/test/generatedItems.test.ts",
+      "project": "Cloudflare Workers API",
+      "module": "api/test",
+      "productArea": "tests",
+      "ownershipConfidence": "high",
+      "ownershipReason": "test or snapshot path",
+      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
+      "imports": [
+        {
+          "importer": "api/test/generatedItems.test.ts",
+          "specifier": "vitest",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "vitest",
+          "asset": false
+        },
+        {
+          "importer": "api/test/generatedItems.test.ts",
+          "specifier": "../src/lib/generatedItems",
+          "kind": "import",
+          "resolved": "api/src/lib/generatedItems.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/test/generatedItems.test.ts",
           "specifier": "../src/lib/db",
           "kind": "import",
           "resolved": "api/src/lib/db.ts",
@@ -26795,6 +26901,22 @@
       "asset": false
     },
     {
+      "importer": "api/src/lib/generatedItems.ts",
+      "specifier": "./db",
+      "kind": "import",
+      "resolved": "api/src/lib/db.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/lib/generatedItems.ts",
+      "specifier": "../types",
+      "kind": "import",
+      "resolved": "api/src/types.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "api/src/lib/ownership.ts",
       "specifier": "../types",
       "kind": "import",
@@ -26987,6 +27109,14 @@
       "asset": false
     },
     {
+      "importer": "api/src/routes/items.ts",
+      "specifier": "../lib/generatedItems",
+      "kind": "import",
+      "resolved": "api/src/lib/generatedItems.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "api/src/routes/materialHelpers.ts",
       "specifier": "../types",
       "kind": "import",
@@ -27204,6 +27334,14 @@
     },
     {
       "importer": "api/src/routes/proposal.ts",
+      "specifier": "../lib/generatedItems",
+      "kind": "import",
+      "resolved": "api/src/lib/generatedItems.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/proposal.ts",
       "specifier": "../lib/ownership",
       "kind": "import",
       "resolved": "api/src/lib/ownership.ts",
@@ -27271,6 +27409,14 @@
       "specifier": "../lib/r2",
       "kind": "import",
       "resolved": "api/src/lib/r2.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/rooms.ts",
+      "specifier": "../lib/generatedItems",
+      "kind": "import",
+      "resolved": "api/src/lib/generatedItems.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27348,6 +27494,30 @@
     },
     {
       "importer": "api/test/auth.test.ts",
+      "specifier": "../src/lib/db",
+      "kind": "import",
+      "resolved": "api/src/lib/db.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/test/generatedItems.test.ts",
+      "specifier": "vitest",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "vitest",
+      "asset": false
+    },
+    {
+      "importer": "api/test/generatedItems.test.ts",
+      "specifier": "../src/lib/generatedItems",
+      "kind": "import",
+      "resolved": "api/src/lib/generatedItems.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/test/generatedItems.test.ts",
       "specifier": "../src/lib/db",
       "kind": "import",
       "resolved": "api/src/lib/db.ts",
@@ -27445,7 +27615,7 @@
     },
     {
       "name": "vitest",
-      "imports": 47
+      "imports": 48
     },
     {
       "name": "@tanstack/react-query",

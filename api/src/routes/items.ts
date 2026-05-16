@@ -4,6 +4,7 @@ import { UpdateItemSchema } from '../types';
 import { assertItemOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
+import { updateGeneratedItemFromFfe } from '../lib/generatedItems';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -23,34 +24,9 @@ router.patch('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  // COALESCE(provided ?? null, column) leaves each field unchanged when not included in the patch.
-  // Note: explicitly sending null for a nullable field will also leave it unchanged (known limitation).
-  const rows = await sql`
-    UPDATE items
-    SET
-      item_name       = COALESCE(${parsed.data.item_name ?? null}, item_name),
-      room_id         = COALESCE(${parsed.data.room_id ?? null}, room_id),
-      description     = COALESCE(${parsed.data.description ?? null}, description),
-      category        = COALESCE(${parsed.data.category ?? null}, category),
-      item_id_tag     = COALESCE(${parsed.data.item_id_tag ?? null}, item_id_tag),
-      dimensions      = COALESCE(${parsed.data.dimensions ?? null}, dimensions),
-      notes           = COALESCE(${parsed.data.notes ?? null}, notes),
-      qty             = COALESCE(${parsed.data.qty ?? null}, qty),
-      unit_cost_cents = COALESCE(${parsed.data.unit_cost_cents ?? null}, unit_cost_cents),
-      lead_time       = COALESCE(${parsed.data.lead_time ?? null}, lead_time),
-      status          = COALESCE(${parsed.data.status ?? null}, status),
-      custom_data     = CASE
-                          WHEN ${parsed.data.custom_data != null}::boolean
-                          THEN custom_data || ${JSON.stringify(parsed.data.custom_data ?? {})}::jsonb
-                          ELSE custom_data
-                        END,
-      sort_order      = COALESCE(${parsed.data.sort_order ?? null}, sort_order),
-      version         = version + 1
-    WHERE id = ${id} AND version = ${parsed.data.version}
-    RETURNING *
-  `;
-  if (!rows[0]) return c.json({ error: 'Conflict' }, 409);
-  return c.json({ item: rows[0] });
+  const item = await updateGeneratedItemFromFfe(sql, id, parsed.data);
+  if (!item) return c.json({ error: 'Conflict' }, 409);
+  return c.json({ item });
 });
 
 // DELETE /api/v1/items/:id — delete an item
@@ -65,11 +41,28 @@ router.delete('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE item_id = ${id}`;
+  const imageRows = await sql`
+    SELECT r2_key
+    FROM image_assets
+    WHERE item_id = ${id}
+       OR proposal_item_id IN (
+         SELECT proposal_item_id
+         FROM proposal_item_generated_item_links
+         WHERE item_id = ${id}
+       )
+  `;
   await deleteR2Keys(
     c.env.IMAGES_BUCKET,
     (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
   );
+  await sql`
+    DELETE FROM proposal_items
+    WHERE id IN (
+      SELECT proposal_item_id
+      FROM proposal_item_generated_item_links
+      WHERE item_id = ${id}
+    )
+  `;
   await sql`DELETE FROM items WHERE id = ${id}`;
   return c.body(null, 204);
 });

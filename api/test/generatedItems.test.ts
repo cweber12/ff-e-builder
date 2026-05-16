@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  createGeneratedItemFromFfe,
+  createGeneratedItemFromProposal,
   selectCompatibleProposalItemsByCategory,
   selectGeneratedItemsByProposalCategory,
   selectGeneratedItemsByRoom,
+  updateGeneratedItemFromFfe,
 } from '../src/lib/generatedItems';
 import type { getDb } from '../src/lib/db';
 
@@ -54,5 +57,116 @@ describe('Generated Item read model', () => {
     expect(statement).toContain('FROM proposal_items pi');
     expect(statement).toContain('WHERE pi.category_id =');
     expect(statement).not.toContain('canonical_items');
+  });
+
+  it('creates an FF&E item with a linked Furniture proposal item mirror', async () => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ project_id: 'project-1' }])
+      .mockResolvedValueOnce([{ id: 'furniture-category-1' }])
+      .mockResolvedValueOnce([{ id: 'item-1' }])
+      .mockResolvedValueOnce([{ id: 'proposal-item-1' }])
+      .mockResolvedValueOnce([]);
+
+    const item = await createGeneratedItemFromFfe(
+      sql as unknown as ReturnType<typeof getDb>,
+      'room-1',
+      {
+        item_name: 'Lounge chair',
+        description: null,
+        category: null,
+        item_id_tag: 'F-101',
+        dimensions: null,
+        notes: null,
+        qty: 2,
+        unit_cost_cents: 120000,
+        lead_time: null,
+        status: 'pending',
+        custom_data: {},
+        sort_order: 0,
+      },
+    );
+
+    expect(item.id).toBe('item-1');
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements[1]).toContain("lower(name) = 'furniture'");
+    expect(statements[2]).toContain('INSERT INTO items');
+    expect(statements[2]).toContain('proposal_category_id, product_tag, quantity, quantity_unit');
+    expect(statements[3]).toContain('INSERT INTO proposal_items');
+    expect(statements[4]).toContain('proposal_item_generated_item_links');
+  });
+
+  it('creates a Proposal item with a linked Unassigned generated item mirror', async () => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ project_id: 'project-1' }])
+      .mockResolvedValueOnce([{ id: 'unassigned-room-1' }])
+      .mockResolvedValueOnce([{ id: 'proposal-item-1' }])
+      .mockResolvedValueOnce([{ id: 'item-1' }])
+      .mockResolvedValueOnce([]);
+
+    const item = await createGeneratedItemFromProposal(
+      sql as unknown as ReturnType<typeof getDb>,
+      'category-1',
+      {
+        product_tag: 'F-101',
+        plan: '',
+        drawings: '',
+        location: '',
+        description: 'Lounge chair',
+        notes: '',
+        size_label: '',
+        size_mode: 'imperial',
+        size_w: '',
+        size_d: '',
+        size_h: '',
+        size_unit: 'in',
+        cbm: 0,
+        quantity: 2,
+        quantity_unit: 'unit',
+        unit_cost_cents: 120000,
+        sort_order: 0,
+        custom_data: {},
+      },
+    );
+
+    expect(item.id).toBe('proposal-item-1');
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements[1]).toContain("lower(name) = 'unassigned'");
+    expect(statements[2]).toContain('INSERT INTO proposal_items');
+    expect(statements[3]).toContain('INSERT INTO items');
+    expect(statements[4]).toContain('proposal_item_generated_item_links');
+  });
+
+  it('mirrors FF&E updates into a linked Proposal item', async () => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ id: 'item-1' }])
+      .mockResolvedValueOnce([]);
+
+    const item = await updateGeneratedItemFromFfe(
+      sql as unknown as ReturnType<typeof getDb>,
+      'item-1',
+      {
+        item_name: 'Updated chair',
+        item_id_tag: 'F-102',
+        qty: 3,
+        version: 1,
+      },
+    );
+
+    expect(item?.id).toBe('item-1');
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements[0]).toContain('UPDATE items');
+    expect(statements[0]).toContain('product_tag');
+    expect(statements[0]).toContain('quantity');
+    expect(statements[1]).toContain('UPDATE proposal_items pi');
+    expect(statements[1]).toContain('proposal_item_generated_item_links');
   });
 });

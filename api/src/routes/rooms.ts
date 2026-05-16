@@ -4,7 +4,7 @@ import { UpdateRoomSchema, CreateItemSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
-import { selectGeneratedItemsByRoom } from '../lib/generatedItems';
+import { createGeneratedItemFromFfe, selectGeneratedItemsByRoom } from '../lib/generatedItems';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -48,13 +48,30 @@ router.delete('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  // room_id is stored on both room images and item images (items carry their room's id)
-  // so this single query covers the full cascade scope
-  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE room_id = ${id}`;
+  const imageRows = await sql`
+    SELECT r2_key
+    FROM image_assets
+    WHERE room_id = ${id}
+       OR proposal_item_id IN (
+         SELECT link.proposal_item_id
+         FROM proposal_item_generated_item_links link
+         JOIN items i ON i.id = link.item_id
+         WHERE i.room_id = ${id}
+       )
+  `;
   await deleteR2Keys(
     c.env.IMAGES_BUCKET,
     (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
   );
+  await sql`
+    DELETE FROM proposal_items
+    WHERE id IN (
+      SELECT link.proposal_item_id
+      FROM proposal_item_generated_item_links link
+      JOIN items i ON i.id = link.item_id
+      WHERE i.room_id = ${id}
+    )
+  `;
   await sql`DELETE FROM rooms WHERE id = ${id}`;
   return c.body(null, 204);
 });
@@ -91,30 +108,8 @@ router.post('/:id/items', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await sql`
-    INSERT INTO items (
-      room_id, item_name, description, category, item_id_tag,
-      dimensions, notes, qty, unit_cost_cents,
-      lead_time, status, custom_data, sort_order
-    )
-    VALUES (
-      ${roomId},
-      ${parsed.data.item_name},
-      ${parsed.data.description},
-      ${parsed.data.category},
-      ${parsed.data.item_id_tag},
-      ${parsed.data.dimensions},
-      ${parsed.data.notes},
-      ${parsed.data.qty},
-      ${parsed.data.unit_cost_cents},
-      ${parsed.data.lead_time},
-      ${parsed.data.status},
-      ${JSON.stringify(parsed.data.custom_data)},
-      ${parsed.data.sort_order}
-    )
-    RETURNING *
-  `;
-  return c.json({ item: rows[0] }, 201);
+  const item = await createGeneratedItemFromFfe(sql, roomId, parsed.data);
+  return c.json({ item }, 201);
 });
 
 export { router as roomsRouter };
