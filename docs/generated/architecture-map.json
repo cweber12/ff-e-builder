@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-16T20:30:46.888Z",
+  "generatedAt": "2026-05-16T21:20:09.966Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,8 +134,8 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 234,
-      "internalImports": 725,
+      "files": 237,
+      "internalImports": 733,
       "externalImports": 256,
       "unresolvedImports": 0
     },
@@ -161,17 +161,17 @@
       "area": "ffe",
       "files": 24,
       "importsIn": 37,
-      "importsOut": 124,
-      "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types"],
+      "importsOut": 127,
+      "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
       "area": "proposal",
       "files": 23,
-      "importsIn": 33,
-      "importsOut": 94,
-      "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types"],
-      "importedBy": ["project-shell", "shared-lib", "tests"]
+      "importsIn": 34,
+      "importsOut": 96,
+      "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
+      "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
     {
       "area": "plans",
@@ -217,7 +217,7 @@
     {
       "area": "shared-lib",
       "files": 47,
-      "importsIn": 268,
+      "importsIn": 269,
       "importsOut": 111,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
@@ -242,7 +242,7 @@
     {
       "area": "types",
       "files": 10,
-      "importsIn": 152,
+      "importsIn": 153,
       "importsOut": 21,
       "dependsOn": [],
       "importedBy": [
@@ -286,11 +286,11 @@
     },
     {
       "area": "unknown",
-      "files": 4,
-      "importsIn": 6,
-      "importsOut": 7,
+      "files": 7,
+      "importsIn": 11,
+      "importsOut": 10,
       "dependsOn": ["shared-lib", "types"],
-      "importedBy": ["project-shell", "shared-ui", "tests"]
+      "importedBy": ["ffe", "proposal", "project-shell", "shared-ui", "tests"]
     }
   ],
   "productPathSummaries": [
@@ -421,6 +421,10 @@
           "files": 3
         },
         {
+          "path": "src/lib",
+          "files": 3
+        },
+        {
           "path": "src/pages/DemoPage.tsx",
           "files": 1
         }
@@ -457,6 +461,16 @@
       "kind": "import",
       "reviewNote": "expected: product uses public Finish Library surface",
       "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../proposal/ChangeConfirmModal",
+      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "resolvedArea": "proposal",
+      "kind": "import",
+      "reviewNote": "review: product module imports another product module directly",
+      "reviewSection": "Review Targets"
     },
     {
       "importer": "src/components/ffe/catalog/CatalogView.tsx",
@@ -1487,6 +1501,26 @@
       "kind": "import",
       "reviewNote": "expected: product uses shared types",
       "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../lib/table/generatedItemChangeInfo",
+      "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../lib/table/generatedItemTablePresets",
+      "resolved": "src/lib/table/generatedItemTablePresets.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
       "importer": "src/components/materials/MaterialLibraryModal.tsx",
@@ -3539,6 +3573,26 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/table/generatedItemChangeInfo",
+      "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/table/generatedItemTablePresets",
+      "resolved": "src/lib/table/generatedItemTablePresets.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/hooks/index.ts",
       "importerArea": "shared-lib",
       "specifier": "./ffe",
@@ -5299,6 +5353,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/lib/table/generatedItemChangeInfo.ts",
+      "importerArea": "unknown",
+      "specifier": "../api",
+      "resolved": "src/lib/api.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/data/catalogFixture.ts",
       "importerArea": "unknown",
       "specifier": "../types",
@@ -5319,6 +5383,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/lib/table/generatedItemChangeInfo.ts",
+      "importerArea": "unknown",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/pages/DemoPage.tsx",
       "importerArea": "unknown",
       "specifier": "../types",
@@ -5330,6 +5404,25 @@
     }
   ],
   "productCrossAreaImportGroups": [
+    {
+      "section": "Review Targets",
+      "from": "ffe",
+      "to": "proposal",
+      "imports": 1,
+      "reviewNote": "review: product module imports another product module directly",
+      "examples": [
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../proposal/ChangeConfirmModal",
+          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "resolvedArea": "proposal",
+          "kind": "import",
+          "reviewNote": "review: product module imports another product module directly",
+          "reviewSection": "Review Targets"
+        }
+      ]
+    },
     {
       "section": "Review Targets",
       "from": "shared-lib",
@@ -6392,6 +6485,64 @@
     },
     {
       "section": "Unknown / Ambiguous Dependencies",
+      "from": "ffe",
+      "to": "unknown",
+      "imports": 2,
+      "reviewNote": "unknown: ownership unclear",
+      "examples": [
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../../lib/table/generatedItemChangeInfo",
+          "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../../lib/table/generatedItemTablePresets",
+          "resolved": "src/lib/table/generatedItemTablePresets.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        }
+      ]
+    },
+    {
+      "section": "Unknown / Ambiguous Dependencies",
+      "from": "proposal",
+      "to": "unknown",
+      "imports": 2,
+      "reviewNote": "unknown: ownership unclear",
+      "examples": [
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../../lib/table/generatedItemChangeInfo",
+          "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../../lib/table/generatedItemTablePresets",
+          "resolved": "src/lib/table/generatedItemTablePresets.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        }
+      ]
+    },
+    {
+      "section": "Unknown / Ambiguous Dependencies",
       "from": "project-shell",
       "to": "unknown",
       "imports": 1,
@@ -6442,7 +6593,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "unknown",
       "to": "shared-lib",
-      "imports": 3,
+      "imports": 4,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -6481,7 +6632,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "unknown",
       "to": "types",
-      "imports": 3,
+      "imports": 4,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -6505,9 +6656,9 @@
           "reviewSection": "Unknown / Ambiguous Dependencies"
         },
         {
-          "importer": "src/pages/DemoPage.tsx",
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
           "importerArea": "unknown",
-          "specifier": "../types",
+          "specifier": "../../types",
           "resolved": "src/types/index.ts",
           "resolvedArea": "types",
           "kind": "import",
@@ -6960,6 +7111,61 @@
       ]
     },
     {
+      "path": "src/lib/table/generatedItemChangeFields.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
+      "path": "src/lib/table/generatedItemChangeInfo.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": [
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "specifier": "../api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "specifier": "./generatedItemChangeFields",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemChangeFields.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/lib/table/generatedItemTablePresets.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
       "path": "src/pages/DemoPage.tsx",
       "project": "React client",
       "module": "src/pages",
@@ -7055,8 +7261,8 @@
     {
       "path": "src/components",
       "files": 107,
-      "importsIn": 222,
-      "importsOut": 496,
+      "importsIn": 223,
+      "importsOut": 501,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7101,9 +7307,9 @@
     },
     {
       "path": "src/lib",
-      "files": 74,
-      "importsIn": 272,
-      "importsOut": 240,
+      "files": 77,
+      "importsIn": 278,
+      "importsOut": 243,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -7159,7 +7365,7 @@
     {
       "path": "src/types",
       "files": 10,
-      "importsIn": 152,
+      "importsIn": 153,
       "importsOut": 23,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -8068,6 +8274,22 @@
         },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "../../../lib/table/generatedItemChangeInfo",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "../../../lib/table/generatedItemTablePresets",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemTablePresets.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
           "specifier": "../../../hooks",
           "kind": "import",
           "resolved": "src/hooks/index.ts",
@@ -8223,6 +8445,14 @@
           "specifier": "../../shared/table/SortableColHeader",
           "kind": "import",
           "resolved": "src/components/shared/table/SortableColHeader.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "../../proposal/ChangeConfirmModal",
+          "kind": "import",
+          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -11245,6 +11475,22 @@
           "specifier": "../../../lib/utils",
           "kind": "import",
           "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "../../../lib/table/generatedItemChangeInfo",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "../../../lib/table/generatedItemTablePresets",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemTablePresets.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -16475,6 +16721,61 @@
       ]
     },
     {
+      "path": "src/lib/table/generatedItemChangeFields.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
+      "path": "src/lib/table/generatedItemChangeInfo.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": [
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "specifier": "../api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "specifier": "./generatedItemChangeFields",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemChangeFields.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/lib/table/generatedItemTablePresets.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
       "path": "src/lib/theme/constants.ts",
       "project": "React client",
       "module": "src/lib",
@@ -19614,6 +19915,22 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "../../../lib/table/generatedItemChangeInfo",
+      "kind": "import",
+      "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "../../../lib/table/generatedItemTablePresets",
+      "kind": "import",
+      "resolved": "src/lib/table/generatedItemTablePresets.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
       "specifier": "../../../hooks",
       "kind": "import",
       "resolved": "src/hooks/index.ts",
@@ -19769,6 +20086,14 @@
       "specifier": "../../shared/table/SortableColHeader",
       "kind": "import",
       "resolved": "src/components/shared/table/SortableColHeader.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "../../proposal/ChangeConfirmModal",
+      "kind": "import",
+      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -22033,6 +22358,22 @@
       "specifier": "../../../lib/utils",
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "../../../lib/table/generatedItemChangeInfo",
+      "kind": "import",
+      "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "../../../lib/table/generatedItemTablePresets",
+      "kind": "import",
+      "resolved": "src/lib/table/generatedItemTablePresets.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25865,6 +26206,30 @@
       "specifier": "../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/table/generatedItemChangeInfo.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/table/generatedItemChangeInfo.ts",
+      "specifier": "../api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/table/generatedItemChangeInfo.ts",
+      "specifier": "./generatedItemChangeFields",
+      "kind": "import",
+      "resolved": "src/lib/table/generatedItemChangeFields.ts",
       "externalPackage": null,
       "asset": false
     },

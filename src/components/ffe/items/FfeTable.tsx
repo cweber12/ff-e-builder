@@ -30,7 +30,10 @@ import type { QueryClient } from '@tanstack/react-query';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/money';
 import { getSortOrderPatches } from '../../../lib/items';
-import { GENERATED_ITEM_CHANGE_FIELDS } from '../../../lib/table/generatedItemChangeFields';
+import {
+  ffePatchToGeneratedItemChangeInfo,
+  type GeneratedItemChangeInfo,
+} from '../../../lib/table/generatedItemChangeInfo';
 import { FFE_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import {
   useItemMaterialActions,
@@ -151,14 +154,6 @@ type EditableItemPatch = Omit<UpdateItemInput, 'version'>;
 
 type SaveItemPatch = (item: Item, patch: EditableItemPatch) => Promise<void>;
 
-type FfeChangeInfo = {
-  columnKey: string;
-  columnLabel: string;
-  previousValue: string;
-  newValue: string;
-  isPriceAffecting: boolean;
-};
-
 type TableActions = {
   rooms: RoomWithItems[];
   onDuplicate: (item: Item) => Promise<void>;
@@ -169,53 +164,6 @@ type TableActions = {
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
   onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
-
-function ffePatchToChangeInfo(patch: EditableItemPatch, item: Item): FfeChangeInfo | null {
-  const changeFields = GENERATED_ITEM_CHANGE_FIELDS.ffe;
-  if ('itemName' in patch && patch.itemName != null) {
-    return {
-      ...changeFields.itemName,
-      previousValue: item.itemName,
-      newValue: patch.itemName,
-    };
-  }
-  if ('itemIdTag' in patch) {
-    return {
-      ...changeFields.itemIdTag,
-      previousValue: item.itemIdTag ?? '',
-      newValue: patch.itemIdTag ?? '',
-    };
-  }
-  if ('notes' in patch) {
-    return {
-      ...changeFields.notes,
-      previousValue: item.notes ?? '',
-      newValue: patch.notes ?? '',
-    };
-  }
-  if ('dimensions' in patch) {
-    return {
-      ...changeFields.dimensions,
-      previousValue: item.dimensions ?? '',
-      newValue: patch.dimensions ?? '',
-    };
-  }
-  if ('qty' in patch && patch.qty != null) {
-    return {
-      ...changeFields.qty,
-      previousValue: String(item.qty),
-      newValue: String(patch.qty),
-    };
-  }
-  if ('unitCostCents' in patch && patch.unitCostCents != null) {
-    return {
-      ...changeFields.unitCostCents,
-      previousValue: formatMoney(cents(item.unitCostCents)),
-      newValue: formatMoney(cents(patch.unitCostCents)),
-    };
-  }
-  return null;
-}
 
 async function assignMaterialsToItem(
   itemId: string,
@@ -1475,7 +1423,7 @@ function RoomItemsSection({
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
   const [detailItem, setDetailItem] = useState<Item | null>(null);
-  type PendingChange = FfeChangeInfo & {
+  type PendingChange = GeneratedItemChangeInfo & {
     item: Item;
     patch: EditableItemPatch;
   };
@@ -1561,7 +1509,7 @@ function RoomItemsSection({
   );
   const saveItemPatch = useCallback<SaveItemPatch>(
     async (item, patch) => {
-      const changeInfo = ffePatchToChangeInfo(patch, item);
+      const changeInfo = ffePatchToGeneratedItemChangeInfo(patch, item);
       if (shouldConfirmProposalImpact && changeInfo) {
         setPendingChange({ ...changeInfo, item, patch });
         return;

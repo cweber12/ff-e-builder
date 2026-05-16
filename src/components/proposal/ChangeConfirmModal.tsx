@@ -15,7 +15,7 @@ interface ChangeConfirmModalProps {
   newValue: string;
   proposalStatus: ProposalStatus;
   /** When set, shows a revision badge instead of the status badge. */
-  openRevisionLabel?: string;
+  openRevisionLabel?: string | undefined;
   isPriceAffecting: boolean;
   lockPriceAffecting?: boolean;
   onConfirm: (result: ChangeConfirmResult) => void;

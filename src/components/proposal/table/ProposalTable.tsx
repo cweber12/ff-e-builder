@@ -83,7 +83,10 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
-import { GENERATED_ITEM_CHANGE_FIELDS } from '../../../lib/table/generatedItemChangeFields';
+import {
+  proposalPatchToGeneratedItemChangeInfo,
+  type GeneratedItemChangeInfo,
+} from '../../../lib/table/generatedItemChangeInfo';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import { proposalStatusConfig } from '../proposalStatusConfig';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
@@ -93,101 +96,6 @@ import {
   RevisionQtyCell,
   RevisionTotalCell,
 } from '../revision';
-
-// --- Changelog helpers ---
-
-type ChangeInfo = {
-  columnKey: string;
-  columnLabel: string;
-  previousValue: string;
-  newValue: string;
-  isPriceAffecting: boolean;
-};
-
-function formatSizeDisplay(item: {
-  sizeW?: string;
-  sizeD?: string;
-  sizeH?: string;
-  sizeUnit?: string;
-}): string {
-  const parts = [
-    item.sizeW && `${item.sizeW}W`,
-    item.sizeD && `${item.sizeD}D`,
-    item.sizeH && `${item.sizeH}H`,
-  ].filter(Boolean);
-  return parts.length ? `${parts.join(' × ')} ${item.sizeUnit ?? ''}`.trim() : '';
-}
-
-function patchToChangeInfo(
-  patch: Omit<UpdateProposalItemInput, 'version'>,
-  item: ProposalItem,
-  customColumnDefs: CustomColumnDef[],
-): ChangeInfo | null {
-  const changeFields = GENERATED_ITEM_CHANGE_FIELDS.proposal;
-  const sizeFields = ['sizeW', 'sizeD', 'sizeH', 'sizeLabel', 'sizeMode', 'sizeUnit'] as const;
-  if (sizeFields.some((f) => f in patch)) {
-    return {
-      ...changeFields.size,
-      previousValue: formatSizeDisplay(item),
-      newValue: formatSizeDisplay({ ...item, ...patch }),
-    };
-  }
-  if ('quantity' in patch) {
-    return {
-      ...changeFields.quantity,
-      previousValue: `${item.quantity} ${item.quantityUnit}`,
-      newValue: `${patch.quantity ?? ''} ${item.quantityUnit}`,
-    };
-  }
-  if ('cbm' in patch) {
-    return {
-      ...changeFields.cbm,
-      previousValue: String(item.cbm),
-      newValue: String(patch.cbm ?? ''),
-    };
-  }
-  if ('unitCostCents' in patch) {
-    return {
-      ...changeFields.unitCostCents,
-      previousValue: formatMoney(cents(item.unitCostCents)),
-      newValue: formatMoney(cents(patch.unitCostCents ?? 0)),
-    };
-  }
-  const textFields = [
-    { key: 'productTag', meta: changeFields.productTag },
-    { key: 'plan', meta: changeFields.plan },
-    { key: 'drawings', meta: changeFields.drawings },
-    { key: 'location', meta: changeFields.location },
-    { key: 'description', meta: changeFields.description },
-    { key: 'notes', meta: changeFields.notes },
-    { key: 'quantityUnit', meta: changeFields.quantityUnit },
-  ];
-  for (const { key, meta } of textFields) {
-    if (key in patch) {
-      const prevVal = item[key as keyof ProposalItem];
-      const newVal = (patch as Record<string, unknown>)[key];
-      return {
-        ...meta,
-        previousValue: typeof prevVal === 'string' ? prevVal : '',
-        newValue: typeof newVal === 'string' ? newVal : '',
-      };
-    }
-  }
-  if ('customData' in patch && patch.customData) {
-    const changedKey = Object.keys(patch.customData)[0];
-    if (changedKey) {
-      const def = customColumnDefs.find((d) => d.id === changedKey);
-      return {
-        columnKey: changedKey,
-        columnLabel: def?.label ?? changeFields.customData.columnLabel,
-        previousValue: item.customData[changedKey] ?? '',
-        newValue: patch.customData[changedKey] ?? '',
-        isPriceAffecting: changeFields.customData.isPriceAffecting,
-      };
-    }
-  }
-  return null;
-}
 
 // --- Proposal Status ---
 
@@ -1023,7 +931,7 @@ function ProposalCategorySection({
     return map;
   }, [revisionsData?.changelog, openRev]);
 
-  type PendingChange = ChangeInfo & {
+  type PendingChange = GeneratedItemChangeInfo & {
     item: ProposalItem;
     patch: Omit<UpdateProposalItemInput, 'version'>;
   };
@@ -1035,7 +943,7 @@ function ProposalCategorySection({
       onItemSave(item, { ...patch, version: item.version });
       return;
     }
-    const changeInfo = patchToChangeInfo(patch, item, customColumnDefs);
+    const changeInfo = proposalPatchToGeneratedItemChangeInfo(patch, item, customColumnDefs);
     if (!changeInfo) {
       onItemSave(item, { ...patch, version: item.version });
       return;
