@@ -106,9 +106,9 @@ export type ProposalExportDocument = {
 };
 
 const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
-  { key: 'rendering', label: 'Rendering', pdfWidth: 28, excelWidth: 16 },
+  { key: 'rendering', label: 'Rendering', pdfWidth: 28, excelWidth: 24 },
   { key: 'productTag', label: 'Product Tag', pdfWidth: 18, excelWidth: 14, alwaysVisible: true },
-  { key: 'plan', label: 'Plan', pdfWidth: 18, excelWidth: 14 },
+  { key: 'plan', label: 'Plan', pdfWidth: 18, excelWidth: 24 },
   { key: 'drawingsLocation', label: 'Drawings / Location', pdfWidth: 24, excelWidth: 20 },
   {
     key: 'description',
@@ -318,7 +318,7 @@ function buildProposalVisibleColumns(
           key: 'revisionNotes',
           label: 'Rev Notes',
           pdfWidth: 28,
-          excelWidth: 22,
+          excelWidth: 26,
           isRevision: true,
         },
         { key: 'revQty', label: 'Rev Qty', pdfWidth: 12, excelWidth: 10, isRevision: true },
@@ -450,7 +450,7 @@ function proposalCellValue(item: ProposalItem, key: ProposalExportColumnKey) {
 function truncateProposalText(value: string, maxChars: number) {
   const normalized = value.trim();
   if (normalized.length <= maxChars) return normalized;
-  return `${normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd()}â€¦`;
+  return `${normalized.slice(0, Math.max(0, maxChars - 3)).trimEnd()}...`;
 }
 
 function proposalWrappedCellValue(item: ProposalItem, key: ProposalExportColumnKey) {

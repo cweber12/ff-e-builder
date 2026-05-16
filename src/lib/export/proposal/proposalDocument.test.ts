@@ -137,6 +137,24 @@ describe('proposal export document', () => {
       'unitCost',
       'totalCost',
     ]);
+    expect(document.columns.find((column) => column.key === 'rendering')?.excelWidth).toBe(24);
+    expect(document.columns.find((column) => column.key === 'plan')?.excelWidth).toBe(24);
+  });
+
+  it('truncates long proposal text with a compatibility-safe ellipsis', () => {
+    const item = makeProposalItem({
+      description:
+        'Wood dining chair with curved cane backrest, open arms, upholstered seat cushion, tapered wood legs, and brass foot rail',
+    });
+    const document = buildProposalExportDocument(
+      makeProject(),
+      [makeCategory({ items: [item] })],
+      makeAssets(),
+    );
+
+    const description = document.categories[0]?.rows[0]?.values.description;
+    expect(description).toContain('...');
+    expect(description).not.toContain('â€¦');
   });
 
   it('uses the fallback company name in compact identity lines', () => {

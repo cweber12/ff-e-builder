@@ -110,6 +110,39 @@ export function excelPaddedCellPlacement(
   };
 }
 
+/**
+ * Centers a fixed-size image inside a cell.
+ * The image is rendered at exactly targetWidthPx × targetHeightPx (clamped to
+ * the cell dimensions) with equal padding on all sides.
+ */
+export function excelCenteredFixedImagePlacement(
+  columnIndex: number,
+  rowNumber: number,
+  columnWidth: number,
+  rowHeight: number,
+  targetWidthPx: number,
+  targetHeightPx: number,
+): ExcelImagePlacement {
+  const cellWidthPx = excelColumnWidthToPixels(columnWidth);
+  const cellHeightPx = excelRowHeightToPixels(rowHeight);
+  const imgW = Math.min(targetWidthPx, cellWidthPx);
+  const imgH = Math.min(targetHeightPx, cellHeightPx);
+  const hPad = (cellWidthPx - imgW) / 2;
+  const vPad = (cellHeightPx - imgH) / 2;
+  const horizontalInset = Math.min(0.45, hPad / cellWidthPx);
+  const verticalInset = Math.min(0.45, vPad / cellHeightPx);
+  return {
+    box: {
+      left: columnIndex + horizontalInset,
+      top: rowNumber - 1 + verticalInset,
+      right: columnIndex + 1 - horizontalInset,
+      bottom: rowNumber - verticalInset,
+    },
+    widthPx: imgW,
+    heightPx: imgH,
+  };
+}
+
 async function loadImageElement(src: string): Promise<HTMLImageElement> {
   return await new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -122,7 +155,7 @@ async function loadImageElement(src: string): Promise<HTMLImageElement> {
 async function cropDataUrlToRect(
   dataUrl: string,
   params: CropParams,
-  maxOutputPx = 1600,
+  maxOutputPx = Number.POSITIVE_INFINITY,
 ): Promise<string> {
   const image = await loadImageElement(dataUrl);
   const srcW = image.naturalWidth || image.width;
@@ -194,7 +227,7 @@ export async function addExcelCoverImage(
   targetHeight: number,
 ) {
   const imageId = workbook.addImage({
-    base64: await cropDataUrlToCover(dataUrl, targetWidth, targetHeight),
+    base64: await cropDataUrlToCover(dataUrl, targetWidth, targetHeight, Number.POSITIVE_INFINITY),
     extension: 'png',
   });
   addExcelImage(worksheet, imageId, {
@@ -207,7 +240,7 @@ async function scaleDataUrlToContain(
   dataUrl: string,
   targetWidth: number,
   targetHeight: number,
-  maxOutputPx = 1600,
+  maxOutputPx = Number.POSITIVE_INFINITY,
 ): Promise<string> {
   const cellW = Math.max(1, Math.round(targetWidth));
   const cellH = Math.max(1, Math.round(targetHeight));
