@@ -30,6 +30,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/money';
 import { getSortOrderPatches } from '../../../lib/items';
+import { GENERATED_ITEM_CHANGE_FIELDS } from '../../../lib/table/generatedItemChangeFields';
 import { FFE_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import {
   useItemMaterialActions,
@@ -170,58 +171,47 @@ const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableIt
   onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
 
 function ffePatchToChangeInfo(patch: EditableItemPatch, item: Item): FfeChangeInfo | null {
+  const changeFields = GENERATED_ITEM_CHANGE_FIELDS.ffe;
   if ('itemName' in patch && patch.itemName != null) {
     return {
-      columnKey: 'description',
-      columnLabel: 'Item',
+      ...changeFields.itemName,
       previousValue: item.itemName,
       newValue: patch.itemName,
-      isPriceAffecting: false,
     };
   }
   if ('itemIdTag' in patch) {
     return {
-      columnKey: 'product_tag',
-      columnLabel: 'ID',
+      ...changeFields.itemIdTag,
       previousValue: item.itemIdTag ?? '',
       newValue: patch.itemIdTag ?? '',
-      isPriceAffecting: false,
     };
   }
   if ('notes' in patch) {
     return {
-      columnKey: 'notes',
-      columnLabel: 'Notes',
+      ...changeFields.notes,
       previousValue: item.notes ?? '',
       newValue: patch.notes ?? '',
-      isPriceAffecting: false,
     };
   }
   if ('dimensions' in patch) {
     return {
-      columnKey: 'size_label',
-      columnLabel: 'Dimensions',
+      ...changeFields.dimensions,
       previousValue: item.dimensions ?? '',
       newValue: patch.dimensions ?? '',
-      isPriceAffecting: true,
     };
   }
   if ('qty' in patch && patch.qty != null) {
     return {
-      columnKey: 'quantity',
-      columnLabel: 'Qty',
+      ...changeFields.qty,
       previousValue: String(item.qty),
       newValue: String(patch.qty),
-      isPriceAffecting: true,
     };
   }
   if ('unitCostCents' in patch && patch.unitCostCents != null) {
     return {
-      columnKey: 'unit_cost_cents',
-      columnLabel: 'Unit Cost',
+      ...changeFields.unitCostCents,
       previousValue: formatMoney(cents(item.unitCostCents)),
       newValue: formatMoney(cents(patch.unitCostCents)),
-      isPriceAffecting: true,
     };
   }
   return null;

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): centralize Generated Item change-field metadata for FF&E and Proposal views
+
 - refactor(table): centralize FF&E and Proposal Generated Item table view presets
 
 - refactor(ui): confirm FF&E edits before recording Proposal revision history

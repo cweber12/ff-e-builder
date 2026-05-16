@@ -83,6 +83,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
+import { GENERATED_ITEM_CHANGE_FIELDS } from '../../../lib/table/generatedItemChangeFields';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import { proposalStatusConfig } from '../proposalStatusConfig';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
@@ -122,62 +123,53 @@ function patchToChangeInfo(
   item: ProposalItem,
   customColumnDefs: CustomColumnDef[],
 ): ChangeInfo | null {
+  const changeFields = GENERATED_ITEM_CHANGE_FIELDS.proposal;
   const sizeFields = ['sizeW', 'sizeD', 'sizeH', 'sizeLabel', 'sizeMode', 'sizeUnit'] as const;
   if (sizeFields.some((f) => f in patch)) {
     return {
-      columnKey: 'size',
-      columnLabel: 'Size',
+      ...changeFields.size,
       previousValue: formatSizeDisplay(item),
       newValue: formatSizeDisplay({ ...item, ...patch }),
-      isPriceAffecting: true,
     };
   }
   if ('quantity' in patch) {
     return {
-      columnKey: 'quantity',
-      columnLabel: 'Quantity',
+      ...changeFields.quantity,
       previousValue: `${item.quantity} ${item.quantityUnit}`,
       newValue: `${patch.quantity ?? ''} ${item.quantityUnit}`,
-      isPriceAffecting: true,
     };
   }
   if ('cbm' in patch) {
     return {
-      columnKey: 'cbm',
-      columnLabel: 'CBM',
+      ...changeFields.cbm,
       previousValue: String(item.cbm),
       newValue: String(patch.cbm ?? ''),
-      isPriceAffecting: true,
     };
   }
   if ('unitCostCents' in patch) {
     return {
-      columnKey: 'unitCostCents',
-      columnLabel: 'Unit Cost',
+      ...changeFields.unitCostCents,
       previousValue: formatMoney(cents(item.unitCostCents)),
       newValue: formatMoney(cents(patch.unitCostCents ?? 0)),
-      isPriceAffecting: false,
     };
   }
-  const textFields: { key: keyof typeof patch; label: string }[] = [
-    { key: 'productTag', label: 'Product Tag' },
-    { key: 'plan', label: 'Plan' },
-    { key: 'drawings', label: 'Drawings' },
-    { key: 'location', label: 'Location' },
-    { key: 'description', label: 'Description' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'quantityUnit', label: 'Quantity Unit' },
+  const textFields = [
+    { key: 'productTag', meta: changeFields.productTag },
+    { key: 'plan', meta: changeFields.plan },
+    { key: 'drawings', meta: changeFields.drawings },
+    { key: 'location', meta: changeFields.location },
+    { key: 'description', meta: changeFields.description },
+    { key: 'notes', meta: changeFields.notes },
+    { key: 'quantityUnit', meta: changeFields.quantityUnit },
   ];
-  for (const { key, label } of textFields) {
+  for (const { key, meta } of textFields) {
     if (key in patch) {
       const prevVal = item[key as keyof ProposalItem];
       const newVal = (patch as Record<string, unknown>)[key];
       return {
-        columnKey: key,
-        columnLabel: label,
+        ...meta,
         previousValue: typeof prevVal === 'string' ? prevVal : '',
         newValue: typeof newVal === 'string' ? newVal : '',
-        isPriceAffecting: false,
       };
     }
   }
@@ -187,10 +179,10 @@ function patchToChangeInfo(
       const def = customColumnDefs.find((d) => d.id === changedKey);
       return {
         columnKey: changedKey,
-        columnLabel: def?.label ?? 'Custom Field',
+        columnLabel: def?.label ?? changeFields.customData.columnLabel,
         previousValue: item.customData[changedKey] ?? '',
         newValue: patch.customData[changedKey] ?? '',
-        isPriceAffecting: false,
+        isPriceAffecting: changeFields.customData.isPriceAffecting,
       };
     }
   }
