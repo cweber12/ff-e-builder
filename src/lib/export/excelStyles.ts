@@ -26,3 +26,17 @@ export function subtotalTopBorder() {
     right: { style: 'thin' as const, color: { argb: 'FFD9D9D9' } },
   };
 }
+
+export function tableBorderSide() {
+  return { style: 'medium' as const, color: { argb: 'FF9CA3AF' } };
+}
+
+export function tableBorder() {
+  const side = tableBorderSide();
+  return {
+    top: side,
+    left: side,
+    bottom: side,
+    right: side,
+  };
+}

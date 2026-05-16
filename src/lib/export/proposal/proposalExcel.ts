@@ -8,21 +8,25 @@ import type { RevisionExportData } from './proposalDocument';
 import type { Project, ProposalCategoryWithItems, UserProfile } from '../../../types';
 import {
   type ExcelImagePlacement,
+  addExcelAspectFitImage,
   addExcelCircularCoverImage,
-  addExcelContainImage,
   addExcelCoverImage,
-  excelCenteredFixedImagePlacement,
   excelEqualWidthSlotPlacement,
   excelPaddedCellPlacement,
 } from '../imageHelpers';
 import { safeName, triggerDownload } from '../shared';
-import { headerRowBorder, subtotalTopBorder, thinBorder } from '../excelStyles';
+import {
+  headerRowBorder,
+  subtotalTopBorder,
+  tableBorder,
+  tableBorderSide,
+  thinBorder,
+} from '../excelStyles';
 
 // ── Styling constants ─────────────────────────────────────────────────────────
 const PROPOSAL_FONT = 'Aptos';
 const PROPOSAL_EXCEL_ROW_HEIGHT = 96; // ~128px — fits item renderings comfortably
-const PROPOSAL_IMAGE_WIDTH_PX = 168;
-const PROPOSAL_IMAGE_HEIGHT_PX = 126;
+const PROPOSAL_IMAGE_PADDING_PX = 3;
 const TABLE_START_COLUMN = 2;
 const TABLE_START_ROW = 2;
 const SUMMARY_COLUMN_COUNT = 3;
@@ -37,7 +41,7 @@ type ExcelBorder = {
 };
 const REVISION_SEPARATOR: ExcelBorderSide = {
   style: 'medium',
-  color: { argb: 'FFBFBFBF' },
+  color: { argb: 'FF9CA3AF' },
 };
 
 /** Strip encoding replacement chars and non-printable control chars. */
@@ -80,6 +84,57 @@ function parseDecimal(value: string | null | undefined) {
   return Number.isFinite(amount) ? amount : null;
 }
 
+function formatQuantity(value: number, unit: string | null | undefined) {
+  const formattedValue = Number.isInteger(value)
+    ? String(value)
+    : String(Number(value.toFixed(4))).replace(/\.?0+$/, '');
+  const normalizedUnit = cleanText(unit ?? '').trim();
+  return normalizedUnit ? `${formattedValue} ${normalizedUnit}` : formattedValue;
+}
+
+function numericPrefixFormula(address: string) {
+  return `VALUE(LEFT(${address},FIND(" ",${address}&" ")-1))`;
+}
+
+function sizeRichText(value: string) {
+  const cleaned = cleanText(value);
+  if (!/\d/.test(cleaned) || !/[xX]/.test(cleaned)) return null;
+  const parts: {
+    text: string;
+    font: { name: string; size: number; color: { argb: string }; bold?: boolean };
+  }[] = [];
+  let cursor = 0;
+
+  for (let index = 0; index < cleaned.length; index += 1) {
+    const character = cleaned[index];
+    if (character !== 'x' && character !== 'X') continue;
+    const previous = cleaned.slice(0, index).trimEnd().slice(-1);
+    const next = cleaned.slice(index + 1).trimStart()[0] ?? '';
+    const separatesDimensions = /[\d"']/.test(previous) && /[\d'-]/.test(next);
+    if (!separatesDimensions) continue;
+    if (cursor < index) {
+      parts.push({
+        text: cleaned.slice(cursor, index),
+        font: { name: PROPOSAL_FONT, size: 10, color: { argb: 'FF374151' } },
+      });
+    }
+    parts.push({
+      text: character,
+      font: { name: PROPOSAL_FONT, size: 10, bold: true, color: { argb: 'FF111827' } },
+    });
+    cursor = index + 1;
+  }
+
+  if (parts.length === 0) return null;
+  if (cursor < cleaned.length) {
+    parts.push({
+      text: cleaned.slice(cursor),
+      font: { name: PROPOSAL_FONT, size: 10, color: { argb: 'FF374151' } },
+    });
+  }
+  return { richText: parts };
+}
+
 function offsetPlacement(
   placement: ExcelImagePlacement,
   columnOffset: number,
@@ -100,15 +155,37 @@ function borderForColumn(
   column: { key: string; isRevision?: boolean },
   previousColumn: { isRevision?: boolean } | null,
   nextColumn: { isRevision?: boolean } | null,
+  options: {
+    isFirstColumn?: boolean;
+    isLastColumn?: boolean;
+    tableTop?: boolean;
+    tableBottom?: boolean;
+    rowBottom?: boolean;
+  } = {},
 ): ExcelBorder {
   const border: ExcelBorder = { ...baseBorder };
+  if (options.tableTop) border.top = tableBorderSide();
+  if (options.tableBottom || options.rowBottom) border.bottom = tableBorderSide();
+  if (options.isFirstColumn) border.left = tableBorderSide();
+  if (options.isLastColumn) border.right = tableBorderSide();
+  if (column.key === 'productTag') {
+    border.right = tableBorderSide();
+  }
   if (column.isRevision && !previousColumn?.isRevision) {
     border.left = REVISION_SEPARATOR;
   }
-  if (column.key === 'totalCost' && nextColumn?.isRevision) {
+  if (column.key === 'revisionNotes' || (column.key === 'totalCost' && nextColumn?.isRevision)) {
     border.right = REVISION_SEPARATOR;
   }
   return border;
+}
+
+function headerLabelForColumn(column: { key: string; label: string }) {
+  if (column.key === 'revisionNotes') return 'Revision Notes';
+  if (column.key === 'revQty') return 'Quantity';
+  if (column.key === 'revUnitCost') return 'Unit Cost';
+  if (column.key === 'revTotalCost') return 'Total Cost';
+  return column.label;
 }
 
 const PROPOSAL_SWATCH_LIMIT = 4;
@@ -248,34 +325,95 @@ export async function exportProposalExcel(
     worksheet.mergeCells(currentRow, TABLE_START_COLUMN, currentRow, endColumn);
     const categoryCell = worksheet.getCell(currentRow, TABLE_START_COLUMN);
     categoryCell.value = section.category.name.toUpperCase();
-    categoryCell.font = { name: PROPOSAL_FONT, size: 10, bold: true, color: { argb: 'FF1A6B4A' } };
-    categoryCell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFF0F2F0' },
-    };
-    categoryCell.alignment = { vertical: 'middle', indent: 1 };
-    categoryCell.border = { bottom: { style: 'thin' as const, color: { argb: 'FFBFBFBF' } } };
-    worksheet.getRow(currentRow).height = 22;
+    for (let columnIndex = TABLE_START_COLUMN; columnIndex <= endColumn; columnIndex += 1) {
+      const cell = worksheet.getCell(currentRow, columnIndex);
+      cell.font = {
+        name: PROPOSAL_FONT,
+        size: 13,
+        bold: true,
+        color: { argb: 'FFFFFFFF' },
+      };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A6B4A' } };
+      cell.alignment = { vertical: 'middle', indent: 1 };
+      cell.border = {
+        ...tableBorder(),
+        left: columnIndex === TABLE_START_COLUMN ? tableBorderSide() : tableBorder().left,
+        right: columnIndex === endColumn ? tableBorderSide() : tableBorder().right,
+      };
+    }
+    worksheet.getRow(currentRow).height = 26;
     currentRow += 1;
 
-    const headerRow = worksheet.getRow(currentRow);
+    const headerTopRowNumber = currentRow;
+    const headerSubRowNumber = currentRow + 1;
+    const revisedStartIndex = columns.findIndex((column) => column.key === 'revQty');
+    const revisedEndIndex = columns.findIndex((column) => column.key === 'revTotalCost');
+    const hasRevisedProposalHeader = revisedStartIndex >= 0 && revisedEndIndex >= revisedStartIndex;
+
+    if (hasRevisedProposalHeader) {
+      worksheet.mergeCells(
+        headerTopRowNumber,
+        TABLE_START_COLUMN + revisedStartIndex,
+        headerTopRowNumber,
+        TABLE_START_COLUMN + revisedEndIndex,
+      );
+      const revisedHeaderCell = worksheet.getCell(
+        headerTopRowNumber,
+        TABLE_START_COLUMN + revisedStartIndex,
+      );
+      revisedHeaderCell.value = 'Revised Proposal';
+      revisedHeaderCell.font = {
+        name: PROPOSAL_FONT,
+        size: 9,
+        bold: true,
+        color: { argb: 'FF92400E' },
+      };
+      revisedHeaderCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      revisedHeaderCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF7ED' } };
+      revisedHeaderCell.border = tableBorder();
+    }
+
     columns.forEach((column, index) => {
+      const actualColumn = index + TABLE_START_COLUMN;
       const prevColumn = index > 0 ? (columns[index - 1] ?? null) : null;
       const nextColumn = index < columns.length - 1 ? (columns[index + 1] ?? null) : null;
-      const cell = headerRow.getCell(index + TABLE_START_COLUMN);
-      cell.value = column.label;
-      cell.font = { name: PROPOSAL_FONT, size: 10, bold: true, color: { argb: 'FF1F2937' } };
-      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      cell.fill = {
+      const isRevisedDetail =
+        hasRevisedProposalHeader && index >= revisedStartIndex && index <= revisedEndIndex;
+      const shouldMergeVertically = hasRevisedProposalHeader && !isRevisedDetail;
+      const topCell = worksheet.getCell(headerTopRowNumber, actualColumn);
+      const subCell = worksheet.getCell(headerSubRowNumber, actualColumn);
+      const targetCell = isRevisedDetail && hasRevisedProposalHeader ? subCell : topCell;
+
+      if (shouldMergeVertically) {
+        worksheet.mergeCells(headerTopRowNumber, actualColumn, headerSubRowNumber, actualColumn);
+      }
+
+      targetCell.value = headerLabelForColumn(column);
+      targetCell.font = { name: PROPOSAL_FONT, size: 8, bold: true, color: { argb: 'FF1F2937' } };
+      targetCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      targetCell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: column.isRevision ? 'FFFEF3C7' : 'FFF3F2F0' },
+        fgColor:
+          column.key === 'revisionNotes' ? 'FFFFF7ED' : column.isRevision ? 'FFFEF3C7' : 'FFF3F2F0',
       };
-      cell.border = borderForColumn(headerRowBorder(), column, prevColumn, nextColumn);
+      targetCell.border = borderForColumn(tableBorder(), column, prevColumn, nextColumn, {
+        isFirstColumn: index === 0,
+        isLastColumn: index === columns.length - 1,
+        tableTop: true,
+        rowBottom: true,
+      });
+
+      if (shouldMergeVertically) {
+        subCell.fill = targetCell.fill;
+        subCell.border = targetCell.border;
+      }
     });
-    headerRow.height = 30;
-    currentRow += 1;
+    worksheet.getRow(headerTopRowNumber).height = hasRevisedProposalHeader ? 20 : 28;
+    if (hasRevisedProposalHeader) {
+      worksheet.getRow(headerSubRowNumber).height = 24;
+    }
+    currentRow += hasRevisedProposalHeader ? 2 : 1;
 
     const firstItemRow = currentRow;
     for (const rowData of section.rows) {
@@ -287,6 +425,7 @@ export async function exportProposalExcel(
         const nextColumn = index < columns.length - 1 ? (columns[index + 1] ?? null) : null;
         const isImage =
           column.key === 'rendering' || column.key === 'swatch' || column.key === 'plan';
+        const isSizeColumn = column.key === 'size' || column.label.trim().toLowerCase() === 'size';
         const isCurrency =
           column.key === 'unitCost' ||
           column.key === 'totalCost' ||
@@ -329,8 +468,7 @@ export async function exportProposalExcel(
               cell.numFmt = DECIMAL_FORMAT;
               break;
             case 'quantity':
-              cell.value = rowData.item.quantity;
-              cell.numFmt = DECIMAL_FORMAT;
+              cell.value = formatQuantity(rowData.item.quantity, rowData.item.quantityUnit);
               break;
             case 'unitCost':
               cell.value = (rowData.item.unitCostCents || 0) / 100;
@@ -340,8 +478,9 @@ export async function exportProposalExcel(
               const quantityColumn = columnIndexByKey.get('quantity');
               const unitCostColumn = columnIndexByKey.get('unitCost');
               if (quantityColumn && unitCostColumn) {
+                const quantityAddress = cellAddress(quantityColumn, currentRow);
                 cell.value = {
-                  formula: `${cellAddress(quantityColumn, currentRow)}*${cellAddress(
+                  formula: `${numericPrefixFormula(quantityAddress)}*${cellAddress(
                     unitCostColumn,
                     currentRow,
                   )}`,
@@ -355,8 +494,7 @@ export async function exportProposalExcel(
             }
             case 'revQty': {
               const revQty = parseDecimal(rowData.values.revQty);
-              cell.value = revQty ?? '';
-              cell.numFmt = DECIMAL_FORMAT;
+              cell.value = revQty == null ? '' : formatQuantity(revQty, rowData.item.quantityUnit);
               break;
             }
             case 'revUnitCost': {
@@ -369,14 +507,12 @@ export async function exportProposalExcel(
               const revQtyColumn = columnIndexByKey.get('revQty');
               const revUnitCostColumn = columnIndexByKey.get('revUnitCost');
               if (revQtyColumn && revUnitCostColumn) {
+                const revQtyAddress = cellAddress(revQtyColumn, currentRow);
+                const revUnitCostAddress = cellAddress(revUnitCostColumn, currentRow);
                 cell.value = {
-                  formula: `IF(OR(${cellAddress(revQtyColumn, currentRow)}="",${cellAddress(
-                    revUnitCostColumn,
-                    currentRow,
-                  )}=""),"",${cellAddress(revQtyColumn, currentRow)}*${cellAddress(
-                    revUnitCostColumn,
-                    currentRow,
-                  )})`,
+                  formula: `IF(OR(${revQtyAddress}="",${revUnitCostAddress}=""),"",${numericPrefixFormula(
+                    revQtyAddress,
+                  )}*${revUnitCostAddress})`,
                   result: parseCurrency(rowData.values.revTotalCost) ?? '',
                 };
               } else {
@@ -385,8 +521,19 @@ export async function exportProposalExcel(
               cell.numFmt = CURRENCY_FORMAT;
               break;
             }
+            case 'size': {
+              cell.value =
+                sizeRichText(rowData.values[column.key] ?? '') ??
+                cleanText(rowData.values[column.key] ?? '');
+              break;
+            }
             default:
-              cell.value = isImage ? '' : cleanText(rowData.values[column.key] ?? '');
+              cell.value = isImage
+                ? ''
+                : isSizeColumn
+                  ? (sizeRichText(rowData.values[column.key] ?? '') ??
+                    cleanText(rowData.values[column.key] ?? ''))
+                  : cleanText(rowData.values[column.key] ?? '');
               break;
           }
         }
@@ -399,7 +546,16 @@ export async function exportProposalExcel(
           shrinkToFit: false,
           ...(isCurrency || isCentered || isImage ? {} : { indent: 1 }),
         };
-        cell.border = borderForColumn(thinBorder(), column, prevColumn, nextColumn);
+        cell.border = borderForColumn(thinBorder(), column, prevColumn, nextColumn, {
+          isFirstColumn: index === 0,
+          isLastColumn: index === columns.length - 1,
+          rowBottom: true,
+        });
+        if (column.key === 'revisionNotes') {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
+        } else if (column.isRevision) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFCF2' } };
+        }
         // Amber highlight on rev cost cells when PM action is required.
         if (
           rowData.revCostFlagged &&
@@ -415,15 +571,13 @@ export async function exportProposalExcel(
       if (renderingColumn >= 0) {
         const renderingExportColumn = columns[renderingColumn];
         if (rowData.rendering && renderingExportColumn) {
-          const placement = excelCenteredFixedImagePlacement(
-            renderingColumn + TABLE_START_COLUMN - 1,
-            currentRow,
-            renderingExportColumn.excelWidth,
-            PROPOSAL_EXCEL_ROW_HEIGHT,
-            PROPOSAL_IMAGE_WIDTH_PX,
-            PROPOSAL_IMAGE_HEIGHT_PX,
-          );
-          await addExcelContainImage(workbook, worksheet, rowData.rendering, placement);
+          await addExcelAspectFitImage(workbook, worksheet, rowData.rendering, {
+            columnIndex: renderingColumn + TABLE_START_COLUMN - 1,
+            rowNumber: currentRow,
+            columnWidth: renderingExportColumn.excelWidth,
+            rowHeight: PROPOSAL_EXCEL_ROW_HEIGHT,
+            paddingPx: PROPOSAL_IMAGE_PADDING_PX,
+          });
         }
       }
 
@@ -432,15 +586,13 @@ export async function exportProposalExcel(
         if (planExportColumn) {
           const planCell = row.getCell(planColumn + TABLE_START_COLUMN);
           planCell.value = '';
-          const placement = excelCenteredFixedImagePlacement(
-            planColumn + TABLE_START_COLUMN - 1,
-            currentRow,
-            planExportColumn.excelWidth,
-            PROPOSAL_EXCEL_ROW_HEIGHT,
-            PROPOSAL_IMAGE_WIDTH_PX,
-            PROPOSAL_IMAGE_HEIGHT_PX,
-          );
-          await addExcelContainImage(workbook, worksheet, rowData.planImage, placement);
+          await addExcelAspectFitImage(workbook, worksheet, rowData.planImage, {
+            columnIndex: planColumn + TABLE_START_COLUMN - 1,
+            rowNumber: currentRow,
+            columnWidth: planExportColumn.excelWidth,
+            rowHeight: PROPOSAL_EXCEL_ROW_HEIGHT,
+            paddingPx: PROPOSAL_IMAGE_PADDING_PX,
+          });
         }
       }
 
@@ -514,7 +666,11 @@ export async function exportProposalExcel(
         pattern: 'solid',
         fgColor: { argb: 'FFF7F7F5' },
       };
-      cell.border = borderForColumn(subtotalTopBorder(), column, prevColumn, nextColumn);
+      cell.border = borderForColumn(subtotalTopBorder(), column, prevColumn, nextColumn, {
+        isFirstColumn: index === 0,
+        isLastColumn: index === columns.length - 1,
+        tableBottom: true,
+      });
     });
     if (totalCostColumn) {
       summaryRefs.push({

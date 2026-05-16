@@ -12,7 +12,7 @@
 
 - **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
 
-- **Confirm `pnpm typecheck && pnpm lint && pnpm test && pnpm build` pass before drafting the commit message.**
+- **Confirm `pnpm typecheck && pnpm lint && pnpm test && pnpm build` pass before drafting the commit message.** Exception: if the user explicitly says they will run checks or tests manually, do not run those commands yourself. Finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop.
 
 - **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 

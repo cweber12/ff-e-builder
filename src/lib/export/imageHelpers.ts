@@ -17,6 +17,14 @@ export type ExcelImagePlacement = {
   heightPx: number;
 };
 
+export type ExcelImageCellPlacementOptions = {
+  columnIndex: number;
+  rowNumber: number;
+  columnWidth: number;
+  rowHeight: number;
+  paddingPx?: number;
+};
+
 export async function blobToPngDataUrl(blob: Blob): Promise<string> {
   const objectUrl = URL.createObjectURL(blob);
   try {
@@ -149,6 +157,49 @@ async function loadImageElement(src: string): Promise<HTMLImageElement> {
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error('Unable to load export image.'));
     image.src = src;
+  });
+}
+
+function imageDimensions(image: HTMLImageElement) {
+  return {
+    width: image.naturalWidth || image.width || 1,
+    height: image.naturalHeight || image.height || 1,
+  };
+}
+
+export async function addExcelAspectFitImage(
+  workbook: Workbook,
+  worksheet: Worksheet,
+  dataUrl: string,
+  options: ExcelImageCellPlacementOptions,
+) {
+  const image = await loadImageElement(dataUrl);
+  const source = imageDimensions(image);
+  const cellWidthPx = excelColumnWidthToPixels(options.columnWidth);
+  const cellHeightPx = excelRowHeightToPixels(options.rowHeight);
+  const paddingPx = options.paddingPx ?? DEFAULT_EXCEL_IMAGE_PADDING_PX;
+  const boxWidthPx = Math.max(1, cellWidthPx - paddingPx * 2);
+  const boxHeightPx = Math.max(1, cellHeightPx - paddingPx * 2);
+  const sourceAspect = source.width / source.height;
+  const boxAspect = boxWidthPx / boxHeightPx;
+  const widthPx = sourceAspect > boxAspect ? boxWidthPx : Math.max(1, boxHeightPx * sourceAspect);
+  const heightPx = sourceAspect > boxAspect ? Math.max(1, boxWidthPx / sourceAspect) : boxHeightPx;
+  const leftPaddingPx = paddingPx + (boxWidthPx - widthPx) / 2;
+  const topPaddingPx = paddingPx + (boxHeightPx - heightPx) / 2;
+
+  const imageId = workbook.addImage({
+    base64: dataUrl,
+    extension: 'png',
+  });
+  addExcelImage(worksheet, imageId, {
+    tl: {
+      col: options.columnIndex + leftPaddingPx / cellWidthPx,
+      row: options.rowNumber - 1 + topPaddingPx / cellHeightPx,
+    },
+    ext: {
+      width: Math.max(1, Math.round(widthPx)),
+      height: Math.max(1, Math.round(heightPx)),
+    },
   });
 }
 

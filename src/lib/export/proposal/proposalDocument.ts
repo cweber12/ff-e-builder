@@ -107,24 +107,24 @@ export type ProposalExportDocument = {
 
 const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
   { key: 'rendering', label: 'Rendering', pdfWidth: 28, excelWidth: 24 },
-  { key: 'productTag', label: 'Product Tag', pdfWidth: 18, excelWidth: 14, alwaysVisible: true },
+  { key: 'productTag', label: 'Product Tag', pdfWidth: 18, excelWidth: 12, alwaysVisible: true },
   { key: 'plan', label: 'Plan', pdfWidth: 18, excelWidth: 24 },
-  { key: 'drawingsLocation', label: 'Drawings / Location', pdfWidth: 24, excelWidth: 20 },
+  { key: 'drawingsLocation', label: 'Drawings / Location', pdfWidth: 24, excelWidth: 18 },
   {
     key: 'description',
     label: 'Product Description',
     pdfWidth: 40,
-    excelWidth: 30,
+    excelWidth: 28,
     alwaysVisible: true,
   },
   { key: 'notes', label: 'Notes', pdfWidth: 28, excelWidth: 22 },
-  { key: 'size', label: 'Size', pdfWidth: 22, excelWidth: 18 },
+  { key: 'size', label: 'Size', pdfWidth: 22, excelWidth: 16 },
   { key: 'swatch', label: 'Swatch', pdfWidth: 16, excelWidth: 12 },
   { key: 'cbm', label: 'CBM', pdfWidth: 10, excelWidth: 9 },
-  { key: 'quantity', label: 'Quantity', pdfWidth: 12, excelWidth: 10, alwaysVisible: true },
-  { key: 'unit', label: 'Unit', pdfWidth: 12, excelWidth: 10, alwaysVisible: true },
-  { key: 'unitCost', label: 'Unit Cost', pdfWidth: 15, excelWidth: 13, alwaysVisible: true },
-  { key: 'totalCost', label: 'Total Cost', pdfWidth: 16, excelWidth: 14, alwaysVisible: true },
+  { key: 'quantity', label: 'Quantity', pdfWidth: 12, excelWidth: 12, alwaysVisible: true },
+  { key: 'unit', label: 'Unit', pdfWidth: 12, excelWidth: 8, alwaysVisible: true },
+  { key: 'unitCost', label: 'Unit Cost', pdfWidth: 15, excelWidth: 12, alwaysVisible: true },
+  { key: 'totalCost', label: 'Total Cost', pdfWidth: 16, excelWidth: 13, alwaysVisible: true },
 ];
 
 export function filteredProposalCategories(categories: ProposalCategoryWithItems[]) {
@@ -318,18 +318,18 @@ function buildProposalVisibleColumns(
           key: 'revisionNotes',
           label: 'Rev Notes',
           pdfWidth: 28,
-          excelWidth: 26,
+          excelWidth: 24,
           isRevision: true,
         },
-        { key: 'revQty', label: 'Rev Qty', pdfWidth: 12, excelWidth: 10, isRevision: true },
+        { key: 'revQty', label: 'Rev Qty', pdfWidth: 12, excelWidth: 12, isRevision: true },
         {
           key: 'revUnitCost',
           label: 'Rev Unit Cost',
           pdfWidth: 15,
-          excelWidth: 13,
+          excelWidth: 12,
           isRevision: true,
         },
-        { key: 'revTotalCost', label: 'Rev Total', pdfWidth: 16, excelWidth: 14, isRevision: true },
+        { key: 'revTotalCost', label: 'Rev Total', pdfWidth: 16, excelWidth: 13, isRevision: true },
       ]
     : [];
 
