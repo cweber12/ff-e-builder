@@ -46,6 +46,7 @@ import {
   useUpdateItemColumnDef,
   useColumnConfig,
   useIsMobileViewport,
+  useProposalRevisions,
   useTableDensity,
   densityRowClass,
   type TableDensity,
@@ -82,6 +83,7 @@ import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
+import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
 
 /**
  * Stable IDs for built-in columns — used as keys in useColumnConfig.
@@ -186,6 +188,14 @@ type EditableItemPatch = Omit<UpdateItemInput, 'version'>;
 
 type SaveItemPatch = (item: Item, patch: EditableItemPatch) => Promise<void>;
 
+type FfeChangeInfo = {
+  columnKey: string;
+  columnLabel: string;
+  previousValue: string;
+  newValue: string;
+  isPriceAffecting: boolean;
+};
+
 type TableActions = {
   rooms: RoomWithItems[];
   onDuplicate: (item: Item) => Promise<void>;
@@ -196,6 +206,64 @@ type TableActions = {
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
   onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
+
+function ffePatchToChangeInfo(patch: EditableItemPatch, item: Item): FfeChangeInfo | null {
+  if ('itemName' in patch && patch.itemName != null) {
+    return {
+      columnKey: 'description',
+      columnLabel: 'Item',
+      previousValue: item.itemName,
+      newValue: patch.itemName,
+      isPriceAffecting: false,
+    };
+  }
+  if ('itemIdTag' in patch) {
+    return {
+      columnKey: 'product_tag',
+      columnLabel: 'ID',
+      previousValue: item.itemIdTag ?? '',
+      newValue: patch.itemIdTag ?? '',
+      isPriceAffecting: false,
+    };
+  }
+  if ('notes' in patch) {
+    return {
+      columnKey: 'notes',
+      columnLabel: 'Notes',
+      previousValue: item.notes ?? '',
+      newValue: patch.notes ?? '',
+      isPriceAffecting: false,
+    };
+  }
+  if ('dimensions' in patch) {
+    return {
+      columnKey: 'size_label',
+      columnLabel: 'Dimensions',
+      previousValue: item.dimensions ?? '',
+      newValue: patch.dimensions ?? '',
+      isPriceAffecting: true,
+    };
+  }
+  if ('qty' in patch && patch.qty != null) {
+    return {
+      columnKey: 'quantity',
+      columnLabel: 'Qty',
+      previousValue: String(item.qty),
+      newValue: String(patch.qty),
+      isPriceAffecting: true,
+    };
+  }
+  if ('unitCostCents' in patch && patch.unitCostCents != null) {
+    return {
+      columnKey: 'unit_cost_cents',
+      columnLabel: 'Unit Cost',
+      previousValue: formatMoney(cents(item.unitCostCents)),
+      newValue: formatMoney(cents(patch.unitCostCents)),
+      isPriceAffecting: true,
+    };
+  }
+  return null;
+}
 
 async function assignMaterialsToItem(
   itemId: string,
@@ -1443,6 +1511,7 @@ function RoomItemsSection({
   const moveItem = useMoveItem();
   const projectMaterials = useMaterials(projectId);
   const materialActions = useItemMaterialActions({ kind: 'ffe', itemGroupId: room.id, projectId });
+  const { data: revisionsData } = useProposalRevisions(projectId);
   const { data: columnDefs = [] } = useItemColumnDefs(projectId);
   const createColumnDef = useCreateItemColumnDef(projectId);
   const updateColumnDef = useUpdateItemColumnDef(projectId);
@@ -1454,7 +1523,18 @@ function RoomItemsSection({
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
   const [detailItem, setDetailItem] = useState<Item | null>(null);
+  type PendingChange = FfeChangeInfo & {
+    item: Item;
+    patch: EditableItemPatch;
+  };
+  const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
   const isMobile = useIsMobileViewport();
+  const proposalStatus = project?.proposalStatus ?? 'in_progress';
+  const openRevision = useMemo(
+    () => revisionsData?.revisions.find((revision) => revision.closedAt === null) ?? null,
+    [revisionsData?.revisions],
+  );
+  const shouldConfirmProposalImpact = proposalStatus !== 'in_progress' || openRevision !== null;
   const sortedItems = useMemo(
     () =>
       [...room.items].sort(
@@ -1529,12 +1609,44 @@ function RoomItemsSection({
   );
   const saveItemPatch = useCallback<SaveItemPatch>(
     async (item, patch) => {
+      const changeInfo = ffePatchToChangeInfo(patch, item);
+      if (shouldConfirmProposalImpact && changeInfo) {
+        setPendingChange({ ...changeInfo, item, patch });
+        return;
+      }
+
       await updateItem.mutateAsync({
         id: item.id,
         patch: { ...patch, version: item.version },
       });
     },
-    [updateItem],
+    [shouldConfirmProposalImpact, updateItem],
+  );
+  const handleConfirmChange = useCallback(
+    async (result: ChangeConfirmResult) => {
+      if (!pendingChange) return;
+
+      const { item, patch, columnKey, previousValue, newValue, isPriceAffecting } = pendingChange;
+      const changeLog: NonNullable<UpdateItemInput['changeLog']> = {
+        columnKey,
+        previousValue,
+        newValue,
+        proposalStatus,
+        isPriceAffecting: isPriceAffecting || result.isPriceAffecting,
+      };
+      if (result.notes) changeLog.notes = result.notes;
+
+      await updateItem.mutateAsync({
+        id: item.id,
+        patch: {
+          ...patch,
+          version: item.version,
+          changeLog,
+        },
+      });
+      setPendingChange(null);
+    },
+    [pendingChange, proposalStatus, updateItem],
   );
   const saveCustomCell = useCallback(
     async (item: Item, defId: string, value: string) => {
@@ -2043,6 +2155,19 @@ function RoomItemsSection({
           item={detailItem}
           roomName={room.name}
           onClose={() => setDetailItem(null)}
+        />
+      )}
+      {pendingChange && (
+        <ChangeConfirmModal
+          columnLabel={pendingChange.columnLabel}
+          previousValue={pendingChange.previousValue}
+          newValue={pendingChange.newValue}
+          proposalStatus={proposalStatus}
+          openRevisionLabel={openRevision?.label}
+          isPriceAffecting={pendingChange.isPriceAffecting}
+          lockPriceAffecting={pendingChange.isPriceAffecting}
+          onConfirm={(result) => void handleConfirmChange(result)}
+          onCancel={() => setPendingChange(null)}
         />
       )}
       <AddColumnModal

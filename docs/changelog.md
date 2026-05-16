@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ui): confirm FF&E edits before recording Proposal revision history
+
+- refactor(api): record FF&E edits in Proposal revision history for linked Generated Items
+- refactor(db): add canonical Generated Item references to Proposal revision records
+- refactor(api): preserve canonical Generated Items when deleting Proposal Categories
+
 - refactor(api): mirror FF&E and Proposal item writes through linked Generated Item rows
 
 - refactor(api): keep Proposal reads legacy-compatible while staging Generated Item read bridge

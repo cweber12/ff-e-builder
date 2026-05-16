@@ -29,6 +29,7 @@ type FfeChange = {
   columnKey: string;
   previousValue: string;
   newValue: string;
+  notes?: string;
   isPriceAffecting: boolean;
 };
 
@@ -91,6 +92,28 @@ function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionC
       newValue: String(input.unit_cost_cents),
       isPriceAffecting: true,
     });
+  }
+
+  const confirmedChange = input.change_log;
+  if (confirmedChange) {
+    const matchingChange = changes.find(
+      (change) => change.columnKey === confirmedChange.column_key,
+    );
+    if (matchingChange) {
+      matchingChange.previousValue = confirmedChange.previous_value;
+      matchingChange.newValue = confirmedChange.new_value;
+      matchingChange.notes = confirmedChange.notes;
+      matchingChange.isPriceAffecting =
+        matchingChange.isPriceAffecting || confirmedChange.is_price_affecting;
+    } else {
+      changes.push({
+        columnKey: confirmedChange.column_key,
+        previousValue: confirmedChange.previous_value,
+        newValue: confirmedChange.new_value,
+        notes: confirmedChange.notes,
+        isPriceAffecting: confirmedChange.is_price_affecting,
+      });
+    }
   }
 
   return changes;
@@ -531,10 +554,11 @@ async function insertFfeRevisionChangelog(
     await sql`
       INSERT INTO proposal_item_changelog
         (proposal_item_id, generated_item_id, column_key, previous_value, new_value,
-         proposal_status, revision_id, is_price_affecting)
+         notes, proposal_status, revision_id, is_price_affecting)
       VALUES
         (${proposalItemId}, ${itemId}, ${change.columnKey}, ${change.previousValue},
-         ${change.newValue}, ${proposalStatus}, ${revision?.id ?? null}, ${change.isPriceAffecting})
+         ${change.newValue}, ${change.notes ?? null}, ${proposalStatus}, ${revision?.id ?? null},
+         ${change.isPriceAffecting})
     `;
   }
 }

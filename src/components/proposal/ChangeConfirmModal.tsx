@@ -17,6 +17,7 @@ interface ChangeConfirmModalProps {
   /** When set, shows a revision badge instead of the status badge. */
   openRevisionLabel?: string;
   isPriceAffecting: boolean;
+  lockPriceAffecting?: boolean;
   onConfirm: (result: ChangeConfirmResult) => void;
   onCancel: () => void;
 }
@@ -28,6 +29,7 @@ export function ChangeConfirmModal({
   proposalStatus,
   openRevisionLabel,
   isPriceAffecting,
+  lockPriceAffecting = false,
   onConfirm,
   onCancel,
 }: ChangeConfirmModalProps) {
@@ -91,8 +93,9 @@ export function ChangeConfirmModal({
             type="checkbox"
             id="price-affecting-toggle"
             checked={priceAffecting}
+            disabled={lockPriceAffecting}
             onChange={(e) => setPriceAffecting(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-brand-600 cursor-pointer"
+            className="h-4 w-4 rounded border-gray-300 accent-brand-600 cursor-pointer disabled:cursor-not-allowed"
           />
           <label
             htmlFor="price-affecting-toggle"

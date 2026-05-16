@@ -1,6 +1,6 @@
 import { apiFetch } from './transport';
 import { mapItem, type RawItem } from './mappers';
-import type { Item, ItemStatus } from '../../types';
+import type { Item, ItemStatus, ProposalStatus } from '../../types';
 
 export type CreateItemInput = {
   itemName: string;
@@ -31,6 +31,14 @@ export type UpdateItemInput = {
   status?: ItemStatus;
   customData?: Record<string, string>;
   sortOrder?: number;
+  changeLog?: {
+    columnKey: string;
+    previousValue: string;
+    newValue: string;
+    notes?: string;
+    proposalStatus: ProposalStatus;
+    isPriceAffecting?: boolean;
+  };
   /** Required for optimistic concurrency - must match the current DB version */
   version: number;
 };
@@ -77,6 +85,16 @@ export const itemsApi = {
         status: patch.status,
         custom_data: patch.customData,
         sort_order: patch.sortOrder,
+        change_log: patch.changeLog
+          ? {
+              column_key: patch.changeLog.columnKey,
+              previous_value: patch.changeLog.previousValue,
+              new_value: patch.changeLog.newValue,
+              ...(patch.changeLog.notes ? { notes: patch.changeLog.notes } : {}),
+              proposal_status: patch.changeLog.proposalStatus,
+              is_price_affecting: patch.changeLog.isPriceAffecting ?? false,
+            }
+          : undefined,
         version: patch.version,
       }),
     }).then((r) => mapItem(r.item)),

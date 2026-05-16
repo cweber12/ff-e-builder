@@ -320,8 +320,19 @@ export const CreateItemSchema = z.object({
 });
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
 
+export const ChangeLogEntrySchema = z.object({
+  column_key: z.string().min(1).max(255),
+  previous_value: z.string().max(2000),
+  new_value: z.string().max(2000),
+  notes: z.string().max(2000).optional(),
+  proposal_status: z.enum(proposalStatuses),
+  is_price_affecting: z.boolean().default(false),
+});
+export type ChangeLogEntryInput = z.infer<typeof ChangeLogEntrySchema>;
+
 export const UpdateItemSchema = CreateItemSchema.partial().extend({
   version: z.number().int().nonnegative(),
+  change_log: ChangeLogEntrySchema.optional(),
 });
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
@@ -396,16 +407,6 @@ export const CreateProposalItemSchema = z.object({
   custom_data: z.record(z.string().max(255), z.string().max(2000)).default({}),
 });
 export type CreateProposalItemInput = z.infer<typeof CreateProposalItemSchema>;
-
-export const ChangeLogEntrySchema = z.object({
-  column_key: z.string().min(1).max(255),
-  previous_value: z.string().max(2000),
-  new_value: z.string().max(2000),
-  notes: z.string().max(2000).optional(),
-  proposal_status: z.enum(proposalStatuses),
-  is_price_affecting: z.boolean().default(false),
-});
-export type ChangeLogEntryInput = z.infer<typeof ChangeLogEntrySchema>;
 
 export const UpdateProposalItemSchema = CreateProposalItemSchema.partial().extend({
   version: z.number().int().nonnegative(),

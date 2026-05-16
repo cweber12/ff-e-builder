@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-16T20:11:33.634Z",
+  "generatedAt": "2026-05-16T20:30:46.888Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -151,7 +151,7 @@
       "name": "Cloudflare Workers API",
       "tsconfig": "api/tsconfig.json",
       "files": 24,
-      "internalImports": 86,
+      "internalImports": 87,
       "externalImports": 19,
       "unresolvedImports": 0
     }
@@ -234,8 +234,8 @@
     {
       "area": "api-worker",
       "files": 20,
-      "importsIn": 86,
-      "importsOut": 73,
+      "importsIn": 87,
+      "importsOut": 74,
       "dependsOn": [],
       "importedBy": ["tests"]
     },
@@ -6991,8 +6991,8 @@
     {
       "path": "api/src/lib",
       "files": 6,
-      "importsIn": 43,
-      "importsOut": 8,
+      "importsIn": 44,
+      "importsOut": 9,
       "internalDependencies": ["api/src/types.ts"],
       "externalDependencies": ["@neondatabase/serverless"]
     },
@@ -17916,6 +17916,14 @@
           "resolved": "api/src/types.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "api/src/lib/generatedItems.ts",
+          "specifier": "./revisions",
+          "kind": "import",
+          "resolved": "api/src/lib/revisions.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -26913,6 +26921,14 @@
       "specifier": "../types",
       "kind": "import",
       "resolved": "api/src/types.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/lib/generatedItems.ts",
+      "specifier": "./revisions",
+      "kind": "import",
+      "resolved": "api/src/lib/revisions.ts",
       "externalPackage": null,
       "asset": false
     },
