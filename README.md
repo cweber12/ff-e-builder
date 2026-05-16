@@ -42,6 +42,14 @@ C4Context
 
 For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md](docs/architecture.md).
 
+Generate current import and module maps for architecture planning with:
+
+```bash
+pnpm arch:scan
+```
+
+The command writes agent-readable Markdown and JSON under [docs/generated/](docs/generated/).
+
 ---
 
 ## UI surfaces
@@ -99,7 +107,8 @@ For component diagrams, sequence diagrams, and the ERD see [docs/architecture.md
 ├── db/
 │   └── migrations/    # SQL migration files; apply via `pnpm migrate`, never from client
 ├── docs/              # Project documentation
-│   └── adr/           # Architecture Decision Records
+│   ├── adr/           # Architecture Decision Records
+│   └── generated/     # Generated architecture maps from pnpm arch:scan
 ├── .github/
 │   └── workflows/     # ci.yml (PR gates) + deploy.yml (main → gh-pages)
 ├── .env.example       # Required environment variables (no secrets)

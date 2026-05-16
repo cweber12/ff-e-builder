@@ -24,6 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:api": "pnpm --filter ffe-api test",
     "test:e2e": "playwright test",
+    "arch:scan": "tsx scripts/architecture-map.ts",
     "migrate": "tsx scripts/migrate.ts",
     "prepare": "husky"
   },

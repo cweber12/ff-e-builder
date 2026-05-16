@@ -60,6 +60,14 @@ C4Component
 
 The Worker uses hand-written SQL through `@neondatabase/serverless`; there is no current Drizzle schema in the repo. SQL migrations in `db/migrations/` are the database source of truth, and API/client TypeScript models are maintained manually.
 
+Generated import and module maps live in [generated/architecture-map.md](generated/architecture-map.md) with a machine-readable companion at [generated/architecture-map.json](generated/architecture-map.json). Refresh both with:
+
+```bash
+pnpm arch:scan
+```
+
+The generated map is descriptive only. It is intended to give agents current facts before architecture work; it does not enforce module seams or change runtime behavior.
+
 ## 3. Frontend Routes
 
 - `/signin` is public.

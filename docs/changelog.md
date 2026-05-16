@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs(architecture): add generated architecture-map tooling and docs under `docs/generated`
+
 - fix(exports): refine Proposal Excel table polish with centered image placement, stronger category/header borders, clearer revised-proposal headers, unit-aware quantities, and bold dimension separators in Size cells
 
 - fix(exports): polish Proposal Excel exports with 4:3 row imagery, compatibility-safe non-frozen panes, right-side formula-backed budget summaries, and recalculating item, category, revision, and grand totals
