@@ -11,7 +11,7 @@ import {
 } from '../types';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
-import { selectGeneratedItemsByProposalCategory } from '../lib/generatedItems';
+import { selectCompatibleProposalItemsByCategory } from '../lib/generatedItems';
 import {
   assertProjectOwnership,
   assertProposalCategoryOwnership,
@@ -121,7 +121,7 @@ router.get('/proposal/categories/:id/items', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const rows = await selectGeneratedItemsByProposalCategory(sql, id);
+  const rows = await selectCompatibleProposalItemsByCategory(sql, id);
   return c.json({ items: rows });
 });
 

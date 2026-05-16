@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  selectCompatibleProposalItemsByCategory,
   selectGeneratedItemsByProposalCategory,
   selectGeneratedItemsByRoom,
 } from '../src/lib/generatedItems';
@@ -37,5 +38,21 @@ describe('Generated Item read model', () => {
     expect(statements[1]).toContain('WHERE i.proposal_category_id =');
     expect(statements[1]).toContain('proposal_item_generated_item_links');
     expect(statements[1]).toContain('UNION ALL');
+  });
+
+  it('keeps a compatibility reader for current Proposal item endpoints', async () => {
+    const sql = vi.fn().mockResolvedValue([]);
+
+    await selectCompatibleProposalItemsByCategory(
+      sql as unknown as ReturnType<typeof getDb>,
+      'category-1',
+    );
+
+    const statement = Array.from(
+      (sql.mock.calls[0] as [TemplateStringsArray, ...unknown[]])[0],
+    ).join(' ');
+    expect(statement).toContain('FROM proposal_items pi');
+    expect(statement).toContain('WHERE pi.category_id =');
+    expect(statement).not.toContain('canonical_items');
   });
 });

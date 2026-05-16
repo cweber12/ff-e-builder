@@ -158,3 +158,31 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
     ORDER BY sort_order, created_at
   `;
 }
+
+export async function selectCompatibleProposalItemsByCategory(sql: Sql, categoryId: string) {
+  return sql`
+    SELECT
+      pi.*,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id',          m.id,
+            'project_id',  m.project_id,
+            'name',        m.name,
+            'material_id', m.material_id,
+            'description', m.description,
+            'swatch_hex',  m.swatch_hex,
+            'created_at',  m.created_at,
+            'updated_at',  m.updated_at
+          ) ORDER BY pim.sort_order
+        ) FILTER (WHERE m.id IS NOT NULL),
+        '[]'::json
+      ) AS materials
+    FROM  proposal_items pi
+    LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id
+    LEFT  JOIN materials m                 ON m.id = pim.material_id
+    WHERE pi.category_id = ${categoryId}
+    GROUP BY pi.id
+    ORDER BY pi.sort_order, pi.created_at
+  `;
+}
