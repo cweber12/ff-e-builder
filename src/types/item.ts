@@ -3,6 +3,23 @@ import type { Material } from './material';
 
 export type { ItemStatus } from './itemValidation';
 
+export type GeneratedItemProposalFields = {
+  proposalCategoryId: string | null;
+  productTag: string;
+  plan: string;
+  drawings: string;
+  location: string;
+  sizeLabel: string;
+  sizeMode: 'imperial' | 'metric';
+  sizeW: string;
+  sizeD: string;
+  sizeH: string;
+  sizeUnit: string;
+  cbm: number;
+  quantity: number;
+  quantityUnit: string;
+};
+
 export type Item = {
   id: string;
   roomId: string;
@@ -26,6 +43,8 @@ export type Item = {
   updatedAt: string;
   materials: Material[];
 };
+
+export type GeneratedItem = Item & GeneratedItemProposalFields;
 
 export type CustomColumnDef = {
   id: string;

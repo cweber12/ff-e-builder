@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(db): stage shared Generated Item schema for FF&E and Proposal table consolidation
+
 - docs(architecture): record shared Generated Item Table direction for FF&E and Proposal views
 
 - refactor(architecture): route FF&E and Proposal Finish Library consumers through the public materials barrel

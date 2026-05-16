@@ -57,12 +57,26 @@ export interface Room {
 export interface Item {
   id: string;
   room_id: string;
+  proposal_category_id: string | null;
   item_name: string;
   description: string | null;
   category: string | null;
   item_id_tag: string | null;
+  product_tag: string;
+  plan: string;
+  drawings: string;
+  location: string;
   dimensions: string | null;
   notes: string | null;
+  size_label: string;
+  size_mode: 'imperial' | 'metric';
+  size_w: string;
+  size_d: string;
+  size_h: string;
+  size_unit: string;
+  cbm: string;
+  quantity: string;
+  quantity_unit: string;
   qty: number;
   /** Always integer cents — see /docs/money.md */
   unit_cost_cents: number;
