@@ -50,7 +50,7 @@ import {
   useIsMobileViewport,
   useProposalRevisions,
 } from '../../../hooks';
-import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
+import { MaterialBadges, MaterialLibraryModal } from '../../materials';
 import {
   dollarsToCents,
   cents,

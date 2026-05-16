@@ -12,7 +12,7 @@ import {
 } from '../../../types';
 import { emptyToNull } from '../../../lib/utils';
 import type { Material } from '../../../types';
-import { MaterialLibraryModal, MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
+import { MaterialLibraryModal, MaterialSwatchImage } from '../../materials';
 import { Button, Drawer } from '../../primitives';
 
 export type AddItemMaterialSelection =

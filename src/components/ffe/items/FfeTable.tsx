@@ -74,7 +74,7 @@ import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
 import { Modal } from '../../primitives/Modal';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
-import { MaterialBadges, MaterialLibraryModal } from '../../materials/MaterialLibraryModal';
+import { MaterialBadges, MaterialLibraryModal } from '../../materials';
 import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import { GroupedTableHeader, GroupedTableSection } from '../../shared/table/TableViewWrappers';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';

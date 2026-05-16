@@ -16,7 +16,7 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
 import { CropModal } from '../../shared/image/CropModal';
-import { MaterialSwatchImage } from '../../materials/MaterialLibraryModal';
+import { MaterialSwatchImage } from '../../materials';
 import { api } from '../../../lib/api';
 import type { CropParams, ImageAsset } from '../../../types';
 

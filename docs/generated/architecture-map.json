@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-16T17:10:27.456Z",
+  "generatedAt": "2026-05-16T18:06:56.139Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -431,32 +431,32 @@
     {
       "importer": "src/components/ffe/catalog/CatalogView.tsx",
       "importerArea": "ffe",
-      "specifier": "../../materials/MaterialLibraryModal",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "specifier": "../../materials",
+      "resolved": "src/components/materials/index.ts",
       "resolvedArea": "finish-library",
       "kind": "import",
-      "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-      "reviewSection": "Review Targets"
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "reviewSection": "Expected Shared Dependencies"
     },
     {
       "importer": "src/components/ffe/items/AddItemDrawer.tsx",
       "importerArea": "ffe",
-      "specifier": "../../materials/MaterialLibraryModal",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "specifier": "../../materials",
+      "resolved": "src/components/materials/index.ts",
       "resolvedArea": "finish-library",
       "kind": "import",
-      "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-      "reviewSection": "Review Targets"
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "reviewSection": "Expected Shared Dependencies"
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
       "importerArea": "ffe",
-      "specifier": "../../materials/MaterialLibraryModal",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "specifier": "../../materials",
+      "resolved": "src/components/materials/index.ts",
       "resolvedArea": "finish-library",
       "kind": "import",
-      "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-      "reviewSection": "Review Targets"
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "reviewSection": "Expected Shared Dependencies"
     },
     {
       "importer": "src/components/ffe/catalog/CatalogView.tsx",
@@ -2801,12 +2801,12 @@
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
-      "specifier": "../../materials/MaterialLibraryModal",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "specifier": "../../materials",
+      "resolved": "src/components/materials/index.ts",
       "resolvedArea": "finish-library",
       "kind": "import",
-      "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-      "reviewSection": "Review Targets"
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "reviewSection": "Expected Shared Dependencies"
     },
     {
       "importer": "src/components/proposal/ChangeConfirmModal.tsx",
@@ -5312,64 +5312,6 @@
   "productCrossAreaImportGroups": [
     {
       "section": "Review Targets",
-      "from": "ffe",
-      "to": "finish-library",
-      "imports": 3,
-      "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-      "examples": [
-        {
-          "importer": "src/components/ffe/catalog/CatalogView.tsx",
-          "importerArea": "ffe",
-          "specifier": "../../materials/MaterialLibraryModal",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
-          "resolvedArea": "finish-library",
-          "kind": "import",
-          "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-          "reviewSection": "Review Targets"
-        },
-        {
-          "importer": "src/components/ffe/items/AddItemDrawer.tsx",
-          "importerArea": "ffe",
-          "specifier": "../../materials/MaterialLibraryModal",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
-          "resolvedArea": "finish-library",
-          "kind": "import",
-          "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-          "reviewSection": "Review Targets"
-        },
-        {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
-          "importerArea": "ffe",
-          "specifier": "../../materials/MaterialLibraryModal",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
-          "resolvedArea": "finish-library",
-          "kind": "import",
-          "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-          "reviewSection": "Review Targets"
-        }
-      ]
-    },
-    {
-      "section": "Review Targets",
-      "from": "proposal",
-      "to": "finish-library",
-      "imports": 1,
-      "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-      "examples": [
-        {
-          "importer": "src/components/proposal/table/ProposalTable.tsx",
-          "importerArea": "proposal",
-          "specifier": "../../materials/MaterialLibraryModal",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
-          "resolvedArea": "finish-library",
-          "kind": "import",
-          "reviewNote": "review: product imports internal Finish Library file; consider public Finish Library entry point",
-          "reviewSection": "Review Targets"
-        }
-      ]
-    },
-    {
-      "section": "Review Targets",
       "from": "shared-lib",
       "to": "ffe",
       "imports": 1,
@@ -5671,6 +5613,45 @@
     {
       "section": "Expected Shared Dependencies",
       "from": "ffe",
+      "to": "finish-library",
+      "imports": 3,
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "examples": [
+        {
+          "importer": "src/components/ffe/catalog/CatalogView.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../materials",
+          "resolved": "src/components/materials/index.ts",
+          "resolvedArea": "finish-library",
+          "kind": "import",
+          "reviewNote": "expected: product uses public Finish Library surface",
+          "reviewSection": "Expected Shared Dependencies"
+        },
+        {
+          "importer": "src/components/ffe/items/AddItemDrawer.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../materials",
+          "resolved": "src/components/materials/index.ts",
+          "resolvedArea": "finish-library",
+          "kind": "import",
+          "reviewNote": "expected: product uses public Finish Library surface",
+          "reviewSection": "Expected Shared Dependencies"
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../materials",
+          "resolved": "src/components/materials/index.ts",
+          "resolvedArea": "finish-library",
+          "kind": "import",
+          "reviewNote": "expected: product uses public Finish Library surface",
+          "reviewSection": "Expected Shared Dependencies"
+        }
+      ]
+    },
+    {
+      "section": "Expected Shared Dependencies",
+      "from": "ffe",
       "to": "shared-ui",
       "imports": 28,
       "reviewNote": "expected: product uses shared UI",
@@ -5781,6 +5762,25 @@
           "resolvedArea": "types",
           "kind": "import",
           "reviewNote": "expected: product uses shared types",
+          "reviewSection": "Expected Shared Dependencies"
+        }
+      ]
+    },
+    {
+      "section": "Expected Shared Dependencies",
+      "from": "proposal",
+      "to": "finish-library",
+      "imports": 1,
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "examples": [
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../materials",
+          "resolved": "src/components/materials/index.ts",
+          "resolvedArea": "finish-library",
+          "kind": "import",
+          "reviewNote": "expected: product uses public Finish Library surface",
           "reviewSection": "Expected Shared Dependencies"
         }
       ]
@@ -7555,9 +7555,9 @@
         },
         {
           "importer": "src/components/ffe/catalog/CatalogView.tsx",
-          "specifier": "../../materials/MaterialLibraryModal",
+          "specifier": "../../materials",
           "kind": "import",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+          "resolved": "src/components/materials/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -7767,9 +7767,9 @@
         },
         {
           "importer": "src/components/ffe/items/AddItemDrawer.tsx",
-          "specifier": "../../materials/MaterialLibraryModal",
+          "specifier": "../../materials",
           "kind": "import",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+          "resolved": "src/components/materials/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -8144,9 +8144,9 @@
         },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../materials/MaterialLibraryModal",
+          "specifier": "../../materials",
           "kind": "import",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+          "resolved": "src/components/materials/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -11134,9 +11134,9 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
-          "specifier": "../../materials/MaterialLibraryModal",
+          "specifier": "../../materials",
           "kind": "import",
-          "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+          "resolved": "src/components/materials/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -19084,9 +19084,9 @@
     },
     {
       "importer": "src/components/ffe/catalog/CatalogView.tsx",
-      "specifier": "../../materials/MaterialLibraryModal",
+      "specifier": "../../materials",
       "kind": "import",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "resolved": "src/components/materials/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -19252,9 +19252,9 @@
     },
     {
       "importer": "src/components/ffe/items/AddItemDrawer.tsx",
-      "specifier": "../../materials/MaterialLibraryModal",
+      "specifier": "../../materials",
       "kind": "import",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "resolved": "src/components/materials/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -19596,9 +19596,9 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../materials/MaterialLibraryModal",
+      "specifier": "../../materials",
       "kind": "import",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "resolved": "src/components/materials/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -21828,9 +21828,9 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
-      "specifier": "../../materials/MaterialLibraryModal",
+      "specifier": "../../materials",
       "kind": "import",
-      "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "resolved": "src/components/materials/index.ts",
       "externalPackage": null,
       "asset": false
     },

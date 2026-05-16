@@ -773,6 +773,17 @@ function getProductImportReviewSignal(
   if (
     (from === 'ffe' || from === 'proposal') &&
     to === 'finish-library' &&
+    isPublicFinishLibraryPath(resolved.path)
+  ) {
+    return {
+      reviewNote: 'expected: product uses public Finish Library surface',
+      reviewSection: 'Expected Shared Dependencies',
+    };
+  }
+
+  if (
+    (from === 'ffe' || from === 'proposal') &&
+    to === 'finish-library' &&
     isInternalFinishLibraryPath(resolved.path)
   ) {
     return {
@@ -838,6 +849,10 @@ function getProductImportReviewSignal(
     reviewNote: 'unknown: ownership unclear',
     reviewSection: 'Unknown / Ambiguous Dependencies',
   };
+}
+
+function isPublicFinishLibraryPath(repoPath: string): boolean {
+  return repoPath === 'src/components/materials/index.ts';
 }
 
 function isInternalFinishLibraryPath(repoPath: string): boolean {
