@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): centralize FF&E and Proposal Generated Item table view presets
+
 - refactor(ui): confirm FF&E edits before recording Proposal revision history
 
 - refactor(api): record FF&E edits in Proposal revision history for linked Generated Items

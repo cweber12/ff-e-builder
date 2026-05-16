@@ -30,6 +30,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/money';
 import { getSortOrderPatches } from '../../../lib/items';
+import { FFE_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import {
   useItemMaterialActions,
   useCreateItem,
@@ -85,28 +86,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
 
-/**
- * Stable IDs for built-in columns — used as keys in useColumnConfig.
- * The order here is the initial default order.
- */
-const DEFAULT_COLUMN_IDS = [
-  'drag',
-  'image',
-  'plan',
-  'itemIdTag',
-  'itemName',
-  'description',
-  'category',
-  'dimensions',
-  'materials',
-  'qty',
-  'unitCostCents',
-  'lineTotal',
-  'status',
-  'leadTime',
-  'notes',
-  'actions',
-] as const;
+const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;
 
 type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
 
@@ -120,25 +100,7 @@ const stickyTotalCellClassName =
 const stickyActionsCellClassName =
   'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
 
-/** Human-readable labels for default columns shown in the restore picker. */
-const DEFAULT_COLUMN_LABELS: Record<DefaultColumnId, string> = {
-  drag: 'Drag',
-  image: 'Rendering',
-  plan: 'Plan',
-  itemIdTag: 'ID',
-  itemName: 'Item',
-  description: 'Product Description',
-  category: 'Category',
-  dimensions: 'Dimensions',
-  materials: 'Materials',
-  qty: 'Qty',
-  unitCostCents: 'Unit Cost',
-  lineTotal: 'Total',
-  status: 'Status',
-  leadTime: 'Lead Time',
-  notes: 'Notes',
-  actions: 'Actions',
-};
+const DEFAULT_COLUMN_LABELS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnLabels;
 
 type FfeTableProps = {
   roomsWithItems: RoomWithItems[];

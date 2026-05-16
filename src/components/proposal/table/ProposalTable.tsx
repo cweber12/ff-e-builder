@@ -83,6 +83,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
+import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import { proposalStatusConfig } from '../proposalStatusConfig';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
 import {
@@ -340,35 +341,13 @@ function ChangeHistoryDot({
 
 // --- Proposal Table Column Definitions ---
 // quantity and unitCost are fixed sticky-right columns — not draggable or hideable.
-const STICKY_RIGHT_COLUMN_IDS = new Set(['quantity', 'unitCost']);
+const STICKY_RIGHT_COLUMN_IDS = new Set(PROPOSAL_GENERATED_ITEM_TABLE_PRESET.fixedColumnIds);
 
-const PROPOSAL_HIDEABLE_IDS = [
-  'rendering',
-  'productTag',
-  'plan',
-  'drawings',
-  'location',
-  'description',
-  'notes',
-  'size',
-  'swatch',
-  'cbm',
-] as const;
+const PROPOSAL_HIDEABLE_IDS = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.hideableColumnIds;
 
 export type ProposalColumnId = (typeof PROPOSAL_HIDEABLE_IDS)[number];
 
-const PROPOSAL_COLUMN_META: Record<ProposalColumnId, { label: string; className: string }> = {
-  rendering: { label: 'Rendering', className: 'w-40 min-w-40' },
-  productTag: { label: 'Product Tag', className: 'min-w-36' },
-  plan: { label: 'Plan', className: 'w-36 min-w-36' },
-  drawings: { label: 'Drawings', className: 'min-w-36' },
-  location: { label: 'Location', className: 'min-w-36' },
-  description: { label: 'Product Description', className: 'min-w-64' },
-  notes: { label: 'Notes', className: 'min-w-48' },
-  size: { label: 'Size', className: 'w-44 min-w-44' },
-  swatch: { label: 'Swatch', className: 'min-w-36' },
-  cbm: { label: 'CBM', className: 'w-24 min-w-24' },
-};
+const PROPOSAL_COLUMN_META = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnMeta;
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
