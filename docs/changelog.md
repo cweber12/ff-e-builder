@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): share generated item editable text table cell chrome
+
 - refactor(table): share generated item Rendering and Plan image cells
 
 - refactor(table): move generated item text-wrap behavior into table presets

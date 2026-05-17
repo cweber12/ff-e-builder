@@ -82,6 +82,7 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
@@ -1618,18 +1619,20 @@ function ProposalRow({
       />
     ),
     productTag: (
-      <EditableCell
+      <GeneratedItemEditableTextCell
         value={item.productTag}
         onSave={(productTag) => onSave({ productTag })}
         indicator={dot('productTag')}
+        inputClassName={editInputClassName}
       />
     ),
     itemName: (
-      <EditableCell
+      <GeneratedItemEditableTextCell
         value={item.itemName}
         onSave={(itemName) => onSave({ itemName })}
         className="min-w-48"
         indicator={dot('itemName')}
+        inputClassName={editInputClassName}
       />
     ),
     plan: (
@@ -1642,33 +1645,37 @@ function ProposalRow({
       />
     ),
     drawings: (
-      <EditableCell
+      <GeneratedItemEditableTextCell
         value={item.drawings}
         onSave={(drawings) => onSave({ drawings })}
         indicator={dot('drawings')}
+        inputClassName={editInputClassName}
       />
     ),
     location: (
-      <EditableCell
+      <GeneratedItemEditableTextCell
         value={item.location}
         onSave={(location) => onSave({ location })}
         indicator={dot('location')}
+        inputClassName={editInputClassName}
       />
     ),
     description: (
-      <EditableCell
+      <GeneratedItemEditableTextCell
         value={item.description}
         onSave={(description) => onSave({ description })}
         className="min-w-64"
         indicator={dot('description')}
+        inputClassName={editInputClassName}
       />
     ),
     notes: (
-      <EditableCell
+      <GeneratedItemEditableTextCell
         value={item.notes}
         onSave={(notes) => onSave({ notes })}
         className="min-w-48"
         indicator={dot('notes')}
+        inputClassName={editInputClassName}
       />
     ),
     size: (
@@ -1725,12 +1732,13 @@ function ProposalRow({
     ...Object.fromEntries(
       customColumnDefs.map((def) => [
         def.id,
-        <EditableCell
+        <GeneratedItemEditableTextCell
           value={item.customData[def.id] ?? ''}
           onSave={(value) => {
             onSave({ customData: { ...item.customData, [def.id]: value } });
           }}
           indicator={dot(def.id)}
+          inputClassName={editInputClassName}
         />,
       ]),
     ),
@@ -2098,90 +2106,6 @@ function MobileProposalCards({
         );
       })}
     </div>
-  );
-}
-
-function EditableCell({
-  value,
-  onSave,
-  className,
-  indicator,
-}: {
-  value: string;
-  onSave: (value: string) => void;
-  className?: string;
-  indicator?: ReactNode;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!editing) setDraft(value);
-  }, [value, editing]);
-
-  useEffect(() => {
-    if (editing) inputRef.current?.select();
-  }, [editing]);
-
-  const commit = () => {
-    if (draft !== value) onSave(draft);
-    setEditing(false);
-  };
-
-  const cancel = () => {
-    setDraft(value);
-    setEditing(false);
-  };
-
-  if (!editing) {
-    const isEmpty = !value;
-    return (
-      <td className={cn('px-3 py-2', className)} onClick={(e) => e.stopPropagation()}>
-        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => setEditing(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setEditing(true);
-            }
-          }}
-          className={cn(
-            'block w-full cursor-pointer rounded px-2 py-1 text-sm',
-            isEmpty
-              ? 'border border-gray-300 text-gray-400 hover:border-brand-500'
-              : 'text-gray-700 hover:bg-brand-50',
-          )}
-        >
-          {isEmpty ? '-' : value}
-        </span>
-      </td>
-    );
-  }
-
-  return (
-    <td className={cn('px-3 py-2', className)} onClick={(e) => e.stopPropagation()}>
-      <input
-        ref={inputRef}
-        type="text"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            commit();
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            cancel();
-          }
-        }}
-        className={cn('w-full', editInputClassName)}
-      />
-    </td>
   );
 }
 
