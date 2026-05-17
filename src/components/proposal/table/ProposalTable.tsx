@@ -77,6 +77,7 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
 import {
   GeneratedItemEditableMoneyCell,
   GeneratedItemEditableNumberCell,
@@ -194,19 +195,6 @@ const stickyLockedTotalCellClassName =
   'sticky right-[472px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
 const stickyNotesCellClassName =
   'sticky right-[312px] z-10 bg-surface min-w-[160px] group-hover:bg-neutral-50';
-
-function GripIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-      <circle cx="5" cy="4" r="1.5" />
-      <circle cx="11" cy="4" r="1.5" />
-      <circle cx="5" cy="8" r="1.5" />
-      <circle cx="11" cy="8" r="1.5" />
-      <circle cx="5" cy="12" r="1.5" />
-      <circle cx="11" cy="12" r="1.5" />
-    </svg>
-  );
-}
 
 type ProposalTableProps = {
   projectId: string;
@@ -1733,15 +1721,11 @@ function ProposalRow({
       )}
     >
       <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
-        <button
-          type="button"
-          aria-label={`Drag ${item.productTag || 'item'}`}
-          className="cursor-grab rounded px-1 text-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        <GeneratedItemDragHandle
+          ariaLabel={`Drag ${item.productTag || 'item'}`}
           {...attributes}
           {...listeners}
-        >
-          <GripIcon />
-        </button>
+        />
       </td>
       {visibleColOrder.map((colId) => (
         <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>

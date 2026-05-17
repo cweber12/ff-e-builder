@@ -91,6 +91,7 @@ import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
@@ -562,19 +563,6 @@ function MoreIcon() {
       <circle cx="5" cy="10" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="15" cy="10" r="1.5" />
-    </svg>
-  );
-}
-
-function GripIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-      <circle cx="7" cy="5" r="1.2" />
-      <circle cx="13" cy="5" r="1.2" />
-      <circle cx="7" cy="10" r="1.2" />
-      <circle cx="13" cy="10" r="1.2" />
-      <circle cx="7" cy="15" r="1.2" />
-      <circle cx="13" cy="15" r="1.2" />
     </svg>
   );
 }
@@ -1054,15 +1042,11 @@ function SortableItemRow({
           )}
         >
           {cell.column.id === 'drag' ? (
-            <button
-              type="button"
-              aria-label={`Drag ${row.original.itemName}`}
-              className="cursor-grab rounded px-1 text-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            <GeneratedItemDragHandle
+              ariaLabel={`Drag ${row.original.itemName}`}
               {...attributes}
               {...listeners}
-            >
-              <GripIcon />
-            </button>
+            />
           ) : cell.column.id === 'actions' ? (
             <div className="flex items-center gap-1">
               <button
