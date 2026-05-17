@@ -84,7 +84,7 @@ import {
 } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
-import { GeneratedItemMaterialBadges } from '../../shared/table/GeneratedItemMaterialsCell';
+import { GeneratedItemMaterialsCell } from '../../shared/table/GeneratedItemMaterialsCell';
 import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
@@ -1686,11 +1686,7 @@ function ProposalRow({
       </td>
     ),
     swatch: (
-      <td className="min-w-36 px-3 py-2" onClick={stopProp}>
-        <GeneratedItemMaterialBadges
-          materials={item.materials}
-          onOpen={() => setSwatchOpen(true)}
-        />
+      <GeneratedItemMaterialsCell materials={item.materials} onOpen={() => setSwatchOpen(true)}>
         <MaterialLibraryModal
           open={swatchOpen}
           projectId={projectId}
@@ -1699,7 +1695,7 @@ function ProposalRow({
           item={item}
           onClose={() => setSwatchOpen(false)}
         />
-      </td>
+      </GeneratedItemMaterialsCell>
     ),
     cbm: (
       <GeneratedItemEditableNumberCell
