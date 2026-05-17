@@ -108,4 +108,15 @@ describe('proposalApi', () => {
       version: 9,
     });
   });
+
+  it('adds a proposal item to FF&E with an explicit worker action', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ item: { id: 'generated-item-1' } }));
+
+    await proposalApi.addItemToFfe('proposal-item-1');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/proposal/items/proposal-item-1/add-to-ffe'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
 });

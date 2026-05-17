@@ -12,6 +12,7 @@ import {
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
 import {
+  addProposalItemToFfe,
   createGeneratedItemFromProposal,
   mirrorProposalItemToGeneratedItem,
   selectCompatibleProposalItemsByCategory,
@@ -294,6 +295,22 @@ router.patch('/proposal/items/:id', async (c) => {
   }
 
   return c.json({ item: updateRows[0] });
+});
+
+router.post('/proposal/items/:id/add-to-ffe', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+
+  try {
+    await assertProposalItemOwnership(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const item = await addProposalItemToFfe(sql, id);
+  if (!item) return c.json({ error: 'Not found' }, 404);
+  return c.json({ item });
 });
 
 // PATCH /api/v1/proposal/revisions/:revisionId/items/:itemId/cost

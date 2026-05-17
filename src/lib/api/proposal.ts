@@ -166,6 +166,11 @@ export const proposalApi = {
       body: JSON.stringify(proposalItemUpdatePayload(patch)),
     }).then((r) => mapProposalItem(r.item)),
 
+  addItemToFfe: (id: string): Promise<void> =>
+    apiFetch<unknown>(`/api/v1/proposal/items/${id}/add-to-ffe`, { method: 'POST' }).then(
+      () => undefined,
+    ),
+
   deleteItem: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
 

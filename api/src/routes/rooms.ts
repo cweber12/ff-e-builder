@@ -57,6 +57,7 @@ router.delete('/:id', async (c) => {
          FROM proposal_item_generated_item_links link
          JOIN items i ON i.id = link.item_id
          WHERE i.room_id = ${id}
+           AND i.is_ffe_visible = true
        )
   `;
   await deleteR2Keys(
@@ -70,6 +71,7 @@ router.delete('/:id', async (c) => {
       FROM proposal_item_generated_item_links link
       JOIN items i ON i.id = link.item_id
       WHERE i.room_id = ${id}
+        AND i.is_ffe_visible = true
     )
   `;
   await sql`DELETE FROM rooms WHERE id = ${id}`;

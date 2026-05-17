@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { projectKeys, proposalKeys } from '../../lib/query';
+import { itemKeys, projectKeys, proposalKeys, roomKeys } from '../../lib/query';
 import {
   appendListItem,
   appendUniqueListItem,
@@ -196,6 +196,18 @@ export function useMoveProposalItem() {
       });
       void queryClient.invalidateQueries({ queryKey: proposalKeys.items(variables.toCategoryId) });
     },
+  });
+}
+
+export function useAddProposalItemToFfe(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.proposal.addItemToFfe(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: roomKeys.forProject(projectId) });
+      void queryClient.invalidateQueries({ queryKey: itemKeys.all });
+    },
+    onError: (err) => toast.error(`Add to FF&E failed: ${err.message}`),
   });
 }
 

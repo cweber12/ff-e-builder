@@ -145,7 +145,7 @@ The shared item record that can appear in both FF&E and Proposal views. FF&E and
 _Avoid_: Treating FF&E Item and Proposal Item as unrelated records when referring to long-term table/export behavior
 
 **Generated Item Table**:
-The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default.
+The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default. Proposal-created Furniture items are visible in FF&E automatically; other Proposal items become visible in FF&E only when the user chooses Add to FF&E.
 _Avoid_: Separate table engines, duplicated export table models
 
 **Table Group**:
@@ -216,6 +216,7 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A **Location** groups zero or more **Generated Items** in the FF&E view.
 - A **Proposal Category** groups zero or more **Generated Items** in the Proposal view.
 - Creating a furniture **Generated Item** in FF&E should make it visible in Proposal under the Furniture **Proposal Category** by default.
+- Choosing Add to FF&E for a **Proposal Item** places it in the FF&E **Location** matching its Location field, creating that Location if needed, or Unassigned when blank.
 - A **Proposal Item** can have zero or more **Proposal Item Changes**, one per tracked field edit while the proposal is not `in_progress`.
 - A **Proposal Item Change** snapshots the **Proposal Status** at the time of the edit to preserve the display color for that entry.
 - A **Proposal Item Change** belongs to a **Revision Round** via `revision_id`; entries created before any Revision Round is triggered carry a null `revision_id` until the next round is opened.

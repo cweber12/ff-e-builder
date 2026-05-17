@@ -7,6 +7,9 @@ type DbRow = Record<string, unknown>;
 type ProposalStatus = 'in_progress' | 'pricing_complete' | 'submitted' | 'approved';
 type TrackedProposalStatus = Exclude<ProposalStatus, 'in_progress'>;
 
+const DEFAULT_UNASSIGNED_ROOM_NAME = 'Unassigned';
+const DEFAULT_FURNITURE_CATEGORY_NAME = 'Furniture';
+
 const trackedProposalStatuses = new Set<ProposalStatus>([
   'pricing_complete',
   'submitted',
@@ -31,6 +34,36 @@ type FfeChange = {
   newValue: string;
   notes?: string;
   isPriceAffecting: boolean;
+};
+
+type ProposalCategoryContext = {
+  projectId: string;
+  name: string;
+};
+
+type ProposalItemSource = {
+  id: string;
+  category_id: string;
+  project_id: string;
+  item_id: string | null;
+  product_tag: string | null;
+  plan: string | null;
+  drawings: string | null;
+  location: string | null;
+  description: string | null;
+  notes: string | null;
+  size_label: string | null;
+  size_mode: CreateProposalItemInput['size_mode'] | null;
+  size_w: string | null;
+  size_d: string | null;
+  size_h: string | null;
+  size_unit: string | null;
+  cbm: number | string | null;
+  quantity: number | string | null;
+  quantity_unit: string | null;
+  unit_cost_cents: number | string | null;
+  sort_order: number | null;
+  custom_data: Record<string, string> | null;
 };
 
 function plain(value: unknown) {
@@ -131,16 +164,60 @@ async function selectRoomProjectId(sql: Sql, roomId: string) {
   return row.project_id;
 }
 
-async function selectProposalCategoryProjectId(sql: Sql, categoryId: string) {
+async function selectProposalCategoryContext(
+  sql: Sql,
+  categoryId: string,
+): Promise<ProposalCategoryContext> {
   const rows = await sql`
-    SELECT project_id
+    SELECT project_id, name
     FROM proposal_categories
     WHERE id = ${categoryId}
     LIMIT 1
   `;
-  const row = rows[0] as { project_id?: string } | undefined;
-  if (!row?.project_id) throw new Error('proposal_category_not_found');
-  return row.project_id;
+  const row = rows[0] as { project_id?: string; name?: string } | undefined;
+  if (!row?.project_id || !row.name) throw new Error('proposal_category_not_found');
+  return { projectId: row.project_id, name: row.name };
+}
+
+function isDefaultFurnitureCategory(name: string) {
+  return name.trim().toLowerCase() === DEFAULT_FURNITURE_CATEGORY_NAME.toLowerCase();
+}
+
+function ffeLocationName(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : DEFAULT_UNASSIGNED_ROOM_NAME;
+}
+
+async function selectRoomIdForFfeLocation(sql: Sql, projectId: string, location: string) {
+  const roomName = ffeLocationName(location);
+  const rows = await sql`
+    WITH existing AS (
+      SELECT id
+      FROM rooms
+      WHERE project_id = ${projectId} AND lower(name) = lower(${roomName})
+      ORDER BY sort_order, created_at
+      LIMIT 1
+    ),
+    next_sort AS (
+      SELECT COALESCE(MAX(sort_order), -1) + 1 AS sort_order
+      FROM rooms
+      WHERE project_id = ${projectId}
+    ),
+    inserted AS (
+      INSERT INTO rooms (project_id, name, sort_order)
+      SELECT ${projectId}, ${roomName}, next_sort.sort_order
+      FROM next_sort
+      WHERE NOT EXISTS (SELECT 1 FROM existing)
+      RETURNING id
+    )
+    SELECT id FROM inserted
+    UNION ALL
+    SELECT id FROM existing
+    LIMIT 1
+  `;
+  const row = rows[0] as { id?: string } | undefined;
+  if (!row?.id) throw new Error('ffe_location_room_not_found');
+  return row.id;
 }
 
 async function selectDefaultFurnitureCategoryId(sql: Sql, projectId: string) {
@@ -169,28 +246,7 @@ async function selectDefaultFurnitureCategoryId(sql: Sql, projectId: string) {
 }
 
 async function selectDefaultUnassignedRoomId(sql: Sql, projectId: string) {
-  const rows = await sql`
-    WITH existing AS (
-      SELECT id
-      FROM rooms
-      WHERE project_id = ${projectId} AND lower(name) = 'unassigned'
-      ORDER BY sort_order, created_at
-      LIMIT 1
-    ),
-    inserted AS (
-      INSERT INTO rooms (project_id, name, sort_order)
-      SELECT ${projectId}, 'Unassigned', 0
-      WHERE NOT EXISTS (SELECT 1 FROM existing)
-      RETURNING id
-    )
-    SELECT id FROM inserted
-    UNION ALL
-    SELECT id FROM existing
-    LIMIT 1
-  `;
-  const row = rows[0] as { id?: string } | undefined;
-  if (!row?.id) throw new Error('unassigned_room_not_found');
-  return row.id;
+  return selectRoomIdForFfeLocation(sql, projectId, DEFAULT_UNASSIGNED_ROOM_NAME);
 }
 
 async function insertProposalItemMirrorForGeneratedItem(
@@ -342,12 +398,13 @@ async function insertGeneratedItemMirrorForProposalItem(
   roomId: string,
   categoryId: string,
   input: CreateProposalItemInput,
+  options: { isFfeVisible?: boolean } = {},
 ) {
   const rows = await sql`
     INSERT INTO items (
       room_id, item_name, description, category, item_id_tag,
       dimensions, notes, qty, unit_cost_cents,
-      lead_time, status, custom_data, sort_order,
+      lead_time, status, custom_data, sort_order, is_ffe_visible,
       proposal_category_id, product_tag, plan, drawings, location,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit
@@ -366,6 +423,7 @@ async function insertGeneratedItemMirrorForProposalItem(
       'pending',
       ${JSON.stringify(input.custom_data ?? {})},
       ${input.sort_order ?? 0},
+      ${options.isFfeVisible === true},
       ${categoryId},
       ${input.product_tag ?? ''},
       ${input.plan ?? ''},
@@ -401,7 +459,7 @@ export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input
       room_id, item_name, description, category, item_id_tag,
       dimensions, notes, qty, unit_cost_cents,
       lead_time, status, custom_data, sort_order,
-      proposal_category_id, product_tag, quantity, quantity_unit
+      proposal_category_id, product_tag, quantity, quantity_unit, is_ffe_visible
     )
     VALUES (
       ${roomId},
@@ -420,7 +478,8 @@ export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input
       ${furnitureCategoryId},
       ${input.item_id_tag ?? ''},
       ${input.qty ?? 1},
-      'unit'
+      'unit',
+      true
     )
     RETURNING *
   `;
@@ -436,8 +495,11 @@ export async function createGeneratedItemFromProposal(
   categoryId: string,
   input: CreateProposalItemInput,
 ) {
-  const projectId = await selectProposalCategoryProjectId(sql, categoryId);
-  const unassignedRoomId = await selectDefaultUnassignedRoomId(sql, projectId);
+  const category = await selectProposalCategoryContext(sql, categoryId);
+  const isFurniture = isDefaultFurnitureCategory(category.name);
+  const roomId = isFurniture
+    ? await selectRoomIdForFfeLocation(sql, category.projectId, input.location ?? '')
+    : await selectDefaultUnassignedRoomId(sql, category.projectId);
   const rows = await sql`
     INSERT INTO proposal_items (
       category_id, product_tag, plan, drawings, location, description, notes,
@@ -470,14 +532,81 @@ export async function createGeneratedItemFromProposal(
   const proposalItem = rows[0] as { id?: string } | undefined;
   if (!proposalItem?.id) throw new Error('proposal_item_not_created');
 
-  await insertGeneratedItemMirrorForProposalItem(
-    sql,
-    proposalItem.id,
-    unassignedRoomId,
-    categoryId,
-    input,
-  );
+  await insertGeneratedItemMirrorForProposalItem(sql, proposalItem.id, roomId, categoryId, input, {
+    isFfeVisible: isFurniture,
+  });
   return rows[0] as DbRow;
+}
+
+function proposalItemSourceToCreateInput(source: ProposalItemSource): CreateProposalItemInput {
+  return {
+    product_tag: source.product_tag ?? '',
+    plan: source.plan ?? '',
+    drawings: source.drawings ?? '',
+    location: source.location ?? '',
+    description: source.description ?? '',
+    notes: source.notes ?? '',
+    size_label: source.size_label ?? '',
+    size_mode: source.size_mode ?? 'imperial',
+    size_w: source.size_w ?? '',
+    size_d: source.size_d ?? '',
+    size_h: source.size_h ?? '',
+    size_unit: source.size_unit ?? 'in',
+    cbm: Number(source.cbm ?? 0),
+    quantity: Number(source.quantity ?? 1),
+    quantity_unit: source.quantity_unit ?? 'unit',
+    unit_cost_cents: Number(source.unit_cost_cents ?? 0),
+    sort_order: source.sort_order ?? 0,
+    custom_data: source.custom_data ?? {},
+  };
+}
+
+export async function addProposalItemToFfe(sql: Sql, proposalItemId: string) {
+  const sourceRows = await sql`
+    SELECT
+      pi.*,
+      pc.project_id,
+      link.item_id
+    FROM proposal_items pi
+    JOIN proposal_categories pc ON pc.id = pi.category_id
+    LEFT JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
+    WHERE pi.id = ${proposalItemId}
+    LIMIT 1
+  `;
+  const source = sourceRows[0] as ProposalItemSource | undefined;
+  if (!source) return undefined;
+
+  const roomId = await selectRoomIdForFfeLocation(sql, source.project_id, source.location ?? '');
+
+  if (!source.item_id) {
+    await insertGeneratedItemMirrorForProposalItem(
+      sql,
+      source.id,
+      roomId,
+      source.category_id,
+      proposalItemSourceToCreateInput(source),
+      { isFfeVisible: true },
+    );
+    const createdRows = await sql`
+      SELECT i.*
+      FROM items i
+      JOIN proposal_item_generated_item_links link ON link.item_id = i.id
+      WHERE link.proposal_item_id = ${proposalItemId}
+      LIMIT 1
+    `;
+    return createdRows[0] as DbRow | undefined;
+  }
+
+  await mirrorProposalItemToGeneratedItem(sql, proposalItemId);
+  const rows = await sql`
+    UPDATE items
+    SET room_id = ${roomId},
+        is_ffe_visible = true,
+        version = version + 1
+    WHERE id = ${source.item_id}
+    RETURNING *
+  `;
+  return rows[0] as DbRow | undefined;
 }
 
 export async function mirrorGeneratedItemToProposalItem(
@@ -708,6 +837,7 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
     LEFT JOIN item_materials im ON im.item_id = i.id
     LEFT JOIN materials m ON m.id = im.material_id
     WHERE i.room_id = ${roomId}
+      AND i.is_ffe_visible = true
     GROUP BY i.id
     ORDER BY i.sort_order, i.created_at
   `;

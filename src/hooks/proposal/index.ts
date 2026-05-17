@@ -8,6 +8,7 @@ export {
   useUpdateProposalItem,
   useProposalItemChangelog,
   useMoveProposalItem,
+  useAddProposalItemToFfe,
   useDeleteProposalItem,
   useProposalRevisions,
   useUpdateRevisionItemCost,

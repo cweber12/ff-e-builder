@@ -37,6 +37,7 @@ import {
   useCreateProposalItem,
   useDeleteProposalCategory,
   useDeleteProposalItem,
+  useAddProposalItemToFfe,
   useMoveProposalItem,
   useProposalWithItems,
   useUpdateProposalCategory,
@@ -905,6 +906,7 @@ function ProposalCategorySection({
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
+  const addItemToFfe = useAddProposalItemToFfe(projectId);
   const moveItem = useMoveProposalItem();
   const updateItem = useUpdateProposalItem();
   const isMobile = useIsMobileViewport();
@@ -1313,6 +1315,7 @@ function ProposalCategorySection({
                           }),
                         })
                       }
+                      onAddToFfe={() => addItemToFfe.mutate(item.id)}
                       onMove={(toCategoryId) =>
                         moveItem.mutate({
                           id: item.id,
@@ -1365,6 +1368,7 @@ function ProposalCategorySection({
                 ...(Object.keys(item.customData).length > 0 && { customData: item.customData }),
               })
             }
+            onAddToFfe={(item) => addItemToFfe.mutate(item.id)}
             onMove={(item, toCategoryId) =>
               moveItem.mutate({
                 id: item.id,
@@ -1620,6 +1624,7 @@ function ProposalCategorySection({
                               }),
                             })
                           }
+                          onAddToFfe={() => addItemToFfe.mutate(item.id)}
                           onMove={(toCategoryId) =>
                             moveItem.mutate({
                               id: item.id,
@@ -1676,6 +1681,7 @@ function ProposalRow({
   onSave,
   onDelete,
   onDuplicate,
+  onAddToFfe,
   onMove,
   onRowClick,
   visibleColOrder,
@@ -1693,6 +1699,7 @@ function ProposalRow({
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onAddToFfe: () => void;
   onMove: (toCategoryId: string) => void;
   onRowClick: () => void;
   visibleColOrder: string[];
@@ -1945,6 +1952,7 @@ function ProposalRow({
           otherCategories={otherCategories}
           onViewDetails={onRowClick}
           onDuplicate={onDuplicate}
+          onAddToFfe={onAddToFfe}
           onMove={onMove}
           onDelete={onDelete}
         />
@@ -1958,6 +1966,7 @@ function ProposalItemActionsMenu({
   otherCategories,
   onViewDetails,
   onDuplicate,
+  onAddToFfe,
   onMove,
   onDelete,
 }: {
@@ -1965,6 +1974,7 @@ function ProposalItemActionsMenu({
   otherCategories: { id: string; name: string }[];
   onViewDetails: () => void;
   onDuplicate: () => void;
+  onAddToFfe: () => void;
   onMove: (toCategoryId: string) => void;
   onDelete: () => void;
 }) {
@@ -2042,6 +2052,14 @@ function ProposalItemActionsMenu({
             >
               Duplicate
             </button>
+            <button
+              type="button"
+              role="menuitem"
+              className={menuItemClassName}
+              onClick={() => runAction(onAddToFfe)}
+            >
+              Add to FF&amp;E
+            </button>
             {otherCategories.length > 0 && (
               <div className="relative">
                 <button
@@ -2109,6 +2127,7 @@ function MobileProposalCards({
   otherCategories,
   onDelete,
   onDuplicate,
+  onAddToFfe,
   onMove,
   onItemClick,
 }: {
@@ -2116,6 +2135,7 @@ function MobileProposalCards({
   otherCategories: { id: string; name: string }[];
   onDelete: (item: ProposalItem) => void;
   onDuplicate: (item: ProposalItem) => void;
+  onAddToFfe: (item: ProposalItem) => void;
   onMove: (item: ProposalItem, toCategoryId: string) => void;
   onItemClick: (item: ProposalItem) => void;
 }) {
@@ -2164,6 +2184,7 @@ function MobileProposalCards({
                 otherCategories={otherCategories}
                 onViewDetails={() => onItemClick(item)}
                 onDuplicate={() => onDuplicate(item)}
+                onAddToFfe={() => onAddToFfe(item)}
                 onMove={(toCategoryId) => onMove(item, toCategoryId)}
                 onDelete={() => onDelete(item)}
               />
