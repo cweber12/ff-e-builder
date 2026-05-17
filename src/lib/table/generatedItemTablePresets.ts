@@ -50,9 +50,15 @@ export const FFE_GENERATED_ITEM_TABLE_PRESET = {
     notes: 'Notes',
     actions: 'Actions',
   },
+  defaultColumnMeta: {
+    plan: { className: 'w-24 min-w-24 max-w-24' },
+    itemName: { className: 'w-48 min-w-48 max-w-48' },
+    description: { className: 'w-64 min-w-64 max-w-64' },
+  },
 } as const satisfies GeneratedItemTablePreset & {
   defaultColumnIds: readonly string[];
   defaultColumnLabels: Record<string, string>;
+  defaultColumnMeta: Record<string, { className: string }>;
 };
 
 export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
