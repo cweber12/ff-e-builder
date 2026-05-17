@@ -173,6 +173,7 @@ export function ImportProposalExcelModal({
       const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
       const unmappedCols = parsed.columns.filter((col) => {
         if (usedKeys.has(col.key)) return false;
+        if (isComputedProposalTotalColumn(col.label)) return false;
         return importableRows.some((row) => (row.values[col.key] ?? '').trim().length > 0);
       });
       const customDataKeyMap = new Map<string, string>();
@@ -564,7 +565,7 @@ export function ImportProposalExcelModal({
   );
 }
 
-function buildProposalItem(
+export function buildProposalItem(
   row: ProposalParsedRow,
   mapping: ProposalImportColumnMap,
   allColumns: ProposalImportColumn[],
@@ -573,7 +574,7 @@ function buildProposalItem(
   const usedKeys = new Set(Object.values(mapping).filter((v): v is string => v !== null));
   const customData: Record<string, string> = {};
   for (const col of allColumns) {
-    if (!usedKeys.has(col.key)) {
+    if (!usedKeys.has(col.key) && !isComputedProposalTotalColumn(col.label)) {
       const val = (row.values[col.key] ?? '').trim();
       if (val) {
         const key = customDataKeyMap?.get(col.key) ?? col.label;
@@ -602,6 +603,14 @@ function buildProposalItem(
 function getValue(row: ProposalParsedRow, columnKey: string | null): string {
   if (!columnKey) return '';
   return (row.values[columnKey] ?? '').trim();
+}
+
+export function isComputedProposalTotalColumn(label: string) {
+  const normalized = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+  return normalized === 'total' || normalized === 'total cost' || normalized === 'line total';
 }
 
 function selectedImages(

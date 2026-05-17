@@ -12,8 +12,10 @@ const PAGE_PADDING_X = 13;
 const PAGE_PADDING_Y = 12;
 const CONTENT_W = PAGE_W - PAGE_PADDING_X * 2;
 
-const HEADER_RULE_Y = PAGE_PADDING_Y + 9.5;
-const BODY_START_Y = HEADER_RULE_Y + 5.5;
+const HEADER_TITLE_Y = PAGE_PADDING_Y + 6.5;
+const HEADER_SUBTITLE_Y = HEADER_TITLE_Y + 4;
+const HEADER_RULE_Y = HEADER_SUBTITLE_Y + 3;
+const BODY_START_Y = HEADER_RULE_Y + 5;
 const SECTION_GAP = 6;
 
 const FOOTER_Y = PAGE_H - PAGE_PADDING_Y;
@@ -33,7 +35,7 @@ const OPTION_CARD_SIZE = (LEFT_COL_W - OPTION_CARD_GAP) / 2;
 const PLAN_FRAME_W = 56;
 const PLAN_FRAME_H = PLAN_FRAME_W * (3 / 4);
 
-const APPROVAL_H = 22;
+const APPROVAL_H = 26;
 const APPROVAL_RADIUS = 6;
 
 const MAX_OPTION_IMAGES = 2;
@@ -331,7 +333,6 @@ function drawHeader(
 ) {
   const leftX = PAGE_PADDING_X;
   const rightX = PAGE_W - PAGE_PADDING_X;
-  const titleY = PAGE_PADDING_Y + 6.5;
 
   // LEFT: optional ID tag + item name (uppercase, brand-700, bold)
   const idTag = compactText(item.itemIdTag);
@@ -339,23 +340,23 @@ function drawHeader(
   applyFont(doc, font, 'bold', 13);
   setText(doc, BRAND_700);
   if (idTag) {
-    doc.text(idTag.toUpperCase(), cursorX, titleY);
+    doc.text(idTag.toUpperCase(), cursorX, HEADER_TITLE_Y);
     cursorX += doc.getTextWidth(idTag.toUpperCase()) + 3;
   }
   const itemName = item.itemName.toUpperCase();
   const nameMaxW = rightX - cursorX - 70; // leave room for project text on right
   const nameLines = (doc.splitTextToSize(itemName, Math.max(40, nameMaxW)) as string[]).slice(0, 1);
-  doc.text(nameLines, cursorX, titleY);
+  doc.text(nameLines, cursorX, HEADER_TITLE_Y);
 
   // RIGHT: project name (top) + location/room subtitle
   applyFont(doc, font, 'bold', 13);
   setText(doc, BRAND_700);
-  doc.text(project.name.toUpperCase(), rightX, titleY, { align: 'right' });
+  doc.text(project.name.toUpperCase(), rightX, HEADER_TITLE_Y, { align: 'right' });
 
   const locationText = compactText(project.projectLocation) ?? entry.roomName;
   applyFont(doc, font, 'normal', 7.5);
   setText(doc, BRAND_500);
-  doc.text(locationText.toUpperCase(), rightX, titleY + 3.6, { align: 'right' });
+  doc.text(locationText.toUpperCase(), rightX, HEADER_SUBTITLE_Y, { align: 'right' });
 
   // Bottom rule (brand-500, 0.6pt)
   setStroke(doc, BRAND_500);
@@ -495,9 +496,14 @@ function drawMaterialsRow(
   y: number,
   width: number,
 ) {
+  // Match browser: render only actual material cells when any exist; otherwise
+  // fall back to MAX_MATERIALS empty placeholders. Either way the row keeps a
+  // 4-column grid so a single material lands in the leftmost slot (per CSS
+  // grid-template-columns: repeat(4, 1fr)).
+  const slotCount = MAX_MATERIALS;
+  const cellCount = materials.length > 0 ? Math.min(materials.length, MAX_MATERIALS) : slotCount;
   const cells = materials.slice(0, MAX_MATERIALS);
-  const cellCount = MAX_MATERIALS;
-  const cellW = width / cellCount;
+  const cellW = width / slotCount;
   const swatchSize = 10;
 
   for (let index = 0; index < cellCount; index++) {
@@ -665,16 +671,17 @@ function drawApprovalBand(
   setStroke(doc, BRAND_200);
   drawRoundedRect(doc, x, y, width, APPROVAL_H, APPROVAL_RADIUS, 'FD');
 
-  // "Client Approval" label (left, larger)
-  const innerX = x + 6;
-  const innerY = y + 5.5;
+  const innerX = x + 7;
+  const innerRight = x + width - 7;
+
+  // Title: "CLIENT APPROVAL" — uppercase, bold, top-left of band
   applyFont(doc, font, 'bold', 10);
   setText(doc, GRAY_700);
-  doc.text('Client Approval', innerX, innerY);
+  doc.text('CLIENT APPROVAL', innerX, y + 7);
 
-  // Signature line + label
-  const sigX = innerX + 27;
-  const sigW = width * 0.36;
+  // Signature line + label (left, below title)
+  const sigX = innerX;
+  const sigW = width * 0.46;
   const lineY = y + APPROVAL_H - 7;
   setStroke(doc, GRAY_400);
   doc.setLineWidth(0.3);
@@ -685,9 +692,9 @@ function drawApprovalBand(
   doc.text('AUTHORIZED SIGNATURE', sigX, lineY + 3);
   addTextField(doc, `${itemId}-approval-signature`, sigX, lineY - 5, sigW, 5, font);
 
-  // Date line + label
+  // Date line + label (middle)
   const dateX = sigX + sigW + 6;
-  const dateW = 26;
+  const dateW = 28;
   setStroke(doc, GRAY_400);
   doc.setLineWidth(0.3);
   doc.line(dateX, lineY, dateX + dateW, lineY);
@@ -697,17 +704,21 @@ function drawApprovalBand(
   doc.text('DATE', dateX, lineY + 3);
   addTextField(doc, `${itemId}-approval-date`, dateX, lineY - 5, dateW, 5, font);
 
-  // Checkboxes (right side)
-  const checksX = dateX + dateW + 8;
+  // Checkboxes (right side, vertically centered on the line area)
   const checkBoxSize = 3;
-  const check1Y = y + 6;
-  const check2Y = y + 12.5;
-  addCheckboxField(doc, `${itemId}-approval-with-revisions`, checksX, check1Y, checkBoxSize);
-  addCheckboxField(doc, `${itemId}-approval-as-presented`, checksX, check2Y, checkBoxSize);
-  applyFont(doc, font, 'normal', 7);
+  const checkLabel1 = 'Approved with revisions';
+  const checkLabel2 = 'Approved as presented';
+  applyFont(doc, font, 'normal', 7.5);
+  const checkLabelW = Math.max(doc.getTextWidth(checkLabel1), doc.getTextWidth(checkLabel2));
+  const checksLabelX = innerRight - checkLabelW;
+  const checksBoxX = checksLabelX - checkBoxSize - 2;
+  const check1Y = y + 9.5;
+  const check2Y = check1Y + 6;
+  addCheckboxField(doc, `${itemId}-approval-with-revisions`, checksBoxX, check1Y, checkBoxSize);
+  addCheckboxField(doc, `${itemId}-approval-as-presented`, checksBoxX, check2Y, checkBoxSize);
   setText(doc, GRAY_700);
-  doc.text('Approved with revisions', checksX + checkBoxSize + 2, check1Y + checkBoxSize - 0.5);
-  doc.text('Approved as presented', checksX + checkBoxSize + 2, check2Y + checkBoxSize - 0.5);
+  doc.text(checkLabel1, checksLabelX, check1Y + checkBoxSize - 0.4);
+  doc.text(checkLabel2, checksLabelX, check2Y + checkBoxSize - 0.4);
 }
 
 function drawFooter(doc: jsPDF, font: string, project: Project, pageNum: number, total: number) {

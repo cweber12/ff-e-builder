@@ -205,6 +205,43 @@ describe('detectTableHeader', () => {
     ];
     expect(detectTableHeader(rows)).toBeNull();
   });
+
+  it('accepts a merged-header follower row before the first data row', () => {
+    const rows = [
+      [''],
+      ['Project Group USA'],
+      ['Cork & Batter | San Diego, CA'],
+      [''],
+      ['Millwork'],
+      [
+        'ID',
+        'DRAWING',
+        'NAME',
+        'RENDERING',
+        'PLAN',
+        'PRODUCT DESCRIPTION',
+        'SIZE',
+        'QUANTITY',
+        'UNIT COST',
+        'TOTAL COST',
+      ],
+      ['', '', '', '', '', '', '', '', '', ''],
+      [
+        'M1',
+        'A-501',
+        'BANQUETTE',
+        '',
+        '',
+        'CUSTOM BANQUETTES WITH LED AND OUTLETS',
+        '8-7W x 7D x 3H',
+        '1 unit',
+        '4700',
+        '4700',
+      ],
+    ];
+
+    expect(detectTableHeader(rows)).toBe(5);
+  });
 });
 
 // ─── extractTableRows ─────────────────────────────────────────────────────────

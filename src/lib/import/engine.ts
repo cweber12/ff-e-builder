@@ -107,7 +107,8 @@ export function columnsToRecord(columns: ImportColumn[], values: string[]): Reco
 
 // Returns the index of the first row in the top `scanLimit` rows that has
 // at least MIN_HEADER_CELLS non-empty, non-numeric cells (excluding skipColumns)
-// and is immediately followed by a non-empty row.
+// and is followed shortly by a non-empty row. The short lookahead handles
+// two-row merged Excel headers where the second row is only merge followers.
 export function detectTableHeader(
   rows: string[][],
   scanLimit = SCAN_LIMIT,
@@ -123,8 +124,8 @@ export function detectTableHeader(
       if (cell && !isPurelyNumeric(cell)) labelCols++;
     }
     if (labelCols < MIN_HEADER_CELLS) continue;
-    const nextRow = rows[i + 1] ?? [];
-    if (nextRow.some((cell) => cell?.trim())) return i;
+    const nextRows = rows.slice(i + 1, Math.min(rows.length, i + 4));
+    if (nextRows.some((nextRow) => nextRow.some((cell) => cell?.trim()))) return i;
   }
   return null;
 }

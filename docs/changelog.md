@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(imports): skip computed Proposal totals when creating import custom columns
+- fix(imports): detect Proposal template headers before merged follower rows
 - fix(proposal): persist Proposal Name through Generated Item mirroring for FF&E views
 - refactor(table): share generated item editable text table cell chrome
 - refactor(table): route FF&E text cells through shared generated item edit control
