@@ -61,14 +61,14 @@ vi.mock('../../../hooks', () => ({
   useColumnConfig: () => ({
     visibleOrder: [
       'drag',
+      'itemIdTag',
+      'drawings',
       'image',
       'plan',
-      'itemIdTag',
-      'itemName',
       'description',
-      'category',
       'dimensions',
       'materials',
+      'itemName',
       'qty',
       'unitCostCents',
       'lineTotal',

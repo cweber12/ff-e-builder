@@ -47,6 +47,11 @@ export interface RawRoom {
 export interface RawItem {
   id: string;
   room_id: string;
+  product_tag?: string;
+  drawings?: string;
+  size_label?: string;
+  quantity?: string | number;
+  quantity_unit?: string;
   item_name: string;
   description: string | null;
   category: string | null;
@@ -248,6 +253,11 @@ export const mapRoom = (r: RawRoom): Room => ({
 export const mapItem = (r: RawItem): Item => ({
   id: r.id,
   roomId: r.room_id,
+  productTag: r.product_tag ?? r.item_id_tag ?? '',
+  drawings: r.drawings ?? '',
+  sizeLabel: r.size_label ?? r.dimensions ?? '',
+  quantity: Number(r.quantity ?? r.qty),
+  quantityUnit: r.quantity_unit ?? 'unit',
   itemName: r.item_name,
   description: r.description,
   category: r.category,

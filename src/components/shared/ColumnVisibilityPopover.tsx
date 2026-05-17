@@ -13,14 +13,14 @@ import { cn } from '../../lib/utils';
 
 const FFE_DEFAULT_COLUMN_IDS = [
   'drag',
+  'itemIdTag',
+  'drawings',
   'image',
   'plan',
-  'itemIdTag',
-  'itemName',
   'description',
-  'category',
   'dimensions',
   'materials',
+  'itemName',
   'qty',
   'unitCostCents',
   'lineTotal',
@@ -32,14 +32,14 @@ const FFE_DEFAULT_COLUMN_IDS = [
 
 /** Columns the user may hide/restore in the FFE table. */
 const FFE_HIDEABLE_IDS = new Set<string>([
+  'itemIdTag',
+  'drawings',
   'image',
   'plan',
-  'itemIdTag',
-  'itemName',
   'description',
-  'category',
   'dimensions',
   'materials',
+  'itemName',
   'qty',
   'unitCostCents',
   'lineTotal',
@@ -49,14 +49,15 @@ const FFE_HIDEABLE_IDS = new Set<string>([
 ]);
 
 const FFE_COLUMN_LABELS: Record<string, string> = {
+  itemIdTag: 'ID',
+  drawings: 'Drawings',
   image: 'Rendering',
   plan: 'Plan',
-  itemIdTag: 'ID',
-  itemName: 'Name',
   description: 'Product Description',
   category: 'Category',
-  dimensions: 'Dimensions',
-  materials: 'Materials',
+  dimensions: 'Size',
+  materials: 'Swatch',
+  itemName: 'Name',
   qty: 'Quantity',
   unitCostCents: 'Unit Cost',
   lineTotal: 'Total',

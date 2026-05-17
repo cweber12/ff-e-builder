@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): align FF&E default columns with Proposal generated item fields
 - fix(imports): skip computed Proposal totals when creating import custom columns
 - fix(imports): detect Proposal template headers before merged follower rows
 - fix(proposal): persist Proposal Name through Generated Item mirroring for FF&E views

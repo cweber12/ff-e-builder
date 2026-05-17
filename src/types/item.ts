@@ -23,6 +23,11 @@ export type GeneratedItemProposalFields = {
 export type Item = {
   id: string;
   roomId: string;
+  productTag?: string;
+  drawings?: string;
+  sizeLabel?: string;
+  quantity?: number;
+  quantityUnit?: string;
   itemName: string;
   description: string | null;
   category: string | null;

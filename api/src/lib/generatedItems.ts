@@ -852,6 +852,11 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
     SELECT
       i.id,
       i.room_id,
+      COALESCE(NULLIF(i.product_tag, ''), i.item_id_tag, '') AS product_tag,
+      i.drawings,
+      COALESCE(NULLIF(i.size_label, ''), i.dimensions, '') AS size_label,
+      i.quantity,
+      i.quantity_unit,
       COALESCE(
         NULLIF(i.item_name, ''),
         NULLIF(i.product_tag, ''),

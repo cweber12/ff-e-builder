@@ -407,6 +407,19 @@ function EditableDimensionsCell({
   );
 }
 
+function ReadOnlyTextCell({
+  value,
+  placeholder = '—',
+}: {
+  value: string | null | undefined;
+  placeholder?: string;
+}) {
+  const display = value?.trim();
+  return (
+    <span className={display ? 'text-gray-700' : 'text-gray-400'}>{display || placeholder}</span>
+  );
+}
+
 function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }) {
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -600,6 +613,26 @@ const createColumns = (
     cell: () => null,
   },
   {
+    accessorKey: 'itemIdTag',
+    header: 'ID',
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.itemIdTag}
+        field="itemIdTag"
+        label="ID"
+        onSave={onSave}
+        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemIdTag')}
+        revisions={revisionIndicator?.revisions ?? []}
+      />
+    ),
+  },
+  {
+    accessorKey: 'drawings',
+    header: 'Drawings',
+    cell: ({ row }) => <ReadOnlyTextCell value={row.original.drawings} />,
+  },
+  {
     id: 'image',
     header: 'Rendering',
     cell: ({ row }) => (
@@ -620,38 +653,6 @@ const createColumns = (
         kind="plan"
         entityId={row.original.id}
         alt={`${row.original.itemName} plan`}
-      />
-    ),
-  },
-  {
-    accessorKey: 'itemIdTag',
-    header: 'ID',
-    cell: ({ row }) => (
-      <EditableTextCell
-        item={row.original}
-        value={row.original.itemIdTag}
-        field="itemIdTag"
-        label="ID"
-        onSave={onSave}
-        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemIdTag')}
-        revisions={revisionIndicator?.revisions ?? []}
-      />
-    ),
-  },
-  {
-    accessorKey: 'itemName',
-    header: 'Name',
-    cell: ({ row }) => (
-      <EditableTextCell
-        item={row.original}
-        value={row.original.itemName}
-        field="itemName"
-        label="Name"
-        onSave={onSave}
-        required
-        displayClassName="font-medium text-gray-950"
-        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemName')}
-        revisions={revisionIndicator?.revisions ?? []}
       />
     ),
   },
@@ -683,7 +684,7 @@ const createColumns = (
   },
   {
     accessorKey: 'dimensions',
-    header: 'Dimensions',
+    header: 'Size',
     cell: ({ row }) => (
       <EditableDimensionsCell
         item={row.original}
@@ -699,11 +700,28 @@ const createColumns = (
   },
   {
     id: 'materials',
-    header: 'Materials',
+    header: 'Swatch',
     cell: ({ row }) => (
       <GeneratedItemMaterialBadges
         materials={row.original.materials}
         onOpen={() => actions.onEditMaterials(row.original)}
+      />
+    ),
+  },
+  {
+    accessorKey: 'itemName',
+    header: 'Name',
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.itemName}
+        field="itemName"
+        label="Name"
+        onSave={onSave}
+        required
+        displayClassName="font-medium text-gray-950"
+        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemName')}
+        revisions={revisionIndicator?.revisions ?? []}
       />
     ),
   },
@@ -1151,16 +1169,19 @@ function MobileItemCards({
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <MobileField label="Category">
-              <EditableTextCell
+            <MobileField label="Size">
+              <EditableDimensionsCell
                 item={item}
-                value={item.category}
-                field="category"
-                label="Category"
                 onSave={onSave}
+                revisionEntries={revisionEntriesForFfeCell(
+                  revisionIndicator,
+                  item.id,
+                  'dimensions',
+                )}
+                revisions={revisionIndicator?.revisions ?? []}
               />
             </MobileField>
-            <MobileField label="Materials">
+            <MobileField label="Swatch">
               <GeneratedItemMaterialBadges
                 materials={item.materials}
                 onOpen={() => actions.onEditMaterials(item)}
