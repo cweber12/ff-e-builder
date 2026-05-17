@@ -97,7 +97,7 @@ import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedIt
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
-import { RevisionHistoryDot } from '../../proposal/revision';
+import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } from '../../proposal/revision';
 
 const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;
 
@@ -241,32 +241,6 @@ const nextStatus = (status: ItemStatus): ItemStatus => {
   const index = itemStatuses.indexOf(status);
   return itemStatuses[(index + 1) % itemStatuses.length] ?? 'pending';
 };
-
-function RevisionIndicatorWrap({
-  children,
-  entries,
-  revisions,
-}: {
-  children: ReactNode;
-  entries: ProposalItemChangelogEntry[];
-  revisions: ProposalRevision[];
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      {children}
-      <RevisionHistoryDot
-        entries={entries}
-        revisions={revisions}
-        title="Proposal revision history"
-        triggerTitle="View Proposal revision history"
-        requireGeneratedItemId
-        footer={
-          <span className="text-[11px] text-gray-500">Cost resolution is handled in Proposal.</span>
-        }
-      />
-    </span>
-  );
-}
 
 function EditableTextCell({
   item,

@@ -42,7 +42,6 @@ import {
   useProposalWithItems,
   useUpdateProposalCategory,
   useUpdateProposalItem,
-  useProposalItemChangelog,
   useColumnConfig,
   useColumnDefs,
   useCreateColumnDef,
@@ -95,32 +94,13 @@ import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generat
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
 import {
   RevisionCostCell,
-  RevisionHistoryDot,
+  GeneratedItemColumnChangeDot,
   RevisionNotesCell,
   RevisionQtyCell,
   RevisionTotalCell,
 } from '../revision';
 
 // --- Proposal Status ---
-
-function ChangeHistoryDot({
-  itemId,
-  columnKey,
-  revisions,
-}: {
-  itemId: string;
-  columnKey: string;
-  revisions: ProposalRevision[];
-}) {
-  const { data: changelog = [] } = useProposalItemChangelog(itemId);
-
-  const entries = useMemo(
-    () => changelog.filter((entry) => entry.columnKey === columnKey),
-    [changelog, columnKey],
-  );
-
-  return <RevisionHistoryDot entries={entries} revisions={revisions} />;
-}
 
 // --- Proposal Table Column Definitions ---
 // quantity and unitCost are fixed sticky-right columns — not draggable or hideable.
@@ -1605,7 +1585,7 @@ function ProposalRow({
   const showDots = proposalStatus !== 'in_progress';
   const dot = (columnKey: string) =>
     showDots ? (
-      <ChangeHistoryDot itemId={item.id} columnKey={columnKey} revisions={revisions} />
+      <GeneratedItemColumnChangeDot itemId={item.id} columnKey={columnKey} revisions={revisions} />
     ) : null;
 
   const cellRenderMap: Record<string, ReactNode> = {
