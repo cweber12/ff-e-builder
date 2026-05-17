@@ -704,6 +704,36 @@ export async function mirrorProposalItemToGeneratedItem(
     WHERE i.id = link.item_id
       AND link.proposal_item_id = ${proposalItemId}
   `;
+
+  const ffeVisibleRows = await sql`
+    SELECT
+      pc.project_id,
+      pi.location,
+      link.item_id
+    FROM proposal_items pi
+    JOIN proposal_categories pc ON pc.id = pi.category_id
+    JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
+    JOIN items i ON i.id = link.item_id
+    WHERE pi.id = ${proposalItemId}
+      AND i.is_ffe_visible = true
+    LIMIT 1
+  `;
+  const ffeVisibleItem = ffeVisibleRows[0] as
+    | { project_id?: string; location?: string | null; item_id?: string }
+    | undefined;
+  if (!ffeVisibleItem?.project_id || !ffeVisibleItem.item_id) return;
+
+  const roomId = await selectRoomIdForFfeLocation(
+    sql,
+    ffeVisibleItem.project_id,
+    ffeVisibleItem.location ?? '',
+  );
+  await sql`
+    UPDATE items
+    SET room_id = ${roomId}
+    WHERE id = ${ffeVisibleItem.item_id}
+      AND is_ffe_visible = true
+  `;
 }
 
 async function insertFfeRevisionChangelog(

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createGeneratedItemFromFfe,
   createGeneratedItemFromProposal,
+  mirrorProposalItemToGeneratedItem,
   selectCompatibleProposalItemsByCategory,
   selectGeneratedItemsByProposalCategory,
   selectGeneratedItemsByRoom,
@@ -240,5 +241,34 @@ describe('Generated Item read model', () => {
       statements.some((statement) => statement.includes('UPDATE proposal_revision_snapshots')),
     ).toBe(true);
     expect(statements.at(-1)).toContain('UPDATE proposal_items pi');
+  });
+
+  it('moves FF&E-visible linked items to the room matching the Proposal location', async () => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          project_id: 'project-1',
+          location: 'Lobby',
+          item_id: 'item-1',
+        },
+      ])
+      .mockResolvedValueOnce([{ id: 'room-lobby' }])
+      .mockResolvedValueOnce([]);
+
+    await mirrorProposalItemToGeneratedItem(
+      sql as unknown as ReturnType<typeof getDb>,
+      'proposal-item-1',
+    );
+
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements.some((statement) => statement.includes('AND i.is_ffe_visible = true'))).toBe(
+      true,
+    );
+    expect(statements.some((statement) => statement.includes('lower(name) = lower('))).toBe(true);
+    expect(statements.some((statement) => statement.includes('SET room_id ='))).toBe(true);
   });
 });

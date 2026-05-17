@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(table): move FF&E-visible Proposal items when their Proposal Location changes
 - fix(table): rebase saved table column settings when built-in defaults change
 - refactor(table): align FF&E default columns with Proposal generated item fields
 - fix(imports): skip computed Proposal totals when creating import custom columns
