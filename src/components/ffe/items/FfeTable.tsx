@@ -187,6 +187,7 @@ type FfeRevisionIndicator = {
 type FfeRevisionColumnKey =
   | 'itemIdTag'
   | 'drawings'
+  | 'description'
   | 'itemName'
   | 'dimensions'
   | 'qty'
@@ -207,7 +208,8 @@ const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableIt
 const ffeRevisionColumnKeys: Record<FfeRevisionColumnKey, string[]> = {
   itemIdTag: ['product_tag', 'productTag'],
   drawings: ['drawings'],
-  itemName: ['itemName', 'description'],
+  description: ['description'],
+  itemName: ['itemName'],
   dimensions: ['size_label', 'size'],
   qty: ['quantity'],
   unitCostCents: ['unit_cost_cents', 'unitCostCents'],
@@ -665,6 +667,12 @@ const createColumns = (
         field="description"
         label="Product Description"
         onSave={onSave}
+        revisionEntries={revisionEntriesForFfeCell(
+          revisionIndicator,
+          row.original.id,
+          'description',
+        )}
+        revisions={revisionIndicator?.revisions ?? []}
       />
     ),
   },

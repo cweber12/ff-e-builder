@@ -23,6 +23,7 @@ type FfeRevisionContext = {
   itemName: string;
   itemIdTag: string | null;
   drawings: string | null;
+  description: string | null;
   dimensions: string | null;
   notes: string | null;
   qty: number;
@@ -81,6 +82,7 @@ function plain(value: unknown) {
 function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionContext) {
   const changes: FfeChange[] = [];
   const hasDrawingsChange = Object.prototype.hasOwnProperty.call(input, 'drawings');
+  const hasDescriptionChange = Object.prototype.hasOwnProperty.call(input, 'description');
 
   if (input.item_name != null && input.item_name !== before.itemName) {
     changes.push({
@@ -103,6 +105,14 @@ function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionC
       columnKey: 'drawings',
       previousValue: plain(before.drawings),
       newValue: plain(input.drawings),
+      isPriceAffecting: false,
+    });
+  }
+  if (hasDescriptionChange && input.description !== before.description) {
+    changes.push({
+      columnKey: 'description',
+      previousValue: plain(before.description),
+      newValue: plain(input.description),
       isPriceAffecting: false,
     });
   }
@@ -325,6 +335,7 @@ async function selectFfeRevisionContext(sql: Sql, itemId: string) {
       i.item_name,
       i.item_id_tag,
       i.drawings,
+      i.description,
       i.dimensions,
       i.notes,
       i.qty,
@@ -344,6 +355,7 @@ async function selectFfeRevisionContext(sql: Sql, itemId: string) {
         item_name?: string;
         item_id_tag?: string | null;
         drawings?: string | null;
+        description?: string | null;
         dimensions?: string | null;
         notes?: string | null;
         qty?: number;
@@ -358,6 +370,7 @@ async function selectFfeRevisionContext(sql: Sql, itemId: string) {
     itemName: row.item_name,
     itemIdTag: row.item_id_tag ?? null,
     drawings: row.drawings ?? null,
+    description: row.description ?? null,
     dimensions: row.dimensions ?? null,
     notes: row.notes ?? null,
     qty: row.qty ?? 0,

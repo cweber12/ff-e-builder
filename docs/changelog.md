@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): show FF&E Product Description edits in shared Proposal revision history
 - feat(table): allow FF&E Drawings edits to sync through shared Generated Items
 - fix(table): sync FF&E Location renames into linked Proposal item locations
 - fix(table): move FF&E-visible Proposal items when their Proposal Location changes

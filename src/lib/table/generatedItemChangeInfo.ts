@@ -45,6 +45,13 @@ export function ffePatchToGeneratedItemChangeInfo(
       newValue: patch.drawings ?? '',
     };
   }
+  if ('description' in patch) {
+    return {
+      ...changeFields.description,
+      previousValue: item.description ?? '',
+      newValue: patch.description ?? '',
+    };
+  }
   if ('notes' in patch) {
     return {
       ...changeFields.notes,

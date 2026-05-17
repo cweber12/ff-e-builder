@@ -21,6 +21,11 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
       columnLabel: 'Drawings',
       isPriceAffecting: false,
     },
+    description: {
+      columnKey: 'description',
+      columnLabel: 'Product Description',
+      isPriceAffecting: false,
+    },
     notes: {
       columnKey: 'notes',
       columnLabel: 'Notes',
