@@ -81,7 +81,7 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { Modal } from '../../primitives/Modal';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
-import { MaterialBadges, MaterialLibraryModal } from '../../materials';
+import { MaterialLibraryModal } from '../../materials';
 import {
   GroupedTableHeader,
   GroupedTableSection,
@@ -94,6 +94,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemMaterialBadges } from '../../shared/table/GeneratedItemMaterialsCell';
 import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
@@ -714,7 +715,7 @@ const createColumns = (
     id: 'materials',
     header: 'Materials',
     cell: ({ row }) => (
-      <MaterialBadges
+      <GeneratedItemMaterialBadges
         materials={row.original.materials}
         onOpen={() => actions.onEditMaterials(row.original)}
       />
@@ -1178,7 +1179,7 @@ function MobileItemCards({
               />
             </MobileField>
             <MobileField label="Materials">
-              <MaterialBadges
+              <GeneratedItemMaterialBadges
                 materials={item.materials}
                 onOpen={() => actions.onEditMaterials(item)}
               />

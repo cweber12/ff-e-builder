@@ -49,7 +49,7 @@ import {
   useIsMobileViewport,
   useProposalRevisions,
 } from '../../../hooks';
-import { MaterialBadges, MaterialLibraryModal } from '../../materials';
+import { MaterialLibraryModal } from '../../materials';
 import {
   cents,
   formatMoney,
@@ -84,6 +84,7 @@ import {
 } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemMaterialBadges } from '../../shared/table/GeneratedItemMaterialsCell';
 import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
@@ -1686,7 +1687,10 @@ function ProposalRow({
     ),
     swatch: (
       <td className="min-w-36 px-3 py-2" onClick={stopProp}>
-        <MaterialBadges materials={item.materials} onOpen={() => setSwatchOpen(true)} />
+        <GeneratedItemMaterialBadges
+          materials={item.materials}
+          onOpen={() => setSwatchOpen(true)}
+        />
         <MaterialLibraryModal
           open={swatchOpen}
           projectId={projectId}
