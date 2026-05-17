@@ -60,12 +60,12 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
 
       <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-100 px-4 py-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Rooms</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Locations</h2>
         </div>
         <table className="w-full text-sm">
           <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-4 py-3">Room</th>
+              <th className="px-4 py-3">Location</th>
               <th className="px-4 py-3 text-right">Item count</th>
               <th className="px-4 py-3 text-right">Subtotal</th>
             </tr>

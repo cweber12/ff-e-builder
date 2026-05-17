@@ -285,7 +285,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
               <p className="truncate font-medium">{parsed?.sheetName || parsed?.filename}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">Rooms</p>
+              <p className="text-xs uppercase tracking-wide text-gray-500">Locations</p>
               <p className="font-medium">{parsed?.sections.length ?? 0}</p>
             </div>
             <div>

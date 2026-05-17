@@ -78,7 +78,7 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
           <div className="flex-1 overflow-y-auto p-5">
             <div className="space-y-4">
               <MetaField label="Description" value={item.description} />
-              <MetaField label="Item ID" value={item.itemIdTag} />
+              <MetaField label="ID" value={item.itemIdTag} />
               <MetaField label="Category" value={item.category} />
               <MetaField label="Dimensions" value={item.dimensions} />
               <MetaField label="Lead Time" value={item.leadTime} />

@@ -169,7 +169,7 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
               <tr>
                 <th className="px-4 py-2">Category</th>
                 <th className="px-4 py-2 text-right">Rows</th>
-                <th className="px-4 py-2 text-right">Qty</th>
+                <th className="px-4 py-2 text-right">Quantity</th>
                 <th className="px-4 py-2 text-right">Subtotal</th>
               </tr>
             </thead>

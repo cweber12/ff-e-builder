@@ -13,7 +13,7 @@ const nullableText = (max: number) =>
     .max(max)
     .transform((value) => (value.length > 0 ? value : null));
 
-export const itemNameSchema = z.string().trim().min(1, 'Item name is required').max(255);
+export const itemNameSchema = z.string().trim().min(1, 'Name is required').max(255);
 export const itemQtySchema = z
   .number()
   .int('Quantity must be a whole number')

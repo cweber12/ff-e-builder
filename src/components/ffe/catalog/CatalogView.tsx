@@ -61,7 +61,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
           <h1 className="text-2xl font-semibold text-gray-950">No catalog items yet</h1>
           <p className="text-sm text-gray-600">
-            Add FF&amp;E items to rooms before creating a printable catalog.
+            Add FF&amp;E items to locations before creating a printable catalog.
           </p>
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
             Back
@@ -354,7 +354,7 @@ export function CatalogPage({
             {item.itemIdTag ? <span className="catalog-header-id">{item.itemIdTag}</span> : null}
             <InlineTextEdit
               value={item.itemName}
-              aria-label={`Item name for ${item.itemName}`}
+              aria-label={`Name for ${item.itemName}`}
               className="min-w-0 inline-block"
               inputClassName="w-full text-[22px] font-bold uppercase tracking-wide text-brand-700"
               onSave={(value) => saveField('itemName', value, true)}

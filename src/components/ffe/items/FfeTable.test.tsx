@@ -82,6 +82,10 @@ vi.mock('../../../hooks', () => ({
   isPersistedImageEntityId: () => true,
   useTableDensity: () => ({ density: 'default', setDensity: vi.fn() }),
   densityRowClass: () => 'h-13',
+  useProposalRevisions: () => ({
+    data: { revisions: [], snapshots: [], changelog: [] },
+    isLoading: false,
+  }),
 }));
 
 vi.mock('../../../lib/export', () => ({
@@ -224,7 +228,7 @@ describe('FfeTable', () => {
     expect(screen.getByText('Lounge Chair')).toBeInTheDocument();
     expect(screen.getByText('Floor Lamp')).toBeInTheDocument();
     expect(screen.getByText('Dining Table')).toBeInTheDocument();
-    expect(screen.getByText('No items — add one via the room menu.')).toBeInTheDocument();
+    expect(screen.getByText('No items — add one via the location menu.')).toBeInTheDocument();
   });
 
   it('renders room subtotals matching roomSubtotalCents', () => {
@@ -308,7 +312,7 @@ describe('FfeTable', () => {
     renderTable();
 
     await user.dblClick(screen.getByText('2'));
-    const input = screen.getByLabelText('Qty for Lounge Chair');
+    const input = screen.getByLabelText('Quantity for Lounge Chair');
     await user.clear(input);
     await user.type(input, '-1');
     await user.tab();
@@ -375,12 +379,12 @@ describe('FfeTable', () => {
     await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
 
-    await user.type(within(drawer).getByLabelText('Item name'), 'Side Table');
+    await user.type(within(drawer).getByLabelText('Name'), 'Side Table');
     await user.type(within(drawer).getByLabelText('Category'), 'Casegoods');
-    await user.type(within(drawer).getByLabelText('Item ID/tag'), 'TB-02');
+    await user.type(within(drawer).getByLabelText('ID'), 'TB-02');
     await user.type(within(drawer).getByLabelText('Dimensions'), '20 x 20 x 24');
-    await user.clear(within(drawer).getByLabelText('Qty'));
-    await user.type(within(drawer).getByLabelText('Qty'), '3');
+    await user.clear(within(drawer).getByLabelText('Quantity'));
+    await user.type(within(drawer).getByLabelText('Quantity'), '3');
     await user.clear(within(drawer).getByLabelText('Unit cost'));
     await user.type(within(drawer).getByLabelText('Unit cost'), '250.50');
     await user.type(within(drawer).getByLabelText('Notes'), 'Match sample finish');
@@ -442,7 +446,7 @@ describe('FfeTable', () => {
     await openLivingRoomAddItem(user);
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
 
-    await user.type(within(drawer).getByLabelText('Item name'), 'Accent Chair');
+    await user.type(within(drawer).getByLabelText('Name'), 'Accent Chair');
     await user.type(within(drawer).getByLabelText('Materials'), 'Ivory boucle');
     await user.click(within(drawer).getByRole('button', { name: 'Select' }));
     await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
@@ -478,23 +482,23 @@ describe('FfeTable', () => {
     const drawer = screen.getByRole('dialog', { name: /Add item to Living Room/ });
     await user.click(within(drawer).getByRole('button', { name: 'Add item' }));
 
-    expect(await screen.findByText('Item name is required')).toBeInTheDocument();
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
     expect(mockCreateItemMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('does not allow deleting a room with items until a target room is selected', async () => {
+  it('does not allow deleting a location with items until a target location is selected', async () => {
     const user = userEvent.setup();
     renderTable();
 
     await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Delete room' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete location' }));
 
     expect(screen.getByText(/has 2 items/)).toBeInTheDocument();
     const dialog = screen.getByRole('dialog', { name: /Delete Living Room/ });
-    expect(within(dialog).getByRole('button', { name: 'Delete room' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Delete location' })).toBeDisabled();
 
     await user.selectOptions(within(dialog).getByLabelText('Move items to...'), 'room-2');
-    await user.click(within(dialog).getByRole('button', { name: 'Delete room' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Delete location' }));
 
     expect(mockMoveItemMutateAsync).toHaveBeenCalledWith({
       id: 'item-1',

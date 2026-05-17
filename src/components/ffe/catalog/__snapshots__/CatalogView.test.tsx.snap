@@ -20,7 +20,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           LR-CH-01
         </span>
         <div
-          aria-label="Item name for Channel Lounge Chair"
+          aria-label="Name for Channel Lounge Chair"
           class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 min-w-0 inline-block"
           role="button"
           tabindex="0"

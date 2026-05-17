@@ -115,7 +115,7 @@ type FfeTableProps = {
   onReload?: (() => void) | undefined;
   onImport?: (() => void) | undefined;
   className?: string | undefined;
-  /** Controlled-mode: if provided, external caller manages Add Room modal open state. */
+  /** Controlled-mode: if provided, external caller manages Add Location modal open state. */
   addRoomOpen?: boolean;
   onAddRoomOpenChange?: (open: boolean) => void;
 };
@@ -403,7 +403,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
               {targetRooms.length > 0 && (
                 <div className="border-t border-gray-100 pt-1">
                   <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Move to room
+                    Move to location
                   </div>
                   {targetRooms.map((room) => (
                     <button
@@ -588,13 +588,13 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   },
   {
     accessorKey: 'itemName',
-    header: 'Item',
+    header: 'Name',
     cell: ({ row }) => (
       <EditableTextCell
         item={row.original}
         value={row.original.itemName}
         field="itemName"
-        label="Item"
+        label="Name"
         onSave={onSave}
         required
         displayClassName="font-medium text-gray-950"
@@ -644,11 +644,11 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   },
   {
     accessorKey: 'qty',
-    header: 'Qty',
+    header: 'Quantity',
     cell: ({ row }) => (
       <InlineNumberEdit
         value={row.original.qty}
-        aria-label={`Qty for ${row.original.itemName}`}
+        aria-label={`Quantity for ${row.original.itemName}`}
         parser={parseQtyInput}
         formatter={(value) => String(value)}
         onSave={(qty) => saveValidatedPatch(onSave, row.original, { qty })}
@@ -856,13 +856,13 @@ function EmptyProjectState({ onAddRoom }: { onAddRoom?: (() => void) | undefined
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-12 text-center">
       <div className="flex flex-col items-center gap-4">
-        <h2 className="font-display text-2xl text-neutral-900">No rooms yet</h2>
+        <h2 className="font-display text-2xl text-neutral-900">No locations yet</h2>
         <p className="max-w-md text-sm text-neutral-600">
-          Rooms and FF&amp;E items will appear here once this project has a room schedule.
+          Locations and FF&amp;E items will appear here once this project has a location schedule.
         </p>
         {onAddRoom && (
           <Button type="button" variant="secondary" onClick={onAddRoom}>
-            Add room
+            Add location
           </Button>
         )}
       </div>
@@ -898,7 +898,7 @@ function DeleteRoomModal({
   }, [open, room?.id]);
 
   return (
-    <Modal open={open} onClose={onClose} title={room ? `Delete ${room.name}?` : 'Delete room'}>
+    <Modal open={open} onClose={onClose} title={room ? `Delete ${room.name}?` : 'Delete location'}>
       <div className="flex flex-col gap-4">
         {hasItems ? (
           <>
@@ -916,7 +916,7 @@ function DeleteRoomModal({
                   onChange={() => setDeleteAll(false)}
                 />
                 <span className="text-sm font-medium text-gray-800">
-                  Move items to another room
+                  Move items to another location
                 </span>
               </label>
               <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
@@ -928,7 +928,7 @@ function DeleteRoomModal({
                   onChange={() => setDeleteAll(true)}
                 />
                 <span className="text-sm font-medium text-gray-800">
-                  Delete room and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  Delete location and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </span>
               </label>
             </div>
@@ -940,7 +940,7 @@ function DeleteRoomModal({
                   onChange={(event) => setTargetRoomId(event.target.value)}
                   className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
                 >
-                  <option value="">Choose a room</option>
+                  <option value="">Choose a location</option>
                   {otherRooms.map((candidate) => (
                     <option key={candidate.id} value={candidate.id}>
                       {candidate.name}
@@ -951,7 +951,7 @@ function DeleteRoomModal({
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-600">This room is empty and can be deleted.</p>
+          <p className="text-sm text-gray-600">This location is empty and can be deleted.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
@@ -971,7 +971,7 @@ function DeleteRoomModal({
               );
             }}
           >
-            Delete room
+            Delete location
           </Button>
         </div>
       </div>
@@ -1099,7 +1099,7 @@ function MobileItemCards({
                   item={item}
                   value={item.itemName}
                   field="itemName"
-                  label="Item"
+                  label="Name"
                   onSave={onSave}
                   required
                   displayClassName="text-base font-semibold text-gray-950"
@@ -1134,10 +1134,10 @@ function MobileItemCards({
                 onOpen={() => actions.onEditMaterials(item)}
               />
             </MobileField>
-            <MobileField label="Qty">
+            <MobileField label="Quantity">
               <InlineNumberEdit
                 value={item.qty}
-                aria-label={`Qty for ${item.itemName}`}
+                aria-label={`Quantity for ${item.itemName}`}
                 parser={parseQtyInput}
                 formatter={(value) => String(value)}
                 onSave={(qty) => saveValidatedPatch(onSave, item, { qty })}
@@ -1374,7 +1374,7 @@ function RoomActionsMenu({
               className={cn(menuItemClassName, 'text-danger-600')}
               onClick={() => runAction(onDeleteRoom)}
             >
-              Delete room
+              Delete location
             </button>
           </div>,
           document.body,
@@ -1641,7 +1641,7 @@ function RoomItemsSection({
             onSave={async (name) => {
               await updateRoom.mutateAsync({ id: room.id, patch: { name } });
             }}
-            aria-label="Room name"
+            aria-label="Location name"
             renderDisplay={(v) => (
               <span className="truncate text-sm font-semibold text-gray-950">{v}</span>
             )}
@@ -1722,15 +1722,15 @@ function RoomItemsSection({
             className="w-fit rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             onClick={onToggleImage}
             aria-expanded={!imageCollapsed}
-            title={imageCollapsed ? 'Show room image' : 'Hide room image'}
+            title={imageCollapsed ? 'Show location image' : 'Hide location image'}
           >
-            {imageCollapsed ? 'Show room image' : 'Hide room image'}
+            {imageCollapsed ? 'Show location image' : 'Hide location image'}
           </button>
           {!imageCollapsed && (
             <ImageFrame
               entityType="room"
               entityId={room.id}
-              alt={`${room.name} room`}
+              alt={`${room.name} location`}
               className="h-40 w-full"
             />
           )}
@@ -1746,8 +1746,8 @@ function RoomItemsSection({
               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
               onClick={onToggleImage}
               aria-expanded={!imageCollapsed}
-              aria-label={imageCollapsed ? 'Show room image' : 'Hide room image'}
-              title={imageCollapsed ? 'Show room image' : 'Hide room image'}
+              aria-label={imageCollapsed ? 'Show location image' : 'Hide location image'}
+              title={imageCollapsed ? 'Show location image' : 'Hide location image'}
             >
               <ChevronIcon direction={imageCollapsed ? 'right' : 'left'} />
             </button>
@@ -1757,7 +1757,7 @@ function RoomItemsSection({
               <ImageFrame
                 entityType="room"
                 entityId={room.id}
-                alt={`${room.name} room`}
+                alt={`${room.name} location`}
                 className="h-full w-full"
               />
             </div>
@@ -1857,7 +1857,7 @@ function RoomItemsSection({
                         colSpan={columns.length}
                         className="px-4 py-3 text-sm italic text-neutral-400"
                       >
-                        No items — add one via the room menu.
+                        No items — add one via the location menu.
                       </td>
                     </tr>
                   ) : (
@@ -1918,7 +1918,7 @@ function RoomItemsSection({
                 <ImageFrame
                   entityType="room"
                   entityId={room.id}
-                  alt={`${room.name} room`}
+                  alt={`${room.name} location`}
                   className="h-72 w-full"
                 />
               </aside>
@@ -2023,7 +2023,7 @@ function RoomItemsSection({
                             colSpan={columns.length}
                             className="px-4 py-3 text-sm italic text-neutral-400"
                           >
-                            No items — add one via the room menu.
+                            No items — add one via the location menu.
                           </td>
                         </tr>
                       ) : (
@@ -2129,7 +2129,7 @@ export function FfeTableView({
       <>
         <EmptyProjectState onAddRoom={projectId ? () => setAddRoomOpen(true) : undefined} />
         <AddGroupModal
-          groupLabel="Room"
+          groupLabel="Location"
           open={addRoomOpen}
           onClose={() => setAddRoomOpen(false)}
           onSubmit={async (name) => {
@@ -2160,12 +2160,12 @@ export function FfeTableView({
       <TotalsBar
         itemCount={totalItemCount}
         groupCount={sortedRooms.length}
-        groupLabel="rooms"
+        groupLabel="locations"
         grandTotal={formatMoney(cents(grandTotal))}
       />
 
       <AddGroupModal
-        groupLabel="Room"
+        groupLabel="Location"
         open={addRoomOpen}
         onClose={() => setAddRoomOpen(false)}
         onSubmit={async (name) => {

@@ -70,7 +70,7 @@ The generated map is descriptive only. It is intended to give agents current fac
 
 ### Target Table And Export Direction
 
-ADR-0008 records the target direction for FF&E and Proposal table/export work: both tools should become different views over shared generated item data. FF&E groups Generated Items by Room and Proposal groups Generated Items by Proposal Category. The long-term table and generated item export modules should share item behavior, export document preparation, and CSV/Excel/PDF rendering, with view presets controlling grouping and default columns.
+ADR-0008 records the target direction for FF&E and Proposal table/export work: both tools should become different views over shared generated item data. FF&E groups Generated Items by Location and Proposal groups Generated Items by Proposal Category. The long-term table and generated item export modules should share item behavior, export document preparation, and CSV/Excel/PDF rendering, with view presets controlling grouping and default columns.
 
 The current implementation still has separate FF&E and Proposal route contracts, hooks, and database tables. Migration `0027_shared_generated_item_schema.sql` stages Proposal-view columns on `items`, default Furniture/Unassigned groupings, and a legacy Proposal Item mapping table so future slices can migrate behavior incrementally. Migration `0028_generated_item_revision_links.sql` adds canonical Generated Item references to Proposal revision history while preserving legacy Proposal Item ids for route compatibility. The API bridge in `api/src/lib/generatedItems.ts` can read canonical `items` by Room or Proposal Category, creates/updates linked compatibility rows for FF&E and Proposal item writes, and records FF&E edits into Proposal revision history once Proposal leaves `in_progress`. The current Proposal category endpoint remains legacy-compatible until route contracts can safely switch to canonical Generated Item ids. Until later cleanup slices run, `proposal_items` remains writable compatibility storage.
 
@@ -80,7 +80,7 @@ The current implementation still has separate FF&E and Proposal route contracts,
 - `/projects` lists projects, editable user information, and project image previews.
 - `/projects/:id` redirects to `/projects/:id/snapshot`.
 - `/projects/:id/snapshot` shows the read-first Project Snapshot landing page for the open Project.
-- `/projects/:id/ffe/table` shows the editable FF&E table grouped by Room.
+- `/projects/:id/ffe/table` shows the editable FF&E table grouped by Location.
 - `/projects/:id/ffe/catalog` shows printable FF&E catalog pages with inline item-text editing, option renderings, and customer approval markup.
 - `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
 - `/projects/:id/ffe/summary` shows FF&E budget and status summaries.

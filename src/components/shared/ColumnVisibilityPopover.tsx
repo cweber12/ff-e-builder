@@ -52,12 +52,12 @@ const FFE_COLUMN_LABELS: Record<string, string> = {
   image: 'Rendering',
   plan: 'Plan',
   itemIdTag: 'ID',
-  itemName: 'Item',
+  itemName: 'Name',
   description: 'Product Description',
   category: 'Category',
   dimensions: 'Dimensions',
   materials: 'Materials',
-  qty: 'Qty',
+  qty: 'Quantity',
   unitCostCents: 'Unit Cost',
   lineTotal: 'Total',
   status: 'Status',
@@ -85,7 +85,7 @@ const PROPOSAL_HIDEABLE_IDS = new Set<string>([...PROPOSAL_DEFAULT_COLUMN_IDS]);
 
 const PROPOSAL_COLUMN_LABELS: Record<string, string> = {
   rendering: 'Rendering',
-  productTag: 'Product Tag',
+  productTag: 'ID',
   plan: 'Plan',
   drawings: 'Drawings',
   location: 'Location',

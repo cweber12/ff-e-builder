@@ -1,6 +1,6 @@
 # ChillDesignStudio Context
 
-ChillDesignStudio is a project-first specification workspace for interior design teams. A single Project can carry both room-based FF&E work and category-based Proposal work as different views of shared generated item data.
+ChillDesignStudio is a project-first specification workspace for interior design teams. A single Project can carry both location-based FF&E work and category-based Proposal work as different views of shared generated item data.
 
 ## Language
 
@@ -69,15 +69,19 @@ _Avoid_: Inline project editing, hidden project settings
 ### FF&E
 
 **FF&E**:
-The furniture, fixtures, and equipment specification tool for room-based schedules, catalogs, materials, and summaries.
+The furniture, fixtures, and equipment specification tool for location-based schedules, catalogs, materials, and summaries.
 _Avoid_: FFE without ampersand in user-facing text, furniture table
 
 **Room**:
 A named project space that groups FF&E Items.
 _Avoid_: Category, area
 
+**Location**:
+The user-facing FF&E table grouping for Generated Items. The current implementation stores Locations in the existing `rooms` table, but table UI should say Location. Proposal Items can later use their `location` field to choose or create the FF&E Location when explicitly added to FF&E.
+_Avoid_: Room in FF&E table UI, Category
+
 **FF&E Item**:
-A room-scoped specification line for a furnishing, fixture, or equipment product.
+A location-scoped specification line for a furnishing, fixture, or equipment product.
 _Avoid_: Product row, proposal item
 
 **Catalog**:
@@ -141,12 +145,12 @@ The shared item record that can appear in both FF&E and Proposal views. FF&E and
 _Avoid_: Treating FF&E Item and Proposal Item as unrelated records when referring to long-term table/export behavior
 
 **Generated Item Table**:
-The shared table behavior behind FF&E and Proposal. FF&E is the room-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default.
+The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default.
 _Avoid_: Separate table engines, duplicated export table models
 
 **Table Group**:
-The unit of organisation inside a tool's table view — a **Room** in FF&E, a **Proposal Category** in Proposal. Table Groups are view-specific groupings over Generated Items, not separate table engines. The action to remove a Table Group is labelled "Delete room" or "Delete category" in the UI — never "Delete table."
-_Avoid_: Section, bucket, container, "delete table" (use "Delete room" or "Delete category" instead)
+The unit of organisation inside a tool's table view — a **Location** in FF&E, a **Proposal Category** in Proposal. Table Groups are view-specific groupings over Generated Items, not separate table engines. The action to remove a Table Group is labelled "Delete location" or "Delete category" in the UI — never "Delete table."
+_Avoid_: Section, bucket, container, "delete table" (use "Delete location" or "Delete category" instead)
 
 ### Finish Library and Images
 
@@ -155,7 +159,7 @@ The unified project-scoped library of reusable finish entries accessible from bo
 _Avoid_: Material library, swatch library, swatches tab
 
 **Finish Library Filters**:
-The filters available in the Finish Library UI: All, Used in FF&E, Used in Proposal. When "Used in FF&E" is active, a secondary Room dropdown narrows to materials assigned within a specific Room. When "Used in Proposal" is active, a secondary Category dropdown narrows to materials assigned within a specific Proposal Category. A material ID search field is always available.
+The filters available in the Finish Library UI: All, Used in FF&E, Used in Proposal. When "Used in FF&E" is active, a secondary Location dropdown narrows to materials assigned within a specific Location. When "Used in Proposal" is active, a secondary Category dropdown narrows to materials assigned within a specific Proposal Category. A material ID search field is always available.
 _Avoid_: Materials tab, Swatches tab, classification-based sections
 
 **Import Material ID**:
@@ -191,7 +195,7 @@ The shared workflow for importing external spreadsheets into the FF&E or Proposa
 _Avoid_: Template-only import, raw upload, column mapping wizard
 
 **FF&E Spreadsheet Import**:
-A Spreadsheet Import targeting the FF&E table. Each Import Section title becomes a Room name; if the Room does not exist it is created. All columns are imported: recognized columns map to FF&E Item fields, unrecognized columns land in custom data.
+A Spreadsheet Import targeting the FF&E table. Each Import Section title becomes a Location name; if the Location does not exist it is created. All columns are imported: recognized columns map to FF&E Item fields, unrecognized columns land in custom data.
 _Avoid_: Proposal import when referring to FF&E context
 
 **Proposal Spreadsheet Import**:
@@ -199,17 +203,17 @@ A Spreadsheet Import targeting the Proposal table. Each Import Section title bec
 _Avoid_: Raw upload, template-only import, column mapping wizard
 
 **Import Section**:
-A single named table block within a spreadsheet — one title row (single non-empty cell) followed by a column header row and one or more data rows. A spreadsheet may contain multiple Import Sections separated by repeat header rows. The Import Section title becomes the Table Group name (Room for FF&E, Proposal Category for Proposal). If no title row is found above the header, the sheet name is used.
+A single named table block within a spreadsheet — one title row (single non-empty cell) followed by a column header row and one or more data rows. A spreadsheet may contain multiple Import Sections separated by repeat header rows. The Import Section title becomes the Table Group name (Location for FF&E, Proposal Category for Proposal). If no title row is found above the header, the sheet name is used.
 _Avoid_: Category, room, sheet (when referring to the logical import block)
 
 ## Relationships
 
 - A **Project** belongs to exactly one authenticated user.
 - A **Project** can optionally be associated with one **Company**.
-- A **Project** can contain zero or more **Rooms** and zero or more **Proposal Categories**.
+- A **Project** can contain zero or more FF&E **Locations** and zero or more **Proposal Categories**.
 - A **Project** has one **FF&E** workspace and one **Proposal** workspace; these are different views of shared generated item data.
 - A **Company** can define one active **Company Theme** used as the default for document exports.
-- A **Room** groups zero or more **Generated Items** in the FF&E view.
+- A **Location** groups zero or more **Generated Items** in the FF&E view.
 - A **Proposal Category** groups zero or more **Generated Items** in the Proposal view.
 - Creating a furniture **Generated Item** in FF&E should make it visible in Proposal under the Furniture **Proposal Category** by default.
 - A **Proposal Item** can have zero or more **Proposal Item Changes**, one per tracked field edit while the proposal is not `in_progress`.
@@ -231,8 +235,8 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - **Project Options** are available from both Project Cards and the **Project Header** so Project data can be updated without making header fields inline-editable.
 - A **Spreadsheet Import** auto-detects the column header row within the first 25 rows; no user-facing mapping step is required.
 - A **Spreadsheet Import** skips financial summary rows (Total, Grand Total, Shipping, Tax, etc.) instead of creating items from them.
-- A **Spreadsheet Import** supports multi-section sheets: each **Import Section** creates one **Table Group** (Room or Proposal Category).
-- An **FF&E Spreadsheet Import** creates missing **Rooms** from detected **Import Section** titles.
+- A **Spreadsheet Import** supports multi-section sheets: each **Import Section** creates one **Table Group** (Location or Proposal Category).
+- An **FF&E Spreadsheet Import** creates missing **Locations** from detected **Import Section** titles.
 - A **Proposal Spreadsheet Import** creates missing **Proposal Categories** from detected **Import Section** titles.
 - A **Proposal Spreadsheet Import** migrates embedded swatch images into the **Finish Library** as **Materials** assigned to the imported **Proposal Items**.
 - A **Measured Plan** can produce derived **Plan Images** attached to either **FF&E Items** or **Proposal Items** after a user confirms the measured item association.
@@ -279,7 +283,7 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 
 ## Flagged Ambiguities
 
-- "Item" is overloaded. Use **FF&E Item** for room-scoped specification lines and **Proposal Item** for category-scoped proposal rows.
+- "Item" is overloaded. Use **FF&E Item** for location-scoped specification lines and **Proposal Item** for category-scoped proposal rows.
 - "Category" is overloaded. Use **Proposal Category** for table groupings and describe FF&E item category as an item attribute.
 - "Swatch" is no longer a separate entity type. All Finish Library entries are **Materials**. "Swatch Cell" remains valid as a rendering term for the Proposal export column — but it describes the column format, not the entry type.
 - "FF&E Builder" is the historical repo name. The product shell is **ChillDesignStudio**, and **FF&E** is one tool inside it.

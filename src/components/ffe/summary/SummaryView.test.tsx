@@ -6,7 +6,7 @@ import { cents, formatMoney } from '../../../types';
 import { projectTotalCents, roomSubtotalCents } from '../../../lib/money';
 
 describe('SummaryView', () => {
-  it('renders room subtotals, grand total, and status cards', () => {
+  it('renders location subtotals, grand total, and status cards', () => {
     render(<SummaryView project={catalogProjectFixture} roomsWithItems={catalogRoomsFixture} />);
 
     expect(screen.getByRole('heading', { name: 'Budget vs actual' })).toBeInTheDocument();

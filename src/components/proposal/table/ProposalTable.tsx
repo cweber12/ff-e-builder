@@ -241,7 +241,9 @@ function ChangeHistoryDot({
 
 // --- Proposal Table Column Definitions ---
 // quantity and unitCost are fixed sticky-right columns — not draggable or hideable.
-const STICKY_RIGHT_COLUMN_IDS = new Set(PROPOSAL_GENERATED_ITEM_TABLE_PRESET.fixedColumnIds);
+const STICKY_RIGHT_COLUMN_IDS = new Set<string>(
+  PROPOSAL_GENERATED_ITEM_TABLE_PRESET.fixedColumnIds,
+);
 
 const PROPOSAL_HIDEABLE_IDS = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.hideableColumnIds;
 
@@ -1164,7 +1166,7 @@ function ProposalCategorySection({
                         )}
                         rowSpan={2}
                       >
-                        Qty
+                        Quantity
                       </th>
                       <th
                         className={cn(
@@ -1213,7 +1215,7 @@ function ProposalCategorySection({
                           stickyQtyHeaderClassName,
                         )}
                       >
-                        Qty
+                        Quantity
                       </th>
                       <th
                         className={cn(
@@ -1247,7 +1249,7 @@ function ProposalCategorySection({
                         stickyRevQtyHeaderClassName,
                       )}
                     >
-                      Qty
+                      Quantity
                     </th>
                     <th
                       className={cn(
@@ -1470,7 +1472,7 @@ function ProposalCategorySection({
                             )}
                             rowSpan={2}
                           >
-                            Qty
+                            Quantity
                           </th>
                           <th
                             className={cn(
@@ -1517,7 +1519,7 @@ function ProposalCategorySection({
                               stickyQtyExpandedHeaderClassName,
                             )}
                           >
-                            Qty
+                            Quantity
                           </th>
                           <th
                             className={cn(
@@ -1554,7 +1556,7 @@ function ProposalCategorySection({
                             stickyRevQtyExpandedHeaderClassName,
                           )}
                         >
-                          Qty
+                          Quantity
                         </th>
                         <th
                           className={cn(

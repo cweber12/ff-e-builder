@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): standardize Generated Item field labels and rename FF&E table groups to Location
+
 - refactor(table): move FF&E and Proposal edit-change helpers into shared Generated Item table utilities
 
 - refactor(table): centralize Generated Item change-field metadata for FF&E and Proposal views

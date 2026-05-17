@@ -4,7 +4,7 @@ import { Modal } from '../../primitives/Modal';
 
 type AddGroupModalProps = {
   open: boolean;
-  groupLabel: 'Room' | 'Category';
+  groupLabel: 'Location' | 'Room' | 'Category';
   onClose: () => void;
   onSubmit: (name: string) => Promise<void> | void;
 };

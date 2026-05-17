@@ -174,7 +174,7 @@ export function AddItemDrawer({
   return (
     <Drawer open={open} onClose={onClose} title={`Add item to ${roomName}`} className="max-w-xl">
       <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
-        <Field label="Item name" error={errors.itemName?.message}>
+        <Field label="Name" error={errors.itemName?.message}>
           <input {...register('itemName')} className={inputClassName} />
         </Field>
 
@@ -207,7 +207,7 @@ export function AddItemDrawer({
           </div>
         </Field>
 
-        <Field label="Item ID/tag" error={errors.itemIdTag?.message}>
+        <Field label="ID" error={errors.itemIdTag?.message}>
           <input {...register('itemIdTag')} className={inputClassName} />
         </Field>
 
@@ -218,7 +218,7 @@ export function AddItemDrawer({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Qty" error={errors.qty?.message}>
+          <Field label="Quantity" error={errors.qty?.message}>
             <input
               {...register('qty')}
               type="number"

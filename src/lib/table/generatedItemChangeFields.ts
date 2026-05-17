@@ -8,7 +8,7 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
   ffe: {
     itemName: {
       columnKey: 'description',
-      columnLabel: 'Item',
+      columnLabel: 'Name',
       isPriceAffecting: false,
     },
     itemIdTag: {
@@ -28,7 +28,7 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
     },
     qty: {
       columnKey: 'quantity',
-      columnLabel: 'Qty',
+      columnLabel: 'Quantity',
       isPriceAffecting: true,
     },
     unitCostCents: {
@@ -60,7 +60,7 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
     },
     productTag: {
       columnKey: 'productTag',
-      columnLabel: 'Product Tag',
+      columnLabel: 'ID',
       isPriceAffecting: false,
     },
     plan: {
