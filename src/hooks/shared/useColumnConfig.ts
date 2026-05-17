@@ -7,6 +7,8 @@ export type ColumnConfig = {
   order: string[];
   /** IDs of default columns the user has hidden. */
   hidden: string[];
+  /** Signature of the built-in defaults used when this config was persisted. */
+  defaultSignature?: string;
 };
 
 function storageKey(projectId: string, tableKey: string) {
@@ -55,6 +57,49 @@ function insertBeforeAnchor(order: string[], ids: string[], anchorId?: string): 
   return [...order.slice(0, anchorIndex), ...ids, ...order.slice(anchorIndex)];
 }
 
+function signatureForDefaultColumns(defaultColumnIds: readonly string[]) {
+  return defaultColumnIds.join('|');
+}
+
+function mergeSavedConfig(
+  saved: ColumnConfig,
+  defaultColumnIds: readonly string[],
+  customDefs: CustomColumnDef[],
+  insertBeforeId?: string,
+): ColumnConfig {
+  const defaultSignature = signatureForDefaultColumns(defaultColumnIds);
+  const defaultIds = new Set(defaultColumnIds);
+  const customIds = customDefs.map((d) => d.id);
+  const customIdSet = new Set(customIds);
+  const hidden = saved.hidden.filter((id) => defaultIds.has(id));
+
+  if (saved.defaultSignature !== defaultSignature) {
+    const savedCustomIds = saved.order.filter((id) => customIdSet.has(id));
+    const customIdsInOrder = [
+      ...savedCustomIds,
+      ...customIds.filter((id) => !savedCustomIds.includes(id)),
+    ];
+    return {
+      order: insertBeforeAnchor(
+        defaultColumnIds.filter((id) => !hidden.includes(id)),
+        customIdsInOrder,
+        insertBeforeId,
+      ),
+      hidden,
+      defaultSignature,
+    };
+  }
+
+  const knownIds = new Set(saved.order);
+  const newDefaults = defaultColumnIds.filter((id) => !knownIds.has(id) && !hidden.includes(id));
+  const newCustom = customIds.filter((id) => !knownIds.has(id));
+  return {
+    order: insertBeforeAnchor([...saved.order, ...newDefaults], newCustom, insertBeforeId),
+    hidden,
+    defaultSignature,
+  };
+}
+
 /**
  * Manages column order and visibility for a table, backed by localStorage.
  *
@@ -76,24 +121,13 @@ export function useColumnConfig(
   customDefs: CustomColumnDef[],
   insertBeforeId?: string,
 ) {
+  const defaultSignature = signatureForDefaultColumns(defaultColumnIds);
   const [config, setConfig] = useState<ColumnConfig>(() => {
     const saved = readConfig(projectId, tableKey);
     if (saved) {
-      // Merge: add any new default columns not yet in the saved order.
-      const knownIds = new Set(saved.order);
-      const newDefaults = defaultColumnIds.filter(
-        (id) => !knownIds.has(id) && !saved.hidden.includes(id),
-      );
-      const newCustom = customDefs.map((d) => d.id).filter((id) => !knownIds.has(id));
-      if (newDefaults.length > 0 || newCustom.length > 0) {
-        const merged: ColumnConfig = {
-          order: insertBeforeAnchor([...saved.order, ...newDefaults], newCustom, insertBeforeId),
-          hidden: saved.hidden,
-        };
-        writeConfig(projectId, tableKey, merged);
-        return merged;
-      }
-      return saved;
+      const merged = mergeSavedConfig(saved, defaultColumnIds, customDefs, insertBeforeId);
+      writeConfig(projectId, tableKey, merged);
+      return merged;
     }
     // First load: order = defaults with custom defs inserted before anchor.
     const initial: ColumnConfig = {
@@ -103,6 +137,7 @@ export function useColumnConfig(
         insertBeforeId,
       ),
       hidden: [],
+      defaultSignature,
     };
     writeConfig(projectId, tableKey, initial);
     return initial;
@@ -145,11 +180,12 @@ export function useColumnConfig(
       const next: ColumnConfig = {
         ...current,
         order: insertBeforeAnchor(current.order, newIds, insertBeforeId),
+        defaultSignature,
       };
       writeConfig(projectId, tableKey, next);
       return next;
     });
-  }, [customDefIdsKey, insertBeforeId, projectId, tableKey]);
+  }, [customDefIdsKey, defaultSignature, insertBeforeId, projectId, tableKey]);
 
   /** Move a column by ID (used on drag-end). */
   const moveColumn = useCallback(
@@ -175,9 +211,10 @@ export function useColumnConfig(
       persist({
         order: config.order.filter((id) => id !== columnId),
         hidden: config.hidden.includes(columnId) ? config.hidden : [...config.hidden, columnId],
+        defaultSignature,
       });
     },
-    [config, persist],
+    [config, defaultSignature, persist],
   );
 
   /** Restore a previously hidden default column (appends to end). */
@@ -186,9 +223,10 @@ export function useColumnConfig(
       persist({
         order: config.order.includes(columnId) ? config.order : [...config.order, columnId],
         hidden: config.hidden.filter((id) => id !== columnId),
+        defaultSignature,
       });
     },
-    [config, persist],
+    [config, defaultSignature, persist],
   );
 
   /**
