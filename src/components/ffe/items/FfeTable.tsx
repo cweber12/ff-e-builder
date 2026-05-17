@@ -1,4 +1,4 @@
-import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -68,6 +68,8 @@ import {
   type Item,
   type ItemStatus,
   type Project,
+  type ProposalItemChangelogEntry,
+  type ProposalRevision,
   type RoomWithItems,
 } from '../../../types';
 import type { CreateMaterialInput, UpdateItemInput } from '../../../lib/api';
@@ -89,6 +91,7 @@ import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
+import { proposalStatusConfig } from '../../proposal/proposalStatusConfig';
 
 const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;
 
@@ -154,6 +157,19 @@ type EditableItemPatch = Omit<UpdateItemInput, 'version'>;
 
 type SaveItemPatch = (item: Item, patch: EditableItemPatch) => Promise<void>;
 
+type FfeRevisionIndicator = {
+  revisions: ProposalRevision[];
+  changelogByGeneratedItemId: Map<string, ProposalItemChangelogEntry[]>;
+};
+
+type FfeRevisionColumnKey =
+  | 'itemIdTag'
+  | 'itemName'
+  | 'dimensions'
+  | 'qty'
+  | 'unitCostCents'
+  | 'notes';
+
 type TableActions = {
   rooms: RoomWithItems[];
   onDuplicate: (item: Item) => Promise<void>;
@@ -164,6 +180,26 @@ type TableActions = {
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
   onSave(item, editableItemPatchSchema.parse(patch) as EditableItemPatch);
+
+const ffeRevisionColumnKeys: Record<FfeRevisionColumnKey, string[]> = {
+  itemIdTag: ['product_tag', 'productTag'],
+  itemName: ['description'],
+  dimensions: ['size_label', 'size'],
+  qty: ['quantity'],
+  unitCostCents: ['unit_cost_cents', 'unitCostCents'],
+  notes: ['notes'],
+};
+
+function revisionEntriesForFfeCell(
+  revisionIndicator: FfeRevisionIndicator | undefined,
+  itemId: string,
+  column: FfeRevisionColumnKey,
+) {
+  if (!revisionIndicator) return [];
+  const entries = revisionIndicator.changelogByGeneratedItemId.get(itemId) ?? [];
+  const columnKeys = new Set(ffeRevisionColumnKeys[column]);
+  return entries.filter((entry) => columnKeys.has(entry.columnKey));
+}
 
 async function assignMaterialsToItem(
   itemId: string,
@@ -190,6 +226,158 @@ const nextStatus = (status: ItemStatus): ItemStatus => {
   return itemStatuses[(index + 1) % itemStatuses.length] ?? 'pending';
 };
 
+function formatRevisionDate(isoString: string): string {
+  const date = new Date(isoString);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  });
+}
+
+function FfeRevisionIndicatorDot({
+  entries,
+  revisions,
+}: {
+  entries: ProposalItemChangelogEntry[];
+  revisions: ProposalRevision[];
+}) {
+  const revisionLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const revision of revisions) map.set(revision.id, revision.label);
+    return map;
+  }, [revisions]);
+  const visibleEntries = useMemo(
+    () =>
+      entries.filter(
+        (entry) =>
+          entry.revisionId !== null &&
+          entry.generatedItemId !== null &&
+          revisionLabelMap.has(entry.revisionId),
+      ),
+    [entries, revisionLabelMap],
+  );
+  const groupedEntries = useMemo(() => {
+    const groups: { label: string; entries: ProposalItemChangelogEntry[] }[] = [];
+    const seen = new Map<string, { label: string; entries: ProposalItemChangelogEntry[] }>();
+    for (const entry of visibleEntries) {
+      const key = entry.revisionId!;
+      const label = revisionLabelMap.get(key) ?? 'Unknown';
+      if (!seen.has(key)) {
+        const group = { label, entries: [] };
+        groups.push(group);
+        seen.set(key, group);
+      }
+      seen.get(key)!.entries.push(entry);
+    }
+    return groups;
+  }, [revisionLabelMap, visibleEntries]);
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: globalThis.MouseEvent) => {
+      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
+      const inPopup = popupRef.current?.contains(event.target as Node) ?? false;
+      if (!inTrigger && !inPopup) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  if (visibleEntries.length === 0) return null;
+
+  const latest = visibleEntries[visibleEntries.length - 1]!;
+  const cfg = proposalStatusConfig[latest.proposalStatus];
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+
+  return (
+    <span className="inline-flex">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen((current) => !current);
+        }}
+        title="View Proposal revision history"
+        className={cn('h-2 w-2 flex-shrink-0 rounded-full', cfg.dotClass)}
+      />
+      {open &&
+        triggerRect &&
+        createPortal(
+          <div
+            ref={popupRef}
+            style={{
+              position: 'fixed',
+              top: triggerRect.bottom + 4,
+              left: triggerRect.left,
+            }}
+            className="z-[100] min-w-56 max-w-xs rounded-lg border border-gray-200 bg-white shadow-lg"
+          >
+            <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
+              Proposal revision history
+            </div>
+            <ul className="max-h-56 overflow-y-auto">
+              {groupedEntries.map((group) => (
+                <Fragment key={group.label}>
+                  <li className="sticky top-0 border-b border-gray-100 bg-gray-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    Round {group.label}
+                  </li>
+                  {group.entries.map((entry) => (
+                    <li key={entry.id} className="divide-y divide-gray-50 px-3 py-2 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            'h-1.5 w-1.5 flex-shrink-0 rounded-full',
+                            proposalStatusConfig[entry.proposalStatus].dotClass,
+                          )}
+                        />
+                        <span className="text-gray-400">{formatRevisionDate(entry.changedAt)}</span>
+                      </div>
+                      <div className="mt-0.5 flex items-baseline gap-1">
+                        <span className="text-gray-400 line-through">
+                          {entry.previousValue || '-'}
+                        </span>
+                        <span className="text-gray-300">-&gt;</span>
+                        <span className="font-medium text-gray-700">{entry.newValue || '-'}</span>
+                      </div>
+                      {entry.notes && <p className="mt-0.5 italic text-gray-500">{entry.notes}</p>}
+                    </li>
+                  ))}
+                </Fragment>
+              ))}
+            </ul>
+            <div className="border-t border-gray-100 px-3 py-2 text-[11px] text-gray-500">
+              Cost resolution is handled in Proposal.
+            </div>
+          </div>,
+          document.body,
+        )}
+    </span>
+  );
+}
+
+function RevisionIndicatorWrap({
+  children,
+  entries,
+  revisions,
+}: {
+  children: ReactNode;
+  entries: ProposalItemChangelogEntry[];
+  revisions: ProposalRevision[];
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {children}
+      <FfeRevisionIndicatorDot entries={entries} revisions={revisions} />
+    </span>
+  );
+}
+
 function EditableTextCell({
   item,
   value,
@@ -198,6 +386,8 @@ function EditableTextCell({
   onSave,
   required = false,
   displayClassName,
+  revisionEntries = [],
+  revisions = [],
 }: {
   item: Item;
   value: string | null;
@@ -206,26 +396,30 @@ function EditableTextCell({
   onSave: SaveItemPatch;
   required?: boolean | undefined;
   displayClassName?: string | undefined;
+  revisionEntries?: ProposalItemChangelogEntry[] | undefined;
+  revisions?: ProposalRevision[] | undefined;
 }) {
   const current = value ?? '';
 
   return (
-    <InlineTextEdit
-      value={current}
-      aria-label={`${label} for ${item.itemName}`}
-      {...(displayClassName ? { className: displayClassName } : {})}
-      onSave={(nextValue) => {
-        const patchValue = required ? nextValue.trim() : emptyToNull(nextValue);
-        return saveValidatedPatch(onSave, item, { [field]: patchValue });
-      }}
-      renderDisplay={(displayValue) =>
-        displayValue.trim().length > 0 ? (
-          <span className={displayClassName}>{displayValue}</span>
-        ) : (
-          <span className="text-gray-400">-</span>
-        )
-      }
-    />
+    <RevisionIndicatorWrap entries={revisionEntries} revisions={revisions}>
+      <InlineTextEdit
+        value={current}
+        aria-label={`${label} for ${item.itemName}`}
+        {...(displayClassName ? { className: displayClassName } : {})}
+        onSave={(nextValue) => {
+          const patchValue = required ? nextValue.trim() : emptyToNull(nextValue);
+          return saveValidatedPatch(onSave, item, { [field]: patchValue });
+        }}
+        renderDisplay={(displayValue) =>
+          displayValue.trim().length > 0 ? (
+            <span className={displayClassName}>{displayValue}</span>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )
+        }
+      />
+    </RevisionIndicatorWrap>
   );
 }
 
@@ -314,21 +508,33 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
   );
 }
 
-function EditableDimensionsCell({ item, onSave }: { item: Item; onSave: SaveItemPatch }) {
+function EditableDimensionsCell({
+  item,
+  onSave,
+  revisionEntries = [],
+  revisions = [],
+}: {
+  item: Item;
+  onSave: SaveItemPatch;
+  revisionEntries?: ProposalItemChangelogEntry[] | undefined;
+  revisions?: ProposalRevision[] | undefined;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-md px-1 py-0.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-      >
-        {item.dimensions?.trim() ? (
-          item.dimensions
-        ) : (
-          <span className="text-gray-400">Set dimensions</span>
-        )}
-      </button>
+      <RevisionIndicatorWrap entries={revisionEntries} revisions={revisions}>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-md px-1 py-0.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          {item.dimensions?.trim() ? (
+            item.dimensions
+          ) : (
+            <span className="text-gray-400">Set dimensions</span>
+          )}
+        </button>
+      </RevisionIndicatorWrap>
       <DimensionEditorModal
         open={open}
         title="Set dimensions"
@@ -430,7 +636,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                 }}
                 className={cn(menuItemClassName, 'text-danger-600')}
               >
-                Delete
+                Remove from FF&amp;E
               </button>
             </div>,
             document.body,
@@ -439,11 +645,12 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
       <Modal
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title={`Delete ${item.itemName}?`}
+        title={`Remove ${item.itemName} from FF&E?`}
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-600">
-            This removes the item from the schedule. This action cannot be undone.
+            This removes the item from the FF&amp;E table only. It stays in the Project database and
+            Proposal table.
           </p>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setConfirmDelete(false)}>
@@ -457,7 +664,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                 void actions.onDelete(item);
               }}
             >
-              Delete item
+              Remove from FF&amp;E
             </Button>
           </div>
         </div>
@@ -539,7 +746,11 @@ function ExpandIcon({ expanded }: { expanded?: boolean }) {
   );
 }
 
-const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<Item>[] => [
+const createColumns = (
+  onSave: SaveItemPatch,
+  actions: TableActions,
+  revisionIndicator?: FfeRevisionIndicator,
+): ColumnDef<Item>[] => [
   {
     id: 'drag',
     header: '',
@@ -583,6 +794,8 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         field="itemIdTag"
         label="ID"
         onSave={onSave}
+        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemIdTag')}
+        revisions={revisionIndicator?.revisions ?? []}
       />
     ),
   },
@@ -598,6 +811,8 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         onSave={onSave}
         required
         displayClassName="font-medium text-gray-950"
+        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemName')}
+        revisions={revisionIndicator?.revisions ?? []}
       />
     ),
   },
@@ -630,7 +845,18 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
   {
     accessorKey: 'dimensions',
     header: 'Dimensions',
-    cell: ({ row }) => <EditableDimensionsCell item={row.original} onSave={onSave} />,
+    cell: ({ row }) => (
+      <EditableDimensionsCell
+        item={row.original}
+        onSave={onSave}
+        revisionEntries={revisionEntriesForFfeCell(
+          revisionIndicator,
+          row.original.id,
+          'dimensions',
+        )}
+        revisions={revisionIndicator?.revisions ?? []}
+      />
+    ),
   },
   {
     id: 'materials',
@@ -646,30 +872,40 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
     accessorKey: 'qty',
     header: 'Quantity',
     cell: ({ row }) => (
-      <InlineNumberEdit
-        value={row.original.qty}
-        aria-label={`Quantity for ${row.original.itemName}`}
-        parser={parseQtyInput}
-        formatter={(value) => String(value)}
-        onSave={(qty) => saveValidatedPatch(onSave, row.original, { qty })}
-      />
+      <RevisionIndicatorWrap
+        entries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'qty')}
+        revisions={revisionIndicator?.revisions ?? []}
+      >
+        <InlineNumberEdit
+          value={row.original.qty}
+          aria-label={`Quantity for ${row.original.itemName}`}
+          parser={parseQtyInput}
+          formatter={(value) => String(value)}
+          onSave={(qty) => saveValidatedPatch(onSave, row.original, { qty })}
+        />
+      </RevisionIndicatorWrap>
     ),
   },
   {
     accessorKey: 'unitCostCents',
     header: 'Unit Cost',
     cell: ({ row }) => (
-      <InlineNumberEdit
-        value={row.original.unitCostCents / 100}
-        aria-label={`Unit Cost for ${row.original.itemName}`}
-        parser={parseUnitCostDollarsInput}
-        formatter={formatDollars}
-        onSave={(unitCostDollars) =>
-          saveValidatedPatch(onSave, row.original, {
-            unitCostCents: unitCostDollarsToCents(unitCostDollars),
-          })
-        }
-      />
+      <RevisionIndicatorWrap
+        entries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'unitCostCents')}
+        revisions={revisionIndicator?.revisions ?? []}
+      >
+        <InlineNumberEdit
+          value={row.original.unitCostCents / 100}
+          aria-label={`Unit Cost for ${row.original.itemName}`}
+          parser={parseUnitCostDollarsInput}
+          formatter={formatDollars}
+          onSave={(unitCostDollars) =>
+            saveValidatedPatch(onSave, row.original, {
+              unitCostCents: unitCostDollarsToCents(unitCostDollars),
+            })
+          }
+        />
+      </RevisionIndicatorWrap>
     ),
   },
   {
@@ -712,6 +948,8 @@ const createColumns = (onSave: SaveItemPatch, actions: TableActions): ColumnDef<
         field="notes"
         label="Notes"
         onSave={onSave}
+        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'notes')}
+        revisions={revisionIndicator?.revisions ?? []}
       />
     ),
   },
@@ -735,8 +973,9 @@ function buildColumns(
   onSaveCustomCell: (item: Item, defId: string, value: string) => Promise<void>,
   onDeleteCustomDef: (defId: string) => void,
   onRenameCustomDef: (defId: string, label: string) => Promise<void>,
+  revisionIndicator?: FfeRevisionIndicator,
 ): ColumnDef<Item>[] {
-  const allDefaultCols = createColumns(onSave, actions);
+  const allDefaultCols = createColumns(onSave, actions, revisionIndicator);
   const defaultColMap = new Map(
     allDefaultCols.map((col) => [col.id ?? (col as { accessorKey?: string }).accessorKey, col]),
   );
@@ -872,86 +1111,36 @@ function EmptyProjectState({ onAddRoom }: { onAddRoom?: (() => void) | undefined
 
 function DeleteRoomModal({
   room,
-  rooms,
   open,
   onClose,
   onConfirm,
 }: {
   room: RoomWithItems | null;
-  rooms: RoomWithItems[];
   open: boolean;
   onClose: () => void;
-  onConfirm: (targetRoomId: string | null) => Promise<void> | void;
+  onConfirm: () => Promise<void> | void;
 }) {
-  const [targetRoomId, setTargetRoomId] = useState('');
-  const [deleteAll, setDeleteAll] = useState(false);
-  const otherRooms = rooms.filter((candidate) => candidate.id !== room?.id);
   const itemCount = room?.items.length ?? 0;
   const hasItems = itemCount > 0;
-  const canDelete = !hasItems || deleteAll || targetRoomId.length > 0;
-
-  useEffect(() => {
-    if (open) {
-      setTargetRoomId('');
-      setDeleteAll(false);
-    }
-  }, [open, room?.id]);
 
   return (
-    <Modal open={open} onClose={onClose} title={room ? `Delete ${room.name}?` : 'Delete location'}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={room ? `Remove ${room.name} from FF&E?` : 'Remove location from FF&E'}
+    >
       <div className="flex flex-col gap-4">
         {hasItems ? (
-          <>
-            <p className="text-sm text-gray-600">
-              <strong>{room?.name}</strong> has {itemCount} {itemCount === 1 ? 'item' : 'items'}.
-              Choose what to do with them before deleting.
-            </p>
-            <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50/30">
-                <input
-                  type="radio"
-                  name="delete-room-action"
-                  className="mt-0.5 accent-brand-500"
-                  checked={!deleteAll}
-                  onChange={() => setDeleteAll(false)}
-                />
-                <span className="text-sm font-medium text-gray-800">
-                  Move items to another location
-                </span>
-              </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
-                <input
-                  type="radio"
-                  name="delete-room-action"
-                  className="mt-0.5 accent-brand-500"
-                  checked={deleteAll}
-                  onChange={() => setDeleteAll(true)}
-                />
-                <span className="text-sm font-medium text-gray-800">
-                  Delete location and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
-                </span>
-              </label>
-            </div>
-            {!deleteAll && (
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                Move items to...
-                <select
-                  value={targetRoomId}
-                  onChange={(event) => setTargetRoomId(event.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
-                >
-                  <option value="">Choose a location</option>
-                  {otherRooms.map((candidate) => (
-                    <option key={candidate.id} value={candidate.id}>
-                      {candidate.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </>
+          <p className="text-sm text-gray-600">
+            <strong>{room?.name}</strong> has {itemCount} {itemCount === 1 ? 'item' : 'items'}. This
+            removes the location and its items from the FF&amp;E table only. They stay in the
+            Project database and Proposal table.
+          </p>
         ) : (
-          <p className="text-sm text-gray-600">This location is empty and can be deleted.</p>
+          <p className="text-sm text-gray-600">
+            This removes the empty location from the FF&amp;E table without deleting the database
+            row.
+          </p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
@@ -960,18 +1149,13 @@ function DeleteRoomModal({
           <Button
             type="button"
             variant="danger"
-            disabled={!canDelete}
             onClick={() => {
-              void Promise.resolve(onConfirm(hasItems && !deleteAll ? targetRoomId : null)).then(
-                () => {
-                  setTargetRoomId('');
-                  setDeleteAll(false);
-                  onClose();
-                },
-              );
+              void Promise.resolve(onConfirm()).then(() => {
+                onClose();
+              });
             }}
           >
-            Delete location
+            Remove from FF&amp;E
           </Button>
         </div>
       </div>
@@ -1067,10 +1251,12 @@ function MobileItemCards({
   items,
   actions,
   onSave,
+  revisionIndicator,
 }: {
   items: Item[];
   actions: TableActions;
   onSave: SaveItemPatch;
+  revisionIndicator?: FfeRevisionIndicator;
 }) {
   if (items.length === 0) {
     return (
@@ -1103,6 +1289,12 @@ function MobileItemCards({
                   onSave={onSave}
                   required
                   displayClassName="text-base font-semibold text-gray-950"
+                  revisionEntries={revisionEntriesForFfeCell(
+                    revisionIndicator,
+                    item.id,
+                    'itemName',
+                  )}
+                  revisions={revisionIndicator?.revisions ?? []}
                 />
                 <div className="mt-1 text-sm text-gray-500">
                   <EditableTextCell
@@ -1111,6 +1303,12 @@ function MobileItemCards({
                     field="itemIdTag"
                     label="ID"
                     onSave={onSave}
+                    revisionEntries={revisionEntriesForFfeCell(
+                      revisionIndicator,
+                      item.id,
+                      'itemIdTag',
+                    )}
+                    revisions={revisionIndicator?.revisions ?? []}
                   />
                 </div>
               </div>
@@ -1135,26 +1333,36 @@ function MobileItemCards({
               />
             </MobileField>
             <MobileField label="Quantity">
-              <InlineNumberEdit
-                value={item.qty}
-                aria-label={`Quantity for ${item.itemName}`}
-                parser={parseQtyInput}
-                formatter={(value) => String(value)}
-                onSave={(qty) => saveValidatedPatch(onSave, item, { qty })}
-              />
+              <RevisionIndicatorWrap
+                entries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'qty')}
+                revisions={revisionIndicator?.revisions ?? []}
+              >
+                <InlineNumberEdit
+                  value={item.qty}
+                  aria-label={`Quantity for ${item.itemName}`}
+                  parser={parseQtyInput}
+                  formatter={(value) => String(value)}
+                  onSave={(qty) => saveValidatedPatch(onSave, item, { qty })}
+                />
+              </RevisionIndicatorWrap>
             </MobileField>
             <MobileField label="Unit cost">
-              <InlineNumberEdit
-                value={item.unitCostCents / 100}
-                aria-label={`Unit Cost for ${item.itemName}`}
-                parser={parseUnitCostDollarsInput}
-                formatter={formatDollars}
-                onSave={(unitCostDollars) =>
-                  saveValidatedPatch(onSave, item, {
-                    unitCostCents: unitCostDollarsToCents(unitCostDollars),
-                  })
-                }
-              />
+              <RevisionIndicatorWrap
+                entries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'unitCostCents')}
+                revisions={revisionIndicator?.revisions ?? []}
+              >
+                <InlineNumberEdit
+                  value={item.unitCostCents / 100}
+                  aria-label={`Unit Cost for ${item.itemName}`}
+                  parser={parseUnitCostDollarsInput}
+                  formatter={formatDollars}
+                  onSave={(unitCostDollars) =>
+                    saveValidatedPatch(onSave, item, {
+                      unitCostCents: unitCostDollarsToCents(unitCostDollars),
+                    })
+                  }
+                />
+              </RevisionIndicatorWrap>
             </MobileField>
             <MobileField label="Total">
               <span className="font-semibold tabular-nums">
@@ -1171,6 +1379,8 @@ function MobileItemCards({
               field="notes"
               label="Notes"
               onSave={onSave}
+              revisionEntries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'notes')}
+              revisions={revisionIndicator?.revisions ?? []}
             />
           </div>
         </article>
@@ -1374,7 +1584,7 @@ function RoomActionsMenu({
               className={cn(menuItemClassName, 'text-danger-600')}
               onClick={() => runAction(onDeleteRoom)}
             >
-              Delete location
+              Remove from FF&amp;E
             </button>
           </div>,
           document.body,
@@ -1433,6 +1643,27 @@ function RoomItemsSection({
   const openRevision = useMemo(
     () => revisionsData?.revisions.find((revision) => revision.closedAt === null) ?? null,
     [revisionsData?.revisions],
+  );
+  const revisions = useMemo(() => revisionsData?.revisions ?? [], [revisionsData?.revisions]);
+  const changelogByGeneratedItemId = useMemo(() => {
+    const map = new Map<string, ProposalItemChangelogEntry[]>();
+    const currentRevisionIds = new Set(revisions.map((revision) => revision.id));
+    for (const entry of revisionsData?.changelog ?? []) {
+      if (
+        !entry.generatedItemId ||
+        !entry.revisionId ||
+        !currentRevisionIds.has(entry.revisionId)
+      ) {
+        continue;
+      }
+      if (!map.has(entry.generatedItemId)) map.set(entry.generatedItemId, []);
+      map.get(entry.generatedItemId)!.push(entry);
+    }
+    return map;
+  }, [revisions, revisionsData?.changelog]);
+  const revisionIndicator = useMemo<FfeRevisionIndicator>(
+    () => ({ revisions, changelogByGeneratedItemId }),
+    [changelogByGeneratedItemId, revisions],
   );
   const shouldConfirmProposalImpact = proposalStatus !== 'in_progress' || openRevision !== null;
   const sortedItems = useMemo(
@@ -1579,6 +1810,7 @@ function RoomItemsSection({
         saveCustomCell,
         handleDeleteCustomDef,
         handleRenameCustomDef,
+        revisionIndicator,
       ),
     [
       actions,
@@ -1588,6 +1820,7 @@ function RoomItemsSection({
       saveCustomCell,
       handleDeleteCustomDef,
       handleRenameCustomDef,
+      revisionIndicator,
     ],
   );
   const hiddenDefaultColumns = useMemo(
@@ -1650,6 +1883,11 @@ function RoomItemsSection({
           <span className="shrink-0 rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
+          {openRevision && (
+            <span className="shrink-0 rounded-pill border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+              Revision {openRevision.label} open - resolve costs in Proposal
+            </span>
+          )}
         </div>
         <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
           {formatMoney(cents(subtotal))}
@@ -1734,7 +1972,12 @@ function RoomItemsSection({
               className="h-40 w-full"
             />
           )}
-          <MobileItemCards items={sortedItems} actions={actions} onSave={saveItemPatch} />
+          <MobileItemCards
+            items={sortedItems}
+            actions={actions}
+            onSave={saveItemPatch}
+            revisionIndicator={revisionIndicator}
+          />
         </div>
       )}
 
@@ -2108,7 +2351,6 @@ export function FfeTableView({
   const { collapsed: imageCollapsed, toggle: toggleImage } = useCollapsedRoomImages(roomsWithItems);
   const createRoom = useCreateRoom(projectId);
   const deleteRoom = useDeleteRoom(projectId);
-  const moveItem = useMoveItem();
   const [addRoomOpenInternal, setAddRoomOpenInternal] = useState(false);
   const isControlledAddRoom = addRoomOpenProp !== undefined && onAddRoomOpenChange !== undefined;
   const addRoomOpen = isControlledAddRoom ? (addRoomOpenProp ?? false) : addRoomOpenInternal;
@@ -2179,21 +2421,8 @@ export function FfeTableView({
       <DeleteRoomModal
         open={roomToDelete !== null}
         room={roomToDelete}
-        rooms={sortedRooms}
         onClose={() => setRoomToDelete(null)}
-        onConfirm={async (targetRoomId) => {
-          if (roomToDelete?.items.length && targetRoomId) {
-            await Promise.all(
-              roomToDelete.items.map((item) =>
-                moveItem.mutateAsync({
-                  id: item.id,
-                  fromRoomId: roomToDelete.id,
-                  toRoomId: targetRoomId,
-                  version: item.version,
-                }),
-              ),
-            );
-          }
+        onConfirm={async () => {
           if (roomToDelete) {
             await deleteRoom.mutateAsync(roomToDelete.id);
           }

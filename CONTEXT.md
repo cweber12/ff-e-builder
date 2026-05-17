@@ -145,12 +145,12 @@ The shared item record that can appear in both FF&E and Proposal views. FF&E and
 _Avoid_: Treating FF&E Item and Proposal Item as unrelated records when referring to long-term table/export behavior
 
 **Generated Item Table**:
-The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default. Proposal-created Furniture items are visible in FF&E automatically; other Proposal items become visible in FF&E only when the user chooses Add to FF&E.
+The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default. Proposal-created Furniture items are visible in FF&E automatically; other Proposal items become visible in FF&E only when the user chooses Add to FF&E. Proposal revision indicators and notes can appear in FF&E for linked Generated Items, but cost resolution remains Proposal-owned.
 _Avoid_: Separate table engines, duplicated export table models
 
 **Table Group**:
-The unit of organisation inside a tool's table view — a **Location** in FF&E, a **Proposal Category** in Proposal. Table Groups are view-specific groupings over Generated Items, not separate table engines. The action to remove a Table Group is labelled "Delete location" or "Delete category" in the UI — never "Delete table."
-_Avoid_: Section, bucket, container, "delete table" (use "Delete location" or "Delete category" instead)
+The unit of organisation inside a tool's table view — a **Location** in FF&E, a **Proposal Category** in Proposal. Table Groups are view-specific groupings over Generated Items, not separate table engines. Removing a Location from FF&E clears its FF&E visibility only; it must not delete Generated Items, Proposal rows, images, revisions, or database records.
+_Avoid_: Section, bucket, container, "delete table"
 
 ### Finish Library and Images
 

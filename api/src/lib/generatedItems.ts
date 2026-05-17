@@ -209,8 +209,17 @@ async function selectRoomIdForFfeLocation(sql: Sql, projectId: string, location:
       FROM next_sort
       WHERE NOT EXISTS (SELECT 1 FROM existing)
       RETURNING id
+    ),
+    restored AS (
+      UPDATE rooms
+      SET is_ffe_visible = true
+      WHERE id IN (SELECT id FROM existing)
+        AND is_ffe_visible = false
+      RETURNING id
     )
     SELECT id FROM inserted
+    UNION ALL
+    SELECT id FROM restored
     UNION ALL
     SELECT id FROM existing
     LIMIT 1

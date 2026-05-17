@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-17T01:22:14.523Z",
+  "generatedAt": "2026-05-17T01:53:59.375Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -135,7 +135,7 @@
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
       "files": 237,
-      "internalImports": 733,
+      "internalImports": 734,
       "externalImports": 256,
       "unresolvedImports": 0
     },
@@ -151,7 +151,7 @@
       "name": "Cloudflare Workers API",
       "tsconfig": "api/tsconfig.json",
       "files": 24,
-      "internalImports": 87,
+      "internalImports": 85,
       "externalImports": 19,
       "unresolvedImports": 0
     }
@@ -161,14 +161,14 @@
       "area": "ffe",
       "files": 24,
       "importsIn": 37,
-      "importsOut": 127,
+      "importsOut": 128,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
       "area": "proposal",
       "files": 23,
-      "importsIn": 34,
+      "importsIn": 35,
       "importsOut": 96,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
@@ -234,8 +234,8 @@
     {
       "area": "api-worker",
       "files": 20,
-      "importsIn": 87,
-      "importsOut": 74,
+      "importsIn": 85,
+      "importsOut": 72,
       "dependsOn": [],
       "importedBy": ["tests"]
     },
@@ -467,6 +467,16 @@
       "importerArea": "ffe",
       "specifier": "../../proposal/ChangeConfirmModal",
       "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "resolvedArea": "proposal",
+      "kind": "import",
+      "reviewNote": "review: product module imports another product module directly",
+      "reviewSection": "Review Targets"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../proposal/proposalStatusConfig",
+      "resolved": "src/components/proposal/proposalStatusConfig.ts",
       "resolvedArea": "proposal",
       "kind": "import",
       "reviewNote": "review: product module imports another product module directly",
@@ -5408,7 +5418,7 @@
       "section": "Review Targets",
       "from": "ffe",
       "to": "proposal",
-      "imports": 1,
+      "imports": 2,
       "reviewNote": "review: product module imports another product module directly",
       "examples": [
         {
@@ -5416,6 +5426,16 @@
           "importerArea": "ffe",
           "specifier": "../../proposal/ChangeConfirmModal",
           "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "resolvedArea": "proposal",
+          "kind": "import",
+          "reviewNote": "review: product module imports another product module directly",
+          "reviewSection": "Review Targets"
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importerArea": "ffe",
+          "specifier": "../../proposal/proposalStatusConfig",
+          "resolved": "src/components/proposal/proposalStatusConfig.ts",
           "resolvedArea": "proposal",
           "kind": "import",
           "reviewNote": "review: product module imports another product module directly",
@@ -7197,7 +7217,7 @@
     {
       "path": "api/src/lib",
       "files": 6,
-      "importsIn": 44,
+      "importsIn": 42,
       "importsOut": 9,
       "internalDependencies": ["api/src/types.ts"],
       "externalDependencies": ["@neondatabase/serverless"]
@@ -7214,7 +7234,7 @@
       "path": "api/src/routes",
       "files": 10,
       "importsIn": 11,
-      "importsOut": 60,
+      "importsOut": 58,
       "internalDependencies": ["api/src/lib", "api/src/middleware", "api/src/types.ts"],
       "externalDependencies": ["hono"]
     },
@@ -7261,8 +7281,8 @@
     {
       "path": "src/components",
       "files": 107,
-      "importsIn": 223,
-      "importsOut": 501,
+      "importsIn": 224,
+      "importsOut": 502,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8453,6 +8473,14 @@
           "specifier": "../../proposal/ChangeConfirmModal",
           "kind": "import",
           "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "../../proposal/proposalStatusConfig",
+          "kind": "import",
+          "resolved": "src/components/proposal/proposalStatusConfig.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -18499,14 +18527,6 @@
         },
         {
           "importer": "api/src/routes/items.ts",
-          "specifier": "../lib/r2",
-          "kind": "import",
-          "resolved": "api/src/lib/r2.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "api/src/routes/items.ts",
           "specifier": "../lib/generatedItems",
           "kind": "import",
           "resolved": "api/src/lib/generatedItems.ts",
@@ -18864,14 +18884,6 @@
           "specifier": "../lib/db",
           "kind": "import",
           "resolved": "api/src/lib/db.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "api/src/routes/rooms.ts",
-          "specifier": "../lib/r2",
-          "kind": "import",
-          "resolved": "api/src/lib/r2.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -20094,6 +20106,14 @@
       "specifier": "../../proposal/ChangeConfirmModal",
       "kind": "import",
       "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "../../proposal/proposalStatusConfig",
+      "kind": "import",
+      "resolved": "src/components/proposal/proposalStatusConfig.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27483,14 +27503,6 @@
     },
     {
       "importer": "api/src/routes/items.ts",
-      "specifier": "../lib/r2",
-      "kind": "import",
-      "resolved": "api/src/lib/r2.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "api/src/routes/items.ts",
       "specifier": "../lib/generatedItems",
       "kind": "import",
       "resolved": "api/src/lib/generatedItems.ts",
@@ -27782,14 +27794,6 @@
       "specifier": "../lib/db",
       "kind": "import",
       "resolved": "api/src/lib/db.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "api/src/routes/rooms.ts",
-      "specifier": "../lib/r2",
-      "kind": "import",
-      "resolved": "api/src/lib/r2.ts",
       "externalPackage": null,
       "asset": false
     },

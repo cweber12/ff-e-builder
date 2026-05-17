@@ -15,6 +15,7 @@ const {
   mockCreateRoomMutateAsync,
   mockDeleteRoomMutateAsync,
   mockCreateAndAssignMaterialMutateAsync,
+  mockProposalRevisionsData,
 } = vi.hoisted(() => ({
   mockUpdateMutateAsync: vi.fn(),
   mockCreateItemMutateAsync: vi.fn(),
@@ -23,6 +24,11 @@ const {
   mockCreateRoomMutateAsync: vi.fn(),
   mockDeleteRoomMutateAsync: vi.fn(),
   mockCreateAndAssignMaterialMutateAsync: vi.fn(),
+  mockProposalRevisionsData: {
+    revisions: [] as unknown[],
+    snapshots: [] as unknown[],
+    changelog: [] as unknown[],
+  },
 }));
 
 vi.mock('../../../hooks', () => ({
@@ -83,7 +89,7 @@ vi.mock('../../../hooks', () => ({
   useTableDensity: () => ({ density: 'default', setDensity: vi.fn() }),
   densityRowClass: () => 'h-13',
   useProposalRevisions: () => ({
-    data: { revisions: [], snapshots: [], changelog: [] },
+    data: mockProposalRevisionsData,
     isLoading: false,
   }),
 }));
@@ -216,6 +222,9 @@ describe('FfeTable', () => {
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
     });
+    mockProposalRevisionsData.revisions = [];
+    mockProposalRevisionsData.snapshots = [];
+    mockProposalRevisionsData.changelog = [];
     window.localStorage.clear();
   });
 
@@ -229,6 +238,44 @@ describe('FfeTable', () => {
     expect(screen.getByText('Floor Lamp')).toBeInTheDocument();
     expect(screen.getByText('Dining Table')).toBeInTheDocument();
     expect(screen.getByText('No items — add one via the location menu.')).toBeInTheDocument();
+  });
+
+  it('shows linked proposal revision indicators in FF&E cells', () => {
+    mockProposalRevisionsData.revisions = [
+      {
+        id: 'revision-1',
+        projectId: 'project-1',
+        revisionMajor: 1,
+        revisionMinor: 0,
+        label: '1.0',
+        triggeredAtStatus: 'pricing_complete',
+        openedAt: '2026-05-01T00:00:00Z',
+        closedAt: null,
+      },
+    ];
+    mockProposalRevisionsData.changelog = [
+      {
+        id: 'change-1',
+        proposalItemId: 'proposal-item-1',
+        generatedItemId: 'item-1',
+        columnKey: 'quantity',
+        previousValue: '1',
+        newValue: '2',
+        notes: 'Client added one chair',
+        proposalStatus: 'pricing_complete',
+        relatedChangeId: null,
+        revisionId: 'revision-1',
+        isPriceAffecting: true,
+        changedAt: '2026-05-01T00:00:00Z',
+      },
+    ];
+
+    renderTable();
+
+    expect(
+      screen.getAllByText('Revision 1.0 open - resolve costs in Proposal').length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('View Proposal revision history').length).toBeGreaterThan(0);
   });
 
   it('renders room subtotals matching roomSubtotalCents', () => {
@@ -486,26 +533,20 @@ describe('FfeTable', () => {
     expect(mockCreateItemMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('does not allow deleting a location with items until a target location is selected', async () => {
+  it('removes a location from FF&E without moving its items', async () => {
     const user = userEvent.setup();
     renderTable();
 
     await openLivingRoomActions(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Delete location' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Remove from FF&E' }));
 
     expect(screen.getByText(/has 2 items/)).toBeInTheDocument();
-    const dialog = screen.getByRole('dialog', { name: /Delete Living Room/ });
-    expect(within(dialog).getByRole('button', { name: 'Delete location' })).toBeDisabled();
+    const dialog = screen.getByRole('dialog', { name: /Remove Living Room from FF&E/ });
+    expect(within(dialog).getByText(/Proposal table/)).toBeInTheDocument();
 
-    await user.selectOptions(within(dialog).getByLabelText('Move items to...'), 'room-2');
-    await user.click(within(dialog).getByRole('button', { name: 'Delete location' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Remove from FF&E' }));
 
-    expect(mockMoveItemMutateAsync).toHaveBeenCalledWith({
-      id: 'item-1',
-      fromRoomId: 'room-1',
-      toRoomId: 'room-2',
-      version: 1,
-    });
+    expect(mockMoveItemMutateAsync).not.toHaveBeenCalled();
     expect(mockDeleteRoomMutateAsync).toHaveBeenCalledWith('room-1');
   });
 

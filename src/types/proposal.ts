@@ -56,6 +56,7 @@ export type ProposalItem = {
 export type ProposalItemChangelogEntry = {
   id: string;
   proposalItemId: string;
+  generatedItemId: string | null;
   columnKey: string;
   previousValue: string;
   newValue: string;

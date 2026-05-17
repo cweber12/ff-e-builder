@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(api): remove FF&E items and Locations by clearing FF&E visibility
+
+- refactor(table): show linked Proposal revision indicators in FF&E
+
 - refactor(images): share linked Generated Item Rendering and Plan images between FF&E and Proposal
 
 - feat(proposal): add explicit Add to FF&E action for Proposal items

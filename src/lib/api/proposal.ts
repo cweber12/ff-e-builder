@@ -181,6 +181,7 @@ export const proposalApi = {
       r.changelog.map((row) => ({
         id: row.id as string,
         proposalItemId: row.proposal_item_id as string,
+        generatedItemId: (row.generated_item_id as string | null) ?? null,
         columnKey: row.column_key as string,
         previousValue: (row.previous_value as string | null) ?? '',
         newValue: (row.new_value as string | null) ?? '',
@@ -233,6 +234,7 @@ export const proposalApi = {
         (row): ProposalItemChangelogEntry => ({
           id: row.id as string,
           proposalItemId: row.proposal_item_id as string,
+          generatedItemId: (row.generated_item_id as string | null) ?? null,
           columnKey: row.column_key as string,
           previousValue: (row.previous_value as string | null) ?? '',
           newValue: (row.new_value as string | null) ?? '',

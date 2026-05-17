@@ -152,6 +152,7 @@ router.get('/:id/rooms', async (c) => {
   const rows = await sql`
     SELECT * FROM rooms
     WHERE project_id = ${id}
+      AND is_ffe_visible = true
     ORDER BY sort_order, created_at
   `;
   return c.json({ rooms: rows });
@@ -174,9 +175,30 @@ router.post('/:id/rooms', async (c) => {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    INSERT INTO rooms (project_id, name, sort_order)
-    VALUES (${projectId}, ${parsed.data.name}, ${parsed.data.sort_order})
-    RETURNING *
+    WITH existing AS (
+      SELECT id
+      FROM rooms
+      WHERE project_id = ${projectId} AND lower(name) = lower(${parsed.data.name})
+      ORDER BY is_ffe_visible DESC, sort_order, created_at
+      LIMIT 1
+    ),
+    restored AS (
+      UPDATE rooms
+      SET is_ffe_visible = true,
+          sort_order = ${parsed.data.sort_order}
+      WHERE id IN (SELECT id FROM existing)
+      RETURNING *
+    ),
+    inserted AS (
+      INSERT INTO rooms (project_id, name, sort_order)
+      SELECT ${projectId}, ${parsed.data.name}, ${parsed.data.sort_order}
+      WHERE NOT EXISTS (SELECT 1 FROM existing)
+      RETURNING *
+    )
+    SELECT * FROM restored
+    UNION ALL
+    SELECT * FROM inserted
+    LIMIT 1
   `;
   return c.json({ room: rows[0] }, 201);
 });

@@ -3,7 +3,6 @@ import type { Env, HonoVariables } from '../types';
 import { UpdateRoomSchema, CreateItemSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
-import { deleteR2Keys } from '../lib/r2';
 import { createGeneratedItemFromFfe, selectGeneratedItemsByRoom } from '../lib/generatedItems';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -36,7 +35,8 @@ router.patch('/:id', async (c) => {
   return c.json({ room: rows[0] });
 });
 
-// DELETE /api/v1/rooms/:id — delete a room (cascades to items)
+// DELETE /api/v1/rooms/:id — remove a Location from the FF&E view.
+// The room row, generated items, linked Proposal rows, and images remain.
 router.delete('/:id', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
@@ -48,33 +48,19 @@ router.delete('/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const imageRows = await sql`
-    SELECT r2_key
-    FROM image_assets
-    WHERE room_id = ${id}
-       OR proposal_item_id IN (
-         SELECT link.proposal_item_id
-         FROM proposal_item_generated_item_links link
-         JOIN items i ON i.id = link.item_id
-         WHERE i.room_id = ${id}
-           AND i.is_ffe_visible = true
-       )
-  `;
-  await deleteR2Keys(
-    c.env.IMAGES_BUCKET,
-    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
-  );
   await sql`
-    DELETE FROM proposal_items
-    WHERE id IN (
-      SELECT link.proposal_item_id
-      FROM proposal_item_generated_item_links link
-      JOIN items i ON i.id = link.item_id
-      WHERE i.room_id = ${id}
-        AND i.is_ffe_visible = true
-    )
+    UPDATE items
+    SET is_ffe_visible = false,
+        version = version + 1
+    WHERE room_id = ${id}
   `;
-  await sql`DELETE FROM rooms WHERE id = ${id}`;
+  const rows = await sql`
+    UPDATE rooms
+    SET is_ffe_visible = false
+    WHERE id = ${id}
+    RETURNING id
+  `;
+  if (!rows[0]) return c.json({ error: 'Not found' }, 404);
   return c.body(null, 204);
 });
 

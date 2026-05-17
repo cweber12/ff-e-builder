@@ -394,7 +394,7 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
   // Include changelog entries for all revisions in the current cycle so the
   // client can show change history for both open and closed rounds.
   const changelog = await sql`
-    SELECT cl.id, cl.proposal_item_id, cl.column_key, cl.previous_value,
+    SELECT cl.id, cl.proposal_item_id, cl.generated_item_id, cl.column_key, cl.previous_value,
            cl.new_value, cl.notes, cl.proposal_status, cl.revision_id,
            cl.is_price_affecting, cl.changed_at
     FROM   proposal_item_changelog cl
