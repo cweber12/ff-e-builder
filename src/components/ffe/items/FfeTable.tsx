@@ -118,6 +118,10 @@ function defaultColumnClassName(columnId: string) {
   return DEFAULT_COLUMN_META[columnId as keyof typeof DEFAULT_COLUMN_META]?.className;
 }
 
+function defaultColumnWraps(columnId: string) {
+  return DEFAULT_COLUMN_META[columnId as keyof typeof DEFAULT_COLUMN_META]?.wraps === true;
+}
+
 type FfeTableProps = {
   roomsWithItems: RoomWithItems[];
   projectId: string;
@@ -1079,9 +1083,7 @@ function SortableItemRow({
           className={cn(
             'px-3 py-3 text-gray-700',
             defaultColumnClassName(cell.column.id),
-            cell.column.id === 'description' || cell.column.id === 'itemName'
-              ? 'whitespace-normal'
-              : 'whitespace-nowrap',
+            defaultColumnWraps(cell.column.id) ? 'whitespace-normal' : 'whitespace-nowrap',
             cell.column.id === 'plan' && 'overflow-hidden',
             cell.column.id === 'lineTotal' && stickyTotalCellClassName,
             cell.column.id === 'actions' && stickyActionsCellClassName,

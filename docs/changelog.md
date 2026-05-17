@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): move generated item text-wrap behavior into table presets
+
 - refactor(table): move FF&E generated item column widths into shared table presets
 
 - fix(table): align FF&E Name and Product Description column widths with Proposal

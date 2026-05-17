@@ -8,6 +8,12 @@ export type GeneratedItemTablePreset = {
   groupPluralLabel: string;
 };
 
+type GeneratedItemColumnMeta = {
+  label?: string;
+  className: string;
+  wraps?: boolean;
+};
+
 export const FFE_GENERATED_ITEM_TABLE_PRESET = {
   view: 'ffe',
   tableKey: 'ffe',
@@ -52,13 +58,13 @@ export const FFE_GENERATED_ITEM_TABLE_PRESET = {
   },
   defaultColumnMeta: {
     plan: { className: 'w-24 min-w-24 max-w-24' },
-    itemName: { className: 'w-48 min-w-48 max-w-48' },
-    description: { className: 'w-64 min-w-64 max-w-64' },
+    itemName: { className: 'w-48 min-w-48 max-w-48', wraps: true },
+    description: { className: 'w-64 min-w-64 max-w-64', wraps: true },
   },
 } as const satisfies GeneratedItemTablePreset & {
   defaultColumnIds: readonly string[];
   defaultColumnLabels: Record<string, string>;
-  defaultColumnMeta: Record<string, { className: string }>;
+  defaultColumnMeta: Record<string, Omit<GeneratedItemColumnMeta, 'label'>>;
 };
 
 export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
@@ -84,11 +90,11 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
   columnMeta: {
     rendering: { label: 'Rendering', className: 'w-40 min-w-40' },
     productTag: { label: 'ID', className: 'min-w-36' },
-    itemName: { label: 'Name', className: 'min-w-48' },
+    itemName: { label: 'Name', className: 'min-w-48', wraps: true },
     plan: { label: 'Plan', className: 'w-36 min-w-36' },
     drawings: { label: 'Drawings', className: 'min-w-36' },
     location: { label: 'Location', className: 'min-w-36' },
-    description: { label: 'Product Description', className: 'min-w-64' },
+    description: { label: 'Product Description', className: 'min-w-64', wraps: true },
     notes: { label: 'Notes', className: 'min-w-48' },
     size: { label: 'Size', className: 'w-44 min-w-44' },
     swatch: { label: 'Swatch', className: 'min-w-36' },
@@ -97,5 +103,5 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
 } as const satisfies GeneratedItemTablePreset & {
   fixedColumnIds: readonly string[];
   hideableColumnIds: readonly string[];
-  columnMeta: Record<string, { label: string; className: string }>;
+  columnMeta: Record<string, GeneratedItemColumnMeta & { label: string }>;
 };
