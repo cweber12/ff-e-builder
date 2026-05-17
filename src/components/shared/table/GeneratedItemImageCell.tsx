@@ -10,8 +10,8 @@ const imageFrameConfig: Record<
   Record<GeneratedItemImageKind, { entityType: ImageEntityType; frameClassName: string }>
 > = {
   ffe: {
-    rendering: { entityType: 'item', frameClassName: 'h-12 aspect-[117/75]' },
-    plan: { entityType: 'item_plan', frameClassName: 'h-12 aspect-[103/75]' },
+    rendering: { entityType: 'item', frameClassName: 'h-20 w-[125px] max-w-full' },
+    plan: { entityType: 'item_plan', frameClassName: 'h-20 w-[110px] max-w-full' },
   },
   proposal: {
     rendering: { entityType: 'proposal_item', frameClassName: 'h-20 w-[125px] max-w-full' },

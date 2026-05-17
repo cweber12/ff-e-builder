@@ -57,7 +57,8 @@ export const FFE_GENERATED_ITEM_TABLE_PRESET = {
     actions: 'Actions',
   },
   defaultColumnMeta: {
-    plan: { className: 'w-24 min-w-24 max-w-24' },
+    image: { className: 'w-40 min-w-40 max-w-40' },
+    plan: { className: 'w-36 min-w-36 max-w-36' },
     itemName: { className: 'w-48 min-w-48 max-w-48', wraps: true },
     description: { className: 'w-64 min-w-64 max-w-64', wraps: true },
   },
