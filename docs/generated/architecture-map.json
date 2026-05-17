@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-17T23:12:42.553Z",
+  "generatedAt": "2026-05-17T23:50:19.146Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 248,
-      "internalImports": 766,
-      "externalImports": 267,
+      "files": 250,
+      "internalImports": 771,
+      "externalImports": 269,
       "unresolvedImports": 2
     },
     {
@@ -167,9 +167,9 @@
     },
     {
       "area": "proposal",
-      "files": 25,
-      "importsIn": 39,
-      "importsOut": 109,
+      "files": 26,
+      "importsIn": 40,
+      "importsOut": 112,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
@@ -217,7 +217,7 @@
     {
       "area": "shared-lib",
       "files": 47,
-      "importsIn": 275,
+      "importsIn": 278,
       "importsOut": 111,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
@@ -242,7 +242,7 @@
     {
       "area": "types",
       "files": 10,
-      "importsIn": 159,
+      "importsIn": 160,
       "importsOut": 21,
       "dependsOn": [],
       "importedBy": [
@@ -259,9 +259,9 @@
     },
     {
       "area": "tests",
-      "files": 48,
+      "files": 49,
       "importsIn": 0,
-      "importsOut": 91,
+      "importsOut": 93,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -312,7 +312,7 @@
       "paths": [
         {
           "path": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-          "files": 23
+          "files": 24
         },
         {
           "path": "src/lib/import/formats/proposal.ts, src/lib/api/proposal.ts",
@@ -400,7 +400,7 @@
       "paths": [
         {
           "path": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-          "files": 48
+          "files": 49
         }
       ]
     },
@@ -2933,6 +2933,26 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/proposal/import/proposalImportItem.ts",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/api",
+      "resolved": "src/lib/api.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/import/proposalImportItem.ts",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/import",
+      "resolved": "src/lib/import/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/proposal/revision/GeneratedItemRevisionIndicator.tsx",
       "importerArea": "proposal",
       "specifier": "../../../hooks",
@@ -5035,8 +5055,8 @@
     {
       "importer": "src/components/proposal/import/ImportProposalExcelModal.test.ts",
       "importerArea": "tests",
-      "specifier": "./ImportProposalExcelModal",
-      "resolved": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+      "specifier": "./proposalImportItem",
+      "resolved": "src/components/proposal/import/proposalImportItem.ts",
       "resolvedArea": "proposal",
       "kind": "import",
       "reviewNote": "expected: test coverage dependency",
@@ -5117,6 +5137,16 @@
       "importerArea": "tests",
       "specifier": "./optimisticList",
       "resolved": "src/hooks/optimisticList.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
+      "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+      "importerArea": "tests",
+      "specifier": "./useColumnConfig",
+      "resolved": "src/hooks/shared/useColumnConfig.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: test coverage dependency",
@@ -5434,6 +5464,16 @@
     },
     {
       "importer": "src/hooks/ffe/useItems.test.tsx",
+      "importerArea": "tests",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
+      "importer": "src/hooks/shared/useColumnConfig.test.tsx",
       "importerArea": "tests",
       "specifier": "../../types",
       "resolved": "src/types/index.ts",
@@ -6230,7 +6270,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-lib",
-      "imports": 38,
+      "imports": 40,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -7005,8 +7045,8 @@
         {
           "importer": "src/components/proposal/import/ImportProposalExcelModal.test.ts",
           "importerArea": "tests",
-          "specifier": "./ImportProposalExcelModal",
-          "resolved": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+          "specifier": "./proposalImportItem",
+          "resolved": "src/components/proposal/import/proposalImportItem.ts",
           "resolvedArea": "proposal",
           "kind": "import",
           "reviewNote": "expected: test coverage dependency",
@@ -7174,7 +7214,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "shared-lib",
-      "imports": 23,
+      "imports": 24,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7252,7 +7292,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "types",
-      "imports": 17,
+      "imports": 18,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7549,9 +7589,9 @@
     },
     {
       "path": "src/components",
-      "files": 117,
-      "importsIn": 243,
-      "importsOut": 544,
+      "files": 118,
+      "importsIn": 244,
+      "importsOut": 547,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7581,9 +7621,9 @@
     },
     {
       "path": "src/hooks",
-      "files": 26,
-      "importsIn": 65,
-      "importsOut": 113,
+      "files": 27,
+      "importsIn": 66,
+      "importsOut": 117,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -7597,7 +7637,7 @@
     {
       "path": "src/lib",
       "files": 78,
-      "importsIn": 284,
+      "importsIn": 286,
       "importsOut": 246,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
@@ -7654,7 +7694,7 @@
     {
       "path": "src/types",
       "files": 10,
-      "importsIn": 159,
+      "importsIn": 160,
       "importsOut": 23,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -11162,9 +11202,9 @@
         },
         {
           "importer": "src/components/proposal/import/ImportProposalExcelModal.test.ts",
-          "specifier": "./ImportProposalExcelModal",
+          "specifier": "./proposalImportItem",
           "kind": "import",
-          "resolved": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+          "resolved": "src/components/proposal/import/proposalImportItem.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -11242,6 +11282,14 @@
           "resolved": "src/lib/import/index.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+          "specifier": "./proposalImportItem",
+          "kind": "import",
+          "resolved": "src/components/proposal/import/proposalImportItem.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -11259,6 +11307,33 @@
           "specifier": "./ImportProposalExcelModal",
           "kind": "export",
           "resolved": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/proposal/import/proposalImportItem.ts",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "proposal",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Proposal-owned feature path",
+      "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
+      "imports": [
+        {
+          "importer": "src/components/proposal/import/proposalImportItem.ts",
+          "specifier": "../../../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/import/proposalImportItem.ts",
+          "specifier": "../../../lib/import",
+          "kind": "import",
+          "resolved": "src/lib/import/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -14393,6 +14468,49 @@
           "specifier": "./useIsMobileViewport",
           "kind": "export",
           "resolved": "src/hooks/shared/useIsMobileViewport.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/shared/useColumnConfig.test.tsx",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "tests",
+      "ownershipConfidence": "high",
+      "ownershipReason": "test or snapshot path",
+      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+          "specifier": "@testing-library/react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@testing-library/react",
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+          "specifier": "vitest",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "vitest",
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+          "specifier": "./useColumnConfig",
+          "kind": "import",
+          "resolved": "src/hooks/shared/useColumnConfig.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -22661,9 +22779,9 @@
     },
     {
       "importer": "src/components/proposal/import/ImportProposalExcelModal.test.ts",
-      "specifier": "./ImportProposalExcelModal",
+      "specifier": "./proposalImportItem",
       "kind": "import",
-      "resolved": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+      "resolved": "src/components/proposal/import/proposalImportItem.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -22732,10 +22850,34 @@
       "asset": false
     },
     {
+      "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+      "specifier": "./proposalImportItem",
+      "kind": "import",
+      "resolved": "src/components/proposal/import/proposalImportItem.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/proposal/import/index.ts",
       "specifier": "./ImportProposalExcelModal",
       "kind": "export",
       "resolved": "src/components/proposal/import/ImportProposalExcelModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/import/proposalImportItem.ts",
+      "specifier": "../../../lib/api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/import/proposalImportItem.ts",
+      "specifier": "../../../lib/import",
+      "kind": "import",
+      "resolved": "src/lib/import/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25112,6 +25254,38 @@
       "specifier": "./useIsMobileViewport",
       "kind": "export",
       "resolved": "src/hooks/shared/useIsMobileViewport.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+      "specifier": "@testing-library/react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@testing-library/react",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+      "specifier": "vitest",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "vitest",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+      "specifier": "./useColumnConfig",
+      "kind": "import",
+      "resolved": "src/hooks/shared/useColumnConfig.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useColumnConfig.test.tsx",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -29127,14 +29301,14 @@
     },
     {
       "name": "vitest",
-      "imports": 49
-    },
-    {
-      "name": "@tanstack/react-query",
-      "imports": 23
+      "imports": 50
     },
     {
       "name": "@testing-library/react",
+      "imports": 24
+    },
+    {
+      "name": "@tanstack/react-query",
       "imports": 23
     },
     {

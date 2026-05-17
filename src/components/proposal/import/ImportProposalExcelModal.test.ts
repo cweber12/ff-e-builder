@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildProposalItem, isComputedProposalTotalColumn } from './ImportProposalExcelModal';
+import { buildProposalItem, isComputedProposalTotalColumn } from './proposalImportItem';
 import type {
   ProposalImportColumn,
   ProposalImportColumnMap,

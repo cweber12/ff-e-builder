@@ -38,6 +38,13 @@ export function ffePatchToGeneratedItemChangeInfo(
       newValue: patch.itemIdTag ?? '',
     };
   }
+  if ('drawings' in patch) {
+    return {
+      ...changeFields.drawings,
+      previousValue: item.drawings ?? '',
+      newValue: patch.drawings ?? '',
+    };
+  }
   if ('notes' in patch) {
     return {
       ...changeFields.notes,

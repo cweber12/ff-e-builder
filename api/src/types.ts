@@ -310,6 +310,7 @@ export const CreateItemSchema = z.object({
   description: z.string().max(4000).nullable().default(null),
   category: z.string().max(100).nullable().default(null),
   item_id_tag: z.string().max(100).nullable().default(null),
+  drawings: z.string().max(255).nullable().default(null),
   dimensions: z.string().max(100).nullable().default(null),
   notes: z.string().nullable().default(null),
   qty: z.number().int().nonnegative().default(1),

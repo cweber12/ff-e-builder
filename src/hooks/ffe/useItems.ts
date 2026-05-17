@@ -36,6 +36,7 @@ export function useCreateItem(roomId: string) {
         description: input.description ?? null,
         category: input.category ?? null,
         itemIdTag: input.itemIdTag ?? null,
+        drawings: input.drawings ?? '',
         dimensions: input.dimensions ?? null,
         notes: input.notes ?? null,
         qty: input.qty ?? 1,
@@ -81,6 +82,9 @@ export function useUpdateItem(roomId: string) {
           ...item,
           ...patch,
           roomId: patch.roomId ?? item.roomId,
+          drawings: Object.prototype.hasOwnProperty.call(patch, 'drawings')
+            ? (patch.drawings ?? '')
+            : (item.drawings ?? ''),
         })),
       );
 

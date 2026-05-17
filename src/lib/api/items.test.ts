@@ -15,6 +15,7 @@ describe('itemsApi', () => {
           description: 'Curved upholstered lounge chair',
           category: 'Seating',
           item_id_tag: null,
+          drawings: 'A-101',
           dimensions: null,
           notes: null,
           qty: 2,
@@ -34,6 +35,7 @@ describe('itemsApi', () => {
       roomId: 'room-2',
       itemName: 'Lounge Chair',
       description: 'Curved upholstered lounge chair',
+      drawings: 'A-101',
       qty: 2,
       unitCostCents: 125000,
       status: 'approved',
@@ -51,6 +53,7 @@ describe('itemsApi', () => {
       item_name: 'Lounge Chair',
       room_id: 'room-2',
       description: 'Curved upholstered lounge chair',
+      drawings: 'A-101',
       qty: 2,
       unit_cost_cents: 125000,
       status: 'approved',
@@ -62,6 +65,7 @@ describe('itemsApi', () => {
       roomId: 'room-2',
       itemName: 'Lounge Chair',
       description: 'Curved upholstered lounge chair',
+      drawings: 'A-101',
       version: 8,
     });
   });

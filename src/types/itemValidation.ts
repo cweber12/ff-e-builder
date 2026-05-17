@@ -29,6 +29,7 @@ export const editableItemPatchSchema = z.object({
   description: nullableText(4000).optional(),
   category: nullableText(100).optional(),
   itemIdTag: nullableText(100).optional(),
+  drawings: nullableText(255).optional(),
   dimensions: nullableText(100).optional(),
   notes: nullableText(2000).optional(),
   qty: itemQtySchema.optional(),

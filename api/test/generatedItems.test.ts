@@ -78,6 +78,7 @@ describe('Generated Item read model', () => {
         description: null,
         category: null,
         item_id_tag: 'F-101',
+        drawings: null,
         dimensions: null,
         notes: null,
         qty: 2,
@@ -156,6 +157,7 @@ describe('Generated Item read model', () => {
           proposal_item_id: 'proposal-item-1',
           item_name: 'Lounge chair',
           item_id_tag: 'F-101',
+          drawings: 'A1',
           dimensions: '',
           notes: '',
           qty: 2,
@@ -172,6 +174,7 @@ describe('Generated Item read model', () => {
       {
         item_name: 'Updated chair',
         item_id_tag: 'F-102',
+        drawings: 'A2',
         qty: 3,
         version: 1,
       },
@@ -183,8 +186,10 @@ describe('Generated Item read model', () => {
     );
     expect(statements[1]).toContain('UPDATE items');
     expect(statements[1]).toContain('product_tag');
+    expect(statements[1]).toContain('drawings');
     expect(statements[1]).toContain('quantity');
     expect(statements[3]).toContain('UPDATE proposal_items pi');
+    expect(statements[3]).toContain('drawings');
     expect(statements[3]).toContain('proposal_item_generated_item_links');
   });
 

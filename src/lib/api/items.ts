@@ -7,6 +7,7 @@ export type CreateItemInput = {
   description?: string | null;
   category?: string | null;
   itemIdTag?: string | null;
+  drawings?: string | null;
   dimensions?: string | null;
   notes?: string | null;
   qty?: number;
@@ -23,6 +24,7 @@ export type UpdateItemInput = {
   description?: string | null;
   category?: string | null;
   itemIdTag?: string | null;
+  drawings?: string | null;
   dimensions?: string | null;
   notes?: string | null;
   qty?: number;
@@ -57,6 +59,7 @@ export const itemsApi = {
         description: input.description,
         category: input.category,
         item_id_tag: input.itemIdTag,
+        drawings: input.drawings,
         dimensions: input.dimensions,
         notes: input.notes,
         qty: input.qty,
@@ -77,6 +80,7 @@ export const itemsApi = {
         description: patch.description,
         category: patch.category,
         item_id_tag: patch.itemIdTag,
+        drawings: patch.drawings,
         dimensions: patch.dimensions,
         notes: patch.notes,
         qty: patch.qty,

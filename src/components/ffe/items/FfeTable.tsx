@@ -186,6 +186,7 @@ type FfeRevisionIndicator = {
 
 type FfeRevisionColumnKey =
   | 'itemIdTag'
+  | 'drawings'
   | 'itemName'
   | 'dimensions'
   | 'qty'
@@ -205,6 +206,7 @@ const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableIt
 
 const ffeRevisionColumnKeys: Record<FfeRevisionColumnKey, string[]> = {
   itemIdTag: ['product_tag', 'productTag'],
+  drawings: ['drawings'],
   itemName: ['itemName', 'description'],
   dimensions: ['size_label', 'size'],
   qty: ['quantity'],
@@ -260,7 +262,7 @@ function EditableTextCell({
   revisions = [],
 }: {
   item: Item;
-  value: string | null;
+  value: string | null | undefined;
   field: keyof EditableItemPatch;
   label: string;
   onSave: SaveItemPatch;
@@ -404,19 +406,6 @@ function EditableDimensionsCell({
         }}
       />
     </>
-  );
-}
-
-function ReadOnlyTextCell({
-  value,
-  placeholder = '—',
-}: {
-  value: string | null | undefined;
-  placeholder?: string;
-}) {
-  const display = value?.trim();
-  return (
-    <span className={display ? 'text-gray-700' : 'text-gray-400'}>{display || placeholder}</span>
   );
 }
 
@@ -630,7 +619,17 @@ const createColumns = (
   {
     accessorKey: 'drawings',
     header: 'Drawings',
-    cell: ({ row }) => <ReadOnlyTextCell value={row.original.drawings} />,
+    cell: ({ row }) => (
+      <EditableTextCell
+        item={row.original}
+        value={row.original.drawings}
+        field="drawings"
+        label="Drawings"
+        onSave={onSave}
+        revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'drawings')}
+        revisions={revisionIndicator?.revisions ?? []}
+      />
+    ),
   },
   {
     id: 'image',
@@ -1169,6 +1168,17 @@ function MobileItemCards({
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <MobileField label="Drawings">
+              <EditableTextCell
+                item={item}
+                value={item.drawings}
+                field="drawings"
+                label="Drawings"
+                onSave={onSave}
+                revisionEntries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'drawings')}
+                revisions={revisionIndicator?.revisions ?? []}
+              />
+            </MobileField>
             <MobileField label="Size">
               <EditableDimensionsCell
                 item={item}

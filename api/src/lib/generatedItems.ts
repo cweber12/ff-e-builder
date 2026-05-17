@@ -22,6 +22,7 @@ type FfeRevisionContext = {
   proposalItemId: string | null;
   itemName: string;
   itemIdTag: string | null;
+  drawings: string | null;
   dimensions: string | null;
   notes: string | null;
   qty: number;
@@ -79,6 +80,7 @@ function plain(value: unknown) {
 
 function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionContext) {
   const changes: FfeChange[] = [];
+  const hasDrawingsChange = Object.prototype.hasOwnProperty.call(input, 'drawings');
 
   if (input.item_name != null && input.item_name !== before.itemName) {
     changes.push({
@@ -93,6 +95,14 @@ function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionC
       columnKey: 'product_tag',
       previousValue: plain(before.itemIdTag),
       newValue: input.item_id_tag,
+      isPriceAffecting: false,
+    });
+  }
+  if (hasDrawingsChange && input.drawings !== before.drawings) {
+    changes.push({
+      columnKey: 'drawings',
+      previousValue: plain(before.drawings),
+      newValue: plain(input.drawings),
       isPriceAffecting: false,
     });
   }
@@ -314,6 +324,7 @@ async function selectFfeRevisionContext(sql: Sql, itemId: string) {
       link.proposal_item_id,
       i.item_name,
       i.item_id_tag,
+      i.drawings,
       i.dimensions,
       i.notes,
       i.qty,
@@ -332,6 +343,7 @@ async function selectFfeRevisionContext(sql: Sql, itemId: string) {
         proposal_item_id?: string | null;
         item_name?: string;
         item_id_tag?: string | null;
+        drawings?: string | null;
         dimensions?: string | null;
         notes?: string | null;
         qty?: number;
@@ -345,6 +357,7 @@ async function selectFfeRevisionContext(sql: Sql, itemId: string) {
     proposalItemId: row.proposal_item_id ?? null,
     itemName: row.item_name,
     itemIdTag: row.item_id_tag ?? null,
+    drawings: row.drawings ?? null,
     dimensions: row.dimensions ?? null,
     notes: row.notes ?? null,
     qty: row.qty ?? 0,
@@ -476,7 +489,7 @@ export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input
       room_id, item_name, description, category, item_id_tag,
       dimensions, notes, qty, unit_cost_cents,
       lead_time, status, custom_data, sort_order,
-      proposal_category_id, product_tag, location, quantity, quantity_unit, is_ffe_visible
+      proposal_category_id, product_tag, drawings, location, quantity, quantity_unit, is_ffe_visible
     )
     VALUES (
       ${roomId},
@@ -494,6 +507,7 @@ export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input
       ${input.sort_order ?? 0},
       ${furnitureCategoryId},
       ${input.item_id_tag ?? ''},
+      ${input.drawings ?? ''},
       ${room.name},
       ${input.qty ?? 1},
       'unit',
@@ -669,6 +683,7 @@ export async function mirrorGeneratedItemToProposalItem(
       category_id      = i.proposal_category_id,
       product_tag      = COALESCE(i.product_tag, ''),
       item_name        = COALESCE(i.item_name, ''),
+      drawings         = COALESCE(i.drawings, ''),
       description      = COALESCE(i.description, ''),
       notes            = COALESCE(i.notes, ''),
       size_label       = COALESCE(i.dimensions, ''),
@@ -875,6 +890,11 @@ export async function updateGeneratedItemFromFfe(sql: Sql, itemId: string, input
       category        = COALESCE(${input.category ?? null}, category),
       item_id_tag     = COALESCE(${input.item_id_tag ?? null}, item_id_tag),
       product_tag     = COALESCE(${input.item_id_tag ?? null}, product_tag),
+      drawings        = CASE
+                          WHEN ${Object.prototype.hasOwnProperty.call(input, 'drawings')}::boolean
+                          THEN ${input.drawings ?? null}
+                          ELSE drawings
+                        END,
       dimensions      = COALESCE(${input.dimensions ?? null}, dimensions),
       notes           = COALESCE(${input.notes ?? null}, notes),
       qty             = COALESCE(${input.qty ?? null}, qty),
