@@ -68,7 +68,6 @@ import {
   proposalProjectTotalCents,
 } from '../../../lib/money';
 import type { UpdateProposalItemInput } from '../../../lib/api';
-import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import {
   GroupedTableHeader,
   GroupedTableSection,
@@ -85,6 +84,7 @@ import {
 } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemSizeModal } from '../../shared/table/GeneratedItemSizeModal';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
@@ -2107,7 +2107,7 @@ function SizeModal({
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
 }) {
   return (
-    <DimensionEditorModal
+    <GeneratedItemSizeModal
       open={open}
       title="Set size"
       initial={{

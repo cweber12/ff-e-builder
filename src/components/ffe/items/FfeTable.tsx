@@ -82,7 +82,6 @@ import { Modal } from '../../primitives/Modal';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials';
-import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import {
   GroupedTableHeader,
   GroupedTableSection,
@@ -95,6 +94,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemSizeModal } from '../../shared/table/GeneratedItemSizeModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
 import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } from '../../proposal/revision';
@@ -393,7 +393,7 @@ function EditableDimensionsCell({
           )}
         </button>
       </RevisionIndicatorWrap>
-      <DimensionEditorModal
+      <GeneratedItemSizeModal
         open={open}
         title="Set dimensions"
         onClose={() => setOpen(false)}
