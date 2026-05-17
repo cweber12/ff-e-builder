@@ -52,10 +52,8 @@ import {
 } from '../../../hooks';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials';
 import {
-  dollarsToCents,
   cents,
   formatMoney,
-  parseUnitCostDollarsInput,
   type Project,
   type ProposalItem,
   type ProposalItemChangelogEntry,
@@ -81,7 +79,10 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
-import { GeneratedItemEditableNumberCell } from '../../shared/table/GeneratedItemEditableNumberCell';
+import {
+  GeneratedItemEditableMoneyCell,
+  GeneratedItemEditableNumberCell,
+} from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
@@ -1811,11 +1812,12 @@ function ProposalRow({
             indicator={dot('quantity')}
             tdClassName={stickyQtyCellClassName}
           />
-          <MoneyCell
+          <GeneratedItemEditableMoneyCell
             valueCents={item.unitCostCents}
             onSave={(unitCostCents) => onSave({ unitCostCents })}
             indicator={dot('unitCostCents')}
             tdClassName={stickyUnitCostCellClassName}
+            inputClassName={editInputClassName}
           />
           <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
             {formatMoney(cents(lineTotal))}
@@ -2088,91 +2090,6 @@ function MobileProposalCards({
         );
       })}
     </div>
-  );
-}
-
-function MoneyCell({
-  valueCents,
-  onSave,
-  indicator,
-  tdClassName,
-}: {
-  valueCents: number;
-  onSave: (value: number) => void;
-  indicator?: ReactNode;
-  tdClassName?: string;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState((valueCents / 100).toString());
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!editing) setDraft((valueCents / 100).toString());
-  }, [valueCents, editing]);
-
-  useEffect(() => {
-    if (editing) inputRef.current?.select();
-  }, [editing]);
-
-  const commit = () => {
-    const dollars = parseUnitCostDollarsInput(draft);
-    if (dollars !== undefined) {
-      const newCents = dollarsToCents(dollars);
-      if (newCents !== valueCents) onSave(newCents);
-    }
-    setEditing(false);
-  };
-
-  if (!editing) {
-    return (
-      <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
-        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => setEditing(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setEditing(true);
-            }
-          }}
-          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
-        >
-          {formatMoney(cents(valueCents))}
-        </span>
-      </td>
-    );
-  }
-
-  return (
-    <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
-      <div className="relative w-28">
-        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-gray-400">
-          $
-        </span>
-        <input
-          ref={inputRef}
-          type="number"
-          min="0"
-          step="0.01"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              commit();
-            } else if (e.key === 'Escape') {
-              e.preventDefault();
-              setDraft((valueCents / 100).toString());
-              setEditing(false);
-            }
-          }}
-          className={cn('w-full py-1 pl-5 pr-2', editInputClassName)}
-        />
-      </div>
-    </td>
   );
 }
 
