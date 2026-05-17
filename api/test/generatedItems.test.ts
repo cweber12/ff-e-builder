@@ -7,6 +7,7 @@ import {
   selectCompatibleProposalItemsByCategory,
   selectGeneratedItemsByProposalCategory,
   selectGeneratedItemsByRoom,
+  syncFfeLocationNameToLinkedProposalItems,
   updateGeneratedItemFromFfe,
 } from '../src/lib/generatedItems';
 import type { getDb } from '../src/lib/db';
@@ -63,7 +64,7 @@ describe('Generated Item read model', () => {
   it('creates an FF&E item with a linked Furniture proposal item mirror', async () => {
     const sql = vi
       .fn()
-      .mockResolvedValueOnce([{ project_id: 'project-1' }])
+      .mockResolvedValueOnce([{ project_id: 'project-1', name: 'Lobby' }])
       .mockResolvedValueOnce([{ id: 'furniture-category-1' }])
       .mockResolvedValueOnce([{ id: 'item-1' }])
       .mockResolvedValueOnce([{ id: 'proposal-item-1' }])
@@ -94,7 +95,9 @@ describe('Generated Item read model', () => {
     );
     expect(statements[1]).toContain("lower(name) = 'furniture'");
     expect(statements[2]).toContain('INSERT INTO items');
-    expect(statements[2]).toContain('proposal_category_id, product_tag, quantity, quantity_unit');
+    expect(statements[2]).toContain(
+      'proposal_category_id, product_tag, location, quantity, quantity_unit',
+    );
     expect(statements[3]).toContain('INSERT INTO proposal_items');
     expect(statements[4]).toContain('proposal_item_generated_item_links');
   });
@@ -270,5 +273,26 @@ describe('Generated Item read model', () => {
     );
     expect(statements.some((statement) => statement.includes('lower(name) = lower('))).toBe(true);
     expect(statements.some((statement) => statement.includes('SET room_id ='))).toBe(true);
+  });
+
+  it('syncs FF&E Location renames to linked Proposal item locations', async () => {
+    const sql = vi.fn().mockResolvedValue([]);
+
+    await syncFfeLocationNameToLinkedProposalItems(
+      sql as unknown as ReturnType<typeof getDb>,
+      'room-1',
+      'Main Dining',
+    );
+
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements[0]).toContain('UPDATE items');
+    expect(statements[0]).toContain('SET location =');
+    expect(statements[0]).toContain('AND is_ffe_visible = true');
+    expect(statements[1]).toContain('UPDATE proposal_items pi');
+    expect(statements[1]).toContain('SET location =');
+    expect(statements[1]).toContain('proposal_item_generated_item_links');
+    expect(statements[1]).toContain('AND i.is_ffe_visible = true');
   });
 });

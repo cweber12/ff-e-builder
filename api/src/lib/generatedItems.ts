@@ -154,16 +154,16 @@ function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionC
   return changes;
 }
 
-async function selectRoomProjectId(sql: Sql, roomId: string) {
+async function selectRoomContext(sql: Sql, roomId: string) {
   const rows = await sql`
-    SELECT project_id
+    SELECT project_id, name
     FROM rooms
     WHERE id = ${roomId}
     LIMIT 1
   `;
-  const row = rows[0] as { project_id?: string } | undefined;
-  if (!row?.project_id) throw new Error('room_not_found');
-  return row.project_id;
+  const row = rows[0] as { project_id?: string; name?: string } | undefined;
+  if (!row?.project_id || row.name == null) throw new Error('room_not_found');
+  return { projectId: row.project_id, name: row.name };
 }
 
 async function selectProposalCategoryContext(
@@ -469,14 +469,14 @@ async function insertGeneratedItemMirrorForProposalItem(
 }
 
 export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input: CreateItemInput) {
-  const projectId = await selectRoomProjectId(sql, roomId);
-  const furnitureCategoryId = await selectDefaultFurnitureCategoryId(sql, projectId);
+  const room = await selectRoomContext(sql, roomId);
+  const furnitureCategoryId = await selectDefaultFurnitureCategoryId(sql, room.projectId);
   const rows = await sql`
     INSERT INTO items (
       room_id, item_name, description, category, item_id_tag,
       dimensions, notes, qty, unit_cost_cents,
       lead_time, status, custom_data, sort_order,
-      proposal_category_id, product_tag, quantity, quantity_unit, is_ffe_visible
+      proposal_category_id, product_tag, location, quantity, quantity_unit, is_ffe_visible
     )
     VALUES (
       ${roomId},
@@ -494,6 +494,7 @@ export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input
       ${input.sort_order ?? 0},
       ${furnitureCategoryId},
       ${input.item_id_tag ?? ''},
+      ${room.name},
       ${input.qty ?? 1},
       'unit',
       true
@@ -505,6 +506,30 @@ export async function createGeneratedItemFromFfe(sql: Sql, roomId: string, input
 
   await insertProposalItemMirrorForGeneratedItem(sql, item.id, furnitureCategoryId, input);
   return rows[0] as DbRow;
+}
+
+export async function syncFfeLocationNameToLinkedProposalItems(
+  sql: Sql,
+  roomId: string,
+  locationName: string,
+) {
+  await sql`
+    UPDATE items
+    SET location = ${locationName},
+        version = version + 1
+    WHERE room_id = ${roomId}
+      AND is_ffe_visible = true
+  `;
+  await sql`
+    UPDATE proposal_items pi
+    SET location = ${locationName},
+        version = pi.version + 1
+    FROM proposal_item_generated_item_links link
+    JOIN items i ON i.id = link.item_id
+    WHERE pi.id = link.proposal_item_id
+      AND i.room_id = ${roomId}
+      AND i.is_ffe_visible = true
+  `;
 }
 
 export async function createGeneratedItemFromProposal(

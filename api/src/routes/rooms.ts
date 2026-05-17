@@ -3,7 +3,11 @@ import type { Env, HonoVariables } from '../types';
 import { UpdateRoomSchema, CreateItemSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
-import { createGeneratedItemFromFfe, selectGeneratedItemsByRoom } from '../lib/generatedItems';
+import {
+  createGeneratedItemFromFfe,
+  selectGeneratedItemsByRoom,
+  syncFfeLocationNameToLinkedProposalItems,
+} from '../lib/generatedItems';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -32,6 +36,10 @@ router.patch('/:id', async (c) => {
     RETURNING *
   `;
   if (!rows[0]) return c.json({ error: 'Not found' }, 404);
+  if (parsed.data.name != null) {
+    const room = rows[0] as { name?: string };
+    await syncFfeLocationNameToLinkedProposalItems(sql, id, room.name ?? parsed.data.name);
+  }
   return c.json({ room: rows[0] });
 });
 
