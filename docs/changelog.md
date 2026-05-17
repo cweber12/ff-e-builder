@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(table): route FF&E numeric cells through shared generated item edit control
 - refactor(table): route Proposal CBM editing through shared generated item number cell
 - refactor(table): route Proposal unit-cost editing through shared generated item money cell
+- refactor(table): route Proposal quantity editing through shared generated item quantity cell
 
 - refactor(table): share generated item Rendering and Plan image cells
 

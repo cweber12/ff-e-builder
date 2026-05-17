@@ -230,3 +230,90 @@ export function GeneratedItemEditableMoneyCell({
     </td>
   );
 }
+
+type GeneratedItemEditableQuantityCellProps = {
+  quantity: number;
+  quantityUnit: string;
+  quantityUnits: readonly string[];
+  onSaveQuantity: (value: number) => Promise<void> | void;
+  onSaveUnit: (value: string) => Promise<void> | void;
+  indicator?: ReactNode;
+  tdClassName?: string;
+  inputClassName?: string;
+};
+
+export function GeneratedItemEditableQuantityCell({
+  quantity,
+  quantityUnit,
+  quantityUnits,
+  onSaveQuantity,
+  onSaveUnit,
+  indicator,
+  tdClassName,
+  inputClassName,
+}: GeneratedItemEditableQuantityCellProps) {
+  const [editing, setEditing] = useState(false);
+
+  const saveQuantity = (rawValue: string) => {
+    const value = Number(rawValue);
+    if (Number.isFinite(value) && value >= 0) void onSaveQuantity(value);
+  };
+
+  if (!editing) {
+    return (
+      <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setEditing(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
+        >
+          {quantity} {quantityUnit}
+        </span>
+      </td>
+    );
+  }
+
+  return (
+    <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+      <div
+        className="flex flex-col gap-1"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setEditing(false);
+          }
+        }}
+      >
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          defaultValue={quantity}
+          autoFocus
+          onChange={(event) => saveQuantity(event.target.value)}
+          className={cn('w-20', inputClassName)}
+          aria-label="Quantity"
+        />
+        <select
+          value={quantityUnit}
+          onChange={(event) => void onSaveUnit(event.target.value)}
+          className={cn('w-20', inputClassName)}
+          aria-label="Quantity unit"
+        >
+          {quantityUnits.map((unit) => (
+            <option key={unit} value={unit}>
+              {unit}
+            </option>
+          ))}
+        </select>
+      </div>
+    </td>
+  );
+}

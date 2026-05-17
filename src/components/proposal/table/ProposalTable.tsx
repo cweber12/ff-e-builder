@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
   type MouseEvent,
   type ReactNode,
 } from 'react';
@@ -82,6 +81,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import {
   GeneratedItemEditableMoneyCell,
   GeneratedItemEditableNumberCell,
+  GeneratedItemEditableQuantityCell,
 } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
@@ -1804,13 +1804,15 @@ function ProposalRow({
         })()
       ) : (
         <>
-          <QuantityCell
+          <GeneratedItemEditableQuantityCell
             quantity={item.quantity}
             quantityUnit={item.quantityUnit}
+            quantityUnits={quantityUnits}
             onSaveQuantity={(quantity) => onSave({ quantity })}
             onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
             indicator={dot('quantity')}
             tdClassName={stickyQtyCellClassName}
+            inputClassName={editInputClassName}
           />
           <GeneratedItemEditableMoneyCell
             valueCents={item.unitCostCents}
@@ -2093,82 +2095,6 @@ function MobileProposalCards({
   );
 }
 
-function QuantityCell({
-  quantity,
-  quantityUnit,
-  onSaveQuantity,
-  onSaveUnit,
-  indicator,
-  tdClassName,
-}: {
-  quantity: number;
-  quantityUnit: string;
-  onSaveQuantity: (value: number) => void;
-  onSaveUnit: (value: string) => void;
-  indicator?: ReactNode;
-  tdClassName?: string;
-}) {
-  const [editing, setEditing] = useState(false);
-
-  if (!editing) {
-    return (
-      <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
-        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => setEditing(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setEditing(true);
-            }
-          }}
-          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
-        >
-          {quantity} {quantityUnit}
-        </span>
-      </td>
-    );
-  }
-
-  return (
-    <td className={cn('px-3 py-2', tdClassName)} onClick={(e) => e.stopPropagation()}>
-      <div
-        className="flex flex-col gap-1"
-        onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) {
-            setEditing(false);
-          }
-        }}
-      >
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          defaultValue={quantity}
-          autoFocus
-          onChange={(event) => onNumberChange(event, onSaveQuantity)}
-          className={cn('w-20', editInputClassName)}
-          aria-label="Quantity"
-        />
-        <select
-          value={quantityUnit}
-          onChange={(event) => onSaveUnit(event.target.value)}
-          className={cn('w-20', editInputClassName)}
-          aria-label="Quantity unit"
-        >
-          {quantityUnits.map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
-      </div>
-    </td>
-  );
-}
-
 function SizeModal({
   item,
   open,
@@ -2204,9 +2130,4 @@ function SizeModal({
       }
     />
   );
-}
-
-function onNumberChange(event: ChangeEvent<HTMLInputElement>, onSave: (value: number) => void) {
-  const value = Number(event.target.value);
-  if (Number.isFinite(value) && value >= 0) onSave(value);
 }
