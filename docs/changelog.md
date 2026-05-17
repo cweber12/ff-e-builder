@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - refactor(table): share generated item editable text table cell chrome
+- refactor(table): route FF&E text cells through shared generated item edit control
 
 - refactor(table): share generated item Rendering and Plan image cells
 

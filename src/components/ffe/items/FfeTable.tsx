@@ -93,6 +93,7 @@ import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
@@ -292,21 +293,15 @@ function EditableTextCell({
 
   return (
     <RevisionIndicatorWrap entries={revisionEntries} revisions={revisions}>
-      <InlineTextEdit
+      <GeneratedItemEditableTextControl
         value={current}
-        aria-label={`${label} for ${item.itemName}`}
-        {...(displayClassName ? { className: displayClassName } : {})}
+        ariaLabel={`${label} for ${item.itemName}`}
+        displayClassName={displayClassName}
+        normalizeValue={(nextValue) => nextValue.trim()}
         onSave={(nextValue) => {
-          const patchValue = required ? nextValue.trim() : emptyToNull(nextValue);
+          const patchValue = required ? nextValue : emptyToNull(nextValue);
           return saveValidatedPatch(onSave, item, { [field]: patchValue });
         }}
-        renderDisplay={(displayValue) =>
-          displayValue.trim().length > 0 ? (
-            <span className={displayClassName}>{displayValue}</span>
-          ) : (
-            <span className="text-gray-400">-</span>
-          )
-        }
       />
     </RevisionIndicatorWrap>
   );
@@ -884,13 +879,11 @@ function buildColumns(
           />
         ),
         cell: ({ row }) => (
-          <InlineTextEdit
+          <GeneratedItemEditableTextControl
             value={row.original.customData[def.id] ?? ''}
-            aria-label={`${def.label} for ${row.original.itemName}`}
+            ariaLabel={`${def.label} for ${row.original.itemName}`}
+            normalizeValue={(value) => value.trim()}
             onSave={(value) => onSaveCustomCell(row.original, def.id, value)}
-            renderDisplay={(v) =>
-              v.trim().length > 0 ? <span>{v}</span> : <span className="text-gray-400">-</span>
-            }
           />
         ),
       };
