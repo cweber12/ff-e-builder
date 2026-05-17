@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(table): align FF&E Name and Product Description column widths with Proposal
+
 - fix(proposal): map Proposal Name to FF&E Name instead of Product Description
 
 - refactor(table): share mobile table field chrome between FF&E and Proposal

@@ -110,6 +110,10 @@ const stickyTotalCellClassName =
   'sticky right-10 z-20 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
 const stickyActionsCellClassName =
   'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
+const ffeColumnWidthClassNames: Record<string, string> = {
+  itemName: 'w-48 min-w-48 max-w-48',
+  description: 'w-64 min-w-64 max-w-64',
+};
 
 const DEFAULT_COLUMN_LABELS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnLabels;
 
@@ -1073,7 +1077,10 @@ function SortableItemRow({
           key={cell.id}
           className={cn(
             'px-3 py-3 text-gray-700',
-            cell.column.id === 'description' ? 'min-w-64 whitespace-normal' : 'whitespace-nowrap',
+            ffeColumnWidthClassNames[cell.column.id],
+            cell.column.id === 'description' || cell.column.id === 'itemName'
+              ? 'whitespace-normal'
+              : 'whitespace-nowrap',
             cell.column.id === 'plan' && 'w-24 min-w-24 max-w-24 overflow-hidden',
             cell.column.id === 'lineTotal' && stickyTotalCellClassName,
             cell.column.id === 'actions' && stickyActionsCellClassName,
@@ -1941,6 +1948,7 @@ function RoomItemsSection({
                                   label={header.column.columnDef.header as string}
                                   className={cn(
                                     'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                    ffeColumnWidthClassNames[colId],
                                     colId === 'plan' && 'w-24 min-w-24 max-w-24',
                                   )}
                                   onHide={() => columnConfig.hideDefaultColumn(colId)}
@@ -2104,6 +2112,7 @@ function RoomItemsSection({
                                       label={header.column.columnDef.header as string}
                                       className={cn(
                                         'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                        ffeColumnWidthClassNames[colId],
                                         colId === 'plan' && 'w-24 min-w-24 max-w-24',
                                       )}
                                       onHide={() => columnConfig.hideDefaultColumn(colId)}
