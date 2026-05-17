@@ -179,11 +179,11 @@ The export column in Proposal that renders each assigned Material's visual as an
 _Avoid_: Materials column when referring to the Proposal export presentation
 
 **Rendering**:
-The primary image attached to an FF&E Item or Proposal Item row.
+The primary image attached to an FF&E Item or Proposal Item row. When an FF&E Item and Proposal Item are linked through a Generated Item, both views should show the same Rendering images.
 _Avoid_: Screenshot, render URL
 
 **Plan Image**:
-A measured or imported plan visual attached directly to an FF&E Item or Proposal Item. In Proposal, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
+A measured or imported plan visual attached directly to an FF&E Item or Proposal Item. When an FF&E Item and Proposal Item are linked through a Generated Item, both views should show the same Plan Images. In Proposal, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
 _Avoid_: Rendering, Swatch, Measured Plan when referring to the item-level derived image
 
 **Plan Calibration**:

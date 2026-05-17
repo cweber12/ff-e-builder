@@ -23,6 +23,16 @@ type EntityContext = {
   proposalItemId: string | null;
 };
 
+type SharedGeneratedItemImagePair = {
+  itemType: Extract<ImageEntityType, 'item' | 'item_plan'>;
+  proposalType: Extract<ImageEntityType, 'proposal_item' | 'proposal_plan'>;
+};
+
+type SharedGeneratedItemImageContext = {
+  itemId: string;
+  proposalItemId: string;
+};
+
 function extensionForContentType(contentType: string): string {
   switch (contentType) {
     case 'image/jpeg':
@@ -88,6 +98,52 @@ function isProjectImageAsset(image: ImageAsset): boolean {
 
 function promotesNextPrimaryOnDelete(image: ImageAsset): boolean {
   return isProjectImageAsset(image) || image.entity_type === 'item_option';
+}
+
+function sharedGeneratedItemImagePair(
+  entityType: ImageEntityType,
+): SharedGeneratedItemImagePair | null {
+  if (entityType === 'item' || entityType === 'proposal_item') {
+    return { itemType: 'item', proposalType: 'proposal_item' };
+  }
+  if (entityType === 'item_plan' || entityType === 'proposal_plan') {
+    return { itemType: 'item_plan', proposalType: 'proposal_plan' };
+  }
+  return null;
+}
+
+async function selectSharedGeneratedItemImageContext(
+  sql: ReturnType<typeof getDb>,
+  entityType: ImageEntityType,
+  context: EntityContext,
+): Promise<SharedGeneratedItemImageContext | null> {
+  if (entityType === 'item' || entityType === 'item_plan') {
+    if (!context.itemId) return null;
+    const rows = await sql`
+      SELECT item_id, proposal_item_id
+      FROM proposal_item_generated_item_links
+      WHERE item_id = ${context.itemId}
+      LIMIT 1
+    `;
+    const row = rows[0] as { item_id?: string; proposal_item_id?: string } | undefined;
+    if (!row?.item_id || !row.proposal_item_id) return null;
+    return { itemId: row.item_id, proposalItemId: row.proposal_item_id };
+  }
+
+  if (entityType === 'proposal_item' || entityType === 'proposal_plan') {
+    if (!context.proposalItemId) return null;
+    const rows = await sql`
+      SELECT item_id, proposal_item_id
+      FROM proposal_item_generated_item_links
+      WHERE proposal_item_id = ${context.proposalItemId}
+      LIMIT 1
+    `;
+    const row = rows[0] as { item_id?: string; proposal_item_id?: string } | undefined;
+    if (!row?.item_id || !row.proposal_item_id) return null;
+    return { itemId: row.item_id, proposalItemId: row.proposal_item_id };
+  }
+
+  return null;
 }
 
 async function getOwnedEntityContext(
@@ -221,6 +277,36 @@ router.get('/', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const sharedPair = sharedGeneratedItemImagePair(parsed.data.entity_type);
+  const sharedContext = sharedPair
+    ? await selectSharedGeneratedItemImageContext(sql, parsed.data.entity_type, context)
+    : null;
+
+  if (sharedPair && sharedContext) {
+    const rows = await sql`
+      SELECT *
+      FROM image_assets
+      WHERE owner_uid = ${uid}
+        AND project_id = ${context.projectId}
+        AND material_id IS NULL
+        AND (
+          (
+            entity_type = ${sharedPair.itemType}
+            AND item_id IS NOT DISTINCT FROM ${sharedContext.itemId}
+            AND proposal_item_id IS NULL
+          )
+          OR (
+            entity_type = ${sharedPair.proposalType}
+            AND item_id IS NULL
+            AND proposal_item_id IS NOT DISTINCT FROM ${sharedContext.proposalItemId}
+          )
+        )
+      ORDER BY is_primary DESC, created_at DESC
+    `;
+
+    return c.json({ images: rows.map(imageRow) });
+  }
+
   const rows = await sql`
     SELECT *
     FROM image_assets
