@@ -78,7 +78,6 @@ import { ItemStatusChip } from '../../shared/ItemStatusChip';
 import { TotalsBar } from '../../shared/TotalsBar';
 import { Button } from '../../primitives/Button';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
-import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
 import { Modal } from '../../primitives/Modal';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
@@ -93,6 +92,7 @@ import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
@@ -730,9 +730,9 @@ const createColumns = (
         entries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'qty')}
         revisions={revisionIndicator?.revisions ?? []}
       >
-        <InlineNumberEdit
+        <GeneratedItemEditableNumberControl
           value={row.original.qty}
-          aria-label={`Quantity for ${row.original.itemName}`}
+          ariaLabel={`Quantity for ${row.original.itemName}`}
           parser={parseQtyInput}
           formatter={(value) => String(value)}
           onSave={(qty) => saveValidatedPatch(onSave, row.original, { qty })}
@@ -748,9 +748,9 @@ const createColumns = (
         entries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'unitCostCents')}
         revisions={revisionIndicator?.revisions ?? []}
       >
-        <InlineNumberEdit
+        <GeneratedItemEditableNumberControl
           value={row.original.unitCostCents / 100}
-          aria-label={`Unit Cost for ${row.original.itemName}`}
+          ariaLabel={`Unit Cost for ${row.original.itemName}`}
           parser={parseUnitCostDollarsInput}
           formatter={formatDollars}
           onSave={(unitCostDollars) =>
@@ -1190,9 +1190,9 @@ function MobileItemCards({
                 entries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'qty')}
                 revisions={revisionIndicator?.revisions ?? []}
               >
-                <InlineNumberEdit
+                <GeneratedItemEditableNumberControl
                   value={item.qty}
-                  aria-label={`Quantity for ${item.itemName}`}
+                  ariaLabel={`Quantity for ${item.itemName}`}
                   parser={parseQtyInput}
                   formatter={(value) => String(value)}
                   onSave={(qty) => saveValidatedPatch(onSave, item, { qty })}
@@ -1204,9 +1204,9 @@ function MobileItemCards({
                 entries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'unitCostCents')}
                 revisions={revisionIndicator?.revisions ?? []}
               >
-                <InlineNumberEdit
+                <GeneratedItemEditableNumberControl
                   value={item.unitCostCents / 100}
-                  aria-label={`Unit Cost for ${item.itemName}`}
+                  ariaLabel={`Unit Cost for ${item.itemName}`}
                   parser={parseUnitCostDollarsInput}
                   formatter={formatDollars}
                   onSave={(unitCostDollars) =>
