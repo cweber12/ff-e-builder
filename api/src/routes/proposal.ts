@@ -221,6 +221,7 @@ router.patch('/proposal/items/:id', async (c) => {
     SET
       category_id         = COALESCE(${d.category_id ?? null}, category_id),
       product_tag         = COALESCE(${d.product_tag ?? null}, product_tag),
+      item_name           = COALESCE(${d.item_name ?? null}, item_name),
       plan                = COALESCE(${d.plan ?? null}, plan),
       drawings            = COALESCE(${d.drawings ?? null}, drawings),
       location            = COALESCE(${d.location ?? null}, location),

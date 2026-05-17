@@ -47,6 +47,7 @@ type ProposalItemSource = {
   project_id: string;
   item_id: string | null;
   item_name?: string | null;
+  generated_item_name?: string | null;
   product_tag: string | null;
   plan: string | null;
   drawings: string | null;
@@ -267,13 +268,14 @@ async function insertProposalItemMirrorForGeneratedItem(
 ) {
   const rows = await sql`
     INSERT INTO proposal_items (
-      category_id, product_tag, plan, drawings, location, description, notes,
+      category_id, product_tag, item_name, plan, drawings, location, description, notes,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
     )
     VALUES (
       ${categoryId},
       ${input.item_id_tag ?? ''},
+      ${input.item_name ?? ''},
       '',
       '',
       '',
@@ -362,13 +364,14 @@ async function ensureProposalItemMirrorForGeneratedItem(sql: Sql, itemId: string
 
   const rows = await sql`
     INSERT INTO proposal_items (
-      category_id, product_tag, plan, drawings, location, description, notes,
+      category_id, product_tag, item_name, plan, drawings, location, description, notes,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
     )
     SELECT
       i.proposal_category_id,
       COALESCE(NULLIF(i.product_tag, ''), i.item_id_tag, ''),
+      i.item_name,
       i.plan,
       i.drawings,
       i.location,
@@ -516,13 +519,14 @@ export async function createGeneratedItemFromProposal(
     : await selectDefaultUnassignedRoomId(sql, category.projectId);
   const rows = await sql`
     INSERT INTO proposal_items (
-      category_id, product_tag, plan, drawings, location, description, notes,
+      category_id, product_tag, item_name, plan, drawings, location, description, notes,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
     )
     VALUES (
       ${categoryId},
       ${input.product_tag ?? ''},
+      ${input.item_name ?? ''},
       ${input.plan ?? ''},
       ${input.drawings ?? ''},
       ${input.location ?? ''},
@@ -558,10 +562,7 @@ export async function createGeneratedItemFromProposal(
 function proposalItemSourceToCreateInput(source: ProposalItemSource): CreateProposalItemInput {
   return {
     product_tag: source.product_tag ?? '',
-    item_name:
-      source.item_name && source.item_name !== source.description
-        ? source.item_name
-        : (source.product_tag ?? ''),
+    item_name: source.item_name ?? source.generated_item_name ?? source.product_tag ?? '',
     plan: source.plan ?? '',
     drawings: source.drawings ?? '',
     location: source.location ?? '',
@@ -588,7 +589,7 @@ export async function addProposalItemToFfe(sql: Sql, proposalItemId: string) {
       pi.*,
       pc.project_id,
       link.item_id,
-      i.item_name
+      i.item_name AS generated_item_name
     FROM proposal_items pi
     JOIN proposal_categories pc ON pc.id = pi.category_id
     LEFT JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
@@ -642,6 +643,7 @@ export async function mirrorGeneratedItemToProposalItem(
     SET
       category_id      = i.proposal_category_id,
       product_tag      = COALESCE(i.product_tag, ''),
+      item_name        = COALESCE(i.item_name, ''),
       description      = COALESCE(i.description, ''),
       notes            = COALESCE(i.notes, ''),
       size_label       = COALESCE(i.dimensions, ''),
@@ -670,13 +672,8 @@ export async function mirrorProposalItemToGeneratedItem(
       proposal_category_id = pi.category_id,
       item_name            = COALESCE(
                                NULLIF(${options.itemName ?? ''}, ''),
-                               CASE
-                                 WHEN NULLIF(i.item_name, '') IS NOT NULL
-                                  AND i.item_name IS DISTINCT FROM NULLIF(pi.description, '')
-                                  AND i.item_name IS DISTINCT FROM NULLIF(i.description, '')
-                                 THEN i.item_name
-                                 ELSE NULL
-                               END,
+                               NULLIF(pi.item_name, ''),
+                               NULLIF(i.item_name, ''),
                                NULLIF(pi.product_tag, ''),
                                'Proposal item'
                              ),
@@ -856,14 +853,7 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
       i.id,
       i.room_id,
       COALESCE(
-        CASE
-          WHEN MAX(pi.id) IS NULL THEN i.item_name
-          WHEN NULLIF(i.item_name, '') IS NOT NULL
-           AND i.item_name IS DISTINCT FROM NULLIF(i.description, '')
-           AND i.item_name IS DISTINCT FROM NULLIF(MAX(pi.description), '')
-          THEN i.item_name
-          ELSE NULL
-        END,
+        NULLIF(i.item_name, ''),
         NULLIF(i.product_tag, ''),
         i.item_id_tag,
         'Proposal item'
@@ -921,12 +911,7 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         i.proposal_category_id AS category_id,
         COALESCE(NULLIF(i.product_tag, ''), i.item_id_tag, '') AS product_tag,
         COALESCE(
-          CASE
-            WHEN NULLIF(i.item_name, '') IS NOT NULL
-             AND i.item_name IS DISTINCT FROM NULLIF(i.description, '')
-            THEN i.item_name
-            ELSE NULL
-          END,
+          NULLIF(i.item_name, ''),
           NULLIF(i.product_tag, ''),
           i.item_id_tag,
           'Proposal item'
@@ -992,7 +977,7 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         pi.id,
         pi.category_id,
         pi.product_tag,
-        COALESCE(NULLIF(pi.product_tag, ''), 'Proposal item') AS item_name,
+        COALESCE(NULLIF(pi.item_name, ''), NULLIF(pi.product_tag, ''), 'Proposal item') AS item_name,
         pi.plan,
         pi.drawings,
         pi.location,
@@ -1055,13 +1040,8 @@ export async function selectCompatibleProposalItemsByCategory(sql: Sql, category
     SELECT
       pi.*,
       COALESCE(
-        CASE
-          WHEN NULLIF(i.item_name, '') IS NOT NULL
-           AND i.item_name IS DISTINCT FROM NULLIF(pi.description, '')
-           AND i.item_name IS DISTINCT FROM NULLIF(i.description, '')
-          THEN i.item_name
-          ELSE NULL
-        END,
+        NULLIF(pi.item_name, ''),
+        NULLIF(i.item_name, ''),
         NULLIF(pi.product_tag, ''),
         'Proposal item'
       ) AS item_name,

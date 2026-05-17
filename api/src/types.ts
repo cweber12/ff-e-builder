@@ -135,6 +135,7 @@ export interface ProposalItem {
   id: string;
   category_id: string;
   product_tag: string;
+  item_name: string;
   plan: string;
   drawings: string;
   location: string;
