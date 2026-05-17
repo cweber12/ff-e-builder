@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { cn } from '../../../lib/utils';
 import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
 
 type GeneratedItemEditableNumberControlProps = {
@@ -38,5 +40,99 @@ export function GeneratedItemEditableNumberControl({
       {...(inputClassName !== undefined ? { inputClassName } : {})}
       {...(ariaLabel !== undefined ? { 'aria-label': ariaLabel } : {})}
     />
+  );
+}
+
+type GeneratedItemEditableNumberCellProps = {
+  value: number;
+  onSave: (value: number) => Promise<void> | void;
+  step: string;
+  className?: string;
+  inputClassName?: string;
+  tdClassName?: string;
+  indicator?: ReactNode;
+};
+
+export function GeneratedItemEditableNumberCell({
+  value,
+  onSave,
+  step,
+  className,
+  inputClassName,
+  tdClassName,
+  indicator,
+}: GeneratedItemEditableNumberCellProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(String(value));
+  }, [value, editing]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  const commit = async () => {
+    const numberValue = Number(draft);
+    if (Number.isFinite(numberValue) && numberValue >= 0 && numberValue !== value) {
+      await onSave(numberValue);
+    }
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(String(value));
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setEditing(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className={cn(
+            'block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50',
+            className,
+          )}
+        >
+          {value}
+        </span>
+      </td>
+    );
+  }
+
+  return (
+    <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+      <input
+        ref={inputRef}
+        type="number"
+        min="0"
+        step={step}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => void commit()}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            void commit();
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            cancel();
+          }
+        }}
+        className={cn(inputClassName, className)}
+      />
+    </td>
   );
 }

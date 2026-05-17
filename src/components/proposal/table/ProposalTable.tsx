@@ -81,6 +81,7 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemEditableNumberCell } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
@@ -1700,11 +1701,12 @@ function ProposalRow({
       </td>
     ),
     cbm: (
-      <NumberCell
+      <GeneratedItemEditableNumberCell
         value={item.cbm}
         step="0.001"
         onSave={(cbm) => onSave({ cbm })}
         className="w-24"
+        inputClassName={editInputClassName}
         indicator={dot('cbm')}
       />
     ),
@@ -2086,88 +2088,6 @@ function MobileProposalCards({
         );
       })}
     </div>
-  );
-}
-
-function NumberCell({
-  value,
-  onSave,
-  step,
-  className,
-  indicator,
-}: {
-  value: number;
-  onSave: (value: number) => void;
-  step: string;
-  className?: string;
-  indicator?: ReactNode;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(value));
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!editing) setDraft(String(value));
-  }, [value, editing]);
-
-  useEffect(() => {
-    if (editing) inputRef.current?.select();
-  }, [editing]);
-
-  const commit = () => {
-    const n = Number(draft);
-    if (Number.isFinite(n) && n >= 0 && n !== value) onSave(n);
-    setEditing(false);
-  };
-
-  if (!editing) {
-    return (
-      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => setEditing(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setEditing(true);
-            }
-          }}
-          className={cn(
-            'block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50',
-            className,
-          )}
-        >
-          {value}
-        </span>
-      </td>
-    );
-  }
-
-  return (
-    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-      <input
-        ref={inputRef}
-        type="number"
-        min="0"
-        step={step}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            commit();
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            setDraft(String(value));
-            setEditing(false);
-          }
-        }}
-        className={cn(editInputClassName, className)}
-      />
-    </td>
   );
 }
 
