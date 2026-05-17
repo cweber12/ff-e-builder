@@ -15,10 +15,10 @@ type GeneratedItemEditableTextControlProps = {
   value: string;
   onSave: (value: string) => Promise<void> | void;
   indicator?: ReactNode;
-  inputClassName?: string;
-  ariaLabel?: string;
-  displayClassName?: string;
-  normalizeValue?: (value: string) => string;
+  inputClassName?: string | undefined;
+  ariaLabel?: string | undefined;
+  displayClassName?: string | undefined;
+  normalizeValue?: ((value: string) => string) | undefined;
 };
 
 export function GeneratedItemEditableTextCell({

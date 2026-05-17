@@ -1,43 +1,62 @@
 import jsPDF, { AcroFormCheckBox, AcroFormTextField } from 'jspdf';
 import { api } from '../../api';
-import { BRAND_RGB } from '../../theme/constants';
 import type { ImageAsset, Item, Material, Project, RoomWithItems } from '../../../types';
 import { imageAssetToPngDataUrl } from '../imageHelpers';
 import { fmtMoney, safeName } from '../shared';
+import { registerCatalogFonts } from './catalogFonts';
 
-const BRAND = BRAND_RGB;
-// Letter size in millimetres (215.9 x 279.4)
+// ── Page geometry (Letter, millimetres) ───────────────────────────────────────
 const PAGE_W = 215.9;
 const PAGE_H = 279.4;
-const PAGE_PADDING = 13;
-const CONTENT_W = PAGE_W - PAGE_PADDING * 2;
-const HEADER_TEXT_Y = PAGE_PADDING + 5;
-const HEADER_RULE_Y = PAGE_PADDING + 13;
-const TOP_SECTION_Y = HEADER_RULE_Y + 7;
-const SECTION_GAP = 7;
-const COLUMN_GAP = 5;
-const FOOTER_RULE_Y = PAGE_H - 10;
-const FOOTER_TEXT_Y = FOOTER_RULE_Y + 5;
+const PAGE_PADDING_X = 13;
+const PAGE_PADDING_Y = 12;
+const CONTENT_W = PAGE_W - PAGE_PADDING_X * 2;
+
+const HEADER_RULE_Y = PAGE_PADDING_Y + 9.5;
+const BODY_START_Y = HEADER_RULE_Y + 5.5;
+const SECTION_GAP = 6;
+
+const FOOTER_Y = PAGE_H - PAGE_PADDING_Y;
+
+const MAIN_GAP = 8;
+const LEFT_COL_W = (CONTENT_W - MAIN_GAP) * (1.35 / 2.35);
+const RIGHT_COL_W = CONTENT_W - MAIN_GAP - LEFT_COL_W;
+const RIGHT_COL_X = PAGE_PADDING_X + LEFT_COL_W + MAIN_GAP;
+
+const RENDER_SIZE = LEFT_COL_W; // square rendering matches left column width
+const QTY_BAND_H = 13;
+const QTY_LABEL_ROW_H = 5;
+
+const OPTION_CARD_GAP = 4;
+const OPTION_CARD_SIZE = (LEFT_COL_W - OPTION_CARD_GAP) / 2;
+
+const PLAN_FRAME_W = 56;
+const PLAN_FRAME_H = PLAN_FRAME_W * (3 / 4);
+
+const APPROVAL_H = 22;
+const APPROVAL_RADIUS = 6;
+
 const MAX_OPTION_IMAGES = 2;
-const MAX_MATERIALS = 8;
-const APPROVAL_HEIGHT = 23;
-const SECOND_SECTION_H = 74;
-const OPTION_CARD_AR = 1.45;
-const OPTION_CARD_GAP = 5;
-const MATERIAL_SWATCH_SIZE = 16;
-const MATERIAL_ROW_H = 22;
-const MATERIALS_PER_ROW = 5;
+const MAX_MATERIALS = 4;
 
-const LIGHT_BORDER: [number, number, number] = [229, 231, 235];
-const LIGHT_TEXT: [number, number, number] = [107, 114, 128];
-const MUTED_TEXT: [number, number, number] = [156, 163, 175];
-const PANEL_BG: [number, number, number] = [249, 250, 251];
-const APPROVAL_BG: [number, number, number] = [248, 250, 252];
+// ── Palette (matches src/index.css brand + gray tokens) ───────────────────────
+const BRAND_500: RGB = [75, 127, 171];
+const BRAND_600: RGB = [58, 100, 138];
+const BRAND_700: RGB = [40, 71, 101];
+const BRAND_200: RGB = [158, 192, 220];
+const BRAND_50: RGB = [236, 243, 249];
+const GRAY_700: RGB = [55, 65, 81];
+const GRAY_600: RGB = [75, 85, 99];
+const GRAY_500: RGB = [107, 114, 128];
+const GRAY_400: RGB = [156, 163, 175];
+const GRAY_300: RGB = [209, 213, 219];
+const GRAY_200: RGB = [229, 231, 235];
+const GRAY_100: RGB = [243, 244, 246];
+const WHITE: RGB = [255, 255, 255];
 
-type CatalogItemEntry = {
-  item: Item;
-  roomName: string;
-};
+type RGB = [number, number, number];
+
+type CatalogItemEntry = { item: Item; roomName: string };
 
 type CatalogOptionAsset = {
   id: string;
@@ -47,6 +66,7 @@ type CatalogOptionAsset = {
 
 type CatalogItemAssets = {
   rendering: string | null;
+  plan: string | null;
   options: CatalogOptionAsset[];
   materialImages: Map<string, string | null>;
 };
@@ -63,20 +83,11 @@ export type CatalogPdfPageModel = {
 
 type CatalogPdfOptionLayout = 'stacked' | 'row';
 
-function sortedEntries(rooms: RoomWithItems[]): CatalogItemEntry[] {
-  return [...rooms]
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-    .flatMap((room) =>
-      [...room.items]
-        .sort((a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName))
-        .map((item) => ({ item, roomName: room.name })),
-    );
-}
-
+// ── Pure helpers used by tests ────────────────────────────────────────────────
 function compactText(value: string | null | undefined): string | null {
   if (!value) return null;
-  const compacted = value.trim();
-  return compacted ? compacted : null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
 }
 
 export function buildCatalogPdfPageModel(
@@ -110,6 +121,17 @@ export function pickCatalogPdfOptionLayout(
   return optionCount > 1 ? 'row' : 'stacked';
 }
 
+// ── Asset loading ─────────────────────────────────────────────────────────────
+function sortedEntries(rooms: RoomWithItems[]): CatalogItemEntry[] {
+  return [...rooms]
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+    .flatMap((room) =>
+      [...room.items]
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName))
+        .map((item) => ({ item, roomName: room.name })),
+    );
+}
+
 function primaryImage(images: ImageAsset[]): ImageAsset | null {
   return images.find((image) => image.isPrimary) ?? images[0] ?? null;
 }
@@ -119,11 +141,17 @@ async function buildCatalogAssets(
 ): Promise<Map<string, CatalogItemAssets>> {
   const pairs = await Promise.all(
     entries.map(async ({ item }) => {
-      const renderingImages = await api.images.list({ entityType: 'item', entityId: item.id });
-      const renderingAsset = primaryImage(renderingImages);
-      const rendering = renderingAsset ? await imageAssetToPngDataUrl(renderingAsset) : null;
+      const [renderingImages, planImages, optionImages] = await Promise.all([
+        api.images.list({ entityType: 'item', entityId: item.id }),
+        api.images.list({ entityType: 'item_plan', entityId: item.id }),
+        api.images.list({ entityType: 'item_option', entityId: item.id }),
+      ]);
 
-      const optionImages = await api.images.list({ entityType: 'item_option', entityId: item.id });
+      const renderingAsset = primaryImage(renderingImages);
+      const planAsset = primaryImage(planImages);
+      const rendering = renderingAsset ? await imageAssetToPngDataUrl(renderingAsset) : null;
+      const plan = planAsset ? await imageAssetToPngDataUrl(planAsset) : null;
+
       const options = await Promise.all(
         optionImages
           .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
@@ -142,54 +170,31 @@ async function buildCatalogAssets(
         materialImages.set(material.id, matImage ? await imageAssetToPngDataUrl(matImage) : null);
       }
 
-      return [item.id, { rendering, options, materialImages }] as const;
+      return [item.id, { rendering, plan, options, materialImages }] as const;
     }),
   );
 
   return new Map(pairs);
 }
 
-function addTextField(
-  doc: jsPDF,
-  fieldName: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  const field = new AcroFormTextField();
-  field.fieldName = fieldName;
-  field.x = x;
-  field.y = y;
-  field.width = width;
-  field.height = height;
-  field.fontName = 'helvetica';
-  field.fontSize = 8;
-  field.textAlign = 'left';
-  field.showWhenPrinted = true;
-  doc.addField(field);
+// ── Low-level drawing primitives ──────────────────────────────────────────────
+function setFill(doc: jsPDF, color: RGB) {
+  doc.setFillColor(color[0], color[1], color[2]);
+}
+function setStroke(doc: jsPDF, color: RGB) {
+  doc.setDrawColor(color[0], color[1], color[2]);
+}
+function setText(doc: jsPDF, color: RGB) {
+  doc.setTextColor(color[0], color[1], color[2]);
 }
 
-function addCheckboxField(
-  doc: jsPDF,
-  fieldName: string,
-  x: number,
-  y: number,
-  size: number,
-  checked = false,
-) {
-  const field = new AcroFormCheckBox();
-  field.fieldName = fieldName;
-  field.x = x;
-  field.y = y;
-  field.width = size;
-  field.height = size;
-  field.showWhenPrinted = true;
-  field.appearanceState = checked ? 'On' : 'Off';
-  doc.addField(field);
+function applyFont(doc: jsPDF, font: string, weight: 'normal' | 'bold', size: number) {
+  doc.setFont(font, weight);
+  doc.setFontSize(size);
 }
 
-function lineHeight(fontSize: number, multiplier = 1.4) {
+function lineHeightMm(fontSize: number, multiplier = 1.4): number {
+  // jsPDF font size is in pt; 1pt = 0.3528mm.
   return fontSize * 0.3528 * multiplier;
 }
 
@@ -202,18 +207,41 @@ function addContainedImage(
   height: number,
   padding = 0,
 ) {
-  const imageProperties = doc.getImageProperties(dataUrl);
-  const innerWidth = Math.max(1, width - padding * 2);
-  const innerHeight = Math.max(1, height - padding * 2);
-  const scale = Math.min(innerWidth / imageProperties.width, innerHeight / imageProperties.height);
-  const drawWidth = imageProperties.width * scale;
-  const drawHeight = imageProperties.height * scale;
-  const drawX = x + padding + (innerWidth - drawWidth) / 2;
-  const drawY = y + padding + (innerHeight - drawHeight) / 2;
-  doc.addImage(dataUrl, 'PNG', drawX, drawY, drawWidth, drawHeight);
+  const props = doc.getImageProperties(dataUrl);
+  const innerW = Math.max(1, width - padding * 2);
+  const innerH = Math.max(1, height - padding * 2);
+  const scale = Math.min(innerW / props.width, innerH / props.height);
+  const drawW = props.width * scale;
+  const drawH = props.height * scale;
+  const drawX = x + padding + (innerW - drawW) / 2;
+  const drawY = y + padding + (innerH - drawH) / 2;
+  doc.addImage(dataUrl, 'PNG', drawX, drawY, drawW, drawH);
 }
 
-function initials(value: string) {
+function drawWrappedText(
+  doc: jsPDF,
+  font: string,
+  weight: 'normal' | 'bold',
+  size: number,
+  color: RGB,
+  value: string,
+  x: number,
+  y: number,
+  width: number,
+  options: { maxLines?: number; align?: 'left' | 'center' | 'right'; lineMultiplier?: number } = {},
+) {
+  applyFont(doc, font, weight, size);
+  setText(doc, color);
+  const lines = doc.splitTextToSize(value, width) as string[];
+  const limited = options.maxLines ? lines.slice(0, options.maxLines) : lines;
+  doc.text(limited, x, y, { align: options.align ?? 'left', maxWidth: width });
+  return {
+    lines: limited,
+    height: limited.length * lineHeightMm(size, options.lineMultiplier ?? 1.4),
+  };
+}
+
+function initials(value: string): string {
   return value
     .split(/\s+/)
     .filter(Boolean)
@@ -222,211 +250,7 @@ function initials(value: string) {
     .join('');
 }
 
-function drawSectionLabel(doc: jsPDF, label: string, x: number, y: number) {
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text(label.toUpperCase(), x, y);
-}
-
-function drawImagePlaceholder(
-  doc: jsPDF,
-  label: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  const cx = x + width / 2;
-  const cy = y + height / 2;
-  const radius = Math.min(width * 0.28, height * 0.32);
-  doc.setFillColor(225, 239, 252);
-  doc.setDrawColor(225, 239, 252);
-  doc.circle(cx, cy, radius, 'FD');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
-  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(label, cx, cy + 1.8, { align: 'center' });
-}
-
-function drawWrappedText(
-  doc: jsPDF,
-  value: string,
-  x: number,
-  y: number,
-  width: number,
-  fontSize: number,
-  color: [number, number, number],
-  options?: { bold?: boolean; maxLines?: number; align?: 'left' | 'center' | 'right' },
-) {
-  doc.setFont('helvetica', options?.bold ? 'bold' : 'normal');
-  doc.setFontSize(fontSize);
-  doc.setTextColor(color[0], color[1], color[2]);
-  const lines = doc.splitTextToSize(value, width) as string[];
-  const limitedLines = options?.maxLines ? lines.slice(0, options.maxLines) : lines;
-  doc.text(limitedLines, x, y, { align: options?.align ?? 'left', maxWidth: width });
-  return {
-    lines: limitedLines,
-    height: limitedLines.length * lineHeight(fontSize),
-  };
-}
-
-function drawTopSection(
-  doc: jsPDF,
-  item: Item,
-  model: CatalogPdfPageModel,
-  x: number,
-  y: number,
-  width: number,
-) {
-  let currentY = y;
-  const idText = model.itemIdTag;
-
-  if (idText) {
-    doc.setFont('courier', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-    doc.text(idText, x, currentY);
-  }
-
-  const idWidth = idText ? doc.getTextWidth(idText) + 5 : 0;
-  const title = drawWrappedText(
-    doc,
-    item.itemName,
-    x + idWidth,
-    currentY,
-    width - idWidth,
-    18,
-    [17, 24, 39],
-    { bold: true, maxLines: 2 },
-  );
-  currentY += Math.max(7.5, title.height) + 2;
-
-  if (model.dimensions) {
-    const dimensions = drawWrappedText(doc, model.dimensions, x, currentY, width, 9, LIGHT_TEXT, {
-      maxLines: 2,
-    });
-    currentY += dimensions.height + 2;
-  }
-
-  return currentY;
-}
-
-function drawNotesPanel(
-  doc: jsPDF,
-  model: CatalogPdfPageModel,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  let currentY = y;
-
-  // Cost row pinned to bottom — always drawn when present
-  let reservedBottom = 0;
-  if (model.unitCostCents !== null) {
-    reservedBottom = 13;
-    const dividerY = y + height - reservedBottom;
-    doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-    doc.line(x, dividerY, x + width, dividerY);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-    doc.text('Unit cost', x, dividerY + 5);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-    doc.text(fmtMoney(model.unitCostCents), x + width, dividerY + 5, { align: 'right' });
-  }
-
-  // Description at top of right column — no label (matches HTML)
-  if (model.description) {
-    const desc = drawWrappedText(doc, model.description, x, currentY, width, 9, LIGHT_TEXT, {
-      maxLines: 4,
-    });
-    currentY += desc.height + (model.notes ? 5 : 0);
-  }
-
-  // "Notes" label + text — omit entirely when no notes (per spec: "if no notes, omit in pdf")
-  if (!model.notes) return;
-
-  drawSectionLabel(doc, 'Notes', x, currentY);
-  currentY += 5;
-
-  const maxLines = Math.max(
-    1,
-    Math.floor((y + height - reservedBottom - currentY) / lineHeight(9, 1.65)),
-  );
-  drawWrappedText(doc, model.notes, x, currentY, width, 9, LIGHT_TEXT, { maxLines });
-}
-
-function drawOptionSelectionMark(doc: jsPDF, x: number, y: number, isPrimary: boolean) {
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.circle(x, y, 2.4, 'FD');
-  if (!isPrimary) return;
-  doc.setDrawColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.setLineWidth(0.5);
-  doc.line(x - 0.9, y, x - 0.15, y + 0.8);
-  doc.line(x - 0.15, y + 0.8, x + 1.2, y - 1);
-  doc.setLineWidth(0.2);
-}
-
-function drawOptionsStrip(
-  doc: jsPDF,
-  options: CatalogOptionAsset[],
-  x: number,
-  y: number,
-  width: number,
-) {
-  const visibleOptions = options.filter((option) => option.dataUrl).slice(0, MAX_OPTION_IMAGES);
-  if (visibleOptions.length === 0) return y;
-
-  const cardsY = y;
-  const layout = pickCatalogPdfOptionLayout(visibleOptions.length, [], 0);
-
-  const OPTION_LABEL_GAP = 5;
-
-  if (layout === 'stacked') {
-    const cardWidth = Math.min(width * 0.72, width);
-    const cardHeight = cardWidth / OPTION_CARD_AR;
-    const cardX = x + (width - cardWidth) / 2;
-    if (visibleOptions[0]?.dataUrl) {
-      addContainedImage(doc, visibleOptions[0].dataUrl, cardX, cardsY, cardWidth, cardHeight, 0);
-    }
-    drawOptionSelectionMark(
-      doc,
-      cardX + cardWidth - 4,
-      cardsY + 4,
-      visibleOptions[0]?.isPrimary ?? false,
-    );
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-    doc.text('OPTION 1', x + width / 2, cardsY + cardHeight + 4, { align: 'center' });
-    return cardsY + cardHeight + OPTION_LABEL_GAP;
-  }
-
-  const cardWidth = (width - OPTION_CARD_GAP) / 2;
-  const cardHeight = cardWidth / OPTION_CARD_AR;
-  visibleOptions.forEach((option, index) => {
-    const cardX = x + index * (cardWidth + OPTION_CARD_GAP);
-    if (option.dataUrl) {
-      addContainedImage(doc, option.dataUrl, cardX, cardsY, cardWidth, cardHeight, 0);
-    }
-    drawOptionSelectionMark(doc, cardX + cardWidth - 4, cardsY + 4, option.isPrimary);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-    doc.text(`OPTION ${index + 1}`, cardX + cardWidth / 2, cardsY + cardHeight + 4, {
-      align: 'center',
-    });
-  });
-
-  return cardsY + cardHeight + OPTION_LABEL_GAP;
-}
-
-function hexToRgb(hex: string): [number, number, number] {
+function hexToRgb(hex: string): RGB {
   const clean = hex.replace('#', '');
   const full =
     clean.length === 3
@@ -441,205 +265,538 @@ function hexToRgb(hex: string): [number, number, number] {
   return [Number.isNaN(r) ? 232 : r, Number.isNaN(g) ? 232 : g, Number.isNaN(b) ? 232 : b];
 }
 
-function drawMaterialsStrip(
+function drawImagePlaceholder(
   doc: jsPDF,
+  font: string,
+  label: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  setFill(doc, BRAND_50);
+  doc.rect(x, y, width, height, 'F');
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  const radius = Math.min(width * 0.16, height * 0.18);
+  setFill(doc, [BRAND_500[0], BRAND_500[1], BRAND_500[2]]);
+  doc.circle(cx, cy, radius, 'F');
+  applyFont(doc, font, 'bold', 22);
+  setText(doc, WHITE);
+  doc.text(label || '·', cx, cy + 2.4, { align: 'center' });
+}
+
+// ── AcroForm fields (approval band) ───────────────────────────────────────────
+function addTextField(
+  doc: jsPDF,
+  fieldName: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  font: string,
+) {
+  const field = new AcroFormTextField();
+  field.fieldName = fieldName;
+  field.x = x;
+  field.y = y;
+  field.width = width;
+  field.height = height;
+  field.fontName = font;
+  field.fontSize = 9;
+  field.textAlign = 'left';
+  field.showWhenPrinted = true;
+  doc.addField(field);
+}
+
+function addCheckboxField(doc: jsPDF, fieldName: string, x: number, y: number, size: number) {
+  const field = new AcroFormCheckBox();
+  field.fieldName = fieldName;
+  field.x = x;
+  field.y = y;
+  field.width = size;
+  field.height = size;
+  field.showWhenPrinted = true;
+  field.appearanceState = 'Off';
+  doc.addField(field);
+}
+
+// ── Section drawers ───────────────────────────────────────────────────────────
+function drawHeader(
+  doc: jsPDF,
+  font: string,
+  project: Project,
+  entry: CatalogItemEntry,
+  item: Item,
+) {
+  const leftX = PAGE_PADDING_X;
+  const rightX = PAGE_W - PAGE_PADDING_X;
+  const titleY = PAGE_PADDING_Y + 6.5;
+
+  // LEFT: optional ID tag + item name (uppercase, brand-700, bold)
+  const idTag = compactText(item.itemIdTag);
+  let cursorX = leftX;
+  applyFont(doc, font, 'bold', 13);
+  setText(doc, BRAND_700);
+  if (idTag) {
+    doc.text(idTag.toUpperCase(), cursorX, titleY);
+    cursorX += doc.getTextWidth(idTag.toUpperCase()) + 3;
+  }
+  const itemName = item.itemName.toUpperCase();
+  const nameMaxW = rightX - cursorX - 70; // leave room for project text on right
+  const nameLines = (doc.splitTextToSize(itemName, Math.max(40, nameMaxW)) as string[]).slice(0, 1);
+  doc.text(nameLines, cursorX, titleY);
+
+  // RIGHT: project name (top) + location/room subtitle
+  applyFont(doc, font, 'bold', 13);
+  setText(doc, BRAND_700);
+  doc.text(project.name.toUpperCase(), rightX, titleY, { align: 'right' });
+
+  const locationText = compactText(project.projectLocation) ?? entry.roomName;
+  applyFont(doc, font, 'normal', 7.5);
+  setText(doc, BRAND_500);
+  doc.text(locationText.toUpperCase(), rightX, titleY + 3.6, { align: 'right' });
+
+  // Bottom rule (brand-500, 0.6pt)
+  setStroke(doc, BRAND_500);
+  doc.setLineWidth(0.4);
+  doc.line(leftX, HEADER_RULE_Y, rightX, HEADER_RULE_Y);
+  doc.setLineWidth(0.2);
+}
+
+function drawRendering(
+  doc: jsPDF,
+  font: string,
+  rendering: string | null,
+  item: Item,
+  x: number,
+  y: number,
+) {
+  if (rendering) {
+    setFill(doc, BRAND_50);
+    doc.rect(x, y, RENDER_SIZE, RENDER_SIZE, 'F');
+    addContainedImage(doc, rendering, x, y, RENDER_SIZE, RENDER_SIZE, 0);
+  } else {
+    drawImagePlaceholder(doc, font, initials(item.itemName), x, y, RENDER_SIZE, RENDER_SIZE);
+  }
+}
+
+function drawQtyBand(doc: jsPDF, font: string, item: Item, x: number, y: number, width: number) {
+  // Header strip (brand-600 background, white uppercase labels)
+  setFill(doc, BRAND_600);
+  doc.rect(x, y, width, QTY_LABEL_ROW_H, 'F');
+
+  const cellW = width / 3;
+  applyFont(doc, font, 'bold', 6.5);
+  setText(doc, WHITE);
+  doc.text('PRODUCT QTY', x + cellW / 2, y + 3.5, { align: 'center' });
+  doc.text('PRICE PER ITEM', x + cellW + cellW / 2, y + 3.5, { align: 'center' });
+  doc.text('TOTAL', x + 2 * cellW + cellW / 2, y + 3.5, { align: 'center' });
+
+  // Value row (white bg, gray-700 values)
+  const valueY = y + QTY_LABEL_ROW_H;
+  const valueH = QTY_BAND_H - QTY_LABEL_ROW_H;
+  setFill(doc, WHITE);
+  doc.rect(x, valueY, width, valueH, 'F');
+  setStroke(doc, BRAND_200);
+  doc.rect(x, y, width, QTY_BAND_H);
+
+  applyFont(doc, font, 'normal', 10);
+  setText(doc, GRAY_700);
+  const valTextY = valueY + valueH / 2 + 1.6;
+  const unitText = item.unitCostCents > 0 ? fmtMoney(item.unitCostCents) : '—';
+  const totalCents = item.unitCostCents * item.qty;
+  const totalText = totalCents > 0 ? fmtMoney(totalCents) : '—';
+  doc.text(String(item.qty), x + cellW / 2, valTextY, { align: 'center' });
+  doc.text(unitText, x + cellW + cellW / 2, valTextY, { align: 'center' });
+  doc.text(totalText, x + 2 * cellW + cellW / 2, valTextY, { align: 'center' });
+}
+
+function drawSpecColumn(
+  doc: jsPDF,
+  font: string,
+  model: CatalogPdfPageModel,
+  materials: Material[],
+  materialImages: Map<string, string | null>,
+  x: number,
+  y: number,
+  width: number,
+  maxBottomY: number,
+) {
+  let cursorY = y + 4;
+
+  // "PRODUCT SPECIFICATIONS" heading (gray-700, 11pt, light tracking)
+  applyFont(doc, font, 'bold', 9.5);
+  setText(doc, GRAY_700);
+  doc.text('PRODUCT SPECIFICATIONS', x, cursorY);
+  cursorY += 5;
+
+  // Dimensions (small gray-700)
+  const dim = model.dimensions ?? 'W __" x D __" x H __"';
+  const dimColor: RGB = model.dimensions ? GRAY_700 : GRAY_400;
+  const dimResult = drawWrappedText(doc, font, 'normal', 9, dimColor, dim, x, cursorY, width, {
+    maxLines: 1,
+  });
+  cursorY += dimResult.height + 2;
+
+  // Description (gray-700, 9pt, up to 4 lines, italic-ish leading)
+  if (model.description) {
+    const desc = drawWrappedText(
+      doc,
+      font,
+      'normal',
+      8.5,
+      GRAY_700,
+      model.description,
+      x,
+      cursorY,
+      width,
+      { maxLines: 4, lineMultiplier: 1.4 },
+    );
+    cursorY += desc.height + 3;
+  }
+
+  // Notes block — only render when present (per spec)
+  if (model.notes) {
+    const notesAvailable = Math.max(0, maxBottomY - cursorY - 35); // reserve room for finish schedule
+    const maxLines = Math.max(1, Math.floor(notesAvailable / lineHeightMm(8, 1.5)));
+    const notesResult = drawWrappedText(
+      doc,
+      font,
+      'normal',
+      8,
+      GRAY_600,
+      model.notes,
+      x,
+      cursorY,
+      width,
+      { maxLines, lineMultiplier: 1.5 },
+    );
+    cursorY += notesResult.height + 4;
+  }
+
+  // FINISH SCHEDULE — bottom-aligned within the right column
+  const fsHeight = 36; // sub-heading + materials row
+  const fsTop = Math.max(cursorY, maxBottomY - fsHeight);
+
+  applyFont(doc, font, 'bold', 8.5);
+  setText(doc, GRAY_600);
+  doc.text('FINISH SCHEDULE', x, fsTop);
+
+  drawMaterialsRow(doc, font, materials, materialImages, x, fsTop + 4, width);
+}
+
+function drawMaterialsRow(
+  doc: jsPDF,
+  font: string,
   materials: Material[],
   materialImages: Map<string, string | null>,
   x: number,
   y: number,
   width: number,
 ) {
-  const visibleMaterials = materials.slice(0, MAX_MATERIALS);
-  if (visibleMaterials.length === 0) return y;
+  const cells = materials.slice(0, MAX_MATERIALS);
+  const cellCount = MAX_MATERIALS;
+  const cellW = width / cellCount;
+  const swatchSize = 10;
 
-  drawSectionLabel(doc, 'Materials', x, y);
-  const startY = y + 5;
-  const columns = Math.min(MATERIALS_PER_ROW, visibleMaterials.length);
-  const itemWidth = width / columns;
+  for (let index = 0; index < cellCount; index++) {
+    const cellX = x + index * cellW;
+    const centerX = cellX + cellW / 2;
+    const material = cells[index] ?? null;
+    const isEmpty = !material;
 
-  visibleMaterials.forEach((material, index) => {
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    const centerX = x + column * itemWidth + itemWidth / 2;
-    const rowY = startY + row * MATERIAL_ROW_H;
-    const swatchX = centerX - MATERIAL_SWATCH_SIZE / 2;
-    const swatchY = rowY;
+    // ID label (top)
+    applyFont(doc, font, 'bold', 6.5);
+    setText(doc, isEmpty ? GRAY_300 : GRAY_500);
+    const idLabel = material ? (compactText(material.materialId) ?? 'ID') : 'ID';
+    doc.text(idLabel.toUpperCase(), centerX, y + 2.6, { align: 'center' });
 
-    const imageDataUrl = materialImages.get(material.id);
-    if (imageDataUrl) {
-      doc.setFillColor(PANEL_BG[0], PANEL_BG[1], PANEL_BG[2]);
-      doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-      doc.rect(swatchX, swatchY, MATERIAL_SWATCH_SIZE, MATERIAL_SWATCH_SIZE, 'FD');
-      addContainedImage(
-        doc,
-        imageDataUrl,
-        swatchX,
-        swatchY,
-        MATERIAL_SWATCH_SIZE,
-        MATERIAL_SWATCH_SIZE,
-        1,
-      );
+    // Swatch (circle if no image, square w/ image if available)
+    const swatchY = y + 4.4;
+    const swatchCx = centerX;
+    const swatchCy = swatchY + swatchSize / 2;
+    if (material) {
+      const image = materialImages.get(material.id);
+      if (image) {
+        setFill(doc, GRAY_100);
+        setStroke(doc, GRAY_200);
+        doc.rect(swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize, 'FD');
+        addContainedImage(
+          doc,
+          image,
+          swatchCx - swatchSize / 2,
+          swatchY,
+          swatchSize,
+          swatchSize,
+          0.6,
+        );
+      } else {
+        const fill = hexToRgb(material.swatchHex);
+        setFill(doc, fill);
+        setStroke(doc, GRAY_200);
+        doc.circle(swatchCx, swatchCy, swatchSize / 2, 'FD');
+      }
     } else {
-      const [r, g, b] = hexToRgb(material.swatchHex);
-      doc.setFillColor(r, g, b);
-      doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-      doc.circle(centerX, rowY + MATERIAL_SWATCH_SIZE / 2, MATERIAL_SWATCH_SIZE / 2, 'FD');
+      setFill(doc, GRAY_100);
+      setStroke(doc, GRAY_200);
+      doc.circle(swatchCx, swatchCy, swatchSize / 2, 'FD');
     }
 
-    const label = compactText(material.name) ?? compactText(material.materialId) ?? 'Material';
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.2);
-    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-    const labelLines = (doc.splitTextToSize(label, itemWidth - 3) as string[]).slice(0, 2);
-    doc.text(labelLines, centerX, rowY + MATERIAL_SWATCH_SIZE + 3.8, {
+    // Name (single word, uppercase)
+    const nameRaw = material ? compactText(material.name) : null;
+    const nameLabel = nameRaw ? nameRaw.split(/\s+/)[0]! : 'MATERIAL';
+    applyFont(doc, font, 'bold', 6);
+    setText(doc, isEmpty ? GRAY_300 : GRAY_500);
+    doc.text(nameLabel.toUpperCase(), centerX, swatchY + swatchSize + 2.4, {
       align: 'center',
-      maxWidth: itemWidth - 3,
+      maxWidth: cellW - 1,
+    });
+  }
+}
+
+function drawOptionStrip(
+  doc: jsPDF,
+  font: string,
+  options: CatalogOptionAsset[],
+  x: number,
+  y: number,
+) {
+  const visible = options.filter((option) => option.dataUrl).slice(0, MAX_OPTION_IMAGES);
+  if (visible.length === 0) return;
+
+  const layout = pickCatalogPdfOptionLayout(visible.length, [], 0);
+
+  if (layout === 'stacked') {
+    const size = Math.min(OPTION_CARD_SIZE * 1.4, LEFT_COL_W * 0.8);
+    const cardX = x + (LEFT_COL_W - size) / 2;
+    setFill(doc, GRAY_100);
+    doc.rect(cardX, y, size, size, 'F');
+    if (visible[0]?.dataUrl) {
+      addContainedImage(doc, visible[0].dataUrl, cardX, y, size, size, 0);
+    }
+    drawOptionCheckmark(doc, cardX + size - 5.5, y + 5.5, visible[0]?.isPrimary ?? false);
+    applyFont(doc, font, 'bold', 6);
+    setText(doc, GRAY_400);
+    doc.text('OPTION 1', cardX + size / 2, y + size + 3, { align: 'center' });
+    return;
+  }
+
+  visible.forEach((option, index) => {
+    const cardX = x + index * (OPTION_CARD_SIZE + OPTION_CARD_GAP);
+    setFill(doc, GRAY_100);
+    doc.rect(cardX, y, OPTION_CARD_SIZE, OPTION_CARD_SIZE, 'F');
+    if (option.dataUrl) {
+      addContainedImage(doc, option.dataUrl, cardX, y, OPTION_CARD_SIZE, OPTION_CARD_SIZE, 0);
+    }
+    drawOptionCheckmark(doc, cardX + OPTION_CARD_SIZE - 5.5, y + 5.5, option.isPrimary);
+    applyFont(doc, font, 'bold', 6);
+    setText(doc, GRAY_400);
+    doc.text(`OPTION ${index + 1}`, cardX + OPTION_CARD_SIZE / 2, y + OPTION_CARD_SIZE + 3, {
+      align: 'center',
     });
   });
-
-  return startY + Math.ceil(visibleMaterials.length / columns) * MATERIAL_ROW_H;
 }
 
-function drawApprovalBand(doc: jsPDF, itemId: string, x: number, y: number, width: number) {
-  doc.setFillColor(APPROVAL_BG[0], APPROVAL_BG[1], APPROVAL_BG[2]);
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.rect(x, y, width, APPROVAL_HEIGHT, 'FD');
-  drawSectionLabel(doc, 'Client Approval', x + 4, y + 5.3);
-
-  const signatureW = width * 0.5;
-  const dateW = width * 0.16;
-  const checksX = x + signatureW + dateW + 14;
-
-  // Lines first, labels below
-  const lineY = y + 14;
-  doc.setDrawColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.line(x + 4, lineY, x + signatureW, lineY);
-  doc.line(x + signatureW + 8, lineY, x + signatureW + dateW, lineY);
-
-  const labelY = lineY + 3.5;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text('Authorized Signature', x + 4, labelY);
-  doc.text('Date', x + signatureW + 8, labelY);
-
-  addTextField(doc, `${itemId}-approval-signature`, x + 4, y + 8, signatureW - 4, 6);
-  addTextField(doc, `${itemId}-approval-date`, x + signatureW + 8, y + 8, dateW - 8, 6);
-
-  addCheckboxField(doc, `${itemId}-approval-with-revisions`, checksX, y + 8.5, 3.5, false);
-  addCheckboxField(doc, `${itemId}-approval-as-presented`, checksX, y + 14.5, 3.5, false);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.8);
-  doc.setTextColor(75, 85, 99);
-  doc.text('Approved with revisions', checksX + 5, y + 11.5);
-  doc.text('Approved as presented', checksX + 5, y + 17.5);
+function drawOptionCheckmark(doc: jsPDF, x: number, y: number, isSelected: boolean) {
+  setFill(doc, WHITE);
+  setStroke(doc, GRAY_300);
+  doc.circle(x, y, 2.4, 'FD');
+  if (!isSelected) return;
+  setStroke(doc, BRAND_500);
+  doc.setLineWidth(0.55);
+  doc.line(x - 1.1, y, x - 0.25, y + 0.9);
+  doc.line(x - 0.25, y + 0.9, x + 1.3, y - 1.05);
+  doc.setLineWidth(0.2);
 }
 
+function drawLocationBlock(
+  doc: jsPDF,
+  font: string,
+  roomName: string,
+  plan: string | null,
+  x: number,
+  y: number,
+) {
+  // "LOCATION: <room>"
+  applyFont(doc, font, 'bold', 8);
+  setText(doc, GRAY_600);
+  doc.text('LOCATION:', x, y + 3);
+  const keyWidth = doc.getTextWidth('LOCATION:') + 1.5;
+  applyFont(doc, font, 'normal', 8);
+  setText(doc, GRAY_700);
+  doc.text(roomName, x + keyWidth, y + 3);
+
+  // Plan frame
+  const frameY = y + 7;
+  setFill(doc, GRAY_100);
+  doc.rect(x, frameY, PLAN_FRAME_W, PLAN_FRAME_H, 'F');
+  if (plan) {
+    addContainedImage(doc, plan, x, frameY, PLAN_FRAME_W, PLAN_FRAME_H, 0);
+  } else {
+    applyFont(doc, font, 'bold', 7);
+    setText(doc, GRAY_400);
+    doc.text('LOCATION', x + PLAN_FRAME_W / 2, frameY + PLAN_FRAME_H / 2 - 1, { align: 'center' });
+    doc.text('SNIPPET', x + PLAN_FRAME_W / 2, frameY + PLAN_FRAME_H / 2 + 3, { align: 'center' });
+  }
+}
+
+function drawRoundedRect(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  style: 'F' | 'S' | 'FD',
+) {
+  doc.roundedRect(x, y, width, height, radius, radius, style);
+}
+
+function drawApprovalBand(
+  doc: jsPDF,
+  font: string,
+  itemId: string,
+  x: number,
+  y: number,
+  width: number,
+) {
+  setFill(doc, BRAND_50);
+  setStroke(doc, BRAND_200);
+  drawRoundedRect(doc, x, y, width, APPROVAL_H, APPROVAL_RADIUS, 'FD');
+
+  // "Client Approval" label (left, larger)
+  const innerX = x + 6;
+  const innerY = y + 5.5;
+  applyFont(doc, font, 'bold', 10);
+  setText(doc, GRAY_700);
+  doc.text('Client Approval', innerX, innerY);
+
+  // Signature line + label
+  const sigX = innerX + 27;
+  const sigW = width * 0.36;
+  const lineY = y + APPROVAL_H - 7;
+  setStroke(doc, GRAY_400);
+  doc.setLineWidth(0.3);
+  doc.line(sigX, lineY, sigX + sigW, lineY);
+  doc.setLineWidth(0.2);
+  applyFont(doc, font, 'normal', 6.5);
+  setText(doc, GRAY_500);
+  doc.text('AUTHORIZED SIGNATURE', sigX, lineY + 3);
+  addTextField(doc, `${itemId}-approval-signature`, sigX, lineY - 5, sigW, 5, font);
+
+  // Date line + label
+  const dateX = sigX + sigW + 6;
+  const dateW = 26;
+  setStroke(doc, GRAY_400);
+  doc.setLineWidth(0.3);
+  doc.line(dateX, lineY, dateX + dateW, lineY);
+  doc.setLineWidth(0.2);
+  applyFont(doc, font, 'normal', 6.5);
+  setText(doc, GRAY_500);
+  doc.text('DATE', dateX, lineY + 3);
+  addTextField(doc, `${itemId}-approval-date`, dateX, lineY - 5, dateW, 5, font);
+
+  // Checkboxes (right side)
+  const checksX = dateX + dateW + 8;
+  const checkBoxSize = 3;
+  const check1Y = y + 6;
+  const check2Y = y + 12.5;
+  addCheckboxField(doc, `${itemId}-approval-with-revisions`, checksX, check1Y, checkBoxSize);
+  addCheckboxField(doc, `${itemId}-approval-as-presented`, checksX, check2Y, checkBoxSize);
+  applyFont(doc, font, 'normal', 7);
+  setText(doc, GRAY_700);
+  doc.text('Approved with revisions', checksX + checkBoxSize + 2, check1Y + checkBoxSize - 0.5);
+  doc.text('Approved as presented', checksX + checkBoxSize + 2, check2Y + checkBoxSize - 0.5);
+}
+
+function drawFooter(doc: jsPDF, font: string, project: Project, pageNum: number, total: number) {
+  const leftX = PAGE_PADDING_X;
+  const rightX = PAGE_W - PAGE_PADDING_X;
+  applyFont(doc, font, 'normal', 7);
+  setText(doc, GRAY_400);
+  doc.text(safeName(project.name), (leftX + rightX) / 2, FOOTER_Y, { align: 'center' });
+  applyFont(doc, font, 'bold', 7);
+  setText(doc, GRAY_500);
+  doc.text(`PAGE ${pageNum} of ${total}`, rightX, FOOTER_Y, { align: 'right' });
+}
+
+// ── Page composition ──────────────────────────────────────────────────────────
 function drawCatalogPage(
   doc: jsPDF,
+  font: string,
   project: Project,
   entry: CatalogItemEntry,
   assets: CatalogItemAssets,
   pageNum: number,
   total: number,
 ): void {
-  const pageWidth = doc.internal.pageSize.getWidth();
   const model = buildCatalogPdfPageModel(entry.item, assets.options);
-  const clientName = compactText(project.clientName);
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.text(project.name.toUpperCase(), PAGE_PADDING, HEADER_TEXT_Y);
-  doc.text(entry.roomName.toUpperCase(), pageWidth - PAGE_PADDING, HEADER_TEXT_Y, {
-    align: 'right',
-  });
-  if (clientName) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.8);
-    doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-    doc.text(clientName.toUpperCase(), PAGE_PADDING, HEADER_TEXT_Y + 4.4);
-  }
-  doc.setDrawColor(BRAND[0], BRAND[1], BRAND[2]);
-  doc.line(PAGE_PADDING, HEADER_RULE_Y, pageWidth - PAGE_PADDING, HEADER_RULE_Y);
+  drawHeader(doc, font, project, entry, entry.item);
 
-  const topSectionBottomY = drawTopSection(
+  // ── Main two-column section ─────────────────────────────────────────────────
+  const mainY = BODY_START_Y;
+  // Left column: rendering + qty band
+  drawRendering(doc, font, assets.rendering, entry.item, PAGE_PADDING_X, mainY);
+  const qtyY = mainY + RENDER_SIZE + 3;
+  drawQtyBand(doc, font, entry.item, PAGE_PADDING_X, qtyY, LEFT_COL_W);
+
+  // Right column: specifications, dims, description, notes, finish schedule
+  const mainBottomY = qtyY + QTY_BAND_H;
+  drawSpecColumn(
     doc,
-    entry.item,
+    font,
     model,
-    PAGE_PADDING,
-    TOP_SECTION_Y,
-    CONTENT_W,
+    model.materials,
+    assets.materialImages,
+    RIGHT_COL_X,
+    mainY,
+    RIGHT_COL_W,
+    mainBottomY,
   );
-  const panelY = topSectionBottomY + SECTION_GAP;
-  // Column ratio matches HTML: 1fr rendering / 1.65fr notes = 1/2.65 ≈ 0.377
-  const leftWidth = (CONTENT_W - COLUMN_GAP) * (1 / 2.65);
-  const rightWidth = CONTENT_W - COLUMN_GAP - leftWidth;
-  const rightX = PAGE_PADDING + leftWidth + COLUMN_GAP;
 
-  // Rendering — no label (HTML rendering panel has no section label)
-  if (assets.rendering) {
-    addContainedImage(doc, assets.rendering, PAGE_PADDING, panelY, leftWidth, SECOND_SECTION_H, 0);
-  } else {
-    drawImagePlaceholder(
-      doc,
-      initials(entry.item.itemName),
-      PAGE_PADDING,
-      panelY,
-      leftWidth,
-      SECOND_SECTION_H,
-    );
-  }
+  // ── Bottom row: options + location/plan ─────────────────────────────────────
+  const bottomY = mainBottomY + SECTION_GAP;
+  drawOptionStrip(doc, font, assets.options, PAGE_PADDING_X, bottomY);
+  drawLocationBlock(doc, font, entry.roomName, assets.plan, RIGHT_COL_X, bottomY);
 
-  // Notes panel — description, "Notes" label, notes text, cost (matches HTML right column)
-  drawNotesPanel(doc, model, rightX, panelY, rightWidth, SECOND_SECTION_H);
+  // ── Approval band ───────────────────────────────────────────────────────────
+  const approvalY = FOOTER_Y - APPROVAL_H - 6;
+  drawApprovalBand(doc, font, entry.item.id, PAGE_PADDING_X, approvalY, CONTENT_W);
 
-  const thirdSectionY = panelY + SECOND_SECTION_H + SECTION_GAP;
-  let materialsStartY = thirdSectionY;
-  if (model.optionCount > 0) {
-    materialsStartY = drawOptionsStrip(doc, assets.options, PAGE_PADDING, thirdSectionY, CONTENT_W);
-  }
-  if (model.materials.length > 0) {
-    drawMaterialsStrip(
-      doc,
-      model.materials,
-      assets.materialImages,
-      PAGE_PADDING,
-      materialsStartY + (model.optionCount > 0 ? 6 : 0),
-      CONTENT_W,
-    );
-  }
-
-  const approvalY = FOOTER_RULE_Y - APPROVAL_HEIGHT - SECTION_GAP;
-  drawApprovalBand(doc, entry.item.id, PAGE_PADDING, approvalY, CONTENT_W);
-
-  doc.setDrawColor(LIGHT_BORDER[0], LIGHT_BORDER[1], LIGHT_BORDER[2]);
-  doc.line(PAGE_PADDING, FOOTER_RULE_Y, pageWidth - PAGE_PADDING, FOOTER_RULE_Y);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(LIGHT_TEXT[0], LIGHT_TEXT[1], LIGHT_TEXT[2]);
-  doc.text(`${pageNum} of ${total}`, PAGE_PADDING, FOOTER_TEXT_Y);
-  doc.text(safeName(project.name), pageWidth / 2, FOOTER_TEXT_Y, { align: 'center' });
-  if (model.itemIdTag) {
-    doc.text(model.itemIdTag, pageWidth - PAGE_PADDING, FOOTER_TEXT_Y, { align: 'right' });
-  }
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  drawFooter(doc, font, project, pageNum, total);
 }
+
+// ── Public exports ────────────────────────────────────────────────────────────
+function createDoc(): jsPDF {
+  return new jsPDF({ unit: 'mm', format: 'letter' });
+}
+
+const EMPTY_ASSETS: CatalogItemAssets = {
+  rendering: null,
+  plan: null,
+  options: [],
+  materialImages: new Map(),
+};
 
 export async function exportCatalogPdf(project: Project, rooms: RoomWithItems[]): Promise<void> {
   const entries = sortedEntries(rooms);
   if (entries.length === 0) return;
 
   const assets = await buildCatalogAssets(entries);
-  const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+  const doc = createDoc();
+  const font = await registerCatalogFonts(doc);
 
   for (const [index, entry] of entries.entries()) {
     if (index > 0) doc.addPage();
     drawCatalogPage(
       doc,
+      font,
       project,
       entry,
-      assets.get(entry.item.id) ?? { rendering: null, options: [], materialImages: new Map() },
+      assets.get(entry.item.id) ?? EMPTY_ASSETS,
       index + 1,
       entries.length,
     );
@@ -659,12 +816,14 @@ export async function exportCatalogItemPdf(
 
   const entry = entries[entryIndex]!;
   const assets = await buildCatalogAssets([entry]);
-  const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+  const doc = createDoc();
+  const font = await registerCatalogFonts(doc);
   drawCatalogPage(
     doc,
+    font,
     project,
     entry,
-    assets.get(entry.item.id) ?? { rendering: null, options: [], materialImages: new Map() },
+    assets.get(entry.item.id) ?? EMPTY_ASSETS,
     entryIndex + 1,
     entries.length,
   );
