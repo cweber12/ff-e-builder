@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): share Proposal revision history indicator UI between Proposal and FF&E
+
 - refactor(api): remove FF&E items and Locations by clearing FF&E visibility
 
 - refactor(table): show linked Proposal revision indicators in FF&E

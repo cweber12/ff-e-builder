@@ -89,26 +89,16 @@ import {
   type GeneratedItemChangeInfo,
 } from '../../../lib/table/generatedItemChangeInfo';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
-import { proposalStatusConfig } from '../proposalStatusConfig';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
 import {
   RevisionCostCell,
+  RevisionHistoryDot,
   RevisionNotesCell,
   RevisionQtyCell,
   RevisionTotalCell,
 } from '../revision';
 
 // --- Proposal Status ---
-
-function formatStatusDate(isoString: string): string {
-  const date = new Date(isoString);
-  const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    ...(sameYear ? {} : { year: 'numeric' }),
-  });
-}
 
 function ChangeHistoryDot({
   itemId,
@@ -121,123 +111,12 @@ function ChangeHistoryDot({
 }) {
   const { data: changelog = [] } = useProposalItemChangelog(itemId);
 
-  // Build a label map from the current-cycle revisions (already scoped by the
-  // GET endpoint to currentMajor). Filter changelog to only current-cycle entries
-  // so dots don't surface history from prior acceptance cycles after preservation.
-  const revisionLabelMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const rev of revisions) map.set(rev.id, rev.label);
-    return map;
-  }, [revisions]);
-
   const entries = useMemo(
-    () =>
-      changelog.filter(
-        (e) =>
-          e.columnKey === columnKey && e.revisionId !== null && revisionLabelMap.has(e.revisionId),
-      ),
-    [changelog, columnKey, revisionLabelMap],
+    () => changelog.filter((entry) => entry.columnKey === columnKey),
+    [changelog, columnKey],
   );
 
-  type EntryGroup = { label: string; entries: typeof entries };
-  const groupedEntries = useMemo(() => {
-    const groups: EntryGroup[] = [];
-    const seen = new Map<string, EntryGroup>();
-    for (const entry of entries) {
-      const key = entry.revisionId!;
-      const label = revisionLabelMap.get(key) ?? 'Unknown';
-      if (!seen.has(key)) {
-        const g: EntryGroup = { label, entries: [] };
-        groups.push(g);
-        seen.set(key, g);
-      }
-      seen.get(key)!.entries.push(entry);
-    }
-    return groups;
-  }, [entries, revisionLabelMap]);
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handleOutside(e: globalThis.MouseEvent) {
-      const inTrigger = triggerRef.current?.contains(e.target as Node) ?? false;
-      const inPopup = popupRef.current?.contains(e.target as Node) ?? false;
-      if (!inTrigger && !inPopup) setOpen(false);
-    }
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [open]);
-
-  if (entries.length === 0) return null;
-
-  const latest = entries[0]!;
-  const cfg = proposalStatusConfig[latest.proposalStatus];
-  const triggerRect = triggerRef.current?.getBoundingClientRect();
-
-  return (
-    <div className="inline-flex">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
-        title="View change history"
-        className={cn('h-2 w-2 rounded-full flex-shrink-0', cfg.dotClass)}
-      />
-      {open &&
-        triggerRect &&
-        createPortal(
-          <div
-            ref={popupRef}
-            style={{
-              position: 'fixed',
-              top: triggerRect.bottom + 4,
-              left: triggerRect.left,
-            }}
-            className="z-[100] min-w-56 max-w-xs rounded-lg border border-gray-200 bg-white shadow-lg"
-          >
-            <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
-              Change history
-            </div>
-            <ul className="max-h-56 overflow-y-auto">
-              {groupedEntries.map((group) => (
-                <Fragment key={group.label}>
-                  <li className="sticky top-0 border-b border-gray-100 bg-gray-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                    {group.label !== 'General' ? `Round ${group.label}` : 'General'}
-                  </li>
-                  {group.entries.map((entry) => (
-                    <li key={entry.id} className="divide-y divide-gray-50 px-3 py-2 text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            'h-1.5 w-1.5 rounded-full flex-shrink-0',
-                            proposalStatusConfig[entry.proposalStatus].dotClass,
-                          )}
-                        />
-                        <span className="text-gray-400">{formatStatusDate(entry.changedAt)}</span>
-                      </div>
-                      <div className="mt-0.5 flex items-baseline gap-1">
-                        <span className="text-gray-400 line-through">
-                          {entry.previousValue || '—'}
-                        </span>
-                        <span className="text-gray-300">→</span>
-                        <span className="font-medium text-gray-700">{entry.newValue || '—'}</span>
-                      </div>
-                      {entry.notes && <p className="mt-0.5 text-gray-500 italic">{entry.notes}</p>}
-                    </li>
-                  ))}
-                </Fragment>
-              ))}
-            </ul>
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
+  return <RevisionHistoryDot entries={entries} revisions={revisions} />;
 }
 
 // --- Proposal Table Column Definitions ---

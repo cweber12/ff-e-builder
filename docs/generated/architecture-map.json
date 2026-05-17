@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-17T01:53:59.375Z",
+  "generatedAt": "2026-05-17T02:11:53.309Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 237,
-      "internalImports": 734,
-      "externalImports": 256,
+      "files": 238,
+      "internalImports": 737,
+      "externalImports": 258,
       "unresolvedImports": 0
     },
     {
@@ -167,9 +167,9 @@
     },
     {
       "area": "proposal",
-      "files": 23,
-      "importsIn": 35,
-      "importsOut": 96,
+      "files": 24,
+      "importsIn": 36,
+      "importsOut": 99,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
@@ -217,7 +217,7 @@
     {
       "area": "shared-lib",
       "files": 47,
-      "importsIn": 269,
+      "importsIn": 270,
       "importsOut": 111,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
@@ -242,7 +242,7 @@
     {
       "area": "types",
       "files": 10,
-      "importsIn": 153,
+      "importsIn": 154,
       "importsOut": 21,
       "dependsOn": [],
       "importedBy": [
@@ -312,7 +312,7 @@
       "paths": [
         {
           "path": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-          "files": 21
+          "files": 22
         },
         {
           "path": "src/lib/import/formats/proposal.ts, src/lib/api/proposal.ts",
@@ -475,8 +475,8 @@
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
       "importerArea": "ffe",
-      "specifier": "../../proposal/proposalStatusConfig",
-      "resolved": "src/components/proposal/proposalStatusConfig.ts",
+      "specifier": "../../proposal/revision",
+      "resolved": "src/components/proposal/revision/index.ts",
       "resolvedArea": "proposal",
       "kind": "import",
       "reviewNote": "review: product module imports another product module directly",
@@ -2923,6 +2923,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/proposal/revision/RevisionNotesCell.tsx",
       "importerArea": "proposal",
       "specifier": "../../../lib/utils",
@@ -3414,6 +3424,16 @@
     },
     {
       "importer": "src/components/proposal/revision/RevisionCostCell.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
       "importerArea": "proposal",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -5434,8 +5454,8 @@
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
           "importerArea": "ffe",
-          "specifier": "../../proposal/proposalStatusConfig",
-          "resolved": "src/components/proposal/proposalStatusConfig.ts",
+          "specifier": "../../proposal/revision",
+          "resolved": "src/components/proposal/revision/index.ts",
           "resolvedArea": "proposal",
           "kind": "import",
           "reviewNote": "review: product module imports another product module directly",
@@ -5961,7 +5981,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-lib",
-      "imports": 36,
+      "imports": 37,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6000,7 +6020,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "types",
-      "imports": 22,
+      "imports": 23,
       "reviewNote": "expected: product uses shared types",
       "examples": [
         {
@@ -7280,9 +7300,9 @@
     },
     {
       "path": "src/components",
-      "files": 107,
-      "importsIn": 224,
-      "importsOut": 502,
+      "files": 108,
+      "importsIn": 225,
+      "importsOut": 507,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7328,7 +7348,7 @@
     {
       "path": "src/lib",
       "files": 77,
-      "importsIn": 278,
+      "importsIn": 279,
       "importsOut": 243,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
@@ -7385,7 +7405,7 @@
     {
       "path": "src/types",
       "files": 10,
-      "importsIn": 153,
+      "importsIn": 154,
       "importsOut": 23,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -8478,9 +8498,9 @@
         },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../proposal/proposalStatusConfig",
+          "specifier": "../../proposal/revision",
           "kind": "import",
-          "resolved": "src/components/proposal/proposalStatusConfig.ts",
+          "resolved": "src/components/proposal/revision/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -10982,6 +11002,14 @@
         },
         {
           "importer": "src/components/proposal/revision/index.ts",
+          "specifier": "./RevisionHistoryDot",
+          "kind": "export",
+          "resolved": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/revision/index.ts",
           "specifier": "./RevisionTotalCell",
           "kind": "export",
           "resolved": "src/components/proposal/revision/RevisionTotalCell.tsx",
@@ -11063,6 +11091,57 @@
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "proposal",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Proposal-owned feature path",
+      "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
+      "imports": [
+        {
+          "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "specifier": "../../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "specifier": "../proposalStatusConfig",
+          "kind": "import",
+          "resolved": "src/components/proposal/proposalStatusConfig.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -11519,14 +11598,6 @@
           "specifier": "../../../lib/table/generatedItemTablePresets",
           "kind": "import",
           "resolved": "src/lib/table/generatedItemTablePresets.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalTable.tsx",
-          "specifier": "../proposalStatusConfig",
-          "kind": "import",
-          "resolved": "src/components/proposal/proposalStatusConfig.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -20111,9 +20182,9 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../proposal/proposalStatusConfig",
+      "specifier": "../../proposal/revision",
       "kind": "import",
-      "resolved": "src/components/proposal/proposalStatusConfig.ts",
+      "resolved": "src/components/proposal/revision/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -21967,6 +22038,14 @@
     },
     {
       "importer": "src/components/proposal/revision/index.ts",
+      "specifier": "./RevisionHistoryDot",
+      "kind": "export",
+      "resolved": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/revision/index.ts",
       "specifier": "./RevisionTotalCell",
       "kind": "export",
       "resolved": "src/components/proposal/revision/RevisionTotalCell.tsx",
@@ -22026,6 +22105,46 @@
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "specifier": "../../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "specifier": "../proposalStatusConfig",
+      "kind": "import",
+      "resolved": "src/components/proposal/proposalStatusConfig.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -22394,14 +22513,6 @@
       "specifier": "../../../lib/table/generatedItemTablePresets",
       "kind": "import",
       "resolved": "src/lib/table/generatedItemTablePresets.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalTable.tsx",
-      "specifier": "../proposalStatusConfig",
-      "kind": "import",
-      "resolved": "src/components/proposal/proposalStatusConfig.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27996,7 +28107,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 71
+      "imports": 72
     },
     {
       "name": "vitest",
@@ -28028,7 +28139,7 @@
     },
     {
       "name": "react-dom",
-      "imports": 7
+      "imports": 8
     },
     {
       "name": "@dnd-kit/sortable",
