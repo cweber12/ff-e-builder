@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(table): route Proposal swatch cell through shared generated item materials cell
 - refactor(table): share generated item row drag handle between FF&E and Proposal
 - fix(table): match FF&E generated item image sizes to Proposal
+- refactor(table): share generated item row action trigger between FF&E and Proposal
 
 - refactor(table): share generated item Rendering and Plan image cells
 

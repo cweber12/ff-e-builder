@@ -77,6 +77,7 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemActionTrigger } from '../../shared/table/GeneratedItemActionControls';
 import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
 import {
   GeneratedItemEditableMoneyCell,
@@ -1870,18 +1871,14 @@ function ProposalItemActionsMenu({
 
   return (
     <div className="inline-flex">
-      <button
+      <GeneratedItemActionTrigger
         ref={triggerRef}
-        type="button"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Open options for ${itemName}`}
         title={`Open options for ${itemName}`}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-      >
-        <MoreIcon />
-      </button>
+      />
       {open &&
         menuRect &&
         createPortal(

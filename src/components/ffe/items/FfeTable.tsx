@@ -90,6 +90,7 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
+import { GeneratedItemActionTrigger } from '../../shared/table/GeneratedItemActionControls';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
@@ -429,17 +430,14 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
   return (
     <>
       <span className="inline-flex items-center">
-        <button
+        <GeneratedItemActionTrigger
           ref={triggerRef}
-          type="button"
+          variant="inline"
           aria-label={`Open item actions for ${item.itemName}`}
           aria-expanded={open}
           title={`Open item actions for ${item.itemName}`}
           onClick={() => setOpen((current) => !current)}
-          className="rounded px-2 py-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-        >
-          <MoreIcon />
-        </button>
+        />
         {open &&
           menuRect &&
           createPortal(
