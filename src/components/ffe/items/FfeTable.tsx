@@ -94,7 +94,10 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
-import { GeneratedItemSizeModal } from '../../shared/table/GeneratedItemSizeModal';
+import {
+  GeneratedItemSizeModal,
+  GeneratedItemSizeTrigger,
+} from '../../shared/table/GeneratedItemSizeModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
 import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } from '../../proposal/revision';
@@ -381,17 +384,12 @@ function EditableDimensionsCell({
   return (
     <>
       <RevisionIndicatorWrap entries={revisionEntries} revisions={revisions}>
-        <button
-          type="button"
+        <GeneratedItemSizeTrigger
+          value={item.dimensions}
+          placeholder="Set dimensions"
+          variant="inline"
           onClick={() => setOpen(true)}
-          className="rounded-md px-1 py-0.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-        >
-          {item.dimensions?.trim() ? (
-            item.dimensions
-          ) : (
-            <span className="text-gray-400">Set dimensions</span>
-          )}
-        </button>
+        />
       </RevisionIndicatorWrap>
       <GeneratedItemSizeModal
         open={open}

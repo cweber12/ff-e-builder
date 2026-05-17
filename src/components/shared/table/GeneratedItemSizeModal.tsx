@@ -1,4 +1,5 @@
 import type { SizeMode } from '../../../types';
+import { cn } from '../../../lib/utils';
 import { DimensionEditorModal } from '../modals/DimensionEditorModal';
 
 type GeneratedItemSizeInput = Partial<{
@@ -41,5 +42,49 @@ export function GeneratedItemSizeModal({
       onClose={onClose}
       onSave={onSave}
     />
+  );
+}
+
+type GeneratedItemSizeTriggerProps = {
+  value: string | null | undefined;
+  placeholder: string;
+  onClick: () => void;
+  variant?: 'inline' | 'table';
+};
+
+export function GeneratedItemSizeTrigger({
+  value,
+  placeholder,
+  onClick,
+  variant = 'table',
+}: GeneratedItemSizeTriggerProps) {
+  const displayValue = value?.trim() ?? '';
+  const hasValue = displayValue.length > 0;
+
+  if (variant === 'inline') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="rounded-md px-1 py-0.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      >
+        {hasValue ? displayValue : <span className="text-gray-400">{placeholder}</span>}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+        hasValue
+          ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
+          : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
+      )}
+    >
+      {hasValue ? displayValue : placeholder}
+    </button>
   );
 }

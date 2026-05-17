@@ -84,7 +84,10 @@ import {
 } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
-import { GeneratedItemSizeModal } from '../../shared/table/GeneratedItemSizeModal';
+import {
+  GeneratedItemSizeModal,
+  GeneratedItemSizeTrigger,
+} from '../../shared/table/GeneratedItemSizeModal';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
@@ -1663,18 +1666,11 @@ function ProposalRow({
     size: (
       <td className="px-3 py-2" onClick={stopProp}>
         <div className="flex items-start justify-between gap-1">
-          <button
-            type="button"
+          <GeneratedItemSizeTrigger
+            value={item.sizeLabel}
+            placeholder="Set size"
             onClick={() => setSizeOpen(true)}
-            className={cn(
-              'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-              item.sizeLabel
-                ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
-                : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
-            )}
-          >
-            {item.sizeLabel || 'Set size'}
-          </button>
+          />
           {dot('size')}
         </div>
         <SizeModal
