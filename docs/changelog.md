@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(proposal): map Proposal Name to FF&E Name instead of Product Description
+
+- refactor(table): share mobile table field chrome between FF&E and Proposal
+
 - refactor(table): share Proposal revision history indicator UI between Proposal and FF&E
 
 - refactor(api): remove FF&E items and Locations by clearing FF&E visibility

@@ -46,6 +46,15 @@ export function GroupedTableHeader({
   );
 }
 
+export function MobileField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
+      <div className="mt-1 text-gray-950">{children}</div>
+    </div>
+  );
+}
+
 export function StickyGrandTotal({
   label = 'Grand total',
   value,

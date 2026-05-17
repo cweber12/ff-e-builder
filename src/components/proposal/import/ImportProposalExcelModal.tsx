@@ -584,6 +584,7 @@ function buildProposalItem(
 
   return {
     productTag: getValue(row, mapping.productTag),
+    itemName: getValue(row, mapping.itemName),
     plan: getValue(row, mapping.plan),
     drawings: getValue(row, mapping.drawings),
     location: getValue(row, mapping.location),

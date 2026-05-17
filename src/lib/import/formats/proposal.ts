@@ -17,6 +17,7 @@ export type ProposalImportField =
   | 'category'
   | 'rendering'
   | 'productTag'
+  | 'itemName'
   | 'plan'
   | 'drawings'
   | 'location'
@@ -95,6 +96,7 @@ const FIELD_ALIASES: Record<ProposalImportField, string[]> = {
     'ref',
     'reference',
   ],
+  itemName: ['name', 'item name', 'product name', 'item', 'product title'],
   plan: ['plan', 'plan image'],
   drawings: ['drawings', 'drawing', 'drawings / location', 'drawings location'],
   location: ['location', 'area', 'room', 'space'],
@@ -118,6 +120,7 @@ export const PROPOSAL_IMPORT_EMPTY_MAP: ProposalImportColumnMap = {
   category: null,
   rendering: null,
   productTag: null,
+  itemName: null,
   plan: null,
   drawings: null,
   location: null,

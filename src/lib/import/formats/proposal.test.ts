@@ -47,7 +47,8 @@ describe('autoMapProposalColumns', () => {
     const mapping = autoMapProposalColumns([
       { key: 'rendering__2', label: 'RENDERING', columnNumber: 2 },
       { key: 'tag__3', label: 'PRODUCT TAG', columnNumber: 3 },
-      { key: 'plan__4', label: 'PLAN', columnNumber: 4 },
+      { key: 'name__4', label: 'NAME', columnNumber: 4 },
+      { key: 'plan__5', label: 'PLAN', columnNumber: 5 },
       { key: 'desc__7', label: 'PRODUCT DESCRIPTION', columnNumber: 7 },
       { key: 'qty__11', label: 'QUANTITY', columnNumber: 11 },
       { key: 'cost__12', label: 'UNIT COST', columnNumber: 12 },
@@ -55,7 +56,8 @@ describe('autoMapProposalColumns', () => {
 
     expect(mapping.rendering).toBe('rendering__2');
     expect(mapping.productTag).toBe('tag__3');
-    expect(mapping.plan).toBe('plan__4');
+    expect(mapping.itemName).toBe('name__4');
+    expect(mapping.plan).toBe('plan__5');
     expect(mapping.description).toBe('desc__7');
     expect(mapping.quantity).toBe('qty__11');
     expect(mapping.unitCost).toBe('cost__12');

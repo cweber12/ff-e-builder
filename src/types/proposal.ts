@@ -29,6 +29,7 @@ export type ProposalItem = {
   id: string;
   categoryId: string;
   productTag: string;
+  itemName: string;
   plan: string;
   drawings: string;
   location: string;

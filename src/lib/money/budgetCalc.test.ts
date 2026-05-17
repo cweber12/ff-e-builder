@@ -35,6 +35,7 @@ const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem =
   id: 'to1',
   categoryId: 'cat1',
   productTag: 'MW-1',
+  itemName: '',
   plan: '',
   drawings: '',
   location: '',

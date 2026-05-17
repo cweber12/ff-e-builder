@@ -73,6 +73,7 @@ const proposalCategoriesWithItems = [
         id: 'proposal-item-1',
         categoryId: 'proposal-category-1',
         productTag: 'P-42',
+        itemName: 'Reception millwork',
         plan: '',
         drawings: '',
         location: '',

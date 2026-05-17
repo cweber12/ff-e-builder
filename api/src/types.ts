@@ -388,6 +388,7 @@ export type UpdateProposalCategoryInput = z.infer<typeof UpdateProposalCategoryS
 export const CreateProposalItemSchema = z.object({
   category_id: z.string().uuid().optional(),
   product_tag: z.string().max(100).default(''),
+  item_name: z.string().max(255).default(''),
   plan: z.string().max(255).default(''),
   drawings: z.string().max(255).default(''),
   location: z.string().max(255).default(''),

@@ -114,6 +114,7 @@ const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem =
   id: 'pi1',
   categoryId: 'pc1',
   productTag: 'P-001',
+  itemName: 'Custom lounge chair',
   plan: '',
   drawings: 'A-101',
   location: 'Living Room',

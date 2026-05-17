@@ -84,7 +84,11 @@ import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { MaterialBadges, MaterialLibraryModal } from '../../materials';
 import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
-import { GroupedTableHeader, GroupedTableSection } from '../../shared/table/TableViewWrappers';
+import {
+  GroupedTableHeader,
+  GroupedTableSection,
+  MobileField,
+} from '../../shared/table/TableViewWrappers';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
@@ -183,7 +187,7 @@ const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableIt
 
 const ffeRevisionColumnKeys: Record<FfeRevisionColumnKey, string[]> = {
   itemIdTag: ['product_tag', 'productTag'],
-  itemName: ['description'],
+  itemName: ['itemName', 'description'],
   dimensions: ['size_label', 'size'],
   qty: ['quantity'],
   unitCostCents: ['unit_cost_cents', 'unitCostCents'],
@@ -1259,15 +1263,6 @@ function MobileItemCards({
           </div>
         </article>
       ))}
-    </div>
-  );
-}
-
-function MobileField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <div className="mt-1 text-gray-950">{children}</div>
     </div>
   );
 }

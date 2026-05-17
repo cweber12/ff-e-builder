@@ -110,6 +110,7 @@ export interface RawProposalItem {
   id: string;
   category_id: string;
   product_tag: string;
+  item_name?: string;
   plan: string;
   drawings: string;
   location: string;
@@ -331,6 +332,7 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   id: r.id,
   categoryId: r.category_id,
   productTag: r.product_tag,
+  itemName: r.item_name ?? r.description ?? r.product_tag ?? '',
   plan: r.plan,
   drawings: r.drawings,
   location: r.location,

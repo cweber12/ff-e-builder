@@ -249,7 +249,16 @@ router.patch('/proposal/items/:id', async (c) => {
     RETURNING *
   `;
   if (!updateRows[0]) return c.json({ error: 'Conflict or not found' }, 409);
-  await mirrorProposalItemToGeneratedItem(sql, id);
+  await mirrorProposalItemToGeneratedItem(sql, id, { itemName: d.item_name });
+
+  const generatedItemRows = await sql`
+    SELECT i.item_name
+    FROM proposal_item_generated_item_links link
+    JOIN items i ON i.id = link.item_id
+    WHERE link.proposal_item_id = ${id}
+    LIMIT 1
+  `;
+  const generatedItem = generatedItemRows[0] as { item_name?: string } | undefined;
 
   // Update the Revision Snapshot for this item when relevant.
   if (openRev && cl && priceAffectingEdit) {
@@ -294,7 +303,12 @@ router.patch('/proposal/items/:id', async (c) => {
     `;
   }
 
-  return c.json({ item: updateRows[0] });
+  return c.json({
+    item: {
+      ...(updateRows[0] as Record<string, unknown>),
+      item_name: generatedItem?.item_name ?? d.item_name ?? '',
+    },
+  });
 });
 
 router.post('/proposal/items/:id/add-to-ffe', async (c) => {

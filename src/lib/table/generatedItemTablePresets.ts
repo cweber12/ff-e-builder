@@ -65,6 +65,7 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
   hideableColumnIds: [
     'rendering',
     'productTag',
+    'itemName',
     'plan',
     'drawings',
     'location',
@@ -77,6 +78,7 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
   columnMeta: {
     rendering: { label: 'Rendering', className: 'w-40 min-w-40' },
     productTag: { label: 'ID', className: 'min-w-36' },
+    itemName: { label: 'Name', className: 'min-w-48' },
     plan: { label: 'Plan', className: 'w-36 min-w-36' },
     drawings: { label: 'Drawings', className: 'min-w-36' },
     location: { label: 'Location', className: 'min-w-36' },

@@ -7,7 +7,7 @@ export type GeneratedItemChangeFieldMeta = {
 export const GENERATED_ITEM_CHANGE_FIELDS = {
   ffe: {
     itemName: {
-      columnKey: 'description',
+      columnKey: 'itemName',
       columnLabel: 'Name',
       isPriceAffecting: false,
     },
@@ -61,6 +61,11 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
     productTag: {
       columnKey: 'productTag',
       columnLabel: 'ID',
+      isPriceAffecting: false,
+    },
+    itemName: {
+      columnKey: 'itemName',
+      columnLabel: 'Name',
       isPriceAffecting: false,
     },
     plan: {

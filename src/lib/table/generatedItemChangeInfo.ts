@@ -120,6 +120,7 @@ export function proposalPatchToGeneratedItemChangeInfo(
   }
   const textFields = [
     { key: 'productTag', meta: changeFields.productTag },
+    { key: 'itemName', meta: changeFields.itemName },
     { key: 'plan', meta: changeFields.plan },
     { key: 'drawings', meta: changeFields.drawings },
     { key: 'location', meta: changeFields.location },

@@ -76,6 +76,7 @@ import { DimensionEditorModal } from '../../shared/modals/DimensionEditorModal';
 import {
   GroupedTableHeader,
   GroupedTableSection,
+  MobileField,
   TableViewStack,
 } from '../../shared/table/TableViewWrappers';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
@@ -959,6 +960,7 @@ function ProposalCategorySection({
               createItem.mutate({
                 sortOrder: items.length,
                 productTag: `${categoryName.slice(0, 2).toUpperCase()}-${items.length + 1}`,
+                itemName: '',
               })
             }
             onRestoreDefault={onRestoreDefault}
@@ -1623,6 +1625,14 @@ function ProposalRow({
         indicator={dot('productTag')}
       />
     ),
+    itemName: (
+      <EditableCell
+        value={item.itemName}
+        onSave={(itemName) => onSave({ itemName })}
+        className="min-w-48"
+        indicator={dot('itemName')}
+      />
+    ),
     plan: (
       <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
         <ImageFrame
@@ -1827,7 +1837,7 @@ function ProposalRow({
       )}
       <td className={cn('px-1 py-2', stickyOptionsCellClassName)} onClick={stopProp}>
         <ProposalItemActionsMenu
-          itemName={item.productTag || item.description || 'item'}
+          itemName={item.itemName || item.productTag || item.description || 'item'}
           otherCategories={otherCategories}
           onViewDetails={onRowClick}
           onDuplicate={onDuplicate}
@@ -2051,7 +2061,7 @@ function MobileProposalCards({
                     onClick={() => onItemClick(item)}
                     className="truncate text-base font-semibold text-gray-950 hover:underline text-left"
                   >
-                    {item.productTag || item.description || 'Unnamed item'}
+                    {item.itemName || item.productTag || item.description || 'Unnamed item'}
                   </button>
                   {item.location && (
                     <p className="mt-0.5 truncate text-sm text-gray-500">{item.location}</p>
@@ -2059,7 +2069,7 @@ function MobileProposalCards({
                 </div>
               </div>
               <ProposalItemActionsMenu
-                itemName={item.productTag || item.description || 'item'}
+                itemName={item.itemName || item.productTag || item.description || 'item'}
                 otherCategories={otherCategories}
                 onViewDetails={() => onItemClick(item)}
                 onDuplicate={() => onDuplicate(item)}
@@ -2090,15 +2100,6 @@ function MobileProposalCards({
           </article>
         );
       })}
-    </div>
-  );
-}
-
-function MobileField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <div className="mt-1 text-gray-950">{children}</div>
     </div>
   );
 }

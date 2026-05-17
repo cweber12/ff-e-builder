@@ -46,6 +46,7 @@ type ProposalItemSource = {
   category_id: string;
   project_id: string;
   item_id: string | null;
+  item_name?: string | null;
   product_tag: string | null;
   plan: string | null;
   drawings: string | null;
@@ -80,7 +81,7 @@ function revisionChangesForFfePatch(input: UpdateItemInput, before: FfeRevisionC
 
   if (input.item_name != null && input.item_name !== before.itemName) {
     changes.push({
-      columnKey: 'description',
+      columnKey: 'itemName',
       previousValue: before.itemName,
       newValue: input.item_name,
       isPriceAffecting: false,
@@ -276,7 +277,7 @@ async function insertProposalItemMirrorForGeneratedItem(
       '',
       '',
       '',
-      ${input.item_name},
+      ${input.description ?? ''},
       ${input.notes ?? ''},
       ${input.dimensions ?? ''},
       'imperial',
@@ -420,7 +421,12 @@ async function insertGeneratedItemMirrorForProposalItem(
     )
     VALUES (
       ${roomId},
-      COALESCE(NULLIF(${input.description ?? ''}, ''), NULLIF(${input.product_tag ?? ''}, ''), 'Proposal item'),
+      COALESCE(
+        NULLIF(${input.item_name ?? ''}, ''),
+        NULLIF(${input.description ?? ''}, ''),
+        NULLIF(${input.product_tag ?? ''}, ''),
+        'Proposal item'
+      ),
       NULLIF(${input.description ?? ''}, ''),
       NULL,
       NULLIF(${input.product_tag ?? ''}, ''),
@@ -544,12 +550,16 @@ export async function createGeneratedItemFromProposal(
   await insertGeneratedItemMirrorForProposalItem(sql, proposalItem.id, roomId, categoryId, input, {
     isFfeVisible: isFurniture,
   });
-  return rows[0] as DbRow;
+  return {
+    ...(rows[0] as DbRow),
+    item_name: input.item_name || input.description || input.product_tag || 'Proposal item',
+  } as DbRow;
 }
 
 function proposalItemSourceToCreateInput(source: ProposalItemSource): CreateProposalItemInput {
   return {
     product_tag: source.product_tag ?? '',
+    item_name: source.item_name ?? source.description ?? source.product_tag ?? '',
     plan: source.plan ?? '',
     drawings: source.drawings ?? '',
     location: source.location ?? '',
@@ -575,10 +585,12 @@ export async function addProposalItemToFfe(sql: Sql, proposalItemId: string) {
     SELECT
       pi.*,
       pc.project_id,
-      link.item_id
+      link.item_id,
+      i.item_name
     FROM proposal_items pi
     JOIN proposal_categories pc ON pc.id = pi.category_id
     LEFT JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
+    LEFT JOIN items i ON i.id = link.item_id
     WHERE pi.id = ${proposalItemId}
     LIMIT 1
   `;
@@ -628,7 +640,7 @@ export async function mirrorGeneratedItemToProposalItem(
     SET
       category_id      = i.proposal_category_id,
       product_tag      = COALESCE(i.product_tag, ''),
-      description      = i.item_name,
+      description      = COALESCE(i.description, ''),
       notes            = COALESCE(i.notes, ''),
       size_label       = COALESCE(i.dimensions, ''),
       quantity         = CASE WHEN ${options.lockPriceFields === true}::boolean THEN pi.quantity ELSE i.qty::numeric END,
@@ -645,12 +657,21 @@ export async function mirrorGeneratedItemToProposalItem(
   `;
 }
 
-export async function mirrorProposalItemToGeneratedItem(sql: Sql, proposalItemId: string) {
+export async function mirrorProposalItemToGeneratedItem(
+  sql: Sql,
+  proposalItemId: string,
+  options: { itemName?: string | null } = {},
+) {
   await sql`
     UPDATE items i
     SET
       proposal_category_id = pi.category_id,
-      item_name            = COALESCE(NULLIF(pi.description, ''), NULLIF(pi.product_tag, ''), i.item_name),
+      item_name            = COALESCE(
+                               NULLIF(${options.itemName ?? ''}, ''),
+                               NULLIF(i.item_name, ''),
+                               NULLIF(pi.product_tag, ''),
+                               'Proposal item'
+                             ),
       description          = NULLIF(pi.description, ''),
       item_id_tag          = NULLIF(pi.product_tag, ''),
       product_tag          = pi.product_tag,
@@ -861,6 +882,7 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         i.id,
         i.proposal_category_id AS category_id,
         COALESCE(NULLIF(i.product_tag, ''), i.item_id_tag, '') AS product_tag,
+        i.item_name,
         i.plan,
         i.drawings,
         i.location,
@@ -922,6 +944,7 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         pi.id,
         pi.category_id,
         pi.product_tag,
+        COALESCE(NULLIF(pi.description, ''), NULLIF(pi.product_tag, ''), 'Proposal item') AS item_name,
         pi.plan,
         pi.drawings,
         pi.location,
@@ -983,6 +1006,7 @@ export async function selectCompatibleProposalItemsByCategory(sql: Sql, category
   return sql`
     SELECT
       pi.*,
+      COALESCE(i.item_name, NULLIF(pi.description, ''), NULLIF(pi.product_tag, ''), 'Proposal item') AS item_name,
       COALESCE(
         json_agg(
           json_build_object(
@@ -999,10 +1023,12 @@ export async function selectCompatibleProposalItemsByCategory(sql: Sql, category
         '[]'::json
       ) AS materials
     FROM  proposal_items pi
+    LEFT JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
+    LEFT JOIN items i ON i.id = link.item_id
     LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id
     LEFT  JOIN materials m                 ON m.id = pim.material_id
     WHERE pi.category_id = ${categoryId}
-    GROUP BY pi.id
+    GROUP BY pi.id, i.item_name
     ORDER BY pi.sort_order, pi.created_at
   `;
 }

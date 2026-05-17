@@ -26,6 +26,7 @@ export type UpdateProposalCategoryInput = {
 
 export type CreateProposalItemInput = {
   productTag?: string;
+  itemName?: string;
   plan?: string;
   drawings?: string;
   location?: string;
@@ -70,6 +71,7 @@ const proposalCategoryUpdatePayload = (patch: UpdateProposalCategoryInput) => ({
 
 const proposalItemCreatePayload = (input: CreateProposalItemInput) => ({
   product_tag: input.productTag ?? '',
+  item_name: input.itemName ?? '',
   plan: input.plan ?? '',
   drawings: input.drawings ?? '',
   location: input.location ?? '',
@@ -92,6 +94,7 @@ const proposalItemCreatePayload = (input: CreateProposalItemInput) => ({
 const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
   category_id: patch.categoryId,
   product_tag: patch.productTag,
+  item_name: patch.itemName,
   plan: patch.plan,
   drawings: patch.drawings,
   location: patch.location,
