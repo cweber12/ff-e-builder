@@ -82,6 +82,7 @@ import {
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
@@ -1608,15 +1609,13 @@ function ProposalRow({
 
   const cellRenderMap: Record<string, ReactNode> = {
     rendering: (
-      <td className="w-40 min-w-40 px-3 py-2" onClick={stopProp}>
-        <ImageFrame
-          entityType="proposal_item"
-          entityId={item.id}
-          alt={`${item.productTag || 'Proposal'} rendering`}
-          className="h-20 w-[125px] max-w-full"
-          compact
-        />
-      </td>
+      <GeneratedItemImageCell
+        view="proposal"
+        kind="rendering"
+        entityId={item.id}
+        alt={`${item.productTag || 'Proposal'} rendering`}
+        onClick={stopProp}
+      />
     ),
     productTag: (
       <EditableCell
@@ -1634,15 +1633,13 @@ function ProposalRow({
       />
     ),
     plan: (
-      <td className="w-36 min-w-36 px-3 py-2" onClick={stopProp}>
-        <ImageFrame
-          entityType="proposal_plan"
-          entityId={item.id}
-          alt={`${item.productTag || 'Proposal'} plan`}
-          className="h-20 w-[110px] max-w-full"
-          compact
-        />
-      </td>
+      <GeneratedItemImageCell
+        view="proposal"
+        kind="plan"
+        entityId={item.id}
+        alt={`${item.productTag || 'Proposal'} plan`}
+        onClick={stopProp}
+      />
     ),
     drawings: (
       <EditableCell

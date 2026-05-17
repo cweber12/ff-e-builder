@@ -93,6 +93,7 @@ import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
 import { RevisionHistoryDot } from '../../proposal/revision';
@@ -119,7 +120,8 @@ function defaultColumnClassName(columnId: string) {
 }
 
 function defaultColumnWraps(columnId: string) {
-  return DEFAULT_COLUMN_META[columnId as keyof typeof DEFAULT_COLUMN_META]?.wraps === true;
+  const meta = DEFAULT_COLUMN_META[columnId as keyof typeof DEFAULT_COLUMN_META];
+  return meta != null && 'wraps' in meta && meta.wraps === true;
 }
 
 type FfeTableProps = {
@@ -647,13 +649,11 @@ const createColumns = (
     id: 'image',
     header: 'Rendering',
     cell: ({ row }) => (
-      <ImageFrame
-        entityType="item"
+      <GeneratedItemImageFrame
+        view="ffe"
+        kind="rendering"
         entityId={row.original.id}
         alt={row.original.itemName}
-        fallbackUrl={null}
-        className="h-12 aspect-[117/75]"
-        compact
       />
     ),
   },
@@ -661,13 +661,11 @@ const createColumns = (
     id: 'plan',
     header: 'Plan',
     cell: ({ row }) => (
-      <ImageFrame
-        entityType="item_plan"
+      <GeneratedItemImageFrame
+        view="ffe"
+        kind="plan"
         entityId={row.original.id}
         alt={`${row.original.itemName} plan`}
-        fallbackUrl={null}
-        className="h-12 aspect-[103/75]"
-        compact
       />
     ),
   },

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-17T04:14:44.613Z",
+  "generatedAt": "2026-05-17T04:29:26.177Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 238,
-      "internalImports": 737,
-      "externalImports": 258,
+      "files": 239,
+      "internalImports": 741,
+      "externalImports": 259,
       "unresolvedImports": 0
     },
     {
@@ -161,7 +161,7 @@
       "area": "ffe",
       "files": 24,
       "importsIn": 37,
-      "importsOut": 128,
+      "importsOut": 129,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
@@ -169,7 +169,7 @@
       "area": "proposal",
       "files": 24,
       "importsIn": 36,
-      "importsOut": 99,
+      "importsOut": 100,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
@@ -208,9 +208,9 @@
     },
     {
       "area": "shared-ui",
-      "files": 35,
-      "importsIn": 134,
-      "importsOut": 96,
+      "files": 36,
+      "importsIn": 137,
+      "importsOut": 98,
       "dependsOn": ["shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
     },
@@ -242,7 +242,7 @@
     {
       "area": "types",
       "files": 10,
-      "importsIn": 154,
+      "importsIn": 155,
       "importsOut": 21,
       "dependsOn": [],
       "importedBy": [
@@ -360,7 +360,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 35
+          "files": 36
         }
       ]
     },
@@ -1227,6 +1227,16 @@
       "importerArea": "ffe",
       "specifier": "../../shared/table/CustomColumnHeader",
       "resolved": "src/components/shared/table/CustomColumnHeader.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../shared/table/GeneratedItemImageCell",
+      "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -3355,6 +3365,16 @@
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
+      "specifier": "../../shared/table/GeneratedItemImageCell",
+      "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "importerArea": "proposal",
       "specifier": "../../shared/modals/AddColumnModal",
       "resolved": "src/components/shared/modals/AddColumnModal.tsx",
       "resolvedArea": "shared-ui",
@@ -4434,6 +4454,16 @@
     },
     {
       "importer": "src/components/shared/table/CustomColumnHeader.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: shared code uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -5806,7 +5836,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-ui",
-      "imports": 28,
+      "imports": 29,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -5942,7 +5972,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-ui",
-      "imports": 15,
+      "imports": 16,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6449,7 +6479,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "types",
-      "imports": 11,
+      "imports": 12,
       "reviewNote": "expected: shared code uses shared types",
       "examples": [
         {
@@ -7300,9 +7330,9 @@
     },
     {
       "path": "src/components",
-      "files": 108,
-      "importsIn": 225,
-      "importsOut": 507,
+      "files": 109,
+      "importsIn": 228,
+      "importsOut": 512,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7405,7 +7435,7 @@
     {
       "path": "src/types",
       "files": 10,
-      "importsIn": 154,
+      "importsIn": 155,
       "importsOut": 23,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -8477,6 +8507,14 @@
           "specifier": "../../shared/table/CustomColumnHeader",
           "kind": "import",
           "resolved": "src/components/shared/table/CustomColumnHeader.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "../../shared/table/GeneratedItemImageCell",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -11563,6 +11601,14 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "../../shared/table/GeneratedItemImageCell",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
           "specifier": "../../shared/modals/AddColumnModal",
           "kind": "import",
           "resolved": "src/components/shared/modals/AddColumnModal.tsx",
@@ -12812,6 +12858,41 @@
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
+          "specifier": "../image/ImageFrame",
+          "kind": "import",
+          "resolved": "src/components/shared/image/ImageFrame.tsx",
           "externalPackage": null,
           "asset": false
         }
@@ -20166,6 +20247,14 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "../../shared/table/GeneratedItemImageCell",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
       "specifier": "../../shared/table/SortableColHeader",
       "kind": "import",
       "resolved": "src/components/shared/table/SortableColHeader.tsx",
@@ -22478,6 +22567,14 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "../../shared/table/GeneratedItemImageCell",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
       "specifier": "../../shared/modals/AddColumnModal",
       "kind": "import",
       "resolved": "src/components/shared/modals/AddColumnModal.tsx",
@@ -23441,6 +23538,30 @@
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemImageCell.tsx",
+      "specifier": "../image/ImageFrame",
+      "kind": "import",
+      "resolved": "src/components/shared/image/ImageFrame.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -28107,7 +28228,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 72
+      "imports": 73
     },
     {
       "name": "vitest",
