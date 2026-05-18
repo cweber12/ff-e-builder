@@ -69,6 +69,7 @@ import {
 } from '../../../lib/money';
 import type { UpdateProposalItemInput } from '../../../lib/api';
 import {
+  ColumnNavArrows,
   GroupedTableHeader,
   GroupedTableSection,
   MobileField,
@@ -882,8 +883,8 @@ function ProposalCategorySection({
 
   return (
     <GroupedTableSection>
-      <GroupedTableHeader className="flex-wrap gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+      <GroupedTableHeader>
+        <div className="sticky left-4 flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
             onClick={onToggle}
@@ -909,7 +910,8 @@ function ProposalCategorySection({
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="sticky right-4 flex items-center gap-2">
+          {!collapsed && !isMobile && <ColumnNavArrows />}
           <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
             {formatMoney(cents(subtotalCents))}
           </span>
@@ -942,14 +944,14 @@ function ProposalCategorySection({
       </GroupedTableHeader>
 
       {!collapsed && !isMobile && (
-        <div className="overflow-x-auto">
+        <div className="min-w-0">
           <table
             className={cn(
               hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
               'w-full border-collapse text-left text-sm',
             )}
           >
-            <thead className="sticky top-0 z-30 bg-surface text-xs">
+            <thead className="sticky top-10 z-30 bg-surface text-xs">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}

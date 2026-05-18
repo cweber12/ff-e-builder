@@ -83,9 +83,11 @@ import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { MaterialLibraryModal } from '../../materials';
 import {
+  ColumnNavArrows,
   GroupedTableHeader,
   GroupedTableSection,
   MobileField,
+  TableViewStack,
 } from '../../shared/table/TableViewWrappers';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { FfeItemDetailPanel } from './FfeItemDetailPanel';
@@ -1726,7 +1728,7 @@ function RoomItemsSection({
   return (
     <GroupedTableSection>
       <GroupedTableHeader>
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="sticky left-4 flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
             onClick={onToggle}
@@ -1757,32 +1759,35 @@ function RoomItemsSection({
             </span>
           )}
         </div>
-        <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
-          {formatMoney(cents(subtotal))}
-        </span>
-        <div className="flex items-center gap-1">
-          <RoomActionsMenu
-            room={room}
-            rooms={rooms}
-            {...(project !== undefined ? { project } : {})}
-            columnDefs={columnDefs}
-            hiddenDefaults={hiddenDefaultColumns}
-            onDeleteRoom={() => onDeleteRoom(room)}
-            onAddItem={() => setAddDrawerOpen(true)}
-            onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
-            onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
-          />
-          {!isMobile && !collapsed && (
-            <button
-              type="button"
-              aria-label="Expand table view"
-              title="Expand table view"
-              onClick={() => setIsExpanded(true)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-            >
-              <ExpandIcon />
-            </button>
-          )}
+        <div className="sticky right-4 flex items-center gap-2">
+          {!isMobile && !collapsed && <ColumnNavArrows />}
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
+            {formatMoney(cents(subtotal))}
+          </span>
+          <div className="flex items-center gap-1">
+            <RoomActionsMenu
+              room={room}
+              rooms={rooms}
+              {...(project !== undefined ? { project } : {})}
+              columnDefs={columnDefs}
+              hiddenDefaults={hiddenDefaultColumns}
+              onDeleteRoom={() => onDeleteRoom(room)}
+              onAddItem={() => setAddDrawerOpen(true)}
+              onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+              onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
+            />
+            {!isMobile && !collapsed && (
+              <button
+                type="button"
+                aria-label="Expand table view"
+                title="Expand table view"
+                onClick={() => setIsExpanded(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                <ExpandIcon />
+              </button>
+            )}
+          </div>
         </div>
       </GroupedTableHeader>
 
@@ -1851,40 +1856,38 @@ function RoomItemsSection({
 
       {!collapsed && !isMobile && (
         <div className="relative flex items-stretch">
-          <div className="flex w-9 shrink-0 items-center justify-center border-r border-gray-100 bg-white">
-            <button
-              type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              onClick={onToggleImage}
-              aria-expanded={!imageCollapsed}
-              aria-label={imageCollapsed ? 'Show location image' : 'Hide location image'}
-              title={imageCollapsed ? 'Show location image' : 'Hide location image'}
-            >
-              <ChevronIcon direction={imageCollapsed ? 'right' : 'left'} />
-            </button>
-          </div>
-          {!imageCollapsed && (
-            <div className="h-[22rem] w-80 min-w-48 max-w-[50%] shrink-0 resize-x overflow-auto border-r border-gray-100 p-3 xl:w-96">
-              <ImageFrame
-                entityType="room"
-                entityId={room.id}
-                alt={`${room.name} location`}
-                className="h-full w-full"
-              />
+          <aside className="sticky left-0 top-10 z-30 flex shrink-0 self-start">
+            <div className="flex w-9 shrink-0 items-center justify-center border-r border-gray-100 bg-white">
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                onClick={onToggleImage}
+                aria-expanded={!imageCollapsed}
+                aria-label={imageCollapsed ? 'Show location image' : 'Hide location image'}
+                title={imageCollapsed ? 'Show location image' : 'Hide location image'}
+              >
+                <ChevronIcon direction={imageCollapsed ? 'right' : 'left'} />
+              </button>
             </div>
-          )}
-          <div
-            tabIndex={0}
-            aria-label={`${room.name} items table`}
-            className="max-h-[22rem] min-w-0 flex-1 overflow-auto"
-          >
+            {!imageCollapsed && (
+              <div className="h-72 w-72 shrink-0 border-r border-gray-100 bg-white p-3 xl:w-80">
+                <ImageFrame
+                  entityType="room"
+                  entityId={room.id}
+                  alt={`${room.name} location`}
+                  className="h-full w-full"
+                />
+              </div>
+            )}
+          </aside>
+          <div tabIndex={0} aria-label={`${room.name} items table`} className="min-w-0 flex-1">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
               <table className="w-full min-w-[1180px] border-collapse text-sm">
-                <thead className="sticky top-0 z-30 text-left bg-surface">
+                <thead className="sticky top-10 z-30 text-left bg-surface">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       <SortableContext
@@ -2232,7 +2235,7 @@ export function FfeTableView({
   }
 
   return (
-    <div className={cn('flex flex-1 flex-col overflow-auto', className)}>
+    <TableViewStack className={className}>
       {sortedRooms.map((room) => (
         <RoomItemsSection
           key={room.id}
@@ -2277,7 +2280,7 @@ export function FfeTableView({
           }
         }}
       />
-    </div>
+    </TableViewStack>
   );
 }
 

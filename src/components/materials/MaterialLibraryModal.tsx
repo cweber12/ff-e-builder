@@ -32,7 +32,12 @@ type MaterialLibraryModalProps = {
 export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
   const { open, onClose } = props;
   return (
-    <Modal open={open} onClose={onClose} title="Finish Library" className="max-w-5xl">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Finish Library"
+      className="!max-w-[min(96vw,96rem)] !w-[min(96vw,96rem)]"
+    >
       <MaterialLibraryPanel {...props} />
     </Modal>
   );
@@ -77,6 +82,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const [pendingAssignmentId, setPendingAssignmentId] = useState<string | null>(null);
   const [addedMaterialName, setAddedMaterialName] = useState<string | null>(null);
   const [removedMaterialName, setRemovedMaterialName] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const assignedIds = useMemo(
     () => new Set(activeItem?.materials.map((m) => m.id) ?? []),
@@ -105,6 +111,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     setDraft({ name: '', materialId: '', description: '', swatchFile: null, swatchHex: '#D9D4C8' });
     setEditingId(null);
     setEditingAssigned(false);
+    setShowForm(false);
   };
 
   const startEdit = (material: Material, isAssigned = false) => {
@@ -117,6 +124,14 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       swatchFile: null,
       swatchHex: material.swatchHex || '#D9D4C8',
     });
+    setShowForm(true);
+  };
+
+  const openCreateForm = () => {
+    setEditingId(null);
+    setEditingAssigned(false);
+    setDraft({ name: '', materialId: '', description: '', swatchFile: null, swatchHex: '#D9D4C8' });
+    setShowForm(true);
   };
 
   const saveDraft = async () => {
@@ -192,103 +207,175 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       : 'Add to library';
 
   return (
-    <div className="grid min-w-0 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
-      <MaterialForm
-        draft={draft}
-        editing={Boolean(editingMaterial)}
-        submitLabel={submitLabel}
-        onDraftChange={setDraft}
-        onCancel={editingId ? resetDraft : undefined}
-        onSubmit={() => void saveDraft()}
-      />
+    <div className="grid min-w-0 gap-5">
+      {activeItem && (
+        <AssignedMaterialsStrip
+          materials={assignedMaterials}
+          addedName={addedMaterialName}
+          removedName={removedMaterialName}
+          onEdit={(m) => startEdit(m, true)}
+          onRemove={(m) => void removeAssignedMaterial(m)}
+        />
+      )}
 
-      <section className="flex min-h-[24rem] max-h-[34rem] min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="grid gap-3 border-b border-gray-100 px-4 py-3">
-          <h3 className="min-w-0 text-sm font-semibold text-gray-950">Project library</h3>
-          {activeItem && (
-            <div className="grid min-w-0 gap-3 rounded-lg border border-gray-200 bg-surface-muted p-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Assigned to item
-              </span>
-              {assignedMaterials.length ? (
-                <div className="grid min-w-0 gap-2 sm:grid-cols-2">
-                  {assignedMaterials.map((material) => (
-                    <span
-                      key={material.id}
-                      className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
-                    >
-                      <MaterialSwatchImage material={material} size="sm" />
-                      <span className="min-w-0 truncate">{material.name}</span>
-                      <button
-                        type="button"
-                        className="rounded px-1 py-0.5 font-semibold text-gray-500 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                        onClick={() => startEdit(material, true)}
-                        aria-label={`Edit ${material.name}`}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded px-1 py-0.5 font-semibold text-danger-700 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                        onClick={() => void removeAssignedMaterial(material)}
-                        aria-label={`Remove ${material.name} from item`}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No materials assigned yet.</p>
-              )}
-              {removedMaterialName && (
-                <p role="status" className="text-xs font-medium text-danger-700">
-                  Removed {removedMaterialName} from this item.
-                </p>
-              )}
-              {addedMaterialName && (
-                <p role="status" className="text-xs font-medium text-brand-700">
-                  Added {addedMaterialName} to this item.
-                </p>
-              )}
-            </div>
-          )}
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search library"
-            className={`${inputClassName} min-w-0`}
-            aria-label="Search project library"
+      <div className={`grid min-w-0 gap-5 ${showForm ? 'lg:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
+        {showForm && (
+          <MaterialForm
+            draft={draft}
+            editing={Boolean(editingMaterial)}
+            submitLabel={submitLabel}
+            onDraftChange={setDraft}
+            onCancel={resetDraft}
+            onSubmit={() => void saveDraft()}
           />
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4">
-          {materials.isLoading ? (
-            <p className="text-sm text-gray-500">Loading library...</p>
-          ) : visibleMaterials.length ? (
-            <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3">
-              {visibleMaterials.map((material) => (
-                <MaterialPickerCard
-                  key={material.id}
-                  material={material}
-                  assigning={pendingAssignmentId === material.id}
-                  assignable={Boolean(activeItem)}
-                  onSelect={() => void assignExistingMaterial(material)}
-                  onEdit={() => startEdit(material, false)}
-                />
-              ))}
+        )}
+
+        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <div className="flex items-baseline gap-3">
+              <h3 className="text-sm font-semibold text-gray-950">Project library</h3>
+              <span className="text-xs font-medium text-gray-500">
+                {visibleMaterials.length} {visibleMaterials.length === 1 ? 'item' : 'items'}
+              </span>
             </div>
-          ) : (
-            <p className="rounded-md border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
-              {searchQuery.trim()
-                ? 'No library items match the current search.'
-                : activeItem
-                  ? 'All library items are already assigned to this item.'
-                  : 'Add the first item to build the project library.'}
-            </p>
-          )}
-        </div>
-      </section>
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or ID…"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none sm:w-80"
+                aria-label="Search project library"
+              />
+              {!showForm && (
+                <Button type="button" size="sm" onClick={openCreateForm}>
+                  + New material
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface-muted/40 p-5">
+            {materials.isLoading ? (
+              <p className="text-sm text-gray-500">Loading library...</p>
+            ) : visibleMaterials.length ? (
+              <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-4">
+                {visibleMaterials.map((material) => (
+                  <MaterialPickerCard
+                    key={material.id}
+                    material={material}
+                    assigning={pendingAssignmentId === material.id}
+                    assignable={Boolean(activeItem)}
+                    onSelect={() => void assignExistingMaterial(material)}
+                    onEdit={() => startEdit(material, false)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-10 text-center text-sm text-gray-500">
+                {searchQuery.trim()
+                  ? 'No library items match the current search.'
+                  : activeItem
+                    ? 'All library items are already assigned to this item.'
+                    : 'Add the first item to build the project library.'}
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
+  );
+}
+
+function AssignedMaterialsStrip({
+  materials,
+  addedName,
+  removedName,
+  onEdit,
+  onRemove,
+}: {
+  materials: Material[];
+  addedName: string | null;
+  removedName: string | null;
+  onEdit: (material: Material) => void;
+  onRemove: (material: Material) => void;
+}) {
+  return (
+    <section className="rounded-lg border border-brand-200 bg-brand-50/40 px-5 py-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <h3 className="text-sm font-semibold text-brand-800">Assigned to this item</h3>
+          <span className="text-xs font-medium text-brand-700/80">
+            {materials.length} {materials.length === 1 ? 'material' : 'materials'}
+          </span>
+        </div>
+        {(addedName || removedName) && (
+          <p
+            role="status"
+            className={`text-xs font-medium ${removedName ? 'text-danger-700' : 'text-brand-700'}`}
+          >
+            {removedName ? `Removed ${removedName}` : `Added ${addedName}`}
+          </p>
+        )}
+      </div>
+      {materials.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {materials.map((material) => (
+            <AssignedMaterialChip
+              key={material.id}
+              material={material}
+              onEdit={() => onEdit(material)}
+              onRemove={() => onRemove(material)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-brand-800/70">
+          No materials assigned yet — pick from the library below to add some.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function AssignedMaterialChip({
+  material,
+  onEdit,
+  onRemove,
+}: {
+  material: Material;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <span className="group inline-flex max-w-xs items-center gap-2 rounded-full border border-brand-200 bg-white py-1 pl-1 pr-1 shadow-sm transition hover:border-brand-400">
+      <MaterialSwatchImage material={material} size="sm" />
+      <span className="flex min-w-0 flex-col leading-tight">
+        <span className="truncate text-sm font-semibold text-gray-950">{material.name}</span>
+        {material.materialId && (
+          <span className="truncate font-mono text-[10px] uppercase tracking-wider text-gray-500">
+            {material.materialId}
+          </span>
+        )}
+      </span>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-label={`Edit ${material.name}`}
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="rounded-full p-1 text-gray-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-label={`Remove ${material.name} from item`}
+        title="Remove from item"
+      >
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
+          <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+        </svg>
+      </button>
+    </span>
   );
 }
 
@@ -445,46 +532,58 @@ function MaterialPickerCard({
 
   return (
     <article
-      role="button"
-      tabIndex={0}
-      aria-label={assignable ? `Add ${material.name} to item` : `View ${material.name}`}
+      role={assignable ? 'button' : undefined}
+      tabIndex={assignable ? 0 : -1}
+      aria-label={assignable ? `Add ${material.name} to item` : material.name}
       aria-busy={assigning}
-      onClick={onSelect}
-      onKeyDown={handleKeyDown}
-      className="group min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-sm transition hover:border-brand-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      onClick={assignable ? onSelect : undefined}
+      onKeyDown={assignable ? handleKeyDown : undefined}
+      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+        assignable ? 'cursor-pointer' : ''
+      }`}
     >
-      <ImageFrame
-        entityType="material"
-        entityId={material.id}
-        alt={material.name}
-        className="h-28 w-full rounded-none border-0 shadow-none"
-        imageClassName="object-cover"
-        compact
-        placeholderContent={<span className="text-lg text-gray-400">+</span>}
-        disabled
-      />
-      <div className="grid min-w-0 gap-2 p-3">
-        <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-gray-950">{material.name}</h4>
-          <p className="truncate text-xs text-gray-500">
-            {material.materialId || 'No material ID'}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
-          <span className="rounded-full bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700">
-            {assigning ? 'Adding...' : assignable ? 'Click to add' : 'Library item'}
-          </span>
-          <Button
+      <div className="relative">
+        <ImageFrame
+          entityType="material"
+          entityId={material.id}
+          alt={material.name}
+          className="h-24 w-full rounded-none border-0 shadow-none"
+          imageClassName="object-cover"
+          compact
+          placeholderContent={<span className="text-lg text-gray-400">+</span>}
+          disabled
+        />
+        {assignable && (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center bg-brand-900/0 opacity-0 transition group-hover:bg-brand-900/40 group-hover:opacity-100 group-focus-visible:bg-brand-900/40 group-focus-visible:opacity-100"
+            aria-hidden="true"
+          >
+            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-700 shadow-md">
+              {assigning ? 'Adding…' : '+ Add to item'}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
+        <p className="truncate font-mono text-[10px] uppercase tracking-wider text-gray-500">
+          {material.materialId || 'No ID'}
+        </p>
+        <h4 className="truncate text-sm font-semibold leading-tight text-gray-950">
+          {material.name}
+        </h4>
+        <div className="mt-2 flex items-center justify-between gap-1">
+          <MaterialSwatchImage material={material} size="sm" />
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
+            className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            aria-label={`Edit ${material.name}`}
           >
             Edit
-          </Button>
+          </button>
         </div>
       </div>
     </article>

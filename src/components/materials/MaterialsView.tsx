@@ -55,6 +55,7 @@ export function MaterialsView({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const editingMaterial = materials.data?.find((material) => material.id === editingId);
   const filteredMaterials = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -101,6 +102,7 @@ export function MaterialsView({
   const resetDraft = () => {
     setDraft(emptyDraft);
     setEditingId(null);
+    setShowForm(false);
   };
 
   const startEdit = (material: Material) => {
@@ -112,6 +114,13 @@ export function MaterialsView({
       swatchFile: null,
       swatchHex: material.swatchHex || '#D9D4C8',
     });
+    setShowForm(true);
+  };
+
+  const openCreateForm = () => {
+    setEditingId(null);
+    setDraft(emptyDraft);
+    setShowForm(true);
   };
 
   const saveDraft = async () => {
@@ -220,36 +229,50 @@ export function MaterialsView({
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <MaterialForm
-          draft={draft}
-          editing={Boolean(editingMaterial)}
-          submitLabel={editingId ? 'Save changes' : 'Add to library'}
-          onDraftChange={setDraft}
-          onCancel={editingId ? resetDraft : undefined}
-          onSubmit={() => void saveDraft()}
-        />
+      <div className={`grid gap-5 ${showForm ? 'xl:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
+        {showForm && (
+          <MaterialForm
+            draft={draft}
+            editing={Boolean(editingMaterial)}
+            submitLabel={editingId ? 'Save changes' : 'Add to library'}
+            onDraftChange={setDraft}
+            onCancel={resetDraft}
+            onSubmit={() => void saveDraft()}
+          />
+        )}
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-gray-950">Project library</h3>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search name or ID"
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none sm:w-72"
-              aria-label="Search library by name or ID"
-            />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <div className="flex items-baseline gap-3">
+              <h3 className="text-sm font-semibold text-gray-950">Project library</h3>
+              <span className="text-xs font-medium text-gray-500">
+                {filteredMaterials.length} {filteredMaterials.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search name or ID"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none sm:w-72"
+                aria-label="Search library by name or ID"
+              />
+              {!showForm && (
+                <Button type="button" size="sm" onClick={openCreateForm}>
+                  + New material
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="max-h-[42rem] overflow-auto p-4">
+          <div className="max-h-[48rem] overflow-auto bg-surface-muted/40 p-5">
             {materials.isLoading ? (
               <p className="text-sm text-gray-500">Loading materials...</p>
             ) : filteredMaterials.length === 0 ? (
-              <p className="rounded-md border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
+              <p className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-8 text-center text-sm text-gray-500">
                 No materials match the current search.
               </p>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-4">
                 {filteredMaterials.map((material) => (
                   <MaterialGridCard
                     key={material.id}
@@ -283,33 +306,37 @@ function MaterialGridCard({
   onDelete: () => void;
 }) {
   return (
-    <article className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md">
       <ImageFrame
         entityType="material"
         entityId={material.id}
         alt={material.name}
-        className="h-36 w-full rounded-none border-0 shadow-none"
+        className="h-24 w-full rounded-none border-0 shadow-none"
         imageClassName="object-cover"
         compact
       />
-      <div className="grid gap-3 p-3">
+      <div className="flex flex-1 flex-col gap-2.5 p-3">
         <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-gray-950">{material.name}</h4>
-          <p className="truncate text-xs text-gray-500">
-            {material.materialId || 'No material ID'}
+          <p className="truncate font-mono text-[10px] uppercase tracking-wider text-gray-500">
+            {material.materialId || 'No ID'}
           </p>
+          <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-gray-950">
+            {material.name}
+          </h4>
         </div>
-        <MaterialSwatchImage material={material} size="sm" />
         {material.description && (
-          <p className="line-clamp-2 text-xs leading-5 text-gray-600">{material.description}</p>
+          <p className="line-clamp-2 text-xs leading-snug text-gray-600">{material.description}</p>
         )}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
-            Edit
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
-            Delete
-          </Button>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+          <MaterialSwatchImage material={material} size="sm" />
+          <div className="flex gap-1">
+            <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
+              Edit
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
     </article>
