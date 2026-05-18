@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { PLAN_TOOL_DEFINITIONS } from './planToolDefinitions';
 import type { PlanToolId, RectangleModeId } from './types';
 
@@ -17,8 +17,6 @@ export function PlanToolRail({
   rectangleMode,
   onRectangleModeChange,
 }: PlanToolRailProps) {
-  const [popoutOpen, setPopoutOpen] = useState(false);
-
   return (
     <aside className="overflow-y-auto border-r border-black/10 bg-canvas-chrome/80 p-2.5 backdrop-blur">
       <div className="flex flex-col gap-2">
@@ -35,58 +33,47 @@ export function PlanToolRail({
 
           if (tool.id === 'rectangle') {
             return (
-              <div key={tool.id} className="relative">
+              <div key={tool.id} className="flex flex-col items-center gap-1">
                 <button
                   type="button"
                   aria-label={tool.label}
                   title={`${tool.label}: ${tool.description}`}
                   disabled={disabled}
-                  onClick={() =>
-                    active
-                      ? setPopoutOpen((v) => !v)
-                      : (onToolChange(tool.id), setPopoutOpen(false))
-                  }
-                  className={`relative ${btnCls}`}
+                  onClick={() => onToolChange(tool.id)}
+                  className={btnCls}
                 >
                   <span className="sr-only">{tool.label}</span>
                   <ToolIcon toolId={tool.id} />
-                  {active && (
-                    <span className="pointer-events-none absolute bottom-0.5 left-0 right-0 text-center text-[8px] font-bold uppercase leading-none text-white/70">
-                      {rectangleMode === 'measure' ? 'M' : 'H'}
-                    </span>
-                  )}
                 </button>
-                {popoutOpen && (
-                  <div className="absolute left-full top-0 z-50 ml-2 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+                {active && (
+                  <div className="flex w-11 overflow-hidden rounded border border-neutral-300">
                     <button
                       type="button"
-                      onClick={() => {
-                        onRectangleModeChange('measure');
-                        setPopoutOpen(false);
-                      }}
+                      aria-label="Measure mode"
+                      title="Measure mode"
+                      onClick={() => onRectangleModeChange('measure')}
                       className={[
-                        'block w-full whitespace-nowrap px-4 py-2.5 text-left text-sm transition hover:bg-neutral-50',
+                        'flex-1 py-0.5 text-[9px] font-bold uppercase leading-none transition',
                         rectangleMode === 'measure'
-                          ? 'font-semibold text-neutral-950'
-                          : 'text-neutral-700',
+                          ? 'bg-neutral-950 text-white'
+                          : 'bg-white text-neutral-400 hover:text-neutral-700',
                       ].join(' ')}
                     >
-                      Measure
+                      M
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        onRectangleModeChange('highlight');
-                        setPopoutOpen(false);
-                      }}
+                      aria-label="Highlight mode"
+                      title="Highlight mode"
+                      onClick={() => onRectangleModeChange('highlight')}
                       className={[
-                        'block w-full whitespace-nowrap px-4 py-2.5 text-left text-sm transition hover:bg-neutral-50',
+                        'flex-1 border-l border-neutral-300 py-0.5 text-[9px] font-bold uppercase leading-none transition',
                         rectangleMode === 'highlight'
-                          ? 'font-semibold text-neutral-950'
-                          : 'text-neutral-700',
+                          ? 'bg-neutral-950 text-white'
+                          : 'bg-white text-neutral-400 hover:text-neutral-700',
                       ].join(' ')}
                     >
-                      Highlight
+                      H
                     </button>
                   </div>
                 )}
@@ -101,10 +88,7 @@ export function PlanToolRail({
               aria-label={tool.label}
               title={`${tool.label}: ${tool.description}`}
               disabled={disabled}
-              onClick={() => {
-                onToolChange(tool.id);
-                setPopoutOpen(false);
-              }}
+              onClick={() => onToolChange(tool.id)}
               className={btnCls}
             >
               <span className="sr-only">{tool.label}</span>
