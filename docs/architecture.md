@@ -78,6 +78,8 @@ Rendering and Plan Image reads use the Generated Item link as a shared image sea
 
 Revision history reads also expose canonical Generated Item ids. FF&E can show Proposal revision indicators and notes for linked Generated Items, while cost resolution remains in Proposal.
 
+The current implementation state and future cleanup plan for FF&E/Proposal table consolidation is recorded in [generated-item-table-state.md](generated-item-table-state.md).
+
 ## 3. Frontend Routes
 
 - `/signin` is public.
