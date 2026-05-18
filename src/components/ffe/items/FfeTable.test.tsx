@@ -495,6 +495,7 @@ describe('FfeTable', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Edit item materials' })[0]!);
     const dialog = screen.getByRole('dialog', { name: 'Finish Library' });
+    await user.click(within(dialog).getByRole('button', { name: '+ New material' }));
     await user.type(within(dialog).getByLabelText('Name'), 'Ivory boucle');
     await user.type(within(dialog).getByLabelText('ID'), 'FAB-001');
     await user.click(within(dialog).getByRole('button', { name: 'Add and assign' }));

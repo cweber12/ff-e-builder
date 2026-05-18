@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { cn } from '../../../lib/utils';
 
-type TableScrollRef = RefObject<HTMLDivElement | null>;
+type TableScrollRef = RefObject<HTMLDivElement>;
 
 const TableScrollContext = createContext<TableScrollRef | null>(null);
 

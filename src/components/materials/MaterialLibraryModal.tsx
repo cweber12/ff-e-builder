@@ -697,33 +697,48 @@ export function MaterialBadges({
   );
 }
 
-export function ProductLinkIcon({ url, label }: { url: string; label: string }) {
-  if (!url) return null;
+function ChainLinkGlyph() {
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="inline-flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-      aria-label={`Open product page for ${label}`}
-      title="Open product page"
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-3.5 w-3.5"
     >
-      <svg
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="h-3.5 w-3.5"
+      <path d="M10 13.5a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.5 1.5" />
+      <path d="M14 10.5a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.5" />
+    </svg>
+  );
+}
+
+export function ProductLinkIcon({ url, label }: { url: string; label: string }) {
+  if (url) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-label={`Open product page for ${label}`}
+        title="Open product page"
       >
-        <path d="M7 3H4.5A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13h7A1.5 1.5 0 0 0 13 11.5V9" />
-        <path d="M9 3h4v4" />
-        <path d="m13 3-6 6" />
-      </svg>
-    </a>
+        <ChainLinkGlyph />
+      </a>
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      title="No product link — add one in the material edit form"
+      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-300"
+    >
+      <ChainLinkGlyph />
+    </span>
   );
 }
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-18T00:05:40.871Z",
+  "generatedAt": "2026-05-18T13:46:28.351Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,8 +134,8 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 251,
-      "internalImports": 772,
+      "files": 252,
+      "internalImports": 775,
       "externalImports": 269,
       "unresolvedImports": 2
     },
@@ -169,7 +169,7 @@
       "area": "proposal",
       "files": 26,
       "importsIn": 40,
-      "importsOut": 112,
+      "importsOut": 113,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
@@ -185,8 +185,8 @@
       "area": "finish-library",
       "files": 7,
       "importsIn": 16,
-      "importsOut": 27,
-      "dependsOn": ["shared-ui", "shared-lib", "types"],
+      "importsOut": 29,
+      "dependsOn": ["shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "project-shell", "shared-ui", "shared-lib", "tests"]
     },
     {
@@ -209,7 +209,7 @@
     {
       "area": "shared-ui",
       "files": 43,
-      "importsIn": 149,
+      "importsIn": 150,
       "importsOut": 108,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
@@ -286,11 +286,11 @@
     },
     {
       "area": "unknown",
-      "files": 7,
-      "importsIn": 11,
+      "files": 8,
+      "importsIn": 13,
       "importsOut": 10,
       "dependsOn": ["shared-lib", "types"],
-      "importedBy": ["ffe", "proposal", "project-shell", "shared-ui", "tests"]
+      "importedBy": ["ffe", "proposal", "finish-library", "project-shell", "shared-ui", "tests"]
     }
   ],
   "productPathSummaries": [
@@ -417,11 +417,11 @@
       "area": "unknown",
       "paths": [
         {
-          "path": "src/data/**",
-          "files": 3
+          "path": "src/lib",
+          "files": 4
         },
         {
-          "path": "src/lib",
+          "path": "src/data/**",
           "files": 3
         },
         {
@@ -1801,6 +1801,26 @@
       "kind": "import",
       "reviewNote": "expected: product uses shared types",
       "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/materials/MaterialLibraryModal.tsx",
+      "importerArea": "finish-library",
+      "specifier": "../../lib/materials/catalog",
+      "resolved": "src/lib/materials/catalog.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/components/materials/MaterialsView.tsx",
+      "importerArea": "finish-library",
+      "specifier": "../../lib/materials/catalog",
+      "resolved": "src/lib/materials/catalog.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
       "importer": "src/components/plans/canvas/PlanViewport.tsx",
@@ -3487,6 +3507,16 @@
       "importerArea": "proposal",
       "specifier": "../../shared/table/GeneratedItemSizeModal",
       "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../shared/table/generatedItemStickyStyles",
+      "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -6241,7 +6271,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-ui",
-      "imports": 21,
+      "imports": 22,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6882,6 +6912,35 @@
     },
     {
       "section": "Unknown / Ambiguous Dependencies",
+      "from": "finish-library",
+      "to": "unknown",
+      "imports": 2,
+      "reviewNote": "unknown: ownership unclear",
+      "examples": [
+        {
+          "importer": "src/components/materials/MaterialLibraryModal.tsx",
+          "importerArea": "finish-library",
+          "specifier": "../../lib/materials/catalog",
+          "resolved": "src/lib/materials/catalog.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/components/materials/MaterialsView.tsx",
+          "importerArea": "finish-library",
+          "specifier": "../../lib/materials/catalog",
+          "resolved": "src/lib/materials/catalog.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        }
+      ]
+    },
+    {
+      "section": "Unknown / Ambiguous Dependencies",
       "from": "project-shell",
       "to": "unknown",
       "imports": 1,
@@ -7450,6 +7509,16 @@
       ]
     },
     {
+      "path": "src/lib/materials/catalog.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
       "path": "src/lib/table/generatedItemChangeFields.ts",
       "project": "React client",
       "module": "src/lib",
@@ -7600,8 +7669,8 @@
     {
       "path": "src/components",
       "files": 119,
-      "importsIn": 245,
-      "importsOut": 548,
+      "importsIn": 246,
+      "importsOut": 551,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7646,8 +7715,8 @@
     },
     {
       "path": "src/lib",
-      "files": 78,
-      "importsIn": 286,
+      "files": 79,
+      "importsIn": 288,
       "importsOut": 246,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
@@ -9151,6 +9220,14 @@
           "resolved": "src/components/shared/image/ImageFrame.tsx",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/materials/MaterialLibraryModal.tsx",
+          "specifier": "../../lib/materials/catalog",
+          "kind": "import",
+          "resolved": "src/lib/materials/catalog.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -9224,6 +9301,14 @@
           "specifier": "./MaterialLibraryModal",
           "kind": "import",
           "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/materials/MaterialsView.tsx",
+          "specifier": "../../lib/materials/catalog",
+          "kind": "import",
+          "resolved": "src/lib/materials/catalog.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -12074,6 +12159,14 @@
           "specifier": "../../shared/table/GeneratedItemSizeModal",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "../../shared/table/generatedItemStickyStyles",
+          "kind": "import",
+          "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -17330,6 +17423,16 @@
       ]
     },
     {
+      "path": "src/lib/materials/catalog.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
       "path": "src/lib/money/budgetCalc.test.ts",
       "project": "React client",
       "module": "src/lib",
@@ -21286,6 +21389,14 @@
       "asset": false
     },
     {
+      "importer": "src/components/materials/MaterialLibraryModal.tsx",
+      "specifier": "../../lib/materials/catalog",
+      "kind": "import",
+      "resolved": "src/lib/materials/catalog.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/materials/MaterialsView.tsx",
       "specifier": "react",
       "kind": "import",
@@ -21346,6 +21457,14 @@
       "specifier": "./MaterialLibraryModal",
       "kind": "import",
       "resolved": "src/components/materials/MaterialLibraryModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/materials/MaterialsView.tsx",
+      "specifier": "../../lib/materials/catalog",
+      "kind": "import",
+      "resolved": "src/lib/materials/catalog.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -23482,6 +23601,14 @@
       "specifier": "../../shared/table/GeneratedItemSizeModal",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "../../shared/table/generatedItemStickyStyles",
+      "kind": "import",
+      "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
       "externalPackage": null,
       "asset": false
     },
