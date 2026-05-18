@@ -113,8 +113,19 @@ export function ChangeConfirmModal({
           >
             <p className="font-medium">This change affects pricing.</p>
             <p className="mt-0.5 text-amber-700">
-              Saving will open a <span className="font-semibold">Revision Round</span> and flag this
-              item's cost for review. You can update the quoted cost from the Revision panel.
+              {openRevisionLabel ? (
+                <>
+                  Saving will add this change to{' '}
+                  <span className="font-semibold">Revision {openRevisionLabel}</span> and flag this
+                  item's cost for review. You can update the quoted cost from the Revision panel.
+                </>
+              ) : (
+                <>
+                  Saving will open a <span className="font-semibold">Revision Round</span> and flag
+                  this item's cost for review. You can update the quoted cost from the Revision
+                  panel.
+                </>
+              )}
             </p>
           </div>
         )}

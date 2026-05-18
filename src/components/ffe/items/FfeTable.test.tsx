@@ -278,6 +278,28 @@ describe('FfeTable', () => {
     expect(screen.getAllByTitle('View Proposal revision history').length).toBeGreaterThan(0);
   });
 
+  it('shows open proposal revision state in FF&E before item changelog exists', () => {
+    mockProposalRevisionsData.revisions = [
+      {
+        id: 'revision-1',
+        projectId: 'project-1',
+        revisionMajor: 1,
+        revisionMinor: 0,
+        label: '1.0',
+        triggeredAtStatus: 'pricing_complete',
+        openedAt: '2026-05-01T00:00:00Z',
+        closedAt: null,
+      },
+    ];
+    mockProposalRevisionsData.changelog = [];
+
+    renderTable();
+
+    expect(
+      screen.getAllByText('Revision 1.0 open - resolve costs in Proposal').length,
+    ).toBeGreaterThan(0);
+  });
+
   it('renders room subtotals matching roomSubtotalCents', () => {
     renderTable();
 
