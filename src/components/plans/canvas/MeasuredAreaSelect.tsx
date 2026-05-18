@@ -48,7 +48,7 @@ export function MeasuredAreaSelect({
           return (
             <option key={measurement.id} value={measurement.id}>
               {item
-                ? `${item.primaryLabel} - ${item.secondaryLabel} - ${item.containerLabel}`
+                ? `${item.primaryLabel} – ${item.secondaryLabel.length > 12 ? `${item.secondaryLabel.slice(0, 12)}…` : item.secondaryLabel}`
                 : measurement.targetTagSnapshot}
             </option>
           );

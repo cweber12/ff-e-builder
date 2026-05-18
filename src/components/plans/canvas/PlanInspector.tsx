@@ -517,7 +517,10 @@ export function PlanInspector({
                           <option value="">Choose an item</option>
                           {measurementItems.map((item) => (
                             <option key={item.key} value={item.key}>
-                              {item.primaryLabel} - {item.secondaryLabel} - {item.containerLabel}
+                              {item.primaryLabel} –{' '}
+                              {item.secondaryLabel.length > 12
+                                ? `${item.secondaryLabel.slice(0, 12)}…`
+                                : item.secondaryLabel}
                             </option>
                           ))}
                         </select>
