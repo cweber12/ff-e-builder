@@ -33,6 +33,37 @@ import {
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
+async function mirrorProposalMaterialToLinkedItem(
+  sql: ReturnType<typeof getDb>,
+  proposalItemId: string,
+  materialId: string,
+  sortOrder: number,
+) {
+  await sql`
+    INSERT INTO item_materials (item_id, material_id, sort_order)
+    SELECT link.item_id, ${materialId}, ${sortOrder}
+    FROM proposal_item_generated_item_links link
+    WHERE link.proposal_item_id = ${proposalItemId}
+    ON CONFLICT (item_id, material_id) DO NOTHING
+  `;
+}
+
+async function deleteProposalMaterialFromLinkedItem(
+  sql: ReturnType<typeof getDb>,
+  proposalItemId: string,
+  materialId: string,
+) {
+  await sql`
+    DELETE FROM item_materials
+    WHERE material_id = ${materialId}
+      AND item_id IN (
+        SELECT item_id
+        FROM proposal_item_generated_item_links
+        WHERE proposal_item_id = ${proposalItemId}
+      )
+  `;
+}
+
 router.get('/projects/:id/proposal/categories', async (c) => {
   const uid = c.get('uid');
   const projectId = c.req.param('id');
@@ -508,6 +539,7 @@ router.post('/proposal/items/:id/materials', async (c) => {
     VALUES (${proposalItemId}, ${parsed.data.material_id}, ${nextSort})
     ON CONFLICT (proposal_item_id, material_id) DO NOTHING
   `;
+  await mirrorProposalMaterialToLinkedItem(sql, proposalItemId, parsed.data.material_id, nextSort);
   return c.json({ material: await selectMaterialById(sql, parsed.data.material_id) }, 201);
 });
 
@@ -557,6 +589,7 @@ router.post('/proposal/items/:id/materials/new', async (c) => {
     VALUES (${proposalItemId}, ${mat.id}, ${nextSort})
     ON CONFLICT (proposal_item_id, material_id) DO NOTHING
   `;
+  await mirrorProposalMaterialToLinkedItem(sql, proposalItemId, mat.id, nextSort);
   return c.json({ material: await selectMaterialById(sql, mat.id) }, 201);
 });
 
@@ -575,6 +608,7 @@ router.delete('/proposal/items/:id/materials/:materialId', async (c) => {
     DELETE FROM proposal_item_materials
     WHERE  proposal_item_id = ${proposalItemId} AND material_id = ${materialId}
   `;
+  await deleteProposalMaterialFromLinkedItem(sql, proposalItemId, materialId);
   return c.body(null, 204);
 });
 

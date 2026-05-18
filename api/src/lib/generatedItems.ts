@@ -1161,15 +1161,27 @@ export async function selectCompatibleProposalItemsByCategory(sql: Sql, category
             'swatch_hex',  m.swatch_hex,
             'created_at',  m.created_at,
             'updated_at',  m.updated_at
-          ) ORDER BY pim.sort_order
+          ) ORDER BY generated_materials.sort_order, lower(m.name)
         ) FILTER (WHERE m.id IS NOT NULL),
         '[]'::json
       ) AS materials
     FROM  proposal_items pi
     LEFT JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
     LEFT JOIN items i ON i.id = link.item_id
-    LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id
-    LEFT  JOIN materials m                 ON m.id = pim.material_id
+    LEFT JOIN LATERAL (
+      SELECT DISTINCT ON (material_id) material_id, sort_order
+      FROM (
+        SELECT pim.material_id, pim.sort_order
+        FROM proposal_item_materials pim
+        WHERE pim.proposal_item_id = pi.id
+        UNION ALL
+        SELECT im.material_id, im.sort_order
+        FROM item_materials im
+        WHERE im.item_id = link.item_id
+      ) material_refs
+      ORDER BY material_id, sort_order
+    ) generated_materials ON true
+    LEFT  JOIN materials m                 ON m.id = generated_materials.material_id
     WHERE pi.category_id = ${categoryId}
     GROUP BY pi.id, i.item_name
     ORDER BY pi.sort_order, pi.created_at

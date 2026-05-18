@@ -63,9 +63,9 @@ describe('Proposal routes', () => {
     const calls = sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>;
     const statement = Array.from(calls[0]?.[0] ?? []).join(' ');
     expect(statement).toContain('FROM proposal_items pi');
-    expect(statement).toContain(
-      'LEFT  JOIN proposal_item_materials pim ON pim.proposal_item_id = pi.id',
-    );
+    expect(statement).toContain('proposal_item_materials');
+    expect(statement).toContain('item_materials');
+    expect(statement).toContain('UNION ALL');
     expect(statement).toContain('WHERE pi.category_id =');
     expect(statement).not.toContain('WITH canonical_items AS');
   });

@@ -30,6 +30,73 @@ const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 type AppContext = Context<{ Bindings: Env; Variables: HonoVariables }>;
 type MaterialRow = { id: string; swatch_hex: string };
 
+async function mirrorItemMaterialToLinkedProposalItem(
+  sql: ReturnType<typeof getDb>,
+  itemId: string,
+  materialId: string,
+  sortOrder: number,
+) {
+  await sql`
+    INSERT INTO proposal_item_materials (proposal_item_id, material_id, sort_order)
+    SELECT link.proposal_item_id, ${materialId}, ${sortOrder}
+    FROM proposal_item_generated_item_links link
+    WHERE link.item_id = ${itemId}
+    ON CONFLICT (proposal_item_id, material_id) DO NOTHING
+  `;
+}
+
+async function deleteItemMaterialFromLinkedProposalItem(
+  sql: ReturnType<typeof getDb>,
+  itemId: string,
+  materialId: string,
+) {
+  await sql`
+    DELETE FROM proposal_item_materials
+    WHERE material_id = ${materialId}
+      AND proposal_item_id IN (
+        SELECT proposal_item_id
+        FROM proposal_item_generated_item_links
+        WHERE item_id = ${itemId}
+      )
+  `;
+}
+
+async function updateLinkedProposalItemMaterial(
+  sql: ReturnType<typeof getDb>,
+  itemId: string,
+  materialId: string,
+  finalId: string,
+) {
+  await sql`
+    UPDATE proposal_item_materials
+    SET material_id = ${finalId}
+    WHERE material_id = ${materialId}
+      AND proposal_item_id IN (
+        SELECT proposal_item_id
+        FROM proposal_item_generated_item_links
+        WHERE item_id = ${itemId}
+      )
+  `;
+}
+
+async function updateLinkedItemMaterial(
+  sql: ReturnType<typeof getDb>,
+  proposalItemId: string,
+  materialId: string,
+  finalId: string,
+) {
+  await sql`
+    UPDATE item_materials
+    SET material_id = ${finalId}
+    WHERE material_id = ${materialId}
+      AND item_id IN (
+        SELECT item_id
+        FROM proposal_item_generated_item_links
+        WHERE proposal_item_id = ${proposalItemId}
+      )
+  `;
+}
+
 async function listProjectMaterials(c: AppContext) {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
@@ -181,6 +248,7 @@ router.post('/items/:itemId/materials', async (c) => {
     VALUES (${itemId}, ${parsed.data.material_id}, ${nextSortOrder})
     ON CONFLICT (item_id, material_id) DO NOTHING
   `;
+  await mirrorItemMaterialToLinkedProposalItem(sql, itemId, parsed.data.material_id, nextSortOrder);
   const material = await selectMaterialById(sql, parsed.data.material_id);
   await assertItemOwnership(c.env, itemId, uid);
   return c.json({ material }, 201);
@@ -238,6 +306,7 @@ router.post('/items/:itemId/materials/new', async (c) => {
     VALUES (${itemId}, ${material.id}, ${nextSortOrder})
     ON CONFLICT (item_id, material_id) DO NOTHING
   `;
+  await mirrorItemMaterialToLinkedProposalItem(sql, itemId, material.id, nextSortOrder);
   return c.json({ material: await selectMaterialById(sql, material.id) }, 201);
 });
 
@@ -258,6 +327,7 @@ router.delete('/items/:itemId/materials/:materialId', async (c) => {
     DELETE FROM item_materials
     WHERE item_id = ${itemId} AND material_id = ${materialId}
   `;
+  await deleteItemMaterialFromLinkedProposalItem(sql, itemId, materialId);
   return c.body(null, 204);
 });
 
@@ -289,6 +359,7 @@ router.patch('/items/:itemId/materials/:materialId', async (c) => {
       SET material_id = ${finalId}
       WHERE item_id = ${itemId} AND material_id = ${materialId}
     `;
+    await updateLinkedProposalItemMaterial(sql, itemId, materialId, finalId);
   } else {
     await sql`
       UPDATE materials SET
@@ -330,6 +401,7 @@ router.patch('/proposal/items/:proposalItemId/materials/:materialId', async (c) 
       SET material_id = ${finalId}
       WHERE proposal_item_id = ${proposalItemId} AND material_id = ${materialId}
     `;
+    await updateLinkedItemMaterial(sql, proposalItemId, materialId, finalId);
   } else {
     await sql`
       UPDATE materials SET

@@ -61,6 +61,23 @@ describe('Generated Item read model', () => {
     expect(statement).not.toContain('canonical_items');
   });
 
+  it('includes linked FF&E material assignments in compatible Proposal item reads', async () => {
+    const sql = vi.fn().mockResolvedValue([]);
+
+    await selectCompatibleProposalItemsByCategory(
+      sql as unknown as ReturnType<typeof getDb>,
+      'category-1',
+    );
+
+    const statement = Array.from(
+      (sql.mock.calls[0] as [TemplateStringsArray, ...unknown[]])[0],
+    ).join(' ');
+    expect(statement).toContain('proposal_item_generated_item_links');
+    expect(statement).toContain('proposal_item_materials');
+    expect(statement).toContain('item_materials');
+    expect(statement).toContain('UNION ALL');
+  });
+
   it('includes linked Proposal material assignments in FF&E room reads', async () => {
     const sql = vi.fn().mockResolvedValue([]);
 
