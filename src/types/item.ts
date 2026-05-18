@@ -47,6 +47,8 @@ export type Item = {
   createdAt: string;
   updatedAt: string;
   materials: Material[];
+  /** Set when this room item is linked to a proposal item via add-to-ffe */
+  linkedProposalItemId?: string | null;
 };
 
 export type GeneratedItem = Item & GeneratedItemProposalFields;

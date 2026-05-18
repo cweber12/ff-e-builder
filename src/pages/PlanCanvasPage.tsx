@@ -507,7 +507,11 @@ export function PlanCanvasPage({
     setCropDraft(null);
   };
 
-  const savePlanImageForMeasurement = async (measurement: Measurement, cropParams: CropParams) => {
+  const savePlanImageForMeasurement = async (
+    measurement: Measurement,
+    cropParams: CropParams,
+    linkedFfeItemId?: string | null,
+  ) => {
     if (!selectedPlan || planNaturalSize.width <= 0 || planNaturalSize.height <= 0) return;
 
     const entityType = measurement.targetKind === 'ffe' ? 'item_plan' : 'proposal_plan';
@@ -542,6 +546,31 @@ export function PlanCanvasPage({
       uploadedImage,
     ]);
     restorePlanColumn(project.id, measurement.targetKind);
+
+    // For linked items (proposal view of an FFE item), also write item_plan so
+    // the FFE table image cell stays in sync with the proposal image cell.
+    if (measurement.targetKind === 'proposal' && linkedFfeItemId) {
+      const existingFfeImages = await api.images.list({
+        entityType: 'item_plan',
+        entityId: linkedFfeItemId,
+      });
+      if (existingFfeImages.length > 0) {
+        await Promise.all(existingFfeImages.map((img) => api.images.delete(img.id)));
+      }
+      const ffeUploadFile = new File([highlightedCropBlob], `${selectedPlan.name}-plan.png`, {
+        type: 'image/png',
+      });
+      const ffeUploadedImage = await api.images.upload({
+        entityType: 'item_plan',
+        entityId: linkedFfeItemId,
+        file: ffeUploadFile,
+        altText: `${measurement.targetTagSnapshot} plan image`,
+      });
+      queryClient.setQueryData(imageKeys.forEntity('item_plan', linkedFfeItemId), [
+        ffeUploadedImage,
+      ]);
+      restorePlanColumn(project.id, 'ffe');
+    }
   };
 
   const handleSavePlanImage = async () => {
@@ -557,7 +586,11 @@ export function PlanCanvasPage({
 
     setIsSavingPlanImage(true);
     try {
-      await savePlanImageForMeasurement(selectedMeasurement, savedCropParams);
+      await savePlanImageForMeasurement(
+        selectedMeasurement,
+        savedCropParams,
+        selectedMeasurementItem?.linkedFfeItemId,
+      );
     } finally {
       setIsSavingPlanImage(false);
     }
@@ -591,12 +624,16 @@ export function PlanCanvasPage({
 
       setSelectedMeasurementId(updated.id);
       setCropDraft(null);
-      await savePlanImageForMeasurement(updated, {
-        cropX: normalizedCropDraft.x,
-        cropY: normalizedCropDraft.y,
-        cropWidth: normalizedCropDraft.width,
-        cropHeight: normalizedCropDraft.height,
-      });
+      await savePlanImageForMeasurement(
+        updated,
+        {
+          cropX: normalizedCropDraft.x,
+          cropY: normalizedCropDraft.y,
+          cropWidth: normalizedCropDraft.width,
+          cropHeight: normalizedCropDraft.height,
+        },
+        selectedMeasurementItem?.linkedFfeItemId,
+      );
       toast.success('Plan image added to item.');
     } finally {
       setIsSavingPlanImage(false);
@@ -971,6 +1008,9 @@ function buildMeasurementItems(
 
   for (const room of roomsWithItems) {
     for (const item of room.items) {
+      // Skip room items that are already represented by a proposal entry — the
+      // proposal entry is the canonical dropdown choice for linked items.
+      if (item.linkedProposalItemId) continue;
       items.push({
         key: `ffe:${item.id}`,
         targetKind: 'ffe',
@@ -982,6 +1022,7 @@ function buildMeasurementItems(
         containerId: room.id,
         version: item.version,
         dimensions: item.dimensions,
+        linkedProposalItemId: item.linkedProposalItemId,
       });
     }
   }
@@ -1000,6 +1041,7 @@ function buildMeasurementItems(
         version: item.version,
         quantity: item.quantity,
         quantityUnit: item.quantityUnit,
+        linkedFfeItemId: item.linkedFfeItemId,
       });
     }
   }

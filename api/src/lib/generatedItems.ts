@@ -965,6 +965,7 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
       i.version,
       i.created_at,
       i.updated_at,
+      link.proposal_item_id AS linked_proposal_item_id,
       COALESCE(
         json_agg(
           json_build_object(
@@ -1001,7 +1002,7 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
     LEFT JOIN materials m ON m.id = generated_materials.material_id
     WHERE i.room_id = ${roomId}
       AND i.is_ffe_visible = true
-    GROUP BY i.id
+    GROUP BY i.id, link.proposal_item_id
     ORDER BY i.sort_order, i.created_at
   `;
 }
@@ -1041,6 +1042,7 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         i.version,
         i.created_at,
         i.updated_at,
+        i.id AS linked_ffe_item_id,
         COALESCE(
           json_agg(
             json_build_object(
@@ -1103,6 +1105,7 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         pi.version,
         pi.created_at,
         pi.updated_at,
+        NULL::uuid AS linked_ffe_item_id,
         COALESCE(
           json_agg(
             json_build_object(

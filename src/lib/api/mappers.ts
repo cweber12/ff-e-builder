@@ -68,6 +68,7 @@ export interface RawItem {
   created_at: string;
   updated_at: string;
   materials?: RawMaterial[];
+  linked_proposal_item_id?: string | null;
 }
 
 export interface RawImageAsset {
@@ -137,6 +138,7 @@ export interface RawProposalItem {
   version: number;
   created_at: string;
   updated_at: string;
+  linked_ffe_item_id?: string | null;
 }
 
 export interface RawMaterial {
@@ -276,6 +278,7 @@ export const mapItem = (r: RawItem): Item => ({
   createdAt: r.created_at,
   updatedAt: r.updated_at,
   materials: (r.materials ?? []).map(mapMaterial),
+  linkedProposalItemId: r.linked_proposal_item_id ?? null,
 });
 
 export interface RawItemColumnDef {
@@ -366,6 +369,7 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  linkedFfeItemId: r.linked_ffe_item_id ?? null,
 });
 
 export const mapMaterial = (r: RawMaterial): Material => ({

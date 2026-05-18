@@ -22,6 +22,8 @@ export type MeasurementItemRef = {
   dimensions?: string | null;
   quantity?: number;
   quantityUnit?: string;
+  linkedFfeItemId?: string | null;
+  linkedProposalItemId?: string | null;
 };
 
 export type MeasurementDisplay = {

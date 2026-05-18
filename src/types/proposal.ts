@@ -52,6 +52,8 @@ export type ProposalItem = {
   version: number;
   createdAt: string;
   updatedAt: string;
+  /** Set for canonical items (items table row) that have an FFE table counterpart */
+  linkedFfeItemId?: string | null;
 };
 
 export type ProposalItemChangelogEntry = {
