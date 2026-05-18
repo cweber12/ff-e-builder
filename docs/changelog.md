@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): move Proposal quantity and unit-cost sticky styles into shared table helpers
 - refactor(table): move Proposal sticky table edge styles into shared Generated Item table helpers
 - fix(table): keep FF&E column drag context out of table header markup
 - refactor(table): move FF&E sticky table edge styles into shared Generated Item table helpers

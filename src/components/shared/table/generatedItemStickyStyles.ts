@@ -29,6 +29,14 @@ function cellClassName(style: StickyColumnStyle) {
   }`;
 }
 
+export function createStickyColumnClassNames(style: StickyColumnStyle) {
+  return {
+    header: headerClassName(style),
+    expandedHeader: expandedHeaderClassName(style),
+    cell: cellClassName(style),
+  };
+}
+
 export function createStickyEdgeColumnClassNames(styles: StickyEdgeColumnStyles) {
   return {
     totalHeader: headerClassName(styles.total),
@@ -67,3 +75,18 @@ export const proposalStickyEdgeColumnClassNames = createStickyEdgeColumnClassNam
     hoverClassName: 'group-hover:bg-neutral-50',
   },
 });
+
+export const proposalStickyValueColumnClassNames = {
+  quantity: createStickyColumnClassNames({
+    rightClassName: 'right-[232px]',
+    widthClassName: 'w-20 min-w-[80px]',
+    cellZClassName: 'z-10',
+    hoverClassName: 'group-hover:bg-neutral-50',
+  }),
+  unitCost: createStickyColumnClassNames({
+    rightClassName: 'right-[136px]',
+    widthClassName: 'w-24 min-w-[96px]',
+    cellZClassName: 'z-10',
+    hoverClassName: 'group-hover:bg-neutral-50',
+  }),
+};

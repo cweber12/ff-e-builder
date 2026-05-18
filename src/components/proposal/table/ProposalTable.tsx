@@ -91,7 +91,10 @@ import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
 } from '../../shared/table/GeneratedItemSizeModal';
-import { proposalStickyEdgeColumnClassNames } from '../../shared/table/generatedItemStickyStyles';
+import {
+  proposalStickyEdgeColumnClassNames,
+  proposalStickyValueColumnClassNames,
+} from '../../shared/table/generatedItemStickyStyles';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
@@ -129,17 +132,6 @@ const editInputClassName =
 // Qty and Unit Cost sticky-right columns (always visible, not draggable).
 // right offsets: unitCost = options(40) + total(96) = 136px
 //               qty = unitCost(136) + unitCost-width(96) = 232px
-const stickyQtyHeaderClassName = 'sticky right-[232px] z-40 bg-surface w-20 min-w-[80px]';
-const stickyUnitCostHeaderClassName = 'sticky right-[136px] z-40 bg-surface w-24 min-w-[96px]';
-const stickyQtyExpandedHeaderClassName =
-  'sticky top-0 right-[232px] z-50 bg-surface w-20 min-w-[80px]';
-const stickyUnitCostExpandedHeaderClassName =
-  'sticky top-0 right-[136px] z-50 bg-surface w-24 min-w-[96px]';
-const stickyQtyCellClassName =
-  'sticky right-[232px] z-10 bg-surface w-20 min-w-[80px] group-hover:bg-neutral-50';
-const stickyUnitCostCellClassName =
-  'sticky right-[136px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
-
 // Revision sticky block — same right offsets as editable block but for revision data.
 // When a revision is open the sticky block expands to show Rev Qty | Rev UC | Rev Total.
 // right offsets are identical: rev-qty=232px, rev-uc=136px, rev-total=40px (right-10).
@@ -1064,7 +1056,7 @@ function ProposalCategorySection({
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                          stickyQtyHeaderClassName,
+                          proposalStickyValueColumnClassNames.quantity.header,
                         )}
                       >
                         Quantity
@@ -1072,7 +1064,7 @@ function ProposalCategorySection({
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                          stickyUnitCostHeaderClassName,
+                          proposalStickyValueColumnClassNames.unitCost.header,
                         )}
                       >
                         Unit Cost
@@ -1373,7 +1365,7 @@ function ProposalCategorySection({
                           <th
                             className={cn(
                               'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                              stickyQtyExpandedHeaderClassName,
+                              proposalStickyValueColumnClassNames.quantity.expandedHeader,
                             )}
                           >
                             Quantity
@@ -1381,7 +1373,7 @@ function ProposalCategorySection({
                           <th
                             className={cn(
                               'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                              stickyUnitCostExpandedHeaderClassName,
+                              proposalStickyValueColumnClassNames.unitCost.expandedHeader,
                             )}
                           >
                             Unit Cost
@@ -1787,14 +1779,14 @@ function ProposalRow({
             onSaveQuantity={(quantity) => onSave({ quantity })}
             onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
             indicator={dot('quantity')}
-            tdClassName={stickyQtyCellClassName}
+            tdClassName={proposalStickyValueColumnClassNames.quantity.cell}
             inputClassName={editInputClassName}
           />
           <GeneratedItemEditableMoneyCell
             valueCents={item.unitCostCents}
             onSave={(unitCostCents) => onSave({ unitCostCents })}
             indicator={dot('unitCostCents')}
-            tdClassName={stickyUnitCostCellClassName}
+            tdClassName={proposalStickyValueColumnClassNames.unitCost.cell}
             inputClassName={editInputClassName}
           />
           <td
