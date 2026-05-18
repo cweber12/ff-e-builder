@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): move FF&E sticky table edge styles into shared Generated Item table helpers
 - refactor(table): clarify FF&E copy for edits added to an open Proposal revision
 - refactor(table): show FF&E Product Description edits in shared Proposal revision history
 - feat(table): allow FF&E Drawings edits to sync through shared Generated Items

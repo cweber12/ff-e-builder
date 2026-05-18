@@ -102,22 +102,13 @@ import {
   GeneratedItemSizeTrigger,
 } from '../../shared/table/GeneratedItemSizeModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
+import { ffeStickyEdgeColumnClassNames } from '../../shared/table/generatedItemStickyStyles';
 import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
 import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } from '../../proposal/revision';
 
 const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;
 
 type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
-
-const stickyTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-[120px] min-w-[120px]';
-const stickyActionsHeaderClassName = 'sticky right-0 z-40 bg-surface w-10 min-w-10';
-const stickyTotalExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-surface w-[120px] min-w-[120px]';
-const stickyActionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-surface w-10 min-w-10';
-const stickyTotalCellClassName =
-  'sticky right-10 z-20 bg-surface w-[120px] min-w-[120px] group-hover:bg-neutral-50/60';
-const stickyActionsCellClassName =
-  'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50/60';
 
 const DEFAULT_COLUMN_LABELS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnLabels;
 const DEFAULT_COLUMN_META = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnMeta;
@@ -1060,8 +1051,8 @@ function SortableItemRow({
             defaultColumnClassName(cell.column.id),
             defaultColumnWraps(cell.column.id) ? 'whitespace-normal' : 'whitespace-nowrap',
             cell.column.id === 'plan' && 'overflow-hidden',
-            cell.column.id === 'lineTotal' && stickyTotalCellClassName,
-            cell.column.id === 'actions' && stickyActionsCellClassName,
+            cell.column.id === 'lineTotal' && ffeStickyEdgeColumnClassNames.totalCell,
+            cell.column.id === 'actions' && ffeStickyEdgeColumnClassNames.actionsCell,
           )}
         >
           {cell.column.id === 'drag' ? (
@@ -1910,7 +1901,7 @@ function RoomItemsSection({
                                   key={header.id}
                                   className={cn(
                                     'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
-                                    stickyTotalHeaderClassName,
+                                    ffeStickyEdgeColumnClassNames.totalHeader,
                                   )}
                                 >
                                   {flexRender(header.column.columnDef.header, header.getContext())}
@@ -1923,7 +1914,7 @@ function RoomItemsSection({
                                   key={header.id}
                                   className={cn(
                                     'h-10 border-y border-neutral-200',
-                                    stickyActionsHeaderClassName,
+                                    ffeStickyEdgeColumnClassNames.actionsHeader,
                                   )}
                                 />
                               );
@@ -2070,7 +2061,7 @@ function RoomItemsSection({
                                       key={header.id}
                                       className={cn(
                                         'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
-                                        stickyTotalExpandedHeaderClassName,
+                                        ffeStickyEdgeColumnClassNames.totalExpandedHeader,
                                       )}
                                     >
                                       {flexRender(
@@ -2086,7 +2077,7 @@ function RoomItemsSection({
                                       key={header.id}
                                       className={cn(
                                         'h-10 border-y border-neutral-200',
-                                        stickyActionsExpandedHeaderClassName,
+                                        ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
                                       )}
                                     />
                                   );

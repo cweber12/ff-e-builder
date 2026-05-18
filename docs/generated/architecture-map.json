@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-17T23:50:19.146Z",
+  "generatedAt": "2026-05-18T00:05:40.871Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,8 +134,8 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 250,
-      "internalImports": 771,
+      "files": 251,
+      "internalImports": 772,
       "externalImports": 269,
       "unresolvedImports": 2
     },
@@ -161,7 +161,7 @@
       "area": "ffe",
       "files": 25,
       "importsIn": 38,
-      "importsOut": 133,
+      "importsOut": 134,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
@@ -208,8 +208,8 @@
     },
     {
       "area": "shared-ui",
-      "files": 42,
-      "importsIn": 148,
+      "files": 43,
+      "importsIn": 149,
       "importsOut": 108,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
@@ -360,7 +360,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 42
+          "files": 43
         }
       ]
     },
@@ -1277,6 +1277,16 @@
       "importerArea": "ffe",
       "specifier": "../../shared/table/SortableColHeader",
       "resolved": "src/components/shared/table/SortableColHeader.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../shared/table/generatedItemStickyStyles",
+      "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -6095,7 +6105,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-ui",
-      "imports": 33,
+      "imports": 34,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -7589,9 +7599,9 @@
     },
     {
       "path": "src/components",
-      "files": 118,
-      "importsIn": 244,
-      "importsOut": 547,
+      "files": 119,
+      "importsIn": 245,
+      "importsOut": 548,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8814,6 +8824,14 @@
           "specifier": "../../shared/table/SortableColHeader",
           "kind": "import",
           "resolved": "src/components/shared/table/SortableColHeader.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "../../shared/table/generatedItemStickyStyles",
+          "kind": "import",
+          "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -13535,6 +13553,16 @@
           "asset": false
         }
       ]
+    },
+    {
+      "path": "src/components/shared/table/generatedItemStickyStyles.ts",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": []
     },
     {
       "path": "src/components/shared/table/SortableColHeader.tsx",
@@ -21006,6 +21034,14 @@
       "specifier": "../../shared/table/SortableColHeader",
       "kind": "import",
       "resolved": "src/components/shared/table/SortableColHeader.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "../../shared/table/generatedItemStickyStyles",
+      "kind": "import",
+      "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
       "externalPackage": null,
       "asset": false
     },
