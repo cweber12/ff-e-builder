@@ -120,7 +120,7 @@ describe('proposal export document', () => {
       makeAssets({
         renderingByItemId: new Map([[item.id, 'rendering']]),
         planByItemId: new Map([[item.id, 'plan']]),
-        swatchesByItemId: new Map([[item.id, ['swatch']]]),
+        swatchesByItemId: new Map([[item.id, ['swatch-a', 'swatch-b']]]),
       }),
     );
 
@@ -140,6 +140,8 @@ describe('proposal export document', () => {
     ]);
     expect(document.columns.find((column) => column.key === 'rendering')?.excelWidth).toBe(24);
     expect(document.columns.find((column) => column.key === 'plan')?.excelWidth).toBe(24);
+    expect(document.columns.find((column) => column.key === 'swatch')?.excelWidth).toBe(18);
+    expect(document.categories[0]?.rows[0]?.swatches).toEqual(['swatch-a', 'swatch-b']);
   });
 
   it('truncates long proposal text with a compatibility-safe ellipsis', () => {

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(exports): polish Proposal Excel table styling with theme headers, thin borders, striped rows, and square multi-swatch cells
 - fix(table): refresh Proposal item locations after FF&E Location renames
 - fix(imports): populate Proposal Location from combined Drawings / Location imports
 - fix(table): mirror linked FF&E and Proposal material edits across Generated Item views

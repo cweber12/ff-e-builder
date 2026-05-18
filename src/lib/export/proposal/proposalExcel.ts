@@ -9,10 +9,9 @@ import type { Project, ProposalCategoryWithItems, UserProfile } from '../../../t
 import {
   type ExcelImagePlacement,
   addExcelAspectFitImage,
-  addExcelCircularCoverImage,
   addExcelCoverImage,
   excelEqualWidthSlotPlacement,
-  excelPaddedCellPlacement,
+  excelSquareGridPlacements,
 } from '../imageHelpers';
 import { safeName, triggerDownload } from '../shared';
 import {
@@ -22,16 +21,29 @@ import {
   tableBorderSide,
   thinBorder,
 } from '../excelStyles';
+import { BRAND_RGB } from '../../theme/constants';
 
 // ── Styling constants ─────────────────────────────────────────────────────────
 const PROPOSAL_FONT = 'Aptos';
 const PROPOSAL_EXCEL_ROW_HEIGHT = 96; // ~128px — fits item renderings comfortably
 const PROPOSAL_IMAGE_PADDING_PX = 3;
+const PROPOSAL_SWATCH_SIZE_PX = 42;
+const PROPOSAL_SWATCH_GAP_PX = 5;
+const PROPOSAL_SWATCH_PADDING_PX = 7;
+const PROPOSAL_SWATCH_GRID_COLUMNS = 2;
 const TABLE_START_COLUMN = 2;
 const TABLE_START_ROW = 2;
 const SUMMARY_COLUMN_COUNT = 3;
 const CURRENCY_FORMAT = '$#,##0.00';
 const DECIMAL_FORMAT = '0.##';
+const THEME_BRAND_ARGB = `FF${BRAND_RGB.map((value) =>
+  value.toString(16).padStart(2, '0').toUpperCase(),
+).join('')}`;
+const THEME_BRAND_DARK_ARGB = 'FF2F5F83';
+const THEME_BRAND_LIGHT_ARGB = 'FFE8F0F7';
+const THEME_BRAND_PALE_ARGB = 'FFF4F8FB';
+const ROW_FILL_ARGB = 'FFFFFFFF';
+const ALT_ROW_FILL_ARGB = 'FFF6F7F8';
 type ExcelBorderSide = { style: 'thin' | 'medium'; color: { argb: string } };
 type ExcelBorder = {
   top: ExcelBorderSide;
@@ -40,8 +52,8 @@ type ExcelBorder = {
   right: ExcelBorderSide;
 };
 const REVISION_SEPARATOR: ExcelBorderSide = {
-  style: 'medium',
-  color: { argb: 'FF9CA3AF' },
+  style: 'thin',
+  color: { argb: 'FF8EA6BA' },
 };
 
 /** Strip encoding replacement chars and non-printable control chars. */
@@ -90,6 +102,20 @@ function formatQuantity(value: number, unit: string | null | undefined) {
     : String(Number(value.toFixed(4))).replace(/\.?0+$/, '');
   const normalizedUnit = cleanText(unit ?? '').trim();
   return normalizedUnit ? `${formattedValue} ${normalizedUnit}` : formattedValue;
+}
+
+function pixelsToExcelPoints(pixels: number) {
+  return Math.ceil(pixels * (72 / 96));
+}
+
+function proposalExcelRowHeight(swatchCount: number) {
+  if (swatchCount <= 0) return PROPOSAL_EXCEL_ROW_HEIGHT;
+  const gridRows = Math.ceil(swatchCount / PROPOSAL_SWATCH_GRID_COLUMNS);
+  const requiredPixels =
+    PROPOSAL_SWATCH_PADDING_PX * 2 +
+    gridRows * PROPOSAL_SWATCH_SIZE_PX +
+    (gridRows - 1) * PROPOSAL_SWATCH_GAP_PX;
+  return Math.max(PROPOSAL_EXCEL_ROW_HEIGHT, pixelsToExcelPoints(requiredPixels));
 }
 
 function numericPrefixFormula(address: string) {
@@ -188,7 +214,6 @@ function headerLabelForColumn(column: { key: string; label: string }) {
   return column.label;
 }
 
-const PROPOSAL_SWATCH_LIMIT = 4;
 export async function exportProposalExcel(
   project: Project,
   categories: ProposalCategoryWithItems[],
@@ -199,11 +224,7 @@ export async function exportProposalExcel(
 ): Promise<void> {
   const { Workbook } = await import('exceljs');
   const exportCategories = filteredProposalCategories(categories);
-  const assets = await buildProposalAssetBundle(
-    project.id,
-    exportCategories,
-    PROPOSAL_SWATCH_LIMIT,
-  );
+  const assets = await buildProposalAssetBundle(project.id, exportCategories);
   const exportDoc = buildProposalExportDocument(
     project,
     exportCategories,
@@ -254,7 +275,12 @@ export async function exportProposalExcel(
   worksheet.mergeCells(currentRow, TABLE_START_COLUMN, currentRow, endColumn);
   const companyCell = worksheet.getCell(currentRow, TABLE_START_COLUMN);
   companyCell.value = exportDoc.companyName.toUpperCase();
-  companyCell.font = { name: PROPOSAL_FONT, size: 15, bold: true, color: { argb: 'FF1A6B4A' } };
+  companyCell.font = {
+    name: PROPOSAL_FONT,
+    size: 15,
+    bold: true,
+    color: { argb: THEME_BRAND_ARGB },
+  };
   companyCell.alignment = { horizontal: 'center', vertical: 'middle' };
   worksheet.getRow(currentRow).height = 26;
   currentRow += 1;
@@ -295,7 +321,11 @@ export async function exportProposalExcel(
     slotRanges.forEach((range) => {
       worksheet.mergeCells(imageBandRow, range.start, imageBandRow, range.end);
       const slotCell = worksheet.getCell(imageBandRow, range.start);
-      slotCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
+      slotCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: THEME_BRAND_PALE_ARGB },
+      };
       slotCell.border = thinBorder();
     });
     await Promise.all(
@@ -333,7 +363,7 @@ export async function exportProposalExcel(
         bold: true,
         color: { argb: 'FFFFFFFF' },
       };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A6B4A' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: THEME_BRAND_ARGB } };
       cell.alignment = { vertical: 'middle', indent: 1 };
       cell.border = {
         ...tableBorder(),
@@ -366,10 +396,14 @@ export async function exportProposalExcel(
         name: PROPOSAL_FONT,
         size: 9,
         bold: true,
-        color: { argb: 'FF92400E' },
+        color: { argb: THEME_BRAND_DARK_ARGB },
       };
       revisedHeaderCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      revisedHeaderCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF7ED' } };
+      revisedHeaderCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: THEME_BRAND_LIGHT_ARGB },
+      };
       revisedHeaderCell.border = tableBorder();
     }
 
@@ -389,19 +423,12 @@ export async function exportProposalExcel(
       }
 
       targetCell.value = headerLabelForColumn(column);
-      targetCell.font = { name: PROPOSAL_FONT, size: 8, bold: true, color: { argb: 'FF1F2937' } };
+      targetCell.font = { name: PROPOSAL_FONT, size: 8, bold: true, color: { argb: 'FFFFFFFF' } };
       targetCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
       targetCell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: {
-          argb:
-            column.key === 'revisionNotes'
-              ? 'FFFFF7ED'
-              : column.isRevision
-                ? 'FFFEF3C7'
-                : 'FFF3F2F0',
-        },
+        fgColor: { argb: THEME_BRAND_ARGB },
       };
       targetCell.border = borderForColumn(tableBorder(), column, prevColumn, nextColumn, {
         isFirstColumn: index === 0,
@@ -422,9 +449,11 @@ export async function exportProposalExcel(
     currentRow += hasRevisedProposalHeader ? 2 : 1;
 
     const firstItemRow = currentRow;
-    for (const rowData of section.rows) {
+    for (const [rowIndex, rowData] of section.rows.entries()) {
       const row = worksheet.getRow(currentRow);
-      row.height = PROPOSAL_EXCEL_ROW_HEIGHT;
+      const rowHeight = proposalExcelRowHeight(rowData.swatches.length);
+      const rowFillArgb = rowIndex % 2 === 0 ? ROW_FILL_ARGB : ALT_ROW_FILL_ARGB;
+      row.height = rowHeight;
       columns.forEach((column, index) => {
         const cell = row.getCell(index + TABLE_START_COLUMN);
         const prevColumn = index > 0 ? (columns[index - 1] ?? null) : null;
@@ -557,11 +586,7 @@ export async function exportProposalExcel(
           isLastColumn: index === columns.length - 1,
           rowBottom: true,
         });
-        if (column.key === 'revisionNotes') {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
-        } else if (column.isRevision) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFCF2' } };
-        }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFillArgb } };
         // Amber highlight on rev cost cells when PM action is required.
         if (
           rowData.revCostFlagged &&
@@ -581,7 +606,7 @@ export async function exportProposalExcel(
             columnIndex: renderingColumn + TABLE_START_COLUMN - 1,
             rowNumber: currentRow,
             columnWidth: renderingExportColumn.excelWidth,
-            rowHeight: PROPOSAL_EXCEL_ROW_HEIGHT,
+            rowHeight,
             paddingPx: PROPOSAL_IMAGE_PADDING_PX,
           });
         }
@@ -596,7 +621,7 @@ export async function exportProposalExcel(
             columnIndex: planColumn + TABLE_START_COLUMN - 1,
             rowNumber: currentRow,
             columnWidth: planExportColumn.excelWidth,
-            rowHeight: PROPOSAL_EXCEL_ROW_HEIGHT,
+            rowHeight,
             paddingPx: PROPOSAL_IMAGE_PADDING_PX,
           });
         }
@@ -606,16 +631,33 @@ export async function exportProposalExcel(
         const swatchExportColumn = columns[swatchColumn];
         const swatches = rowData.swatches;
         const swatchCell = row.getCell(swatchColumn + TABLE_START_COLUMN);
-        swatchCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F2' } };
-        const swatch = swatches[0];
-        if (swatch && swatchExportColumn) {
-          const placement = excelPaddedCellPlacement(
-            swatchColumn + TABLE_START_COLUMN - 1,
-            currentRow,
-            swatchExportColumn.excelWidth,
-            PROPOSAL_EXCEL_ROW_HEIGHT,
+        swatchCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFillArgb } };
+        if (swatchExportColumn && swatches.length > 0) {
+          const placements = excelSquareGridPlacements({
+            columnIndex: swatchColumn + TABLE_START_COLUMN - 1,
+            rowNumber: currentRow,
+            columnWidth: swatchExportColumn.excelWidth,
+            rowHeight,
+            paddingPx: PROPOSAL_SWATCH_PADDING_PX,
+            imageCount: swatches.length,
+            columnCount: PROPOSAL_SWATCH_GRID_COLUMNS,
+            gapPx: PROPOSAL_SWATCH_GAP_PX,
+            maxImageSizePx: PROPOSAL_SWATCH_SIZE_PX,
+          });
+          await Promise.all(
+            swatches.map((swatch, index) => {
+              const placement = placements[index];
+              if (!placement) return Promise.resolve();
+              return addExcelCoverImage(
+                workbook,
+                worksheet,
+                swatch,
+                placement,
+                placement.widthPx,
+                placement.heightPx,
+              );
+            }),
           );
-          await addExcelCircularCoverImage(workbook, worksheet, swatch, placement);
         }
       }
 
@@ -695,8 +737,17 @@ export async function exportProposalExcel(
   worksheet.mergeCells(currentRow, summaryStartColumn, currentRow, summaryEndColumn);
   const summaryTitle = worksheet.getCell(currentRow, summaryStartColumn);
   summaryTitle.value = 'BUDGET SUMMARY';
-  summaryTitle.font = { name: PROPOSAL_FONT, size: 10, bold: true, color: { argb: 'FF1A6B4A' } };
-  summaryTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F2F0' } };
+  summaryTitle.font = {
+    name: PROPOSAL_FONT,
+    size: 10,
+    bold: true,
+    color: { argb: THEME_BRAND_DARK_ARGB },
+  };
+  summaryTitle.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: THEME_BRAND_LIGHT_ARGB },
+  };
   summaryTitle.alignment = { vertical: 'middle', indent: 1 };
   summaryTitle.border = { bottom: { style: 'thin' as const, color: { argb: 'FFBFBFBF' } } };
   worksheet.getRow(currentRow).height = 22;
@@ -708,7 +759,7 @@ export async function exportProposalExcel(
   [summaryStartColumn, summaryStartColumn + 1, summaryStartColumn + 2].forEach((columnIndex) => {
     const cell = worksheet.getCell(currentRow, columnIndex);
     cell.font = { name: PROPOSAL_FONT, size: 10, bold: true, color: { argb: 'FF1F2937' } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F2F0' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: THEME_BRAND_LIGHT_ARGB } };
     cell.border = headerRowBorder();
     cell.alignment = {
       horizontal:

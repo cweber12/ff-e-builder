@@ -67,7 +67,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden border border-neutral-200 bg-surface-muted shadow-sm border-0 shadow-none h-full w-full rounded-none"
+                class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
                   class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted catalog-placeholder"
@@ -260,7 +260,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                   class="grid gap-1"
                 >
                   <div
-                    class="relative overflow-hidden border border-neutral-200 bg-surface-muted shadow-sm h-10 w-10 rounded-full shrink-0 border-neutral-200 shadow-none "
+                    class="relative overflow-hidden bg-white h-10 w-10 rounded-full shrink-0 border-0 shadow-none "
                   >
                     <div
                       class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted bg-white"
@@ -362,7 +362,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden border border-neutral-200 bg-surface-muted shadow-sm border-0 shadow-none h-full w-full rounded-none"
+                class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
                   class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted catalog-plan-placeholder"

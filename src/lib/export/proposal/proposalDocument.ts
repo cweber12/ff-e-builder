@@ -119,7 +119,7 @@ const PROPOSAL_EXPORT_COLUMNS: ProposalExportColumn[] = [
   },
   { key: 'notes', label: 'Notes', pdfWidth: 28, excelWidth: 22 },
   { key: 'size', label: 'Size', pdfWidth: 22, excelWidth: 16 },
-  { key: 'swatch', label: 'Swatch', pdfWidth: 16, excelWidth: 12 },
+  { key: 'swatch', label: 'Swatch', pdfWidth: 16, excelWidth: 18 },
   { key: 'cbm', label: 'CBM', pdfWidth: 10, excelWidth: 9 },
   { key: 'quantity', label: 'Quantity', pdfWidth: 12, excelWidth: 12, alwaysVisible: true },
   { key: 'unit', label: 'Unit', pdfWidth: 12, excelWidth: 8, alwaysVisible: true },

@@ -25,6 +25,13 @@ export type ExcelImageCellPlacementOptions = {
   paddingPx?: number;
 };
 
+export type ExcelSquareGridPlacementOptions = ExcelImageCellPlacementOptions & {
+  imageCount: number;
+  columnCount?: number;
+  gapPx?: number;
+  maxImageSizePx?: number;
+};
+
 export async function blobToPngDataUrl(blob: Blob): Promise<string> {
   const objectUrl = URL.createObjectURL(blob);
   try {
@@ -116,6 +123,62 @@ export function excelPaddedCellPlacement(
     widthPx: Math.max(1, widthPx - paddingPx * 2),
     heightPx: Math.max(1, heightPx - paddingPx * 2),
   };
+}
+
+export function excelSquareGridPlacements({
+  columnIndex,
+  rowNumber,
+  columnWidth,
+  rowHeight,
+  paddingPx = DEFAULT_EXCEL_IMAGE_PADDING_PX,
+  imageCount,
+  columnCount,
+  gapPx = 4,
+  maxImageSizePx = Number.POSITIVE_INFINITY,
+}: ExcelSquareGridPlacementOptions): ExcelImagePlacement[] {
+  if (imageCount <= 0) return [];
+
+  const cellWidthPx = excelColumnWidthToPixels(columnWidth);
+  const cellHeightPx = excelRowHeightToPixels(rowHeight);
+  const gridColumnCount = Math.max(
+    1,
+    Math.min(imageCount, columnCount ?? (imageCount === 1 ? 1 : 2)),
+  );
+  const gridRowCount = Math.ceil(imageCount / gridColumnCount);
+  const availableWidthPx = Math.max(1, cellWidthPx - paddingPx * 2 - gapPx * (gridColumnCount - 1));
+  const availableHeightPx = Math.max(1, cellHeightPx - paddingPx * 2 - gapPx * (gridRowCount - 1));
+  const squarePx = Math.max(
+    1,
+    Math.floor(
+      Math.min(
+        maxImageSizePx,
+        availableWidthPx / gridColumnCount,
+        availableHeightPx / gridRowCount,
+      ),
+    ),
+  );
+  const gridWidthPx = squarePx * gridColumnCount + gapPx * (gridColumnCount - 1);
+  const gridHeightPx = squarePx * gridRowCount + gapPx * (gridRowCount - 1);
+  const startX = Math.max(0, (cellWidthPx - gridWidthPx) / 2);
+  const startY = Math.max(0, (cellHeightPx - gridHeightPx) / 2);
+
+  return Array.from({ length: imageCount }, (_, index) => {
+    const gridColumn = index % gridColumnCount;
+    const gridRow = Math.floor(index / gridColumnCount);
+    const leftPx = startX + gridColumn * (squarePx + gapPx);
+    const topPx = startY + gridRow * (squarePx + gapPx);
+
+    return {
+      box: {
+        left: columnIndex + leftPx / cellWidthPx,
+        top: rowNumber - 1 + topPx / cellHeightPx,
+        right: columnIndex + (leftPx + squarePx) / cellWidthPx,
+        bottom: rowNumber - 1 + (topPx + squarePx) / cellHeightPx,
+      },
+      widthPx: squarePx,
+      heightPx: squarePx,
+    };
+  });
 }
 
 /**

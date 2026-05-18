@@ -7,7 +7,7 @@ export function thinBorder() {
   };
 }
 
-/** Thin sides and top, medium-weight bottom — for column header rows. */
+/** Thin sides and top with a slightly firmer bottom for column header rows. */
 export function headerRowBorder() {
   return {
     top: { style: 'thin' as const, color: { argb: 'FFD9D9D9' } },
@@ -17,7 +17,7 @@ export function headerRowBorder() {
   };
 }
 
-/** Medium-weight top, thin others — for subtotal / grand-total rows. */
+/** Thin top rule for subtotal / grand-total rows. */
 export function subtotalTopBorder() {
   return {
     top: { style: 'thin' as const, color: { argb: 'FFBFBFBF' } },
@@ -28,7 +28,7 @@ export function subtotalTopBorder() {
 }
 
 export function tableBorderSide() {
-  return { style: 'medium' as const, color: { argb: 'FF9CA3AF' } };
+  return { style: 'thin' as const, color: { argb: 'FFB8C0C8' } };
 }
 
 export function tableBorder() {

@@ -6,7 +6,7 @@ import type { ProposalAssetBundle } from './proposalDocument';
 export async function buildProposalAssetBundle(
   projectId: string,
   categories: ProposalCategoryWithItems[],
-  swatchLimit: number,
+  swatchLimit?: number,
 ): Promise<ProposalAssetBundle> {
   const projectImages = await api.images.list({ entityType: 'project', entityId: projectId });
   const projectImageData = await Promise.all(
@@ -38,11 +38,12 @@ export async function buildProposalAssetBundle(
 
       const materialIds = item.materials
         .map((material) => material.id)
-        .filter((id, index, all) => Boolean(id) && all.indexOf(id) === index)
-        .slice(0, swatchLimit);
+        .filter((id, index, all) => Boolean(id) && all.indexOf(id) === index);
+      const exportMaterialIds =
+        swatchLimit === undefined ? materialIds : materialIds.slice(0, swatchLimit);
 
       const materialImageSets = await Promise.all(
-        materialIds.map(async (materialId) =>
+        exportMaterialIds.map(async (materialId) =>
           api.images.list({ entityType: 'material', entityId: materialId }),
         ),
       );
@@ -51,7 +52,7 @@ export async function buildProposalAssetBundle(
         .filter((image): image is ImageAsset => Boolean(image));
 
       const swatchData = await Promise.all(
-        swatchImages.slice(0, swatchLimit).map(async (image) => imageAssetToPngDataUrl(image)),
+        swatchImages.map(async (image) => imageAssetToPngDataUrl(image)),
       );
       const resolvedSwatches = swatchData.filter((value): value is string => Boolean(value));
       if (resolvedSwatches.length > 0) {
