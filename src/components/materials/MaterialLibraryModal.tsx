@@ -684,7 +684,7 @@ export function MaterialBadges({
         materials.map((material) => (
           <span
             key={material.id}
-            className="inline-flex max-w-full items-center gap-1 rounded-pill border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-700"
+            className="inline-flex max-w-full items-center gap-1 rounded-pill bg-white px-2 py-0.5 text-xs font-medium text-neutral-700"
           >
             <MaterialSwatchImage material={material} size="sm" />
             <span className="truncate">{material.name}</span>
@@ -753,7 +753,7 @@ export function MaterialSwatchImage({
 }) {
   const frameClassName =
     size === 'sm'
-      ? 'h-6 w-6 rounded-full'
+      ? 'h-9 w-9 rounded-full'
       : size === 'lg'
         ? 'h-20 w-20 rounded-full'
         : 'h-10 w-10 rounded-full';
@@ -771,7 +771,7 @@ export function MaterialSwatchImage({
       entityType="material"
       entityId={material.id}
       alt={`${material.name} swatch`}
-      className={`${frameClassName} shrink-0 border-neutral-200 shadow-none ${className}`}
+      className={`${frameClassName} shrink-0 border-0 shadow-none ${className}`}
       imageClassName="object-cover"
       placeholderClassName="bg-white"
       placeholderContent={hexPlaceholder}

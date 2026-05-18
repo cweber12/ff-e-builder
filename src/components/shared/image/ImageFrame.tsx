@@ -299,7 +299,10 @@ export function ImageFrame({
           !/rounded-/.test(className ?? '') && 'rounded-md',
           canUpload &&
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-          isRoomImage ? 'bg-transparent' : 'border border-neutral-200 bg-surface-muted shadow-sm',
+          !isRoomImage && 'bg-white',
+          !isRoomImage &&
+            !/\bborder-0\b/.test(className ?? '') &&
+            'border border-neutral-200 shadow-sm',
           className,
         )}
       >
