@@ -52,3 +52,18 @@ export const ffeStickyEdgeColumnClassNames = createStickyEdgeColumnClassNames({
     hoverClassName: 'group-hover:bg-neutral-50/60',
   },
 });
+
+export const proposalStickyEdgeColumnClassNames = createStickyEdgeColumnClassNames({
+  total: {
+    rightClassName: 'right-10',
+    widthClassName: 'w-24 min-w-[96px]',
+    cellZClassName: 'z-10',
+    hoverClassName: 'group-hover:bg-neutral-50',
+  },
+  actions: {
+    rightClassName: 'right-0',
+    widthClassName: 'w-10 min-w-10',
+    cellZClassName: 'z-20',
+    hoverClassName: 'group-hover:bg-neutral-50',
+  },
+});

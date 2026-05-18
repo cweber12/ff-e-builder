@@ -91,6 +91,7 @@ import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
 } from '../../shared/table/GeneratedItemSizeModal';
+import { proposalStickyEdgeColumnClassNames } from '../../shared/table/generatedItemStickyStyles';
 import { AddColumnModal } from '../../shared/modals/AddColumnModal';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
@@ -125,15 +126,6 @@ const PROPOSAL_COLUMN_META = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnMeta;
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
   'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
-const stickyTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-24 min-w-[96px]';
-const stickyOptionsHeaderClassName = 'sticky right-0 z-40 bg-surface w-10 min-w-10';
-const stickyTotalExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-surface w-24 min-w-[96px]';
-const stickyOptionsExpandedHeaderClassName = 'sticky top-0 right-0 z-[60] bg-surface w-10 min-w-10';
-const stickyTotalCellClassName =
-  'sticky right-10 z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
-const stickyOptionsCellClassName =
-  'sticky right-0 z-20 bg-surface w-10 min-w-10 group-hover:bg-neutral-50';
 // Qty and Unit Cost sticky-right columns (always visible, not draggable).
 // right offsets: unitCost = options(40) + total(96) = 136px
 //               qty = unitCost(136) + unitCost-width(96) = 232px
@@ -1088,7 +1080,7 @@ function ProposalCategorySection({
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                          stickyTotalHeaderClassName,
+                          proposalStickyEdgeColumnClassNames.totalHeader,
                         )}
                       >
                         Total Cost
@@ -1096,7 +1088,10 @@ function ProposalCategorySection({
                     </>
                   )}
                   <th
-                    className={cn('h-10 border-y border-neutral-200', stickyOptionsHeaderClassName)}
+                    className={cn(
+                      'h-10 border-y border-neutral-200',
+                      proposalStickyEdgeColumnClassNames.actionsHeader,
+                    )}
                     rowSpan={hasOpenRevision ? 2 : 1}
                   />
                 </tr>
@@ -1394,7 +1389,7 @@ function ProposalCategorySection({
                           <th
                             className={cn(
                               'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
-                              stickyTotalExpandedHeaderClassName,
+                              proposalStickyEdgeColumnClassNames.totalExpandedHeader,
                             )}
                           >
                             Total Cost
@@ -1404,7 +1399,7 @@ function ProposalCategorySection({
                       <th
                         className={cn(
                           'h-10 border-y border-neutral-200',
-                          stickyOptionsExpandedHeaderClassName,
+                          proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
                         )}
                         rowSpan={hasOpenRevision ? 2 : 1}
                       />
@@ -1802,12 +1797,20 @@ function ProposalRow({
             tdClassName={stickyUnitCostCellClassName}
             inputClassName={editInputClassName}
           />
-          <td className={cn('px-3 py-2 font-semibold text-gray-900', stickyTotalCellClassName)}>
+          <td
+            className={cn(
+              'px-3 py-2 font-semibold text-gray-900',
+              proposalStickyEdgeColumnClassNames.totalCell,
+            )}
+          >
             {formatMoney(cents(lineTotal))}
           </td>
         </>
       )}
-      <td className={cn('px-1 py-2', stickyOptionsCellClassName)} onClick={stopProp}>
+      <td
+        className={cn('px-1 py-2', proposalStickyEdgeColumnClassNames.actionsCell)}
+        onClick={stopProp}
+      >
         <ProposalItemActionsMenu
           itemName={item.itemName || item.productTag || item.description || 'item'}
           otherCategories={otherCategories}
