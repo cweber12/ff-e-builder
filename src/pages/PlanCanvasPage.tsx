@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import {
+  ChangeConfirmModal,
+  type ChangeConfirmResult,
+} from '../components/proposal/ChangeConfirmModal';
 import { PlanInspector } from '../components/plans/canvas/PlanInspector';
 import { PlanToolRail } from '../components/plans/canvas/PlanToolRail';
 import { PlanViewport } from '../components/plans/canvas/PlanViewport';
@@ -85,6 +89,14 @@ export function PlanCanvasPage({
     useState<MeasurementApplicationMode>('reference-only');
   const [isApplyingMeasurement, setIsApplyingMeasurement] = useState(false);
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
+  const [pendingMeasurementApply, setPendingMeasurementApply] = useState<{
+    roundedQuantity: number;
+    quantityUnit: string;
+    targetItemId: string;
+    containerId: string;
+    version: number;
+    previousQuantity: number;
+  } | null>(null);
 
   const selectedPlan = useMemo(
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
@@ -570,6 +582,46 @@ export function PlanCanvasPage({
     }
   };
 
+  const executeApplyMeasurement = async (
+    roundedQuantity: number,
+    quantityUnit: string,
+    targetItemId: string,
+    containerId: string,
+    version: number,
+    previousQuantity: number,
+    result?: ChangeConfirmResult,
+  ) => {
+    setIsApplyingMeasurement(true);
+    try {
+      const updated = await api.proposal.updateItem(targetItemId, {
+        quantity: roundedQuantity,
+        quantityUnit,
+        version,
+        changeLog: {
+          columnKey: 'quantity',
+          previousValue: String(previousQuantity),
+          newValue: String(roundedQuantity),
+          proposalStatus: project.proposalStatus,
+          isPriceAffecting: result?.isPriceAffecting ?? true,
+          ...(result?.notes ? { notes: result.notes } : {}),
+        },
+      });
+      queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(containerId), (old) =>
+        (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
+      );
+      toast.success('Measurement applied to item.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Measurement application failed.';
+      toast.error(
+        err instanceof ApiError && err.status === 409
+          ? 'This item changed elsewhere. Refresh the project and try again.'
+          : message,
+      );
+    } finally {
+      setIsApplyingMeasurement(false);
+    }
+  };
+
   const handleApplyMeasurement = async () => {
     if (
       !selectedMeasurement ||
@@ -580,60 +632,66 @@ export function PlanCanvasPage({
       return;
     }
 
+    if (selectedMeasurementItem.targetKind === 'proposal') {
+      const horizontalFeet = convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, 'ft');
+      const verticalFeet = convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, 'ft');
+      const quantity =
+        measurementApplicationMode === 'proposal-horizontal'
+          ? selectedMeasurementDisplay.horizontal
+          : measurementApplicationMode === 'proposal-vertical'
+            ? selectedMeasurementDisplay.vertical
+            : horizontalFeet * verticalFeet;
+      const quantityUnit =
+        measurementApplicationMode === 'proposal-area'
+          ? 'sq ft'
+          : calibration?.unit === 'ft'
+            ? 'ln ft'
+            : calibration?.unit === 'in'
+              ? 'ln in'
+              : calibration?.unit === 'm'
+                ? 'ln m'
+                : calibration?.unit === 'cm'
+                  ? 'ln cm'
+                  : 'ln mm';
+      const roundedQuantity =
+        measurementApplicationMode === 'proposal-area'
+          ? Math.round(quantity)
+          : parseFloat(quantity.toFixed(2));
+      const pending = {
+        roundedQuantity,
+        quantityUnit,
+        targetItemId: selectedMeasurementItem.targetItemId,
+        containerId: selectedMeasurementItem.containerId,
+        version: selectedMeasurementItem.version,
+        previousQuantity: selectedMeasurementItem.quantity ?? 1,
+      };
+      if (project.proposalStatus !== 'in_progress') {
+        setPendingMeasurementApply(pending);
+        return;
+      }
+      await executeApplyMeasurement(
+        pending.roundedQuantity,
+        pending.quantityUnit,
+        pending.targetItemId,
+        pending.containerId,
+        pending.version,
+        pending.previousQuantity,
+      );
+      return;
+    }
+
+    // FFE item path — proposal items are handled early-return above.
     setIsApplyingMeasurement(true);
     try {
-      if (selectedMeasurementItem.targetKind === 'proposal') {
-        const horizontalFeet = convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, 'ft');
-        const verticalFeet = convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, 'ft');
-        const quantity =
-          measurementApplicationMode === 'proposal-horizontal'
-            ? selectedMeasurementDisplay.horizontal
-            : measurementApplicationMode === 'proposal-vertical'
-              ? selectedMeasurementDisplay.vertical
-              : horizontalFeet * verticalFeet;
-        const quantityUnit =
-          measurementApplicationMode === 'proposal-area'
-            ? 'sq ft'
-            : calibration?.unit === 'ft'
-              ? 'ln ft'
-              : calibration?.unit === 'in'
-                ? 'ln in'
-                : calibration?.unit === 'm'
-                  ? 'ln m'
-                  : calibration?.unit === 'cm'
-                    ? 'ln cm'
-                    : 'ln mm';
-        const roundedQuantity =
-          measurementApplicationMode === 'proposal-area'
-            ? Math.round(quantity)
-            : parseFloat(quantity.toFixed(2));
-        const updated = await api.proposal.updateItem(selectedMeasurementItem.targetItemId, {
-          quantity: roundedQuantity,
-          quantityUnit,
-          version: selectedMeasurementItem.version,
-          changeLog: {
-            columnKey: 'quantity',
-            previousValue: String(selectedMeasurementItem.quantity ?? 1),
-            newValue: String(roundedQuantity),
-            proposalStatus: project.proposalStatus,
-            isPriceAffecting: true,
-          },
-        });
-        queryClient.setQueryData<ProposalItem[]>(
-          proposalKeys.items(selectedMeasurementItem.containerId),
-          (old) => (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
-        );
-      } else {
-        const dimensions = selectedMeasurementDisplay.dimensionsText;
-        const updated = await api.items.update(selectedMeasurementItem.targetItemId, {
-          dimensions,
-          version: selectedMeasurementItem.version,
-        });
-        queryClient.setQueryData<Item[]>(
-          itemKeys.forRoom(selectedMeasurementItem.containerId),
-          (old) => (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
-        );
-      }
+      const dimensions = selectedMeasurementDisplay.dimensionsText;
+      const updated = await api.items.update(selectedMeasurementItem.targetItemId, {
+        dimensions,
+        version: selectedMeasurementItem.version,
+      });
+      queryClient.setQueryData<Item[]>(
+        itemKeys.forRoom(selectedMeasurementItem.containerId),
+        (old) => (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
+      );
 
       toast.success('Measurement applied to item.');
     } catch (err) {
@@ -667,192 +725,220 @@ export function PlanCanvasPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-canvas">
-      <header className="border-b border-black/10 bg-canvas-chrome/95 px-4 py-2.5 backdrop-blur md:px-5">
-        <div className="flex min-h-10 flex-wrap items-center gap-3">
-          <Link
-            to={`/projects/${project.id}/plans`}
-            className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400 transition hover:text-brand-700"
-          >
-            Plans
-          </Link>
-          <div className="h-5 w-px bg-neutral-200" />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1
-                className="max-w-[28ch] truncate font-display text-lg font-semibold text-neutral-950"
-                title={selectedPlan.name}
-              >
-                {selectedPlan.name}
-              </h1>
-              <span className="rounded-full border border-neutral-200 bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                {selectedPlan.sheetReference || 'No sheet ref'}
-              </span>
-              <span
-                className={[
-                  'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]',
-                  isCalibrated
-                    ? 'bg-emerald-100/80 text-emerald-800'
-                    : 'bg-amber-100/80 text-amber-800',
-                ].join(' ')}
-              >
-                {isCalibrated ? 'calibrated' : 'uncalibrated'}
-              </span>
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-            Sheet
-            <select
-              value={selectedPlan.id}
-              onChange={(event) => navigate(`/projects/${project.id}/plans/${event.target.value}`)}
-              className="min-w-44 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium normal-case tracking-normal text-neutral-800 outline-none transition focus:border-brand-400"
+    <>
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-canvas">
+        <header className="border-b border-black/10 bg-canvas-chrome/95 px-4 py-2.5 backdrop-blur md:px-5">
+          <div className="flex min-h-10 flex-wrap items-center gap-3">
+            <Link
+              to={`/projects/${project.id}/plans`}
+              className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400 transition hover:text-brand-700"
             >
-              {(plans ?? []).map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.sheetReference ? `${plan.sheetReference} - ${plan.name}` : plan.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </header>
+              Plans
+            </Link>
+            <div className="h-5 w-px bg-neutral-200" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1
+                  className="max-w-[28ch] truncate font-display text-lg font-semibold text-neutral-950"
+                  title={selectedPlan.name}
+                >
+                  {selectedPlan.name}
+                </h1>
+                <span className="rounded-full border border-neutral-200 bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                  {selectedPlan.sheetReference || 'No sheet ref'}
+                </span>
+                <span
+                  className={[
+                    'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]',
+                    isCalibrated
+                      ? 'bg-emerald-100/80 text-emerald-800'
+                      : 'bg-amber-100/80 text-amber-800',
+                  ].join(' ')}
+                >
+                  {isCalibrated ? 'calibrated' : 'uncalibrated'}
+                </span>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+              Sheet
+              <select
+                value={selectedPlan.id}
+                onChange={(event) =>
+                  navigate(`/projects/${project.id}/plans/${event.target.value}`)
+                }
+                className="min-w-44 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium normal-case tracking-normal text-neutral-800 outline-none transition focus:border-brand-400"
+              >
+                {(plans ?? []).map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.sheetReference ? `${plan.sheetReference} - ${plan.name}` : plan.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </header>
 
-      <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[72px_minmax(0,1fr)_340px]">
-        <PlanToolRail
-          activeTool={activeTool}
-          isCalibrated={isCalibrated}
-          onToolChange={setActiveTool}
-        />
-
-        <main className="min-h-0 overflow-hidden">
-          <PlanViewport
-            projectId={project.id}
-            plan={selectedPlan}
+        <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[72px_minmax(0,1fr)_340px]">
+          <PlanToolRail
             activeTool={activeTool}
+            isCalibrated={isCalibrated}
+            onToolChange={setActiveTool}
+          />
+
+          <main className="min-h-0 overflow-hidden">
+            <PlanViewport
+              projectId={project.id}
+              plan={selectedPlan}
+              activeTool={activeTool}
+              calibration={calibration}
+              calibrationDraft={calibrationDraft}
+              onCalibrationDraftChange={setCalibrationDraft}
+              lengthLines={lengthLines}
+              selectedLengthLineId={selectedLengthLineId}
+              lengthLineDraft={lengthLineDraft}
+              onLengthLineDraftChange={setLengthLineDraft}
+              measurements={measurements}
+              selectedMeasurementId={selectedMeasurementId}
+              measurementDraft={measurementDraft}
+              onMeasurementDraftChange={setMeasurementDraft}
+              cropDraft={cropDraft}
+              onCropDraftChange={setCropDraft}
+              onMeasurementSelect={(measurementId) => {
+                const item = measurementItemsByMeasurementId.get(measurementId);
+                setSelectedMeasurementId(measurementId);
+                setActiveTool((currentTool) => (currentTool === 'crop' ? 'crop' : 'rectangle'));
+                setMeasurementDraft(null);
+                setCropDraft(null);
+                if (item) setSelectedMeasurementTargetKey(item.key);
+              }}
+              onNaturalSizeChange={setPlanNaturalSize}
+            />
+          </main>
+
+          <PlanInspector
+            activeTool={activeTool}
+            onToolChange={setActiveTool}
             calibration={calibration}
+            calibrationLoading={calibrationLoading}
+            isCalibrated={isCalibrated}
             calibrationDraft={calibrationDraft}
-            onCalibrationDraftChange={setCalibrationDraft}
+            calibrationPixelLength={calibrationPixelLength}
+            calibrationUnit={calibrationUnit}
+            onCalibrationUnitChange={setCalibrationUnit}
+            calibrationFeetInput={calibrationFeetInput}
+            onCalibrationFeetInputChange={setCalibrationFeetInput}
+            calibrationInchesInput={calibrationInchesInput}
+            onCalibrationInchesInputChange={setCalibrationInchesInput}
+            calibrationLengthInput={calibrationLengthInput}
+            onCalibrationLengthInputChange={setCalibrationLengthInput}
+            calibrationLengthValue={calibrationLengthValue}
+            canSaveCalibration={canSaveCalibration}
+            savingCalibration={setCalibration.isPending}
+            onSaveCalibration={() => void handleSaveCalibration()}
+            onClearCalibrationDraft={() => setCalibrationDraft(null)}
             lengthLines={lengthLines}
+            lengthLinesLoading={lengthLinesLoading}
+            selectedLengthLine={selectedLengthLine}
             selectedLengthLineId={selectedLengthLineId}
             lengthLineDraft={lengthLineDraft}
-            onLengthLineDraftChange={setLengthLineDraft}
+            lengthLinePixelLength={lengthLinePixelLength}
+            draftLengthInPlanUnits={draftLengthInPlanUnits}
+            lengthLineLabelInput={lengthLineLabelInput}
+            onLengthLineLabelInputChange={setLengthLineLabelInput}
+            canSaveLengthLine={canSaveLengthLine}
+            savingLengthLine={createLengthLine.isPending || updateLengthLine.isPending}
+            deletingLengthLine={deleteLengthLine.isPending}
+            onSaveLengthLine={() => void handleSaveLengthLine()}
+            onClearLengthLineDraft={() => setLengthLineDraft(null)}
+            onSelectLengthLine={(line) => {
+              setSelectedLengthLineId(line.id);
+              setActiveTool('length');
+              setLengthLineDraft(null);
+              setLengthLineLabelInput(line.label ?? '');
+            }}
+            onClearLengthLineSelection={() => {
+              setSelectedLengthLineId(null);
+              setLengthLineDraft(null);
+              setLengthLineLabelInput('');
+            }}
+            onDeleteLengthLine={() => void handleDeleteLengthLine()}
             measurements={measurements}
+            measurementsLoading={measurementsLoading}
+            measurementItems={measurementItems}
+            measurementItemsByMeasurementId={measurementItemsByMeasurementId}
+            normalizedMeasurementDraft={normalizedMeasurementDraft}
             selectedMeasurementId={selectedMeasurementId}
-            measurementDraft={measurementDraft}
-            onMeasurementDraftChange={setMeasurementDraft}
-            cropDraft={cropDraft}
-            onCropDraftChange={setCropDraft}
-            onMeasurementSelect={(measurementId) => {
-              const item = measurementItemsByMeasurementId.get(measurementId);
+            selectedMeasurement={selectedMeasurement}
+            selectedMeasurementItem={selectedMeasurementItem}
+            selectedMeasurementRect={selectedMeasurementRect}
+            selectedMeasurementDisplay={selectedMeasurementDisplay}
+            selectedMeasurementTargetKey={selectedMeasurementTargetKey}
+            onMeasurementTargetKeyChange={setSelectedMeasurementTargetKey}
+            draftMeasurementWidthPlanUnits={draftMeasurementWidthPlanUnits}
+            draftMeasurementHeightPlanUnits={draftMeasurementHeightPlanUnits}
+            canSaveMeasurement={canSaveMeasurement}
+            savingMeasurement={createMeasurement.isPending || updateMeasurement.isPending}
+            deletingMeasurement={deleteMeasurement.isPending}
+            onSaveMeasurement={() => void handleSaveMeasurement()}
+            onClearMeasurementDraft={() => setMeasurementDraft(null)}
+            onSelectMeasurement={(measurementId, item) => {
               setSelectedMeasurementId(measurementId);
-              setActiveTool((currentTool) => (currentTool === 'crop' ? 'crop' : 'rectangle'));
               setMeasurementDraft(null);
               setCropDraft(null);
               if (item) setSelectedMeasurementTargetKey(item.key);
             }}
-            onNaturalSizeChange={setPlanNaturalSize}
+            onClearMeasurementSelection={() => {
+              setSelectedMeasurementId(null);
+              setMeasurementDraft(null);
+              setCropDraft(null);
+              setSelectedMeasurementTargetKey('');
+            }}
+            onDeleteMeasurement={() => void handleDeleteMeasurement()}
+            normalizedCropDraft={normalizedCropDraft}
+            draftCropWidthPlanUnits={draftCropWidthPlanUnits}
+            draftCropHeightPlanUnits={draftCropHeightPlanUnits}
+            canSaveCrop={canSaveCrop}
+            canSaveCropAndPlanImage={canSaveCropAndPlanImage}
+            canSavePlanImage={canSavePlanImage}
+            savingPlanImage={isSavingPlanImage}
+            savingCrop={updateMeasurement.isPending}
+            onSaveCropAndPlanImage={() => void handleSaveCropAndPlanImage()}
+            onSaveCrop={() => void handleSaveCrop()}
+            onClearCropDraft={() => setCropDraft(null)}
+            onSavePlanImage={() => void handleSavePlanImage()}
+            onClearSavedCrop={() => void handleClearSavedCrop()}
+            measurementApplicationMode={measurementApplicationMode}
+            onMeasurementApplicationModeChange={setMeasurementApplicationMode}
+            applyingMeasurement={isApplyingMeasurement}
+            onApplyMeasurement={() => void handleApplyMeasurement()}
           />
-        </main>
-
-        <PlanInspector
-          activeTool={activeTool}
-          onToolChange={setActiveTool}
-          calibration={calibration}
-          calibrationLoading={calibrationLoading}
-          isCalibrated={isCalibrated}
-          calibrationDraft={calibrationDraft}
-          calibrationPixelLength={calibrationPixelLength}
-          calibrationUnit={calibrationUnit}
-          onCalibrationUnitChange={setCalibrationUnit}
-          calibrationFeetInput={calibrationFeetInput}
-          onCalibrationFeetInputChange={setCalibrationFeetInput}
-          calibrationInchesInput={calibrationInchesInput}
-          onCalibrationInchesInputChange={setCalibrationInchesInput}
-          calibrationLengthInput={calibrationLengthInput}
-          onCalibrationLengthInputChange={setCalibrationLengthInput}
-          calibrationLengthValue={calibrationLengthValue}
-          canSaveCalibration={canSaveCalibration}
-          savingCalibration={setCalibration.isPending}
-          onSaveCalibration={() => void handleSaveCalibration()}
-          onClearCalibrationDraft={() => setCalibrationDraft(null)}
-          lengthLines={lengthLines}
-          lengthLinesLoading={lengthLinesLoading}
-          selectedLengthLine={selectedLengthLine}
-          selectedLengthLineId={selectedLengthLineId}
-          lengthLineDraft={lengthLineDraft}
-          lengthLinePixelLength={lengthLinePixelLength}
-          draftLengthInPlanUnits={draftLengthInPlanUnits}
-          lengthLineLabelInput={lengthLineLabelInput}
-          onLengthLineLabelInputChange={setLengthLineLabelInput}
-          canSaveLengthLine={canSaveLengthLine}
-          savingLengthLine={createLengthLine.isPending || updateLengthLine.isPending}
-          deletingLengthLine={deleteLengthLine.isPending}
-          onSaveLengthLine={() => void handleSaveLengthLine()}
-          onClearLengthLineDraft={() => setLengthLineDraft(null)}
-          onSelectLengthLine={(line) => {
-            setSelectedLengthLineId(line.id);
-            setActiveTool('length');
-            setLengthLineDraft(null);
-            setLengthLineLabelInput(line.label ?? '');
-          }}
-          onClearLengthLineSelection={() => {
-            setSelectedLengthLineId(null);
-            setLengthLineDraft(null);
-            setLengthLineLabelInput('');
-          }}
-          onDeleteLengthLine={() => void handleDeleteLengthLine()}
-          measurements={measurements}
-          measurementsLoading={measurementsLoading}
-          measurementItems={measurementItems}
-          measurementItemsByMeasurementId={measurementItemsByMeasurementId}
-          normalizedMeasurementDraft={normalizedMeasurementDraft}
-          selectedMeasurementId={selectedMeasurementId}
-          selectedMeasurement={selectedMeasurement}
-          selectedMeasurementItem={selectedMeasurementItem}
-          selectedMeasurementRect={selectedMeasurementRect}
-          selectedMeasurementDisplay={selectedMeasurementDisplay}
-          selectedMeasurementTargetKey={selectedMeasurementTargetKey}
-          onMeasurementTargetKeyChange={setSelectedMeasurementTargetKey}
-          draftMeasurementWidthPlanUnits={draftMeasurementWidthPlanUnits}
-          draftMeasurementHeightPlanUnits={draftMeasurementHeightPlanUnits}
-          canSaveMeasurement={canSaveMeasurement}
-          savingMeasurement={createMeasurement.isPending || updateMeasurement.isPending}
-          deletingMeasurement={deleteMeasurement.isPending}
-          onSaveMeasurement={() => void handleSaveMeasurement()}
-          onClearMeasurementDraft={() => setMeasurementDraft(null)}
-          onSelectMeasurement={(measurementId, item) => {
-            setSelectedMeasurementId(measurementId);
-            setMeasurementDraft(null);
-            setCropDraft(null);
-            if (item) setSelectedMeasurementTargetKey(item.key);
-          }}
-          onClearMeasurementSelection={() => {
-            setSelectedMeasurementId(null);
-            setMeasurementDraft(null);
-            setCropDraft(null);
-            setSelectedMeasurementTargetKey('');
-          }}
-          onDeleteMeasurement={() => void handleDeleteMeasurement()}
-          normalizedCropDraft={normalizedCropDraft}
-          draftCropWidthPlanUnits={draftCropWidthPlanUnits}
-          draftCropHeightPlanUnits={draftCropHeightPlanUnits}
-          canSaveCrop={canSaveCrop}
-          canSaveCropAndPlanImage={canSaveCropAndPlanImage}
-          canSavePlanImage={canSavePlanImage}
-          savingPlanImage={isSavingPlanImage}
-          savingCrop={updateMeasurement.isPending}
-          onSaveCropAndPlanImage={() => void handleSaveCropAndPlanImage()}
-          onSaveCrop={() => void handleSaveCrop()}
-          onClearCropDraft={() => setCropDraft(null)}
-          onSavePlanImage={() => void handleSavePlanImage()}
-          onClearSavedCrop={() => void handleClearSavedCrop()}
-          measurementApplicationMode={measurementApplicationMode}
-          onMeasurementApplicationModeChange={setMeasurementApplicationMode}
-          applyingMeasurement={isApplyingMeasurement}
-          onApplyMeasurement={() => void handleApplyMeasurement()}
-        />
+        </div>
       </div>
-    </div>
+      {pendingMeasurementApply && (
+        <ChangeConfirmModal
+          columnLabel="Quantity"
+          previousValue={String(pendingMeasurementApply.previousQuantity)}
+          newValue={`${String(pendingMeasurementApply.roundedQuantity)} ${pendingMeasurementApply.quantityUnit}`}
+          proposalStatus={project.proposalStatus}
+          isPriceAffecting={true}
+          lockPriceAffecting={true}
+          onConfirm={(result) => {
+            const p = pendingMeasurementApply;
+            setPendingMeasurementApply(null);
+            void executeApplyMeasurement(
+              p.roundedQuantity,
+              p.quantityUnit,
+              p.targetItemId,
+              p.containerId,
+              p.version,
+              p.previousQuantity,
+              result,
+            );
+          }}
+          onCancel={() => setPendingMeasurementApply(null)}
+        />
+      )}
+    </>
   );
 }
 
