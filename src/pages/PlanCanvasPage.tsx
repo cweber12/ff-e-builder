@@ -416,6 +416,27 @@ export function PlanCanvasPage({
       });
       setSelectedMeasurementId(updated.id);
     } else {
+      // Remove any pre-existing measurement for the same item on this plan so
+      // each item always has at most one measurement. Also purge its plan image
+      // so stale highlighted crops don't linger in the image cell.
+      const existing = measurements.find(
+        (m) => m.targetItemId === selectedMeasurementTarget.targetItemId,
+      );
+      if (existing) {
+        const existingEntityType = existing.targetKind === 'ffe' ? 'item_plan' : 'proposal_plan';
+        const existingImages = await api.images.list({
+          entityType: existingEntityType,
+          entityId: existing.targetItemId,
+        });
+        if (existingImages.length > 0) {
+          await Promise.all(existingImages.map((img) => api.images.delete(img.id)));
+          queryClient.setQueryData(
+            imageKeys.forEntity(existingEntityType, existing.targetItemId),
+            [],
+          );
+        }
+        await deleteMeasurement.mutateAsync(existing);
+      }
       const created = await createMeasurement.mutateAsync(input);
       setSelectedMeasurementId(created.id);
     }
