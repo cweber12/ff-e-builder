@@ -106,7 +106,7 @@ export function PanZoomFrame({ entityType, entityId, alt }: Props) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-[117/75] overflow-hidden rounded-lg border border-gray-200 bg-surface-muted select-none"
+      className="relative w-full aspect-[117/75] overflow-hidden rounded-lg border border-neutral-200 bg-surface-muted select-none"
       style={{ cursor: url ? (isZoomed ? 'grab' : 'zoom-in') : 'default' }}
       onPointerDown={url ? handlePointerDown : undefined}
       onPointerMove={url ? handlePointerMove : undefined}
@@ -116,7 +116,7 @@ export function PanZoomFrame({ entityType, entityId, alt }: Props) {
     >
       {images.isLoading && <div className="absolute inset-0 animate-pulse bg-surface-muted" />}
       {!images.isLoading && !url && (
-        <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
           No plan image
         </div>
       )}
@@ -141,13 +141,13 @@ export function PanZoomFrame({ entityType, entityId, alt }: Props) {
                 e.stopPropagation();
                 reset();
               }}
-              className="absolute bottom-2 right-2 rounded-md bg-white/80 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-sm hover:bg-white"
+              className="absolute bottom-2 right-2 rounded-md bg-white/80 px-2 py-1 text-xs font-medium text-neutral-600 shadow-sm backdrop-blur-sm hover:bg-white"
               title="Reset view (or double-click)"
             >
               Reset
             </button>
           )}
-          <div className="absolute top-2 right-2 rounded-md bg-white/70 px-1.5 py-0.5 text-[10px] text-gray-400 pointer-events-none backdrop-blur-sm">
+          <div className="absolute top-2 right-2 rounded-md bg-white/70 px-1.5 py-0.5 text-[10px] text-neutral-400 pointer-events-none backdrop-blur-sm">
             {isZoomed ? `${Math.round(scale * 100)}%` : 'Scroll to zoom'}
           </div>
         </>

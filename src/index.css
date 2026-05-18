@@ -1,6 +1,6 @@
 @import '@fontsource-variable/dm-sans';
 @import '@fontsource-variable/jetbrains-mono';
-@import '@fontsource-variable/lora';
+@import '@fontsource-variable/manrope';
 
 @tailwind base;
 @tailwind components;
@@ -13,40 +13,70 @@
   To retheme the app, override these variables in :root or a scoped selector.
 */
 :root {
-  /* Brand — steel blue scale built from reference color ~#4B7FAB */
-  --color-brand-50: 236 243 249;
-  --color-brand-100: 206 222 237;
-  --color-brand-200: 158 192 220;
-  --color-brand-300: 110 159 200;
-  --color-brand-400: 80 136 185;
-  --color-brand-500: 75 127 171;
-  --color-brand-600: 58 100 138;
-  --color-brand-700: 40 71 101;
+  /* Brand — deep steel/Prussian blue. Same hue family as before but
+     significantly more saturated and darker at every step so primary
+     actions, totals, and active states carry real weight on the page. */
+  --color-brand-50: 232 240 248;
+  --color-brand-100: 200 219 237;
+  --color-brand-200: 148 187 220;
+  --color-brand-300: 92 149 198;
+  --color-brand-400: 52 114 174;
+  --color-brand-500: 31 88 145; /* #1F5891 — new primary */
+  --color-brand-600: 22 69 117; /* #164575 */
+  --color-brand-700: 16 52 92; /* #10345C */
+  --color-brand-800: 11 38 68;
+  --color-brand-900: 7 26 47;
 
-  /* Neutral — cool blue-grays that harmonize with the steel blue brand */
-  --color-neutral-50: 248 249 250;
-  --color-neutral-100: 241 243 245;
-  --color-neutral-200: 224 228 232;
-  --color-neutral-300: 199 205 211;
-  --color-neutral-400: 158 167 176;
-  --color-neutral-500: 112 121 130;
-  --color-neutral-600: 80 88 97;
-  --color-neutral-700: 53 60 67;
-  --color-neutral-800: 34 39 46;
-  --color-neutral-900: 19 23 28;
-  --color-neutral-950: 10 13 17;
+  /* Neutral — cool slate-grays with no warm beige bias. 200 and 300 are
+     intentionally darker than before so borders read as architectural
+     ruled lines instead of disappearing into the page. */
+  --color-neutral-50: 246 248 251;
+  --color-neutral-100: 236 240 245;
+  --color-neutral-200: 211 219 230; /* visible card / table borders */
+  --color-neutral-300: 174 186 201; /* strong dividers */
+  --color-neutral-400: 130 145 163;
+  --color-neutral-500: 92 106 124;
+  --color-neutral-600: 62 76 94;
+  --color-neutral-700: 41 53 69;
+  --color-neutral-800: 25 35 49;
+  --color-neutral-900: 14 22 34;
+  --color-neutral-950: 8 14 22;
 
-  /* Surface */
+  /* Surface — three-layer hierarchy:
+       • surface         (#FFFFFF)         → cards, tables, modals
+       • surface-muted   (#E3E9F1)         → page panel — clearly visible as
+                                              "the gray section" against the
+                                              pure-white cards above
+       • surface-raised  (#FFFFFF)         → elevated overlays
+       • surface-inverse (#0E1622)         → reserved for inverted strips */
   --color-surface: 255 255 255;
-  --color-surface-muted: 248 246 241;
+  --color-surface-muted: 227 233 241;
   --color-surface-raised: 255 255 255;
-  --color-surface-inverse: 28 28 26;
+  --color-surface-inverse: 14 22 34;
+
+  /* Dedicated border tokens — used by tables, cards, and dividers when a
+     stronger weight than neutral-200 is wanted. */
+  --color-border: 211 219 230;
+  --color-border-strong: 174 186 201;
 
   /* Semantic */
+  --color-danger-50: 254 242 242;
   --color-danger-500: 220 38 38;
   --color-danger-600: 185 28 28;
+  --color-success-50: 236 253 245;
   --color-success-500: 5 150 105;
+  --color-success-700: 4 108 78;
+  --color-warning-50: 255 247 237;
   --color-warning-500: 217 119 6;
+  --color-warning-700: 154 84 6;
+
+  /* Plan canvas — drafting board palette */
+  --color-canvas-bg: 227 222 210;
+  --color-canvas-shell: 243 241 234;
+  --color-canvas-chrome: 251 250 246;
+  --color-plan-line: 139 111 71;
+  --color-plan-measure: 193 122 0;
+  --color-plan-active: 5 150 105;
 
   /* Shadows — warm-tinted, lower opacity than Tailwind defaults */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -55,7 +85,142 @@
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
 }
 
+@layer base {
+  html {
+    color-scheme: light;
+    /* Tighter rendering for the editorial / specification feel. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family:
+      'Manrope Variable',
+      'DM Sans Variable',
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-feature-settings: 'ss01', 'ss02', 'cv11';
+    letter-spacing: -0.005em;
+    background: rgb(var(--color-surface-muted));
+    color: rgb(var(--color-neutral-900));
+  }
+
+  /* Headings inherit Manrope through font-family above, but tighten
+     letter-spacing and weight for the architectural / spec-sheet voice. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.015em;
+    font-weight: 600;
+    color: rgb(var(--color-neutral-950));
+  }
+
+  /* Tabular numbers everywhere by default for quantity / cost columns. */
+  table,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 @layer components {
+  /* ──────────────────────────────────────────────────────────────────────
+     Design-system utilities
+     Shared primitives extracted from repeated inline class strings.
+     ────────────────────────────────────────────────────────────────────── */
+
+  /* Standard form input — apply on text, search, url, email inputs and
+     anything else that should match the spec-document input vocabulary. */
+  .input-base {
+    @apply w-full rounded-md border border-neutral-300 bg-white px-3 py-2
+           text-sm font-medium text-neutral-950
+           placeholder:font-normal placeholder:text-neutral-500
+           shadow-[inset_0_1px_0_rgb(0_0_0_/_0.02)]
+           transition-colors duration-150
+           focus:border-brand-600 focus:outline-none
+           focus:ring-2 focus:ring-brand-500/25
+           disabled:bg-neutral-50 disabled:text-neutral-500;
+  }
+
+  /* Compact input — slightly tighter padding, for inline-cell editors and
+     toolbars. */
+  .input-compact {
+    @apply rounded-md border border-neutral-300 bg-white px-2 py-1
+           text-sm text-neutral-950
+           focus:border-brand-500 focus:outline-none
+           focus:ring-1 focus:ring-brand-500/30;
+  }
+
+  /* Square icon button — used in table toolbars, panel headers, etc. */
+  .icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md
+           text-neutral-500
+           transition-colors duration-150
+           hover:bg-neutral-100 hover:text-brand-700
+           focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-1 focus-visible:outline-brand-500
+           disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  /* Universal keyboard focus ring — apply to interactive elements that
+     don't already use focus:border-brand-500. */
+  .focus-ring {
+    @apply focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-2 focus-visible:outline-brand-500;
+  }
+
+  /* Floating menu / popover panel — used for context menus, column popovers,
+     status dropdowns. Slightly stronger border + tightened shadow so the
+     panel reads as a clearly separated surface. */
+  .menu-panel {
+    @apply rounded-md border border-neutral-300 bg-white p-1 shadow-lg;
+  }
+
+  .menu-item {
+    @apply flex w-full items-center rounded px-2 py-1.5 text-left text-sm
+           text-neutral-700
+           transition-colors duration-100
+           hover:bg-brand-50 hover:text-brand-700
+           focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-brand-500;
+  }
+
+  /* Small uppercase metadata label — the "ID", "Manufacturer", "Status"
+     micro-labels that mark spec-document sections. Pairs with the JetBrains
+     Mono variable font when used on numeric IDs. Darkened to neutral-600
+     for the higher-contrast spec look. */
+  .eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.12em]
+           text-neutral-600;
+  }
+
+  .eyebrow-mono {
+    @apply font-mono text-[10px] font-semibold uppercase tracking-[0.12em]
+           text-neutral-600;
+  }
+
+  /* Table head cell — used for sticky column headers in table views so
+     density and typography stay consistent. */
+  .table-head-cell {
+    @apply h-10 border-y border-neutral-300 bg-surface px-3
+           text-[10px] font-semibold uppercase tracking-[0.08em]
+           text-neutral-600;
+  }
+
+  /* Hairline border — used to separate dense rows without visual weight. */
+  .border-hairline {
+    border-color: rgb(var(--color-neutral-200) / 0.7);
+  }
+
+  /* Drafting-board chrome — used inside the plan canvas for tool rails
+     and inspector panels. */
+  .canvas-chrome {
+    background-color: rgb(var(--color-canvas-chrome) / 0.94);
+    backdrop-filter: blur(8px);
+  }
+
   /* Project list rows */
   .project-row {
     position: relative;

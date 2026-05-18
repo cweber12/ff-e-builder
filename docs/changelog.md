@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(table): refresh Proposal item locations after FF&E Location renames
+- fix(imports): populate Proposal Location from combined Drawings / Location imports
+- fix(table): mirror linked FF&E and Proposal material edits across Generated Item views
 - fix(table): show linked Proposal material assignments in FF&E Generated Item reads
 - docs(table): document current FF&E and Proposal Generated Item table state
 - refactor(table): move Proposal quantity and unit-cost sticky styles into shared table helpers

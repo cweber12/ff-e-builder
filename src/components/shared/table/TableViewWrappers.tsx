@@ -58,7 +58,7 @@ export function GroupedTableSection({
   return (
     <section
       className={cn(
-        'relative w-fit min-w-full border border-neutral-200 bg-surface shadow-sm',
+        'relative w-fit min-w-full border border-neutral-300 bg-surface shadow-sm',
         className,
       )}
     >
@@ -83,7 +83,11 @@ export function GroupedTableHeader({
   return (
     <div
       className={cn(
-        'sticky top-0 z-40 flex h-10 min-w-full items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-neutral-50/85',
+        // Strong dark band — anchors each room/category section and
+        // contrasts sharply with the white card body below. Child controls
+        // inside the section use light-on-dark variants set by the
+        // surrounding callers.
+        'sticky top-0 z-40 flex h-11 min-w-full items-center justify-between gap-3 border-b border-brand-900/40 bg-brand-700 px-4 text-white shadow-[0_1px_0_rgb(255_255_255_/_0.06)_inset]',
         className,
       )}
     >
@@ -95,8 +99,8 @@ export function GroupedTableHeader({
 export function MobileField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <div className="mt-1 text-gray-950">{children}</div>
+      <p className="eyebrow">{label}</p>
+      <div className="mt-1 text-neutral-950">{children}</div>
     </div>
   );
 }
@@ -109,10 +113,10 @@ export function StickyGrandTotal({
   value: string;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 rounded-lg border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+    <div className="sticky bottom-0 z-10 rounded-md border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
       <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-semibold uppercase tracking-wide text-gray-600">{label}</span>
-        <span className="text-lg font-bold tabular-nums text-brand-700">{value}</span>
+        <span className="eyebrow">{label}</span>
+        <span className="font-mono text-lg font-bold tabular-nums text-brand-700">{value}</span>
       </div>
     </div>
   );

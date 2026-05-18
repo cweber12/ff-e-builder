@@ -11,7 +11,7 @@ interface RevisionQtyCellProps {
 }
 
 const inputClassName =
-  'w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm tabular-nums text-gray-700 focus:border-brand-500 focus:outline-none';
+  'w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm tabular-nums text-neutral-700 focus:border-brand-500 focus:outline-none';
 
 export function RevisionQtyCell({
   snapshot,

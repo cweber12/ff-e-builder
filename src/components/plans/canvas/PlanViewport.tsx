@@ -522,7 +522,7 @@ export function PlanViewport({
     <div className="h-full min-h-0">
       <div
         ref={containerRef}
-        className="relative h-full overflow-hidden bg-[#e3ded2]"
+        className="relative h-full overflow-hidden bg-canvas"
         style={{
           cursor: imageUrl
             ? activeTool === 'calibrate' ||
@@ -601,10 +601,10 @@ export function PlanViewport({
                   start={viewportPointFromImage({ x: line.startX, y: line.startY })}
                   end={viewportPointFromImage({ x: line.endX, y: line.endY })}
                   strokeClassName={
-                    line.id === selectedLengthLineId ? 'stroke-brand-700' : 'stroke-[#8b6f47]'
+                    line.id === selectedLengthLineId ? 'stroke-brand-700' : 'stroke-plan-line'
                   }
                   dotClassName={
-                    line.id === selectedLengthLineId ? 'fill-brand-700' : 'fill-[#8b6f47]'
+                    line.id === selectedLengthLineId ? 'fill-brand-700' : 'fill-plan-line'
                   }
                   label={line.label?.trim() || undefined}
                 />
@@ -663,8 +663,8 @@ export function PlanViewport({
                     y: lengthLineDraft.startY,
                   })}
                   end={viewportPointFromImage({ x: lengthLineDraft.endX, y: lengthLineDraft.endY })}
-                  strokeClassName="stroke-[#c17a00]"
-                  dotClassName="fill-[#c17a00]"
+                  strokeClassName="stroke-plan-measure"
+                  dotClassName="fill-plan-measure"
                   dashed
                   label="Draft"
                 />

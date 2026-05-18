@@ -66,9 +66,9 @@ export function GeneratedItemSizeTrigger({
       <button
         type="button"
         onClick={onClick}
-        className="rounded-md px-1 py-0.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="rounded-md px-1 py-0.5 text-left text-sm text-neutral-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        {hasValue ? displayValue : <span className="text-gray-400">{placeholder}</span>}
+        {hasValue ? displayValue : <span className="text-neutral-400">{placeholder}</span>}
       </button>
     );
   }
@@ -80,8 +80,8 @@ export function GeneratedItemSizeTrigger({
       className={cn(
         'min-h-9 w-40 rounded text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
         hasValue
-          ? 'px-2 py-1 text-gray-700 hover:bg-brand-50'
-          : 'border border-gray-300 px-2 py-1 text-gray-400 hover:border-brand-500',
+          ? 'px-2 py-1 text-neutral-700 hover:bg-brand-50'
+          : 'border border-neutral-300 px-2 py-1 text-neutral-400 hover:border-brand-500',
       )}
     >
       {hasValue ? displayValue : placeholder}

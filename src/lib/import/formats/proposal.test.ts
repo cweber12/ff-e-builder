@@ -62,6 +62,17 @@ describe('autoMapProposalColumns', () => {
     expect(mapping.quantity).toBe('qty__11');
     expect(mapping.unitCost).toBe('cost__12');
   });
+
+  it('maps combined Drawings / Location columns to both fields', () => {
+    const mapping = autoMapProposalColumns([
+      { key: 'tag__2', label: 'ID', columnNumber: 2 },
+      { key: 'drawings_location__3', label: 'Drawings / Location', columnNumber: 3 },
+      { key: 'desc__4', label: 'Product Description', columnNumber: 4 },
+    ]);
+
+    expect(mapping.drawings).toBe('drawings_location__3');
+    expect(mapping.location).toBe('drawings_location__3');
+  });
 });
 
 describe('rowHasImportableContent', () => {

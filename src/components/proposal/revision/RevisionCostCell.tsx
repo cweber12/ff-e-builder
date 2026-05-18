@@ -13,7 +13,7 @@ interface RevisionCostCellProps {
 }
 
 const inputClassName =
-  'w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
+  'w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm text-neutral-700 focus:border-brand-500 focus:outline-none';
 
 export function RevisionCostCell({
   snapshot,

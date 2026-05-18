@@ -71,12 +71,12 @@ export function ImageOptionsMenu({
     <div
       ref={menuRef}
       style={{ top: pos.top, left: pos.left }}
-      className="fixed z-50 min-w-28 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+      className="fixed z-50 min-w-28 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
     >
       {canUpdate && (
         <button
           type="button"
-          className={cn(btnBase, 'text-gray-700 hover:bg-brand-50')}
+          className={cn(btnBase, 'text-neutral-700 hover:bg-brand-50')}
           onClick={() => {
             onUpdate?.();
             onClose();
@@ -88,7 +88,7 @@ export function ImageOptionsMenu({
       {canCrop && (
         <button
           type="button"
-          className={cn(btnBase, 'text-gray-700 hover:bg-brand-50')}
+          className={cn(btnBase, 'text-neutral-700 hover:bg-brand-50')}
           onClick={() => {
             onCrop?.();
             onClose();

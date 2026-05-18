@@ -36,20 +36,35 @@ const config: Config = {
           inverse: 'rgb(var(--color-surface-inverse) / <alpha-value>)',
         },
         danger: {
+          50: 'rgb(var(--color-danger-50)  / <alpha-value>)',
           500: 'rgb(var(--color-danger-500) / <alpha-value>)',
           600: 'rgb(var(--color-danger-600) / <alpha-value>)',
         },
         success: {
+          50: 'rgb(var(--color-success-50)  / <alpha-value>)',
           500: 'rgb(var(--color-success-500) / <alpha-value>)',
+          700: 'rgb(var(--color-success-700) / <alpha-value>)',
         },
         warning: {
+          50: 'rgb(var(--color-warning-50)  / <alpha-value>)',
           500: 'rgb(var(--color-warning-500) / <alpha-value>)',
+          700: 'rgb(var(--color-warning-700) / <alpha-value>)',
+        },
+        canvas: {
+          DEFAULT: 'rgb(var(--color-canvas-bg)     / <alpha-value>)',
+          shell: 'rgb(var(--color-canvas-shell)  / <alpha-value>)',
+          chrome: 'rgb(var(--color-canvas-chrome) / <alpha-value>)',
+        },
+        plan: {
+          line: 'rgb(var(--color-plan-line)    / <alpha-value>)',
+          measure: 'rgb(var(--color-plan-measure) / <alpha-value>)',
+          active: 'rgb(var(--color-plan-active)  / <alpha-value>)',
         },
       },
       fontFamily: {
-        sans: ['DM Sans Variable', 'system-ui', 'sans-serif'],
+        sans: ['Manrope Variable', 'DM Sans Variable', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
-        display: ['Lora Variable', 'Georgia', 'serif'],
+        display: ['Manrope Variable', 'DM Sans Variable', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         sm: 'var(--shadow-sm)',

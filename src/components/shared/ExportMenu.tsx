@@ -42,11 +42,11 @@ export function ExportMenu({
 
   const baseBtn =
     size === 'sm'
-      ? 'rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500'
+      ? 'rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500'
       : 'rounded-md border border-brand-500 bg-white px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
   const optionBtn =
-    'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+    'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
   return (
     <div ref={ref} className={`relative inline-flex ${className}`}>
@@ -77,7 +77,7 @@ export function ExportMenu({
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-40 mt-1 min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+          className="absolute left-0 top-full z-40 mt-1 min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
         >
           {onCsv && (
             <button
@@ -119,12 +119,12 @@ export function ExportMenu({
               >
                 <PdfIcon />
                 Export PDF
-                <span className="ml-auto text-xs text-gray-400">{'>'}</span>
+                <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
               </button>
               {pdfOpen && (
                 <div
                   role="menu"
-                  className="absolute left-full top-0 z-50 ml-1 min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                  className="absolute left-full top-0 z-50 ml-1 min-w-36 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
                 >
                   {pdfOptions.map((option) => (
                     <button
@@ -170,7 +170,7 @@ function CsvIcon() {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 16 16"
       fill="currentColor"
-      className="h-4 w-4 text-gray-500"
+      className="h-4 w-4 text-neutral-500"
       aria-hidden="true"
     >
       <path d="M3 3.5A1.5 1.5 0 0 1 4.5 2h4.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12A1.5 1.5 0 0 1 13 5.622V12.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 12.5v-9Z" />

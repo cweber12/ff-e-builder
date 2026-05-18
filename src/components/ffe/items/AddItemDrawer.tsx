@@ -271,12 +271,12 @@ export function AddItemDrawer({
                 return (
                   <span
                     key={`${selection.type}-${name}-${index}`}
-                    className="inline-flex items-center gap-1.5 rounded-pill border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700"
+                    className="inline-flex items-center gap-1.5 rounded-pill border border-neutral-200 bg-white px-2 py-1 text-xs font-medium text-neutral-700"
                   >
                     {material ? (
                       <MaterialSwatchImage material={material} size="sm" />
                     ) : (
-                      <span className="h-6 w-6 rounded-full border border-gray-200 bg-surface-muted" />
+                      <span className="h-6 w-6 rounded-full border border-neutral-200 bg-surface-muted" />
                     )}
                     <span>{name}</span>
                     {selection.type === 'new' && (
@@ -286,7 +286,7 @@ export function AddItemDrawer({
                     )}
                     <button
                       type="button"
-                      className="rounded-sm px-1 text-gray-400 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                      className="rounded-sm px-1 text-neutral-400 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                       onClick={() => removeMaterial(index)}
                       aria-label={`Remove ${name}`}
                     >
@@ -303,7 +303,7 @@ export function AddItemDrawer({
           <textarea {...register('notes')} rows={4} className={inputClassName} />
         </Field>
 
-        <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-gray-100 bg-white px-6 py-4">
+        <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-neutral-100 bg-white px-6 py-4">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
@@ -334,7 +334,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+    <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
       {label}
       {children}
       {error && <span className="text-xs font-normal text-danger-600">{error}</span>}
@@ -342,5 +342,4 @@ function Field({
   );
 }
 
-const inputClassName =
-  'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none';
+const inputClassName = 'input-base';

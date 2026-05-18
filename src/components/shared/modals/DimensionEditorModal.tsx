@@ -100,7 +100,7 @@ export function DimensionEditorModal({
                 }))
               }
               className={`rounded px-3 py-2 text-sm font-medium ${
-                draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-600'
+                draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-600'
               }`}
             >
               {mode === 'imperial' ? 'Imperial' : 'Metric'}
@@ -112,7 +112,7 @@ export function DimensionEditorModal({
           <select
             value={draft.unit}
             onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value }))}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
             aria-label="Metric unit"
           >
             {metricUnits.map((unit) => (
@@ -125,8 +125,8 @@ export function DimensionEditorModal({
 
         <div className="grid gap-3">
           {axes.map((axis) => (
-            <div key={axis} className="grid gap-2 rounded-md border border-gray-200 p-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div key={axis} className="grid gap-2 rounded-md border border-neutral-200 p-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 {axis.toUpperCase()}
               </span>
               {draft.mode === 'imperial' ? (
@@ -157,7 +157,7 @@ export function DimensionEditorModal({
                       }))
                     }
                   />
-                  <label className="grid gap-1 text-xs font-medium text-gray-600">
+                  <label className="grid gap-1 text-xs font-medium text-neutral-600">
                     fraction
                     <select
                       value={draft.imperial[axis].fraction}
@@ -170,7 +170,7 @@ export function DimensionEditorModal({
                           },
                         }))
                       }
-                      className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+                      className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
                     >
                       {fractions.map((fraction) => (
                         <option key={fraction || 'none'} value={fraction}>
@@ -195,14 +195,14 @@ export function DimensionEditorModal({
                       },
                     }))
                   }
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                  className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                 />
               )}
             </div>
           ))}
         </div>
 
-        <p className="rounded-md bg-surface-muted px-3 py-2 text-sm font-medium text-gray-700">
+        <p className="rounded-md bg-surface-muted px-3 py-2 text-sm font-medium text-neutral-700">
           {label || 'No dimensions set'}
         </p>
 
@@ -229,7 +229,7 @@ function NumberField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="grid gap-1 text-xs font-medium text-gray-600">
+    <label className="grid gap-1 text-xs font-medium text-neutral-600">
       {label}
       <input
         type="number"
@@ -237,7 +237,7 @@ function NumberField({
         step="1"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-md border border-gray-300 px-2 py-1.5 text-sm w-full focus:border-brand-500 focus:outline-none"
+        className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm w-full focus:border-brand-500 focus:outline-none"
       />
     </label>
   );

@@ -45,7 +45,7 @@ export function ProjectImagesPanel({ project }: { project: Project }) {
 
   return (
     <div className="grid gap-4">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-neutral-600">
         Add up to three project images and choose the preview image shown on the project card.
       </p>
       <div className="grid gap-3 md:grid-cols-3">
@@ -191,7 +191,7 @@ function ProjectImageSlot({
       : null;
 
   return (
-    <div className="grid gap-2 rounded-lg border border-gray-200 bg-white p-3">
+    <div className="grid gap-2 rounded-lg border border-neutral-200 bg-white p-3">
       {image && url ? (
         <>
           <button
@@ -204,7 +204,7 @@ function ProjectImageSlot({
             onMouseLeave={disablePasteTarget}
             onFocus={enablePasteTarget}
             onBlur={disablePasteTarget}
-            className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
+            className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
             aria-label={label}
             aria-expanded={menuOpen}
           >
@@ -259,7 +259,7 @@ function ProjectImageSlot({
           onMouseLeave={disablePasteTarget}
           onFocus={enablePasteTarget}
           onBlur={disablePasteTarget}
-          className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-surface-muted text-sm font-medium text-gray-500 hover:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
+          className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-dashed border-neutral-300 bg-surface-muted text-sm font-medium text-neutral-500 hover:border-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
           aria-label={label}
           title={disabled ? label : `${label}. Click to upload or press Ctrl+V to paste`}
         >
@@ -278,7 +278,7 @@ function ProjectImageSlot({
       />
       {image && (
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-700">
+          <label className="inline-flex items-center gap-2 text-xs font-medium text-neutral-700">
             <input
               type="radio"
               name={`project-preview-${project.id}`}

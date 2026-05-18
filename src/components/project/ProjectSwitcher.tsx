@@ -57,7 +57,7 @@ export function ProjectSwitcher({ currentProjectId }: ProjectSwitcherProps) {
           <ul
             role="listbox"
             aria-label="Projects"
-            className="absolute left-0 top-full mt-1 z-20 w-72 rounded-lg bg-surface shadow-lg border border-gray-100 py-1 overflow-hidden"
+            className="absolute left-0 top-full mt-1 z-20 w-72 rounded-lg bg-surface shadow-lg border border-neutral-100 py-1 overflow-hidden"
           >
             {projects.map((p) => (
               <li key={p.id} role="option" aria-selected={p.id === currentProjectId}>
@@ -69,11 +69,11 @@ export function ProjectSwitcher({ currentProjectId }: ProjectSwitcherProps) {
                     p.id === currentProjectId && 'bg-brand-50',
                   )}
                 >
-                  <span className="text-sm font-medium text-gray-900 truncate">{p.name}</span>
-                  <span className="text-xs text-gray-500 truncate">
+                  <span className="text-sm font-medium text-neutral-900 truncate">{p.name}</span>
+                  <span className="text-xs text-neutral-500 truncate">
                     {p.clientName || 'No client'}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-neutral-400">
                     Updated {new Date(p.updatedAt).toLocaleDateString()}
                   </span>
                 </button>

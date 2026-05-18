@@ -10,7 +10,7 @@ type PlanToolRailProps = {
 
 export function PlanToolRail({ activeTool, isCalibrated, onToolChange }: PlanToolRailProps) {
   return (
-    <aside className="overflow-y-auto border-r border-black/10 bg-[#fbfaf6]/80 p-2.5 backdrop-blur">
+    <aside className="overflow-y-auto border-r border-black/10 bg-canvas-chrome/80 p-2.5 backdrop-blur">
       <div className="flex flex-col gap-2">
         {PLAN_TOOL_DEFINITIONS.map((tool) => {
           const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;

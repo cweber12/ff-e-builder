@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { roomKeys } from '../../lib/query';
+import { proposalKeys, roomKeys } from '../../lib/query';
 import {
   appendListItem,
   removeListItem,
@@ -60,6 +60,7 @@ export function useUpdateRoom(projectId: string) {
       queryClient.setQueryData<Room[]>(roomKeys.forProject(projectId), (old) =>
         updateListItem(old, updated.id, () => updated),
       );
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.all });
     },
     onError: (err: Error) => {
       toast.error(`Failed to update room: ${err.message}`);

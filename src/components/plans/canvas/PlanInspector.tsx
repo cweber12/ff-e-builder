@@ -176,7 +176,7 @@ export function PlanInspector({
   onApplyMeasurement,
 }: PlanInspectorProps) {
   return (
-    <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-[#fbfaf6]/92 px-4 py-3 backdrop-blur">
+    <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-canvas-chrome/90 px-4 py-3 backdrop-blur">
       <div className="space-y-4">
         <div className="pb-1">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
@@ -239,7 +239,7 @@ export function PlanInspector({
                         onChange={(event) =>
                           onCalibrationUnitChange(event.target.value as PlanMeasurementUnit)
                         }
-                        className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                        className="input-base shadow-sm"
                       >
                         {UNIT_OPTIONS.map((unit) => (
                           <option key={unit} value={unit}>
@@ -263,7 +263,7 @@ export function PlanInspector({
                               step="1"
                               value={calibrationFeetInput}
                               onChange={(event) => onCalibrationFeetInputChange(event.target.value)}
-                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                              className="input-base shadow-sm"
                             />
                           </label>
                           <label className="block">
@@ -276,7 +276,7 @@ export function PlanInspector({
                               onChange={(event) =>
                                 onCalibrationInchesInputChange(event.target.value)
                               }
-                              className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                              className="input-base shadow-sm"
                             />
                           </label>
                         </div>
@@ -299,7 +299,7 @@ export function PlanInspector({
                           step="0.01"
                           value={calibrationLengthInput}
                           onChange={(event) => onCalibrationLengthInputChange(event.target.value)}
-                          className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                          className="input-base shadow-sm"
                         />
                       </label>
                     )}
@@ -373,7 +373,7 @@ export function PlanInspector({
                         value={lengthLineLabelInput}
                         onChange={(event) => onLengthLineLabelInputChange(event.target.value)}
                         placeholder="Optional note"
-                        className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-brand-400"
+                        className="input-base shadow-sm"
                       />
                     </label>
 

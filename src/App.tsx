@@ -479,9 +479,9 @@ function useProjectContext() {
 function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface-muted px-6 text-center">
-      <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="rounded-lg border border-neutral-200 bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">404</p>
-        <h1 className="mt-2 text-2xl font-semibold text-gray-950">Page not found</h1>
+        <h1 className="mt-2 text-2xl font-semibold text-neutral-950">Page not found</h1>
         <Link
           to="/projects"
           className="mt-6 inline-flex rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"

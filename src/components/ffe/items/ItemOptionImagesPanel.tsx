@@ -129,19 +129,19 @@ function ItemOptionImageSlot({
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
           Option {index + 1}
         </p>
       </div>
 
-      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-surface-muted shadow-sm">
+      <div className="relative overflow-hidden rounded-lg border border-neutral-200 bg-surface-muted shadow-sm">
         {image ? (
-          <label className="absolute right-3 top-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
+          <label className="absolute right-3 top-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-[11px] font-medium text-neutral-700 shadow-sm">
             <input
               type="checkbox"
               checked={checked}
               onChange={() => setChecked((c) => !c)}
-              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
             />
             Selected
           </label>
@@ -164,7 +164,7 @@ function ItemOptionImageSlot({
           <button
             type="button"
             disabled={disabled || Boolean(image)}
-            className="flex aspect-[117/75] w-full items-center justify-center bg-brand-50/40 text-sm font-medium text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-default disabled:text-gray-400"
+            className="flex aspect-[117/75] w-full items-center justify-center bg-brand-50/40 text-sm font-medium text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-default disabled:text-neutral-400"
             onClick={() => inputRef.current?.click()}
           >
             {isBusy ? 'Uploading…' : 'Add option rendering'}

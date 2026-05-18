@@ -15,8 +15,8 @@ export const GeneratedItemActionTrigger = forwardRef<
       type="button"
       className={cn(
         variant === 'icon'
-          ? 'inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500'
-          : 'rounded px-2 py-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+          ? 'inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500'
+          : 'rounded px-2 py-1 text-neutral-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
         className,
       )}
       {...props}

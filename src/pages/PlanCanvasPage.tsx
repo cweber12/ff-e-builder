@@ -656,8 +656,8 @@ export function PlanCanvasPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#efede6]">
-      <header className="border-b border-black/10 bg-[#fbfaf6]/95 px-4 py-2.5 backdrop-blur md:px-5">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-canvas">
+      <header className="border-b border-black/10 bg-canvas-chrome/95 px-4 py-2.5 backdrop-blur md:px-5">
         <div className="flex min-h-10 flex-wrap items-center gap-3">
           <Link
             to={`/projects/${project.id}/plans`}
@@ -1031,7 +1031,7 @@ function insertAfterColumn(order: string[], columnId: string, anchorId: string) 
 
 function PlanCanvasSkeleton() {
   return (
-    <div className="grid h-full min-h-0 gap-0 bg-[#f3f1ea] xl:grid-cols-[84px_minmax(0,1fr)_380px]">
+    <div className="grid h-full min-h-0 gap-0 bg-canvas-shell xl:grid-cols-[84px_minmax(0,1fr)_380px]">
       <div className="overflow-hidden border-r border-black/5 bg-white/72 p-3">
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, index) => (

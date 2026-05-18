@@ -134,7 +134,7 @@ export function InlineNumberEdit({
           }}
           className={cn(
             'opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
-            'text-gray-400 hover:text-brand-500 transition-opacity',
+            'text-neutral-400 hover:text-brand-500 transition-opacity',
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 rounded',
           )}
         >
@@ -183,7 +183,7 @@ export function InlineNumberEdit({
           'rounded border px-2 py-0.5 text-inherit bg-surface focus:outline-none tabular-nums',
           saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
           (saveState === 'error' || validationError) && 'border-danger-500',
-          saveState === 'idle' && !validationError && 'border-gray-300 focus:border-brand-500',
+          saveState === 'idle' && !validationError && 'border-neutral-300 focus:border-brand-500',
           inputClassName,
         )}
       />

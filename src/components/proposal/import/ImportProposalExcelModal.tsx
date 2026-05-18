@@ -413,7 +413,7 @@ export function ImportProposalExcelModal({
         </div>
       ) : step === 'upload' ? (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600">
             Upload a Proposal spreadsheet (.xlsx, .xls, .csv). Categories, columns, and data will be
             imported automatically.
           </p>
@@ -421,7 +421,7 @@ export function ImportProposalExcelModal({
             onDrop={handleDrop}
             onDragOver={(event) => event.preventDefault()}
             onClick={() => inputRef.current?.click()}
-            className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-300 bg-surface-muted px-6 py-10 text-center transition hover:border-brand-500 hover:bg-brand-50/50"
+            className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-neutral-300 bg-surface-muted px-6 py-10 text-center transition hover:border-brand-500 hover:bg-brand-50/50"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -429,7 +429,7 @@ export function ImportProposalExcelModal({
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
-              className="h-10 w-10 text-gray-400"
+              className="h-10 w-10 text-neutral-400"
               aria-hidden="true"
             >
               <path
@@ -439,8 +439,10 @@ export function ImportProposalExcelModal({
               />
             </svg>
             <div>
-              <p className="text-sm font-medium text-gray-700">Drop file here or click to browse</p>
-              <p className="mt-1 text-xs text-gray-500">.xlsx, .xls, .csv</p>
+              <p className="text-sm font-medium text-neutral-700">
+                Drop file here or click to browse
+              </p>
+              <p className="mt-1 text-xs text-neutral-500">.xlsx, .xls, .csv</p>
             </div>
           </div>
           <input
@@ -458,21 +460,21 @@ export function ImportProposalExcelModal({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-4 gap-3 rounded-lg border border-gray-200 bg-surface-muted p-3 text-sm">
+          <div className="grid grid-cols-4 gap-3 rounded-lg border border-neutral-200 bg-surface-muted p-3 text-sm">
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">Sheet</p>
+              <p className="text-xs uppercase tracking-wide text-neutral-500">Sheet</p>
               <p className="truncate font-medium">{parsed?.sheetName || parsed?.filename}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">Categories</p>
+              <p className="text-xs uppercase tracking-wide text-neutral-500">Categories</p>
               <p className="font-medium">{parsed?.sections.length ?? 0}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">Rows</p>
+              <p className="text-xs uppercase tracking-wide text-neutral-500">Rows</p>
               <p className="font-medium">{importableRows.length} ready</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">Images</p>
+              <p className="text-xs uppercase tracking-wide text-neutral-500">Images</p>
               <p className="font-medium">{parsed?.projectImages.length ?? 0}</p>
             </div>
           </div>
@@ -492,14 +494,14 @@ export function ImportProposalExcelModal({
 
           {parsed && parsed.columns.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
+              <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-neutral-500">
                 Columns detected ({parsed.columns.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {parsed.columns.map((col) => (
                   <span
                     key={col.key}
-                    className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                    className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700"
                   >
                     {col.label}
                   </span>
@@ -517,7 +519,7 @@ export function ImportProposalExcelModal({
           )}
 
           {skippedCount > 0 && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-neutral-500">
               {skippedCount} row{skippedCount !== 1 ? 's' : ''} will be skipped (summaries or
               totals).
             </p>
@@ -529,7 +531,7 @@ export function ImportProposalExcelModal({
             </p>
           )}
 
-          <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+          <div className="flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
             <Button
               type="button"
               variant="ghost"

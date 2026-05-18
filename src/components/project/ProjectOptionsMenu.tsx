@@ -21,7 +21,7 @@ export function ProjectOptionsMenu({
   onImages,
   onDelete,
   align = 'top',
-  buttonClassName = 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+  buttonClassName = 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
 }: ProjectOptionsMenuProps) {
   return (
     <div className="relative z-[90]">
@@ -37,28 +37,28 @@ export function ProjectOptionsMenu({
       {open && (
         <div
           className={[
-            'absolute left-0 z-[80] min-w-44 rounded-md border border-gray-200 bg-white p-1 text-sm shadow-lg',
+            'absolute left-0 z-[80] min-w-44 rounded-md border border-neutral-200 bg-white p-1 text-sm shadow-lg',
             align === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
           ].join(' ')}
         >
           {projectId ? (
             <Link
               to={`/projects/${projectId}/plans`}
-              className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"
+              className="flex w-full rounded px-2 py-1.5 text-left text-neutral-700 hover:bg-brand-50"
             >
               Plans
             </Link>
           ) : null}
           <button
             type="button"
-            className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"
+            className="flex w-full rounded px-2 py-1.5 text-left text-neutral-700 hover:bg-brand-50"
             onClick={onEdit}
           >
             Update project
           </button>
           <button
             type="button"
-            className="flex w-full rounded px-2 py-1.5 text-left text-gray-700 hover:bg-brand-50"
+            className="flex w-full rounded px-2 py-1.5 text-left text-neutral-700 hover:bg-brand-50"
             onClick={onImages}
           >
             Project images

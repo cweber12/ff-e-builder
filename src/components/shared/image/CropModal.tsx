@@ -50,7 +50,7 @@ export function CropModal({
   return (
     <Modal open={open} onClose={onClose} title="Crop image" className="max-w-2xl">
       <div className="flex flex-col gap-4">
-        <div className="relative h-80 w-full overflow-hidden rounded-lg bg-gray-900">
+        <div className="relative h-80 w-full overflow-hidden rounded-lg bg-neutral-900">
           <Cropper
             image={imageUrl}
             crop={crop}
@@ -63,7 +63,7 @@ export function CropModal({
           />
         </div>
         <div className="flex items-center gap-3">
-          <label className="text-xs text-gray-600 shrink-0">Zoom</label>
+          <label className="text-xs text-neutral-600 shrink-0">Zoom</label>
           <input
             type="range"
             min={1}
@@ -74,7 +74,7 @@ export function CropModal({
             className="w-full accent-brand-600"
           />
         </div>
-        <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>

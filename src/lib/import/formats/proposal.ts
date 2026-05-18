@@ -116,6 +116,11 @@ const FIELD_ALIASES: Record<ProposalImportField, string[]> = {
   unitCost: ['unit cost', 'cost', 'price', 'unit price'],
 };
 
+function isCombinedDrawingsLocationColumn(column: ProposalImportColumn) {
+  const normalized = normalizeLabel(column.label);
+  return normalized === 'drawings location' || normalized === 'drawings and location';
+}
+
 export const PROPOSAL_IMPORT_EMPTY_MAP: ProposalImportColumnMap = {
   category: null,
   rendering: null,
@@ -148,6 +153,16 @@ export function autoMapProposalColumns(columns: ProposalImportColumn[]): Proposa
     if (match) {
       result[field] = match.key;
       unused.delete(match.key);
+    }
+  }
+
+  const combinedDrawingsLocation = columns.find(isCombinedDrawingsLocationColumn);
+  if (combinedDrawingsLocation) {
+    if (!result.drawings || result.drawings === combinedDrawingsLocation.key) {
+      result.drawings = combinedDrawingsLocation.key;
+    }
+    if (!result.location) {
+      result.location = combinedDrawingsLocation.key;
     }
   }
 

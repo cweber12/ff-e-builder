@@ -129,7 +129,7 @@ const PROPOSAL_COLUMN_META = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnMeta;
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
-  'rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-500 focus:outline-none';
+  'rounded border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700 focus:border-brand-500 focus:outline-none';
 // Qty and Unit Cost sticky-right columns (always visible, not draggable).
 // right offsets: unitCost = options(40) + total(96) = 136px
 //               qty = unitCost(136) + unitCost-width(96) = 232px
@@ -406,12 +406,12 @@ function DeleteCategoryModal({
       <div className="flex flex-col gap-4">
         {hasItems ? (
           <>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-neutral-600">
               <strong>{category?.name}</strong> has {itemCount} {itemCount === 1 ? 'item' : 'items'}
               . Choose what to do with them before deleting.
             </p>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50/30">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-200 p-3 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50/30">
                 <input
                   type="radio"
                   name="delete-category-action"
@@ -419,11 +419,11 @@ function DeleteCategoryModal({
                   checked={!deleteAll}
                   onChange={() => setDeleteAll(false)}
                 />
-                <span className="text-sm font-medium text-gray-800">
+                <span className="text-sm font-medium text-neutral-800">
                   Move items to another category
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
                 <input
                   type="radio"
                   name="delete-category-action"
@@ -431,18 +431,18 @@ function DeleteCategoryModal({
                   checked={deleteAll}
                   onChange={() => setDeleteAll(true)}
                 />
-                <span className="text-sm font-medium text-gray-800">
+                <span className="text-sm font-medium text-neutral-800">
                   Delete category and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </span>
               </label>
             </div>
             {!deleteAll && (
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
                 Move items to...
                 <select
                   value={targetCategoryId}
                   onChange={(event) => setTargetCategoryId(event.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+                  className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
                 >
                   <option value="">Choose a category</option>
                   {otherCategories.map((c) => (
@@ -455,7 +455,7 @@ function DeleteCategoryModal({
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-600">This category is empty and can be deleted.</p>
+          <p className="text-sm text-neutral-600">This category is empty and can be deleted.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
@@ -541,7 +541,7 @@ function ExpandIcon({ expanded }: { expanded?: boolean }) {
 }
 
 const menuItemClassName =
-  'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+  'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
 function CategoryActionsMenu({
   categoryName,
@@ -597,7 +597,7 @@ function CategoryActionsMenu({
         aria-label={`Open options for ${categoryName}`}
         title={`Open options for ${categoryName}`}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="icon-btn"
       >
         <MoreIcon />
       </button>
@@ -612,7 +612,7 @@ function CategoryActionsMenu({
               top: triggerRect.bottom + 4,
               right: window.innerWidth - triggerRect.right,
             }}
-            className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+            className="z-[100] min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
           >
             <button
               type="button"
@@ -649,7 +649,7 @@ function CategoryActionsMenu({
                         columnTriggerRef.current.getBoundingClientRect().left +
                         4,
                     }}
-                    className="z-[100] min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                    className="z-[100] min-w-44 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
                   >
                     {hiddenDefaults.map((col) => (
                       <button
@@ -666,7 +666,7 @@ function CategoryActionsMenu({
                         {col.label}
                       </button>
                     ))}
-                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
+                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-neutral-100" />}
                     <button
                       type="button"
                       role="menuitem"
@@ -683,7 +683,7 @@ function CategoryActionsMenu({
                   document.body,
                 )}
             </div>
-            <div className="my-1 h-px bg-gray-100" />
+            <div className="my-1 h-px bg-neutral-100" />
             <button
               type="button"
               role="menuitem"
@@ -891,7 +891,7 @@ function ProposalCategorySection({
             aria-expanded={!collapsed}
             aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
             title={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
-            className="shrink-0 rounded px-1 text-xs text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="shrink-0 rounded px-1 text-xs text-brand-100 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
           >
             <ChevronIcon direction={collapsed ? 'right' : 'down'} />
           </button>
@@ -902,17 +902,17 @@ function ProposalCategorySection({
             }}
             aria-label="Category name"
             renderDisplay={(v) => (
-              <span className="truncate text-sm font-semibold text-gray-950">{v}</span>
+              <span className="truncate text-sm font-semibold tracking-tight text-white">{v}</span>
             )}
-            inputClassName="text-sm font-semibold text-gray-950 border-gray-300 bg-white"
+            inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
           />
-          <span className="shrink-0 rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
+          <span className="shrink-0 rounded-pill bg-white/15 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
         </div>
-        <div className="sticky right-4 flex items-center gap-2">
+        <div className="sticky right-4 flex items-center gap-2 [&_.icon-btn]:text-brand-100 [&_.icon-btn:hover]:bg-white/10 [&_.icon-btn:hover]:text-white">
           {!collapsed && !isMobile && <ColumnNavArrows />}
-          <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
+          <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-white">
             {formatMoney(cents(subtotalCents))}
           </span>
           <CategoryActionsMenu
@@ -935,7 +935,7 @@ function ProposalCategorySection({
               aria-label="Expand table view"
               title="Expand table view"
               onClick={() => setIsExpanded(true)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              className="icon-btn"
             >
               <ExpandIcon />
             </button>
@@ -951,7 +951,7 @@ function ProposalCategorySection({
               'w-full border-collapse text-left text-sm',
             )}
           >
-            <thead className="sticky top-10 z-30 bg-surface text-xs">
+            <thead className="sticky top-11 z-30 bg-surface text-xs">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -1230,12 +1230,14 @@ function ProposalCategorySection({
       )}
 
       {isExpanded && (
-        <div className="fixed inset-0 z-50 bg-gray-950/35 p-4 backdrop-blur-sm">
-          <div className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-surface px-4 py-3">
+        <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
+          <div className="flex h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-100 bg-surface px-4 py-3">
               <div className="min-w-0">
-                <h2 className="truncate text-base font-semibold text-gray-950">{categoryName}</h2>
-                <p className="text-xs text-gray-500">
+                <h2 className="truncate text-base font-semibold text-neutral-950">
+                  {categoryName}
+                </h2>
+                <p className="text-xs text-neutral-500">
                   {itemCount} {itemCount === 1 ? 'item' : 'items'} -{' '}
                   {formatMoney(cents(subtotalCents))}
                 </p>
@@ -1793,7 +1795,7 @@ function ProposalRow({
           />
           <td
             className={cn(
-              'px-3 py-2 font-semibold text-gray-900',
+              'px-3 py-2 font-semibold text-neutral-900',
               proposalStickyEdgeColumnClassNames.totalCell,
             )}
           >
@@ -1887,7 +1889,7 @@ function ProposalItemActionsMenu({
               top: menuRect.bottom + 4,
               right: window.innerWidth - menuRect.right,
             }}
-            className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+            className="z-[100] min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
           >
             <button
               type="button"
@@ -1897,7 +1899,7 @@ function ProposalItemActionsMenu({
             >
               View details
             </button>
-            <div className="my-1 h-px bg-gray-100" />
+            <div className="my-1 h-px bg-neutral-100" />
             <button
               type="button"
               role="menuitem"
@@ -1926,7 +1928,7 @@ function ProposalItemActionsMenu({
                   onClick={() => setMoveOpen((v) => !v)}
                 >
                   Move to...
-                  <span className="ml-auto text-xs text-gray-400">{'>'}</span>
+                  <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
                 </button>
                 {moveOpen &&
                   moveTriggerRef.current &&
@@ -1942,7 +1944,7 @@ function ProposalItemActionsMenu({
                           moveTriggerRef.current.getBoundingClientRect().left +
                           4,
                       }}
-                      className="z-[100] min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                      className="z-[100] min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
                     >
                       {otherCategories.map((cat) => (
                         <button
@@ -1960,7 +1962,7 @@ function ProposalItemActionsMenu({
                   )}
               </div>
             )}
-            <div className="my-1 h-px bg-gray-100" />
+            <div className="my-1 h-px bg-neutral-100" />
             <button
               type="button"
               role="menuitem"
@@ -1995,7 +1997,7 @@ function MobileProposalCards({
 }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+      <div className="rounded-md border border-dashed border-neutral-300 px-4 py-6 text-center text-sm text-neutral-500">
         Add first item -&gt;
       </div>
     );
@@ -2008,7 +2010,7 @@ function MobileProposalCards({
         return (
           <article
             key={item.id}
-            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+            className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
@@ -2024,12 +2026,12 @@ function MobileProposalCards({
                   <button
                     type="button"
                     onClick={() => onItemClick(item)}
-                    className="truncate text-base font-semibold text-gray-950 hover:underline text-left"
+                    className="truncate text-base font-semibold text-neutral-950 hover:underline text-left"
                   >
                     {item.itemName || item.productTag || item.description || 'Unnamed item'}
                   </button>
                   {item.location && (
-                    <p className="mt-0.5 truncate text-sm text-gray-500">{item.location}</p>
+                    <p className="mt-0.5 truncate text-sm text-neutral-500">{item.location}</p>
                   )}
                 </div>
               </div>

@@ -118,8 +118,8 @@ export function GeneratedItemEditableTextControl({
           className={cn(
             'block w-full cursor-pointer rounded px-2 py-1 text-sm',
             isEmpty
-              ? 'border border-gray-300 text-gray-400 hover:border-brand-500'
-              : 'text-gray-700 hover:bg-brand-50',
+              ? 'border border-neutral-300 text-neutral-400 hover:border-brand-500'
+              : 'text-neutral-700 hover:bg-brand-50',
             displayClassName,
           )}
         >
@@ -151,7 +151,7 @@ export function GeneratedItemEditableTextControl({
           'w-full rounded border px-2 py-1 text-sm text-inherit bg-surface focus:outline-none',
           saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
           saveState === 'error' && 'border-danger-500',
-          saveState === 'idle' && 'border-gray-300 focus:border-brand-500',
+          saveState === 'idle' && 'border-neutral-300 focus:border-brand-500',
           inputClassName,
         )}
       />

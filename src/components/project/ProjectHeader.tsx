@@ -110,11 +110,8 @@ export function ProjectHeader({
   return (
     <header className="no-print relative z-10 shrink-0 overflow-visible">
       {/* ── Row 1: Identity ───────────────────────────────────────── */}
-      <div className="flex h-10 items-center gap-3 border-b border-neutral-200 bg-surface px-4">
-        <Link
-          to="/projects"
-          className="shrink-0 text-xs text-neutral-500 transition-colors hover:text-neutral-900"
-        >
+      <div className="flex h-11 items-center gap-3 border-b border-neutral-300 bg-surface px-4 shadow-[0_1px_0_rgb(0_0_0_/_0.02)]">
+        <Link to="/projects" className="eyebrow shrink-0 transition-colors hover:text-brand-700">
           Projects
         </Link>
         <span className="text-xs text-neutral-300" aria-hidden="true">
@@ -122,7 +119,7 @@ export function ProjectHeader({
         </span>
         <Link
           to={`/projects/${project.id}`}
-          className="min-w-0 truncate font-display text-[22px] font-normal leading-none text-neutral-900 transition-colors hover:text-brand-600"
+          className="min-w-0 truncate text-[18px] font-semibold leading-none tracking-tight text-neutral-950 transition-colors hover:text-brand-700"
           title={project.name}
         >
           {project.name}
@@ -144,7 +141,7 @@ export function ProjectHeader({
       </div>
 
       {/* ── Row 2: Working bar ────────────────────────────────────── */}
-      <div className="flex h-12 items-center border-b border-neutral-200 bg-surface px-4">
+      <div className="flex h-12 items-center border-b border-neutral-300 bg-surface px-4">
         <TabNav projectId={project.id} />
 
         {/* View toggle (FF&E only) */}

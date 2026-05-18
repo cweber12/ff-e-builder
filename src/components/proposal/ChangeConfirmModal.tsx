@@ -64,23 +64,23 @@ export function ChangeConfirmModal({
           </div>
         )}
 
-        <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm">
+        <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-3 text-sm">
           <div className="flex items-start gap-2">
-            <span className="min-w-16 text-xs font-medium text-gray-500">From</span>
-            <span className="text-gray-700 line-through">{previousValue || '—'}</span>
+            <span className="min-w-16 text-xs font-medium text-neutral-500">From</span>
+            <span className="text-neutral-700 line-through">{previousValue || '—'}</span>
           </div>
           <div className="mt-1 flex items-start gap-2">
-            <span className="min-w-16 text-xs font-medium text-gray-500">To</span>
-            <span className="font-medium text-gray-900">{newValue || '—'}</span>
+            <span className="min-w-16 text-xs font-medium text-neutral-500">To</span>
+            <span className="font-medium text-neutral-900">{newValue || '—'}</span>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Notes <span className="text-gray-400 font-normal">(optional)</span>
+          <label className="block text-xs font-medium text-neutral-600 mb-1">
+            Notes <span className="text-neutral-400 font-normal">(optional)</span>
           </label>
           <textarea
-            className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-400"
+            className="input-base resize-none"
             rows={2}
             placeholder="Why is this changing?"
             value={notes}
@@ -95,11 +95,11 @@ export function ChangeConfirmModal({
             checked={priceAffecting}
             disabled={lockPriceAffecting}
             onChange={(e) => setPriceAffecting(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-brand-600 cursor-pointer disabled:cursor-not-allowed"
+            className="h-4 w-4 rounded border-neutral-300 accent-brand-600 cursor-pointer disabled:cursor-not-allowed"
           />
           <label
             htmlFor="price-affecting-toggle"
-            className="text-sm text-gray-700 cursor-pointer select-none"
+            className="text-sm text-neutral-700 cursor-pointer select-none"
           >
             Flag as price change
           </label>

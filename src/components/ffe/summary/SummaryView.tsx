@@ -22,22 +22,22 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-950">Budget vs actual</h2>
-            <p className="mt-1 text-sm text-gray-600">
+            <h2 className="text-lg font-semibold text-neutral-950">Budget vs actual</h2>
+            <p className="mt-1 text-sm text-neutral-600">
               {formatMoney(cents(actualCents))} actual against{' '}
               {formatMoney(cents(project.budgetCents))} budget
             </p>
           </div>
-          <span className="text-sm font-semibold tabular-nums text-gray-700">
+          <span className="text-sm font-semibold tabular-nums text-neutral-700">
             {project.budgetCents > 0
               ? `${Math.round((actualCents / project.budgetCents) * 100)}%`
               : 'No budget'}
           </span>
         </div>
-        <div className="mt-4 h-3 overflow-hidden rounded-pill bg-gray-100">
+        <div className="mt-4 h-3 overflow-hidden rounded-pill bg-neutral-100">
           <div
             className={`h-full rounded-pill ${budgetTone}`}
             style={{ width: `${budgetPercent}%` }}
@@ -49,41 +49,48 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
         {itemStatuses.map((status) => {
           const entry = statusBreakdown[status];
           return (
-            <div key={status} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div
+              key={status}
+              className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+            >
               <StatusBadge status={status} />
-              <p className="mt-4 text-2xl font-semibold text-gray-950">{entry.count}</p>
-              <p className="mt-1 text-sm text-gray-600">{formatMoney(cents(entry.totalCents))}</p>
+              <p className="mt-4 text-2xl font-semibold text-neutral-950">{entry.count}</p>
+              <p className="mt-1 text-sm text-neutral-600">
+                {formatMoney(cents(entry.totalCents))}
+              </p>
             </div>
           );
         })}
       </section>
 
-      <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-4 py-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Locations</h2>
+      <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+        <div className="border-b border-neutral-100 px-4 py-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
+            Locations
+          </h2>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-gray-500">
+          <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-neutral-500">
             <tr>
               <th className="px-4 py-3">Location</th>
               <th className="px-4 py-3 text-right">Item count</th>
               <th className="px-4 py-3 text-right">Subtotal</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-neutral-100">
             {roomsWithItems.map((room) => (
               <tr key={room.id}>
-                <td className="px-4 py-3 font-medium text-gray-950">{room.name}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                <td className="px-4 py-3 font-medium text-neutral-950">{room.name}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
                   {room.items.length}
                 </td>
-                <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-950">
+                <td className="px-4 py-3 text-right font-medium tabular-nums text-neutral-950">
                   {formatMoney(cents(roomSubtotalCents(room.items)))}
                 </td>
               </tr>
             ))}
             <tr className="bg-brand-50/50">
-              <td className="px-4 py-3 font-semibold text-gray-950">Grand total</td>
+              <td className="px-4 py-3 font-semibold text-neutral-950">Grand total</td>
               <td className="px-4 py-3" />
               <td className="px-4 py-3 text-right font-bold tabular-nums text-brand-700">
                 {formatMoney(cents(actualCents))}

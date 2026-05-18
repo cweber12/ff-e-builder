@@ -34,8 +34,8 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
     return (
       <main className="flex min-h-screen items-center justify-center bg-surface-muted px-6">
         <div className="max-w-lg rounded-lg border border-danger-500/30 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-2xl font-semibold text-gray-950">Something went wrong</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl font-semibold text-neutral-950">Something went wrong</h1>
+          <p className="mt-2 text-sm text-neutral-600">
             Reload the app to try again, or copy the error details for debugging.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">

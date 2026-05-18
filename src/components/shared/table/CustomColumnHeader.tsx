@@ -48,7 +48,7 @@ export function CustomColumnHeader({ def, onDelete, onRename }: CustomColumnHead
           }
         }}
         maxLength={100}
-        className="w-full rounded border border-brand-400 bg-white px-1 py-0.5 text-xs font-semibold uppercase tracking-wide text-gray-700 focus:outline-none"
+        className="w-full rounded border border-brand-400 bg-white px-1 py-0.5 text-xs font-semibold uppercase tracking-wide text-neutral-700 focus:outline-none"
         aria-label={`Rename column ${def.label}`}
       />
     );
@@ -73,7 +73,7 @@ export function CustomColumnHeader({ def, onDelete, onRename }: CustomColumnHead
           onDelete();
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="hidden rounded p-0.5 text-gray-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="hidden rounded p-0.5 text-neutral-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

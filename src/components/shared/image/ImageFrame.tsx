@@ -253,7 +253,7 @@ export function ImageFrame({
   ) : (
     <div
       className={cn(
-        'flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400',
+        'flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400',
         !isRoomImage && 'bg-surface-muted',
         placeholderClassName,
       )}
@@ -267,7 +267,7 @@ export function ImageFrame({
           <span
             aria-hidden="true"
             className={cn(
-              'flex items-center justify-center rounded-full border border-dashed border-gray-300 bg-white text-gray-500',
+              'flex items-center justify-center rounded-full border border-dashed border-neutral-300 bg-white text-neutral-500',
               compact ? 'h-5 w-5 text-xs' : 'h-9 w-9 text-lg',
             )}
           >
@@ -299,7 +299,7 @@ export function ImageFrame({
           !/rounded-/.test(className ?? '') && 'rounded-md',
           canUpload &&
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-          isRoomImage ? 'bg-transparent' : 'border border-gray-200 bg-surface-muted shadow-sm',
+          isRoomImage ? 'bg-transparent' : 'border border-neutral-200 bg-surface-muted shadow-sm',
           className,
         )}
       >

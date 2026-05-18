@@ -27,40 +27,40 @@ export function UserProfileModal({ open, onClose }: { open: boolean; onClose: ()
           updateProfile.mutate({ name, email, phone, companyName });
         }}
       >
-        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           Name
           <input
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           Email
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           Phone
           <input
             type="tel"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           Company
           <input
             type="text"
             value={companyName}
             onChange={(event) => setCompanyName(event.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </label>
         <div className="flex justify-end gap-2 pt-2 md:col-span-2">

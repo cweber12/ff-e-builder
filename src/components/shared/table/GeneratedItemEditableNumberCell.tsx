@@ -103,7 +103,7 @@ export function GeneratedItemEditableNumberCell({
             }
           }}
           className={cn(
-            'block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50',
+            'block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
             className,
           )}
         >
@@ -193,7 +193,7 @@ export function GeneratedItemEditableMoneyCell({
               setEditing(true);
             }
           }}
-          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
+          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
         >
           {formatMoney(cents(valueCents))}
         </span>
@@ -204,7 +204,7 @@ export function GeneratedItemEditableMoneyCell({
   return (
     <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
       <div className="relative w-28">
-        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-gray-400">
+        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-neutral-400">
           $
         </span>
         <input
@@ -273,7 +273,7 @@ export function GeneratedItemEditableQuantityCell({
               setEditing(true);
             }
           }}
-          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-gray-700 hover:bg-brand-50"
+          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
         >
           {quantity} {quantityUnit}
         </span>

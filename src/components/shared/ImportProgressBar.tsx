@@ -19,8 +19,8 @@ export function ImportProgressBar({
       : undefined;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-surface-muted p-3">
-      <div className="mb-1 flex items-center justify-between text-xs text-gray-600">
+    <div className="rounded-lg border border-neutral-200 bg-surface-muted p-3">
+      <div className="mb-1 flex items-center justify-between text-xs text-neutral-600">
         <span>
           Import progress: {progress.processed} of {progress.total}
         </span>
@@ -29,7 +29,7 @@ export function ImportProgressBar({
           {remainingMs !== undefined ? ` • ~${formatDuration(remainingMs)} remaining` : ''}
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
         <div
           className="h-full rounded-full bg-brand-500 transition-all duration-300"
           style={{ width: `${percent}%` }}

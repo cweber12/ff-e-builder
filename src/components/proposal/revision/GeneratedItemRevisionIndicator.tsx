@@ -76,7 +76,9 @@ export function GeneratedItemProposalImpactIndicatorWrap({
       title="Proposal revision history"
       triggerTitle="View Proposal revision history"
       footer={
-        <span className="text-[11px] text-gray-500">Cost resolution is handled in Proposal.</span>
+        <span className="text-[11px] text-neutral-500">
+          Cost resolution is handled in Proposal.
+        </span>
       }
       requireGeneratedItemId
     >

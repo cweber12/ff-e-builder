@@ -58,7 +58,7 @@ export function SortableColHeader({
                 onHide();
               }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="hidden rounded p-0.5 text-gray-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              className="hidden rounded p-0.5 text-neutral-400 hover:bg-danger-50 hover:text-danger-600 group-hover:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

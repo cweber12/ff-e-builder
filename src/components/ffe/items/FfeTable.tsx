@@ -332,7 +332,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
           event.stopPropagation();
           setMenuOpen((open) => !open);
         }}
-        className="rounded px-1 text-gray-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="rounded px-1 text-neutral-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         <MoreIcon />
       </button>
@@ -346,7 +346,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
               top: menuRect.bottom + 4,
               left: menuRect.left,
             }}
-            className="z-[100] min-w-36 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+            className="menu-panel z-[100] min-w-36"
           >
             {itemStatuses.map((status) => (
               <button
@@ -446,7 +446,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                 top: menuRect.bottom + 4,
                 right: window.innerWidth - menuRect.right,
               }}
-              className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+              className="menu-panel z-[100] min-w-48"
             >
               <button
                 type="button"
@@ -460,8 +460,8 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                 Duplicate
               </button>
               {targetRooms.length > 0 && (
-                <div className="border-t border-gray-100 pt-1">
-                  <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <div className="border-t border-neutral-200 pt-1">
+                  <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
                     Move to location
                   </div>
                   {targetRooms.map((room) => (
@@ -501,7 +501,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
         title={`Remove ${item.itemName} from FF&E?`}
       >
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600">
             This removes the item from the FF&amp;E table only. It stays in the Project database and
             Proposal table.
           </p>
@@ -526,8 +526,8 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
   );
 }
 
-const menuItemClassName =
-  'flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+// Backed by `.menu-item` in src/index.css.
+const menuItemClassName = 'menu-item';
 
 function ChevronIcon({ direction = 'down' }: { direction?: 'down' | 'left' | 'right' }) {
   return (
@@ -719,7 +719,7 @@ const createColumns = (
         label="Name"
         onSave={onSave}
         required
-        displayClassName="font-medium text-gray-950"
+        displayClassName="font-medium text-neutral-950"
         revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'itemName')}
         revisions={revisionIndicator?.revisions ?? []}
       />
@@ -913,8 +913,8 @@ function ItemsErrorState({ onReload }: { onReload?: (() => void) | undefined }) 
   return (
     <div className="flex min-h-[18rem] flex-col items-center justify-center gap-4 rounded-lg border border-danger-500/30 bg-white px-6 py-10 text-center">
       <div>
-        <h2 className="text-lg font-semibold text-gray-950">Items could not be loaded</h2>
-        <p className="mt-1 text-sm text-gray-600">Reload the table to try the request again.</p>
+        <h2 className="text-lg font-semibold text-neutral-950">Items could not be loaded</h2>
+        <p className="mt-1 text-sm text-neutral-600">Reload the table to try the request again.</p>
       </div>
       <Button type="button" variant="secondary" onClick={onReload}>
         Reload
@@ -986,13 +986,13 @@ function DeleteRoomModal({
     >
       <div className="flex flex-col gap-4">
         {hasItems ? (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600">
             <strong>{room?.name}</strong> has {itemCount} {itemCount === 1 ? 'item' : 'items'}. This
             removes the location and its items from the FF&amp;E table only. They stay in the
             Project database and Proposal table.
           </p>
         ) : (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600">
             This removes the empty location from the FF&amp;E table without deleting the database
             row.
           </p>
@@ -1049,7 +1049,7 @@ function SortableItemRow({
         <td
           key={cell.id}
           className={cn(
-            'px-3 py-3 text-gray-700',
+            'px-3 py-3 text-neutral-700',
             defaultColumnClassName(cell.column.id),
             defaultColumnWraps(cell.column.id) ? 'whitespace-normal' : 'whitespace-nowrap',
             cell.column.id === 'plan' && 'overflow-hidden',
@@ -1070,7 +1070,7 @@ function SortableItemRow({
                 aria-label={`View details for ${row.original.itemName}`}
                 title="View details"
                 onClick={() => onItemClick?.(row.original)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
               >
                 <EyeIcon />
               </button>
@@ -1112,7 +1112,7 @@ function MobileItemCards({
 }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+      <div className="rounded-md border border-dashed border-neutral-300 px-4 py-6 text-center text-sm text-neutral-500">
         Add first item -&gt;
       </div>
     );
@@ -1121,7 +1121,10 @@ function MobileItemCards({
   return (
     <div className="grid gap-3">
       {items.map((item) => (
-        <article key={item.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <article
+          key={item.id}
+          className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
               <ImageFrame
@@ -1140,7 +1143,7 @@ function MobileItemCards({
                   label="Name"
                   onSave={onSave}
                   required
-                  displayClassName="text-base font-semibold text-gray-950"
+                  displayClassName="text-base font-semibold text-neutral-950"
                   revisionEntries={revisionEntriesForFfeCell(
                     revisionIndicator,
                     item.id,
@@ -1148,7 +1151,7 @@ function MobileItemCards({
                   )}
                   revisions={revisionIndicator?.revisions ?? []}
                 />
-                <div className="mt-1 text-sm text-gray-500">
+                <div className="mt-1 text-sm text-neutral-500">
                   <EditableTextCell
                     item={item}
                     value={item.itemIdTag}
@@ -1315,7 +1318,7 @@ function RoomActionsMenu({
         aria-label={`Open options for ${room.name}`}
         title={`Open options for ${room.name}`}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="icon-btn"
       >
         <MoreIcon />
       </button>
@@ -1330,7 +1333,7 @@ function RoomActionsMenu({
               top: triggerRect.bottom + 4,
               right: window.innerWidth - triggerRect.right,
             }}
-            className="z-[100] min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+            className="z-[100] min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
           >
             <button
               type="button"
@@ -1367,7 +1370,7 @@ function RoomActionsMenu({
                         columnTriggerRef.current.getBoundingClientRect().left +
                         4,
                     }}
-                    className="z-50 min-w-44 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+                    className="z-50 min-w-44 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
                   >
                     {hiddenDefaults.map((col) => (
                       <button
@@ -1384,7 +1387,7 @@ function RoomActionsMenu({
                         {col.label}
                       </button>
                     ))}
-                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-gray-100" />}
+                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-neutral-100" />}
                     <button
                       type="button"
                       role="menuitem"
@@ -1401,7 +1404,7 @@ function RoomActionsMenu({
                   document.body,
                 )}
             </div>
-            <div className="my-1 h-px bg-gray-100" />
+            <div className="my-1 h-px bg-neutral-100" />
             {project && (
               <>
                 <button
@@ -1432,7 +1435,7 @@ function RoomActionsMenu({
                 >
                   Export PDF
                 </button>
-                <div className="my-1 h-px bg-gray-100" />
+                <div className="my-1 h-px bg-neutral-100" />
               </>
             )}
             <button
@@ -1735,7 +1738,7 @@ function RoomItemsSection({
             aria-expanded={!collapsed}
             aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
             title={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
-            className="shrink-0 rounded px-1 text-xs text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="shrink-0 rounded px-1 text-xs text-brand-100 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
           >
             <ChevronIcon direction={collapsed ? 'right' : 'down'} />
           </button>
@@ -1746,25 +1749,25 @@ function RoomItemsSection({
             }}
             aria-label="Location name"
             renderDisplay={(v) => (
-              <span className="truncate text-sm font-semibold text-gray-950">{v}</span>
+              <span className="truncate text-sm font-semibold tracking-tight text-white">{v}</span>
             )}
-            inputClassName="text-sm font-semibold text-gray-950 border-gray-300 bg-white"
+            inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
           />
-          <span className="shrink-0 rounded-pill bg-white px-2 py-0.5 text-xs text-gray-600">
+          <span className="shrink-0 rounded-pill bg-white/15 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
           {openRevision && (
-            <span className="shrink-0 rounded-pill border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+            <span className="shrink-0 rounded-pill border border-warning-500/40 bg-warning-500/15 px-2 py-0.5 text-xs font-medium text-warning-50">
               Revision {openRevision.label} open - resolve costs in Proposal
             </span>
           )}
         </div>
         <div className="sticky right-4 flex items-center gap-2">
           {!isMobile && !collapsed && <ColumnNavArrows />}
-          <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
+          <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-white">
             {formatMoney(cents(subtotal))}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 text-brand-100 [&_.icon-btn]:text-brand-100 [&_.icon-btn:hover]:bg-white/10 [&_.icon-btn:hover]:text-white">
             <RoomActionsMenu
               room={room}
               rooms={rooms}
@@ -1782,7 +1785,7 @@ function RoomItemsSection({
                 aria-label="Expand table view"
                 title="Expand table view"
                 onClick={() => setIsExpanded(true)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="icon-btn"
               >
                 <ExpandIcon />
               </button>
@@ -1830,7 +1833,7 @@ function RoomItemsSection({
         <div className="grid gap-3 p-3">
           <button
             type="button"
-            className="w-fit rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="w-fit rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             onClick={onToggleImage}
             aria-expanded={!imageCollapsed}
             title={imageCollapsed ? 'Show location image' : 'Hide location image'}
@@ -1856,11 +1859,11 @@ function RoomItemsSection({
 
       {!collapsed && !isMobile && (
         <div className="relative flex items-stretch">
-          <aside className="sticky left-0 top-10 z-30 flex shrink-0 self-start">
-            <div className="flex w-9 shrink-0 items-center justify-center border-r border-gray-100 bg-white">
+          <aside className="sticky left-0 top-11 z-30 flex shrink-0 self-start">
+            <div className="flex w-9 shrink-0 items-center justify-center border-r border-neutral-200 bg-white">
               <button
                 type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="icon-btn"
                 onClick={onToggleImage}
                 aria-expanded={!imageCollapsed}
                 aria-label={imageCollapsed ? 'Show location image' : 'Hide location image'}
@@ -1870,7 +1873,7 @@ function RoomItemsSection({
               </button>
             </div>
             {!imageCollapsed && (
-              <div className="h-72 w-72 shrink-0 border-r border-gray-100 bg-white p-3 xl:w-80">
+              <div className="h-72 w-72 shrink-0 border-r border-neutral-200 bg-white p-3 xl:w-80">
                 <ImageFrame
                   entityType="room"
                   entityId={room.id}
@@ -1887,7 +1890,7 @@ function RoomItemsSection({
               onDragEnd={handleDragEnd}
             >
               <table className="w-full min-w-[1180px] border-collapse text-sm">
-                <thead className="sticky top-10 z-30 text-left bg-surface">
+                <thead className="sticky top-11 z-30 text-left bg-surface">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       <SortableContext
@@ -1988,12 +1991,12 @@ function RoomItemsSection({
         </div>
       )}
       {isExpanded && (
-        <div className="fixed inset-0 z-50 bg-gray-950/35 p-4 backdrop-blur-sm">
-          <div className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-surface px-4 py-3">
+        <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
+          <div className="flex h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-surface px-4 py-3">
               <div className="min-w-0">
-                <h2 className="truncate text-base font-semibold text-gray-950">{room.name}</h2>
-                <p className="text-xs text-gray-500">
+                <h2 className="truncate text-base font-semibold text-neutral-950">{room.name}</h2>
+                <p className="text-xs text-neutral-500">
                   {itemCount} {itemCount === 1 ? 'item' : 'items'} - {formatMoney(cents(subtotal))}
                 </p>
               </div>
@@ -2020,7 +2023,7 @@ function RoomItemsSection({
               </div>
             </div>
             <div className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)] gap-0">
-              <aside className="border-r border-gray-100 bg-surface-muted p-4">
+              <aside className="border-r border-neutral-200 bg-surface-muted p-4">
                 <ImageFrame
                   entityType="room"
                   entityId={room.id}

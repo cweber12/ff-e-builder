@@ -58,9 +58,9 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   if (!entry) {
     return (
       <div className="min-h-screen bg-surface-muted px-6 py-12">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-          <h1 className="text-2xl font-semibold text-gray-950">No catalog items yet</h1>
-          <p className="text-sm text-gray-600">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-12 text-center">
+          <h1 className="text-2xl font-semibold text-neutral-950">No catalog items yet</h1>
+          <p className="text-sm text-neutral-600">
             Add FF&amp;E items to locations before creating a printable catalog.
           </p>
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
@@ -132,13 +132,13 @@ function CatalogNav({
   let itemIndex = 0;
 
   return (
-    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-gray-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
+    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-neutral-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="mt-1 truncate text-sm font-semibold text-gray-950">
+          <p className="mt-1 truncate text-sm font-semibold text-neutral-950">
             {currentEntry?.item.itemName ?? 'Catalog'}
           </p>
-          <p className="text-xs text-gray-500">{currentEntry?.room.name}</p>
+          <p className="text-xs text-neutral-500">{currentEntry?.room.name}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -158,7 +158,7 @@ function CatalogNav({
             id="catalog-jump"
             value={currentIndex}
             onChange={(event) => onPageChange(Number(event.target.value))}
-            className="min-w-56 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
+            className="min-w-56 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
           >
             {rooms.map((room) => (
               <optgroup key={room.id} label={room.name}>
@@ -187,10 +187,10 @@ function CatalogNav({
           <CatalogActionsMenu project={project} rooms={rooms} currentItemId={currentItemId} />
         </div>
         <div className="flex min-w-24 flex-col items-end gap-1">
-          <span className="text-sm font-semibold tabular-nums text-gray-700">
+          <span className="text-sm font-semibold tabular-nums text-neutral-700">
             {currentIndex + 1} / {total}
           </span>
-          <div className="h-1.5 w-24 overflow-hidden rounded-pill bg-gray-200">
+          <div className="h-1.5 w-24 overflow-hidden rounded-pill bg-neutral-200">
             <div
               className="h-full rounded-pill bg-brand-500 transition-all"
               style={{ width: `${total > 0 ? ((currentIndex + 1) / total) * 100 : 0}%` }}
@@ -239,14 +239,14 @@ function CatalogActionsMenu({
         aria-expanded={open}
         aria-label="Open catalog options"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         <MoreIcon />
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
         >
           <button
             type="button"
@@ -283,7 +283,7 @@ function CatalogActionsMenu({
 }
 
 const catalogMenuItemClassName =
-  'flex w-full items-center rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+  'flex w-full items-center rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
 function MoreIcon() {
   return (
@@ -345,7 +345,7 @@ export function CatalogPage({
 
   return (
     <article
-      className="catalog-page mx-auto bg-white text-gray-950 shadow-xl"
+      className="catalog-page mx-auto bg-white text-neutral-950 shadow-xl"
       aria-label={`${item.itemName} catalog page`}
     >
       <header className="catalog-header">
@@ -422,7 +422,7 @@ export function CatalogPage({
               <InlineTextEdit
                 value={item.dimensions ?? ''}
                 aria-label={`Dimensions for ${item.itemName}`}
-                inputClassName="w-full text-sm text-gray-700"
+                inputClassName="w-full text-sm text-neutral-700"
                 onSave={(value) => saveField('dimensions', value)}
                 renderDisplay={(value) =>
                   value.trim() ? (
@@ -443,7 +443,7 @@ export function CatalogPage({
                 className="block"
                 multiline
                 rows={3}
-                inputClassName="w-full text-sm text-gray-700 leading-snug resize-none"
+                inputClassName="w-full text-sm text-neutral-700 leading-snug resize-none"
                 onSave={(value) => saveField('description', value)}
                 renderDisplay={(value) =>
                   value.trim() ? (
@@ -463,7 +463,7 @@ export function CatalogPage({
                   value={vendor}
                   aria-label="Vendor"
                   className="min-w-0 flex-1"
-                  inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
+                  inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
                   onSave={(value) => setVendor(value.trim())}
                   renderDisplay={(value) =>
                     value.trim() ? (
@@ -481,7 +481,7 @@ export function CatalogPage({
                   value={vendorUrl}
                   aria-label="Vendor link"
                   className="min-w-0 flex-1"
-                  inputClassName="w-full text-sm uppercase tracking-wide text-gray-500"
+                  inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
                   onSave={(value) => setVendorUrl(value.trim())}
                   renderDisplay={(value) =>
                     value.trim() ? (
@@ -521,7 +521,7 @@ export function CatalogPage({
                 className="block w-full"
                 multiline
                 rows={3}
-                inputClassName="w-full min-h-16 resize-none text-sm leading-snug text-gray-700"
+                inputClassName="w-full min-h-16 resize-none text-sm leading-snug text-neutral-700"
                 onSave={(value) => saveField('notes', value)}
                 renderDisplay={(value) =>
                   value.trim() ? (
@@ -955,7 +955,7 @@ function CatalogOptionCard({
         </button>
       ) : (
         <div className="catalog-option-empty">
-          <span className="text-xs text-gray-300">Loading…</span>
+          <span className="text-xs text-neutral-300">Loading…</span>
         </div>
       )}
 

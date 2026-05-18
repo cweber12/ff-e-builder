@@ -116,7 +116,7 @@ function ExportMenu({ disabled, items }: ExportMenuProps) {
               top: triggerRect.bottom + 4,
               right: window.innerWidth - triggerRect.right,
             }}
-            className="z-[100] min-w-40 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+            className="z-[100] min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-md"
           >
             {items.map((item) => (
               <button
@@ -127,7 +127,7 @@ function ExportMenu({ disabled, items }: ExportMenuProps) {
                   setOpen(false);
                   item.onSelect();
                 }}
-                className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
               >
                 {item.label}
               </button>

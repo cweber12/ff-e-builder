@@ -29,12 +29,12 @@ export function AddColumnModal({ open, onClose, onSubmit }: AddColumnModalProps)
           });
         }}
       >
-        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           Column name
           <input
             value={label}
             onChange={(event) => setLabel(event.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
           />
         </label>
         <div className="flex justify-end gap-2">

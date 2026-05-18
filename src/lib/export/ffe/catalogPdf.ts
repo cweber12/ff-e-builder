@@ -394,7 +394,7 @@ function drawQtyBand(doc: jsPDF, font: string, item: Item, x: number, y: number,
   doc.text('PRICE PER ITEM', x + cellW + cellW / 2, y + 3.5, { align: 'center' });
   doc.text('TOTAL', x + 2 * cellW + cellW / 2, y + 3.5, { align: 'center' });
 
-  // Value row (white bg, gray-700 values)
+  // Value row (white bg, neutral-700 values)
   const valueY = y + QTY_LABEL_ROW_H;
   const valueH = QTY_BAND_H - QTY_LABEL_ROW_H;
   setFill(doc, WHITE);
@@ -426,13 +426,13 @@ function drawSpecColumn(
 ) {
   let cursorY = y + 4;
 
-  // "PRODUCT SPECIFICATIONS" heading (gray-700, 11pt, light tracking)
+  // "PRODUCT SPECIFICATIONS" heading (neutral-700, 11pt, light tracking)
   applyFont(doc, font, 'bold', 9.5);
   setText(doc, GRAY_700);
   doc.text('PRODUCT SPECIFICATIONS', x, cursorY);
   cursorY += 5;
 
-  // Dimensions (small gray-700)
+  // Dimensions (small neutral-700)
   const dim = model.dimensions ?? 'W __" x D __" x H __"';
   const dimColor: RGB = model.dimensions ? GRAY_700 : GRAY_400;
   const dimResult = drawWrappedText(doc, font, 'normal', 9, dimColor, dim, x, cursorY, width, {
@@ -440,7 +440,7 @@ function drawSpecColumn(
   });
   cursorY += dimResult.height + 2;
 
-  // Description (gray-700, 9pt, up to 4 lines, italic-ish leading)
+  // Description (neutral-700, 9pt, up to 4 lines, italic-ish leading)
   if (model.description) {
     const desc = drawWrappedText(
       doc,

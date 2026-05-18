@@ -27,19 +27,19 @@ export function ProposalItemDetailPanel({ item, categoryName, onClose }: Props) 
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-950/40 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-neutral-950/40 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl"
+        className="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative z-10 flex flex-shrink-0 items-center gap-3 border-b border-gray-100 bg-surface px-5 py-3">
+        <div className="relative z-10 flex flex-shrink-0 items-center gap-3 border-b border-neutral-100 bg-surface px-5 py-3">
           <div className="min-w-0 flex-1">
             {categoryName && (
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
                 {categoryName}
               </p>
             )}
-            <h2 className="truncate text-base font-semibold text-gray-900">
+            <h2 className="truncate text-base font-semibold text-neutral-900">
               {item.productTag || 'Unnamed item'}
             </h2>
           </div>
@@ -47,14 +47,14 @@ export function ProposalItemDetailPanel({ item, categoryName, onClose }: Props) 
             type="button"
             onClick={onClose}
             aria-label="Close detail panel"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <CloseIcon />
           </button>
         </div>
 
         <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-          <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-gray-100 p-4">
+          <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-neutral-100 p-4">
             <ImageSection label="Rendering" className="flex-1 min-w-0">
               <ImageFrame
                 entityType="proposal_item"
@@ -86,18 +86,18 @@ export function ProposalItemDetailPanel({ item, categoryName, onClose }: Props) 
 
               {item.materials.length > 0 && (
                 <div>
-                  <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-gray-400">
+                  <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400">
                     Materials
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {item.materials.map((m) => (
                       <span
                         key={m.id}
-                        className="inline-flex items-center gap-1.5 rounded-pill border border-gray-200 px-2.5 py-1 text-sm text-gray-700"
+                        className="inline-flex items-center gap-1.5 rounded-pill border border-neutral-200 px-2.5 py-1 text-sm text-neutral-700"
                       >
                         {m.swatchHex && (
                           <span
-                            className="h-3 w-3 flex-shrink-0 rounded-full border border-gray-200"
+                            className="h-3 w-3 flex-shrink-0 rounded-full border border-neutral-200"
                             style={{ background: m.swatchHex }}
                           />
                         )}
@@ -108,26 +108,26 @@ export function ProposalItemDetailPanel({ item, categoryName, onClose }: Props) 
                 </div>
               )}
 
-              <div className="border-t border-gray-100 pt-4">
+              <div className="border-t border-neutral-100 pt-4">
                 <dl className="grid grid-cols-3 gap-4">
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">
                       Quantity
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dd className="mt-1 text-sm text-neutral-900">
                       {item.quantity} {item.quantityUnit}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">
                       Unit Cost
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dd className="mt-1 text-sm text-neutral-900">
                       {formatMoney(cents(item.unitCostCents))}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">
                       Total
                     </dt>
                     <dd className="mt-1 text-sm font-semibold text-brand-700">
@@ -135,7 +135,7 @@ export function ProposalItemDetailPanel({ item, categoryName, onClose }: Props) 
                     </dd>
                   </div>
                 </dl>
-                {item.cbm > 0 && <p className="mt-3 text-xs text-gray-400">CBM: {item.cbm}</p>}
+                {item.cbm > 0 && <p className="mt-3 text-xs text-neutral-400">CBM: {item.cbm}</p>}
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@ function ImageSection({
 }) {
   return (
     <div className={className}>
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
       {children}
     </div>
   );
@@ -166,8 +166,8 @@ function MetaField({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
-      <p className="mt-0.5 text-sm text-gray-900">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
+      <p className="mt-0.5 text-sm text-neutral-900">{value}</p>
     </div>
   );
 }
@@ -214,7 +214,7 @@ function BlobImage({ image, className }: { image: ImageAsset; className?: string
   }, [image.id]);
 
   if (!url) {
-    return <div className={cn('animate-pulse rounded-lg bg-gray-100', className)} />;
+    return <div className={cn('animate-pulse rounded-lg bg-neutral-100', className)} />;
   }
   return <img src={url} alt={image.altText} className={className} />;
 }

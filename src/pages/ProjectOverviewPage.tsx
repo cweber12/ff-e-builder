@@ -19,7 +19,7 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
       {/* Project images */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
             Project Images
           </h2>
         </div>
@@ -31,7 +31,7 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
       {/* Project information + Company information */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
             Project Information
           </h2>
           <Button type="button" variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
@@ -76,9 +76,9 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
 function InfoField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex flex-col gap-1">
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</dt>
-      <dd className="text-sm font-medium text-gray-900">
-        {value ?? <span className="text-gray-400">—</span>}
+      <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</dt>
+      <dd className="text-sm font-medium text-neutral-900">
+        {value ?? <span className="text-neutral-400">—</span>}
       </dd>
     </div>
   );

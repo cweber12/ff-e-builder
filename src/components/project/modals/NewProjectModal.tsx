@@ -67,7 +67,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
       <form onSubmit={(e) => void handleSubmit(e)} noValidate>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label htmlFor="np-name" className="text-sm font-medium text-gray-700">
+            <label htmlFor="np-name" className="text-sm font-medium text-neutral-700">
               Project name <span className="text-danger-500">*</span>
             </label>
             <input
@@ -79,7 +79,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
                 setName(e.target.value);
                 setNameError('');
               }}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+              className="input-base"
               placeholder="Living Room Renovation"
               aria-required="true"
               aria-describedby={nameError ? 'np-name-error' : undefined}
@@ -92,55 +92,55 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="np-client" className="text-sm font-medium text-gray-700">
-              Client name <span className="text-gray-400">(optional)</span>
+            <label htmlFor="np-client" className="text-sm font-medium text-neutral-700">
+              Client name <span className="text-neutral-400">(optional)</span>
             </label>
             <input
               id="np-client"
               type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+              className="input-base"
               placeholder="Jane Smith"
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <label htmlFor="np-company" className="text-sm font-medium text-gray-700">
-                Company <span className="text-gray-400">(optional)</span>
+              <label htmlFor="np-company" className="text-sm font-medium text-neutral-700">
+                Company <span className="text-neutral-400">(optional)</span>
               </label>
               <input
                 id="np-company"
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+                className="input-base"
                 placeholder="Chill Design Studio"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label htmlFor="np-location" className="text-sm font-medium text-gray-700">
-                Project location <span className="text-gray-400">(optional)</span>
+              <label htmlFor="np-location" className="text-sm font-medium text-neutral-700">
+                Project location <span className="text-neutral-400">(optional)</span>
               </label>
               <input
                 id="np-location"
                 type="text"
                 value={projectLocation}
                 onChange={(e) => setProjectLocation(e.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
+                className="input-base"
                 placeholder="Palm Springs, CA"
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="np-budget" className="text-sm font-medium text-gray-700">
-              Budget <span className="text-gray-400">(optional, in dollars)</span>
+            <label htmlFor="np-budget" className="text-sm font-medium text-neutral-700">
+              Budget <span className="text-neutral-400">(optional, in dollars)</span>
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-gray-400">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-neutral-400">
                 $
               </span>
               <input
@@ -150,7 +150,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
                 step="0.01"
                 value={budgetDollars}
                 onChange={(e) => setBudgetDollars(e.target.value)}
-                className="w-full rounded-md border border-gray-300 py-2 pl-6 pr-3 text-sm focus:outline-none focus:border-brand-500"
+                className="input-base py-2 pl-6 pr-3"
                 placeholder="250000"
               />
             </div>

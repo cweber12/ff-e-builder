@@ -67,4 +67,29 @@ describe('buildProposalItem', () => {
 
     expect(item.customData).toEqual({ 'vendor-def-id': 'Millworker' });
   });
+
+  it('splits combined Drawings / Location cells into separate item fields', () => {
+    const columns: ProposalImportColumn[] = [
+      { key: 'drawings_location__4', label: 'Drawings / Location', columnNumber: 4 },
+    ];
+    const row: ProposalParsedRow = {
+      ...BASE_ROW,
+      values: {
+        drawings_location__4: 'A-101 / Lobby',
+      },
+    };
+
+    const item = buildProposalItem(
+      row,
+      {
+        ...EMPTY_MAP,
+        drawings: 'drawings_location__4',
+        location: 'drawings_location__4',
+      },
+      columns,
+    );
+
+    expect(item.drawings).toBe('A-101');
+    expect(item.location).toBe('Lobby');
+  });
 });

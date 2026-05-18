@@ -22,13 +22,19 @@ export function buildProposalItem(
       }
     }
   }
+  const drawings = getValue(row, mapping.drawings);
+  const location = getValue(row, mapping.location);
+  const splitCombined =
+    mapping.drawings && mapping.drawings === mapping.location
+      ? splitDrawingsLocation(drawings)
+      : null;
 
   return {
     productTag: getValue(row, mapping.productTag),
     itemName: getValue(row, mapping.itemName),
     plan: getValue(row, mapping.plan),
-    drawings: getValue(row, mapping.drawings),
-    location: getValue(row, mapping.location),
+    drawings: splitCombined?.drawings ?? drawings,
+    location: splitCombined?.location ?? location,
     description: getValue(row, mapping.description),
     notes: getValue(row, mapping.notes),
     sizeLabel: getValue(row, mapping.sizeLabel),
@@ -38,6 +44,26 @@ export function buildProposalItem(
     unitCostCents: parseMoney(getValue(row, mapping.unitCost)),
     ...(Object.keys(customData).length > 0 && { customData }),
   };
+}
+
+function splitDrawingsLocation(value: string): { drawings: string; location: string } {
+  const lines = value
+    .split(/\r?\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (lines.length >= 2) {
+    return { drawings: lines[0] ?? '', location: lines.slice(1).join(' ') };
+  }
+
+  const slashParts = value
+    .split(/\s+\/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (slashParts.length >= 2) {
+    return { drawings: slashParts[0] ?? '', location: slashParts.slice(1).join(' / ') };
+  }
+
+  return { drawings: value, location: '' };
 }
 
 function getValue(row: ProposalParsedRow, columnKey: string | null): string {

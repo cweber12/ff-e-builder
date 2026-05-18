@@ -253,11 +253,11 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           />
         )}
 
-        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
             <div className="flex items-baseline gap-3">
-              <h3 className="text-sm font-semibold text-gray-950">Project library</h3>
-              <span className="text-xs font-medium text-gray-500">
+              <h3 className="text-sm font-semibold text-neutral-950">Project library</h3>
+              <span className="text-xs font-medium text-neutral-500">
                 {visibleMaterials.length} {visibleMaterials.length === 1 ? 'item' : 'items'}
               </span>
             </div>
@@ -266,7 +266,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or ID…"
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none sm:w-80"
+                className="input-base sm:w-80"
                 aria-label="Search project library"
               />
               {!showForm && (
@@ -278,7 +278,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface-muted/40 p-5">
             {materials.isLoading ? (
-              <p className="text-sm text-gray-500">Loading library...</p>
+              <p className="text-sm text-neutral-500">Loading library...</p>
             ) : visibleMaterials.length ? (
               <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-4">
                 {visibleMaterials.map((material) => (
@@ -293,7 +293,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
                 ))}
               </div>
             ) : (
-              <p className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-10 text-center text-sm text-gray-500">
+              <p className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-10 text-center text-sm text-neutral-500">
                 {searchQuery.trim()
                   ? 'No library items match the current search.'
                   : activeItem
@@ -372,9 +372,9 @@ function AssignedMaterialChip({
     <span className="group inline-flex max-w-xs items-center gap-2 rounded-full border border-brand-200 bg-white py-1 pl-1 pr-1 shadow-sm transition hover:border-brand-400">
       <MaterialSwatchImage material={material} size="sm" />
       <span className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-sm font-semibold text-gray-950">{material.name}</span>
+        <span className="truncate text-sm font-semibold text-neutral-950">{material.name}</span>
         {material.materialId && (
-          <span className="truncate font-mono text-[10px] uppercase tracking-wider text-gray-500">
+          <span className="truncate font-mono text-[10px] uppercase tracking-wider text-neutral-500">
             {material.materialId}
           </span>
         )}
@@ -382,7 +382,7 @@ function AssignedMaterialChip({
       <button
         type="button"
         onClick={onEdit}
-        className="ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label={`Edit ${material.name}`}
       >
         Edit
@@ -390,7 +390,7 @@ function AssignedMaterialChip({
       <button
         type="button"
         onClick={onRemove}
-        className="rounded-full p-1 text-gray-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="rounded-full p-1 text-neutral-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label={`Remove ${material.name} from item`}
         title="Remove from item"
       >
@@ -458,12 +458,12 @@ export function MaterialForm({
   };
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-surface-muted p-4">
-      <h3 className="text-sm font-semibold text-gray-950">
+    <section className="rounded-lg border border-neutral-200 bg-surface-muted p-4">
+      <h3 className="text-sm font-semibold text-neutral-950">
         {editing ? 'Edit item' : 'Add to library'}
       </h3>
       <div className="mt-3 grid gap-3">
-        <div className="grid gap-1 text-sm font-medium text-gray-700">
+        <div className="grid gap-1 text-sm font-medium text-neutral-700">
           <label htmlFor="material-source-url">Product URL or ID</label>
           <div className="flex gap-2">
             <input
@@ -481,9 +481,9 @@ export function MaterialForm({
               Look up
             </Button>
           </div>
-          {lookupHint && <p className="text-xs font-normal text-gray-500">{lookupHint}</p>}
+          {lookupHint && <p className="text-xs font-normal text-neutral-500">{lookupHint}</p>}
         </div>
-        <label className="grid gap-1 text-sm font-medium text-gray-700">
+        <label className="grid gap-1 text-sm font-medium text-neutral-700">
           Name
           <input
             value={draft.name}
@@ -492,7 +492,7 @@ export function MaterialForm({
           />
         </label>
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-          <label className="grid gap-1 text-sm font-medium text-gray-700">
+          <label className="grid gap-1 text-sm font-medium text-neutral-700">
             ID
             <input
               value={draft.materialId}
@@ -500,7 +500,7 @@ export function MaterialForm({
               className={inputClassName}
             />
           </label>
-          <label className="grid gap-1 text-sm font-medium text-gray-700">
+          <label className="grid gap-1 text-sm font-medium text-neutral-700">
             Manufacturer
             <input
               value={draft.manufacturer}
@@ -509,11 +509,11 @@ export function MaterialForm({
             />
           </label>
         </div>
-        <div className="grid gap-2 text-sm font-medium text-gray-700">
+        <div className="grid gap-2 text-sm font-medium text-neutral-700">
           <span>Swatch</span>
           <div className="grid gap-2">
             <div className="flex items-center gap-3">
-              <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-white">
+              <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-neutral-200 bg-white">
                 {previewUrl ? (
                   <img src={previewUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -525,12 +525,12 @@ export function MaterialForm({
               </span>
               <div className="min-w-0 grid gap-1.5">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-normal text-gray-600 shrink-0">Color</label>
+                  <label className="text-xs font-normal text-neutral-600 shrink-0">Color</label>
                   <input
                     type="color"
                     value={draft.swatchHex || '#D9D4C8'}
                     onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                    className="h-7 w-10 cursor-pointer rounded border border-gray-300 bg-white p-0.5"
+                    className="h-7 w-10 cursor-pointer rounded border border-neutral-300 bg-white p-0.5"
                     aria-label="Swatch color"
                   />
                   <input
@@ -539,11 +539,11 @@ export function MaterialForm({
                     onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
                     placeholder="#D9D4C8"
                     maxLength={7}
-                    className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-normal text-gray-950 focus:border-brand-500 focus:outline-none"
+                    className="w-24 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none"
                     aria-label="Swatch hex value"
                   />
                 </div>
-                <p className="text-xs font-normal text-gray-500">
+                <p className="text-xs font-normal text-neutral-500">
                   {draft.swatchFile ? draft.swatchFile.name : 'Image overrides color if uploaded.'}
                 </p>
               </div>
@@ -554,12 +554,12 @@ export function MaterialForm({
               onChange={(e) =>
                 onDraftChange((c) => ({ ...c, swatchFile: e.target.files?.[0] ?? null }))
               }
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700 focus:border-brand-500 focus:outline-none"
+              className="input-base file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700"
               aria-label="Swatch image"
             />
           </div>
         </div>
-        <label className="grid gap-1 text-sm font-medium text-gray-700">
+        <label className="grid gap-1 text-sm font-medium text-neutral-700">
           Description
           <textarea
             value={draft.description}
@@ -611,7 +611,7 @@ function MaterialPickerCard({
       aria-busy={assigning}
       onClick={assignable ? onSelect : undefined}
       onKeyDown={assignable ? handleKeyDown : undefined}
-      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
         assignable ? 'cursor-pointer' : ''
       }`}
     >
@@ -623,7 +623,7 @@ function MaterialPickerCard({
           className="h-24 w-full rounded-none border-0 shadow-none"
           imageClassName="object-cover"
           compact
-          placeholderContent={<span className="text-lg text-gray-400">+</span>}
+          placeholderContent={<span className="text-lg text-neutral-400">+</span>}
           disabled
         />
         {assignable && (
@@ -638,10 +638,10 @@ function MaterialPickerCard({
         )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
-        <p className="truncate font-mono text-[10px] uppercase tracking-wider text-gray-500">
+        <p className="truncate font-mono text-[10px] uppercase tracking-wider text-neutral-500">
           {material.materialId || 'No ID'}
         </p>
-        <h4 className="truncate text-sm font-semibold leading-tight text-gray-950">
+        <h4 className="truncate text-sm font-semibold leading-tight text-neutral-950">
           {material.name}
         </h4>
         <div className="mt-2 flex items-center justify-between gap-1">
@@ -655,7 +655,7 @@ function MaterialPickerCard({
               e.stopPropagation();
               onEdit();
             }}
-            className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="rounded px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             aria-label={`Edit ${material.name}`}
           >
             Edit
@@ -684,14 +684,14 @@ export function MaterialBadges({
         materials.map((material) => (
           <span
             key={material.id}
-            className="inline-flex max-w-full items-center gap-1 rounded-pill border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700"
+            className="inline-flex max-w-full items-center gap-1 rounded-pill border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-700"
           >
             <MaterialSwatchImage material={material} size="sm" />
             <span className="truncate">{material.name}</span>
           </span>
         ))
       ) : (
-        <span className="text-gray-400">Add materials</span>
+        <span className="text-neutral-400">Add materials</span>
       )}
     </button>
   );
@@ -723,7 +723,7 @@ export function ProductLinkIcon({ url, label }: { url: string; label: string }) 
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label={`Open product page for ${label}`}
         title="Open product page"
       >
@@ -735,7 +735,7 @@ export function ProductLinkIcon({ url, label }: { url: string; label: string }) 
     <span
       aria-hidden="true"
       title="No product link — add one in the material edit form"
-      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-300"
+      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-neutral-300"
     >
       <ChainLinkGlyph />
     </span>
@@ -764,14 +764,14 @@ export function MaterialSwatchImage({
       aria-hidden="true"
     />
   ) : (
-    <span className="text-[10px] font-semibold text-gray-400">IMG</span>
+    <span className="text-[10px] font-semibold text-neutral-400">IMG</span>
   );
   return (
     <ImageFrame
       entityType="material"
       entityId={material.id}
       alt={`${material.name} swatch`}
-      className={`${frameClassName} shrink-0 border-gray-200 shadow-none ${className}`}
+      className={`${frameClassName} shrink-0 border-neutral-200 shadow-none ${className}`}
       imageClassName="object-cover"
       placeholderClassName="bg-white"
       placeholderContent={hexPlaceholder}
@@ -789,5 +789,5 @@ function materialMatchesQuery(material: Material, query: string) {
     .includes(query);
 }
 
-const inputClassName =
-  'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-950 focus:border-brand-500 focus:outline-none';
+// Shared input visual — see `.input-base` in src/index.css for the full ruleset.
+const inputClassName = 'input-base';

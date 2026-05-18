@@ -152,7 +152,7 @@ function formatCents(cents: number) {
 }
 
 const STATUS_STYLES: Record<ItemStatus, string> = {
-  pending: 'bg-gray-100 text-gray-600',
+  pending: 'bg-neutral-100 text-neutral-600',
   ordered: 'bg-blue-50 text-blue-700',
   approved: 'bg-green-50 text-green-700',
   received: 'bg-emerald-50 text-emerald-800',

@@ -13,9 +13,10 @@ export function DeleteProjectModal({ project, onClose, onConfirm }: DeleteProjec
   return (
     <Modal open onClose={onClose} title="Delete project">
       <div className="flex flex-col gap-5">
-        <p className="text-sm text-gray-600">
-          Permanently delete <strong className="font-semibold text-gray-950">{project.name}</strong>
-          ? All rooms and items will be removed. This cannot be undone.
+        <p className="text-sm text-neutral-600">
+          Permanently delete{' '}
+          <strong className="font-semibold text-neutral-950">{project.name}</strong>? All rooms and
+          items will be removed. This cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>

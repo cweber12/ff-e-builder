@@ -86,7 +86,7 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
       {/* Backdrop */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 bg-black/40 z-40 transition-opacity"
+        className="fixed inset-0 z-40 bg-neutral-950/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
@@ -97,22 +97,25 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'fixed inset-0 z-50 flex w-full flex-col bg-surface shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md',
+          'fixed inset-0 z-50 flex w-full flex-col bg-surface shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md md:border-l md:border-neutral-300',
           'transition-transform duration-300 ease-in-out',
           'translate-x-0',
           className,
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 id={titleId} className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between border-b border-neutral-300 bg-neutral-100 px-6 py-4">
+          <h2
+            id={titleId}
+            className="font-display text-lg font-semibold tracking-tight text-neutral-950"
+          >
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close drawer"
-            className="rounded p-1 text-gray-400 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

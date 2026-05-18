@@ -77,7 +77,7 @@ export function SignInPage() {
     <main className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center gap-6 w-full max-w-sm">
         <h1 className="text-2xl font-bold text-brand-500">Chill Design Studio</h1>
-        <p className="text-sm text-gray-500 text-center">
+        <p className="text-sm text-neutral-500 text-center">
           Sign in to manage your projects and specifications.
         </p>
 
@@ -94,7 +94,7 @@ export function SignInPage() {
           onSubmit={(event) => void handleEmailSubmit(event)}
           className="flex w-full flex-col gap-3"
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
             Email
             <input
               type="email"
@@ -102,10 +102,10 @@ export function SignInPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
             Password
             <input
               type="password"
@@ -114,7 +114,7 @@ export function SignInPage() {
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
             />
           </label>
           <button
@@ -139,17 +139,17 @@ export function SignInPage() {
             : 'Need an account? Create one'}
         </button>
 
-        <div className="flex w-full items-center gap-3 text-xs uppercase tracking-wide text-gray-600">
-          <span className="h-px flex-1 bg-gray-200" />
+        <div className="flex w-full items-center gap-3 text-xs uppercase tracking-wide text-neutral-600">
+          <span className="h-px flex-1 bg-neutral-200" />
           or
-          <span className="h-px flex-1 bg-gray-200" />
+          <span className="h-px flex-1 bg-neutral-200" />
         </div>
 
         <button
           type="button"
           onClick={() => void handleGoogleSignIn()}
           disabled={isSubmitting}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-800 font-medium hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-neutral-800 font-medium hover:bg-neutral-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
         >
           Sign in with Google
         </button>
@@ -203,7 +203,7 @@ function UserMenu() {
           aria-label="User menu"
           aria-expanded={open}
           aria-haspopup="true"
-          className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ring-2 ring-gray-200 transition-all hover:ring-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ring-2 ring-neutral-200 transition-all hover:ring-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
           {user?.photoURL ? (
             <img src={user.photoURL} alt="" className="h-full w-full object-cover" />
@@ -216,9 +216,9 @@ function UserMenu() {
         {open && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden="true" />
-            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-md border border-neutral-200 bg-white py-1 shadow-lg">
               {(profile?.name || user?.email) && (
-                <p className="truncate border-b border-gray-100 px-3 py-1.5 text-xs text-gray-500">
+                <p className="truncate border-b border-neutral-100 px-3 py-1.5 text-xs text-neutral-500">
                   {profile?.name || user?.email}
                 </p>
               )}
@@ -228,7 +228,7 @@ function UserMenu() {
                   setOpen(false);
                   setProfileOpen(true);
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
               >
                 Update profile
               </button>
@@ -238,18 +238,18 @@ function UserMenu() {
                   setOpen(false);
                   navigate('/projects');
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
               >
                 Projects
               </button>
-              <div className="my-1 border-t border-gray-100" />
+              <div className="my-1 border-t border-neutral-100" />
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
                   void signOut();
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-danger-600 hover:bg-gray-50"
+                className="w-full px-3 py-2 text-left text-sm text-danger-600 hover:bg-neutral-50"
               >
                 Sign out
               </button>
@@ -264,7 +264,7 @@ function UserMenu() {
 
 function TopBar() {
   return (
-    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
       <Link
         to="/projects"
         className="text-sm font-bold tracking-tight text-brand-500 hover:text-brand-600 transition-colors"
@@ -281,12 +281,12 @@ function TopBar() {
 function DemoLayout() {
   return (
     <>
-      <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+      <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
         <span className="text-sm font-bold tracking-tight text-brand-500">Chill Design Studio</span>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-neutral-500 hover:text-neutral-700"
         >
           Sign out
         </button>
