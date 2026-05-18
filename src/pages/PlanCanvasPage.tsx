@@ -603,10 +603,21 @@ export function PlanCanvasPage({
                   : calibration?.unit === 'cm'
                     ? 'ln cm'
                     : 'ln mm';
+        const roundedQuantity =
+          measurementApplicationMode === 'proposal-area'
+            ? Math.round(quantity)
+            : parseFloat(quantity.toFixed(2));
         const updated = await api.proposal.updateItem(selectedMeasurementItem.targetItemId, {
-          quantity: Number(quantity.toFixed(2)),
+          quantity: roundedQuantity,
           quantityUnit,
           version: selectedMeasurementItem.version,
+          changeLog: {
+            columnKey: 'quantity',
+            previousValue: String(selectedMeasurementItem.quantity ?? 1),
+            newValue: String(roundedQuantity),
+            proposalStatus: project.proposalStatus,
+            isPriceAffecting: true,
+          },
         });
         queryClient.setQueryData<ProposalItem[]>(
           proposalKeys.items(selectedMeasurementItem.containerId),

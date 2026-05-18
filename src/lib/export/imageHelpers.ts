@@ -3,6 +3,7 @@ import type { CropParams, ImageAsset } from '../../types';
 import type { Workbook, Worksheet } from 'exceljs';
 
 const DEFAULT_EXCEL_IMAGE_PADDING_PX = 2;
+const EMU_PER_PIXEL_AT_96_DPI = 9525;
 
 export type ExcelImageBox = {
   left: number;
@@ -11,10 +12,18 @@ export type ExcelImageBox = {
   bottom: number;
 };
 
+export type ExcelImagePixelAnchor = {
+  nativeCol: number;
+  nativeRow: number;
+  nativeColOffPx: number;
+  nativeRowOffPx: number;
+};
+
 export type ExcelImagePlacement = {
   box: ExcelImageBox;
   widthPx: number;
   heightPx: number;
+  anchor?: ExcelImagePixelAnchor;
 };
 
 export type ExcelImageCellPlacementOptions = {
@@ -81,15 +90,22 @@ function addExcelImage(
   worksheet: Worksheet,
   imageId: number,
   position: {
-    tl: { col: number; row: number };
+    tl: { col: number; row: number } | ExcelImagePixelAnchor;
     ext: { width: number; height: number };
   },
 ) {
-  // 'oneCellAnchor' with explicit ext dimensions: image is placed at tl and
-  // rendered at exactly ext.width x ext.height pixels. The embedded PNG retains
-  // full resolution so quality is preserved when the user resizes in Excel.
+  const tl =
+    'nativeCol' in position.tl
+      ? ({
+          nativeCol: position.tl.nativeCol,
+          nativeRow: position.tl.nativeRow,
+          nativeColOff: Math.round(position.tl.nativeColOffPx * EMU_PER_PIXEL_AT_96_DPI),
+          nativeRowOff: Math.round(position.tl.nativeRowOffPx * EMU_PER_PIXEL_AT_96_DPI),
+        } as unknown as { col: number; row: number })
+      : position.tl;
+
   worksheet.addImage(imageId, {
-    tl: position.tl,
+    tl,
     ext: position.ext,
   });
 }
@@ -177,6 +193,12 @@ export function excelSquareGridPlacements({
       },
       widthPx: squarePx,
       heightPx: squarePx,
+      anchor: {
+        nativeCol: columnIndex,
+        nativeRow: rowNumber - 1,
+        nativeColOffPx: leftPx,
+        nativeRowOffPx: topPx,
+      },
     };
   });
 }
@@ -256,8 +278,10 @@ export async function addExcelAspectFitImage(
   });
   addExcelImage(worksheet, imageId, {
     tl: {
-      col: options.columnIndex + leftPaddingPx / cellWidthPx,
-      row: options.rowNumber - 1 + topPaddingPx / cellHeightPx,
+      nativeCol: options.columnIndex,
+      nativeRow: options.rowNumber - 1,
+      nativeColOffPx: leftPaddingPx,
+      nativeRowOffPx: topPaddingPx,
     },
     ext: {
       width: Math.max(1, Math.round(widthPx)),
@@ -345,7 +369,7 @@ export async function addExcelCoverImage(
     extension: 'png',
   });
   addExcelImage(worksheet, imageId, {
-    tl: { col: placement.box.left, row: placement.box.top },
+    tl: placement.anchor ?? { col: placement.box.left, row: placement.box.top },
     ext: { width: placement.widthPx, height: placement.heightPx },
   });
 }
@@ -403,7 +427,7 @@ export async function addExcelContainImage(
     extension: 'png',
   });
   addExcelImage(worksheet, imageId, {
-    tl: { col: placement.box.left, row: placement.box.top },
+    tl: placement.anchor ?? { col: placement.box.left, row: placement.box.top },
     ext: { width: placement.widthPx, height: placement.heightPx },
   });
 }
@@ -457,7 +481,7 @@ export async function addExcelCircularCoverImage(
     extension: 'png',
   });
   addExcelImage(worksheet, imageId, {
-    tl: { col: placement.box.left, row: placement.box.top },
+    tl: placement.anchor ?? { col: placement.box.left, row: placement.box.top },
     ext: { width: placement.widthPx, height: placement.heightPx },
   });
 }

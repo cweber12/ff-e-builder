@@ -42,6 +42,7 @@ const THEME_BRAND_ARGB = `FF${BRAND_RGB.map((value) =>
 const THEME_BRAND_DARK_ARGB = 'FF2F5F83';
 const THEME_BRAND_LIGHT_ARGB = 'FFE8F0F7';
 const THEME_BRAND_PALE_ARGB = 'FFF4F8FB';
+const COLUMN_HEADER_FILL_ARGB = 'FFD9E8F4';
 const ROW_FILL_ARGB = 'FFFFFFFF';
 const ALT_ROW_FILL_ARGB = 'FFF6F7F8';
 type ExcelBorderSide = { style: 'thin' | 'medium'; color: { argb: string } };
@@ -207,11 +208,17 @@ function borderForColumn(
 }
 
 function headerLabelForColumn(column: { key: string; label: string }) {
-  if (column.key === 'revisionNotes') return 'Revision Notes';
-  if (column.key === 'revQty') return 'Quantity';
-  if (column.key === 'revUnitCost') return 'Unit Cost';
-  if (column.key === 'revTotalCost') return 'Total Cost';
-  return column.label;
+  const label =
+    column.key === 'revisionNotes'
+      ? 'Revision Notes'
+      : column.key === 'revQty'
+        ? 'Quantity'
+        : column.key === 'revUnitCost'
+          ? 'Unit Cost'
+          : column.key === 'revTotalCost'
+            ? 'Total Cost'
+            : column.label;
+  return label.toUpperCase();
 }
 
 export async function exportProposalExcel(
@@ -391,7 +398,7 @@ export async function exportProposalExcel(
         headerTopRowNumber,
         TABLE_START_COLUMN + revisedStartIndex,
       );
-      revisedHeaderCell.value = 'Revised Proposal';
+      revisedHeaderCell.value = 'REVISED PROPOSAL';
       revisedHeaderCell.font = {
         name: PROPOSAL_FONT,
         size: 9,
@@ -423,12 +430,17 @@ export async function exportProposalExcel(
       }
 
       targetCell.value = headerLabelForColumn(column);
-      targetCell.font = { name: PROPOSAL_FONT, size: 8, bold: true, color: { argb: 'FFFFFFFF' } };
+      targetCell.font = {
+        name: PROPOSAL_FONT,
+        size: 8,
+        bold: true,
+        color: { argb: THEME_BRAND_DARK_ARGB },
+      };
       targetCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
       targetCell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: THEME_BRAND_ARGB },
+        fgColor: { argb: COLUMN_HEADER_FILL_ARGB },
       };
       targetCell.border = borderForColumn(tableBorder(), column, prevColumn, nextColumn, {
         isFirstColumn: index === 0,
@@ -753,9 +765,9 @@ export async function exportProposalExcel(
   worksheet.getRow(currentRow).height = 22;
   currentRow += 1;
 
-  worksheet.getCell(currentRow, summaryStartColumn).value = 'Category';
-  worksheet.getCell(currentRow, summaryStartColumn + 1).value = 'Rows';
-  worksheet.getCell(currentRow, summaryStartColumn + 2).value = 'Total';
+  worksheet.getCell(currentRow, summaryStartColumn).value = 'CATEGORY';
+  worksheet.getCell(currentRow, summaryStartColumn + 1).value = 'ROWS';
+  worksheet.getCell(currentRow, summaryStartColumn + 2).value = 'TOTAL';
   [summaryStartColumn, summaryStartColumn + 1, summaryStartColumn + 2].forEach((columnIndex) => {
     const cell = worksheet.getCell(currentRow, columnIndex);
     cell.font = { name: PROPOSAL_FONT, size: 10, bold: true, color: { argb: 'FF1F2937' } };

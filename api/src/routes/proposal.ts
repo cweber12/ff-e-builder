@@ -239,11 +239,13 @@ router.patch('/proposal/items/:id', async (c) => {
     openRev = await openRevision(sql, ctx.projectId, proposalStatus);
   }
 
-  // When a revision context exists, price-affecting fields are written to the
-  // snapshot, not to proposal_items. proposal_items keeps the pre-revision
-  // baseline until acceptance bakes the latest snapshot in.
+  // When a revision context exists AND the edit declares itself price-affecting,
+  // price fields are written to the snapshot, not to proposal_items.
+  // Non-price-affecting edits (e.g. measurement-driven quantity updates from the
+  // Plans tool, which carry no change_log) write directly regardless of revision
+  // state, so the measured value is always reflected immediately.
   const revisionContext = openRev != null;
-  const lockPriceFields = revisionContext;
+  const lockPriceFields = revisionContext && priceAffectingEdit;
 
   // Build the proposal_items UPDATE. Always bump version for optimistic
   // concurrency, even if only non-price fields are changing.
