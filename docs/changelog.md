@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(table): keep FF&E column drag context out of table header markup
 - refactor(table): move FF&E sticky table edge styles into shared Generated Item table helpers
 - refactor(table): clarify FF&E copy for edits added to an open Proposal revision
 - refactor(table): show FF&E Product Description edits in shared Proposal revision history

@@ -1691,23 +1691,36 @@ function RoomItemsSection({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+  const draggableColumnIds = useMemo(
+    () =>
+      columnConfig.visibleOrder.filter(
+        (id) => id !== 'drag' && id !== 'actions' && id !== 'lineTotal',
+      ),
+    [columnConfig.visibleOrder],
+  );
+  const draggableColumnIdSet = useMemo(() => new Set(draggableColumnIds), [draggableColumnIds]);
+  const sortedItemIdSet = useMemo(() => new Set(sortedItems.map((item) => item.id)), [sortedItems]);
   const subtotal = roomSubtotalCents(room.items);
   const itemCount = room.items.length;
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const patches = getSortOrderPatches(sortedItems, String(active.id), String(over.id));
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    if (draggableColumnIdSet.has(activeId) && draggableColumnIdSet.has(overId)) {
+      columnConfig.moveColumn(activeId, overId);
+      return;
+    }
+
+    if (!sortedItemIdSet.has(activeId) || !sortedItemIdSet.has(overId)) return;
+
+    const patches = getSortOrderPatches(sortedItems, activeId, overId);
     void (async () => {
       for (const { item, sortOrder } of patches) {
         await updateItem.mutateAsync({ id: item.id, patch: { sortOrder, version: item.version } });
       }
     })();
-  };
-  const handleColumnDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    columnConfig.moveColumn(String(active.id), String(over.id));
   };
 
   return (
@@ -1872,81 +1885,73 @@ function RoomItemsSection({
             >
               <table className="w-full min-w-[1180px] border-collapse text-sm">
                 <thead className="sticky top-0 z-30 text-left bg-surface">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleColumnDragEnd}
-                  >
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <tr key={headerGroup.id}>
-                        <SortableContext
-                          items={columnConfig.visibleOrder.filter(
-                            (id) => id !== 'drag' && id !== 'actions' && id !== 'lineTotal',
-                          )}
-                          strategy={horizontalListSortingStrategy}
-                        >
-                          {headerGroup.headers.map((header) => {
-                            const colId = header.column.id;
-                            if (colId === 'drag') {
-                              return (
-                                <th
-                                  key={header.id}
-                                  className="h-10 border-y border-neutral-200 w-10 min-w-10"
-                                />
-                              );
-                            }
-                            if (colId === 'lineTotal') {
-                              return (
-                                <th
-                                  key={header.id}
-                                  className={cn(
-                                    'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
-                                    ffeStickyEdgeColumnClassNames.totalHeader,
-                                  )}
-                                >
-                                  {flexRender(header.column.columnDef.header, header.getContext())}
-                                </th>
-                              );
-                            }
-                            if (colId === 'actions') {
-                              return (
-                                <th
-                                  key={header.id}
-                                  className={cn(
-                                    'h-10 border-y border-neutral-200',
-                                    ffeStickyEdgeColumnClassNames.actionsHeader,
-                                  )}
-                                />
-                              );
-                            }
-                            if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
-                              return (
-                                <SortableColHeader
-                                  key={header.id}
-                                  colId={colId}
-                                  label={header.column.columnDef.header as string}
-                                  className={cn(
-                                    'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
-                                    defaultColumnClassName(colId),
-                                  )}
-                                  onHide={() => columnConfig.hideDefaultColumn(colId)}
-                                />
-                              );
-                            }
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      <SortableContext
+                        items={draggableColumnIds}
+                        strategy={horizontalListSortingStrategy}
+                      >
+                        {headerGroup.headers.map((header) => {
+                          const colId = header.column.id;
+                          if (colId === 'drag') {
+                            return (
+                              <th
+                                key={header.id}
+                                className="h-10 border-y border-neutral-200 w-10 min-w-10"
+                              />
+                            );
+                          }
+                          if (colId === 'lineTotal') {
+                            return (
+                              <th
+                                key={header.id}
+                                className={cn(
+                                  'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
+                                  ffeStickyEdgeColumnClassNames.totalHeader,
+                                )}
+                              >
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                              </th>
+                            );
+                          }
+                          if (colId === 'actions') {
+                            return (
+                              <th
+                                key={header.id}
+                                className={cn(
+                                  'h-10 border-y border-neutral-200',
+                                  ffeStickyEdgeColumnClassNames.actionsHeader,
+                                )}
+                              />
+                            );
+                          }
+                          if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
                             return (
                               <SortableColHeader
                                 key={header.id}
                                 colId={colId}
-                                className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
-                              >
-                                {flexRender(header.column.columnDef.header, header.getContext())}
-                              </SortableColHeader>
+                                label={header.column.columnDef.header as string}
+                                className={cn(
+                                  'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                  defaultColumnClassName(colId),
+                                )}
+                                onHide={() => columnConfig.hideDefaultColumn(colId)}
+                              />
                             );
-                          })}
-                        </SortableContext>
-                      </tr>
-                    ))}
-                  </DndContext>
+                          }
+                          return (
+                            <SortableColHeader
+                              key={header.id}
+                              colId={colId}
+                              className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </SortableColHeader>
+                          );
+                        })}
+                      </SortableContext>
+                    </tr>
+                  ))}
                 </thead>
                 <tbody>
                   {table.getRowModel().rows.length === 0 ? (
@@ -2032,87 +2037,76 @@ function RoomItemsSection({
                 >
                   <table className="w-full min-w-[1180px] border-collapse text-sm">
                     <thead className="sticky top-0 z-30 text-left bg-surface">
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleColumnDragEnd}
-                      >
-                        {table.getHeaderGroups().map((headerGroup) => (
-                          <tr key={headerGroup.id}>
-                            <SortableContext
-                              items={columnConfig.visibleOrder.filter(
-                                (id) => id !== 'drag' && id !== 'actions' && id !== 'lineTotal',
-                              )}
-                              strategy={horizontalListSortingStrategy}
-                            >
-                              {headerGroup.headers.map((header) => {
-                                const colId = header.column.id;
-                                if (colId === 'drag') {
-                                  return (
-                                    <th
-                                      key={header.id}
-                                      className="h-10 border-y border-neutral-200 w-10 min-w-10"
-                                    />
-                                  );
-                                }
-                                if (colId === 'lineTotal') {
-                                  return (
-                                    <th
-                                      key={header.id}
-                                      className={cn(
-                                        'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
-                                        ffeStickyEdgeColumnClassNames.totalExpandedHeader,
-                                      )}
-                                    >
-                                      {flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext(),
-                                      )}
-                                    </th>
-                                  );
-                                }
-                                if (colId === 'actions') {
-                                  return (
-                                    <th
-                                      key={header.id}
-                                      className={cn(
-                                        'h-10 border-y border-neutral-200',
-                                        ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
-                                      )}
-                                    />
-                                  );
-                                }
-                                if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
-                                  return (
-                                    <SortableColHeader
-                                      key={header.id}
-                                      colId={colId}
-                                      label={header.column.columnDef.header as string}
-                                      className={cn(
-                                        'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
-                                        defaultColumnClassName(colId),
-                                      )}
-                                      onHide={() => columnConfig.hideDefaultColumn(colId)}
-                                    />
-                                  );
-                                }
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          <SortableContext
+                            items={draggableColumnIds}
+                            strategy={horizontalListSortingStrategy}
+                          >
+                            {headerGroup.headers.map((header) => {
+                              const colId = header.column.id;
+                              if (colId === 'drag') {
                                 return (
-                                  <SortableColHeader
+                                  <th
                                     key={header.id}
-                                    colId={colId}
-                                    className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                                    className="h-10 border-y border-neutral-200 w-10 min-w-10"
+                                  />
+                                );
+                              }
+                              if (colId === 'lineTotal') {
+                                return (
+                                  <th
+                                    key={header.id}
+                                    className={cn(
+                                      'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
+                                      ffeStickyEdgeColumnClassNames.totalExpandedHeader,
+                                    )}
                                   >
                                     {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext(),
                                     )}
-                                  </SortableColHeader>
+                                  </th>
                                 );
-                              })}
-                            </SortableContext>
-                          </tr>
-                        ))}
-                      </DndContext>
+                              }
+                              if (colId === 'actions') {
+                                return (
+                                  <th
+                                    key={header.id}
+                                    className={cn(
+                                      'h-10 border-y border-neutral-200',
+                                      ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
+                                    )}
+                                  />
+                                );
+                              }
+                              if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
+                                return (
+                                  <SortableColHeader
+                                    key={header.id}
+                                    colId={colId}
+                                    label={header.column.columnDef.header as string}
+                                    className={cn(
+                                      'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                      defaultColumnClassName(colId),
+                                    )}
+                                    onHide={() => columnConfig.hideDefaultColumn(colId)}
+                                  />
+                                );
+                              }
+                              return (
+                                <SortableColHeader
+                                  key={header.id}
+                                  colId={colId}
+                                  className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                                >
+                                  {flexRender(header.column.columnDef.header, header.getContext())}
+                                </SortableColHeader>
+                              );
+                            })}
+                          </SortableContext>
+                        </tr>
+                      ))}
                     </thead>
                     <tbody>
                       {table.getRowModel().rows.length === 0 ? (
