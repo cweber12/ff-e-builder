@@ -146,6 +146,8 @@ export interface RawMaterial {
   material_id: string;
   description: string;
   swatch_hex: string;
+  manufacturer?: string;
+  source_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -373,6 +375,8 @@ export const mapMaterial = (r: RawMaterial): Material => ({
   materialId: r.material_id,
   description: r.description,
   swatchHex: r.swatch_hex,
+  manufacturer: r.manufacturer ?? '',
+  sourceUrl: r.source_url ?? '',
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

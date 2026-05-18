@@ -9,6 +9,7 @@ import {
 import type { Item, Material, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
+import { describeCatalogEntry, lookupCatalogEntry } from '../../lib/materials/catalog';
 
 type FfeContext = {
   context: 'ffe';
@@ -75,6 +76,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     description: '',
     swatchFile: null as File | null,
     swatchHex: '#D9D4C8',
+    manufacturer: '',
+    sourceUrl: '',
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingAssigned, setEditingAssigned] = useState(false);
@@ -108,7 +111,15 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   }, [assignedIds, materials.data, pendingAssignmentId, priorityIds, searchQuery]);
 
   const resetDraft = () => {
-    setDraft({ name: '', materialId: '', description: '', swatchFile: null, swatchHex: '#D9D4C8' });
+    setDraft({
+      name: '',
+      materialId: '',
+      description: '',
+      swatchFile: null,
+      swatchHex: '#D9D4C8',
+      manufacturer: '',
+      sourceUrl: '',
+    });
     setEditingId(null);
     setEditingAssigned(false);
     setShowForm(false);
@@ -123,6 +134,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       description: material.description,
       swatchFile: null,
       swatchHex: material.swatchHex || '#D9D4C8',
+      manufacturer: material.manufacturer,
+      sourceUrl: material.sourceUrl,
     });
     setShowForm(true);
   };
@@ -130,7 +143,15 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const openCreateForm = () => {
     setEditingId(null);
     setEditingAssigned(false);
-    setDraft({ name: '', materialId: '', description: '', swatchFile: null, swatchHex: '#D9D4C8' });
+    setDraft({
+      name: '',
+      materialId: '',
+      description: '',
+      swatchFile: null,
+      swatchHex: '#D9D4C8',
+      manufacturer: '',
+      sourceUrl: '',
+    });
     setShowForm(true);
   };
 
@@ -140,6 +161,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       materialId: draft.materialId.trim(),
       description: draft.description.trim(),
       ...(draft.swatchHex ? { swatchHex: draft.swatchHex } : {}),
+      ...(draft.manufacturer.trim() ? { manufacturer: draft.manufacturer.trim() } : {}),
+      ...(draft.sourceUrl.trim() ? { sourceUrl: draft.sourceUrl.trim() } : {}),
     };
     if (!input.name) return;
     let savedMaterial: Material;
@@ -385,6 +408,8 @@ type MaterialDraft = {
   description: string;
   swatchFile: File | null;
   swatchHex: string;
+  manufacturer: string;
+  sourceUrl: string;
 };
 
 export function MaterialForm({
@@ -403,6 +428,7 @@ export function MaterialForm({
   onSubmit: () => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [lookupHint, setLookupHint] = useState<string | null>(null);
 
   useEffect(() => {
     if (!draft.swatchFile) {
@@ -414,12 +440,49 @@ export function MaterialForm({
     return () => URL.revokeObjectURL(url);
   }, [draft.swatchFile]);
 
+  const runLookup = () => {
+    const entry = lookupCatalogEntry(draft.sourceUrl || draft.materialId);
+    if (!entry) {
+      setLookupHint('No catalog match found — fill the fields manually.');
+      return;
+    }
+    onDraftChange((c) => ({
+      ...c,
+      name: c.name.trim() || entry.name,
+      materialId: c.materialId.trim() || entry.materialId,
+      manufacturer: c.manufacturer.trim() || entry.manufacturer,
+      sourceUrl: entry.sourceUrl,
+      description: c.description.trim() || describeCatalogEntry(entry),
+    }));
+    setLookupHint(`Matched ${entry.manufacturer} ${entry.urlCode} — ${entry.name}.`);
+  };
+
   return (
     <section className="rounded-lg border border-gray-200 bg-surface-muted p-4">
       <h3 className="text-sm font-semibold text-gray-950">
         {editing ? 'Edit item' : 'Add to library'}
       </h3>
       <div className="mt-3 grid gap-3">
+        <div className="grid gap-1 text-sm font-medium text-gray-700">
+          <label htmlFor="material-source-url">Product URL or ID</label>
+          <div className="flex gap-2">
+            <input
+              id="material-source-url"
+              type="text"
+              value={draft.sourceUrl}
+              onChange={(e) => {
+                setLookupHint(null);
+                onDraftChange((c) => ({ ...c, sourceUrl: e.target.value }));
+              }}
+              placeholder="https://www.formica.com/.../07197  or  7197"
+              className={inputClassName}
+            />
+            <Button type="button" variant="ghost" size="sm" onClick={runLookup}>
+              Look up
+            </Button>
+          </div>
+          {lookupHint && <p className="text-xs font-normal text-gray-500">{lookupHint}</p>}
+        </div>
         <label className="grid gap-1 text-sm font-medium text-gray-700">
           Name
           <input
@@ -428,14 +491,24 @@ export function MaterialForm({
             className={inputClassName}
           />
         </label>
-        <label className="grid gap-1 text-sm font-medium text-gray-700">
-          ID
-          <input
-            value={draft.materialId}
-            onChange={(e) => onDraftChange((c) => ({ ...c, materialId: e.target.value }))}
-            className={inputClassName}
-          />
-        </label>
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+          <label className="grid gap-1 text-sm font-medium text-gray-700">
+            ID
+            <input
+              value={draft.materialId}
+              onChange={(e) => onDraftChange((c) => ({ ...c, materialId: e.target.value }))}
+              className={inputClassName}
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium text-gray-700">
+            Manufacturer
+            <input
+              value={draft.manufacturer}
+              onChange={(e) => onDraftChange((c) => ({ ...c, manufacturer: e.target.value }))}
+              className={inputClassName}
+            />
+          </label>
+        </div>
         <div className="grid gap-2 text-sm font-medium text-gray-700">
           <span>Swatch</span>
           <div className="grid gap-2">
@@ -572,7 +645,10 @@ function MaterialPickerCard({
           {material.name}
         </h4>
         <div className="mt-2 flex items-center justify-between gap-1">
-          <MaterialSwatchImage material={material} size="sm" />
+          <div className="flex items-center gap-1.5">
+            <MaterialSwatchImage material={material} size="sm" />
+            <ProductLinkIcon url={material.sourceUrl} label={material.name} />
+          </div>
           <button
             type="button"
             onClick={(e) => {
@@ -618,6 +694,36 @@ export function MaterialBadges({
         <span className="text-gray-400">Add materials</span>
       )}
     </button>
+  );
+}
+
+export function ProductLinkIcon({ url, label }: { url: string; label: string }) {
+  if (!url) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="inline-flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      aria-label={`Open product page for ${label}`}
+      title="Open product page"
+    >
+      <svg
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="h-3.5 w-3.5"
+      >
+        <path d="M7 3H4.5A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13h7A1.5 1.5 0 0 0 13 11.5V9" />
+        <path d="M9 3h4v4" />
+        <path d="m13 3-6 6" />
+      </svg>
+    </a>
   );
 }
 

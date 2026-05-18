@@ -5,4 +5,5 @@ export {
   MaterialForm,
   MaterialBadges,
   MaterialSwatchImage,
+  ProductLinkIcon,
 } from './MaterialLibraryModal';

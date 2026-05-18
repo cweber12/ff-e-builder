@@ -108,6 +108,8 @@ export interface Material {
   material_id: string;
   description: string;
   swatch_hex: string;
+  manufacturer: string;
+  source_url: string;
   created_at: string;
   updated_at: string;
 }
@@ -358,6 +360,8 @@ export const CreateMaterialSchema = z.object({
   material_id: z.string().max(100).default(''),
   description: z.string().max(1000).default(''),
   swatch_hex: SwatchHexSchema.default('#D9D4C8'),
+  manufacturer: z.string().max(255).default(''),
+  source_url: z.string().max(2048).default(''),
 });
 export type CreateMaterialInput = z.infer<typeof CreateMaterialSchema>;
 

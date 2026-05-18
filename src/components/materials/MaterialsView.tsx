@@ -11,7 +11,12 @@ import type { Material, Project, RoomWithItems, ProposalCategoryWithItems } from
 import { Button } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
-import { MaterialForm, MaterialSwatchImage } from './MaterialLibraryModal';
+import { MaterialForm, MaterialSwatchImage, ProductLinkIcon } from './MaterialLibraryModal';
+import {
+  describeCatalogEntry,
+  productCatalog,
+  type CatalogEntry,
+} from '../../lib/materials/catalog';
 
 type MaterialsViewProps = {
   project: Project;
@@ -26,6 +31,8 @@ type MaterialDraft = {
   description: string;
   swatchFile: File | null;
   swatchHex: string;
+  manufacturer: string;
+  sourceUrl: string;
 };
 
 const emptyDraft: MaterialDraft = {
@@ -34,6 +41,8 @@ const emptyDraft: MaterialDraft = {
   description: '',
   swatchFile: null,
   swatchHex: '#D9D4C8',
+  manufacturer: '',
+  sourceUrl: '',
 };
 
 export function MaterialsView({
@@ -113,6 +122,8 @@ export function MaterialsView({
       description: material.description,
       swatchFile: null,
       swatchHex: material.swatchHex || '#D9D4C8',
+      manufacturer: material.manufacturer,
+      sourceUrl: material.sourceUrl,
     });
     setShowForm(true);
   };
@@ -129,6 +140,8 @@ export function MaterialsView({
       materialId: draft.materialId.trim(),
       description: draft.description.trim(),
       ...(draft.swatchHex ? { swatchHex: draft.swatchHex } : {}),
+      ...(draft.manufacturer.trim() ? { manufacturer: draft.manufacturer.trim() } : {}),
+      ...(draft.sourceUrl.trim() ? { sourceUrl: draft.sourceUrl.trim() } : {}),
     };
     if (!input.name) return;
     let savedMaterial: Material;
@@ -146,6 +159,30 @@ export function MaterialsView({
       });
     }
     resetDraft();
+  };
+
+  const importFromCatalog = async () => {
+    const existingByUrl = new Map(
+      (materials.data ?? []).map((m) => [m.sourceUrl.toLowerCase(), m] as const),
+    );
+    const existingByMaterialId = new Map(
+      (materials.data ?? []).map((m) => [m.materialId, m] as const),
+    );
+    const toCreate: CatalogEntry[] = productCatalog.filter(
+      (entry) =>
+        !existingByUrl.has(entry.sourceUrl.toLowerCase()) &&
+        !existingByMaterialId.has(entry.materialId),
+    );
+    if (toCreate.length === 0) return;
+    for (const entry of toCreate) {
+      await createMaterial.mutateAsync({
+        name: entry.name,
+        materialId: entry.materialId,
+        description: describeCatalogEntry(entry),
+        manufacturer: entry.manufacturer,
+        sourceUrl: entry.sourceUrl,
+      });
+    }
   };
 
   return (
@@ -220,6 +257,15 @@ export function MaterialsView({
               Table
             </button>
           </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => void importFromCatalog()}
+            title="Add known products from the built-in catalog (currently Formica laminates)"
+          >
+            Import from catalog
+          </Button>
           <ExportMenu
             onCsv={() => void exportMaterialsExcel(project, filteredMaterials, 'csv')}
             onExcel={() => void exportMaterialsExcel(project, filteredMaterials)}
@@ -328,7 +374,10 @@ function MaterialGridCard({
           <p className="line-clamp-2 text-xs leading-snug text-gray-600">{material.description}</p>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <MaterialSwatchImage material={material} size="sm" />
+          <div className="flex items-center gap-1.5">
+            <MaterialSwatchImage material={material} size="sm" />
+            <ProductLinkIcon url={material.sourceUrl} label={material.name} />
+          </div>
           <div className="flex gap-1">
             <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
               Edit
@@ -353,12 +402,13 @@ function MaterialsTable({
   onDelete: (material: Material) => void;
 }) {
   return (
-    <table className="w-full min-w-[800px] border-collapse text-sm">
+    <table className="w-full min-w-[900px] border-collapse text-sm">
       <thead className="sticky top-0 bg-white text-left text-xs uppercase tracking-wide text-gray-500 shadow-[0_1px_0_rgb(243_244_246)]">
         <tr>
           <th className="px-3 py-3 font-semibold">Swatch</th>
           <th className="px-3 py-3 font-semibold">Material</th>
           <th className="px-3 py-3 font-semibold">ID</th>
+          <th className="px-3 py-3 font-semibold">Manufacturer</th>
           <th className="px-3 py-3 font-semibold">Description</th>
           <th className="px-3 py-3 font-semibold" aria-label="Actions" />
         </tr>
@@ -367,22 +417,26 @@ function MaterialsTable({
         {materials.map((material) => (
           <tr key={material.id}>
             <td className="px-3 py-3">
-              <ImageFrame
-                entityType="material"
-                entityId={material.id}
-                alt={`${material.name} swatch`}
-                className="h-12 w-12 rounded-full border-gray-200 shadow-none"
-                imageClassName="object-cover"
-                placeholderClassName="bg-white"
-                placeholderContent={
-                  <span className="text-[10px] font-semibold text-gray-400">IMG</span>
-                }
-                compact
-                disabled
-              />
+              <div className="flex items-center gap-2">
+                <ImageFrame
+                  entityType="material"
+                  entityId={material.id}
+                  alt={`${material.name} swatch`}
+                  className="h-12 w-12 rounded-full border-gray-200 shadow-none"
+                  imageClassName="object-cover"
+                  placeholderClassName="bg-white"
+                  placeholderContent={
+                    <span className="text-[10px] font-semibold text-gray-400">IMG</span>
+                  }
+                  compact
+                  disabled
+                />
+                <ProductLinkIcon url={material.sourceUrl} label={material.name} />
+              </div>
             </td>
             <td className="px-3 py-3 font-medium text-gray-950">{material.name}</td>
             <td className="px-3 py-3 text-gray-600">{material.materialId || '-'}</td>
+            <td className="px-3 py-3 text-gray-600">{material.manufacturer || '-'}</td>
             <td className="max-w-sm px-3 py-3 text-gray-600">{material.description || '-'}</td>
             <td className="px-3 py-3">
               <div className="flex justify-end gap-2">
@@ -408,8 +462,19 @@ const activeToggleClassName =
 
 function materialMatchesQuery(material: Material, query: string) {
   if (!query) return true;
-  return [material.name, material.materialId, material.description]
+  const haystack = [
+    material.name,
+    material.materialId,
+    material.description,
+    material.manufacturer,
+    material.sourceUrl,
+  ]
     .join(' ')
-    .toLowerCase()
-    .includes(query);
+    .toLowerCase();
+  if (haystack.includes(query)) return true;
+  // Match queries like "07197" or "7197" against the urlCode embedded in
+  // the source URL even when the materialId has been edited.
+  const digits = query.replace(/\D/g, '');
+  if (!digits) return false;
+  return material.sourceUrl.includes(digits) || material.materialId.includes(digits);
 }

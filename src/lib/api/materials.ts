@@ -9,6 +9,8 @@ export type CreateMaterialInput = {
   materialId?: string;
   description?: string;
   swatchHex?: string;
+  manufacturer?: string;
+  sourceUrl?: string;
 };
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
@@ -18,6 +20,8 @@ const materialCreatePayload = (input: CreateMaterialInput) => ({
   material_id: input.materialId ?? '',
   description: input.description ?? '',
   swatch_hex: input.swatchHex ?? DEFAULT_SWATCH_HEX,
+  manufacturer: input.manufacturer ?? '',
+  source_url: input.sourceUrl ?? '',
 });
 
 const materialUpdatePayload = (patch: UpdateMaterialInput) => ({
@@ -25,12 +29,16 @@ const materialUpdatePayload = (patch: UpdateMaterialInput) => ({
   material_id: patch.materialId,
   description: patch.description,
   swatch_hex: patch.swatchHex,
+  manufacturer: patch.manufacturer,
+  source_url: patch.sourceUrl,
 });
 
 const assignedMaterialUpdatePayload = (patch: UpdateMaterialInput) => ({
   name: patch.name,
   material_id: patch.materialId,
   description: patch.description,
+  manufacturer: patch.manufacturer,
+  source_url: patch.sourceUrl,
 });
 
 export const materialsApi = {

@@ -977,7 +977,7 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
             'created_at', m.created_at,
             'updated_at', m.updated_at
           )
-          ORDER BY im.sort_order, lower(m.name)
+          ORDER BY generated_materials.sort_order, lower(m.name)
         )
           FILTER (WHERE m.id IS NOT NULL),
         '[]'::json
@@ -985,8 +985,20 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
     FROM items i
     LEFT JOIN proposal_item_generated_item_links link ON link.item_id = i.id
     LEFT JOIN proposal_items pi ON pi.id = link.proposal_item_id
-    LEFT JOIN item_materials im ON im.item_id = i.id
-    LEFT JOIN materials m ON m.id = im.material_id
+    LEFT JOIN LATERAL (
+      SELECT DISTINCT ON (material_id) material_id, sort_order
+      FROM (
+        SELECT im.material_id, im.sort_order
+        FROM item_materials im
+        WHERE im.item_id = i.id
+        UNION ALL
+        SELECT pim.material_id, pim.sort_order
+        FROM proposal_item_materials pim
+        WHERE pim.proposal_item_id = link.proposal_item_id
+      ) material_refs
+      ORDER BY material_id, sort_order
+    ) generated_materials ON true
+    LEFT JOIN materials m ON m.id = generated_materials.material_id
     WHERE i.room_id = ${roomId}
       AND i.is_ffe_visible = true
     GROUP BY i.id

@@ -28,6 +28,8 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
       materialId: 'MAT-001',
       description: '',
       swatchHex: '#5c3a21',
+      manufacturer: '',
+      sourceUrl: '',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
     },
