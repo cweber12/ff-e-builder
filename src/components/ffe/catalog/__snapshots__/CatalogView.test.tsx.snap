@@ -3,7 +3,7 @@
 exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture item 1`] = `
 <article
   aria-label="Channel Lounge Chair catalog page"
-  class="catalog-page mx-auto bg-white text-gray-950 shadow-xl"
+  class="catalog-page mx-auto bg-white text-neutral-950 shadow-xl"
 >
   <header
     class="catalog-header"
@@ -67,10 +67,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden border border-gray-200 bg-surface-muted shadow-sm border-0 shadow-none h-full w-full rounded-none"
+                class="relative overflow-hidden border border-neutral-200 bg-surface-muted shadow-sm border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
-                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted catalog-placeholder"
+                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted catalog-placeholder"
                 >
                   <span>
                     CL
@@ -260,10 +260,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                   class="grid gap-1"
                 >
                   <div
-                    class="relative overflow-hidden border border-gray-200 bg-surface-muted shadow-sm h-10 w-10 rounded-full shrink-0 border-gray-200 shadow-none "
+                    class="relative overflow-hidden border border-neutral-200 bg-surface-muted shadow-sm h-10 w-10 rounded-full shrink-0 border-neutral-200 shadow-none "
                   >
                     <div
-                      class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted bg-white"
+                      class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted bg-white"
                     >
                       <span
                         aria-hidden="true"
@@ -362,10 +362,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden border border-gray-200 bg-surface-muted shadow-sm border-0 shadow-none h-full w-full rounded-none"
+                class="relative overflow-hidden border border-neutral-200 bg-surface-muted shadow-sm border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
-                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-gray-400 bg-surface-muted catalog-plan-placeholder"
+                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted catalog-plan-placeholder"
                 >
                   <span
                     class="catalog-plan-placeholder-text"
