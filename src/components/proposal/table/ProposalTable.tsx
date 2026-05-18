@@ -959,7 +959,7 @@ function ProposalCategorySection({
               >
                 <tr>
                   <th
-                    className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1"
+                    className="h-10 border-b border-neutral-200 w-8 min-w-8 px-1"
                     rowSpan={hasOpenRevision ? 2 : 1}
                   />
                   <SortableContext
@@ -976,7 +976,7 @@ function ProposalCategorySection({
                             label={meta.label}
                             rowSpan={hasOpenRevision ? 2 : 1}
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                               meta.className,
                             )}
                             onHide={() => onHideColumn(colId)}
@@ -990,7 +990,7 @@ function ProposalCategorySection({
                           key={colId}
                           colId={colId}
                           rowSpan={hasOpenRevision ? 2 : 1}
-                          className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                          className="h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                           onHide={() => onHideColumn(colId)}
                         >
                           <CustomColumnHeader
@@ -1007,7 +1007,7 @@ function ProposalCategorySection({
                       {/* Locked baseline cols (sticky, left of revision block) */}
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           stickyLockedQtyHeaderClassName,
                         )}
                         rowSpan={2}
@@ -1016,7 +1016,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           stickyLockedUnitCostHeaderClassName,
                         )}
                         rowSpan={2}
@@ -1025,7 +1025,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           stickyLockedTotalHeaderClassName,
                         )}
                         rowSpan={2}
@@ -1035,7 +1035,7 @@ function ProposalCategorySection({
                       {/* Revision notes (sticky, between locked and revision blocks) */}
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           stickyNotesHeaderClassName,
                         )}
                         rowSpan={2}
@@ -1057,7 +1057,7 @@ function ProposalCategorySection({
                     <>
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           proposalStickyValueColumnClassNames.quantity.header,
                         )}
                       >
@@ -1065,7 +1065,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           proposalStickyValueColumnClassNames.unitCost.header,
                         )}
                       >
@@ -1073,7 +1073,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                           proposalStickyEdgeColumnClassNames.totalHeader,
                         )}
                       >
@@ -1083,7 +1083,7 @@ function ProposalCategorySection({
                   )}
                   <th
                     className={cn(
-                      'h-10 border-y border-neutral-200',
+                      'h-10 border-b border-neutral-200',
                       proposalStickyEdgeColumnClassNames.actionsHeader,
                     )}
                     rowSpan={hasOpenRevision ? 2 : 1}
@@ -1273,7 +1273,7 @@ function ProposalCategorySection({
                   >
                     <tr>
                       <th
-                        className="h-10 border-y border-neutral-200 w-8 min-w-8 px-1"
+                        className="h-10 border-b border-neutral-200 w-8 min-w-8 px-1"
                         rowSpan={hasOpenRevision ? 2 : 1}
                       />
                       <SortableContext
@@ -1290,7 +1290,7 @@ function ProposalCategorySection({
                                 label={meta.label}
                                 rowSpan={hasOpenRevision ? 2 : 1}
                                 className={cn(
-                                  'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                  'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                                   meta.className,
                                 )}
                                 onHide={() => onHideColumn(colId)}
@@ -1304,7 +1304,7 @@ function ProposalCategorySection({
                               key={colId}
                               colId={colId}
                               rowSpan={hasOpenRevision ? 2 : 1}
-                              className="h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                              className="h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                               onHide={() => onHideColumn(colId)}
                             >
                               <CustomColumnHeader
@@ -1320,7 +1320,7 @@ function ProposalCategorySection({
                         <>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               stickyLockedQtyExpandedHeaderClassName,
                             )}
                             rowSpan={2}
@@ -1329,7 +1329,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               stickyLockedUnitCostExpandedHeaderClassName,
                             )}
                             rowSpan={2}
@@ -1338,7 +1338,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               stickyLockedTotalExpandedHeaderClassName,
                             )}
                             rowSpan={2}
@@ -1347,7 +1347,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               stickyNotesExpandedHeaderClassName,
                             )}
                             rowSpan={2}
@@ -1368,7 +1368,7 @@ function ProposalCategorySection({
                         <>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               proposalStickyValueColumnClassNames.quantity.expandedHeader,
                             )}
                           >
@@ -1376,7 +1376,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               proposalStickyValueColumnClassNames.unitCost.expandedHeader,
                             )}
                           >
@@ -1384,7 +1384,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-y border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
                               proposalStickyEdgeColumnClassNames.totalExpandedHeader,
                             )}
                           >
@@ -1394,7 +1394,7 @@ function ProposalCategorySection({
                       )}
                       <th
                         className={cn(
-                          'h-10 border-y border-neutral-200',
+                          'h-10 border-b border-neutral-200',
                           proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
                         )}
                         rowSpan={hasOpenRevision ? 2 : 1}

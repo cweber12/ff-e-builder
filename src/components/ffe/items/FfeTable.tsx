@@ -1903,7 +1903,7 @@ function RoomItemsSection({
                             return (
                               <th
                                 key={header.id}
-                                className="h-10 border-y border-neutral-200 w-10 min-w-10"
+                                className="h-10 border-b border-neutral-200 w-10 min-w-10"
                               />
                             );
                           }
@@ -1912,7 +1912,7 @@ function RoomItemsSection({
                               <th
                                 key={header.id}
                                 className={cn(
-                                  'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
+                                  'h-10 border-b border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
                                   ffeStickyEdgeColumnClassNames.totalHeader,
                                 )}
                               >
@@ -1925,7 +1925,7 @@ function RoomItemsSection({
                               <th
                                 key={header.id}
                                 className={cn(
-                                  'h-10 border-y border-neutral-200',
+                                  'h-10 border-b border-neutral-200',
                                   ffeStickyEdgeColumnClassNames.actionsHeader,
                                 )}
                               />
@@ -1938,7 +1938,7 @@ function RoomItemsSection({
                                 colId={colId}
                                 label={header.column.columnDef.header as string}
                                 className={cn(
-                                  'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                  'h-10 border-b border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                                   defaultColumnClassName(colId),
                                 )}
                                 onHide={() => columnConfig.hideDefaultColumn(colId)}
@@ -1949,7 +1949,7 @@ function RoomItemsSection({
                             <SortableColHeader
                               key={header.id}
                               colId={colId}
-                              className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                              className="h-10 border-b border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                             </SortableColHeader>
@@ -2055,7 +2055,7 @@ function RoomItemsSection({
                                 return (
                                   <th
                                     key={header.id}
-                                    className="h-10 border-y border-neutral-200 w-10 min-w-10"
+                                    className="h-10 border-b border-neutral-200 w-10 min-w-10"
                                   />
                                 );
                               }
@@ -2064,7 +2064,7 @@ function RoomItemsSection({
                                   <th
                                     key={header.id}
                                     className={cn(
-                                      'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
+                                      'h-10 border-b border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500',
                                       ffeStickyEdgeColumnClassNames.totalExpandedHeader,
                                     )}
                                   >
@@ -2080,7 +2080,7 @@ function RoomItemsSection({
                                   <th
                                     key={header.id}
                                     className={cn(
-                                      'h-10 border-y border-neutral-200',
+                                      'h-10 border-b border-neutral-200',
                                       ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
                                     )}
                                   />
@@ -2093,7 +2093,7 @@ function RoomItemsSection({
                                     colId={colId}
                                     label={header.column.columnDef.header as string}
                                     className={cn(
-                                      'h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                      'h-10 border-b border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
                                       defaultColumnClassName(colId),
                                     )}
                                     onHide={() => columnConfig.hideDefaultColumn(colId)}
@@ -2104,7 +2104,7 @@ function RoomItemsSection({
                                 <SortableColHeader
                                   key={header.id}
                                   colId={colId}
-                                  className="h-10 border-y border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                                  className="h-10 border-b border-neutral-200 px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
                                 >
                                   {flexRender(header.column.columnDef.header, header.getContext())}
                                 </SortableColHeader>
