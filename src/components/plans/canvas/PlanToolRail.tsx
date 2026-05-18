@@ -1,20 +1,99 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { PLAN_TOOL_DEFINITIONS } from './planToolDefinitions';
-import type { PlanToolId } from './types';
+import type { PlanToolId, RectangleModeId } from './types';
 
 type PlanToolRailProps = {
   activeTool: PlanToolId;
   isCalibrated: boolean;
   onToolChange: (tool: PlanToolId) => void;
+  rectangleMode: RectangleModeId;
+  onRectangleModeChange: (mode: RectangleModeId) => void;
 };
 
-export function PlanToolRail({ activeTool, isCalibrated, onToolChange }: PlanToolRailProps) {
+export function PlanToolRail({
+  activeTool,
+  isCalibrated,
+  onToolChange,
+  rectangleMode,
+  onRectangleModeChange,
+}: PlanToolRailProps) {
+  const [popoutOpen, setPopoutOpen] = useState(false);
+
   return (
     <aside className="overflow-y-auto border-r border-black/10 bg-canvas-chrome/80 p-2.5 backdrop-blur">
       <div className="flex flex-col gap-2">
         {PLAN_TOOL_DEFINITIONS.map((tool) => {
           const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
           const active = activeTool === tool.id;
+          const btnCls = [
+            'flex h-11 w-11 items-center justify-center rounded-lg border transition',
+            active
+              ? 'border-neutral-950 bg-neutral-950 text-white shadow-sm'
+              : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200 hover:bg-white hover:text-neutral-950',
+            disabled && 'cursor-not-allowed border-transparent bg-transparent text-neutral-300',
+          ].join(' ');
+
+          if (tool.id === 'rectangle') {
+            return (
+              <div key={tool.id} className="relative">
+                <button
+                  type="button"
+                  aria-label={tool.label}
+                  title={`${tool.label}: ${tool.description}`}
+                  disabled={disabled}
+                  onClick={() =>
+                    active
+                      ? setPopoutOpen((v) => !v)
+                      : (onToolChange(tool.id), setPopoutOpen(false))
+                  }
+                  className={`relative ${btnCls}`}
+                >
+                  <span className="sr-only">{tool.label}</span>
+                  <ToolIcon toolId={tool.id} />
+                  {active && (
+                    <span className="pointer-events-none absolute bottom-0.5 left-0 right-0 text-center text-[8px] font-bold uppercase leading-none text-white/70">
+                      {rectangleMode === 'measure' ? 'M' : 'H'}
+                    </span>
+                  )}
+                </button>
+                {popoutOpen && (
+                  <div className="absolute left-full top-0 z-50 ml-2 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onRectangleModeChange('measure');
+                        setPopoutOpen(false);
+                      }}
+                      className={[
+                        'block w-full whitespace-nowrap px-4 py-2.5 text-left text-sm transition hover:bg-neutral-50',
+                        rectangleMode === 'measure'
+                          ? 'font-semibold text-neutral-950'
+                          : 'text-neutral-700',
+                      ].join(' ')}
+                    >
+                      Measure
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onRectangleModeChange('highlight');
+                        setPopoutOpen(false);
+                      }}
+                      className={[
+                        'block w-full whitespace-nowrap px-4 py-2.5 text-left text-sm transition hover:bg-neutral-50',
+                        rectangleMode === 'highlight'
+                          ? 'font-semibold text-neutral-950'
+                          : 'text-neutral-700',
+                      ].join(' ')}
+                    >
+                      Highlight
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <button
               key={tool.id}
@@ -22,14 +101,11 @@ export function PlanToolRail({ activeTool, isCalibrated, onToolChange }: PlanToo
               aria-label={tool.label}
               title={`${tool.label}: ${tool.description}`}
               disabled={disabled}
-              onClick={() => onToolChange(tool.id)}
-              className={[
-                'flex h-11 w-11 items-center justify-center rounded-lg border transition',
-                active
-                  ? 'border-neutral-950 bg-neutral-950 text-white shadow-sm'
-                  : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200 hover:bg-white hover:text-neutral-950',
-                disabled && 'cursor-not-allowed border-transparent bg-transparent text-neutral-300',
-              ].join(' ')}
+              onClick={() => {
+                onToolChange(tool.id);
+                setPopoutOpen(false);
+              }}
+              className={btnCls}
             >
               <span className="sr-only">{tool.label}</span>
               <ToolIcon toolId={tool.id} />

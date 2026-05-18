@@ -13,6 +13,7 @@ import type {
   MeasurementApplicationMode,
   MeasurementItemRef,
   PlanToolId,
+  RectangleModeId,
 } from '../components/plans/canvas/types';
 import {
   useCreatePlanLengthLine,
@@ -89,6 +90,8 @@ export function PlanCanvasPage({
     useState<MeasurementApplicationMode>('reference-only');
   const [isApplyingMeasurement, setIsApplyingMeasurement] = useState(false);
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
+  const [rectangleMode, setRectangleMode] = useState<RectangleModeId>('measure');
+  const [isSavingHighlight, setIsSavingHighlight] = useState(false);
   const [pendingMeasurementApply, setPendingMeasurementApply] = useState<{
     roundedQuantity: number;
     quantityUnit: string;
@@ -298,6 +301,8 @@ export function PlanCanvasPage({
     selectedMeasurementTarget !== null &&
     !createMeasurement.isPending &&
     !updateMeasurement.isPending;
+  const canSaveHighlight =
+    normalizedMeasurementDraft !== null && selectedMeasurementTarget !== null && !isSavingHighlight;
   const draftCropWidthPlanUnits =
     calibration && normalizedCropDraft
       ? normalizedCropDraft.width / calibration.pixelsPerUnit
@@ -442,6 +447,40 @@ export function PlanCanvasPage({
     }
 
     setMeasurementDraft(null);
+  };
+
+  const handleSaveHighlight = async () => {
+    if (!normalizedMeasurementDraft || !selectedMeasurementTarget) return;
+    setIsSavingHighlight(true);
+    try {
+      const fakeMeasurement = {
+        targetKind: selectedMeasurementTarget.targetKind,
+        targetItemId: selectedMeasurementTarget.targetItemId,
+        targetTagSnapshot: selectedMeasurementTarget.targetTagSnapshot,
+        rectX: normalizedMeasurementDraft.x,
+        rectY: normalizedMeasurementDraft.y,
+        rectWidth: normalizedMeasurementDraft.width,
+        rectHeight: normalizedMeasurementDraft.height,
+      } as unknown as Measurement;
+      await savePlanImageForMeasurement(
+        fakeMeasurement,
+        {
+          cropX: normalizedMeasurementDraft.x,
+          cropY: normalizedMeasurementDraft.y,
+          cropWidth: normalizedMeasurementDraft.width,
+          cropHeight: normalizedMeasurementDraft.height,
+        },
+        selectedMeasurementTarget.linkedFfeItemId,
+      );
+      setMeasurementDraft(null);
+      setSelectedMeasurementTargetKey('');
+      toast.success('Plan image saved to item.');
+    } catch (error) {
+      console.error('Failed to save highlight:', error);
+      toast.error('Failed to save highlight image.');
+    } finally {
+      setIsSavingHighlight(false);
+    }
   };
 
   const handleDeleteMeasurement = async () => {
@@ -841,6 +880,8 @@ export function PlanCanvasPage({
             activeTool={activeTool}
             isCalibrated={isCalibrated}
             onToolChange={setActiveTool}
+            rectangleMode={rectangleMode}
+            onRectangleModeChange={setRectangleMode}
           />
 
           <main className="min-h-0 overflow-hidden">
@@ -969,6 +1010,10 @@ export function PlanCanvasPage({
             onMeasurementApplicationModeChange={setMeasurementApplicationMode}
             applyingMeasurement={isApplyingMeasurement}
             onApplyMeasurement={() => void handleApplyMeasurement()}
+            rectangleMode={rectangleMode}
+            onSaveHighlight={() => void handleSaveHighlight()}
+            savingHighlight={isSavingHighlight}
+            canSaveHighlight={canSaveHighlight}
           />
         </div>
       </div>

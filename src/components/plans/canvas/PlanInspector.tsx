@@ -5,6 +5,7 @@ import type {
   MeasurementDisplay,
   MeasurementItemRef,
   PlanToolId,
+  RectangleModeId,
 } from './types';
 import { Button } from '../../primitives';
 import type { LengthLine, Measurement, PlanCalibration, PlanMeasurementUnit } from '../../../types';
@@ -95,6 +96,10 @@ export type PlanInspectorProps = {
   onMeasurementApplicationModeChange: (mode: MeasurementApplicationMode) => void;
   applyingMeasurement: boolean;
   onApplyMeasurement: () => void;
+  rectangleMode: RectangleModeId;
+  onSaveHighlight: () => void;
+  savingHighlight: boolean;
+  canSaveHighlight: boolean;
 };
 
 export function PlanInspector({
@@ -174,6 +179,10 @@ export function PlanInspector({
   onMeasurementApplicationModeChange,
   applyingMeasurement,
   onApplyMeasurement,
+  rectangleMode,
+  onSaveHighlight,
+  savingHighlight,
+  canSaveHighlight,
 }: PlanInspectorProps) {
   return (
     <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-canvas-chrome/90 px-4 py-3 backdrop-blur">
@@ -527,30 +536,55 @@ export function PlanInspector({
                       </label>
 
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={onSaveMeasurement}
-                          disabled={!canSaveMeasurement}
-                        >
-                          {savingMeasurement ? (
-                            <>Saving&hellip;</>
-                          ) : selectedMeasurement ? (
-                            'Update measurement'
-                          ) : (
-                            'Save measurement'
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={onClearMeasurementDraft}
-                          disabled={savingMeasurement}
-                        >
-                          Clear draft
-                        </Button>
+                        {rectangleMode === 'highlight' ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={onSaveHighlight}
+                              disabled={!canSaveHighlight}
+                            >
+                              {savingHighlight ? <>Saving&hellip;</> : 'Save highlight'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={onClearMeasurementDraft}
+                              disabled={savingHighlight}
+                            >
+                              Clear draft
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={onSaveMeasurement}
+                              disabled={!canSaveMeasurement}
+                            >
+                              {savingMeasurement ? (
+                                <>Saving&hellip;</>
+                              ) : selectedMeasurement ? (
+                                'Update measurement'
+                              ) : (
+                                'Save measurement'
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={onClearMeasurementDraft}
+                              disabled={savingMeasurement}
+                            >
+                              Clear draft
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </>
                   ) : (
@@ -660,7 +694,10 @@ export function PlanInspector({
                 </div>
               ) : null}
 
-              {selectedMeasurement && selectedMeasurementItem && selectedMeasurementDisplay ? (
+              {selectedMeasurement &&
+              selectedMeasurementItem &&
+              selectedMeasurementDisplay &&
+              rectangleMode !== 'highlight' ? (
                 <div className="mt-4 border-t border-neutral-200 pt-3">
                   <label className="block">
                     <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
