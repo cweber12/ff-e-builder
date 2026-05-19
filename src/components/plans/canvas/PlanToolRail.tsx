@@ -89,32 +89,34 @@ export function PlanToolRail({
                           role="radio"
                           aria-checked={rectangleMode === 'measure'}
                           aria-label="Measure mode"
-                          title="Measure mode"
+                          title="Measure — capture dimensions"
                           onClick={() => onRectangleModeChange('measure')}
                           className={[
-                            'flex-1 py-1 text-[10px] font-bold uppercase leading-none tracking-wide transition',
+                            'flex h-6 flex-1 items-center justify-center transition',
                             rectangleMode === 'measure'
                               ? 'bg-neutral-950 text-white'
                               : 'text-neutral-500 hover:text-neutral-900',
                           ].join(' ')}
                         >
-                          M
+                          <span className="sr-only">Measure</span>
+                          <MeasureModeIcon />
                         </button>
                         <button
                           type="button"
                           role="radio"
                           aria-checked={rectangleMode === 'highlight'}
                           aria-label="Highlight mode"
-                          title="Highlight mode"
+                          title="Highlight — mark area on the saved plan image"
                           onClick={() => onRectangleModeChange('highlight')}
                           className={[
-                            'flex-1 border-l border-neutral-300 py-1 text-[10px] font-bold uppercase leading-none tracking-wide transition',
+                            'flex h-6 flex-1 items-center justify-center border-l border-neutral-300 transition',
                             rectangleMode === 'highlight'
                               ? 'bg-neutral-950 text-white'
                               : 'text-neutral-500 hover:text-neutral-900',
                           ].join(' ')}
                         >
-                          H
+                          <span className="sr-only">Highlight</span>
+                          <HighlightModeIcon />
                         </button>
                       </div>
                     ) : null}
@@ -211,6 +213,42 @@ function LockIcon() {
     >
       <rect x="2" y="4.5" width="6" height="4" rx="0.8" />
       <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" />
+    </svg>
+  );
+}
+
+function MeasureModeIcon() {
+  // Rectangle with an architectural dimension line above it — "this mode
+  // turns the box into a saved width × height measurement."
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className="h-3.5 w-3.5"
+      aria-hidden
+    >
+      <path d="M3 2v2M13 2v2M3 3h10" strokeLinecap="round" />
+      <rect x="3" y="6" width="10" height="7" rx="0.5" />
+    </svg>
+  );
+}
+
+function HighlightModeIcon() {
+  // Rectangle with a translucent marker sweep running diagonally through it
+  // — visually reads as "highlighter on the plan."
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className="h-3.5 w-3.5"
+      aria-hidden
+    >
+      <rect x="2.5" y="3.5" width="11" height="9" rx="0.5" />
+      <path d="M3.5 11.5 12.5 4.5" strokeWidth="2.6" strokeLinecap="round" opacity="0.45" />
     </svg>
   );
 }
