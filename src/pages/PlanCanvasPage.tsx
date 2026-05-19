@@ -92,6 +92,13 @@ export function PlanCanvasPage({
   const [isSavingPlanImage, setIsSavingPlanImage] = useState(false);
   const [rectangleMode, setRectangleMode] = useState<RectangleModeId>('measure');
   const [isSavingHighlight, setIsSavingHighlight] = useState(false);
+  const [highlightRect, setHighlightRect] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    targetItem: MeasurementItemRef;
+  } | null>(null);
   const [pendingMeasurementApply, setPendingMeasurementApply] = useState<{
     roundedQuantity: number;
     quantityUnit: string;
@@ -302,7 +309,8 @@ export function PlanCanvasPage({
     !createMeasurement.isPending &&
     !updateMeasurement.isPending;
   const canSaveHighlight =
-    normalizedMeasurementDraft !== null && selectedMeasurementTarget !== null && !isSavingHighlight;
+    highlightRect !== null && normalizedCropDraft !== null && !isSavingHighlight;
+  const canSetHighlight = normalizedMeasurementDraft !== null && selectedMeasurementTarget !== null;
   const draftCropWidthPlanUnits =
     calibration && normalizedCropDraft
       ? normalizedCropDraft.width / calibration.pixelsPerUnit
@@ -449,31 +457,53 @@ export function PlanCanvasPage({
     setMeasurementDraft(null);
   };
 
-  const handleSaveHighlight = async () => {
+  const handleSetHighlight = () => {
     if (!normalizedMeasurementDraft || !selectedMeasurementTarget) return;
+    setHighlightRect({
+      x: normalizedMeasurementDraft.x,
+      y: normalizedMeasurementDraft.y,
+      width: normalizedMeasurementDraft.width,
+      height: normalizedMeasurementDraft.height,
+      targetItem: selectedMeasurementTarget,
+    });
+    setMeasurementDraft(null);
+    setSelectedMeasurementTargetKey('');
+    setCropDraft(null);
+    setActiveTool('crop');
+  };
+
+  const handleCancelHighlight = () => {
+    setHighlightRect(null);
+    setCropDraft(null);
+    setActiveTool('rectangle');
+  };
+
+  const handleSaveHighlight = async () => {
+    if (!highlightRect || !normalizedCropDraft) return;
     setIsSavingHighlight(true);
     try {
       const fakeMeasurement = {
-        targetKind: selectedMeasurementTarget.targetKind,
-        targetItemId: selectedMeasurementTarget.targetItemId,
-        targetTagSnapshot: selectedMeasurementTarget.targetTagSnapshot,
-        rectX: normalizedMeasurementDraft.x,
-        rectY: normalizedMeasurementDraft.y,
-        rectWidth: normalizedMeasurementDraft.width,
-        rectHeight: normalizedMeasurementDraft.height,
+        targetKind: highlightRect.targetItem.targetKind,
+        targetItemId: highlightRect.targetItem.targetItemId,
+        targetTagSnapshot: highlightRect.targetItem.targetTagSnapshot,
+        rectX: highlightRect.x,
+        rectY: highlightRect.y,
+        rectWidth: highlightRect.width,
+        rectHeight: highlightRect.height,
       } as unknown as Measurement;
       await savePlanImageForMeasurement(
         fakeMeasurement,
         {
-          cropX: normalizedMeasurementDraft.x,
-          cropY: normalizedMeasurementDraft.y,
-          cropWidth: normalizedMeasurementDraft.width,
-          cropHeight: normalizedMeasurementDraft.height,
+          cropX: normalizedCropDraft.x,
+          cropY: normalizedCropDraft.y,
+          cropWidth: normalizedCropDraft.width,
+          cropHeight: normalizedCropDraft.height,
         },
-        selectedMeasurementTarget.linkedFfeItemId,
+        highlightRect.targetItem.linkedFfeItemId,
       );
-      setMeasurementDraft(null);
-      setSelectedMeasurementTargetKey('');
+      setHighlightRect(null);
+      setCropDraft(null);
+      setActiveTool('rectangle');
       toast.success('Plan image saved to item.');
     } catch (error) {
       console.error('Failed to save highlight:', error);
@@ -902,6 +932,8 @@ export function PlanCanvasPage({
               onMeasurementDraftChange={setMeasurementDraft}
               cropDraft={cropDraft}
               onCropDraftChange={setCropDraft}
+              highlightRectOverlay={highlightRect}
+              highlightCropPending={highlightRect !== null}
               onMeasurementSelect={(measurementId) => {
                 const item = measurementItemsByMeasurementId.get(measurementId);
                 setSelectedMeasurementId(measurementId);
@@ -1011,9 +1043,18 @@ export function PlanCanvasPage({
             applyingMeasurement={isApplyingMeasurement}
             onApplyMeasurement={() => void handleApplyMeasurement()}
             rectangleMode={rectangleMode}
+            onSetHighlight={handleSetHighlight}
+            canSetHighlight={canSetHighlight}
             onSaveHighlight={() => void handleSaveHighlight()}
             savingHighlight={isSavingHighlight}
             canSaveHighlight={canSaveHighlight}
+            highlightCropPending={highlightRect !== null}
+            highlightTargetLabel={
+              highlightRect
+                ? `${highlightRect.targetItem.primaryLabel} – ${highlightRect.targetItem.targetTagSnapshot}`
+                : null
+            }
+            onCancelHighlight={handleCancelHighlight}
           />
         </div>
       </div>

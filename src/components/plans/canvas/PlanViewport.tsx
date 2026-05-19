@@ -17,6 +17,7 @@ import {
   pointInRect,
   type ImagePoint,
   type LineDraft,
+  type RectBounds,
   type RectDraft,
 } from '../../../lib/plans';
 import type { LengthLine, Measurement, MeasuredPlan, PlanCalibration } from '../../../types';
@@ -40,6 +41,8 @@ export function PlanViewport({
   onMeasurementDraftChange,
   cropDraft,
   onCropDraftChange,
+  highlightRectOverlay,
+  highlightCropPending,
   onMeasurementSelect,
   onNaturalSizeChange,
 }: {
@@ -59,6 +62,8 @@ export function PlanViewport({
   onMeasurementDraftChange: (draft: RectDraft | null) => void;
   cropDraft: RectDraft | null;
   onCropDraftChange: (draft: RectDraft | null) => void;
+  highlightRectOverlay: RectBounds | null;
+  highlightCropPending: boolean;
   onMeasurementSelect: (measurementId: string) => void;
   onNaturalSizeChange: (size: { width: number; height: number }) => void;
 }) {
@@ -92,7 +97,7 @@ export function PlanViewport({
     (activeTool === 'calibrate' ||
       activeTool === 'length' ||
       activeTool === 'rectangle' ||
-      (activeTool === 'crop' && selectedMeasurement !== null));
+      (activeTool === 'crop' && (selectedMeasurement !== null || highlightCropPending)));
 
   const isInputLikeElement = useCallback((target: EventTarget | null) => {
     if (!(target instanceof HTMLElement)) return false;
@@ -392,7 +397,7 @@ export function PlanViewport({
           endX: point.x,
           endY: point.y,
         });
-      } else if (selectedMeasurement) {
+      } else if (selectedMeasurement || highlightCropPending) {
         shapeStart.current = point;
         onCropDraftChange({
           startX: point.x,
@@ -441,7 +446,7 @@ export function PlanViewport({
           endX: point.x,
           endY: point.y,
         });
-      } else if (activeTool === 'crop' && selectedMeasurement) {
+      } else if (activeTool === 'crop' && (selectedMeasurement || highlightCropPending)) {
         onCropDraftChange({
           startX: shapeStart.current.x,
           startY: shapeStart.current.y,
@@ -670,6 +675,13 @@ export function PlanViewport({
                 />
               ) : null}
 
+              {highlightRectOverlay ? (
+                <RectOverlay
+                  points={buildRectPolygonPoints(highlightRectOverlay).map(viewportPointFromImage)}
+                  active
+                />
+              ) : null}
+
               {draftMeasurementRect ? (
                 <RectOverlay
                   points={buildRectPolygonPoints(draftMeasurementRect).map(viewportPointFromImage)}
@@ -722,7 +734,7 @@ export function PlanViewport({
                   : activeTool === 'rectangle'
                     ? 'Draw measured area'
                     : activeTool === 'crop'
-                      ? selectedMeasurement
+                      ? selectedMeasurement || highlightCropPending
                         ? 'Draw item image crop'
                         : 'Select a measured item'
                       : 'Drag to pan'}

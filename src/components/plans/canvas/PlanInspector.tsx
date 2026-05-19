@@ -97,9 +97,14 @@ export type PlanInspectorProps = {
   applyingMeasurement: boolean;
   onApplyMeasurement: () => void;
   rectangleMode: RectangleModeId;
+  onSetHighlight: () => void;
+  canSetHighlight: boolean;
   onSaveHighlight: () => void;
   savingHighlight: boolean;
   canSaveHighlight: boolean;
+  highlightCropPending: boolean;
+  highlightTargetLabel: string | null;
+  onCancelHighlight: () => void;
 };
 
 export function PlanInspector({
@@ -180,9 +185,14 @@ export function PlanInspector({
   applyingMeasurement,
   onApplyMeasurement,
   rectangleMode,
+  onSetHighlight,
+  canSetHighlight,
   onSaveHighlight,
   savingHighlight,
   canSaveHighlight,
+  highlightCropPending,
+  highlightTargetLabel,
+  onCancelHighlight,
 }: PlanInspectorProps) {
   return (
     <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-canvas-chrome/90 px-4 py-3 backdrop-blur">
@@ -542,17 +552,16 @@ export function PlanInspector({
                               type="button"
                               variant="primary"
                               size="sm"
-                              onClick={onSaveHighlight}
-                              disabled={!canSaveHighlight}
+                              onClick={onSetHighlight}
+                              disabled={!canSetHighlight}
                             >
-                              {savingHighlight ? <>Saving&hellip;</> : 'Save highlight'}
+                              Set crop area
                             </Button>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={onClearMeasurementDraft}
-                              disabled={savingHighlight}
                             >
                               Clear draft
                             </Button>
@@ -595,14 +604,20 @@ export function PlanInspector({
 
               {activeTool === 'crop' ? (
                 <div className="mt-3 space-y-3">
-                  <MeasuredAreaSelect
-                    measurements={measurements}
-                    measurementItemsByMeasurementId={measurementItemsByMeasurementId}
-                    measurementsLoading={measurementsLoading}
-                    selectedMeasurementId={selectedMeasurementId}
-                    onSelect={onSelectMeasurement}
-                    onClear={onClearMeasurementSelection}
-                  />
+                  {highlightCropPending && highlightTargetLabel ? (
+                    <p className="text-sm font-medium text-neutral-700">{highlightTargetLabel}</p>
+                  ) : null}
+
+                  {!highlightCropPending && (
+                    <MeasuredAreaSelect
+                      measurements={measurements}
+                      measurementItemsByMeasurementId={measurementItemsByMeasurementId}
+                      measurementsLoading={measurementsLoading}
+                      selectedMeasurementId={selectedMeasurementId}
+                      onSelect={onSelectMeasurement}
+                      onClear={onClearMeasurementSelection}
+                    />
+                  )}
 
                   {selectedMeasurementRect ? (
                     <MetricRow
@@ -638,33 +653,63 @@ export function PlanInspector({
                   ) : null}
 
                   {normalizedCropDraft ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={onSaveCropAndPlanImage}
-                        disabled={!canSaveCropAndPlanImage}
-                      >
-                        {savingPlanImage ? <>Adding plan image&hellip;</> : 'Save crop to item'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={onSaveCrop}
-                        disabled={!canSaveCrop}
-                      >
-                        {savingCrop ? <>Saving&hellip;</> : 'Save crop only'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={onClearCropDraft}
-                        disabled={savingCrop}
-                      >
-                        Clear draft
+                    highlightCropPending ? (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={onSaveHighlight}
+                          disabled={!canSaveHighlight}
+                        >
+                          {savingHighlight ? <>Saving&hellip;</> : 'Save highlight'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={onCancelHighlight}
+                          disabled={savingHighlight}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={onSaveCropAndPlanImage}
+                          disabled={!canSaveCropAndPlanImage}
+                        >
+                          {savingPlanImage ? <>Adding plan image&hellip;</> : 'Save crop to item'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={onSaveCrop}
+                          disabled={!canSaveCrop}
+                        >
+                          {savingCrop ? <>Saving&hellip;</> : 'Save crop only'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={onClearCropDraft}
+                          disabled={savingCrop}
+                        >
+                          Clear draft
+                        </Button>
+                      </div>
+                    )
+                  ) : highlightCropPending ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-neutral-500">Draw a crop area on the plan.</p>
+                      <Button type="button" variant="ghost" size="sm" onClick={onCancelHighlight}>
+                        Cancel
                       </Button>
                     </div>
                   ) : selectedMeasurement &&

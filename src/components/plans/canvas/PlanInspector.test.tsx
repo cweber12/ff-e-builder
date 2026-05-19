@@ -192,6 +192,15 @@ function buildProps(overrides: Partial<PlanInspectorProps> = {}): PlanInspectorP
     onMeasurementApplicationModeChange: vi.fn(),
     applyingMeasurement: false,
     onApplyMeasurement: vi.fn(),
+    rectangleMode: 'measure' as const,
+    onSetHighlight: vi.fn(),
+    canSetHighlight: false,
+    onSaveHighlight: vi.fn(),
+    savingHighlight: false,
+    canSaveHighlight: false,
+    highlightCropPending: false,
+    highlightTargetLabel: null,
+    onCancelHighlight: vi.fn(),
     ...overrides,
   };
 }
