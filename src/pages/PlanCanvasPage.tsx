@@ -1108,7 +1108,7 @@ function buildMeasurementItems(
         containerId: room.id,
         version: item.version,
         dimensions: item.dimensions,
-        linkedProposalItemId: item.linkedProposalItemId,
+        linkedProposalItemId: item.linkedProposalItemId ?? null,
       });
     }
   }
@@ -1127,7 +1127,7 @@ function buildMeasurementItems(
         version: item.version,
         quantity: item.quantity,
         quantityUnit: item.quantityUnit,
-        linkedFfeItemId: item.linkedFfeItemId,
+        linkedFfeItemId: item.linkedFfeItemId ?? null,
       });
     }
   }

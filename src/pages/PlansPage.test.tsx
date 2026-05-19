@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
@@ -69,15 +69,18 @@ vi.mock('../lib/api', () => ({
 }));
 
 describe('PlansPage', () => {
-  it('renders the plans library and upload panel', () => {
+  it('renders the plan library and reveals the upload panel from the header CTA', () => {
     render(
       <MemoryRouter>
         <PlansPage project={project} />
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Architectural plan library')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Plan library' })).toBeInTheDocument();
     expect(screen.getByText('Level 1 Furniture Plan')).toBeInTheDocument();
+    expect(screen.queryByTestId('plan-upload-panel')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Upload plan' }));
     expect(screen.getByTestId('plan-upload-panel')).toBeInTheDocument();
   });
 });

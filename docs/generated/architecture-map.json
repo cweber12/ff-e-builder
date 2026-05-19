@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-18T18:18:51.774Z",
+  "generatedAt": "2026-05-19T01:11:12.472Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 252,
-      "internalImports": 775,
-      "externalImports": 269,
+      "files": 253,
+      "internalImports": 780,
+      "externalImports": 271,
       "unresolvedImports": 2
     },
     {
@@ -168,17 +168,17 @@
     {
       "area": "proposal",
       "files": 26,
-      "importsIn": 40,
-      "importsOut": 113,
+      "importsIn": 41,
+      "importsOut": 114,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
-      "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
+      "importedBy": ["ffe", "plans", "project-shell", "shared-lib", "tests"]
     },
     {
       "area": "plans",
       "files": 17,
       "importsIn": 34,
-      "importsOut": 49,
-      "dependsOn": ["shared-ui", "shared-lib", "types"],
+      "importsOut": 52,
+      "dependsOn": ["proposal", "shared-ui", "shared-lib", "types"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
@@ -209,7 +209,7 @@
     {
       "area": "shared-ui",
       "files": 43,
-      "importsIn": 150,
+      "importsIn": 151,
       "importsOut": 108,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
@@ -217,7 +217,7 @@
     {
       "area": "shared-lib",
       "files": 47,
-      "importsIn": 278,
+      "importsIn": 281,
       "importsOut": 111,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
@@ -259,9 +259,9 @@
     },
     {
       "area": "tests",
-      "files": 49,
+      "files": 50,
       "importsIn": 0,
-      "importsOut": 93,
+      "importsOut": 94,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -400,7 +400,7 @@
       "paths": [
         {
           "path": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-          "files": 49
+          "files": 50
         }
       ]
     },
@@ -1823,6 +1823,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/pages/PlanCanvasPage.tsx",
+      "importerArea": "plans",
+      "specifier": "../components/proposal/ChangeConfirmModal",
+      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "resolvedArea": "proposal",
+      "kind": "import",
+      "reviewNote": "review: product module imports another product module directly",
+      "reviewSection": "Review Targets"
+    },
+    {
       "importer": "src/components/plans/canvas/PlanViewport.tsx",
       "importerArea": "plans",
       "specifier": "../../../lib/api",
@@ -1953,6 +1963,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/pages/PlansPage.tsx",
+      "importerArea": "plans",
+      "specifier": "../lib/api",
+      "resolved": "src/lib/api.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/plans/canvas/PlanInspector.tsx",
       "importerArea": "plans",
       "specifier": "../../primitives",
@@ -1976,6 +1996,16 @@
       "importer": "src/components/plans/list/PlanUploadPanel.tsx",
       "importerArea": "plans",
       "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/pages/PlansPage.tsx",
+      "importerArea": "plans",
+      "specifier": "../components/primitives",
       "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
@@ -3277,6 +3307,16 @@
       "importerArea": "proposal",
       "specifier": "../excelStyles",
       "resolved": "src/lib/export/excelStyles.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/lib/export/proposal/proposalExcel.ts",
+      "importerArea": "proposal",
+      "specifier": "../../theme/constants",
+      "resolved": "src/lib/theme/constants.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -5333,6 +5373,16 @@
       "reviewSection": "Test Dependencies"
     },
     {
+      "importer": "src/lib/export/imageHelpers.test.ts",
+      "importerArea": "tests",
+      "specifier": "./imageHelpers",
+      "resolved": "src/lib/export/imageHelpers.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
       "importer": "src/lib/export/index.test.ts",
       "importerArea": "tests",
       "specifier": "./index",
@@ -5766,6 +5816,25 @@
           "importerArea": "ffe",
           "specifier": "../../proposal/revision",
           "resolved": "src/components/proposal/revision/index.ts",
+          "resolvedArea": "proposal",
+          "kind": "import",
+          "reviewNote": "review: product module imports another product module directly",
+          "reviewSection": "Review Targets"
+        }
+      ]
+    },
+    {
+      "section": "Review Targets",
+      "from": "plans",
+      "to": "proposal",
+      "imports": 1,
+      "reviewNote": "review: product module imports another product module directly",
+      "examples": [
+        {
+          "importer": "src/pages/PlanCanvasPage.tsx",
+          "importerArea": "plans",
+          "specifier": "../components/proposal/ChangeConfirmModal",
+          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
           "resolvedArea": "proposal",
           "kind": "import",
           "reviewNote": "review: product module imports another product module directly",
@@ -6310,7 +6379,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-lib",
-      "imports": 40,
+      "imports": 41,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6388,7 +6457,7 @@
       "section": "Expected Shared Dependencies",
       "from": "plans",
       "to": "shared-ui",
-      "imports": 3,
+      "imports": 4,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6427,7 +6496,7 @@
       "section": "Expected Shared Dependencies",
       "from": "plans",
       "to": "shared-lib",
-      "imports": 13,
+      "imports": 14,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -7283,7 +7352,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "shared-lib",
-      "imports": 24,
+      "imports": 25,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7669,7 +7738,7 @@
     {
       "path": "src/components",
       "files": 119,
-      "importsIn": 246,
+      "importsIn": 248,
       "importsOut": 551,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
@@ -7715,9 +7784,9 @@
     },
     {
       "path": "src/lib",
-      "files": 79,
-      "importsIn": 288,
-      "importsOut": 246,
+      "files": 80,
+      "importsIn": 291,
+      "importsOut": 249,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -7751,7 +7820,7 @@
       "path": "src/pages",
       "files": 10,
       "importsIn": 9,
-      "importsOut": 64,
+      "importsOut": 68,
       "internalDependencies": ["src/components", "src/hooks", "src/lib", "src/types"],
       "externalDependencies": [
         "@tanstack/react-query",
@@ -16449,6 +16518,33 @@
       ]
     },
     {
+      "path": "src/lib/export/imageHelpers.test.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "tests",
+      "ownershipConfidence": "high",
+      "ownershipReason": "test or snapshot path",
+      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
+      "imports": [
+        {
+          "importer": "src/lib/export/imageHelpers.test.ts",
+          "specifier": "vitest",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "vitest",
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/imageHelpers.test.ts",
+          "specifier": "./imageHelpers",
+          "kind": "import",
+          "resolved": "src/lib/export/imageHelpers.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/lib/export/imageHelpers.ts",
       "project": "React client",
       "module": "src/lib",
@@ -16867,6 +16963,14 @@
           "specifier": "../excelStyles",
           "kind": "import",
           "resolved": "src/lib/export/excelStyles.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/proposal/proposalExcel.ts",
+          "specifier": "../../theme/constants",
+          "kind": "import",
+          "resolved": "src/lib/theme/constants.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -18231,6 +18335,14 @@
         },
         {
           "importer": "src/pages/PlanCanvasPage.tsx",
+          "specifier": "../components/proposal/ChangeConfirmModal",
+          "kind": "import",
+          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/PlanCanvasPage.tsx",
           "specifier": "../components/plans/canvas/PlanInspector",
           "kind": "import",
           "resolved": "src/components/plans/canvas/PlanInspector.tsx",
@@ -18373,6 +18485,14 @@
       "imports": [
         {
           "importer": "src/pages/PlansPage.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/pages/PlansPage.tsx",
           "specifier": "../components/plans/list/MeasuredPlanCard",
           "kind": "import",
           "resolved": "src/components/plans/list/MeasuredPlanCard.tsx",
@@ -18397,9 +18517,25 @@
         },
         {
           "importer": "src/pages/PlansPage.tsx",
+          "specifier": "../components/primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/PlansPage.tsx",
           "specifier": "../hooks",
           "kind": "import",
           "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/PlansPage.tsx",
+          "specifier": "../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -26781,6 +26917,22 @@
       "asset": false
     },
     {
+      "importer": "src/lib/export/imageHelpers.test.ts",
+      "specifier": "vitest",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "vitest",
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/imageHelpers.test.ts",
+      "specifier": "./imageHelpers",
+      "kind": "import",
+      "resolved": "src/lib/export/imageHelpers.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/lib/export/imageHelpers.ts",
       "specifier": "../api",
       "kind": "import",
@@ -27113,6 +27265,14 @@
       "specifier": "../excelStyles",
       "kind": "import",
       "resolved": "src/lib/export/excelStyles.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/proposal/proposalExcel.ts",
+      "specifier": "../../theme/constants",
+      "kind": "import",
+      "resolved": "src/lib/theme/constants.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -28014,6 +28174,14 @@
     },
     {
       "importer": "src/pages/PlanCanvasPage.tsx",
+      "specifier": "../components/proposal/ChangeConfirmModal",
+      "kind": "import",
+      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/PlanCanvasPage.tsx",
       "specifier": "../components/plans/canvas/PlanInspector",
       "kind": "import",
       "resolved": "src/components/plans/canvas/PlanInspector.tsx",
@@ -28134,6 +28302,14 @@
     },
     {
       "importer": "src/pages/PlansPage.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/pages/PlansPage.tsx",
       "specifier": "../components/plans/list/MeasuredPlanCard",
       "kind": "import",
       "resolved": "src/components/plans/list/MeasuredPlanCard.tsx",
@@ -28158,9 +28334,25 @@
     },
     {
       "importer": "src/pages/PlansPage.tsx",
+      "specifier": "../components/primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/PlansPage.tsx",
       "specifier": "../hooks",
       "kind": "import",
       "resolved": "src/hooks/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/PlansPage.tsx",
+      "specifier": "../lib/api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -29460,11 +29652,11 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 79
+      "imports": 80
     },
     {
       "name": "vitest",
-      "imports": 50
+      "imports": 51
     },
     {
       "name": "@testing-library/react",
