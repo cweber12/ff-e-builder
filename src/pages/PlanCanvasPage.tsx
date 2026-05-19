@@ -854,46 +854,26 @@ export function PlanCanvasPage({
   return (
     <>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-canvas">
-        <header className="border-b border-black/10 bg-canvas-chrome/95 px-4 py-2.5 backdrop-blur md:px-5">
-          <div className="flex min-h-10 flex-wrap items-center gap-3">
-            <Link
-              to={`/projects/${project.id}/plans`}
-              className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400 transition hover:text-brand-700"
-            >
-              Plans
-            </Link>
-            <div className="h-5 w-px bg-neutral-200" />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1
-                  className="max-w-[28ch] truncate font-display text-lg font-semibold text-neutral-950"
-                  title={selectedPlan.name}
-                >
-                  {selectedPlan.name}
-                </h1>
-                <span className="rounded-full border border-neutral-200 bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                  {selectedPlan.sheetReference || 'No sheet ref'}
-                </span>
-                <span
-                  className={[
-                    'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]',
-                    isCalibrated
-                      ? 'bg-emerald-100/80 text-emerald-800'
-                      : 'bg-amber-100/80 text-amber-800',
-                  ].join(' ')}
-                >
-                  {isCalibrated ? 'calibrated' : 'uncalibrated'}
-                </span>
-              </div>
+        <header className="border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur md:px-5">
+          <div className="flex min-h-9 flex-wrap items-center justify-between gap-3 border-b border-neutral-200/70 py-1.5">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+              <Link
+                to={`/projects/${project.id}/plans`}
+                className="transition hover:text-brand-700"
+              >
+                ← Plans
+              </Link>
+              <span aria-hidden className="h-3 w-px bg-neutral-300" />
+              <span className="text-neutral-500">Workspace</span>
             </div>
-            <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
               Sheet
               <select
                 value={selectedPlan.id}
                 onChange={(event) =>
                   navigate(`/projects/${project.id}/plans/${event.target.value}`)
                 }
-                className="min-w-44 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium normal-case tracking-normal text-neutral-800 outline-none transition focus:border-brand-400"
+                className="min-w-44 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-sm font-medium normal-case tracking-normal text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
               >
                 {(plans ?? []).map((plan) => (
                   <option key={plan.id} value={plan.id}>
@@ -902,6 +882,52 @@ export function PlanCanvasPage({
                 ))}
               </select>
             </label>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h1
+                  className="max-w-[40ch] truncate font-display text-xl font-semibold text-neutral-950"
+                  title={selectedPlan.name}
+                >
+                  {selectedPlan.name}
+                </h1>
+                <span
+                  className={[
+                    'num text-[11px] font-semibold uppercase tracking-[0.14em]',
+                    selectedPlan.sheetReference ? 'text-brand-700' : 'text-neutral-400',
+                  ].join(' ')}
+                >
+                  {selectedPlan.sheetReference || 'No sheet ref'}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveTool('calibrate')}
+              aria-label={
+                isCalibrated && calibration
+                  ? `Calibrated to ${formatDisplayNumber(calibration.realWorldLength)} ${calibration.unit}. Open calibration tool.`
+                  : 'Calibration required. Open calibration tool.'
+              }
+              className={[
+                'status-chip transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+                isCalibrated ? 'status-chip--ok' : 'status-chip--warn',
+              ].join(' ')}
+            >
+              {isCalibrated && calibration ? (
+                <span>
+                  Calibrated to{' '}
+                  <span className="num normal-case tracking-normal">
+                    {formatDisplayNumber(calibration.realWorldLength)} {calibration.unit}
+                  </span>
+                </span>
+              ) : (
+                <span>Calibration required</span>
+              )}
+            </button>
           </div>
         </header>
 
