@@ -123,6 +123,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.0
         version: 10.5.0(postcss@8.5.12)
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       eslint:
         specifier: ^9.0.0
         version: 9.39.4(jiti@1.21.7)
@@ -2114,6 +2117,10 @@ packages:
 
   dompurify@3.4.2:
     resolution: {integrity: sha512-lHeS9SA/IKeIFFyYciHBr2n0v1VMPlSj843HdLOwjb2OxNwdq9Xykxqhk+FE42MzAdHvInbAolSE4mhahPpjXA==}
+
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -5077,14 +5084,6 @@ snapshots:
     optionalDependencies:
       vite: 5.4.21(@types/node@20.19.39)
 
-  '@vitest/mocker@2.1.9(vite@5.4.21(@types/node@22.19.17))':
-    dependencies:
-      '@vitest/spy': 2.1.9
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      vite: 5.4.21(@types/node@22.19.17)
-
   '@vitest/pretty-format@2.1.9':
     dependencies:
       tinyrainbow: 1.2.0
@@ -5113,7 +5112,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.16
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@22.19.17)(@vitest/ui@2.1.9)(jsdom@25.0.1)
+      vitest: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(jsdom@25.0.1)
 
   '@vitest/utils@2.1.9':
     dependencies:
@@ -5493,6 +5492,8 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
     optional: true
+
+  dotenv@17.4.2: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -7075,7 +7076,7 @@ snapshots:
   vitest@2.1.9(@types/node@22.19.17)(@vitest/ui@2.1.9)(jsdom@25.0.1):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@22.19.17))
+      '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@20.19.39))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9

@@ -2,13 +2,8 @@
  * Migration runner — applies pending SQL migrations to Neon Postgres.
  *
  * Usage:
- *   pnpm migrate                          # reads NEON_DATABASE_URL from env
+ *   pnpm migrate                          # reads NEON_DATABASE_URL from .env.local or env
  *   NEON_DATABASE_URL=<url> pnpm migrate  # inline override
- *
- * For local development, set NEON_DATABASE_URL in .env.local and load it
- * before running:
- *   source .env.local && pnpm migrate
- *   # or: dotenv -e .env.local -- pnpm migrate
  *
  * Uses the Neon serverless HTTP driver — no WebSocket setup needed in Node 22.
  */
@@ -16,7 +11,11 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config } from 'dotenv';
 import { Pool } from '@neondatabase/serverless';
+
+// Load .env.local automatically
+config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env.local') });
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = join(__dirname, '..', 'db', 'migrations');
@@ -25,9 +24,7 @@ async function run() {
   const url = process.env['NEON_DATABASE_URL'];
   if (!url) {
     console.error('Error: NEON_DATABASE_URL environment variable is not set.');
-    console.error(
-      'Set it in .env.local and load before running: source .env.local && pnpm migrate',
-    );
+    console.error('Set it in .env.local in the project root.');
     process.exit(1);
   }
 
