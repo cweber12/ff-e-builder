@@ -741,64 +741,6 @@ export function PlanInspector({
                 </div>
               ) : null}
 
-              {selectedMeasurement &&
-              selectedMeasurementItem &&
-              selectedMeasurementDisplay &&
-              rectangleMode !== 'highlight' ? (
-                <div className="mt-4 border-t border-neutral-200 pt-3">
-                  <label className="block">
-                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                      Apply measurement
-                    </span>
-                    <select
-                      value={measurementApplicationMode}
-                      onChange={(event) =>
-                        onMeasurementApplicationModeChange(
-                          event.target.value as MeasurementApplicationMode,
-                        )
-                      }
-                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
-                    >
-                      {selectedMeasurementItem.targetKind === 'proposal' ? (
-                        <>
-                          <option value="proposal-area">
-                            Use area - {formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
-                            {formatAreaUnit(calibration?.unit ?? 'ft')}
-                          </option>
-                          <option value="proposal-horizontal">
-                            Use horizontal -{' '}
-                            {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
-                            {calibration?.unit ?? 'ft'}
-                          </option>
-                          <option value="proposal-vertical">
-                            Use vertical -{' '}
-                            {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
-                            {calibration?.unit ?? 'ft'}
-                          </option>
-                        </>
-                      ) : (
-                        <option value="ffe-dimensions">
-                          Update dimensions - {selectedMeasurementDisplay.dimensionsText}
-                        </option>
-                      )}
-                      <option value="reference-only">Reference only</option>
-                    </select>
-                  </label>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="mt-3"
-                    onClick={onApplyMeasurement}
-                    disabled={
-                      applyingMeasurement || measurementApplicationMode === 'reference-only'
-                    }
-                  >
-                    {applyingMeasurement ? <>Applying&hellip;</> : 'Apply to item'}
-                  </Button>
-                </div>
-              ) : null}
-
               {activeTool === 'rectangle' ? (
                 <div className="mt-4 border-t border-neutral-200 pt-3">
                   <MeasuredAreaSelect
@@ -867,6 +809,66 @@ export function PlanInspector({
               </div>
             </div>
           </section>
+        ) : null}
+
+        {(activeTool === 'rectangle' || activeTool === 'crop') &&
+        selectedMeasurement &&
+        selectedMeasurementItem &&
+        selectedMeasurementDisplay &&
+        rectangleMode !== 'highlight' ? (
+          <div className="action-bar space-y-2.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="eyebrow">Apply measurement</span>
+              <span className="num-muted truncate text-[11px]">
+                {selectedMeasurementItem.primaryLabel}
+              </span>
+            </div>
+            <label className="block">
+              <span className="sr-only">Apply measurement</span>
+              <select
+                aria-label="Apply measurement"
+                value={measurementApplicationMode}
+                onChange={(event) =>
+                  onMeasurementApplicationModeChange(
+                    event.target.value as MeasurementApplicationMode,
+                  )
+                }
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+              >
+                {selectedMeasurementItem.targetKind === 'proposal' ? (
+                  <>
+                    <option value="proposal-area">
+                      Use area - {formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
+                      {formatAreaUnit(calibration?.unit ?? 'ft')}
+                    </option>
+                    <option value="proposal-horizontal">
+                      Use horizontal - {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
+                      {calibration?.unit ?? 'ft'}
+                    </option>
+                    <option value="proposal-vertical">
+                      Use vertical - {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
+                      {calibration?.unit ?? 'ft'}
+                    </option>
+                  </>
+                ) : (
+                  <option value="ffe-dimensions">
+                    Update dimensions - {selectedMeasurementDisplay.dimensionsText}
+                  </option>
+                )}
+                <option value="reference-only">Reference only</option>
+              </select>
+            </label>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="w-full"
+              onClick={onApplyMeasurement}
+              disabled={applyingMeasurement || measurementApplicationMode === 'reference-only'}
+            >
+              {applyingMeasurement ? <>Applying&hellip;</> : 'Apply to item'}
+            </Button>
+          </div>
         ) : null}
       </div>
     </aside>

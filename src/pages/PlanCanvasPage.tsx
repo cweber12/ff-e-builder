@@ -183,10 +183,12 @@ export function PlanCanvasPage({
       setActiveTool('calibrate');
       return;
     }
-    // Crop is a follow-up step, never a sensible default. Kick to rectangle
-    // when a calibrated plan loads or the user navigates to one while crop
-    // happened to be the last active tool.
-    setActiveTool((current) => (current === 'crop' ? 'rectangle' : current));
+    // For calibrated plans, advance the default tool past the setup stage.
+    // 'calibrate' and 'crop' are setup/follow-up stages, never sensible
+    // defaults once the plan is ready to measure — land on 'length'.
+    setActiveTool((current) =>
+      current === 'calibrate' || current === 'crop' ? 'length' : current,
+    );
   }, [isCalibrated, selectedPlan]);
 
   useEffect(() => {
