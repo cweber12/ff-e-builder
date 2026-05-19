@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - refactor(src): reorganise file layout — move ChangeConfirmModal to shared/modals, proposalStatusConfig to lib/table, BRAND_RGB to lib/constants, PDF plan utils to lib/plans, table hooks to hooks/shared, and table-UI components to shared/table
 
+- refactor(db): add Generated Item lookup indexes for shared FF&E and Proposal table reads
+
 - fix(table): let Proposal baseline revision columns scroll while keeping revised values sticky
 - fix(exports): refine Proposal Excel image aspect ratios, centering, column header contrast, and material swatch grid placement
 - fix(exports): polish Proposal Excel table styling with theme headers, thin borders, striped rows, and square multi-swatch cells
