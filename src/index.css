@@ -83,6 +83,22 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+
+  /* Paper shadow — used for the plan-viewport image so it reads as a sheet
+     laid on a drafting table. Layered, longer, with a soft cool tint. */
+  --paper-shadow:
+    0 1px 1px rgb(8 14 22 / 0.04), 0 4px 10px -2px rgb(8 14 22 / 0.06),
+    0 26px 40px -14px rgb(8 14 22 / 0.14);
+
+  /* Architectural rule line — the hairline used between metric rows, tool-rail
+     groups, and inspector subcards. Slightly stronger than neutral-200 so it
+     reads as an intentional drafting rule, not a default browser border. */
+  --rule-line: rgb(174 186 201 / 0.55);
+
+  /* Blueprint hatch — diagonal rule pattern for empty states and the canvas
+     viewport background when no plan is loaded. Stroke uses neutral-300 at
+     low opacity so the texture is felt, not seen. */
+  --blueprint-hatch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M-1 7l8-8M5 13l8-8' stroke='%23AEBAC9' stroke-width='0.5' opacity='0.35'/></svg>");
 }
 
 @layer base {
@@ -219,6 +235,169 @@
   .canvas-chrome {
     background-color: rgb(var(--color-canvas-chrome) / 0.94);
     backdrop-filter: blur(8px);
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     Plan-redesign primitives
+     Shared building blocks for the plan library and measurement workspace.
+     Slice 1 of the plan redesign: tokens only. No components consume these
+     yet — later slices replace inline class strings with these utilities.
+     ────────────────────────────────────────────────────────────────────── */
+
+  /* Mono numeric — every measurement readout (pixels, feet, areas) should
+     pass through one of these so numerals align in tabular columns. */
+  .num {
+    font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .num-muted {
+    font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--color-neutral-500));
+  }
+
+  /* Metric row — compact key/value used inside the inspector panels.
+     Replaces the ad-hoc <div className="flex items-baseline …"> pattern. */
+  .metric-row {
+    @apply flex items-baseline justify-between gap-3 py-1.5;
+    border-bottom: 1px solid var(--rule-line);
+  }
+
+  .metric-row__label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500;
+  }
+
+  .metric-row__value {
+    @apply text-sm text-neutral-900;
+    font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Metric card — larger hero key/value used for calibration state, etc. */
+  .metric-card {
+    @apply flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white px-3 py-2.5;
+  }
+
+  .metric-card__label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500;
+  }
+
+  .metric-card__value {
+    @apply text-base text-neutral-950;
+    font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Status chip — calibration status, measurement counts, sheet refs.
+     Three semantic variants: ok / warn / neutral. */
+  .status-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1
+           text-[11px] font-semibold uppercase tracking-[0.12em];
+  }
+
+  .status-chip::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: currentColor;
+  }
+
+  .status-chip--ok {
+    @apply bg-success-50 text-success-700;
+  }
+
+  .status-chip--warn {
+    @apply bg-warning-50 text-warning-700;
+  }
+
+  .status-chip--neutral {
+    @apply bg-neutral-100 text-neutral-600;
+  }
+
+  .status-chip--neutral::before {
+    background-color: rgb(var(--color-neutral-400));
+  }
+
+  /* Stage indicator dot — used in the inspector top strip
+     (Setup · Measure · Output). */
+  .stage-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background-color: rgb(var(--color-neutral-300));
+    transition:
+      background-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .stage-dot--complete {
+    background-color: rgb(var(--color-brand-300));
+  }
+
+  .stage-dot--active {
+    background-color: rgb(var(--color-brand-500));
+    box-shadow: 0 0 0 3px rgb(var(--color-brand-500) / 0.15);
+  }
+
+  /* Tool-rail group divider — labelled hairline between rail clusters
+     (Setup / Measure / View). */
+  .rail-divider {
+    @apply mx-2 my-2 flex items-center gap-2;
+  }
+
+  .rail-divider::before,
+  .rail-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule-line);
+  }
+
+  .rail-label {
+    @apply text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-400;
+  }
+
+  /* Inspector action bar — pinned to the bottom of the inspector when a
+     measurement is selected and has an "apply to item" action. */
+  .action-bar {
+    @apply sticky bottom-0 z-10 -mx-4 mt-4 border-t border-neutral-200
+           bg-canvas-chrome/95 px-4 py-3 backdrop-blur;
+  }
+
+  /* Paper frame — gutter + drop shadow used around the plan viewport
+     image so it reads as a sheet sitting on a drafting board. */
+  .paper-frame {
+    background: rgb(var(--color-surface));
+    box-shadow: var(--paper-shadow);
+    border: 1px solid rgb(var(--color-neutral-200) / 0.8);
+  }
+
+  /* Blueprint hatch — diagonal pattern for empty states and the viewport
+     background. Subtle enough to feel like paper texture, not wallpaper. */
+  .canvas-hatch {
+    background-image: var(--blueprint-hatch);
+    background-size: 12px 12px;
+  }
+
+  /* Library tile — softer plan-card surface with a hover lift.
+     Will replace the inline border/shadow stack on MeasuredPlanCard. */
+  .tile-card {
+    @apply overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm;
+    transition:
+      transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 180ms ease;
+  }
+
+  .tile-card:hover,
+  .tile-card:focus-within {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgb(var(--color-brand-200));
   }
 
   /* Project list rows */

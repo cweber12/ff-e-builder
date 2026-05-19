@@ -71,6 +71,7 @@ const config: Config = {
         md: 'var(--shadow-md)',
         lg: 'var(--shadow-lg)',
         xl: 'var(--shadow-xl)',
+        paper: 'var(--paper-shadow)',
       },
       spacing: {
         '13': '3.25rem',
@@ -83,9 +84,20 @@ const config: Config = {
           '0%': { backgroundColor: 'rgb(var(--color-success-500) / 0.08)' },
           '100%': { backgroundColor: 'transparent' },
         },
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'chip-pop': {
+          '0%': { opacity: '0', transform: 'scale(0.92)' },
+          '60%': { transform: 'scale(1.03)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
       animation: {
         'flash-success': 'flash-success 600ms ease-out forwards',
+        'fade-up': 'fade-up 240ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'chip-pop': 'chip-pop 220ms cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       borderRadius: {
         pill: '999px',

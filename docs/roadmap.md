@@ -116,3 +116,23 @@ The current 10-column cap applies only to custom column defs per `(project, tabl
 ### Route-based code splitting
 
 The entire app ships as a single `index.js` chunk (>500 KB minified). Split by route using `React.lazy()` and dynamic `import()` on each page component, letting Vite emit per-route chunks. This eliminates the Rollup chunk-size warning and improves initial load time, particularly for pages like Plans and Catalog that pull in heavy PDF/canvas dependencies. Raise `build.chunkSizeWarningLimit` temporarily if needed while migrating.
+
+---
+
+## Plan module — potential future features
+
+_Listed for visibility. None are part of the current redesign._
+
+- **Plan search** — name + sheet-ref typeahead at the top of the library.
+- **Keyboard shortcuts** — C/L/R/K/P for tools, Space to pan, Esc to clear drafts, Cmd+Z to undo last draft.
+- **Multi-select & bulk delete** in the library.
+- **Plan duplication / "branch from"** — clone a calibrated plan for an alternate scope.
+- **Measurement layers / groups** — toggle visibility per room/category in the viewport.
+- **Snapping & ortho-constrain** for length and rectangle tools (architect muscle memory).
+- **Inline rename** of a measured plan from the card.
+- **Export** — PNG of the calibrated plan with all overlays, or a CSV of measurements.
+- **Recent plans strip** on the project dashboard.
+- **Side-by-side compare** — open two plans in adjacent viewports.
+- **Version history** — restore an earlier calibration / measurement set.
+- **Annotations** (notes, arrows) as a non-measuring overlay layer.
+- **Comments / mentions** on a measurement for collaborators.
