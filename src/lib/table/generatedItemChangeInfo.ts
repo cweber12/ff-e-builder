@@ -14,6 +14,7 @@ export type GeneratedItemChangeInfo = {
   previousValue: string;
   newValue: string;
   isPriceAffecting: boolean;
+  lockPriceAffecting?: boolean;
 };
 
 export type FfeGeneratedItemPatch = Omit<UpdateItemInput, 'version'>;

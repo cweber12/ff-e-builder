@@ -2,6 +2,8 @@ export type GeneratedItemChangeFieldMeta = {
   columnKey: string;
   columnLabel: string;
   isPriceAffecting: boolean;
+  /** When true, the price-affecting toggle in ChangeConfirmModal is disabled. */
+  lockPriceAffecting?: boolean;
 };
 
 export const GENERATED_ITEM_CHANGE_FIELDS = {
@@ -52,16 +54,19 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
       columnKey: 'size',
       columnLabel: 'Size',
       isPriceAffecting: true,
+      lockPriceAffecting: true,
     },
     quantity: {
       columnKey: 'quantity',
       columnLabel: 'Quantity',
       isPriceAffecting: true,
+      lockPriceAffecting: true,
     },
     cbm: {
       columnKey: 'cbm',
       columnLabel: 'CBM',
       isPriceAffecting: true,
+      lockPriceAffecting: true,
     },
     unitCostCents: {
       columnKey: 'unitCostCents',
@@ -82,11 +87,13 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
       columnKey: 'plan',
       columnLabel: 'Plan',
       isPriceAffecting: false,
+      lockPriceAffecting: true,
     },
     drawings: {
       columnKey: 'drawings',
       columnLabel: 'Drawings',
       isPriceAffecting: false,
+      lockPriceAffecting: true,
     },
     location: {
       columnKey: 'location',

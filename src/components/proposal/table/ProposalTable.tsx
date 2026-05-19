@@ -794,28 +794,6 @@ function ProposalCategorySection({
       onItemSave(item, { ...patch, version: item.version });
       return;
     }
-    // Quantity change during open revision (in_progress): send changeLog immediately
-    // without showing the modal. The API routes the new qty to the revision snapshot
-    // and flags cost_status so the PM can review the revised total.
-    // proposal_items.quantity stays locked as the baseline reference value.
-    if (
-      proposalStatus === 'in_progress' &&
-      hasOpenRevision &&
-      changeInfo.columnKey === 'quantity'
-    ) {
-      onItemSave(item, {
-        ...patch,
-        version: item.version,
-        changeLog: {
-          columnKey: changeInfo.columnKey,
-          previousValue: changeInfo.previousValue,
-          newValue: changeInfo.newValue,
-          proposalStatus,
-          isPriceAffecting: true,
-        },
-      });
-      return;
-    }
     setPendingChange({ ...changeInfo, item, patch });
   }
 
@@ -1514,6 +1492,7 @@ function ProposalCategorySection({
           proposalStatus={proposalStatus}
           {...(openRev ? { openRevisionLabel: openRev.label } : {})}
           isPriceAffecting={pendingChange.isPriceAffecting}
+          lockPriceAffecting={pendingChange.lockPriceAffecting ?? false}
           onConfirm={handleConfirm}
           onCancel={() => setPendingChange(null)}
         />
