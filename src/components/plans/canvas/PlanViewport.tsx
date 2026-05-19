@@ -551,17 +551,24 @@ export function PlanViewport({
       >
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2),rgba(255,255,255,0))]" />
         {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white/80 px-4 py-2 text-sm text-neutral-500 backdrop-blur">
+          <div className="canvas-hatch absolute inset-0 flex items-center justify-center">
+            <div className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white/85 px-4 py-2 text-sm text-neutral-600 shadow-sm backdrop-blur">
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-              Loading measured plan…
+              <span className="num-muted">Loading measured plan…</span>
             </div>
           </div>
         ) : null}
 
         {!loading && !imageUrl ? (
-          <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm leading-6 text-neutral-500">
-            The protected source image could not be loaded for this Measured Plan.
+          <div className="canvas-hatch absolute inset-0 flex items-center justify-center px-6 text-center">
+            <div className="max-w-sm rounded-2xl border border-dashed border-neutral-300 bg-white/70 px-6 py-8 shadow-sm">
+              <p className="font-display text-base font-semibold text-neutral-900">
+                Plan image unavailable
+              </p>
+              <p className="mt-2 text-sm leading-6 text-neutral-500">
+                The protected source image could not be loaded for this Measured Plan.
+              </p>
+            </div>
           </div>
         ) : null}
 
@@ -714,7 +721,7 @@ export function PlanViewport({
                 />
                 {liveMeasurementPosition && liveMeasurementLabel ? (
                   <div
-                    className="absolute rounded-full border border-white/60 bg-neutral-950/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white shadow-sm backdrop-blur"
+                    className="num absolute rounded-md border border-white/30 bg-neutral-950/85 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md backdrop-blur"
                     style={{
                       left: liveMeasurementPosition.x,
                       top: liveMeasurementPosition.y,
@@ -726,7 +733,8 @@ export function PlanViewport({
               </div>
             ) : null}
 
-            <div className="pointer-events-none absolute left-3 top-3 rounded-md border border-white/70 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500 backdrop-blur">
+            <div className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600 shadow-sm backdrop-blur">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand-500" />
               {activeTool === 'calibrate'
                 ? 'Draw calibration line'
                 : activeTool === 'length'
@@ -785,9 +793,21 @@ export function PlanViewport({
               ) : null}
             </div>
 
-            <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-400 backdrop-blur">
-              <span>{Math.round(zoom * 100)}%</span>
-              {rotation !== 0 ? <span>{rotation}°</span> : null}
+            <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-2 rounded-md border border-neutral-200 bg-white/85 px-2.5 py-1 shadow-sm backdrop-blur">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                Zoom
+              </span>
+              <span className="num text-[11px] font-semibold text-neutral-900">
+                {Math.round(zoom * 100)}%
+              </span>
+              {rotation !== 0 ? (
+                <>
+                  <span aria-hidden className="h-3 w-px bg-neutral-300" />
+                  <span className="num text-[11px] font-semibold text-neutral-900">
+                    {rotation}°
+                  </span>
+                </>
+              ) : null}
             </div>
           </>
         ) : null}

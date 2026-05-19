@@ -63,21 +63,24 @@ export function LineOverlay({
       {label ? (
         <g>
           <rect
-            x={midX - 42}
-            y={midY - 20}
-            width={84}
-            height={18}
-            rx={9}
-            fill="rgba(255,255,255,0.82)"
+            x={midX - 46}
+            y={midY - 22}
+            width={92}
+            height={20}
+            rx={4}
+            fill="rgba(255,255,255,0.94)"
+            stroke="rgba(8,14,22,0.12)"
+            strokeWidth={1}
           />
           <text
             x={midX}
-            y={midY - 8}
+            y={midY - 9}
             textAnchor="middle"
-            fill="#3f3f46"
+            fill="#0E1622"
             fontSize="11"
             fontWeight="600"
-            letterSpacing="0.08em"
+            letterSpacing="0.02em"
+            fontFamily="'JetBrains Mono Variable', ui-monospace, monospace"
           >
             {label}
           </text>

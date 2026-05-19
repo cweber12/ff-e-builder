@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-19T01:11:12.472Z",
+  "generatedAt": "2026-05-19T01:51:58.075Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 253,
-      "internalImports": 780,
-      "externalImports": 271,
+      "files": 252,
+      "internalImports": 779,
+      "externalImports": 269,
       "unresolvedImports": 2
     },
     {
@@ -209,7 +209,7 @@
     {
       "area": "shared-ui",
       "files": 43,
-      "importsIn": 151,
+      "importsIn": 150,
       "importsOut": 108,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
@@ -259,9 +259,9 @@
     },
     {
       "area": "tests",
-      "files": 50,
+      "files": 49,
       "importsIn": 0,
-      "importsOut": 94,
+      "importsOut": 93,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -400,7 +400,7 @@
       "paths": [
         {
           "path": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-          "files": 50
+          "files": 49
         }
       ]
     },
@@ -1853,7 +1853,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "importerArea": "plans",
       "specifier": "../../../lib/api",
       "resolved": "src/lib/api.ts",
@@ -1863,7 +1863,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "importerArea": "plans",
       "specifier": "../../../lib/pdf",
       "resolved": "src/lib/pdf.ts",
@@ -1983,17 +1983,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/plans/list/MeasuredPlanCard.tsx",
-      "importerArea": "plans",
-      "specifier": "../../primitives",
-      "resolved": "src/components/primitives/index.ts",
-      "resolvedArea": "shared-ui",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared UI",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "importerArea": "plans",
       "specifier": "../../primitives",
       "resolved": "src/components/primitives/index.ts",
@@ -5043,16 +5033,6 @@
       "reviewSection": "Test Dependencies"
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-      "importerArea": "tests",
-      "specifier": "./PlanUploadPanel",
-      "resolved": "src/components/plans/list/PlanUploadPanel.tsx",
-      "resolvedArea": "plans",
-      "kind": "import",
-      "reviewNote": "expected: test coverage dependency",
-      "reviewSection": "Test Dependencies"
-    },
-    {
       "importer": "src/pages/PlanCanvasPage.test.tsx",
       "importerArea": "tests",
       "specifier": "./PlanCanvasPage",
@@ -6457,7 +6437,7 @@
       "section": "Expected Shared Dependencies",
       "from": "plans",
       "to": "shared-ui",
-      "imports": 4,
+      "imports": 3,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6471,7 +6451,7 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/plans/list/MeasuredPlanCard.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "importerArea": "plans",
           "specifier": "../../primitives",
           "resolved": "src/components/primitives/index.ts",
@@ -6481,9 +6461,9 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/pages/PlansPage.tsx",
           "importerArea": "plans",
-          "specifier": "../../primitives",
+          "specifier": "../components/primitives",
           "resolved": "src/components/primitives/index.ts",
           "resolvedArea": "shared-ui",
           "kind": "import",
@@ -6520,7 +6500,7 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "importerArea": "plans",
           "specifier": "../../../lib/api",
           "resolved": "src/lib/api.ts",
@@ -7216,7 +7196,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "plans",
-      "imports": 7,
+      "imports": 6,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7737,9 +7717,9 @@
     },
     {
       "path": "src/components",
-      "files": 119,
-      "importsIn": 248,
-      "importsOut": 551,
+      "files": 118,
+      "importsIn": 247,
+      "importsOut": 548,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -9480,6 +9460,14 @@
         },
         {
           "importer": "src/components/plans/canvas/PlanInspector.tsx",
+          "specifier": "./planToolDefinitions",
+          "kind": "import",
+          "resolved": "src/components/plans/canvas/planToolDefinitions.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/plans/canvas/PlanInspector.tsx",
           "specifier": "./types",
           "kind": "import",
           "resolved": "src/components/plans/canvas/types.ts",
@@ -9789,14 +9777,6 @@
           "resolved": "src/types/index.ts",
           "externalPackage": null,
           "asset": false
-        },
-        {
-          "importer": "src/components/plans/list/MeasuredPlanCard.tsx",
-          "specifier": "../../primitives",
-          "kind": "import",
-          "resolved": "src/components/primitives/index.ts",
-          "externalPackage": null,
-          "asset": false
         }
       ]
     },
@@ -9811,42 +9791,7 @@
       "imports": []
     },
     {
-      "path": "src/components/plans/list/PlanUploadPanel.test.tsx",
-      "project": "React client",
-      "module": "src/components",
-      "productArea": "tests",
-      "ownershipConfidence": "high",
-      "ownershipReason": "test or snapshot path",
-      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-      "imports": [
-        {
-          "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-          "specifier": "@testing-library/react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "@testing-library/react",
-          "asset": false
-        },
-        {
-          "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-          "specifier": "vitest",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "vitest",
-          "asset": false
-        },
-        {
-          "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-          "specifier": "./PlanUploadPanel",
-          "kind": "import",
-          "resolved": "src/components/plans/list/PlanUploadPanel.tsx",
-          "externalPackage": null,
-          "asset": false
-        }
-      ]
-    },
-    {
-      "path": "src/components/plans/list/PlanUploadPanel.tsx",
+      "path": "src/components/plans/list/PlanUploadModal.tsx",
       "project": "React client",
       "module": "src/components",
       "productArea": "plans",
@@ -9855,7 +9800,7 @@
       "ownerPath": "src/components/plans/**, src/hooks/plans/**, src/lib/plans/**, src/pages/Plans*.tsx, src/pages/PlanCanvas*.tsx",
       "imports": [
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -9863,7 +9808,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -9871,7 +9816,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "specifier": "../../../lib/api",
           "kind": "import",
           "resolved": "src/lib/api.ts",
@@ -9879,7 +9824,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "specifier": "../../../lib/pdf",
           "kind": "import",
           "resolved": "src/lib/pdf.ts",
@@ -9887,7 +9832,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "specifier": "../../primitives",
           "kind": "import",
           "resolved": "src/components/primitives/index.ts",
@@ -18509,9 +18454,9 @@
         },
         {
           "importer": "src/pages/PlansPage.tsx",
-          "specifier": "../components/plans/list/PlanUploadPanel",
+          "specifier": "../components/plans/list/PlanUploadModal",
           "kind": "import",
-          "resolved": "src/components/plans/list/PlanUploadPanel.tsx",
+          "resolved": "src/components/plans/list/PlanUploadModal.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -21670,6 +21615,14 @@
     },
     {
       "importer": "src/components/plans/canvas/PlanInspector.tsx",
+      "specifier": "./planToolDefinitions",
+      "kind": "import",
+      "resolved": "src/components/plans/canvas/planToolDefinitions.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/plans/canvas/PlanInspector.tsx",
       "specifier": "./types",
       "kind": "import",
       "resolved": "src/components/plans/canvas/types.ts",
@@ -21893,39 +21846,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/plans/list/MeasuredPlanCard.tsx",
-      "specifier": "../../primitives",
-      "kind": "import",
-      "resolved": "src/components/primitives/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-      "specifier": "@testing-library/react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "@testing-library/react",
-      "asset": false
-    },
-    {
-      "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-      "specifier": "vitest",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "vitest",
-      "asset": false
-    },
-    {
-      "importer": "src/components/plans/list/PlanUploadPanel.test.tsx",
-      "specifier": "./PlanUploadPanel",
-      "kind": "import",
-      "resolved": "src/components/plans/list/PlanUploadPanel.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -21933,7 +21854,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -21941,7 +21862,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "specifier": "../../../lib/api",
       "kind": "import",
       "resolved": "src/lib/api.ts",
@@ -21949,7 +21870,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "specifier": "../../../lib/pdf",
       "kind": "import",
       "resolved": "src/lib/pdf.ts",
@@ -21957,7 +21878,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/plans/list/PlanUploadPanel.tsx",
+      "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "specifier": "../../primitives",
       "kind": "import",
       "resolved": "src/components/primitives/index.ts",
@@ -28326,9 +28247,9 @@
     },
     {
       "importer": "src/pages/PlansPage.tsx",
-      "specifier": "../components/plans/list/PlanUploadPanel",
+      "specifier": "../components/plans/list/PlanUploadModal",
       "kind": "import",
-      "resolved": "src/components/plans/list/PlanUploadPanel.tsx",
+      "resolved": "src/components/plans/list/PlanUploadModal.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -29656,14 +29577,14 @@
     },
     {
       "name": "vitest",
-      "imports": 51
-    },
-    {
-      "name": "@testing-library/react",
-      "imports": 24
+      "imports": 50
     },
     {
       "name": "@tanstack/react-query",
+      "imports": 23
+    },
+    {
+      "name": "@testing-library/react",
       "imports": 23
     },
     {
