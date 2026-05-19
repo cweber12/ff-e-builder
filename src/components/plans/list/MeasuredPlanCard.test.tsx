@@ -47,8 +47,8 @@ describe('MeasuredPlanCard', () => {
 
     expect(screen.getByText('Level 1 Furniture Plan')).toBeInTheDocument();
     expect(screen.getByText('A1.1')).toBeInTheDocument();
-    expect(screen.getByText('uncalibrated')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute(
+    expect(screen.getByText('Needs calibration')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open Level 1 Furniture Plan' })).toHaveAttribute(
       'href',
       '/projects/project-1/plans/plan-1',
     );
