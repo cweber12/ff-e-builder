@@ -49,6 +49,13 @@ pnpm arch:scan
 ```
 
 The command writes agent-readable Markdown and JSON under [docs/generated/](docs/generated/).
+Generate a migration-derived database map before schema or query-planning work with:
+
+```bash
+pnpm db:scan
+```
+
+This command writes [docs/generated/database-map.md](docs/generated/database-map.md) and a JSON companion without connecting to Neon or reading `.env.local`.
 
 ---
 

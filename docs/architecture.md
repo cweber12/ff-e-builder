@@ -66,7 +66,13 @@ Generated import and module maps live in [generated/architecture-map.md](generat
 pnpm arch:scan
 ```
 
-The generated map is descriptive only. It is intended to give agents current facts before architecture work; it does not enforce module seams or change runtime behavior.
+Generated database maps live in [generated/database-map.md](generated/database-map.md) with a machine-readable companion at [generated/database-map.json](generated/database-map.json). Refresh both with:
+
+```bash
+pnpm db:scan
+```
+
+The generated maps are descriptive only. The architecture map reports TypeScript import structure and product-area ownership heuristics; the database map reports migration-derived tables, columns, indexes, foreign keys, and migration provenance. They are intended to give agents current facts before architecture work; they do not enforce module seams, connect to Neon, read `.env.local`, or change runtime behavior.
 
 ### Target Table And Export Direction
 

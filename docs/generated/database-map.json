@@ -1,0 +1,3935 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-05-19T17:27:20.402Z",
+  "generatedBy": "pnpm db:scan",
+  "source": "scripts/database-map.ts",
+  "migrations": [
+    {
+      "filename": "0001_initial.sql",
+      "summary": "Migration: 0001_initial",
+      "createsTables": ["items", "projects", "rooms"],
+      "altersTables": [],
+      "createsIndexes": ["items_room_id_idx", "projects_owner_uid_idx", "rooms_project_id_idx"]
+    },
+    {
+      "filename": "0002_image_assets.sql",
+      "summary": "Migration: 0002_image_assets",
+      "createsTables": ["image_assets"],
+      "altersTables": [],
+      "createsIndexes": [
+        "image_assets_entity_lookup_idx",
+        "image_assets_item_id_idx",
+        "image_assets_owner_uid_idx",
+        "image_assets_primary_item_idx",
+        "image_assets_primary_project_idx",
+        "image_assets_primary_room_idx",
+        "image_assets_project_id_idx",
+        "image_assets_room_id_idx"
+      ]
+    },
+    {
+      "filename": "0003_material_library.sql",
+      "summary": "Migration: 0003_material_library",
+      "createsTables": ["item_materials", "materials"],
+      "altersTables": ["image_assets"],
+      "createsIndexes": [
+        "image_assets_entity_lookup_idx",
+        "image_assets_material_id_idx",
+        "image_assets_primary_item_idx",
+        "image_assets_primary_material_idx",
+        "image_assets_primary_project_idx",
+        "image_assets_primary_room_idx",
+        "item_materials_item_sort_idx",
+        "item_materials_material_id_idx",
+        "materials_project_id_idx",
+        "materials_project_name_idx"
+      ]
+    },
+    {
+      "filename": "0004_material_swatches.sql",
+      "summary": "Migration: 0004_material_swatches",
+      "createsTables": ["material_swatches"],
+      "altersTables": [],
+      "createsIndexes": ["material_swatches_material_id_idx"]
+    },
+    {
+      "filename": "0005_takeoff_tool.sql",
+      "summary": "Migration: 0005_takeoff_tool",
+      "createsTables": ["takeoff_categories", "takeoff_items", "user_profiles"],
+      "altersTables": ["image_assets", "projects"],
+      "createsIndexes": [
+        "image_assets_entity_lookup_idx",
+        "image_assets_primary_takeoff_item_idx",
+        "image_assets_takeoff_item_id_idx",
+        "projects_budget_idx",
+        "takeoff_categories_project_id_idx",
+        "takeoff_items_category_id_idx"
+      ]
+    },
+    {
+      "filename": "0006_image_asset_constraints.sql",
+      "summary": "Migration: 0006_image_asset_constraints",
+      "createsTables": [],
+      "altersTables": [],
+      "createsIndexes": [
+        "image_assets_primary_item_idx",
+        "image_assets_primary_material_idx",
+        "image_assets_primary_project_idx",
+        "image_assets_primary_room_idx",
+        "image_assets_primary_takeoff_item_idx"
+      ]
+    },
+    {
+      "filename": "0007_image_asset_entity_type.sql",
+      "summary": "Migration: 0007_image_asset_entity_type",
+      "createsTables": [],
+      "altersTables": ["image_assets"],
+      "createsIndexes": [
+        "image_assets_entity_lookup_idx",
+        "image_assets_primary_item_idx",
+        "image_assets_primary_material_idx",
+        "image_assets_primary_project_idx",
+        "image_assets_primary_room_idx",
+        "image_assets_primary_takeoff_item_idx",
+        "image_assets_primary_takeoff_plan_idx"
+      ]
+    },
+    {
+      "filename": "0008_finish_library.sql",
+      "summary": "Migration: 0008_finish_library",
+      "createsTables": ["takeoff_item_materials"],
+      "altersTables": ["image_assets"],
+      "createsIndexes": [
+        "takeoff_item_materials_item_sort_idx",
+        "takeoff_item_materials_material_id_idx"
+      ]
+    },
+    {
+      "filename": "0009_finish_classification.sql",
+      "summary": "Migration: 0009_finish_classification",
+      "createsTables": [],
+      "altersTables": ["materials"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0010_image_crop_params.sql",
+      "summary": "Migration: 0010_image_crop_params",
+      "createsTables": [],
+      "altersTables": ["image_assets"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0011_unified_material.sql",
+      "summary": "Migration: 0011_unified_material",
+      "createsTables": [],
+      "altersTables": ["materials", "takeoff_items"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0012_proposal_rename.sql",
+      "summary": "Migration: 0012_proposal_rename",
+      "createsTables": [],
+      "altersTables": [
+        "image_assets",
+        "projects",
+        "proposal_item_materials",
+        "takeoff_categories -> proposal_categories",
+        "takeoff_item_materials -> proposal_item_materials",
+        "takeoff_items -> proposal_items"
+      ],
+      "createsIndexes": [
+        "image_assets_entity_lookup_idx",
+        "image_assets_primary_proposal_item_idx",
+        "image_assets_primary_proposal_plan_idx",
+        "image_assets_proposal_item_id_idx",
+        "projects_budget_idx"
+      ]
+    },
+    {
+      "filename": "0013_ffe_item_options.sql",
+      "summary": "Migration: 0013_ffe_item_options",
+      "createsTables": [],
+      "altersTables": ["image_assets", "items"],
+      "createsIndexes": ["image_assets_primary_item_option_idx"]
+    },
+    {
+      "filename": "0013_repair_proposal_item_materials.sql",
+      "summary": "Migration: 0013_repair_proposal_item_materials",
+      "createsTables": [],
+      "altersTables": [],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0014_remove_vendor_model_finishes_markup.sql",
+      "summary": "Migration: 0014_remove_vendor_model_finishes_markup",
+      "createsTables": [],
+      "altersTables": ["items"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0015_plans_tool.sql",
+      "summary": "Migration: 0015_plans_tool",
+      "createsTables": ["length_lines", "measured_plans", "measurements", "plan_calibrations"],
+      "altersTables": [],
+      "createsIndexes": [
+        "length_lines_measured_plan_idx",
+        "measured_plans_project_idx",
+        "measurements_measured_plan_idx"
+      ]
+    },
+    {
+      "filename": "0016_plan_geometry_pixels.sql",
+      "summary": "Migration: 0016_plan_geometry_pixels",
+      "createsTables": [],
+      "altersTables": ["length_lines", "measurements", "plan_calibrations"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0017_ffe_item_plan.sql",
+      "summary": "Migration: 0017_ffe_item_plan",
+      "createsTables": [],
+      "altersTables": ["image_assets"],
+      "createsIndexes": ["image_assets_primary_item_plan_idx"]
+    },
+    {
+      "filename": "0017_proposal_item_notes.sql",
+      "summary": "Migration: 0017_proposal_item_notes",
+      "createsTables": [],
+      "altersTables": ["proposal_items"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0018_items_schema_cleanup.sql",
+      "summary": "Migration: 0018_items_schema_cleanup",
+      "createsTables": ["item_column_defs"],
+      "altersTables": ["items"],
+      "createsIndexes": ["item_column_defs_project_id_idx"]
+    },
+    {
+      "filename": "0019_column_defs_table_type.sql",
+      "summary": "Migration: 0019_column_defs_table_type",
+      "createsTables": [],
+      "altersTables": ["item_column_defs", "proposal_items"],
+      "createsIndexes": ["item_column_defs_project_table_idx"]
+    },
+    {
+      "filename": "0020_pdf_backed_measured_plans.sql",
+      "summary": "Migration: 0020_pdf_backed_measured_plans",
+      "createsTables": [],
+      "altersTables": ["measured_plans"],
+      "createsIndexes": ["measured_plans_pdf_r2_key_idx"]
+    },
+    {
+      "filename": "0021_proposal_status.sql",
+      "summary": "Migration: 0021_proposal_status",
+      "createsTables": [],
+      "altersTables": ["projects"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0022_proposal_item_changelog.sql",
+      "summary": "",
+      "createsTables": ["proposal_item_changelog"],
+      "altersTables": ["proposal_items"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0023_proposal_revisions.sql",
+      "summary": "Revision Rounds for the Proposal tool.",
+      "createsTables": ["proposal_revisions"],
+      "altersTables": ["proposal_item_changelog"],
+      "createsIndexes": [
+        "proposal_item_changelog_revision_idx",
+        "proposal_revisions_one_open_per_project_idx",
+        "proposal_revisions_project_idx"
+      ]
+    },
+    {
+      "filename": "0024_proposal_revision_snapshots.sql",
+      "summary": "Revision Snapshots: one row per Proposal Item per Revision Round.",
+      "createsTables": ["proposal_revision_snapshots"],
+      "altersTables": [],
+      "createsIndexes": ["proposal_revision_snapshots_flagged_idx"]
+    },
+    {
+      "filename": "0025_projects_last_revision_major.sql",
+      "summary": "Persistent counter for Revision Round MAJOR numbering.",
+      "createsTables": [],
+      "altersTables": ["projects"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0026_changelog_is_price_affecting.sql",
+      "summary": "Add is_price_affecting flag to proposal_item_changelog so the client can",
+      "createsTables": [],
+      "altersTables": ["proposal_item_changelog"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0027_shared_generated_item_schema.sql",
+      "summary": "Migration: 0027_shared_generated_item_schema",
+      "createsTables": ["proposal_item_generated_item_links"],
+      "altersTables": ["items"],
+      "createsIndexes": [
+        "items_proposal_category_id_idx",
+        "proposal_item_generated_item_links_item_id_idx"
+      ]
+    },
+    {
+      "filename": "0028_generated_item_revision_links.sql",
+      "summary": "Migration: 0028_generated_item_revision_links",
+      "createsTables": [],
+      "altersTables": ["proposal_item_changelog", "proposal_revision_snapshots"],
+      "createsIndexes": [
+        "proposal_item_changelog_generated_item_idx",
+        "proposal_revision_snapshots_generated_item_idx"
+      ]
+    },
+    {
+      "filename": "0029_items_ffe_visibility.sql",
+      "summary": "Migration: 0029_items_ffe_visibility",
+      "createsTables": [],
+      "altersTables": ["items"],
+      "createsIndexes": ["items_room_ffe_visible_idx"]
+    },
+    {
+      "filename": "0030_rooms_ffe_visibility.sql",
+      "summary": "Migration: 0030_rooms_ffe_visibility",
+      "createsTables": [],
+      "altersTables": ["rooms"],
+      "createsIndexes": ["rooms_project_ffe_visible_idx"]
+    },
+    {
+      "filename": "0031_proposal_item_name.sql",
+      "summary": "Migration: 0031_proposal_item_name",
+      "createsTables": [],
+      "altersTables": ["proposal_items"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0032_materials_manufacturer_source_url.sql",
+      "summary": "Migration: 0032_materials_manufacturer_source_url",
+      "createsTables": [],
+      "altersTables": ["materials"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0033_generated_item_lookup_indexes.sql",
+      "summary": "Migration: 0033_generated_item_lookup_indexes",
+      "createsTables": [],
+      "altersTables": [],
+      "createsIndexes": [
+        "proposal_categories_project_lower_name_idx",
+        "proposal_item_changelog_revision_changed_idx",
+        "proposal_items_category_sort_idx",
+        "rooms_project_lower_name_idx"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "image_assets",
+      "introducedBy": "0002_image_assets.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "owner_uid": {
+          "name": "owner_uid",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "rooms(id)",
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "items(id)",
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "r2_key": {
+          "name": "r2_key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "filename": {
+          "name": "filename",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "byte_size": {
+          "name": "byte_size",
+          "type": "integer",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "alt_text": {
+          "name": "alt_text",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0002_image_assets.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "material_id": {
+          "name": "material_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "materials(id)",
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0007_image_asset_entity_type.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_x": {
+          "name": "crop_x",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0010_image_crop_params.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_y": {
+          "name": "crop_y",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0010_image_crop_params.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_width": {
+          "name": "crop_width",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0010_image_crop_params.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_height": {
+          "name": "crop_height",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0010_image_crop_params.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_item_id": {
+          "name": "proposal_item_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "proposal_items(id)",
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": ["Renamed from takeoff_item_id in 0012_proposal_rename.sql."]
+        }
+      },
+      "indexes": [
+        {
+          "name": "image_assets_owner_uid_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["owner_uid"],
+          "where": null,
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "name": "image_assets_project_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["project_id"],
+          "where": null,
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "name": "image_assets_room_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["room_id"],
+          "where": "room_id IS NOT NULL",
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "name": "image_assets_item_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["item_id"],
+          "where": "item_id IS NOT NULL",
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "name": "image_assets_material_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["material_id"],
+          "where": "material_id IS NOT NULL",
+          "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "name": "image_assets_primary_project_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["project_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'project'",
+          "introducedBy": "0007_image_asset_entity_type.sql"
+        },
+        {
+          "name": "image_assets_primary_room_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["room_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'room'",
+          "introducedBy": "0007_image_asset_entity_type.sql"
+        },
+        {
+          "name": "image_assets_primary_item_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["item_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'item'",
+          "introducedBy": "0007_image_asset_entity_type.sql"
+        },
+        {
+          "name": "image_assets_primary_material_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["material_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'material'",
+          "introducedBy": "0007_image_asset_entity_type.sql"
+        },
+        {
+          "name": "image_assets_entity_lookup_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": [
+            "project_id",
+            "entity_type",
+            "room_id",
+            "item_id",
+            "material_id",
+            "proposal_item_id",
+            "is_primary"
+          ],
+          "where": null,
+          "introducedBy": "0012_proposal_rename.sql"
+        },
+        {
+          "name": "image_assets_proposal_item_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["proposal_item_id"],
+          "where": "proposal_item_id IS NOT NULL",
+          "introducedBy": "0012_proposal_rename.sql"
+        },
+        {
+          "name": "image_assets_primary_proposal_item_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["proposal_item_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'proposal_item'",
+          "introducedBy": "0012_proposal_rename.sql"
+        },
+        {
+          "name": "image_assets_primary_proposal_plan_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["proposal_item_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'proposal_plan'",
+          "introducedBy": "0012_proposal_rename.sql"
+        },
+        {
+          "name": "image_assets_primary_item_option_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["item_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'item_option'",
+          "introducedBy": "0013_ffe_item_options.sql"
+        },
+        {
+          "name": "image_assets_primary_item_plan_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["item_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'item_plan'",
+          "introducedBy": "0017_ffe_item_plan.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "image_assets",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "table": "image_assets",
+          "column": "room_id",
+          "references": "rooms(id)",
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "table": "image_assets",
+          "column": "item_id",
+          "references": "items(id)",
+          "introducedBy": "0002_image_assets.sql"
+        },
+        {
+          "table": "image_assets",
+          "column": "material_id",
+          "references": "materials(id)",
+          "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "table": "image_assets",
+          "column": "takeoff_item_id",
+          "references": "proposal_items(id)",
+          "introducedBy": "0005_takeoff_tool.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "item_column_defs",
+      "introducedBy": "0018_items_schema_cleanup.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "table_type": {
+          "name": "table_type",
+          "type": "text",
+          "nullable": false,
+          "default": "'ffe'",
+          "references": null,
+          "introducedBy": "0019_column_defs_table_type.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "item_column_defs_project_table_idx",
+          "table": "item_column_defs",
+          "unique": false,
+          "columns": ["project_id", "table_type"],
+          "where": null,
+          "introducedBy": "0019_column_defs_table_type.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "item_column_defs",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0018_items_schema_cleanup.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "item_materials",
+      "introducedBy": "0003_material_library.sql",
+      "renamedFrom": [],
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "items(id)",
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "material_id": {
+          "name": "material_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "materials(id)",
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "item_materials_material_id_idx",
+          "table": "item_materials",
+          "unique": false,
+          "columns": ["material_id"],
+          "where": null,
+          "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "name": "item_materials_item_sort_idx",
+          "table": "item_materials",
+          "unique": false,
+          "columns": ["item_id", "sort_order"],
+          "where": null,
+          "introducedBy": "0003_material_library.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "item_materials",
+          "column": "item_id",
+          "references": "items(id)",
+          "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "table": "item_materials",
+          "column": "material_id",
+          "references": "materials(id)",
+          "introducedBy": "0003_material_library.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "items",
+      "introducedBy": "0001_initial.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "rooms(id)",
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "item_name": {
+          "name": "item_name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "vendor": {
+          "name": "vendor",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0014_remove_vendor_model_finishes_markup.sql",
+          "notes": []
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0014_remove_vendor_model_finishes_markup.sql",
+          "notes": []
+        },
+        "item_id_tag": {
+          "name": "item_id_tag",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "dimensions": {
+          "name": "dimensions",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "seat_height": {
+          "name": "seat_height",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0018_items_schema_cleanup.sql",
+          "notes": []
+        },
+        "finishes": {
+          "name": "finishes",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0014_remove_vendor_model_finishes_markup.sql",
+          "notes": []
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "qty": {
+          "name": "qty",
+          "type": "integer",
+          "nullable": false,
+          "default": "1",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "unit_cost_cents": {
+          "name": "unit_cost_cents",
+          "type": "bigint",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "markup_pct": {
+          "name": "markup_pct",
+          "type": "numeric(5,2)",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0014_remove_vendor_model_finishes_markup.sql",
+          "notes": []
+        },
+        "lead_time": {
+          "name": "lead_time",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'pending'",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0018_items_schema_cleanup.sql",
+          "notes": []
+        },
+        "link_url": {
+          "name": "link_url",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": "0018_items_schema_cleanup.sql",
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "nullable": false,
+          "default": "1",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0013_ffe_item_options.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "custom_data": {
+          "name": "custom_data",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'{}'",
+          "references": null,
+          "introducedBy": "0018_items_schema_cleanup.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_category_id": {
+          "name": "proposal_category_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "references": "proposal_categories(id)",
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "product_tag": {
+          "name": "product_tag",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "plan": {
+          "name": "plan",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "drawings": {
+          "name": "drawings",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_label": {
+          "name": "size_label",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_mode": {
+          "name": "size_mode",
+          "type": "text",
+          "nullable": false,
+          "default": "'imperial'",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_w": {
+          "name": "size_w",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_d": {
+          "name": "size_d",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_h": {
+          "name": "size_h",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_unit": {
+          "name": "size_unit",
+          "type": "text",
+          "nullable": false,
+          "default": "'in'",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "cbm": {
+          "name": "cbm",
+          "type": "numeric(12,3)",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(12,2)",
+          "nullable": false,
+          "default": "1",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "quantity_unit": {
+          "name": "quantity_unit",
+          "type": "text",
+          "nullable": false,
+          "default": "'unit'",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "is_ffe_visible": {
+          "name": "is_ffe_visible",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "references": null,
+          "introducedBy": "0029_items_ffe_visibility.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "items_room_id_idx",
+          "table": "items",
+          "unique": false,
+          "columns": ["room_id"],
+          "where": null,
+          "introducedBy": "0001_initial.sql"
+        },
+        {
+          "name": "items_proposal_category_id_idx",
+          "table": "items",
+          "unique": false,
+          "columns": ["proposal_category_id", "sort_order", "created_at"],
+          "where": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql"
+        },
+        {
+          "name": "items_room_ffe_visible_idx",
+          "table": "items",
+          "unique": false,
+          "columns": ["room_id", "is_ffe_visible", "sort_order", "created_at"],
+          "where": null,
+          "introducedBy": "0029_items_ffe_visibility.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "items",
+          "column": "room_id",
+          "references": "rooms(id)",
+          "introducedBy": "0001_initial.sql"
+        },
+        {
+          "table": "items",
+          "column": "proposal_category_id",
+          "references": "proposal_categories(id)",
+          "introducedBy": "0027_shared_generated_item_schema.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "length_lines",
+      "introducedBy": "0015_plans_tool.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "measured_plan_id": {
+          "name": "measured_plan_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "measured_plans(id)",
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "start_x": {
+          "name": "start_x",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "start_y": {
+          "name": "start_y",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "end_x": {
+          "name": "end_x",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "end_y": {
+          "name": "end_y",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "measured_length_base": {
+          "name": "measured_length_base",
+          "type": "numeric(18,4)",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "length_lines_measured_plan_idx",
+          "table": "length_lines",
+          "unique": false,
+          "columns": ["measured_plan_id", "created_at DESC"],
+          "where": null,
+          "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "length_lines",
+          "column": "measured_plan_id",
+          "references": "measured_plans(id)",
+          "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "material_swatches",
+      "introducedBy": "0004_material_swatches.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0004_material_swatches.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "material_id": {
+          "name": "material_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "materials(id)",
+          "introducedBy": "0004_material_swatches.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "swatch_hex": {
+          "name": "swatch_hex",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0004_material_swatches.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0004_material_swatches.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0004_material_swatches.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "material_swatches_material_id_idx",
+          "table": "material_swatches",
+          "unique": false,
+          "columns": ["material_id", "sort_order"],
+          "where": null,
+          "introducedBy": "0004_material_swatches.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "material_swatches",
+          "column": "material_id",
+          "references": "materials(id)",
+          "introducedBy": "0004_material_swatches.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "materials",
+      "introducedBy": "0003_material_library.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "material_id": {
+          "name": "material_id",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "swatch_hex": {
+          "name": "swatch_hex",
+          "type": "text",
+          "nullable": false,
+          "default": "'#D9D4C8'",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0003_material_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "finish_classification": {
+          "name": "finish_classification",
+          "type": "text",
+          "nullable": false,
+          "default": "'material'",
+          "references": null,
+          "introducedBy": "0009_finish_classification.sql",
+          "removedBy": "0011_unified_material.sql",
+          "notes": []
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0032_materials_manufacturer_source_url.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0032_materials_manufacturer_source_url.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "materials_project_id_idx",
+          "table": "materials",
+          "unique": false,
+          "columns": ["project_id"],
+          "where": null,
+          "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "name": "materials_project_name_idx",
+          "table": "materials",
+          "unique": true,
+          "columns": ["project_id", "lower(name)"],
+          "where": null,
+          "introducedBy": "0003_material_library.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "materials",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0003_material_library.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "measured_plans",
+      "introducedBy": "0015_plans_tool.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "owner_uid": {
+          "name": "owner_uid",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sheet_reference": {
+          "name": "sheet_reference",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "image_r2_key": {
+          "name": "image_r2_key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "image_filename": {
+          "name": "image_filename",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "image_content_type": {
+          "name": "image_content_type",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "image_byte_size": {
+          "name": "image_byte_size",
+          "type": "integer",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "text",
+          "nullable": false,
+          "default": "'image'",
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_r2_key": {
+          "name": "pdf_r2_key",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_filename": {
+          "name": "pdf_filename",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_content_type": {
+          "name": "pdf_content_type",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_byte_size": {
+          "name": "pdf_byte_size",
+          "type": "integer",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_page_number": {
+          "name": "pdf_page_number",
+          "type": "integer",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_page_width_pt": {
+          "name": "pdf_page_width_pt",
+          "type": "numeric(18,4)",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_page_height_pt": {
+          "name": "pdf_page_height_pt",
+          "type": "numeric(18,4)",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_render_scale": {
+          "name": "pdf_render_scale",
+          "type": "numeric(18,8)",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_rendered_width_px": {
+          "name": "pdf_rendered_width_px",
+          "type": "integer",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_rendered_height_px": {
+          "name": "pdf_rendered_height_px",
+          "type": "integer",
+          "nullable": true,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pdf_rotation": {
+          "name": "pdf_rotation",
+          "type": "integer",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0020_pdf_backed_measured_plans.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "measured_plans_project_idx",
+          "table": "measured_plans",
+          "unique": false,
+          "columns": ["project_id", "created_at DESC"],
+          "where": null,
+          "introducedBy": "0015_plans_tool.sql"
+        },
+        {
+          "name": "measured_plans_pdf_r2_key_idx",
+          "table": "measured_plans",
+          "unique": true,
+          "columns": ["pdf_r2_key"],
+          "where": "pdf_r2_key IS NOT NULL",
+          "introducedBy": "0020_pdf_backed_measured_plans.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "measured_plans",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "measurements",
+      "introducedBy": "0015_plans_tool.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "measured_plan_id": {
+          "name": "measured_plan_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "measured_plans(id)",
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "target_kind": {
+          "name": "target_kind",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "target_item_id": {
+          "name": "target_item_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "target_tag_snapshot": {
+          "name": "target_tag_snapshot",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "rect_x": {
+          "name": "rect_x",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "rect_y": {
+          "name": "rect_y",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "rect_width": {
+          "name": "rect_width",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "rect_height": {
+          "name": "rect_height",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "horizontal_span_base": {
+          "name": "horizontal_span_base",
+          "type": "numeric(18,4)",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "vertical_span_base": {
+          "name": "vertical_span_base",
+          "type": "numeric(18,4)",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_x": {
+          "name": "crop_x",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_y": {
+          "name": "crop_y",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_width": {
+          "name": "crop_width",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "crop_height": {
+          "name": "crop_height",
+          "type": "double precision",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "measurements_measured_plan_idx",
+          "table": "measurements",
+          "unique": false,
+          "columns": ["measured_plan_id", "created_at DESC"],
+          "where": null,
+          "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "measurements",
+          "column": "measured_plan_id",
+          "references": "measured_plans(id)",
+          "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "plan_calibrations",
+      "introducedBy": "0015_plans_tool.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "measured_plan_id": {
+          "name": "measured_plan_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "measured_plans(id)",
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "start_x": {
+          "name": "start_x",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "start_y": {
+          "name": "start_y",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "end_x": {
+          "name": "end_x",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "end_y": {
+          "name": "end_y",
+          "type": "double precision",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "real_world_length": {
+          "name": "real_world_length",
+          "type": "numeric(18,4)",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "unit": {
+          "name": "unit",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "pixels_per_unit": {
+          "name": "pixels_per_unit",
+          "type": "numeric(18,8)",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0015_plans_tool.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [],
+      "foreignKeys": [
+        {
+          "table": "plan_calibrations",
+          "column": "measured_plan_id",
+          "references": "measured_plans(id)",
+          "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "projects",
+      "introducedBy": "0001_initial.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "owner_uid": {
+          "name": "owner_uid",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "client_name": {
+          "name": "client_name",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "budget_cents": {
+          "name": "budget_cents",
+          "type": "bigint",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_location": {
+          "name": "project_location",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "budget_mode": {
+          "name": "budget_mode",
+          "type": "text",
+          "nullable": false,
+          "default": "'shared'",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "ffe_budget_cents": {
+          "name": "ffe_budget_cents",
+          "type": "bigint",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_budget_cents": {
+          "name": "proposal_budget_cents",
+          "type": "bigint",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": ["Renamed from takeoff_budget_cents in 0012_proposal_rename.sql."]
+        },
+        "proposal_status": {
+          "name": "proposal_status",
+          "type": "text",
+          "nullable": false,
+          "default": "'in_progress'",
+          "references": null,
+          "introducedBy": "0021_proposal_status.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_status_updated_at": {
+          "name": "proposal_status_updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "NOW()",
+          "references": null,
+          "introducedBy": "0021_proposal_status.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "last_revision_major": {
+          "name": "last_revision_major",
+          "type": "int",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0025_projects_last_revision_major.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "projects_owner_uid_idx",
+          "table": "projects",
+          "unique": false,
+          "columns": ["owner_uid"],
+          "where": null,
+          "introducedBy": "0001_initial.sql"
+        },
+        {
+          "name": "projects_budget_idx",
+          "table": "projects",
+          "unique": false,
+          "columns": [
+            "owner_uid",
+            "budget_mode",
+            "budget_cents",
+            "ffe_budget_cents",
+            "proposal_budget_cents"
+          ],
+          "where": null,
+          "introducedBy": "0012_proposal_rename.sql"
+        }
+      ],
+      "foreignKeys": [],
+      "notes": []
+    },
+    {
+      "name": "proposal_categories",
+      "introducedBy": "0005_takeoff_tool.sql",
+      "renamedFrom": ["takeoff_categories"],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_categories_project_id_idx",
+          "table": "proposal_categories",
+          "unique": false,
+          "columns": ["project_id", "sort_order", "created_at"],
+          "where": null,
+          "introducedBy": "0005_takeoff_tool.sql"
+        },
+        {
+          "name": "proposal_categories_project_lower_name_idx",
+          "table": "proposal_categories",
+          "unique": false,
+          "columns": ["project_id", "lower(name)"],
+          "where": null,
+          "introducedBy": "0033_generated_item_lookup_indexes.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "takeoff_categories",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0005_takeoff_tool.sql"
+        }
+      ],
+      "notes": ["Renamed from takeoff_categories in 0012_proposal_rename.sql."]
+    },
+    {
+      "name": "proposal_item_changelog",
+      "introducedBy": "0022_proposal_item_changelog.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_item_id": {
+          "name": "proposal_item_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "proposal_items(id)",
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "column_key": {
+          "name": "column_key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "previous_value": {
+          "name": "previous_value",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "new_value": {
+          "name": "new_value",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_status": {
+          "name": "proposal_status",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "related_change_id": {
+          "name": "related_change_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "proposal_item_changelog(id)",
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "changed_at": {
+          "name": "changed_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "references": "proposal_revisions(id)",
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "is_price_affecting": {
+          "name": "is_price_affecting",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false",
+          "references": null,
+          "introducedBy": "0026_changelog_is_price_affecting.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "generated_item_id": {
+          "name": "generated_item_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "references": "items(id)",
+          "introducedBy": "0028_generated_item_revision_links.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_item_changelog_revision_idx",
+          "table": "proposal_item_changelog",
+          "unique": false,
+          "columns": ["revision_id"],
+          "where": null,
+          "introducedBy": "0023_proposal_revisions.sql"
+        },
+        {
+          "name": "proposal_item_changelog_generated_item_idx",
+          "table": "proposal_item_changelog",
+          "unique": false,
+          "columns": ["generated_item_id", "changed_at DESC"],
+          "where": "generated_item_id IS NOT NULL",
+          "introducedBy": "0028_generated_item_revision_links.sql"
+        },
+        {
+          "name": "proposal_item_changelog_revision_changed_idx",
+          "table": "proposal_item_changelog",
+          "unique": false,
+          "columns": ["revision_id", "changed_at"],
+          "where": "revision_id IS NOT NULL",
+          "introducedBy": "0033_generated_item_lookup_indexes.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "proposal_item_changelog",
+          "column": "proposal_item_id",
+          "references": "proposal_items(id)",
+          "introducedBy": "0022_proposal_item_changelog.sql"
+        },
+        {
+          "table": "proposal_item_changelog",
+          "column": "related_change_id",
+          "references": "proposal_item_changelog(id)",
+          "introducedBy": "0022_proposal_item_changelog.sql"
+        },
+        {
+          "table": "proposal_item_changelog",
+          "column": "revision_id",
+          "references": "proposal_revisions(id)",
+          "introducedBy": "0023_proposal_revisions.sql"
+        },
+        {
+          "table": "proposal_item_changelog",
+          "column": "generated_item_id",
+          "references": "items(id)",
+          "introducedBy": "0028_generated_item_revision_links.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "proposal_item_generated_item_links",
+      "introducedBy": "0027_shared_generated_item_schema.sql",
+      "renamedFrom": [],
+      "columns": {
+        "proposal_item_id": {
+          "name": "proposal_item_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "proposal_items(id)",
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "items(id)",
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_item_generated_item_links_item_id_idx",
+          "table": "proposal_item_generated_item_links",
+          "unique": false,
+          "columns": ["item_id"],
+          "where": null,
+          "introducedBy": "0027_shared_generated_item_schema.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "proposal_item_generated_item_links",
+          "column": "proposal_item_id",
+          "references": "proposal_items(id)",
+          "introducedBy": "0027_shared_generated_item_schema.sql"
+        },
+        {
+          "table": "proposal_item_generated_item_links",
+          "column": "item_id",
+          "references": "items(id)",
+          "introducedBy": "0027_shared_generated_item_schema.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "proposal_item_materials",
+      "introducedBy": "0008_finish_library.sql",
+      "renamedFrom": ["takeoff_item_materials"],
+      "columns": {
+        "material_id": {
+          "name": "material_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "materials(id)",
+          "introducedBy": "0008_finish_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0008_finish_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0008_finish_library.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "proposal_item_id": {
+          "name": "proposal_item_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "proposal_items(id)",
+          "introducedBy": "0008_finish_library.sql",
+          "removedBy": null,
+          "notes": ["Renamed from takeoff_item_id in 0012_proposal_rename.sql."]
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_item_materials_material_id_idx",
+          "table": "proposal_item_materials",
+          "unique": false,
+          "columns": ["material_id"],
+          "where": null,
+          "introducedBy": "0008_finish_library.sql"
+        },
+        {
+          "name": "proposal_item_materials_item_sort_idx",
+          "table": "proposal_item_materials",
+          "unique": false,
+          "columns": ["proposal_item_id", "sort_order"],
+          "where": null,
+          "introducedBy": "0008_finish_library.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "takeoff_item_materials",
+          "column": "takeoff_item_id",
+          "references": "proposal_items(id)",
+          "introducedBy": "0008_finish_library.sql"
+        },
+        {
+          "table": "takeoff_item_materials",
+          "column": "material_id",
+          "references": "materials(id)",
+          "introducedBy": "0008_finish_library.sql"
+        }
+      ],
+      "notes": ["Renamed from takeoff_item_materials in 0012_proposal_rename.sql."]
+    },
+    {
+      "name": "proposal_items",
+      "introducedBy": "0005_takeoff_tool.sql",
+      "renamedFrom": ["takeoff_items"],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "proposal_categories(id)",
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "product_tag": {
+          "name": "product_tag",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "plan": {
+          "name": "plan",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "drawings": {
+          "name": "drawings",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_label": {
+          "name": "size_label",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_mode": {
+          "name": "size_mode",
+          "type": "text",
+          "nullable": false,
+          "default": "'imperial'",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_w": {
+          "name": "size_w",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_d": {
+          "name": "size_d",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_h": {
+          "name": "size_h",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "size_unit": {
+          "name": "size_unit",
+          "type": "text",
+          "nullable": false,
+          "default": "'in'",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "swatches": {
+          "name": "swatches",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'[]'::jsonb",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": "0011_unified_material.sql",
+          "notes": []
+        },
+        "cbm": {
+          "name": "cbm",
+          "type": "numeric(12,3)",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(12,2)",
+          "nullable": false,
+          "default": "1",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "quantity_unit": {
+          "name": "quantity_unit",
+          "type": "text",
+          "nullable": false,
+          "default": "'unit'",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "unit_cost_cents": {
+          "name": "unit_cost_cents",
+          "type": "bigint",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "nullable": false,
+          "default": "1",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0017_proposal_item_notes.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "custom_data": {
+          "name": "custom_data",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'{}'",
+          "references": null,
+          "introducedBy": "0019_column_defs_table_type.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "cost_update_deferred": {
+          "name": "cost_update_deferred",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false",
+          "references": null,
+          "introducedBy": "0022_proposal_item_changelog.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "item_name": {
+          "name": "item_name",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0031_proposal_item_name.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_items_category_id_idx",
+          "table": "proposal_items",
+          "unique": false,
+          "columns": ["category_id", "sort_order", "created_at"],
+          "where": null,
+          "introducedBy": "0005_takeoff_tool.sql"
+        },
+        {
+          "name": "proposal_items_category_sort_idx",
+          "table": "proposal_items",
+          "unique": false,
+          "columns": ["category_id", "sort_order", "created_at"],
+          "where": null,
+          "introducedBy": "0033_generated_item_lookup_indexes.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "takeoff_items",
+          "column": "category_id",
+          "references": "proposal_categories(id)",
+          "introducedBy": "0005_takeoff_tool.sql"
+        }
+      ],
+      "notes": ["Renamed from takeoff_items in 0012_proposal_rename.sql."]
+    },
+    {
+      "name": "proposal_revision_snapshots",
+      "introducedBy": "0024_proposal_revision_snapshots.sql",
+      "renamedFrom": [],
+      "columns": {
+        "revision_id": {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "proposal_revisions(id)",
+          "introducedBy": "0024_proposal_revision_snapshots.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "proposal_items(id)",
+          "introducedBy": "0024_proposal_revision_snapshots.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0024_proposal_revision_snapshots.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "unit_cost_cents": {
+          "name": "unit_cost_cents",
+          "type": "int",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0024_proposal_revision_snapshots.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "cost_status": {
+          "name": "cost_status",
+          "type": "text",
+          "nullable": false,
+          "default": "'none'",
+          "references": null,
+          "introducedBy": "0024_proposal_revision_snapshots.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "generated_item_id": {
+          "name": "generated_item_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "references": "items(id)",
+          "introducedBy": "0028_generated_item_revision_links.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_revision_snapshots_flagged_idx",
+          "table": "proposal_revision_snapshots",
+          "unique": false,
+          "columns": ["revision_id"],
+          "where": "cost_status = 'flagged'",
+          "introducedBy": "0024_proposal_revision_snapshots.sql"
+        },
+        {
+          "name": "proposal_revision_snapshots_generated_item_idx",
+          "table": "proposal_revision_snapshots",
+          "unique": false,
+          "columns": ["generated_item_id"],
+          "where": "generated_item_id IS NOT NULL",
+          "introducedBy": "0028_generated_item_revision_links.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "proposal_revision_snapshots",
+          "column": "revision_id",
+          "references": "proposal_revisions(id)",
+          "introducedBy": "0024_proposal_revision_snapshots.sql"
+        },
+        {
+          "table": "proposal_revision_snapshots",
+          "column": "item_id",
+          "references": "proposal_items(id)",
+          "introducedBy": "0024_proposal_revision_snapshots.sql"
+        },
+        {
+          "table": "proposal_revision_snapshots",
+          "column": "generated_item_id",
+          "references": "items(id)",
+          "introducedBy": "0028_generated_item_revision_links.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "proposal_revisions",
+      "introducedBy": "0023_proposal_revisions.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "revision_major": {
+          "name": "revision_major",
+          "type": "int",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "revision_minor": {
+          "name": "revision_minor",
+          "type": "int",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "triggered_at_status": {
+          "name": "triggered_at_status",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "opened_at": {
+          "name": "opened_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamptz",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0023_proposal_revisions.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "proposal_revisions_project_idx",
+          "table": "proposal_revisions",
+          "unique": false,
+          "columns": ["project_id", "revision_major DESC", "revision_minor DESC"],
+          "where": null,
+          "introducedBy": "0023_proposal_revisions.sql"
+        },
+        {
+          "name": "proposal_revisions_one_open_per_project_idx",
+          "table": "proposal_revisions",
+          "unique": true,
+          "columns": ["project_id"],
+          "where": "closed_at IS NULL",
+          "introducedBy": "0023_proposal_revisions.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "proposal_revisions",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0023_proposal_revisions.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "rooms",
+      "introducedBy": "0001_initial.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0001_initial.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "is_ffe_visible": {
+          "name": "is_ffe_visible",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "references": null,
+          "introducedBy": "0030_rooms_ffe_visibility.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "rooms_project_id_idx",
+          "table": "rooms",
+          "unique": false,
+          "columns": ["project_id"],
+          "where": null,
+          "introducedBy": "0001_initial.sql"
+        },
+        {
+          "name": "rooms_project_ffe_visible_idx",
+          "table": "rooms",
+          "unique": false,
+          "columns": ["project_id", "is_ffe_visible", "sort_order", "created_at"],
+          "where": null,
+          "introducedBy": "0030_rooms_ffe_visibility.sql"
+        },
+        {
+          "name": "rooms_project_lower_name_idx",
+          "table": "rooms",
+          "unique": false,
+          "columns": ["project_id", "lower(name)"],
+          "where": null,
+          "introducedBy": "0033_generated_item_lookup_indexes.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "rooms",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0001_initial.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "user_profiles",
+      "introducedBy": "0005_takeoff_tool.sql",
+      "renamedFrom": [],
+      "columns": {
+        "owner_uid": {
+          "name": "owner_uid",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0005_takeoff_tool.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [],
+      "foreignKeys": [],
+      "notes": []
+    }
+  ],
+  "indexes": [
+    {
+      "name": "image_assets_entity_lookup_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": [
+        "project_id",
+        "entity_type",
+        "room_id",
+        "item_id",
+        "material_id",
+        "proposal_item_id",
+        "is_primary"
+      ],
+      "where": null,
+      "introducedBy": "0012_proposal_rename.sql"
+    },
+    {
+      "name": "image_assets_item_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["item_id"],
+      "where": "item_id IS NOT NULL",
+      "introducedBy": "0002_image_assets.sql"
+    },
+    {
+      "name": "image_assets_material_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["material_id"],
+      "where": "material_id IS NOT NULL",
+      "introducedBy": "0003_material_library.sql"
+    },
+    {
+      "name": "image_assets_owner_uid_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["owner_uid"],
+      "where": null,
+      "introducedBy": "0002_image_assets.sql"
+    },
+    {
+      "name": "image_assets_primary_item_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["item_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'item'",
+      "introducedBy": "0007_image_asset_entity_type.sql"
+    },
+    {
+      "name": "image_assets_primary_item_option_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["item_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'item_option'",
+      "introducedBy": "0013_ffe_item_options.sql"
+    },
+    {
+      "name": "image_assets_primary_item_plan_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["item_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'item_plan'",
+      "introducedBy": "0017_ffe_item_plan.sql"
+    },
+    {
+      "name": "image_assets_primary_material_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["material_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'material'",
+      "introducedBy": "0007_image_asset_entity_type.sql"
+    },
+    {
+      "name": "image_assets_primary_project_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["project_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'project'",
+      "introducedBy": "0007_image_asset_entity_type.sql"
+    },
+    {
+      "name": "image_assets_primary_proposal_item_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["proposal_item_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'proposal_item'",
+      "introducedBy": "0012_proposal_rename.sql"
+    },
+    {
+      "name": "image_assets_primary_proposal_plan_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["proposal_item_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'proposal_plan'",
+      "introducedBy": "0012_proposal_rename.sql"
+    },
+    {
+      "name": "image_assets_primary_room_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["room_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'room'",
+      "introducedBy": "0007_image_asset_entity_type.sql"
+    },
+    {
+      "name": "image_assets_project_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["project_id"],
+      "where": null,
+      "introducedBy": "0002_image_assets.sql"
+    },
+    {
+      "name": "image_assets_proposal_item_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["proposal_item_id"],
+      "where": "proposal_item_id IS NOT NULL",
+      "introducedBy": "0012_proposal_rename.sql"
+    },
+    {
+      "name": "image_assets_room_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["room_id"],
+      "where": "room_id IS NOT NULL",
+      "introducedBy": "0002_image_assets.sql"
+    },
+    {
+      "name": "item_column_defs_project_table_idx",
+      "table": "item_column_defs",
+      "unique": false,
+      "columns": ["project_id", "table_type"],
+      "where": null,
+      "introducedBy": "0019_column_defs_table_type.sql"
+    },
+    {
+      "name": "item_materials_item_sort_idx",
+      "table": "item_materials",
+      "unique": false,
+      "columns": ["item_id", "sort_order"],
+      "where": null,
+      "introducedBy": "0003_material_library.sql"
+    },
+    {
+      "name": "item_materials_material_id_idx",
+      "table": "item_materials",
+      "unique": false,
+      "columns": ["material_id"],
+      "where": null,
+      "introducedBy": "0003_material_library.sql"
+    },
+    {
+      "name": "items_proposal_category_id_idx",
+      "table": "items",
+      "unique": false,
+      "columns": ["proposal_category_id", "sort_order", "created_at"],
+      "where": null,
+      "introducedBy": "0027_shared_generated_item_schema.sql"
+    },
+    {
+      "name": "items_room_ffe_visible_idx",
+      "table": "items",
+      "unique": false,
+      "columns": ["room_id", "is_ffe_visible", "sort_order", "created_at"],
+      "where": null,
+      "introducedBy": "0029_items_ffe_visibility.sql"
+    },
+    {
+      "name": "items_room_id_idx",
+      "table": "items",
+      "unique": false,
+      "columns": ["room_id"],
+      "where": null,
+      "introducedBy": "0001_initial.sql"
+    },
+    {
+      "name": "length_lines_measured_plan_idx",
+      "table": "length_lines",
+      "unique": false,
+      "columns": ["measured_plan_id", "created_at DESC"],
+      "where": null,
+      "introducedBy": "0015_plans_tool.sql"
+    },
+    {
+      "name": "material_swatches_material_id_idx",
+      "table": "material_swatches",
+      "unique": false,
+      "columns": ["material_id", "sort_order"],
+      "where": null,
+      "introducedBy": "0004_material_swatches.sql"
+    },
+    {
+      "name": "materials_project_id_idx",
+      "table": "materials",
+      "unique": false,
+      "columns": ["project_id"],
+      "where": null,
+      "introducedBy": "0003_material_library.sql"
+    },
+    {
+      "name": "materials_project_name_idx",
+      "table": "materials",
+      "unique": true,
+      "columns": ["project_id", "lower(name)"],
+      "where": null,
+      "introducedBy": "0003_material_library.sql"
+    },
+    {
+      "name": "measured_plans_pdf_r2_key_idx",
+      "table": "measured_plans",
+      "unique": true,
+      "columns": ["pdf_r2_key"],
+      "where": "pdf_r2_key IS NOT NULL",
+      "introducedBy": "0020_pdf_backed_measured_plans.sql"
+    },
+    {
+      "name": "measured_plans_project_idx",
+      "table": "measured_plans",
+      "unique": false,
+      "columns": ["project_id", "created_at DESC"],
+      "where": null,
+      "introducedBy": "0015_plans_tool.sql"
+    },
+    {
+      "name": "measurements_measured_plan_idx",
+      "table": "measurements",
+      "unique": false,
+      "columns": ["measured_plan_id", "created_at DESC"],
+      "where": null,
+      "introducedBy": "0015_plans_tool.sql"
+    },
+    {
+      "name": "projects_budget_idx",
+      "table": "projects",
+      "unique": false,
+      "columns": [
+        "owner_uid",
+        "budget_mode",
+        "budget_cents",
+        "ffe_budget_cents",
+        "proposal_budget_cents"
+      ],
+      "where": null,
+      "introducedBy": "0012_proposal_rename.sql"
+    },
+    {
+      "name": "projects_owner_uid_idx",
+      "table": "projects",
+      "unique": false,
+      "columns": ["owner_uid"],
+      "where": null,
+      "introducedBy": "0001_initial.sql"
+    },
+    {
+      "name": "proposal_categories_project_id_idx",
+      "table": "proposal_categories",
+      "unique": false,
+      "columns": ["project_id", "sort_order", "created_at"],
+      "where": null,
+      "introducedBy": "0005_takeoff_tool.sql"
+    },
+    {
+      "name": "proposal_categories_project_lower_name_idx",
+      "table": "proposal_categories",
+      "unique": false,
+      "columns": ["project_id", "lower(name)"],
+      "where": null,
+      "introducedBy": "0033_generated_item_lookup_indexes.sql"
+    },
+    {
+      "name": "proposal_item_changelog_generated_item_idx",
+      "table": "proposal_item_changelog",
+      "unique": false,
+      "columns": ["generated_item_id", "changed_at DESC"],
+      "where": "generated_item_id IS NOT NULL",
+      "introducedBy": "0028_generated_item_revision_links.sql"
+    },
+    {
+      "name": "proposal_item_changelog_revision_changed_idx",
+      "table": "proposal_item_changelog",
+      "unique": false,
+      "columns": ["revision_id", "changed_at"],
+      "where": "revision_id IS NOT NULL",
+      "introducedBy": "0033_generated_item_lookup_indexes.sql"
+    },
+    {
+      "name": "proposal_item_changelog_revision_idx",
+      "table": "proposal_item_changelog",
+      "unique": false,
+      "columns": ["revision_id"],
+      "where": null,
+      "introducedBy": "0023_proposal_revisions.sql"
+    },
+    {
+      "name": "proposal_item_generated_item_links_item_id_idx",
+      "table": "proposal_item_generated_item_links",
+      "unique": false,
+      "columns": ["item_id"],
+      "where": null,
+      "introducedBy": "0027_shared_generated_item_schema.sql"
+    },
+    {
+      "name": "proposal_item_materials_item_sort_idx",
+      "table": "proposal_item_materials",
+      "unique": false,
+      "columns": ["proposal_item_id", "sort_order"],
+      "where": null,
+      "introducedBy": "0008_finish_library.sql"
+    },
+    {
+      "name": "proposal_item_materials_material_id_idx",
+      "table": "proposal_item_materials",
+      "unique": false,
+      "columns": ["material_id"],
+      "where": null,
+      "introducedBy": "0008_finish_library.sql"
+    },
+    {
+      "name": "proposal_items_category_id_idx",
+      "table": "proposal_items",
+      "unique": false,
+      "columns": ["category_id", "sort_order", "created_at"],
+      "where": null,
+      "introducedBy": "0005_takeoff_tool.sql"
+    },
+    {
+      "name": "proposal_items_category_sort_idx",
+      "table": "proposal_items",
+      "unique": false,
+      "columns": ["category_id", "sort_order", "created_at"],
+      "where": null,
+      "introducedBy": "0033_generated_item_lookup_indexes.sql"
+    },
+    {
+      "name": "proposal_revision_snapshots_flagged_idx",
+      "table": "proposal_revision_snapshots",
+      "unique": false,
+      "columns": ["revision_id"],
+      "where": "cost_status = 'flagged'",
+      "introducedBy": "0024_proposal_revision_snapshots.sql"
+    },
+    {
+      "name": "proposal_revision_snapshots_generated_item_idx",
+      "table": "proposal_revision_snapshots",
+      "unique": false,
+      "columns": ["generated_item_id"],
+      "where": "generated_item_id IS NOT NULL",
+      "introducedBy": "0028_generated_item_revision_links.sql"
+    },
+    {
+      "name": "proposal_revisions_one_open_per_project_idx",
+      "table": "proposal_revisions",
+      "unique": true,
+      "columns": ["project_id"],
+      "where": "closed_at IS NULL",
+      "introducedBy": "0023_proposal_revisions.sql"
+    },
+    {
+      "name": "proposal_revisions_project_idx",
+      "table": "proposal_revisions",
+      "unique": false,
+      "columns": ["project_id", "revision_major DESC", "revision_minor DESC"],
+      "where": null,
+      "introducedBy": "0023_proposal_revisions.sql"
+    },
+    {
+      "name": "rooms_project_ffe_visible_idx",
+      "table": "rooms",
+      "unique": false,
+      "columns": ["project_id", "is_ffe_visible", "sort_order", "created_at"],
+      "where": null,
+      "introducedBy": "0030_rooms_ffe_visibility.sql"
+    },
+    {
+      "name": "rooms_project_id_idx",
+      "table": "rooms",
+      "unique": false,
+      "columns": ["project_id"],
+      "where": null,
+      "introducedBy": "0001_initial.sql"
+    },
+    {
+      "name": "rooms_project_lower_name_idx",
+      "table": "rooms",
+      "unique": false,
+      "columns": ["project_id", "lower(name)"],
+      "where": null,
+      "introducedBy": "0033_generated_item_lookup_indexes.sql"
+    }
+  ]
+}
