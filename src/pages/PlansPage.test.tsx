@@ -3,8 +3,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
 
-vi.mock('../components/plans/list/PlanUploadPanel', () => ({
-  PlanUploadPanel: vi.fn(() => <aside data-testid="plan-upload-panel">Upload panel</aside>),
+vi.mock('../components/plans/list/PlanUploadModal', () => ({
+  PlanUploadModal: vi.fn(({ open }: { open: boolean }) =>
+    open ? <div data-testid="plan-upload-modal">Upload modal</div> : null,
+  ),
 }));
 
 import { PlansPage } from './PlansPage';
@@ -69,7 +71,7 @@ vi.mock('../lib/api', () => ({
 }));
 
 describe('PlansPage', () => {
-  it('renders the plan library and reveals the upload panel from the header CTA', () => {
+  it('renders the plan library and opens the upload modal from the header CTA', () => {
     render(
       <MemoryRouter>
         <PlansPage project={project} />
@@ -78,9 +80,9 @@ describe('PlansPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Plan library' })).toBeInTheDocument();
     expect(screen.getByText('Level 1 Furniture Plan')).toBeInTheDocument();
-    expect(screen.queryByTestId('plan-upload-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('plan-upload-modal')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Upload plan' }));
-    expect(screen.getByTestId('plan-upload-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('plan-upload-modal')).toBeInTheDocument();
   });
 });

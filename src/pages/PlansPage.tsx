@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
 import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
-import { PlanUploadPanel } from '../components/plans/list/PlanUploadPanel';
+import { PlanUploadModal } from '../components/plans/list/PlanUploadModal';
 import { Button } from '../components/primitives';
 import { useCreateMeasuredPlan, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
 import type { CreateMeasuredPlanInput } from '../lib/api';
@@ -94,11 +94,10 @@ export function PlansPage({ project }: PlansPageProps) {
               type="button"
               variant="primary"
               size="sm"
-              onClick={() => setUploadOpen((open) => !open)}
-              aria-expanded={uploadOpen}
-              aria-controls="plan-upload-panel"
+              onClick={() => setUploadOpen(true)}
+              aria-haspopup="dialog"
             >
-              {uploadOpen ? 'Close upload' : 'Upload plan'}
+              Upload plan
             </Button>
           </div>
         </div>
@@ -147,11 +146,12 @@ export function PlansPage({ project }: PlansPageProps) {
         </div>
       </header>
 
-      {uploadOpen ? (
-        <div id="plan-upload-panel" className="animate-fade-up">
-          <PlanUploadPanel creating={createPlan.isPending} onCreatePlan={handleCreatePlan} />
-        </div>
-      ) : null}
+      <PlanUploadModal
+        open={uploadOpen}
+        creating={createPlan.isPending}
+        onClose={() => setUploadOpen(false)}
+        onCreatePlan={handleCreatePlan}
+      />
 
       <section>
         {isLoading ? (
