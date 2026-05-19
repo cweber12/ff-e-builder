@@ -1,4 +1,4 @@
-import type { SaveState } from '../../hooks/useSaveStatus';
+import type { SaveState } from '../../hooks/shared/useSaveStatus';
 
 interface SaveStatusIndicatorProps {
   state: SaveState;

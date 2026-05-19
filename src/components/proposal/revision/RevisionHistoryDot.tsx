@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import { createPortal } from 'react-dom';
 import { cn } from '../../../lib/utils';
 import type { ProposalItemChangelogEntry, ProposalRevision } from '../../../types';
-import { proposalStatusConfig } from '../proposalStatusConfig';
+import { proposalStatusConfig } from '../../../lib/table/proposalStatusConfig';
 
 type RevisionHistoryDotProps = {
   entries: ProposalItemChangelogEntry[];

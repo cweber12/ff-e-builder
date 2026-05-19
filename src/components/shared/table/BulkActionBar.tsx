@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { cn } from '../../lib/utils';
-import { Modal } from '../primitives';
+import { cn } from '../../../lib/utils';
+import { Modal } from '../../primitives';
 
 export type BulkAction = 'duplicate' | 'move' | 'editField' | 'delete';
 

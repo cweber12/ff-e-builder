@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 import type { CreateMeasuredPlanInput } from '../../../lib/api';
-import { renderPdfPageAsPngFile, renderPdfThumbnails, type PdfPagePreview } from '../../../lib/pdf';
+import {
+  renderPdfPageAsPngFile,
+  renderPdfThumbnails,
+  type PdfPagePreview,
+} from '../../../lib/plans/pdf';
 import { Button, Modal } from '../../primitives';
 
 type PlanUploadModalProps = {

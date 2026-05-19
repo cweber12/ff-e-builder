@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-19T01:51:58.075Z",
+  "generatedAt": "2026-05-19T05:09:20.669Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -135,7 +135,7 @@
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
       "files": 252,
-      "internalImports": 779,
+      "internalImports": 783,
       "externalImports": 269,
       "unresolvedImports": 2
     },
@@ -167,18 +167,18 @@
     },
     {
       "area": "proposal",
-      "files": 26,
-      "importsIn": 41,
-      "importsOut": 114,
+      "files": 24,
+      "importsIn": 36,
+      "importsOut": 109,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
-      "importedBy": ["ffe", "plans", "project-shell", "shared-lib", "tests"]
+      "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
     {
       "area": "plans",
-      "files": 17,
-      "importsIn": 34,
-      "importsOut": 52,
-      "dependsOn": ["proposal", "shared-ui", "shared-lib", "types"],
+      "files": 18,
+      "importsIn": 36,
+      "importsOut": 53,
+      "dependsOn": ["shared-ui", "shared-lib", "types"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
@@ -208,17 +208,17 @@
     },
     {
       "area": "shared-ui",
-      "files": 43,
-      "importsIn": 150,
-      "importsOut": 108,
+      "files": 44,
+      "importsIn": 153,
+      "importsOut": 112,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
     },
     {
       "area": "shared-lib",
-      "files": 47,
-      "importsIn": 281,
-      "importsOut": 111,
+      "files": 45,
+      "importsIn": 279,
+      "importsOut": 114,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
         "ffe",
@@ -286,9 +286,9 @@
     },
     {
       "area": "unknown",
-      "files": 8,
-      "importsIn": 13,
-      "importsOut": 10,
+      "files": 10,
+      "importsIn": 19,
+      "importsOut": 11,
       "dependsOn": ["shared-lib", "types"],
       "importedBy": ["ffe", "proposal", "finish-library", "project-shell", "shared-ui", "tests"]
     }
@@ -312,7 +312,7 @@
       "paths": [
         {
           "path": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-          "files": 24
+          "files": 22
         },
         {
           "path": "src/lib/import/formats/proposal.ts, src/lib/api/proposal.ts",
@@ -325,7 +325,7 @@
       "paths": [
         {
           "path": "src/components/plans/**, src/hooks/plans/**, src/lib/plans/**, src/pages/Plans*.tsx, src/pages/PlanCanvas*.tsx",
-          "files": 17
+          "files": 18
         }
       ]
     },
@@ -360,7 +360,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 43
+          "files": 44
         }
       ]
     },
@@ -373,7 +373,7 @@
         },
         {
           "path": "src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/pdf.ts, src/lib/query/**, src/lib/theme/**, src/lib/utils/**",
-          "files": 21
+          "files": 19
         }
       ]
     },
@@ -418,7 +418,7 @@
       "paths": [
         {
           "path": "src/lib",
-          "files": 4
+          "files": 6
         },
         {
           "path": "src/data/**",
@@ -461,16 +461,6 @@
       "kind": "import",
       "reviewNote": "expected: product uses public Finish Library surface",
       "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
-      "importerArea": "ffe",
-      "specifier": "../../proposal/ChangeConfirmModal",
-      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
-      "resolvedArea": "proposal",
-      "kind": "import",
-      "reviewNote": "review: product module imports another product module directly",
-      "reviewSection": "Review Targets"
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
@@ -905,16 +895,6 @@
     {
       "importer": "src/lib/export/ffe/ffePdf.ts",
       "importerArea": "ffe",
-      "specifier": "../../theme/constants",
-      "resolved": "src/lib/theme/constants.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/lib/export/ffe/ffePdf.ts",
-      "importerArea": "ffe",
       "specifier": "../imageHelpers",
       "resolved": "src/lib/export/imageHelpers.ts",
       "resolvedArea": "shared-lib",
@@ -1105,8 +1085,8 @@
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
       "importerArea": "ffe",
-      "specifier": "../../shared/ItemStatusChip",
-      "resolved": "src/components/shared/ItemStatusChip.tsx",
+      "specifier": "../../shared/table/ItemStatusChip",
+      "resolved": "src/components/shared/table/ItemStatusChip.tsx",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -1115,8 +1095,8 @@
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
       "importerArea": "ffe",
-      "specifier": "../../shared/TotalsBar",
-      "resolved": "src/components/shared/TotalsBar.tsx",
+      "specifier": "../../shared/table/TotalsBar",
+      "resolved": "src/components/shared/table/TotalsBar.tsx",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -1287,6 +1267,16 @@
       "importerArea": "ffe",
       "specifier": "../../shared/table/generatedItemStickyStyles",
       "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../shared/modals/ChangeConfirmModal",
+      "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -1583,6 +1573,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/lib/export/ffe/ffePdf.ts",
+      "importerArea": "ffe",
+      "specifier": "../../constants",
+      "resolved": "src/lib/constants.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/components/materials/MaterialLibraryModal.tsx",
       "importerArea": "finish-library",
       "specifier": "../../hooks",
@@ -1677,16 +1677,6 @@
       "importerArea": "finish-library",
       "specifier": "../api",
       "resolved": "src/lib/api.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/lib/export/materials.ts",
-      "importerArea": "finish-library",
-      "specifier": "../theme/constants",
-      "resolved": "src/lib/theme/constants.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -1823,14 +1813,14 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
-      "importer": "src/pages/PlanCanvasPage.tsx",
-      "importerArea": "plans",
-      "specifier": "../components/proposal/ChangeConfirmModal",
-      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
-      "resolvedArea": "proposal",
+      "importer": "src/lib/export/materials.ts",
+      "importerArea": "finish-library",
+      "specifier": "../constants",
+      "resolved": "src/lib/constants.ts",
+      "resolvedArea": "unknown",
       "kind": "import",
-      "reviewNote": "review: product module imports another product module directly",
-      "reviewSection": "Review Targets"
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
       "importer": "src/components/plans/canvas/PlanViewport.tsx",
@@ -1857,16 +1847,6 @@
       "importerArea": "plans",
       "specifier": "../../../lib/api",
       "resolved": "src/lib/api.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/plans/list/PlanUploadModal.tsx",
-      "importerArea": "plans",
-      "specifier": "../../../lib/pdf",
-      "resolved": "src/lib/pdf.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -1987,6 +1967,16 @@
       "importerArea": "plans",
       "specifier": "../../primitives",
       "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/pages/PlanCanvasPage.tsx",
+      "importerArea": "plans",
+      "specifier": "../components/shared/modals/ChangeConfirmModal",
+      "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -2335,8 +2325,8 @@
     {
       "importer": "src/components/project/ProjectHeader.tsx",
       "importerArea": "project-shell",
-      "specifier": "../../hooks/useSaveStatus",
-      "resolved": "src/hooks/useSaveStatus.ts",
+      "specifier": "../../hooks/shared/useSaveStatus",
+      "resolved": "src/hooks/shared/useSaveStatus.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -2943,16 +2933,6 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "importerArea": "proposal",
-      "specifier": "../../lib/utils",
-      "resolved": "src/lib/utils/index.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
       "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
       "importerArea": "proposal",
       "specifier": "../../../lib/api",
@@ -3303,26 +3283,6 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/lib/export/proposal/proposalExcel.ts",
-      "importerArea": "proposal",
-      "specifier": "../../theme/constants",
-      "resolved": "src/lib/theme/constants.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/lib/export/proposal/proposalPdf.ts",
-      "importerArea": "proposal",
-      "specifier": "../../theme/constants",
-      "resolved": "src/lib/theme/constants.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
       "importer": "src/lib/export/proposal/proposalPdf.ts",
       "importerArea": "proposal",
       "specifier": "../imageHelpers",
@@ -3350,16 +3310,6 @@
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "importerArea": "proposal",
-      "specifier": "../primitives",
-      "resolved": "src/components/primitives/index.ts",
-      "resolvedArea": "shared-ui",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared UI",
       "reviewSection": "Expected Shared Dependencies"
     },
     {
@@ -3415,8 +3365,8 @@
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
-      "specifier": "../../shared/TotalsBar",
-      "resolved": "src/components/shared/TotalsBar.tsx",
+      "specifier": "../../shared/table/TotalsBar",
+      "resolved": "src/components/shared/table/TotalsBar.tsx",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -3573,29 +3523,19 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
-      "specifier": "../../types",
-      "resolved": "src/types/index.ts",
-      "resolvedArea": "types",
+      "specifier": "../../shared/modals/ChangeConfirmModal",
+      "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "resolvedArea": "shared-ui",
       "kind": "import",
-      "reviewNote": "expected: product uses shared types",
+      "reviewNote": "expected: product uses shared UI",
       "reviewSection": "Expected Shared Dependencies"
     },
     {
       "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
       "importerArea": "proposal",
       "specifier": "../../../types",
-      "resolved": "src/types/index.ts",
-      "resolvedArea": "types",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared types",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/proposal/proposalStatusConfig.ts",
-      "importerArea": "proposal",
-      "specifier": "../../types",
       "resolved": "src/types/index.ts",
       "resolvedArea": "types",
       "kind": "import",
@@ -3813,6 +3753,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/table/proposalStatusConfig",
+      "resolved": "src/lib/table/proposalStatusConfig.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
       "specifier": "../../../lib/table/generatedItemChangeInfo",
@@ -3827,6 +3777,26 @@
       "importerArea": "proposal",
       "specifier": "../../../lib/table/generatedItemTablePresets",
       "resolved": "src/lib/table/generatedItemTablePresets.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/lib/export/proposal/proposalExcel.ts",
+      "importerArea": "proposal",
+      "specifier": "../../constants",
+      "resolved": "src/lib/constants.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/lib/export/proposal/proposalPdf.ts",
+      "importerArea": "proposal",
+      "specifier": "../../constants",
+      "resolved": "src/lib/constants.ts",
       "resolvedArea": "unknown",
       "kind": "import",
       "reviewNote": "unknown: ownership unclear",
@@ -4323,16 +4293,6 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/shared/BulkActionBar.tsx",
-      "importerArea": "shared-ui",
-      "specifier": "../../lib/utils",
-      "resolved": "src/lib/utils/index.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: shared UI/lib dependency",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
       "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../hooks/shared",
@@ -4345,8 +4305,8 @@
     {
       "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
       "importerArea": "shared-ui",
-      "specifier": "../../hooks/useTableDensity",
-      "resolved": "src/hooks/useTableDensity.ts",
+      "specifier": "../../hooks/shared/useTableDensity",
+      "resolved": "src/hooks/shared/useTableDensity.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: shared UI/lib dependency",
@@ -4463,9 +4423,9 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/shared/ItemStatusChip.tsx",
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "importerArea": "shared-ui",
-      "specifier": "../../lib/utils",
+      "specifier": "../../../lib/utils",
       "resolved": "src/lib/utils/index.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
@@ -4525,8 +4485,18 @@
     {
       "importer": "src/components/shared/SaveStatusIndicator.tsx",
       "importerArea": "shared-ui",
-      "specifier": "../../hooks/useSaveStatus",
-      "resolved": "src/hooks/useSaveStatus.ts",
+      "specifier": "../../hooks/shared/useSaveStatus",
+      "resolved": "src/hooks/shared/useSaveStatus.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/shared/table/BulkActionBar.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: shared UI/lib dependency",
@@ -4564,6 +4534,16 @@
     },
     {
       "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/shared/table/ItemStatusChip.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../lib/utils",
       "resolved": "src/lib/utils/index.ts",
@@ -4633,9 +4613,9 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/shared/ItemStatusChip.tsx",
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "importerArea": "shared-ui",
-      "specifier": "../../types",
+      "specifier": "../../../types",
       "resolved": "src/types/index.ts",
       "resolvedArea": "types",
       "kind": "import",
@@ -4743,6 +4723,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/shared/table/ItemStatusChip.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: shared code uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/shared/auth/AuthGate.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../data/seed",
@@ -4757,6 +4747,16 @@
       "importerArea": "shared-ui",
       "specifier": "../../../pages/DemoPage",
       "resolved": "src/pages/DemoPage.tsx",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../lib/table/proposalStatusConfig",
+      "resolved": "src/lib/table/proposalStatusConfig.ts",
       "resolvedArea": "unknown",
       "kind": "import",
       "reviewNote": "unknown: ownership unclear",
@@ -5763,6 +5763,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/lib/table/proposalStatusConfig.ts",
+      "importerArea": "unknown",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/pages/DemoPage.tsx",
       "importerArea": "unknown",
       "specifier": "../types",
@@ -5778,43 +5788,14 @@
       "section": "Review Targets",
       "from": "ffe",
       "to": "proposal",
-      "imports": 2,
+      "imports": 1,
       "reviewNote": "review: product module imports another product module directly",
       "examples": [
-        {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
-          "importerArea": "ffe",
-          "specifier": "../../proposal/ChangeConfirmModal",
-          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
-          "resolvedArea": "proposal",
-          "kind": "import",
-          "reviewNote": "review: product module imports another product module directly",
-          "reviewSection": "Review Targets"
-        },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
           "importerArea": "ffe",
           "specifier": "../../proposal/revision",
           "resolved": "src/components/proposal/revision/index.ts",
-          "resolvedArea": "proposal",
-          "kind": "import",
-          "reviewNote": "review: product module imports another product module directly",
-          "reviewSection": "Review Targets"
-        }
-      ]
-    },
-    {
-      "section": "Review Targets",
-      "from": "plans",
-      "to": "proposal",
-      "imports": 1,
-      "reviewNote": "review: product module imports another product module directly",
-      "examples": [
-        {
-          "importer": "src/pages/PlanCanvasPage.tsx",
-          "importerArea": "plans",
-          "specifier": "../components/proposal/ChangeConfirmModal",
-          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
           "resolvedArea": "proposal",
           "kind": "import",
           "reviewNote": "review: product module imports another product module directly",
@@ -6184,7 +6165,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-ui",
-      "imports": 34,
+      "imports": 35,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6223,7 +6204,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-lib",
-      "imports": 50,
+      "imports": 49,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6324,16 +6305,6 @@
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "importerArea": "proposal",
-          "specifier": "../primitives",
-          "resolved": "src/components/primitives/index.ts",
-          "resolvedArea": "shared-ui",
-          "kind": "import",
-          "reviewNote": "expected: product uses shared UI",
-          "reviewSection": "Expected Shared Dependencies"
-        },
-        {
           "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
           "importerArea": "proposal",
           "specifier": "../../primitives",
@@ -6352,6 +6323,16 @@
           "kind": "import",
           "reviewNote": "expected: product uses shared UI",
           "reviewSection": "Expected Shared Dependencies"
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../shared/image/ImageFrame",
+          "resolved": "src/components/shared/image/ImageFrame.tsx",
+          "resolvedArea": "shared-ui",
+          "kind": "import",
+          "reviewNote": "expected: product uses shared UI",
+          "reviewSection": "Expected Shared Dependencies"
         }
       ]
     },
@@ -6359,19 +6340,9 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-lib",
-      "imports": 41,
+      "imports": 38,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "importerArea": "proposal",
-          "specifier": "../../lib/utils",
-          "resolved": "src/lib/utils/index.ts",
-          "resolvedArea": "shared-lib",
-          "kind": "import",
-          "reviewNote": "expected: product uses shared lib",
-          "reviewSection": "Expected Shared Dependencies"
-        },
         {
           "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
           "importerArea": "proposal",
@@ -6391,6 +6362,16 @@
           "kind": "import",
           "reviewNote": "expected: product uses shared lib",
           "reviewSection": "Expected Shared Dependencies"
+        },
+        {
+          "importer": "src/components/proposal/import/proposalImportItem.ts",
+          "importerArea": "proposal",
+          "specifier": "../../../lib/api",
+          "resolved": "src/lib/api.ts",
+          "resolvedArea": "shared-lib",
+          "kind": "import",
+          "reviewNote": "expected: product uses shared lib",
+          "reviewSection": "Expected Shared Dependencies"
         }
       ]
     },
@@ -6398,19 +6379,9 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "types",
-      "imports": 24,
+      "imports": 22,
       "reviewNote": "expected: product uses shared types",
       "examples": [
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "importerArea": "proposal",
-          "specifier": "../../types",
-          "resolved": "src/types/index.ts",
-          "resolvedArea": "types",
-          "kind": "import",
-          "reviewNote": "expected: product uses shared types",
-          "reviewSection": "Expected Shared Dependencies"
-        },
         {
           "importer": "src/components/proposal/import/ImportProposalExcelModal.tsx",
           "importerArea": "proposal",
@@ -6422,9 +6393,19 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/proposal/proposalStatusConfig.ts",
+          "importer": "src/components/proposal/revision/GeneratedItemRevisionIndicator.tsx",
           "importerArea": "proposal",
-          "specifier": "../../types",
+          "specifier": "../../../types",
+          "resolved": "src/types/index.ts",
+          "resolvedArea": "types",
+          "kind": "import",
+          "reviewNote": "expected: product uses shared types",
+          "reviewSection": "Expected Shared Dependencies"
+        },
+        {
+          "importer": "src/components/proposal/revision/RevisionColumnGroup.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../../types",
           "resolved": "src/types/index.ts",
           "resolvedArea": "types",
           "kind": "import",
@@ -6437,7 +6418,7 @@
       "section": "Expected Shared Dependencies",
       "from": "plans",
       "to": "shared-ui",
-      "imports": 3,
+      "imports": 4,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6461,10 +6442,10 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/pages/PlansPage.tsx",
+          "importer": "src/pages/PlanCanvasPage.tsx",
           "importerArea": "plans",
-          "specifier": "../components/primitives",
-          "resolved": "src/components/primitives/index.ts",
+          "specifier": "../components/shared/modals/ChangeConfirmModal",
+          "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
           "resolvedArea": "shared-ui",
           "kind": "import",
           "reviewNote": "expected: product uses shared UI",
@@ -6476,7 +6457,7 @@
       "section": "Expected Shared Dependencies",
       "from": "plans",
       "to": "shared-lib",
-      "imports": 14,
+      "imports": 13,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6593,7 +6574,7 @@
       "section": "Expected Shared Dependencies",
       "from": "finish-library",
       "to": "shared-lib",
-      "imports": 12,
+      "imports": 11,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6788,7 +6769,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "shared-lib",
-      "imports": 35,
+      "imports": 36,
       "reviewNote": "expected: shared UI/lib dependency",
       "examples": [
         {
@@ -6827,7 +6808,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "types",
-      "imports": 15,
+      "imports": 16,
       "reviewNote": "expected: shared code uses shared types",
       "examples": [
         {
@@ -6905,7 +6886,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "ffe",
       "to": "unknown",
-      "imports": 2,
+      "imports": 3,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -6927,6 +6908,16 @@
           "kind": "import",
           "reviewNote": "unknown: ownership unclear",
           "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/lib/export/ffe/ffePdf.ts",
+          "importerArea": "ffe",
+          "specifier": "../../constants",
+          "resolved": "src/lib/constants.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
         }
       ]
     },
@@ -6934,9 +6925,19 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "proposal",
       "to": "unknown",
-      "imports": 2,
+      "imports": 5,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
+        {
+          "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../../lib/table/proposalStatusConfig",
+          "resolved": "src/lib/table/proposalStatusConfig.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
           "importerArea": "proposal",
@@ -6963,7 +6964,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "finish-library",
       "to": "unknown",
-      "imports": 2,
+      "imports": 3,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -6981,6 +6982,16 @@
           "importerArea": "finish-library",
           "specifier": "../../lib/materials/catalog",
           "resolved": "src/lib/materials/catalog.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/lib/export/materials.ts",
+          "importerArea": "finish-library",
+          "specifier": "../constants",
+          "resolved": "src/lib/constants.ts",
           "resolvedArea": "unknown",
           "kind": "import",
           "reviewNote": "unknown: ownership unclear",
@@ -7011,7 +7022,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "shared-ui",
       "to": "unknown",
-      "imports": 2,
+      "imports": 3,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -7029,6 +7040,16 @@
           "importerArea": "shared-ui",
           "specifier": "../../../pages/DemoPage",
           "resolved": "src/pages/DemoPage.tsx",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "importerArea": "shared-ui",
+          "specifier": "../../../lib/table/proposalStatusConfig",
+          "resolved": "src/lib/table/proposalStatusConfig.ts",
           "resolvedArea": "unknown",
           "kind": "import",
           "reviewNote": "unknown: ownership unclear",
@@ -7079,7 +7100,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "unknown",
       "to": "types",
-      "imports": 4,
+      "imports": 5,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -7558,6 +7579,16 @@
       ]
     },
     {
+      "path": "src/lib/constants.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
       "path": "src/lib/materials/catalog.ts",
       "project": "React client",
       "module": "src/lib",
@@ -7621,6 +7652,25 @@
       "ownershipReason": "no product-area path heuristic matched",
       "ownerPath": "src/lib",
       "imports": []
+    },
+    {
+      "path": "src/lib/table/proposalStatusConfig.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": [
+        {
+          "importer": "src/lib/table/proposalStatusConfig.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
     },
     {
       "path": "src/pages/DemoPage.tsx",
@@ -7717,9 +7767,9 @@
     },
     {
       "path": "src/components",
-      "files": 118,
-      "importsIn": 247,
-      "importsOut": 548,
+      "files": 117,
+      "importsIn": 245,
+      "importsOut": 547,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7750,8 +7800,8 @@
     {
       "path": "src/hooks",
       "files": 27,
-      "importsIn": 66,
-      "importsOut": 117,
+      "importsIn": 69,
+      "importsOut": 120,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -7764,9 +7814,9 @@
     },
     {
       "path": "src/lib",
-      "files": 80,
-      "importsIn": 291,
-      "importsOut": 249,
+      "files": 81,
+      "importsIn": 294,
+      "importsOut": 251,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -8779,17 +8829,17 @@
         },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../shared/ItemStatusChip",
+          "specifier": "../../shared/table/ItemStatusChip",
           "kind": "import",
-          "resolved": "src/components/shared/ItemStatusChip.tsx",
+          "resolved": "src/components/shared/table/ItemStatusChip.tsx",
           "externalPackage": null,
           "asset": false
         },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../shared/TotalsBar",
+          "specifier": "../../shared/table/TotalsBar",
           "kind": "import",
-          "resolved": "src/components/shared/TotalsBar.tsx",
+          "resolved": "src/components/shared/table/TotalsBar.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -8955,9 +9005,9 @@
         },
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../proposal/ChangeConfirmModal",
+          "specifier": "../../shared/modals/ChangeConfirmModal",
           "kind": "import",
-          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -9825,9 +9875,9 @@
         },
         {
           "importer": "src/components/plans/list/PlanUploadModal.tsx",
-          "specifier": "../../../lib/pdf",
+          "specifier": "../../../lib/plans/pdf",
           "kind": "import",
-          "resolved": "src/lib/pdf.ts",
+          "resolved": "src/lib/plans/pdf.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -11063,9 +11113,9 @@
         },
         {
           "importer": "src/components/project/ProjectHeader.tsx",
-          "specifier": "../../hooks/useSaveStatus",
+          "specifier": "../../hooks/shared/useSaveStatus",
           "kind": "import",
-          "resolved": "src/hooks/useSaveStatus.ts",
+          "resolved": "src/hooks/shared/useSaveStatus.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -11250,57 +11300,6 @@
       ]
     },
     {
-      "path": "src/components/proposal/ChangeConfirmModal.tsx",
-      "project": "React client",
-      "module": "src/components",
-      "productArea": "proposal",
-      "ownershipConfidence": "high",
-      "ownershipReason": "Proposal-owned feature path",
-      "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-      "imports": [
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "specifier": "react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react",
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "specifier": "../primitives",
-          "kind": "import",
-          "resolved": "src/components/primitives/index.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "specifier": "./proposalStatusConfig",
-          "kind": "import",
-          "resolved": "src/components/proposal/proposalStatusConfig.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "specifier": "../../lib/utils",
-          "kind": "import",
-          "resolved": "src/lib/utils/index.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-          "specifier": "../../types",
-          "kind": "import",
-          "resolved": "src/types/index.ts",
-          "externalPackage": null,
-          "asset": false
-        }
-      ]
-    },
-    {
       "path": "src/components/proposal/import/ImportProposalExcelModal.test.ts",
       "project": "React client",
       "module": "src/components",
@@ -11451,25 +11450,6 @@
           "specifier": "../../../lib/import",
           "kind": "import",
           "resolved": "src/lib/import/index.ts",
-          "externalPackage": null,
-          "asset": false
-        }
-      ]
-    },
-    {
-      "path": "src/components/proposal/proposalStatusConfig.ts",
-      "project": "React client",
-      "module": "src/components",
-      "productArea": "proposal",
-      "ownershipConfidence": "high",
-      "ownershipReason": "Proposal-owned feature path",
-      "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-      "imports": [
-        {
-          "importer": "src/components/proposal/proposalStatusConfig.ts",
-          "specifier": "../../types",
-          "kind": "import",
-          "resolved": "src/types/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -11706,9 +11686,9 @@
         },
         {
           "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
-          "specifier": "../proposalStatusConfig",
+          "specifier": "../../../lib/table/proposalStatusConfig",
           "kind": "import",
-          "resolved": "src/components/proposal/proposalStatusConfig.ts",
+          "resolved": "src/lib/table/proposalStatusConfig.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -12026,9 +12006,9 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
-          "specifier": "../../shared/TotalsBar",
+          "specifier": "../../shared/table/TotalsBar",
           "kind": "import",
-          "resolved": "src/components/shared/TotalsBar.tsx",
+          "resolved": "src/components/shared/table/TotalsBar.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -12226,9 +12206,9 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
-          "specifier": "../ChangeConfirmModal",
+          "specifier": "../../shared/modals/ChangeConfirmModal",
           "kind": "import",
-          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -12369,41 +12349,6 @@
       ]
     },
     {
-      "path": "src/components/shared/BulkActionBar.tsx",
-      "project": "React client",
-      "module": "src/components",
-      "productArea": "shared-ui",
-      "ownershipConfidence": "high",
-      "ownershipReason": "shared UI primitive/chrome path",
-      "ownerPath": "src/components/shared/**, src/components/primitives/**",
-      "imports": [
-        {
-          "importer": "src/components/shared/BulkActionBar.tsx",
-          "specifier": "react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react",
-          "asset": false
-        },
-        {
-          "importer": "src/components/shared/BulkActionBar.tsx",
-          "specifier": "../../lib/utils",
-          "kind": "import",
-          "resolved": "src/lib/utils/index.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/shared/BulkActionBar.tsx",
-          "specifier": "../primitives",
-          "kind": "import",
-          "resolved": "src/components/primitives/index.ts",
-          "externalPackage": null,
-          "asset": false
-        }
-      ]
-    },
-    {
       "path": "src/components/shared/ColumnVisibilityPopover.tsx",
       "project": "React client",
       "module": "src/components",
@@ -12438,9 +12383,9 @@
         },
         {
           "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
-          "specifier": "../../hooks/useTableDensity",
+          "specifier": "../../hooks/shared/useTableDensity",
           "kind": "import",
-          "resolved": "src/hooks/useTableDensity.ts",
+          "resolved": "src/hooks/shared/useTableDensity.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -12956,33 +12901,33 @@
         },
         {
           "importer": "src/components/shared/index.ts",
-          "specifier": "./ItemStatusChip",
+          "specifier": "./table/ItemStatusChip",
           "kind": "export",
-          "resolved": "src/components/shared/ItemStatusChip.tsx",
+          "resolved": "src/components/shared/table/ItemStatusChip.tsx",
           "externalPackage": null,
           "asset": false
         },
         {
           "importer": "src/components/shared/index.ts",
-          "specifier": "./TotalsBar",
+          "specifier": "./table/TotalsBar",
           "kind": "export",
-          "resolved": "src/components/shared/TotalsBar.tsx",
+          "resolved": "src/components/shared/table/TotalsBar.tsx",
           "externalPackage": null,
           "asset": false
         },
         {
           "importer": "src/components/shared/index.ts",
-          "specifier": "./BulkActionBar",
+          "specifier": "./table/BulkActionBar",
           "kind": "export",
-          "resolved": "src/components/shared/BulkActionBar.tsx",
+          "resolved": "src/components/shared/table/BulkActionBar.tsx",
           "externalPackage": null,
           "asset": false
         },
         {
           "importer": "src/components/shared/index.ts",
-          "specifier": "./BulkActionBar",
+          "specifier": "./table/BulkActionBar",
           "kind": "export",
-          "resolved": "src/components/shared/BulkActionBar.tsx",
+          "resolved": "src/components/shared/table/BulkActionBar.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -13015,33 +12960,6 @@
           "specifier": "./ColumnVisibilityPopover",
           "kind": "export",
           "resolved": "src/components/shared/ColumnVisibilityPopover.tsx",
-          "externalPackage": null,
-          "asset": false
-        }
-      ]
-    },
-    {
-      "path": "src/components/shared/ItemStatusChip.tsx",
-      "project": "React client",
-      "module": "src/components",
-      "productArea": "shared-ui",
-      "ownershipConfidence": "high",
-      "ownershipReason": "shared UI primitive/chrome path",
-      "ownerPath": "src/components/shared/**, src/components/primitives/**",
-      "imports": [
-        {
-          "importer": "src/components/shared/ItemStatusChip.tsx",
-          "specifier": "../../lib/utils",
-          "kind": "import",
-          "resolved": "src/lib/utils/index.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/shared/ItemStatusChip.tsx",
-          "specifier": "../../types",
-          "kind": "import",
-          "resolved": "src/types/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13112,6 +13030,57 @@
           "specifier": "../../primitives/Modal",
           "kind": "import",
           "resolved": "src/components/primitives/Modal.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "specifier": "../../../lib/table/proposalStatusConfig",
+          "kind": "import",
+          "resolved": "src/lib/table/proposalStatusConfig.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "specifier": "../../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13405,9 +13374,44 @@
       "imports": [
         {
           "importer": "src/components/shared/SaveStatusIndicator.tsx",
-          "specifier": "../../hooks/useSaveStatus",
+          "specifier": "../../hooks/shared/useSaveStatus",
           "kind": "import",
-          "resolved": "src/hooks/useSaveStatus.ts",
+          "resolved": "src/hooks/shared/useSaveStatus.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/shared/table/BulkActionBar.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/table/BulkActionBar.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/BulkActionBar.tsx",
+          "specifier": "../../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/BulkActionBar.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13672,6 +13676,33 @@
       "imports": []
     },
     {
+      "path": "src/components/shared/table/ItemStatusChip.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/table/ItemStatusChip.tsx",
+          "specifier": "../../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ItemStatusChip.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/shared/table/SortableColHeader.tsx",
       "project": "React client",
       "module": "src/components",
@@ -13742,7 +13773,7 @@
       ]
     },
     {
-      "path": "src/components/shared/TotalsBar.tsx",
+      "path": "src/components/shared/table/TotalsBar.tsx",
       "project": "React client",
       "module": "src/components",
       "productArea": "shared-ui",
@@ -14202,30 +14233,6 @@
           "resolved": "src/hooks/plans/index.ts",
           "externalPackage": null,
           "asset": false
-        },
-        {
-          "importer": "src/hooks/index.ts",
-          "specifier": "./useRowSelection",
-          "kind": "export",
-          "resolved": "src/hooks/useRowSelection.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/hooks/index.ts",
-          "specifier": "./useTableDensity",
-          "kind": "export",
-          "resolved": "src/hooks/useTableDensity.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/hooks/index.ts",
-          "specifier": "./useSaveStatus",
-          "kind": "export",
-          "resolved": "src/hooks/useSaveStatus.ts",
-          "externalPackage": null,
-          "asset": false
         }
       ]
     },
@@ -14605,6 +14612,54 @@
           "resolved": "src/hooks/shared/useIsMobileViewport.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useRowSelection",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useRowSelection.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useRowSelection",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useRowSelection.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useSaveStatus",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useSaveStatus.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useSaveStatus",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useSaveStatus.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useTableDensity",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useTableDensity.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useTableDensity",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useTableDensity.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -14942,6 +14997,71 @@
       ]
     },
     {
+      "path": "src/hooks/shared/useRowSelection.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useRowSelection.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/shared/useSaveStatus.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useSaveStatus.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useSaveStatus.ts",
+          "specifier": "@tanstack/react-query",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@tanstack/react-query",
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/shared/useTableDensity.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useTableDensity.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/hooks/shared/useUserProfile.ts",
       "project": "React client",
       "module": "src/hooks",
@@ -14996,71 +15116,6 @@
           "kind": "import",
           "resolved": "src/types/index.ts",
           "externalPackage": null,
-          "asset": false
-        }
-      ]
-    },
-    {
-      "path": "src/hooks/useRowSelection.ts",
-      "project": "React client",
-      "module": "src/hooks",
-      "productArea": "shared-lib",
-      "ownershipConfidence": "medium",
-      "ownershipReason": "shared client API/export/hook path",
-      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
-      "imports": [
-        {
-          "importer": "src/hooks/useRowSelection.ts",
-          "specifier": "react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react",
-          "asset": false
-        }
-      ]
-    },
-    {
-      "path": "src/hooks/useSaveStatus.ts",
-      "project": "React client",
-      "module": "src/hooks",
-      "productArea": "shared-lib",
-      "ownershipConfidence": "medium",
-      "ownershipReason": "shared client API/export/hook path",
-      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
-      "imports": [
-        {
-          "importer": "src/hooks/useSaveStatus.ts",
-          "specifier": "react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react",
-          "asset": false
-        },
-        {
-          "importer": "src/hooks/useSaveStatus.ts",
-          "specifier": "@tanstack/react-query",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "@tanstack/react-query",
-          "asset": false
-        }
-      ]
-    },
-    {
-      "path": "src/hooks/useTableDensity.ts",
-      "project": "React client",
-      "module": "src/hooks",
-      "productArea": "shared-lib",
-      "ownershipConfidence": "medium",
-      "ownershipReason": "shared client API/export/hook path",
-      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
-      "imports": [
-        {
-          "importer": "src/hooks/useTableDensity.ts",
-          "specifier": "react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react",
           "asset": false
         }
       ]
@@ -16045,6 +16100,16 @@
       ]
     },
     {
+      "path": "src/lib/constants.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": []
+    },
+    {
       "path": "src/lib/export/csv.ts",
       "project": "React client",
       "module": "src/lib",
@@ -16344,9 +16409,9 @@
         },
         {
           "importer": "src/lib/export/ffe/ffePdf.ts",
-          "specifier": "../../theme/constants",
+          "specifier": "../../constants",
           "kind": "import",
-          "resolved": "src/lib/theme/constants.ts",
+          "resolved": "src/lib/constants.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -16709,9 +16774,9 @@
         },
         {
           "importer": "src/lib/export/materials.ts",
-          "specifier": "../theme/constants",
+          "specifier": "../constants",
           "kind": "import",
-          "resolved": "src/lib/theme/constants.ts",
+          "resolved": "src/lib/constants.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -16913,9 +16978,9 @@
         },
         {
           "importer": "src/lib/export/proposal/proposalExcel.ts",
-          "specifier": "../../theme/constants",
+          "specifier": "../../constants",
           "kind": "import",
-          "resolved": "src/lib/theme/constants.ts",
+          "resolved": "src/lib/constants.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -16964,9 +17029,9 @@
         },
         {
           "importer": "src/lib/export/proposal/proposalPdf.ts",
-          "specifier": "../../theme/constants",
+          "specifier": "../../constants",
           "kind": "import",
-          "resolved": "src/lib/theme/constants.ts",
+          "resolved": "src/lib/constants.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -17571,49 +17636,6 @@
       ]
     },
     {
-      "path": "src/lib/pdf.ts",
-      "project": "React client",
-      "module": "src/lib",
-      "productArea": "shared-lib",
-      "ownershipConfidence": "high",
-      "ownershipReason": "shared client utility path",
-      "ownerPath": "src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/pdf.ts, src/lib/query/**, src/lib/theme/**, src/lib/utils/**",
-      "imports": [
-        {
-          "importer": "src/lib/pdf.ts",
-          "specifier": "pdfjs-dist",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "pdfjs-dist",
-          "asset": false
-        },
-        {
-          "importer": "src/lib/pdf.ts",
-          "specifier": "pdfjs-dist",
-          "kind": "import-type",
-          "resolved": null,
-          "externalPackage": "pdfjs-dist",
-          "asset": false
-        },
-        {
-          "importer": "src/lib/pdf.ts",
-          "specifier": "pdfjs-dist",
-          "kind": "dynamic-import",
-          "resolved": null,
-          "externalPackage": "pdfjs-dist",
-          "asset": false
-        },
-        {
-          "importer": "src/lib/pdf.ts",
-          "specifier": "pdfjs-dist/build/pdf.worker.mjs?url",
-          "kind": "dynamic-import",
-          "resolved": null,
-          "externalPackage": "pdfjs-dist",
-          "asset": false
-        }
-      ]
-    },
-    {
       "path": "src/lib/plans/formatting.ts",
       "project": "React client",
       "module": "src/lib",
@@ -17665,6 +17687,57 @@
           "kind": "export",
           "resolved": "src/lib/plans/formatting.ts",
           "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/plans/index.ts",
+          "specifier": "./pdf",
+          "kind": "export",
+          "resolved": "src/lib/plans/pdf.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/lib/plans/pdf.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "plans",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Plans-owned feature path",
+      "ownerPath": "src/components/plans/**, src/hooks/plans/**, src/lib/plans/**, src/pages/Plans*.tsx, src/pages/PlanCanvas*.tsx",
+      "imports": [
+        {
+          "importer": "src/lib/plans/pdf.ts",
+          "specifier": "pdfjs-dist",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "pdfjs-dist",
+          "asset": false
+        },
+        {
+          "importer": "src/lib/plans/pdf.ts",
+          "specifier": "pdfjs-dist",
+          "kind": "import-type",
+          "resolved": null,
+          "externalPackage": "pdfjs-dist",
+          "asset": false
+        },
+        {
+          "importer": "src/lib/plans/pdf.ts",
+          "specifier": "pdfjs-dist",
+          "kind": "dynamic-import",
+          "resolved": null,
+          "externalPackage": "pdfjs-dist",
+          "asset": false
+        },
+        {
+          "importer": "src/lib/plans/pdf.ts",
+          "specifier": "pdfjs-dist/build/pdf.worker.mjs?url",
+          "kind": "dynamic-import",
+          "resolved": null,
+          "externalPackage": "pdfjs-dist",
           "asset": false
         }
       ]
@@ -17852,14 +17925,23 @@
       "imports": []
     },
     {
-      "path": "src/lib/theme/constants.ts",
+      "path": "src/lib/table/proposalStatusConfig.ts",
       "project": "React client",
       "module": "src/lib",
-      "productArea": "shared-lib",
-      "ownershipConfidence": "high",
-      "ownershipReason": "shared client utility path",
-      "ownerPath": "src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/pdf.ts, src/lib/query/**, src/lib/theme/**, src/lib/utils/**",
-      "imports": []
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": [
+        {
+          "importer": "src/lib/table/proposalStatusConfig.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
     },
     {
       "path": "src/lib/utils/formatting.ts",
@@ -18280,9 +18362,9 @@
         },
         {
           "importer": "src/pages/PlanCanvasPage.tsx",
-          "specifier": "../components/proposal/ChangeConfirmModal",
+          "specifier": "../components/shared/modals/ChangeConfirmModal",
           "kind": "import",
-          "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+          "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -21055,17 +21137,17 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../shared/ItemStatusChip",
+      "specifier": "../../shared/table/ItemStatusChip",
       "kind": "import",
-      "resolved": "src/components/shared/ItemStatusChip.tsx",
+      "resolved": "src/components/shared/table/ItemStatusChip.tsx",
       "externalPackage": null,
       "asset": false
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../shared/TotalsBar",
+      "specifier": "../../shared/table/TotalsBar",
       "kind": "import",
-      "resolved": "src/components/shared/TotalsBar.tsx",
+      "resolved": "src/components/shared/table/TotalsBar.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -21231,9 +21313,9 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../proposal/ChangeConfirmModal",
+      "specifier": "../../shared/modals/ChangeConfirmModal",
       "kind": "import",
-      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -21871,9 +21953,9 @@
     },
     {
       "importer": "src/components/plans/list/PlanUploadModal.tsx",
-      "specifier": "../../../lib/pdf",
+      "specifier": "../../../lib/plans/pdf",
       "kind": "import",
-      "resolved": "src/lib/pdf.ts",
+      "resolved": "src/lib/plans/pdf.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -22823,9 +22905,9 @@
     },
     {
       "importer": "src/components/project/ProjectHeader.tsx",
-      "specifier": "../../hooks/useSaveStatus",
+      "specifier": "../../hooks/shared/useSaveStatus",
       "kind": "import",
-      "resolved": "src/hooks/useSaveStatus.ts",
+      "resolved": "src/hooks/shared/useSaveStatus.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -22942,46 +23024,6 @@
       "asset": false
     },
     {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "specifier": "../primitives",
-      "kind": "import",
-      "resolved": "src/components/primitives/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "specifier": "./proposalStatusConfig",
-      "kind": "import",
-      "resolved": "src/components/proposal/proposalStatusConfig.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "specifier": "../../lib/utils",
-      "kind": "import",
-      "resolved": "src/lib/utils/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/ChangeConfirmModal.tsx",
-      "specifier": "../../types",
-      "kind": "import",
-      "resolved": "src/types/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
       "importer": "src/components/proposal/import/ImportProposalExcelModal.test.ts",
       "specifier": "vitest",
       "kind": "import",
@@ -23090,14 +23132,6 @@
       "specifier": "../../../lib/import",
       "kind": "import",
       "resolved": "src/lib/import/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/proposalStatusConfig.ts",
-      "specifier": "../../types",
-      "kind": "import",
-      "resolved": "src/types/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -23279,9 +23313,9 @@
     },
     {
       "importer": "src/components/proposal/revision/RevisionHistoryDot.tsx",
-      "specifier": "../proposalStatusConfig",
+      "specifier": "../../../lib/table/proposalStatusConfig",
       "kind": "import",
-      "resolved": "src/components/proposal/proposalStatusConfig.ts",
+      "resolved": "src/lib/table/proposalStatusConfig.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -23511,9 +23545,9 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
-      "specifier": "../../shared/TotalsBar",
+      "specifier": "../../shared/table/TotalsBar",
       "kind": "import",
-      "resolved": "src/components/shared/TotalsBar.tsx",
+      "resolved": "src/components/shared/table/TotalsBar.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -23711,9 +23745,9 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
-      "specifier": "../ChangeConfirmModal",
+      "specifier": "../../shared/modals/ChangeConfirmModal",
       "kind": "import",
-      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -23830,30 +23864,6 @@
       "asset": false
     },
     {
-      "importer": "src/components/shared/BulkActionBar.tsx",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/BulkActionBar.tsx",
-      "specifier": "../../lib/utils",
-      "kind": "import",
-      "resolved": "src/lib/utils/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/BulkActionBar.tsx",
-      "specifier": "../primitives",
-      "kind": "import",
-      "resolved": "src/components/primitives/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
       "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
       "specifier": "react",
       "kind": "import",
@@ -23879,9 +23889,9 @@
     },
     {
       "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
-      "specifier": "../../hooks/useTableDensity",
+      "specifier": "../../hooks/shared/useTableDensity",
       "kind": "import",
-      "resolved": "src/hooks/useTableDensity.ts",
+      "resolved": "src/hooks/shared/useTableDensity.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -24287,33 +24297,33 @@
     },
     {
       "importer": "src/components/shared/index.ts",
-      "specifier": "./ItemStatusChip",
+      "specifier": "./table/ItemStatusChip",
       "kind": "export",
-      "resolved": "src/components/shared/ItemStatusChip.tsx",
+      "resolved": "src/components/shared/table/ItemStatusChip.tsx",
       "externalPackage": null,
       "asset": false
     },
     {
       "importer": "src/components/shared/index.ts",
-      "specifier": "./TotalsBar",
+      "specifier": "./table/TotalsBar",
       "kind": "export",
-      "resolved": "src/components/shared/TotalsBar.tsx",
+      "resolved": "src/components/shared/table/TotalsBar.tsx",
       "externalPackage": null,
       "asset": false
     },
     {
       "importer": "src/components/shared/index.ts",
-      "specifier": "./BulkActionBar",
+      "specifier": "./table/BulkActionBar",
       "kind": "export",
-      "resolved": "src/components/shared/BulkActionBar.tsx",
+      "resolved": "src/components/shared/table/BulkActionBar.tsx",
       "externalPackage": null,
       "asset": false
     },
     {
       "importer": "src/components/shared/index.ts",
-      "specifier": "./BulkActionBar",
+      "specifier": "./table/BulkActionBar",
       "kind": "export",
-      "resolved": "src/components/shared/BulkActionBar.tsx",
+      "resolved": "src/components/shared/table/BulkActionBar.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -24350,66 +24360,90 @@
       "asset": false
     },
     {
-      "importer": "src/components/shared/ItemStatusChip.tsx",
-      "specifier": "../../lib/utils",
+      "importer": "src/components/shared/modals/AddColumnModal.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/AddColumnModal.tsx",
+      "specifier": "../../primitives/Button",
+      "kind": "import",
+      "resolved": "src/components/primitives/Button.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/AddColumnModal.tsx",
+      "specifier": "../../primitives/Modal",
+      "kind": "import",
+      "resolved": "src/components/primitives/Modal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/AddGroupModal.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/AddGroupModal.tsx",
+      "specifier": "../../primitives/Button",
+      "kind": "import",
+      "resolved": "src/components/primitives/Button.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/AddGroupModal.tsx",
+      "specifier": "../../primitives/Modal",
+      "kind": "import",
+      "resolved": "src/components/primitives/Modal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "specifier": "../../../lib/table/proposalStatusConfig",
+      "kind": "import",
+      "resolved": "src/lib/table/proposalStatusConfig.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "specifier": "../../../lib/utils",
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
       "externalPackage": null,
       "asset": false
     },
     {
-      "importer": "src/components/shared/ItemStatusChip.tsx",
-      "specifier": "../../types",
+      "importer": "src/components/shared/modals/ChangeConfirmModal.tsx",
+      "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/modals/AddColumnModal.tsx",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/modals/AddColumnModal.tsx",
-      "specifier": "../../primitives/Button",
-      "kind": "import",
-      "resolved": "src/components/primitives/Button.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/modals/AddColumnModal.tsx",
-      "specifier": "../../primitives/Modal",
-      "kind": "import",
-      "resolved": "src/components/primitives/Modal.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/modals/AddGroupModal.tsx",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/modals/AddGroupModal.tsx",
-      "specifier": "../../primitives/Button",
-      "kind": "import",
-      "resolved": "src/components/primitives/Button.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/modals/AddGroupModal.tsx",
-      "specifier": "../../primitives/Modal",
-      "kind": "import",
-      "resolved": "src/components/primitives/Modal.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -24615,9 +24649,33 @@
     },
     {
       "importer": "src/components/shared/SaveStatusIndicator.tsx",
-      "specifier": "../../hooks/useSaveStatus",
+      "specifier": "../../hooks/shared/useSaveStatus",
       "kind": "import",
-      "resolved": "src/hooks/useSaveStatus.ts",
+      "resolved": "src/hooks/shared/useSaveStatus.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/BulkActionBar.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/BulkActionBar.tsx",
+      "specifier": "../../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/BulkActionBar.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -24778,6 +24836,22 @@
       "specifier": "../modals/DimensionEditorModal",
       "kind": "import",
       "resolved": "src/components/shared/modals/DimensionEditorModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ItemStatusChip.tsx",
+      "specifier": "../../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ItemStatusChip.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25174,30 +25248,6 @@
       "asset": false
     },
     {
-      "importer": "src/hooks/index.ts",
-      "specifier": "./useRowSelection",
-      "kind": "export",
-      "resolved": "src/hooks/useRowSelection.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/hooks/index.ts",
-      "specifier": "./useTableDensity",
-      "kind": "export",
-      "resolved": "src/hooks/useTableDensity.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/hooks/index.ts",
-      "specifier": "./useSaveStatus",
-      "kind": "export",
-      "resolved": "src/hooks/useSaveStatus.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
       "importer": "src/hooks/materials/index.ts",
       "specifier": "./useMaterials",
       "kind": "export",
@@ -25478,6 +25528,54 @@
       "asset": false
     },
     {
+      "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useRowSelection",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useRowSelection.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useRowSelection",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useRowSelection.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useSaveStatus",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useSaveStatus.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useSaveStatus",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useSaveStatus.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useTableDensity",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useTableDensity.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useTableDensity",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useTableDensity.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/hooks/shared/useColumnConfig.test.tsx",
       "specifier": "@testing-library/react",
       "kind": "import",
@@ -25734,6 +25832,38 @@
       "asset": false
     },
     {
+      "importer": "src/hooks/shared/useRowSelection.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useSaveStatus.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useSaveStatus.ts",
+      "specifier": "@tanstack/react-query",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@tanstack/react-query",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useTableDensity.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
       "importer": "src/hooks/shared/useUserProfile.ts",
       "specifier": "@tanstack/react-query",
       "kind": "import",
@@ -25779,38 +25909,6 @@
       "kind": "import",
       "resolved": "src/types/index.ts",
       "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/hooks/useRowSelection.ts",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/hooks/useSaveStatus.ts",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/hooks/useSaveStatus.ts",
-      "specifier": "@tanstack/react-query",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "@tanstack/react-query",
-      "asset": false
-    },
-    {
-      "importer": "src/hooks/useTableDensity.ts",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
       "asset": false
     },
     {
@@ -26743,9 +26841,9 @@
     },
     {
       "importer": "src/lib/export/ffe/ffePdf.ts",
-      "specifier": "../../theme/constants",
+      "specifier": "../../constants",
       "kind": "import",
-      "resolved": "src/lib/theme/constants.ts",
+      "resolved": "src/lib/constants.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27031,9 +27129,9 @@
     },
     {
       "importer": "src/lib/export/materials.ts",
-      "specifier": "../theme/constants",
+      "specifier": "../constants",
       "kind": "import",
-      "resolved": "src/lib/theme/constants.ts",
+      "resolved": "src/lib/constants.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27191,9 +27289,9 @@
     },
     {
       "importer": "src/lib/export/proposal/proposalExcel.ts",
-      "specifier": "../../theme/constants",
+      "specifier": "../../constants",
       "kind": "import",
-      "resolved": "src/lib/theme/constants.ts",
+      "resolved": "src/lib/constants.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27231,9 +27329,9 @@
     },
     {
       "importer": "src/lib/export/proposal/proposalPdf.ts",
-      "specifier": "../../theme/constants",
+      "specifier": "../../constants",
       "kind": "import",
-      "resolved": "src/lib/theme/constants.ts",
+      "resolved": "src/lib/constants.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27630,38 +27728,6 @@
       "asset": false
     },
     {
-      "importer": "src/lib/pdf.ts",
-      "specifier": "pdfjs-dist",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "pdfjs-dist",
-      "asset": false
-    },
-    {
-      "importer": "src/lib/pdf.ts",
-      "specifier": "pdfjs-dist",
-      "kind": "import-type",
-      "resolved": null,
-      "externalPackage": "pdfjs-dist",
-      "asset": false
-    },
-    {
-      "importer": "src/lib/pdf.ts",
-      "specifier": "pdfjs-dist",
-      "kind": "dynamic-import",
-      "resolved": null,
-      "externalPackage": "pdfjs-dist",
-      "asset": false
-    },
-    {
-      "importer": "src/lib/pdf.ts",
-      "specifier": "pdfjs-dist/build/pdf.worker.mjs?url",
-      "kind": "dynamic-import",
-      "resolved": null,
-      "externalPackage": "pdfjs-dist",
-      "asset": false
-    },
-    {
       "importer": "src/lib/plans/formatting.ts",
       "specifier": "../../types",
       "kind": "import",
@@ -27683,6 +27749,46 @@
       "kind": "export",
       "resolved": "src/lib/plans/formatting.ts",
       "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/plans/index.ts",
+      "specifier": "./pdf",
+      "kind": "export",
+      "resolved": "src/lib/plans/pdf.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/plans/pdf.ts",
+      "specifier": "pdfjs-dist",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "pdfjs-dist",
+      "asset": false
+    },
+    {
+      "importer": "src/lib/plans/pdf.ts",
+      "specifier": "pdfjs-dist",
+      "kind": "import-type",
+      "resolved": null,
+      "externalPackage": "pdfjs-dist",
+      "asset": false
+    },
+    {
+      "importer": "src/lib/plans/pdf.ts",
+      "specifier": "pdfjs-dist",
+      "kind": "dynamic-import",
+      "resolved": null,
+      "externalPackage": "pdfjs-dist",
+      "asset": false
+    },
+    {
+      "importer": "src/lib/plans/pdf.ts",
+      "specifier": "pdfjs-dist/build/pdf.worker.mjs?url",
+      "kind": "dynamic-import",
+      "resolved": null,
+      "externalPackage": "pdfjs-dist",
       "asset": false
     },
     {
@@ -27778,6 +27884,14 @@
       "specifier": "./generatedItemChangeFields",
       "kind": "import",
       "resolved": "src/lib/table/generatedItemChangeFields.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/table/proposalStatusConfig.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -28095,9 +28209,9 @@
     },
     {
       "importer": "src/pages/PlanCanvasPage.tsx",
-      "specifier": "../components/proposal/ChangeConfirmModal",
+      "specifier": "../components/shared/modals/ChangeConfirmModal",
       "kind": "import",
-      "resolved": "src/components/proposal/ChangeConfirmModal.tsx",
+      "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
       "externalPackage": null,
       "asset": false
     },

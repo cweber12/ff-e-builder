@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import type { Project } from '../../types';
 import { ProjectOptionsMenu } from './ProjectOptionsMenu';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
-import type { SaveState } from '../../hooks/useSaveStatus';
+import type { SaveState } from '../../hooks/shared/useSaveStatus';
 
 // ---------------------------------------------------------------------------
 // Skeleton (two-row height = 40px + 48px = 88px)

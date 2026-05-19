@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button, Modal } from '../primitives';
-import { proposalStatusConfig } from './proposalStatusConfig';
-import { cn } from '../../lib/utils';
-import type { ProposalStatus } from '../../types';
+import { Button, Modal } from '../../primitives';
+import { proposalStatusConfig } from '../../../lib/table/proposalStatusConfig';
+import { cn } from '../../../lib/utils';
+import type { ProposalStatus } from '../../../types';
 
 export interface ChangeConfirmResult {
   notes?: string;

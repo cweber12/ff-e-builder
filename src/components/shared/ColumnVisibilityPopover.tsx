@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useColumnConfig } from '../../hooks/shared';
-import { useTableDensity, type TableDensity } from '../../hooks/useTableDensity';
+import { useTableDensity, type TableDensity } from '../../hooks/shared/useTableDensity';
 import { useColumnDefs } from '../../hooks';
 import { cn } from '../../lib/utils';
 

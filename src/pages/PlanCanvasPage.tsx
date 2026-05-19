@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import {
   ChangeConfirmModal,
   type ChangeConfirmResult,
-} from '../components/proposal/ChangeConfirmModal';
+} from '../components/shared/modals/ChangeConfirmModal';
 import { PlanInspector } from '../components/plans/canvas/PlanInspector';
 import { PlanToolRail } from '../components/plans/canvas/PlanToolRail';
 import { PlanViewport } from '../components/plans/canvas/PlanViewport';

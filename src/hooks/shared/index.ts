@@ -23,3 +23,9 @@ export {
   useDeleteColumnDef,
 } from './useColumnDefs';
 export { useIsMobileViewport } from './useIsMobileViewport';
+export { useRowSelection } from './useRowSelection';
+export type { UseRowSelectionReturn, TableId } from './useRowSelection';
+export { useSaveStatus } from './useSaveStatus';
+export type { SaveState } from './useSaveStatus';
+export { useTableDensity, densityRowClass } from './useTableDensity';
+export type { TableDensity } from './useTableDensity';

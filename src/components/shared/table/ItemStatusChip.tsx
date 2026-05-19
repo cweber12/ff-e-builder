@@ -1,5 +1,5 @@
-import { cn } from '../../lib/utils';
-import type { ItemStatus } from '../../types';
+import { cn } from '../../../lib/utils';
+import type { ItemStatus } from '../../../types';
 
 const itemStatusConfig: Record<ItemStatus, { label: string; dotClass: string }> = {
   pending: { label: 'PENDING', dotClass: 'bg-neutral-400' },

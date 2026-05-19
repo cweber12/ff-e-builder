@@ -74,8 +74,8 @@ import {
 } from '../../../types';
 import type { CreateMaterialInput, UpdateItemInput } from '../../../lib/api';
 import { exportTableCsv, exportTableExcel, exportTablePdf } from '../../../lib/export';
-import { ItemStatusChip } from '../../shared/ItemStatusChip';
-import { TotalsBar } from '../../shared/TotalsBar';
+import { ItemStatusChip } from '../../shared/table/ItemStatusChip';
+import { TotalsBar } from '../../shared/table/TotalsBar';
 import { Button } from '../../primitives/Button';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { Modal } from '../../primitives/Modal';
@@ -105,7 +105,10 @@ import {
 } from '../../shared/table/GeneratedItemSizeModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
 import { ffeStickyEdgeColumnClassNames } from '../../shared/table/generatedItemStickyStyles';
-import { ChangeConfirmModal, type ChangeConfirmResult } from '../../proposal/ChangeConfirmModal';
+import {
+  ChangeConfirmModal,
+  type ChangeConfirmResult,
+} from '../../shared/modals/ChangeConfirmModal';
 import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } from '../../proposal/revision';
 
 const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;

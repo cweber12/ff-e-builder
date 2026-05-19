@@ -21,7 +21,7 @@ import {
   tableBorderSide,
   thinBorder,
 } from '../excelStyles';
-import { BRAND_RGB } from '../../theme/constants';
+import { BRAND_RGB } from '../../constants';
 
 // ── Styling constants ─────────────────────────────────────────────────────────
 const PROPOSAL_FONT = 'Aptos';

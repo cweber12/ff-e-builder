@@ -28,7 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
-import { TotalsBar } from '../../shared/TotalsBar';
+import { TotalsBar } from '../../shared/table/TotalsBar';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import {
@@ -104,7 +104,10 @@ import {
   type GeneratedItemChangeInfo,
 } from '../../../lib/table/generatedItemChangeInfo';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
-import { ChangeConfirmModal, type ChangeConfirmResult } from '../ChangeConfirmModal';
+import {
+  ChangeConfirmModal,
+  type ChangeConfirmResult,
+} from '../../shared/modals/ChangeConfirmModal';
 import {
   RevisionCostCell,
   GeneratedItemColumnChangeDot,
