@@ -504,6 +504,7 @@ router.delete('/proposal/items/:id', async (c) => {
       WHERE proposal_item_id = ${id}
     )
   `;
+  await sql`DELETE FROM measurements WHERE target_item_id = ${id} AND target_kind = 'proposal'`;
   await sql`DELETE FROM proposal_items WHERE id = ${id}`;
   return c.body(null, 204);
 });
