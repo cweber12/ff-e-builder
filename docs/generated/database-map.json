@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-05-19T17:27:20.402Z",
+  "generatedAt": "2026-05-19T17:47:49.871Z",
   "generatedBy": "pnpm db:scan",
   "source": "scripts/database-map.ts",
   "migrations": [
