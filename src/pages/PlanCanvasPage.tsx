@@ -181,7 +181,12 @@ export function PlanCanvasPage({
     if (!selectedPlan) return;
     if (!isCalibrated) {
       setActiveTool('calibrate');
+      return;
     }
+    // Crop is a follow-up step, never a sensible default. Kick to rectangle
+    // when a calibrated plan loads or the user navigates to one while crop
+    // happened to be the last active tool.
+    setActiveTool((current) => (current === 'crop' ? 'rectangle' : current));
   }, [isCalibrated, selectedPlan]);
 
   useEffect(() => {
@@ -931,7 +936,7 @@ export function PlanCanvasPage({
           </div>
         </header>
 
-        <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[72px_minmax(0,1fr)_340px]">
+        <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[88px_minmax(0,1fr)_340px]">
           <PlanToolRail
             activeTool={activeTool}
             isCalibrated={isCalibrated}
@@ -1303,7 +1308,7 @@ function insertAfterColumn(order: string[], columnId: string, anchorId: string) 
 
 function PlanCanvasSkeleton() {
   return (
-    <div className="grid h-full min-h-0 gap-0 bg-canvas-shell xl:grid-cols-[84px_minmax(0,1fr)_380px]">
+    <div className="grid h-full min-h-0 gap-0 bg-canvas-shell xl:grid-cols-[88px_minmax(0,1fr)_380px]">
       <div className="overflow-hidden border-r border-black/5 bg-white/72 p-3">
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, index) => (

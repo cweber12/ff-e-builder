@@ -1,6 +1,6 @@
 import type { PlanToolId } from './types';
 
-export type PlanToolGroupId = 'setup' | 'measure' | 'view';
+export type PlanToolGroupId = 'setup' | 'measure' | 'crop' | 'view';
 
 export type PlanToolDefinition = {
   id: PlanToolId;
@@ -20,7 +20,7 @@ export const PLAN_TOOL_DEFINITIONS: PlanToolDefinition[] = [
     id: 'length',
     label: 'Length Line',
     description: 'Measure and save linear spans on the plan.',
-    group: 'setup',
+    group: 'measure',
   },
   {
     id: 'rectangle',
@@ -32,7 +32,7 @@ export const PLAN_TOOL_DEFINITIONS: PlanToolDefinition[] = [
     id: 'crop',
     label: 'Crop',
     description: 'Refine the derived plan image framing.',
-    group: 'measure',
+    group: 'crop',
   },
   {
     id: 'pan',
@@ -45,6 +45,7 @@ export const PLAN_TOOL_DEFINITIONS: PlanToolDefinition[] = [
 export const PLAN_TOOL_GROUPS: Array<{ id: PlanToolGroupId; label: string }> = [
   { id: 'setup', label: 'Setup' },
   { id: 'measure', label: 'Measure' },
+  { id: 'crop', label: 'Crop' },
   { id: 'view', label: 'View' },
 ];
 

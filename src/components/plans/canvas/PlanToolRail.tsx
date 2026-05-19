@@ -28,16 +28,15 @@ export function PlanToolRail({
 
         return (
           <div key={group.id}>
-            {groupIndex > 0 ? (
-              <div className="rail-divider" aria-hidden>
-                <span className="rail-label">{group.label}</span>
-              </div>
-            ) : (
-              <div className="mx-auto mb-1 mt-1 flex w-11 items-center justify-center">
-                <span className="rail-label">{group.label}</span>
-              </div>
-            )}
-            <div className="flex flex-col items-center gap-1.5 px-2.5">
+            <div
+              className={[
+                'mx-3 flex items-center justify-center px-1 pb-1 pt-2',
+                groupIndex > 0 ? 'mt-2 border-t border-neutral-200/70' : '',
+              ].join(' ')}
+            >
+              <span className="rail-label">{group.label}</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5 px-3">
               {tools.map((tool) => {
                 const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
                 const active = activeTool === tool.id;

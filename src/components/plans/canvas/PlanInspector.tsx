@@ -1,5 +1,6 @@
 import { MeasuredAreaSelect } from './MeasuredAreaSelect';
-import { getPlanToolLabel } from './planToolDefinitions';
+import { getPlanToolLabel, PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './planToolDefinitions';
+import type { PlanToolGroupId } from './planToolDefinitions';
 import type {
   MeasurementApplicationMode,
   MeasurementDisplay,
@@ -197,13 +198,14 @@ export function PlanInspector({
   return (
     <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-canvas-chrome/90 px-4 py-3 backdrop-blur">
       <div className="space-y-4">
-        <div className="pb-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-            Inspector
-          </p>
-          <h2 className="mt-1 font-display text-lg font-semibold text-neutral-950">
-            {getPlanToolLabel(activeTool)}
-          </h2>
+        <div className="space-y-3 border-b border-neutral-200/70 pb-3">
+          <StageStrip activeTool={activeTool} />
+          <div>
+            <p className="eyebrow">Inspector</p>
+            <h2 className="mt-0.5 font-display text-lg font-semibold text-neutral-950">
+              {getPlanToolLabel(activeTool)}
+            </h2>
+          </div>
         </div>
 
         <section className={activeTool === 'calibrate' ? 'block' : 'hidden'}>
@@ -873,11 +875,53 @@ export function PlanInspector({
 
 function MetricRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-neutral-200/80 pb-2 text-sm">
-      <span className="font-medium text-neutral-700">{label}</span>
-      <span className="text-right text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
-        {value}
-      </span>
+    <div className="metric-row">
+      <span className="metric-row__label">{label}</span>
+      <span className="metric-row__value text-right">{value}</span>
     </div>
   );
+}
+
+function StageStrip({ activeTool }: { activeTool: PlanToolId }) {
+  const activeGroup = activeGroupFor(activeTool);
+  const activeIndex = PLAN_TOOL_GROUPS.findIndex((group) => group.id === activeGroup);
+
+  return (
+    <ol className="flex items-center gap-2" aria-label="Workflow stage">
+      {PLAN_TOOL_GROUPS.map((group, index) => {
+        const isActive = group.id === activeGroup;
+        const isComplete = index < activeIndex;
+        return (
+          <li key={group.id} className="flex items-center gap-2">
+            <span
+              className={[
+                'stage-dot',
+                isActive ? 'stage-dot--active' : isComplete ? 'stage-dot--complete' : '',
+              ].join(' ')}
+              aria-hidden
+            />
+            <span
+              className={[
+                'text-[10px] font-semibold uppercase tracking-[0.16em]',
+                isActive
+                  ? 'text-neutral-900'
+                  : isComplete
+                    ? 'text-neutral-500'
+                    : 'text-neutral-400',
+              ].join(' ')}
+            >
+              {group.label}
+            </span>
+            {index < PLAN_TOOL_GROUPS.length - 1 ? (
+              <span aria-hidden className="h-px w-3 bg-neutral-300" />
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function activeGroupFor(toolId: PlanToolId): PlanToolGroupId {
+  return PLAN_TOOL_DEFINITIONS.find((tool) => tool.id === toolId)?.group ?? 'setup';
 }
