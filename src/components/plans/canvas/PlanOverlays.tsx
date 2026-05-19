@@ -19,7 +19,7 @@ export function LineOverlay({
 }) {
   const midX = (start.x + end.x) / 2;
   const midY = (start.y + end.y) / 2;
-  const tick = getPerpendicularTick(start, end, 18);
+  const tick = getPerpendicularTick(start, end, 14);
 
   return (
     <>
@@ -29,8 +29,8 @@ export function LineOverlay({
         x2={end.x}
         y2={end.y}
         className={strokeClassName}
-        strokeWidth={3}
-        strokeDasharray={dashed ? '10 8' : undefined}
+        strokeWidth={2}
+        strokeDasharray={dashed ? '8 6' : undefined}
         strokeLinecap="round"
       />
       {cap === 'tick' ? (
@@ -41,7 +41,7 @@ export function LineOverlay({
             x2={start.x + tick.x}
             y2={start.y + tick.y}
             className={strokeClassName}
-            strokeWidth={2}
+            strokeWidth={1.75}
             strokeLinecap="round"
           />
           <line
@@ -50,14 +50,14 @@ export function LineOverlay({
             x2={end.x + tick.x}
             y2={end.y + tick.y}
             className={strokeClassName}
-            strokeWidth={2}
+            strokeWidth={1.75}
             strokeLinecap="round"
           />
         </>
       ) : (
         <>
-          <circle cx={start.x} cy={start.y} r={5} className={dotClassName} />
-          <circle cx={end.x} cy={end.y} r={5} className={dotClassName} />
+          <circle cx={start.x} cy={start.y} r={3.5} className={dotClassName} />
+          <circle cx={end.x} cy={end.y} r={3.5} className={dotClassName} />
         </>
       )}
       {label ? (
@@ -123,10 +123,10 @@ export function RectOverlay({
   return (
     <polygon
       points={pointsAttr}
-      fill={fill ?? (active ? 'rgba(201, 151, 35, 0.16)' : 'rgba(82, 82, 91, 0.08)')}
-      stroke={stroke ?? (active ? '#c99723' : '#71717a')}
-      strokeWidth={strokeWidth ?? (active ? 3.5 : 2)}
-      strokeDasharray={dashed ? '10 8' : undefined}
+      fill={fill ?? (active ? 'rgba(31, 88, 145, 0.08)' : 'rgba(41, 53, 69, 0.04)')}
+      stroke={stroke ?? (active ? '#164575' : '#5C6A7C')}
+      strokeWidth={strokeWidth ?? (active ? 2 : 1.5)}
+      strokeDasharray={dashed ? '8 6' : undefined}
       strokeLinejoin="round"
     />
   );

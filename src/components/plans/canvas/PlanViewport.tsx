@@ -601,8 +601,8 @@ export function PlanViewport({
                 <LineOverlay
                   start={viewportPointFromImage({ x: calibration.startX, y: calibration.startY })}
                   end={viewportPointFromImage({ x: calibration.endX, y: calibration.endY })}
-                  strokeClassName="stroke-emerald-500"
-                  dotClassName="fill-emerald-500"
+                  strokeClassName="stroke-brand-600"
+                  dotClassName="fill-brand-600"
                   cap="tick"
                 />
               ) : null}
@@ -643,9 +643,9 @@ export function PlanViewport({
                       }).map(viewportPointFromImage)}
                       active={measurement.id === selectedMeasurementId}
                       dashed
-                      fill="rgba(16, 185, 129, 0.08)"
-                      stroke={measurement.id === selectedMeasurementId ? '#059669' : '#10b981'}
-                      strokeWidth={measurement.id === selectedMeasurementId ? 3 : 2}
+                      fill="rgba(5, 150, 105, 0.06)"
+                      stroke={measurement.id === selectedMeasurementId ? '#047857' : '#059669'}
+                      strokeWidth={measurement.id === selectedMeasurementId ? 1.75 : 1.25}
                     />
                   ) : null}
                 </g>
@@ -702,9 +702,9 @@ export function PlanViewport({
                   points={buildRectPolygonPoints(draftCropRect).map(viewportPointFromImage)}
                   active
                   dashed
-                  fill="rgba(16, 185, 129, 0.12)"
-                  stroke="#059669"
-                  strokeWidth={3}
+                  fill="rgba(5, 150, 105, 0.08)"
+                  stroke="#047857"
+                  strokeWidth={1.75}
                 />
               ) : null}
             </svg>

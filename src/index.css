@@ -70,13 +70,17 @@
   --color-warning-500: 217 119 6;
   --color-warning-700: 154 84 6;
 
-  /* Plan canvas — drafting board palette */
+  /* Plan canvas — drafting board palette
+     Overlay tokens now read as architectural drawing ink:
+       plan-line    → cool slate (saved length lines, the "ink" stroke)
+       plan-measure → steel brand (in-progress drafts, dashed)
+       plan-active  → deep brand (selected overlays, authoritative) */
   --color-canvas-bg: 227 222 210;
   --color-canvas-shell: 243 241 234;
   --color-canvas-chrome: 251 250 246;
-  --color-plan-line: 139 111 71;
-  --color-plan-measure: 193 122 0;
-  --color-plan-active: 5 150 105;
+  --color-plan-line: 41 53 69;
+  --color-plan-measure: 31 88 145;
+  --color-plan-active: 16 52 92;
 
   /* Shadows — warm-tinted, lower opacity than Tailwind defaults */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
