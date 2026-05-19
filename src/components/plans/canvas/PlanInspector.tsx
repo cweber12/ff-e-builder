@@ -516,15 +516,23 @@ export function PlanInspector({
                   {normalizedMeasurementDraft ? (
                     <>
                       <MetricRow
-                        label="Draft area"
+                        label="Draft size"
                         value={
                           calibration &&
                           draftMeasurementWidthPlanUnits !== null &&
                           draftMeasurementHeightPlanUnits !== null
-                            ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits)} ${calibration.unit} x ${formatDisplayNumber(draftMeasurementHeightPlanUnits)} ${calibration.unit}`
-                            : `${formatDisplayNumber(normalizedMeasurementDraft.width)} x ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
+                            ? `${formatPlanLength(draftMeasurementWidthPlanUnits, calibration.unit)} × ${formatPlanLength(draftMeasurementHeightPlanUnits, calibration.unit)}`
+                            : `${formatDisplayNumber(normalizedMeasurementDraft.width)} × ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
                         }
                       />
+                      {calibration &&
+                      draftMeasurementWidthPlanUnits !== null &&
+                      draftMeasurementHeightPlanUnits !== null ? (
+                        <MetricRow
+                          label="Draft area"
+                          value={`${formatDisplayNumber(draftMeasurementWidthPlanUnits * draftMeasurementHeightPlanUnits)} ${formatAreaUnit(calibration.unit)}`}
+                        />
+                      ) : null}
 
                       <label className="block">
                         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
@@ -622,14 +630,31 @@ export function PlanInspector({
                   )}
 
                   {selectedMeasurementRect ? (
-                    <MetricRow
-                      label="Selected area"
-                      value={
-                        calibration && selectedMeasurement
-                          ? `${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, calibration.unit))} ${calibration.unit} x ${formatDisplayNumber(convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit))} ${calibration.unit}`
-                          : `${formatDisplayNumber(selectedMeasurementRect.width)} x ${formatDisplayNumber(selectedMeasurementRect.height)} px`
-                      }
-                    />
+                    <>
+                      <MetricRow
+                        label="Selected size"
+                        value={
+                          calibration && selectedMeasurement
+                            ? `${formatPlanLength(convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, calibration.unit), calibration.unit)} × ${formatPlanLength(convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, calibration.unit), calibration.unit)}`
+                            : `${formatDisplayNumber(selectedMeasurementRect.width)} × ${formatDisplayNumber(selectedMeasurementRect.height)} px`
+                        }
+                      />
+                      {calibration && selectedMeasurement ? (
+                        <MetricRow
+                          label="Selected area"
+                          value={`${formatDisplayNumber(
+                            convertBaseToPlanUnits(
+                              selectedMeasurement.horizontalSpanBase,
+                              calibration.unit,
+                            ) *
+                              convertBaseToPlanUnits(
+                                selectedMeasurement.verticalSpanBase,
+                                calibration.unit,
+                              ),
+                          )} ${formatAreaUnit(calibration.unit)}`}
+                        />
+                      ) : null}
+                    </>
                   ) : null}
 
                   {normalizedCropDraft ? (
@@ -639,8 +664,8 @@ export function PlanInspector({
                         calibration &&
                         draftCropWidthPlanUnits !== null &&
                         draftCropHeightPlanUnits !== null
-                          ? `${formatDisplayNumber(draftCropWidthPlanUnits)} ${calibration.unit} x ${formatDisplayNumber(draftCropHeightPlanUnits)} ${calibration.unit}`
-                          : `${formatDisplayNumber(normalizedCropDraft.width)} x ${formatDisplayNumber(normalizedCropDraft.height)} px`
+                          ? `${formatPlanLength(draftCropWidthPlanUnits, calibration.unit)} × ${formatPlanLength(draftCropHeightPlanUnits, calibration.unit)}`
+                          : `${formatDisplayNumber(normalizedCropDraft.width)} × ${formatDisplayNumber(normalizedCropDraft.height)} px`
                       }
                     />
                   ) : null}
@@ -650,7 +675,7 @@ export function PlanInspector({
                   selectedMeasurement.cropHeight !== null ? (
                     <MetricRow
                       label="Saved crop"
-                      value={`${formatDisplayNumber(selectedMeasurement.cropWidth)} x ${formatDisplayNumber(selectedMeasurement.cropHeight)} px`}
+                      value={`${formatDisplayNumber(selectedMeasurement.cropWidth)} × ${formatDisplayNumber(selectedMeasurement.cropHeight)} px`}
                     />
                   ) : null}
 

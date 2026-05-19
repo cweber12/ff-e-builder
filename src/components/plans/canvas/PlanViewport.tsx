@@ -9,8 +9,9 @@ import {
 import { api } from '../../../lib/api';
 import {
   buildRectPolygonPoints,
+  formatAreaUnit,
   formatDisplayNumber,
-  formatPlanLength,
+  formatPlanLengthCompact,
   getLineLength,
   measurementToRectBounds,
   normalizeRectDraft,
@@ -721,7 +722,7 @@ export function PlanViewport({
                 />
                 {liveMeasurementPosition && liveMeasurementLabel ? (
                   <div
-                    className="num absolute rounded-md border border-white/30 bg-neutral-950/85 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md backdrop-blur"
+                    className="absolute whitespace-nowrap rounded-md border border-white/30 bg-neutral-950/85 px-2 py-0.5 text-[12px] font-semibold leading-tight tracking-tight text-white tabular-nums shadow-md backdrop-blur"
                     style={{
                       left: liveMeasurementPosition.x,
                       top: liveMeasurementPosition.y,
@@ -839,25 +840,27 @@ function getLiveMeasurementLabel({
     const pixelLength = getLineLength(lengthLineDraft);
     if (!calibration) return `${formatDisplayNumber(pixelLength)} px`;
 
-    return formatPlanLength(pixelLength / calibration.pixelsPerUnit, calibration.unit);
+    return formatPlanLengthCompact(pixelLength / calibration.pixelsPerUnit, calibration.unit);
   }
 
   if (activeTool === 'rectangle' && measurementDraft) {
     const rect = normalizeRectDraft(measurementDraft);
     if (!calibration) {
-      return `${formatDisplayNumber(rect.width)} x ${formatDisplayNumber(rect.height)} px`;
+      return `${formatDisplayNumber(rect.width)} × ${formatDisplayNumber(rect.height)} px`;
     }
 
-    return `${formatPlanLength(rect.width / calibration.pixelsPerUnit, calibration.unit)} x ${formatPlanLength(rect.height / calibration.pixelsPerUnit, calibration.unit)}`;
+    const width = rect.width / calibration.pixelsPerUnit;
+    const height = rect.height / calibration.pixelsPerUnit;
+    return `${formatPlanLengthCompact(width, calibration.unit)} × ${formatPlanLengthCompact(height, calibration.unit)}  ·  ${formatDisplayNumber(width * height)} ${formatAreaUnit(calibration.unit)}`;
   }
 
   if (activeTool === 'crop' && cropDraft) {
     const rect = normalizeRectDraft(cropDraft);
     if (!calibration) {
-      return `${formatDisplayNumber(rect.width)} x ${formatDisplayNumber(rect.height)} px`;
+      return `${formatDisplayNumber(rect.width)} × ${formatDisplayNumber(rect.height)} px`;
     }
 
-    return `${formatPlanLength(rect.width / calibration.pixelsPerUnit, calibration.unit)} x ${formatPlanLength(rect.height / calibration.pixelsPerUnit, calibration.unit)}`;
+    return `${formatPlanLengthCompact(rect.width / calibration.pixelsPerUnit, calibration.unit)} × ${formatPlanLengthCompact(rect.height / calibration.pixelsPerUnit, calibration.unit)}`;
   }
 
   return null;

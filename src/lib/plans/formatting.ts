@@ -29,6 +29,16 @@ export function formatPlanLength(value: number, unit: PlanMeasurementUnit) {
   return formatFeetAndFractionalInches(value);
 }
 
+/**
+ * Compact architectural notation suitable for tight overlays and HUDs.
+ * For ft → `12'-6½"` (foot-tick, Unicode vulgar fractions, hyphen separator).
+ * For other units → same as formatPlanLength.
+ */
+export function formatPlanLengthCompact(value: number, unit: PlanMeasurementUnit) {
+  if (unit !== 'ft') return `${formatDisplayNumber(value)} ${unit}`;
+  return formatFeetTickInches(value);
+}
+
 export function formatAreaUnit(unit: PlanMeasurementUnit) {
   if (unit === 'ft') return 'sq ft';
   if (unit === 'in') return 'sq in';
@@ -69,6 +79,47 @@ function formatInchFraction(sixteenths: number) {
 
   const divisor = greatestCommonDivisor(sixteenths, 16);
   return `${sixteenths / divisor}/${16 / divisor}`;
+}
+
+function formatFeetTickInches(decimalFeet: number) {
+  if (!Number.isFinite(decimalFeet)) return `0"`;
+
+  const sign = decimalFeet < 0 ? '-' : '';
+  const totalSixteenths = Math.round(Math.abs(decimalFeet) * 12 * 16);
+  const feet = Math.floor(totalSixteenths / (12 * 16));
+  const remainingSixteenths = totalSixteenths - feet * 12 * 16;
+  const wholeInches = Math.floor(remainingSixteenths / 16);
+  const fractionSixteenths = remainingSixteenths % 16;
+  const fraction = formatInchFractionGlyph(fractionSixteenths);
+
+  // Drop the inches segment entirely when the value lands exactly on a foot
+  // mark — `12'` reads cleaner than `12'-0"`. Sub-foot values render as
+  // inches only (`6½"`).
+  const wholeInchesText = wholeInches > 0 || !fraction ? String(wholeInches) : '';
+  const inchSegment = wholeInches === 0 && !fraction ? '' : `${wholeInchesText}${fraction}"`;
+
+  if (feet === 0) return inchSegment ? `${sign}${inchSegment}` : `0"`;
+  if (!inchSegment) return `${sign}${feet}'`;
+  return `${sign}${feet}'-${inchSegment}`;
+}
+
+const UNICODE_INCH_FRACTIONS: Record<number, string> = {
+  2: '⅛',
+  4: '¼',
+  6: '⅜',
+  8: '½',
+  10: '⅝',
+  12: '¾',
+  14: '⅞',
+};
+
+function formatInchFractionGlyph(sixteenths: number) {
+  if (sixteenths === 0) return '';
+  const glyph = UNICODE_INCH_FRACTIONS[sixteenths];
+  if (glyph) return glyph;
+  // Non-eighth fractions (1/16, 3/16, 5/16, …) — fall back to ASCII.
+  const divisor = greatestCommonDivisor(sixteenths, 16);
+  return ` ${sixteenths / divisor}/${16 / divisor}`;
 }
 
 function greatestCommonDivisor(a: number, b: number): number {
