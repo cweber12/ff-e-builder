@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { PLAN_TOOL_DEFINITIONS } from './planToolDefinitions';
+import { PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './planToolDefinitions';
 import type { PlanToolId, RectangleModeId } from './types';
 
 type PlanToolRailProps = {
@@ -18,85 +18,114 @@ export function PlanToolRail({
   onRectangleModeChange,
 }: PlanToolRailProps) {
   return (
-    <aside className="overflow-y-auto border-r border-black/10 bg-canvas-chrome/80 p-2.5 backdrop-blur">
-      <div className="flex flex-col gap-2">
-        {PLAN_TOOL_DEFINITIONS.map((tool) => {
-          const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
-          const active = activeTool === tool.id;
-          const btnCls = [
-            'flex h-11 w-11 items-center justify-center rounded-lg border transition',
-            active
-              ? 'border-neutral-950 bg-neutral-950 text-white shadow-sm'
-              : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200 hover:bg-white hover:text-neutral-950',
-            disabled && 'cursor-not-allowed border-transparent bg-transparent text-neutral-300',
-          ].join(' ');
+    <aside
+      className="overflow-y-auto border-r border-black/10 bg-canvas-chrome/80 py-3 backdrop-blur"
+      aria-label="Plan tools"
+    >
+      {PLAN_TOOL_GROUPS.map((group, groupIndex) => {
+        const tools = PLAN_TOOL_DEFINITIONS.filter((tool) => tool.group === group.id);
+        if (tools.length === 0) return null;
 
-          if (tool.id === 'rectangle') {
-            return (
-              <div key={tool.id} className="flex flex-col items-center gap-1">
-                <button
-                  type="button"
-                  aria-label={tool.label}
-                  title={`${tool.label}: ${tool.description}`}
-                  disabled={disabled}
-                  onClick={() => onToolChange(tool.id)}
-                  className={btnCls}
-                >
-                  <span className="sr-only">{tool.label}</span>
-                  <ToolIcon toolId={tool.id} />
-                </button>
-                {active && (
-                  <div className="flex w-11 overflow-hidden rounded border border-neutral-300">
-                    <button
-                      type="button"
-                      aria-label="Measure mode"
-                      title="Measure mode"
-                      onClick={() => onRectangleModeChange('measure')}
-                      className={[
-                        'flex-1 py-0.5 text-[9px] font-bold uppercase leading-none transition',
-                        rectangleMode === 'measure'
-                          ? 'bg-neutral-950 text-white'
-                          : 'bg-white text-neutral-400 hover:text-neutral-700',
-                      ].join(' ')}
-                    >
-                      M
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Highlight mode"
-                      title="Highlight mode"
-                      onClick={() => onRectangleModeChange('highlight')}
-                      className={[
-                        'flex-1 border-l border-neutral-300 py-0.5 text-[9px] font-bold uppercase leading-none transition',
-                        rectangleMode === 'highlight'
-                          ? 'bg-neutral-950 text-white'
-                          : 'bg-white text-neutral-400 hover:text-neutral-700',
-                      ].join(' ')}
-                    >
-                      H
-                    </button>
-                  </div>
-                )}
+        return (
+          <div key={group.id}>
+            {groupIndex > 0 ? (
+              <div className="rail-divider" aria-hidden>
+                <span className="rail-label">{group.label}</span>
               </div>
-            );
-          }
+            ) : (
+              <div className="mx-auto mb-1 mt-1 flex w-11 items-center justify-center">
+                <span className="rail-label">{group.label}</span>
+              </div>
+            )}
+            <div className="flex flex-col items-center gap-1.5 px-2.5">
+              {tools.map((tool) => {
+                const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
+                const active = activeTool === tool.id;
+                const showRectangleModes = tool.id === 'rectangle' && active && !disabled;
 
-          return (
-            <button
-              key={tool.id}
-              type="button"
-              aria-label={tool.label}
-              title={`${tool.label}: ${tool.description}`}
-              disabled={disabled}
-              onClick={() => onToolChange(tool.id)}
-              className={btnCls}
-            >
-              <span className="sr-only">{tool.label}</span>
-              <ToolIcon toolId={tool.id} />
-            </button>
-          );
-        })}
-      </div>
+                return (
+                  <div key={tool.id} className="flex w-11 flex-col items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label={tool.label}
+                      title={`${tool.label}: ${tool.description}`}
+                      disabled={disabled}
+                      onClick={() => onToolChange(tool.id)}
+                      className={[
+                        'relative flex h-11 w-11 items-center justify-center rounded-lg border transition',
+                        active
+                          ? 'border-neutral-950 bg-neutral-950 text-white shadow-sm'
+                          : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200 hover:bg-white hover:text-neutral-950',
+                        disabled
+                          ? 'cursor-not-allowed border-transparent bg-transparent text-neutral-300 hover:border-transparent hover:bg-transparent hover:text-neutral-300'
+                          : '',
+                      ].join(' ')}
+                    >
+                      {active ? (
+                        <span
+                          aria-hidden
+                          className="absolute -left-2.5 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-brand-500"
+                        />
+                      ) : null}
+                      <span className="sr-only">{tool.label}</span>
+                      <ToolIcon toolId={tool.id} />
+                      {disabled ? (
+                        <span
+                          aria-hidden
+                          className="absolute bottom-0.5 right-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/90 text-neutral-400 shadow-sm"
+                        >
+                          <LockIcon />
+                        </span>
+                      ) : null}
+                    </button>
+
+                    {showRectangleModes ? (
+                      <div
+                        role="radiogroup"
+                        aria-label="Rectangle sub-mode"
+                        className="flex w-11 overflow-hidden rounded-md border border-neutral-300 bg-white shadow-sm"
+                      >
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={rectangleMode === 'measure'}
+                          aria-label="Measure mode"
+                          title="Measure mode"
+                          onClick={() => onRectangleModeChange('measure')}
+                          className={[
+                            'flex-1 py-1 text-[10px] font-bold uppercase leading-none tracking-wide transition',
+                            rectangleMode === 'measure'
+                              ? 'bg-neutral-950 text-white'
+                              : 'text-neutral-500 hover:text-neutral-900',
+                          ].join(' ')}
+                        >
+                          M
+                        </button>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={rectangleMode === 'highlight'}
+                          aria-label="Highlight mode"
+                          title="Highlight mode"
+                          onClick={() => onRectangleModeChange('highlight')}
+                          className={[
+                            'flex-1 border-l border-neutral-300 py-1 text-[10px] font-bold uppercase leading-none tracking-wide transition',
+                            rectangleMode === 'highlight'
+                              ? 'bg-neutral-950 text-white'
+                              : 'text-neutral-500 hover:text-neutral-900',
+                          ].join(' ')}
+                        >
+                          H
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </aside>
   );
 }
@@ -169,5 +198,20 @@ function PanIcon() {
         />
       </svg>
     </ToolbarIcon>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 10 10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      className="h-2.5 w-2.5"
+    >
+      <rect x="2" y="4.5" width="6" height="4" rx="0.8" />
+      <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" />
+    </svg>
   );
 }
