@@ -22,6 +22,7 @@ export type {
 } from './item';
 export type { ImageAsset, ImageEntityType, CropParams } from './image';
 export { CROPPABLE_ENTITY_TYPES, CROP_ASPECT } from './image';
+export type { Company } from './company';
 export type { Material } from './material';
 export type {
   MeasurementUnit,

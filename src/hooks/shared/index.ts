@@ -14,6 +14,7 @@ export {
   useDeleteProject,
 } from './useProjects';
 export { useUserProfile, useUpdateUserProfile } from './useUserProfile';
+export { useCompany, useUpdateCompany } from './useCompany';
 export { useColumnConfig } from './useColumnConfig';
 export type { ColumnConfig } from './useColumnConfig';
 export {

@@ -1,4 +1,5 @@
 import { columnDefsApi } from './api/columnDefs';
+import { companyApi } from './api/company';
 import { imagesApi } from './api/images';
 import { itemsApi } from './api/items';
 import { materialsApi } from './api/materials';
@@ -28,12 +29,14 @@ export type {
 export type { CreateProjectInput, UpdateProjectInput } from './api/projects';
 export type { CreateRoomInput, UpdateRoomInput } from './api/rooms';
 export type { UpsertUserProfileInput } from './api/users';
+export type { UpsertCompanyInput } from './api/company';
 
 // API namespace
 
 export const api = {
   projects: projectsApi,
   users: usersApi,
+  company: companyApi,
   proposal: proposalApi,
   rooms: roomsApi,
   items: itemsApi,

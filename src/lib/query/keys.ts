@@ -20,6 +20,10 @@ export const userProfileKeys = {
   me: ['user-profile', 'me'] as const,
 };
 
+export const companyKeys = {
+  me: ['company', 'me'] as const,
+};
+
 export const roomKeys = {
   forProject: (projectId: string) => ['rooms', projectId] as const,
 };

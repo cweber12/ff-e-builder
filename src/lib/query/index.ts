@@ -3,6 +3,7 @@ export {
   projectKeys,
   planKeys,
   userProfileKeys,
+  companyKeys,
   roomKeys,
   itemKeys,
   imageKeys,
