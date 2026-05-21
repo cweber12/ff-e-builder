@@ -94,7 +94,6 @@ describe('proposal export document', () => {
         name: 'Designer',
         email: 'designer@example.com',
         phone: '',
-        companyName: '',
         createdAt: '',
         updatedAt: '',
         authorized: true,

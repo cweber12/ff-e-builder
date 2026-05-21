@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-20T00:49:38.021Z",
+  "generatedAt": "2026-05-21T18:00:44.415Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 252,
-      "internalImports": 783,
-      "externalImports": 269,
+      "files": 253,
+      "internalImports": 784,
+      "externalImports": 271,
       "unresolvedImports": 2
     },
     {
@@ -150,18 +150,18 @@
     {
       "name": "Cloudflare Workers API",
       "tsconfig": "api/tsconfig.json",
-      "files": 24,
-      "internalImports": 85,
-      "externalImports": 19,
+      "files": 25,
+      "internalImports": 90,
+      "externalImports": 20,
       "unresolvedImports": 0
     }
   ],
   "productAreas": [
     {
       "area": "ffe",
-      "files": 25,
-      "importsIn": 38,
-      "importsOut": 134,
+      "files": 26,
+      "importsIn": 39,
+      "importsOut": 135,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
@@ -233,9 +233,9 @@
     },
     {
       "area": "api-worker",
-      "files": 20,
-      "importsIn": 85,
-      "importsOut": 72,
+      "files": 21,
+      "importsIn": 90,
+      "importsOut": 77,
       "dependsOn": [],
       "importedBy": ["tests"]
     },
@@ -299,7 +299,7 @@
       "paths": [
         {
           "path": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
-          "files": 22
+          "files": 23
         },
         {
           "path": "src/lib/items/**, src/lib/import/formats/ffe.ts",
@@ -382,7 +382,7 @@
       "paths": [
         {
           "path": "api/src/**",
-          "files": 20
+          "files": 21
         }
       ]
     },
@@ -7697,14 +7697,14 @@
       "path": "api/src/index.ts",
       "files": 1,
       "importsIn": 3,
-      "importsOut": 14,
+      "importsOut": 15,
       "internalDependencies": ["api/src/middleware", "api/src/routes", "api/src/types.ts"],
       "externalDependencies": ["hono"]
     },
     {
       "path": "api/src/lib",
       "files": 6,
-      "importsIn": 42,
+      "importsIn": 43,
       "importsOut": 9,
       "internalDependencies": ["api/src/types.ts"],
       "externalDependencies": ["@neondatabase/serverless"]
@@ -7712,23 +7712,23 @@
     {
       "path": "api/src/middleware",
       "files": 2,
-      "importsIn": 3,
+      "importsIn": 4,
       "importsOut": 5,
       "internalDependencies": ["api/src/lib", "api/src/types.ts"],
       "externalDependencies": ["hono"]
     },
     {
       "path": "api/src/routes",
-      "files": 10,
-      "importsIn": 11,
-      "importsOut": 58,
+      "files": 11,
+      "importsIn": 12,
+      "importsOut": 63,
       "internalDependencies": ["api/src/lib", "api/src/middleware", "api/src/types.ts"],
       "externalDependencies": ["hono"]
     },
     {
       "path": "api/src/types.ts",
       "files": 1,
-      "importsIn": 26,
+      "importsIn": 28,
       "importsOut": 1,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -7769,7 +7769,7 @@
       "path": "src/components",
       "files": 117,
       "importsIn": 245,
-      "importsOut": 547,
+      "importsOut": 548,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7799,9 +7799,9 @@
     },
     {
       "path": "src/hooks",
-      "files": 27,
-      "importsIn": 69,
-      "importsOut": 120,
+      "files": 28,
+      "importsIn": 70,
+      "importsOut": 122,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -8236,6 +8236,14 @@
           "kind": "import",
           "resolved": "src/hooks/index.ts",
           "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/catalog/CatalogView.tsx",
+          "specifier": "sonner",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "sonner",
           "asset": false
         },
         {
@@ -13903,6 +13911,33 @@
           "resolved": "src/hooks/ffe/useItemColumnDefs.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/hooks/ffe/index.ts",
+          "specifier": "./useFfeItemSort",
+          "kind": "export",
+          "resolved": "src/hooks/ffe/useFfeItemSort.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/ffe/useFfeItemSort.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/hooks/ffe/useFfeItemSort.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
         }
       ]
     },
@@ -19334,6 +19369,14 @@
           "resolved": "api/src/routes/users.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "api/src/index.ts",
+          "specifier": "./routes/company",
+          "kind": "import",
+          "resolved": "api/src/routes/company.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -19582,6 +19625,57 @@
           "specifier": "../lib/db",
           "kind": "import",
           "resolved": "api/src/lib/db.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "api/src/routes/company.ts",
+      "project": "Cloudflare Workers API",
+      "module": "api/src/routes",
+      "productArea": "api-worker",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Cloudflare Workers API source path",
+      "ownerPath": "api/src/**",
+      "imports": [
+        {
+          "importer": "api/src/routes/company.ts",
+          "specifier": "hono",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "hono",
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/company.ts",
+          "specifier": "../types",
+          "kind": "import",
+          "resolved": "api/src/types.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/company.ts",
+          "specifier": "../types",
+          "kind": "import",
+          "resolved": "api/src/types.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/company.ts",
+          "specifier": "../lib/db",
+          "kind": "import",
+          "resolved": "api/src/lib/db.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "api/src/routes/company.ts",
+          "specifier": "../middleware/requireAuthorized",
+          "kind": "import",
+          "resolved": "api/src/middleware/requireAuthorized.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -20621,6 +20715,14 @@
       "kind": "import",
       "resolved": "src/hooks/index.ts",
       "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/catalog/CatalogView.tsx",
+      "specifier": "sonner",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "sonner",
       "asset": false
     },
     {
@@ -24984,6 +25086,22 @@
       "asset": false
     },
     {
+      "importer": "src/hooks/ffe/index.ts",
+      "specifier": "./useFfeItemSort",
+      "kind": "export",
+      "resolved": "src/hooks/ffe/useFfeItemSort.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/ffe/useFfeItemSort.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
       "importer": "src/hooks/ffe/useItemColumnDefs.ts",
       "specifier": "../shared/useColumnDefs",
       "kind": "import",
@@ -28944,6 +29062,14 @@
       "asset": false
     },
     {
+      "importer": "api/src/index.ts",
+      "specifier": "./routes/company",
+      "kind": "import",
+      "resolved": "api/src/routes/company.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "api/src/lib/db.ts",
       "specifier": "@neondatabase/serverless",
       "kind": "import",
@@ -29092,6 +29218,46 @@
       "specifier": "../lib/db",
       "kind": "import",
       "resolved": "api/src/lib/db.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/company.ts",
+      "specifier": "hono",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "hono",
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/company.ts",
+      "specifier": "../types",
+      "kind": "import",
+      "resolved": "api/src/types.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/company.ts",
+      "specifier": "../types",
+      "kind": "import",
+      "resolved": "api/src/types.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/company.ts",
+      "specifier": "../lib/db",
+      "kind": "import",
+      "resolved": "api/src/lib/db.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "api/src/routes/company.ts",
+      "specifier": "../middleware/requireAuthorized",
+      "kind": "import",
+      "resolved": "api/src/middleware/requireAuthorized.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -29687,7 +29853,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 80
+      "imports": 81
     },
     {
       "name": "vitest",
@@ -29707,11 +29873,11 @@
     },
     {
       "name": "hono",
-      "imports": 13
+      "imports": 14
     },
     {
       "name": "sonner",
-      "imports": 13
+      "imports": 14
     },
     {
       "name": "@testing-library/user-event",

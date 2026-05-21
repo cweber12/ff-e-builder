@@ -58,6 +58,7 @@ const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   entityType: 'project',
   ownerUid: 'user-123',
   projectId: '00000000-0000-0000-0000-000000000001',
+  companyId: null,
   roomId: null,
   itemId: null,
   materialId: null,

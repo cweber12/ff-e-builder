@@ -212,6 +212,7 @@ const projectImages: ImageAsset[] = [
     entityType: 'project',
     ownerUid: 'uid-1',
     projectId: 'project-1',
+    companyId: null,
     roomId: null,
     itemId: null,
     materialId: null,
