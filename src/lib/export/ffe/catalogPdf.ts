@@ -76,6 +76,11 @@ type CatalogItemAssets = {
 
 export type CatalogPdfImageAlignment = 'center' | 'top';
 
+type ContainedImageBox = {
+  drawW: number;
+  drawH: number;
+};
+
 export type CatalogPdfPageModel = {
   itemIdTag: string | null;
   dimensions: string | null;
@@ -274,6 +279,23 @@ function addContainedImage(
   doc.addImage(dataUrl, 'PNG', drawX, drawY, drawW, drawH);
 }
 
+function measureContainedImage(
+  doc: jsPDF,
+  dataUrl: string,
+  width: number,
+  height: number,
+  padding = 0,
+): ContainedImageBox {
+  const props = doc.getImageProperties(dataUrl);
+  const innerW = Math.max(1, width - padding * 2);
+  const innerH = Math.max(1, height - padding * 2);
+  const scale = Math.min(innerW / props.width, innerH / props.height);
+  return {
+    drawW: props.width * scale,
+    drawH: props.height * scale,
+  };
+}
+
 function drawWrappedText(
   doc: jsPDF,
   font: string,
@@ -435,14 +457,19 @@ function drawRendering(
   item: Item,
   x: number,
   y: number,
-  imageAlignment: CatalogPdfImageAlignment,
-) {
+): { width: number; height: number } {
   if (rendering) {
+    const measured = measureContainedImage(doc, rendering, LEFT_COL_W, RENDER_SIZE, 0);
+    const frameX = x + (LEFT_COL_W - measured.drawW) / 2;
     setFill(doc, WHITE);
-    doc.rect(x, y, RENDER_SIZE, RENDER_SIZE, 'F');
-    addContainedImage(doc, rendering, x, y, RENDER_SIZE, RENDER_SIZE, 0, imageAlignment);
+    doc.rect(frameX, y, measured.drawW, measured.drawH, 'F');
+    doc.addImage(rendering, 'PNG', frameX, y, measured.drawW, measured.drawH);
+    return { width: measured.drawW, height: measured.drawH };
   } else {
-    drawImagePlaceholder(doc, font, initials(item.itemName), x, y, RENDER_SIZE, RENDER_SIZE);
+    const fallbackSize = Math.min(LEFT_COL_W, RENDER_SIZE * 0.8);
+    const frameX = x + (LEFT_COL_W - fallbackSize) / 2;
+    drawImagePlaceholder(doc, font, initials(item.itemName), frameX, y, fallbackSize, fallbackSize);
+    return { width: fallbackSize, height: fallbackSize };
   }
 }
 
@@ -907,21 +934,33 @@ function drawCatalogPage(
 
   // ── Main two-column section ─────────────────────────────────────────────────
   const mainY = BODY_START_Y;
-  // Left column: rendering + qty band
-  drawRendering(
+  const leftSectionHeight = RENDER_SIZE + 3 + QTY_BAND_H;
+  const renderingMeasure = assets.rendering
+    ? measureContainedImage(doc, assets.rendering, LEFT_COL_W, RENDER_SIZE, 0)
+    : {
+        drawW: Math.min(LEFT_COL_W, RENDER_SIZE * 0.8),
+        drawH: Math.min(LEFT_COL_W, RENDER_SIZE * 0.8),
+      };
+  const leftContentHeight = renderingMeasure.drawH + 3 + QTY_BAND_H;
+  const leftOffsetY =
+    options.mainImageAlignment === 'top'
+      ? 0
+      : Math.max(0, (leftSectionHeight - leftContentHeight) / 2);
+  const renderingY = mainY + leftOffsetY;
+  const renderingFrame = drawRendering(
     doc,
     font,
     assets.rendering,
     entry.item,
     PAGE_PADDING_X,
-    mainY,
-    options.mainImageAlignment,
+    renderingY,
   );
-  const qtyY = mainY + RENDER_SIZE + 3;
-  drawQtyBand(doc, font, entry.item, PAGE_PADDING_X, qtyY, LEFT_COL_W, options.showCostInfo);
+  const qtyX = PAGE_PADDING_X + (LEFT_COL_W - renderingFrame.width) / 2;
+  const qtyY = renderingY + renderingFrame.height + 3;
+  drawQtyBand(doc, font, entry.item, qtyX, qtyY, renderingFrame.width, options.showCostInfo);
 
   // Right column: specifications, dims, description, notes, finish schedule
-  const mainBottomY = qtyY + QTY_BAND_H;
+  const mainBottomY = mainY + leftSectionHeight;
   drawSpecColumn(
     doc,
     font,

@@ -55,20 +55,20 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       class="catalog-main"
     >
       <div
-        class="catalog-main-left"
+        class="catalog-main-left catalog-main-left-center"
       >
         <div
           class="catalog-image-block"
         >
           <div
-            class="catalog-rendering-square"
+            class="catalog-rendering-square catalog-rendering-square-center"
             data-main-image-alignment="center"
           >
             <div
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
+                class="relative overflow-hidden bg-white catalog-rendering-frame border-0 shadow-none rounded-none"
               >
                 <div
                   class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell catalog-placeholder"

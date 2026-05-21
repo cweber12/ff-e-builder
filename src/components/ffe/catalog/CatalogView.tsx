@@ -700,6 +700,7 @@ export function CatalogPage({
         interactive={watermarkInteractive}
       />
     ) : null;
+  const isTopAligned = mainImageAlignment === 'top';
 
   return (
     <article
@@ -751,10 +752,18 @@ export function CatalogPage({
 
       <div className="catalog-content-block">
         <section className="catalog-main">
-          <div className="catalog-main-left">
+          <div
+            className={cn(
+              'catalog-main-left',
+              isTopAligned ? 'catalog-main-left-top' : 'catalog-main-left-center',
+            )}
+          >
             <div className="catalog-image-block">
               <div
-                className="catalog-rendering-square"
+                className={cn(
+                  'catalog-rendering-square',
+                  isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
+                )}
                 data-main-image-alignment={mainImageAlignment}
               >
                 <ImageFrame
@@ -762,10 +771,10 @@ export function CatalogPage({
                   entityId={item.id}
                   alt={item.itemName}
                   fallbackUrl={null}
-                  className="border-0 shadow-none h-full w-full rounded-none"
+                  className="catalog-rendering-frame border-0 shadow-none rounded-none"
                   imageClassName={cn(
-                    'catalog-image',
-                    mainImageAlignment === 'top' && 'catalog-image-top',
+                    'catalog-image !h-auto !w-auto',
+                    isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
                   )}
                   placeholderClassName="catalog-placeholder"
                   placeholderContent={<span>{initials(item.itemName)}</span>}
