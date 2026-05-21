@@ -75,7 +75,8 @@ export interface RawImageAsset {
   id: string;
   entity_type: ImageEntityType;
   owner_uid: string;
-  project_id: string;
+  project_id: string | null;
+  company_id: string | null;
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
@@ -98,7 +99,6 @@ export interface RawUserProfile {
   name: string;
   email: string;
   phone: string;
-  company_name: string;
   created_at: string;
   updated_at: string;
 }
@@ -306,6 +306,7 @@ export const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   entityType: r.entity_type,
   ownerUid: r.owner_uid,
   projectId: r.project_id,
+  companyId: r.company_id,
   roomId: r.room_id,
   itemId: r.item_id,
   materialId: r.material_id ?? null,
@@ -328,7 +329,6 @@ export const mapUserProfile = (r: RawUserProfile, authorized = false): UserProfi
   name: r.name,
   email: r.email,
   phone: r.phone,
-  companyName: r.company_name,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
   authorized,

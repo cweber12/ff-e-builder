@@ -8,6 +8,7 @@ import {
   getOwnedProjectContext,
   getOwnedRoomContext,
   getOwnedProposalItemContext,
+  getOwnedCompanyContext,
 } from '../lib/ownership';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -74,6 +75,7 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
 
   if (!message.includes('duplicate key value violates unique constraint')) return null;
 
+  if (entityType === 'company_logo') return 'This company already has a logo';
   if (entityType === 'project') return 'Projects can have only one preview image at a time';
   if (entityType === 'item' || entityType === 'proposal_item') {
     return 'This row already has a rendering';
@@ -264,6 +266,27 @@ router.get('/', async (c) => {
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   const uid = c.get('uid');
+
+  // company_logo: not project-scoped, handled separately
+  if (parsed.data.entity_type === 'company_logo') {
+    let company: { companyId: string };
+    try {
+      company = await getOwnedCompanyContext(c.env, parsed.data.entity_id, uid);
+    } catch {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    const sql = getDb(c.env);
+    const rows = await sql`
+      SELECT *
+      FROM image_assets
+      WHERE owner_uid = ${uid}
+        AND company_id = ${company.companyId}
+        AND entity_type = 'company_logo'
+      ORDER BY created_at DESC
+    `;
+    return c.json({ images: rows.map(imageRow) });
+  }
+
   let context: EntityContext;
   try {
     context = await getOwnedEntityContext(
@@ -328,6 +351,80 @@ router.post('/', async (c) => {
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   const uid = c.get('uid');
+
+  // company_logo: separate ownership + insert path (not project-scoped)
+  if (parsed.data.entity_type === 'company_logo') {
+    let company: { companyId: string };
+    try {
+      company = await getOwnedCompanyContext(c.env, parsed.data.entity_id, uid);
+    } catch {
+      return c.json({ error: 'Not found' }, 404);
+    }
+
+    const body = await c.req.parseBody().catch(() => null);
+    const file = body?.['file'];
+    if (!(file instanceof File)) return c.json({ error: 'Image file is required' }, 400);
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return c.json({ error: 'Unsupported image type' }, 415);
+    }
+    if (file.size <= 0 || file.size > MAX_IMAGE_BYTES) {
+      return c.json({ error: 'Image must be between 1 byte and 5 MB' }, 413);
+    }
+
+    const imageId = crypto.randomUUID();
+    const ext = extensionForContentType(file.type);
+    const r2Key = `users/${uid}/company/${company.companyId}/logo/${imageId}.${ext}`;
+
+    await c.env.IMAGES_BUCKET.put(r2Key, file.stream(), {
+      httpMetadata: {
+        contentType: file.type,
+        cacheControl: 'private, max-age=3600',
+      },
+      customMetadata: {
+        ownerUid: uid,
+        companyId: company.companyId,
+        entityType: 'company_logo',
+        imageId,
+      },
+    });
+
+    const sql = getDb(c.env);
+    try {
+      const rows = await sql`
+        WITH demote_existing AS (
+          UPDATE image_assets
+          SET is_primary = false
+          WHERE owner_uid = ${uid}
+            AND company_id = ${company.companyId}
+            AND entity_type = 'company_logo'
+        )
+        INSERT INTO image_assets (
+          id, entity_type, owner_uid, company_id,
+          r2_key, filename, content_type, byte_size, alt_text, is_primary
+        )
+        VALUES (
+          ${imageId},
+          'company_logo',
+          ${uid},
+          ${company.companyId},
+          ${r2Key},
+          ${cleanFilename(file.name)},
+          ${file.type},
+          ${file.size},
+          ${parsed.data.alt_text},
+          true
+        )
+        RETURNING *
+      `;
+      return c.json({ image: imageRow(rows[0]) }, 201);
+    } catch (err) {
+      await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+      const validationError = imageInsertErrorMessage('company_logo', err);
+      if (validationError) return c.json({ error: validationError }, 409);
+      throw err;
+    }
+  }
+
   let context: EntityContext;
   try {
     context = await getOwnedEntityContext(

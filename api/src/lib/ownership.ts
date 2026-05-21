@@ -193,3 +193,20 @@ export async function getOwnedProposalItemContext(
   if (!row?.proposal_item_id || !row.project_id) throw new Error('not_found');
   return { projectId: row.project_id, proposalItemId: row.proposal_item_id };
 }
+
+export async function getOwnedCompanyContext(
+  env: Env,
+  companyId: string,
+  uid: string,
+): Promise<{ companyId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT id
+    FROM companies
+    WHERE id = ${companyId} AND owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { id?: string } | undefined;
+  if (!row?.id) throw new Error('not_found');
+  return { companyId: row.id };
+}

@@ -10,7 +10,6 @@ export type UserProfile = {
   name: string;
   email: string;
   phone: string;
-  companyName: string;
   createdAt: string;
   updatedAt: string;
   authorized: boolean;

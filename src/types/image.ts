@@ -7,13 +7,15 @@ export type ImageEntityType =
   | 'material'
   | 'proposal_item'
   | 'proposal_swatch'
-  | 'proposal_plan';
+  | 'proposal_plan'
+  | 'company_logo';
 
 export type ImageAsset = {
   id: string;
   entityType: ImageEntityType;
   ownerUid: string;
-  projectId: string;
+  projectId: string | null;
+  companyId: string | null;
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;

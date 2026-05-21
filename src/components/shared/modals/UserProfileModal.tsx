@@ -8,14 +8,12 @@ export function UserProfileModal({ open, onClose }: { open: boolean; onClose: ()
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [companyName, setCompanyName] = useState('');
 
   useEffect(() => {
     if (!profile) return;
     setName(profile.name);
     setEmail(profile.email);
     setPhone(profile.phone);
-    setCompanyName(profile.companyName);
   }, [profile]);
 
   return (
@@ -24,7 +22,7 @@ export function UserProfileModal({ open, onClose }: { open: boolean; onClose: ()
         className="grid gap-3 md:grid-cols-2"
         onSubmit={(event) => {
           event.preventDefault();
-          updateProfile.mutate({ name, email, phone, companyName });
+          updateProfile.mutate({ name, email, phone });
         }}
       >
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
@@ -51,15 +49,6 @@ export function UserProfileModal({ open, onClose }: { open: boolean; onClose: ()
             type="tel"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-          Company
-          <input
-            type="text"
-            value={companyName}
-            onChange={(event) => setCompanyName(event.target.value)}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </label>

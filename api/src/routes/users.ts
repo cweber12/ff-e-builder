@@ -19,7 +19,6 @@ router.get('/me', async (c) => {
         name: '',
         email: c.get('email') ?? '',
         phone: '',
-        company_name: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -43,7 +42,6 @@ router.get('/me', async (c) => {
         name: '',
         email: '',
         phone: '',
-        company_name: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       } satisfies Record<string, string>),
@@ -59,19 +57,17 @@ router.put('/me', requireAuthorized, async (c) => {
 
   const sql = getDb(c.env);
   const rows = await sql`
-    INSERT INTO user_profiles (owner_uid, name, email, phone, company_name)
+    INSERT INTO user_profiles (owner_uid, name, email, phone)
     VALUES (
       ${uid},
       ${parsed.data.name},
       ${parsed.data.email},
-      ${parsed.data.phone},
-      ${parsed.data.company_name}
+      ${parsed.data.phone}
     )
     ON CONFLICT (owner_uid) DO UPDATE SET
       name = EXCLUDED.name,
       email = EXCLUDED.email,
-      phone = EXCLUDED.phone,
-      company_name = EXCLUDED.company_name
+      phone = EXCLUDED.phone
     RETURNING *
   `;
 

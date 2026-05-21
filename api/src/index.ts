@@ -12,6 +12,7 @@ import { materialsRouter } from './routes/materials';
 import { plansRouter } from './routes/plans';
 import { proposalRouter } from './routes/proposal';
 import { usersRouter } from './routes/users';
+import { companyRouter } from './routes/company';
 
 export const app = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
@@ -41,6 +42,7 @@ app.use('/api/v1/items/*', requireAuthorized);
 app.use('/api/v1/images/*', requireAuthorized);
 app.use('/api/v1/materials/*', requireAuthorized);
 app.use('/api/v1/proposal/*', requireAuthorized);
+app.use('/api/v1/company/*', requireAuthorized);
 
 // ─── Routes ───────────────────────────────────────────────────────────────
 app.route('/api/v1/projects', projectsRouter);
@@ -53,6 +55,7 @@ app.route('/api/v1/images', imagesRouter);
 app.route('/api/v1', materialsRouter);
 app.route('/api/v1', proposalRouter);
 app.route('/api/v1/users', usersRouter);
+app.route('/api/v1/company', companyRouter);
 
 // ─── Fallback ─────────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ error: 'Not found' }, 404));

@@ -119,7 +119,23 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string;
-  company_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Company {
+  id: string;
+  owner_uid: string;
+  name: string;
+  location: string | null;
+  color_primary: string | null;
+  color_secondary: string | null;
+  color_accent: string | null;
+  mark_enabled: boolean;
+  mark_include_name: boolean;
+  mark_placement_h: 'left' | 'center' | 'right';
+  mark_placement_v: 'header' | 'footer';
+  mark_opacity: number;
   created_at: string;
   updated_at: string;
 }
@@ -244,13 +260,15 @@ export type ImageEntityType =
   | 'material'
   | 'proposal_item'
   | 'proposal_swatch'
-  | 'proposal_plan';
+  | 'proposal_plan'
+  | 'company_logo';
 
 export interface ImageAsset {
   id: string;
   entity_type: ImageEntityType;
   owner_uid: string;
-  project_id: string;
+  project_id: string | null;
+  company_id: string | null;
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
@@ -378,9 +396,40 @@ export const UpsertUserProfileSchema = z.object({
   name: z.string().max(255).default(''),
   email: z.string().email().or(z.literal('')).default(''),
   phone: z.string().max(100).default(''),
-  company_name: z.string().max(255).default(''),
 });
 export type UpsertUserProfileInput = z.infer<typeof UpsertUserProfileSchema>;
+
+const markPlacementH = ['left', 'center', 'right'] as const;
+const markPlacementV = ['header', 'footer'] as const;
+
+export const UpsertCompanySchema = z.object({
+  name: z.string().min(1).max(255),
+  location: z.string().max(500).nullable().default(null),
+  color_primary: z
+    .string()
+    .max(7)
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .nullable()
+    .default(null),
+  color_secondary: z
+    .string()
+    .max(7)
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .nullable()
+    .default(null),
+  color_accent: z
+    .string()
+    .max(7)
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .nullable()
+    .default(null),
+  mark_enabled: z.boolean().default(false),
+  mark_include_name: z.boolean().default(true),
+  mark_placement_h: z.enum(markPlacementH).default('right'),
+  mark_placement_v: z.enum(markPlacementV).default('footer'),
+  mark_opacity: z.number().int().min(0).max(100).default(30),
+});
+export type UpsertCompanyInput = z.infer<typeof UpsertCompanySchema>;
 
 export const CreateProposalCategorySchema = z.object({
   name: z.string().min(1).max(100),
@@ -491,6 +540,7 @@ export const ImageEntitySchema = z.object({
     'proposal_item',
     'proposal_swatch',
     'proposal_plan',
+    'company_logo',
   ]),
   entity_id: z.string().uuid(),
 });

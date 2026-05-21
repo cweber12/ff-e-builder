@@ -31,12 +31,16 @@ The preparer contact information used across project documentation.
 _Avoid_: Account, auth user
 
 **Company**:
-An organizational identity used to group Projects and apply shared presentation defaults.
+An organizational identity owned by one authenticated user that groups Projects and supplies shared presentation defaults (logo, theme colors, location) to exported documents. Each user has at most one Company. Designed to be refactored to a multi-user org model without schema breakage.
 _Avoid_: Client when referring to the internal design organization
 
 **Company Theme**:
-A reusable presentation profile owned by a Company that defines brand color, typography, and sizing defaults for exported documents.
+The brand color subset of a Company's presentation defaults — `color_primary`, `color_secondary`, and `color_accent` stored as hex strings. Applied by export modules at render time; does not alter the live application UI.
 _Avoid_: Per-project styling when referring to shared company defaults
+
+**Document Mark**:
+The positioned brand stamp placed in the header or footer of exported documents. Composed at export time from the Company logo and optionally the Company name. Configurable: horizontal alignment (left / center / right), vertical position (header / footer), opacity (0–100), and whether the Company name is shown alongside the logo. Export modules own the rendering logic; the Company record stores the preferences.
+_Avoid_: Watermark when referring to the header/footer brand stamp (reserve "watermark" for future diagonal full-page overlays if needed)
 
 **Budget Mode**:
 The Project setting that determines whether FF&E and Proposal share one budget or use separate budgets.

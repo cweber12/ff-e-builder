@@ -6,7 +6,6 @@ export type UpsertUserProfileInput = {
   name?: string;
   email?: string;
   phone?: string;
-  companyName?: string;
 };
 
 export const usersApi = {
@@ -22,7 +21,6 @@ export const usersApi = {
         name: input.name ?? '',
         email: input.email ?? '',
         phone: input.phone ?? '',
-        company_name: input.companyName ?? '',
       }),
     }).then((r) => mapUserProfile(r.profile, r.authorized)),
 };
