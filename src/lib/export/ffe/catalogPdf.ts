@@ -100,6 +100,8 @@ export type CatalogWatermarkPdfOptions = {
 export type CatalogPdfOptions = {
   /** When false, the finish-schedule swatches are drawn without their ID and name labels. */
   showSwatchLabels?: boolean;
+  /** When false, the rendering section shows only a compact quantity callout under the image. */
+  showCostInfo?: boolean;
   /**
    * Item ordering within each room.
    * - 'manual' (default): respects each item's `sortOrder`.
@@ -432,7 +434,26 @@ function drawRendering(
   }
 }
 
-function drawQtyBand(doc: jsPDF, font: string, item: Item, x: number, y: number, width: number) {
+function drawQtyBand(
+  doc: jsPDF,
+  font: string,
+  item: Item,
+  x: number,
+  y: number,
+  width: number,
+  showCostInfo: boolean,
+) {
+  if (!showCostInfo) {
+    setFill(doc, GRAY_600);
+    setStroke(doc, GRAY_300);
+    doc.rect(x, y, width, QTY_BAND_H, 'FD');
+    applyFont(doc, font, 'bold', 8.5);
+    setText(doc, WHITE);
+    doc.text('QUANTITY', x + width / 2 - 8, y + QTY_BAND_H / 2 + 1.2, { align: 'right' });
+    doc.text(String(item.qty), x + width / 2 + 8, y + QTY_BAND_H / 2 + 1.2, { align: 'left' });
+    return;
+  }
+
   // Header strip (brand-600 background, white uppercase labels)
   setFill(doc, BRAND_600);
   doc.rect(x, y, width, QTY_LABEL_ROW_H, 'F');
@@ -877,7 +898,7 @@ function drawCatalogPage(
   // Left column: rendering + qty band
   drawRendering(doc, font, assets.rendering, entry.item, PAGE_PADDING_X, mainY);
   const qtyY = mainY + RENDER_SIZE + 3;
-  drawQtyBand(doc, font, entry.item, PAGE_PADDING_X, qtyY, LEFT_COL_W);
+  drawQtyBand(doc, font, entry.item, PAGE_PADDING_X, qtyY, LEFT_COL_W, options.showCostInfo);
 
   // Right column: specifications, dims, description, notes, finish schedule
   const mainBottomY = qtyY + QTY_BAND_H;
@@ -922,6 +943,7 @@ const EMPTY_ASSETS: CatalogItemAssets = {
 function resolveOptions(options: CatalogPdfOptions | undefined): Required<CatalogPdfOptions> {
   return {
     showSwatchLabels: options?.showSwatchLabels ?? true,
+    showCostInfo: options?.showCostInfo ?? true,
     sortMode: options?.sortMode ?? 'manual',
     watermark: options?.watermark ?? null,
   };

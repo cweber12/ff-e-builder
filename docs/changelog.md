@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(catalog): add a show or hide cost toggle for FF&E catalog browser, print, and PDF exports with a compact quantity-only image band when costs are hidden
 - feat(company): add Company entity — DB migration, GET/PUT /api/v1/company, company_logo image support, and removal of company_name from UserProfile
 - feat(company): add Company client types, API client, and hooks (slice 2)
 - feat(company): add CompanyProfilePage at /company — identity, brand colours, document mark, logo upload

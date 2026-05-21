@@ -70,7 +70,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                 class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
-                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted catalog-placeholder"
+                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell catalog-placeholder"
                 >
                   <span>
                     CL
@@ -260,10 +260,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                   class="grid gap-1"
                 >
                   <div
-                    class="relative overflow-hidden bg-white h-10 w-10 rounded-full shrink-0 border-0 shadow-none "
+                    class="relative overflow-hidden bg-white h-10 w-10 rounded-full shrink-0 border-0 shadow-none !h-[60px] !w-[60px]"
                   >
                     <div
-                      class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted bg-white"
+                      class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell bg-canvas-shell"
                     >
                       <span
                         aria-hidden="true"
@@ -280,6 +280,81 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                 Ivory
               </span>
             </div>
+            <button
+              aria-label="Add finish swatch — click to open library or paste an image"
+              class="no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste"
+              title="Click to open library, or hover and press Ctrl+V to paste"
+              type="button"
+            >
+              <span
+                class="catalog-material-id"
+              >
+                ID
+              </span>
+              <div
+                class="catalog-material-swatch catalog-material-swatch-placeholder"
+              />
+              <span
+                class="catalog-material-name"
+              >
+                MATERIAL
+              </span>
+              <span
+                class="catalog-material-color"
+              >
+                COLOR
+              </span>
+            </button>
+            <button
+              aria-label="Add finish swatch — click to open library or paste an image"
+              class="no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste"
+              title="Click to open library, or hover and press Ctrl+V to paste"
+              type="button"
+            >
+              <span
+                class="catalog-material-id"
+              >
+                ID
+              </span>
+              <div
+                class="catalog-material-swatch catalog-material-swatch-placeholder"
+              />
+              <span
+                class="catalog-material-name"
+              >
+                MATERIAL
+              </span>
+              <span
+                class="catalog-material-color"
+              >
+                COLOR
+              </span>
+            </button>
+            <button
+              aria-label="Add finish swatch — click to open library or paste an image"
+              class="no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste"
+              title="Click to open library, or hover and press Ctrl+V to paste"
+              type="button"
+            >
+              <span
+                class="catalog-material-id"
+              >
+                ID
+              </span>
+              <div
+                class="catalog-material-swatch catalog-material-swatch-placeholder"
+              />
+              <span
+                class="catalog-material-name"
+              >
+                MATERIAL
+              </span>
+              <span
+                class="catalog-material-color"
+              >
+                COLOR
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -365,7 +440,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                 class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
-                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-surface-muted catalog-plan-placeholder"
+                  class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell catalog-plan-placeholder"
                 >
                   <span
                     class="catalog-plan-placeholder-text"
@@ -458,9 +533,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
     <span />
     <span
       class="catalog-footer-center"
-    >
-      contact email or company logo - optional
-    </span>
+    />
     <span
       class="catalog-footer-page"
     >

@@ -65,6 +65,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sortMode } = useFfeItemSort(project.id);
+  const [costVisibility, setCostVisibility] = useCatalogPlaceholder(
+    `ffe-catalog-cost-visibility:${project.id}`,
+  );
+  const showCostInfo = costVisibility !== 'hidden';
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
@@ -158,6 +162,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         watermarkConfig={watermarkConfig}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
+        showCostInfo={showCostInfo}
+        onToggleCostInfo={() => setCostVisibility(showCostInfo ? 'hidden' : '')}
         onWatermarkChange={updateWatermark}
       />
 
@@ -175,6 +181,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
+            showCostInfo={showCostInfo}
           />
         </div>
       </div>
@@ -191,6 +198,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             watermarkInteractive={false}
+            showCostInfo={showCostInfo}
           />
         ))}
       </div>
@@ -209,6 +217,8 @@ function CatalogNav({
   watermarkConfig,
   logoDataUrl,
   companyName,
+  showCostInfo,
+  onToggleCostInfo,
   onWatermarkChange,
 }: {
   project: Project;
@@ -221,6 +231,8 @@ function CatalogNav({
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
+  showCostInfo: boolean;
+  onToggleCostInfo: () => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   let itemIndex = 0;
@@ -285,6 +297,8 @@ function CatalogNav({
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
+            showCostInfo={showCostInfo}
+            onToggleCostInfo={onToggleCostInfo}
             onWatermarkChange={onWatermarkChange}
           />
         </div>
@@ -312,6 +326,8 @@ function CatalogActionsMenu({
   watermarkConfig,
   logoDataUrl,
   companyName,
+  showCostInfo,
+  onToggleCostInfo,
   onWatermarkChange: _onWatermarkChange,
 }: {
   project: Project;
@@ -320,6 +336,8 @@ function CatalogActionsMenu({
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
+  showCostInfo: boolean;
+  onToggleCostInfo: () => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   const { sortMode } = useFfeItemSort(project.id);
@@ -379,9 +397,22 @@ function CatalogActionsMenu({
             type="button"
             role="menuitem"
             className={catalogMenuItemClassName}
+            onClick={() => runAction(onToggleCostInfo)}
+          >
+            {showCostInfo ? 'Hide cost information' : 'Show cost information'}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={catalogMenuItemClassName}
             onClick={() =>
               runAction(
-                () => void exportCatalogPdf(project, rooms, { sortMode, watermark: watermarkOpts }),
+                () =>
+                  void exportCatalogPdf(project, rooms, {
+                    showCostInfo,
+                    sortMode,
+                    watermark: watermarkOpts,
+                  }),
               )
             }
           >
@@ -395,6 +426,7 @@ function CatalogActionsMenu({
               runAction(
                 () =>
                   void exportCatalogPdf(project, rooms, {
+                    showCostInfo,
                     showSwatchLabels: false,
                     sortMode,
                     watermark: watermarkOpts,
@@ -414,6 +446,7 @@ function CatalogActionsMenu({
                   runAction(
                     () =>
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
+                        showCostInfo,
                         sortMode,
                         watermark: watermarkOpts,
                       }),
@@ -430,6 +463,7 @@ function CatalogActionsMenu({
                   runAction(
                     () =>
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
+                        showCostInfo,
                         showSwatchLabels: false,
                         sortMode,
                         watermark: watermarkOpts,
@@ -470,6 +504,7 @@ export function CatalogPage({
   logoDataUrl,
   companyName,
   watermarkInteractive = true,
+  showCostInfo = true,
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -480,6 +515,7 @@ export function CatalogPage({
   logoDataUrl?: string | null;
   companyName?: string | null;
   watermarkInteractive?: boolean;
+  showCostInfo?: boolean;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -692,20 +728,31 @@ export function CatalogPage({
               </div>
 
               <div className="catalog-qty-band">
-                <div className="catalog-qty-label-row">
-                  <span className="catalog-qty-label">PRODUCT QTY</span>
-                  <span className="catalog-qty-label">PRICE PER ITEM</span>
-                  <span className="catalog-qty-label">TOTAL</span>
-                </div>
-                <div className="catalog-qty-value-row">
-                  <span className="catalog-qty-value">{item.qty}</span>
-                  <span className="catalog-qty-value">
-                    {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
-                  </span>
-                  <span className="catalog-qty-value">
-                    {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
-                  </span>
-                </div>
+                {showCostInfo ? (
+                  <>
+                    <div className="catalog-qty-label-row">
+                      <span className="catalog-qty-label">PRODUCT QTY</span>
+                      <span className="catalog-qty-label">PRICE PER ITEM</span>
+                      <span className="catalog-qty-label">TOTAL</span>
+                    </div>
+                    <div className="catalog-qty-value-row">
+                      <span className="catalog-qty-value">{item.qty}</span>
+                      <span className="catalog-qty-value">
+                        {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
+                      </span>
+                      <span className="catalog-qty-value">
+                        {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="catalog-qty-label-row catalog-qty-label-row-compact">
+                    <span className="catalog-qty-label catalog-qty-label-compact">
+                      QUANTITY
+                      <span className="catalog-qty-inline-value">{item.qty}</span>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -942,8 +989,8 @@ function LinkIcon() {
   );
 }
 
-// Persistent localStorage-backed placeholder for the vendor / vendor link fields.
-// TODO: Replace with a real Item column (and migration) in a follow-up iteration.
+// Persistent localStorage-backed helper for catalog-only presentation state.
+// TODO: Replace vendor / vendor link storage with real Item columns in a follow-up iteration.
 function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
   const [value, setValue] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
