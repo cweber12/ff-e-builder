@@ -1,4 +1,4 @@
-import jsPDF, { AcroFormCheckBox, AcroFormTextField } from 'jspdf';
+import jsPDF, { AcroFormCheckBox, AcroFormTextField, GState } from 'jspdf';
 import { api } from '../../api';
 import type { ImageAsset, Item, Material, Project, RoomWithItems } from '../../../types';
 import { imageAssetToPngDataUrl } from '../imageHelpers';
@@ -86,6 +86,17 @@ export type CatalogPdfPageModel = {
 
 type CatalogPdfOptionLayout = 'stacked' | 'row';
 
+export type CatalogWatermarkPdfOptions = {
+  /** Base64 data URL of the company logo image. */
+  logoDataUrl: string;
+  /** Company name to render next to the logo, or null for logo-only. */
+  companyName: string | null;
+  placementH: 'left' | 'center' | 'right';
+  placementV: 'header' | 'footer';
+  /** Opacity as a 0–100 integer; 100 = fully opaque. */
+  opacity: number;
+};
+
 export type CatalogPdfOptions = {
   /** When false, the finish-schedule swatches are drawn without their ID and name labels. */
   showSwatchLabels?: boolean;
@@ -95,6 +106,7 @@ export type CatalogPdfOptions = {
    * - 'idTag': alphanumeric sort by `itemIdTag` (untagged items fall to the bottom).
    */
   sortMode?: 'manual' | 'idTag';
+  watermark?: CatalogWatermarkPdfOptions | null;
 };
 
 // ── Pure helpers used by tests ────────────────────────────────────────────────
@@ -359,6 +371,7 @@ function drawHeader(
   project: Project,
   entry: CatalogItemEntry,
   item: Item,
+  watermark?: CatalogWatermarkPdfOptions | null,
 ) {
   const leftX = PAGE_PADDING_X;
   const rightX = PAGE_W - PAGE_PADDING_X;
@@ -396,6 +409,10 @@ function drawHeader(
   doc.setLineWidth(0.4);
   doc.line(leftX, HEADER_RULE_Y, rightX, HEADER_RULE_Y);
   doc.setLineWidth(0.2);
+
+  if (watermark && watermark.placementV === 'header') {
+    drawWatermarkInZone(doc, font, watermark, 'header');
+  }
 }
 
 function drawRendering(
@@ -749,15 +766,95 @@ function drawApprovalBand(
   doc.text(checkLabel2, checksLabelX, check2Y + checkBoxSize - 0.4);
 }
 
-function drawFooter(doc: jsPDF, font: string, project: Project, pageNum: number, total: number) {
+function drawFooter(
+  doc: jsPDF,
+  font: string,
+  project: Project,
+  pageNum: number,
+  total: number,
+  watermark?: CatalogWatermarkPdfOptions | null,
+) {
   const leftX = PAGE_PADDING_X;
   const rightX = PAGE_W - PAGE_PADDING_X;
-  applyFont(doc, font, 'normal', 7);
-  setText(doc, GRAY_400);
-  doc.text(safeName(project.name), (leftX + rightX) / 2, FOOTER_Y, { align: 'center' });
+  // Page number — always on the right
   applyFont(doc, font, 'bold', 7);
   setText(doc, GRAY_500);
   doc.text(`PAGE ${pageNum} of ${total}`, rightX, FOOTER_Y, { align: 'right' });
+  // Project name in center, skipped when the center slot is taken by the watermark
+  if (!watermark || watermark.placementV !== 'footer' || watermark.placementH !== 'center') {
+    applyFont(doc, font, 'normal', 7);
+    setText(doc, GRAY_400);
+    doc.text(safeName(project.name), (leftX + rightX) / 2, FOOTER_Y, { align: 'center' });
+  }
+  if (watermark && watermark.placementV === 'footer') {
+    drawWatermarkInZone(doc, font, watermark, 'footer');
+  }
+}
+
+function drawWatermarkInZone(
+  doc: jsPDF,
+  font: string,
+  watermark: CatalogWatermarkPdfOptions,
+  zone: 'header' | 'footer',
+): void {
+  const logoH = 5; // mm — constrained height for the mark
+  const logoMaxW = 24; // mm — maximum width
+  const leftX = PAGE_PADDING_X;
+  const rightX = PAGE_W - PAGE_PADDING_X;
+  // Baseline Y: bottom of the logo / text alignment in each zone
+  const baseY = zone === 'footer' ? FOOTER_Y : PAGE_PADDING_Y - 1;
+
+  let drawW: number;
+  let drawH: number;
+  try {
+    const props = doc.getImageProperties(watermark.logoDataUrl);
+    const scale = Math.min(logoMaxW / props.width, logoH / props.height);
+    drawW = props.width * scale;
+    drawH = props.height * scale;
+  } catch {
+    return; // skip if image can't be parsed
+  }
+
+  // Measure text width before applying opacity (font state is separate from GState)
+  const nameText = watermark.companyName ? watermark.companyName.toUpperCase() : null;
+  let nameW = 0;
+  if (nameText) {
+    applyFont(doc, font, 'normal', 6.5);
+    nameW = doc.getTextWidth(nameText);
+  }
+
+  // Horizontal positioning
+  const nameGap = 2; // mm gap between logo and name
+  const totalW = drawW + (nameText ? nameGap + nameW : 0);
+  let imgX: number;
+  let nameX: number;
+  if (watermark.placementH === 'left') {
+    imgX = leftX;
+    nameX = leftX + drawW + nameGap;
+  } else if (watermark.placementH === 'center') {
+    imgX = (leftX + rightX) / 2 - totalW / 2;
+    nameX = imgX + drawW + nameGap;
+  } else {
+    // right — reserve ~38mm for "PAGE X of Y" bold text
+    imgX = rightX - 38 - totalW;
+    nameX = imgX + drawW + nameGap;
+  }
+
+  const imgY = baseY - drawH;
+  const textY = baseY - drawH / 2 + 1; // vertically centred with the logo
+
+  doc.saveGraphicsState();
+  doc.setGState(new GState({ opacity: watermark.opacity / 100 }));
+
+  doc.addImage(watermark.logoDataUrl, 'PNG', imgX, imgY, drawW, drawH);
+
+  if (nameText) {
+    applyFont(doc, font, 'normal', 6.5);
+    setText(doc, GRAY_500);
+    doc.text(nameText, nameX, textY);
+  }
+
+  doc.restoreGraphicsState();
 }
 
 // ── Page composition ──────────────────────────────────────────────────────────
@@ -773,7 +870,7 @@ function drawCatalogPage(
 ): void {
   const model = buildCatalogPdfPageModel(entry.item, assets.options);
 
-  drawHeader(doc, font, project, entry, entry.item);
+  drawHeader(doc, font, project, entry, entry.item, options.watermark);
 
   // ── Main two-column section ─────────────────────────────────────────────────
   const mainY = BODY_START_Y;
@@ -807,7 +904,7 @@ function drawCatalogPage(
   drawApprovalBand(doc, font, entry.item.id, PAGE_PADDING_X, approvalY, CONTENT_W);
 
   // ── Footer ──────────────────────────────────────────────────────────────────
-  drawFooter(doc, font, project, pageNum, total);
+  drawFooter(doc, font, project, pageNum, total, options.watermark);
 }
 
 // ── Public exports ────────────────────────────────────────────────────────────
@@ -826,6 +923,7 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
   return {
     showSwatchLabels: options?.showSwatchLabels ?? true,
     sortMode: options?.sortMode ?? 'manual',
+    watermark: options?.watermark ?? null,
   };
 }
 

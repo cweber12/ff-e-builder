@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
+  useCompany,
   useDeleteImage,
   useFfeItemSort,
   useImages,
@@ -22,6 +23,7 @@ import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
 import { CropModal } from '../../shared/image/CropModal';
 import { MaterialLibraryModal, MaterialSwatchImage } from '../../materials';
 import { api } from '../../../lib/api';
+import { imageAssetToPngDataUrl } from '../../../lib/export/imageHelpers';
 import type { CropParams, ImageAsset } from '../../../types';
 
 type CatalogEntry = {
@@ -43,6 +45,22 @@ type CatalogViewProps = {
   rooms: RoomWithItems[];
 };
 
+type WatermarkConfig = {
+  enabled: boolean;
+  placementH: 'left' | 'center' | 'right';
+  placementV: 'header' | 'footer';
+  opacity: number; // 0–100
+  includeName: boolean;
+};
+
+const DEFAULT_WATERMARK: WatermarkConfig = {
+  enabled: false,
+  placementH: 'left',
+  placementV: 'footer',
+  opacity: 30,
+  includeName: false,
+};
+
 export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -52,6 +70,54 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
   const entry = entries[pageIndex];
   const [slideDirection, setSlideDirection] = useState<'next' | 'previous'>('next');
+
+  // ── Company watermark ──────────────────────────────────────────────────────
+  const { data: company, isError: companyLoadError } = useCompany();
+  const logoImages = useImages('company_logo', company?.id ?? '');
+  const primaryLogoAsset = useMemo(
+    () => (logoImages.data ?? []).find((img) => img.isPrimary) ?? logoImages.data?.[0] ?? null,
+    [logoImages.data],
+  );
+  const [watermarkConfig, setWatermarkConfig] = useState<WatermarkConfig>(DEFAULT_WATERMARK);
+  const [watermarkInitialized, setWatermarkInitialized] = useState(false);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (watermarkInitialized) return;
+    const companySettled = company !== undefined || companyLoadError;
+    if (!companySettled) return;
+    if (company && !companyLoadError && logoImages.data === undefined) return;
+    const hasLogo = (logoImages.data?.length ?? 0) > 0;
+    setWatermarkConfig({
+      enabled: hasLogo,
+      placementH: company?.markPlacementH ?? 'left',
+      placementV: company?.markPlacementV ?? 'footer',
+      opacity: company?.markOpacity ?? 30,
+      includeName: company?.markIncludeName ?? false,
+    });
+    setWatermarkInitialized(true);
+  }, [company, companyLoadError, logoImages.data, watermarkInitialized]);
+
+  useEffect(() => {
+    if (!primaryLogoAsset) {
+      setLogoDataUrl(null);
+      return;
+    }
+    let cancelled = false;
+    void imageAssetToPngDataUrl(primaryLogoAsset).then((url) => {
+      if (!cancelled) setLogoDataUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [primaryLogoAsset]);
+
+  const updateWatermark = useCallback(
+    (update: Partial<WatermarkConfig>) => setWatermarkConfig((prev) => ({ ...prev, ...update })),
+    [],
+  );
+  const companyName = company?.name ?? null;
+  // ──────────────────────────────────────────────────────────────────────────
 
   const setPage = (nextIndex: number) => {
     const clampedIndex = clampPageIndex(nextIndex, entries.length);
@@ -89,6 +155,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         currentEntry={entry}
         currentItemId={entry?.item.id}
         onPageChange={setPage}
+        watermarkConfig={watermarkConfig}
+        logoDataUrl={logoDataUrl}
+        companyName={companyName}
+        onWatermarkChange={updateWatermark}
       />
 
       <div className="screen-only catalog-stage">
@@ -101,6 +171,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             entry={entry}
             pageNumber={pageIndex + 1}
             pageCount={entries.length}
+            watermarkConfig={watermarkConfig}
+            onWatermarkChange={updateWatermark}
+            logoDataUrl={logoDataUrl}
+            companyName={companyName}
           />
         </div>
       </div>
@@ -113,6 +187,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             entry={catalogEntry}
             pageNumber={index + 1}
             pageCount={entries.length}
+            watermarkConfig={watermarkConfig}
+            logoDataUrl={logoDataUrl}
+            companyName={companyName}
+            watermarkInteractive={false}
           />
         ))}
       </div>
@@ -128,6 +206,10 @@ function CatalogNav({
   currentEntry,
   currentItemId,
   onPageChange,
+  watermarkConfig,
+  logoDataUrl,
+  companyName,
+  onWatermarkChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
@@ -136,6 +218,10 @@ function CatalogNav({
   currentEntry: CatalogEntry | undefined;
   currentItemId: string | undefined;
   onPageChange: (index: number) => void;
+  watermarkConfig: WatermarkConfig;
+  logoDataUrl: string | null;
+  companyName: string | null;
+  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   let itemIndex = 0;
 
@@ -192,7 +278,15 @@ function CatalogNav({
             <span aria-hidden="true">&gt;</span>
             <span className="sr-only">Next</span>
           </Button>
-          <CatalogActionsMenu project={project} rooms={rooms} currentItemId={currentItemId} />
+          <CatalogActionsMenu
+            project={project}
+            rooms={rooms}
+            currentItemId={currentItemId}
+            watermarkConfig={watermarkConfig}
+            logoDataUrl={logoDataUrl}
+            companyName={companyName}
+            onWatermarkChange={onWatermarkChange}
+          />
         </div>
         <div className="flex min-w-24 flex-col items-end gap-1.5">
           <span className="num text-sm font-semibold text-neutral-950">
@@ -215,10 +309,18 @@ function CatalogActionsMenu({
   project,
   rooms,
   currentItemId,
+  watermarkConfig,
+  logoDataUrl,
+  companyName,
+  onWatermarkChange: _onWatermarkChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
   currentItemId: string | undefined;
+  watermarkConfig: WatermarkConfig;
+  logoDataUrl: string | null;
+  companyName: string | null;
+  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   const { sortMode } = useFfeItemSort(project.id);
   const [open, setOpen] = useState(false);
@@ -239,6 +341,17 @@ function CatalogActionsMenu({
     setOpen(false);
     action();
   };
+
+  const watermarkOpts =
+    watermarkConfig.enabled && logoDataUrl
+      ? {
+          logoDataUrl,
+          companyName: watermarkConfig.includeName ? companyName : null,
+          placementH: watermarkConfig.placementH,
+          placementV: watermarkConfig.placementV,
+          opacity: watermarkConfig.opacity,
+        }
+      : null;
 
   return (
     <div ref={ref} className="relative inline-flex">
@@ -266,7 +379,11 @@ function CatalogActionsMenu({
             type="button"
             role="menuitem"
             className={catalogMenuItemClassName}
-            onClick={() => runAction(() => void exportCatalogPdf(project, rooms, { sortMode }))}
+            onClick={() =>
+              runAction(
+                () => void exportCatalogPdf(project, rooms, { sortMode, watermark: watermarkOpts }),
+              )
+            }
           >
             Export PDF
           </button>
@@ -276,7 +393,12 @@ function CatalogActionsMenu({
             className={catalogMenuItemClassName}
             onClick={() =>
               runAction(
-                () => void exportCatalogPdf(project, rooms, { showSwatchLabels: false, sortMode }),
+                () =>
+                  void exportCatalogPdf(project, rooms, {
+                    showSwatchLabels: false,
+                    sortMode,
+                    watermark: watermarkOpts,
+                  }),
               )
             }
           >
@@ -290,7 +412,11 @@ function CatalogActionsMenu({
                 className={catalogMenuItemClassName}
                 onClick={() =>
                   runAction(
-                    () => void exportCatalogItemPdf(project, rooms, currentItemId, { sortMode }),
+                    () =>
+                      void exportCatalogItemPdf(project, rooms, currentItemId, {
+                        sortMode,
+                        watermark: watermarkOpts,
+                      }),
                   )
                 }
               >
@@ -306,6 +432,7 @@ function CatalogActionsMenu({
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
                         showSwatchLabels: false,
                         sortMode,
+                        watermark: watermarkOpts,
                       }),
                   )
                 }
@@ -338,11 +465,21 @@ export function CatalogPage({
   entry,
   pageNumber,
   pageCount,
+  watermarkConfig,
+  onWatermarkChange,
+  logoDataUrl,
+  companyName,
+  watermarkInteractive = true,
 }: {
   project: Project;
   entry: CatalogEntry;
   pageNumber: number;
   pageCount: number;
+  watermarkConfig?: WatermarkConfig;
+  onWatermarkChange?: (update: Partial<WatermarkConfig>) => void;
+  logoDataUrl?: string | null;
+  companyName?: string | null;
+  watermarkInteractive?: boolean;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -474,12 +611,39 @@ export function CatalogPage({
 
   const lineTotalCents = item.unitCostCents * item.qty;
 
+  const hasFooterMark =
+    !!watermarkConfig?.enabled && watermarkConfig.placementV === 'footer' && !!logoDataUrl;
+  const hasHeaderMark =
+    !!watermarkConfig?.enabled && watermarkConfig.placementV === 'header' && !!logoDataUrl;
+  const watermarkMark =
+    hasFooterMark || hasHeaderMark ? (
+      <WatermarkMark
+        logoDataUrl={logoDataUrl}
+        companyName={watermarkConfig.includeName ? (companyName ?? null) : null}
+        config={watermarkConfig}
+        onConfigChange={onWatermarkChange ?? (() => undefined)}
+        interactive={watermarkInteractive}
+      />
+    ) : null;
+
   return (
     <article
       className="catalog-page mx-auto bg-white text-neutral-950 shadow-xl"
       aria-label={`${item.itemName} catalog page`}
     >
-      <header className="catalog-header">
+      <header className={cn('catalog-header', hasHeaderMark && 'relative')}>
+        {hasHeaderMark && (
+          <div
+            className={cn(
+              'absolute top-1.5 z-10',
+              watermarkConfig?.placementH === 'left' && 'left-3',
+              watermarkConfig?.placementH === 'center' && 'left-1/2 -translate-x-1/2',
+              watermarkConfig?.placementH === 'right' && 'right-3',
+            )}
+          >
+            {watermarkMark}
+          </div>
+        )}
         <div className="catalog-header-left">
           <h1 className="catalog-header-title">
             {item.itemIdTag ? <span className="catalog-header-id">{item.itemIdTag}</span> : null}
@@ -743,9 +907,12 @@ export function CatalogPage({
       />
 
       <footer className="catalog-footer">
-        <span />
-        <span className="catalog-footer-center">contact email or company logo - optional</span>
+        <span>{watermarkConfig?.placementH === 'left' ? watermarkMark : null}</span>
+        <span className="catalog-footer-center">
+          {watermarkConfig?.placementH === 'center' ? watermarkMark : null}
+        </span>
         <span className="catalog-footer-page">
+          {watermarkConfig?.placementH === 'right' ? watermarkMark : null}
           PAGE {pageNumber} of {pageCount}
         </span>
       </footer>
@@ -1335,4 +1502,208 @@ function initials(value: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
+}
+
+function WatermarkMark({
+  logoDataUrl,
+  companyName,
+  config,
+  onConfigChange,
+  interactive = true,
+}: {
+  logoDataUrl: string;
+  companyName: string | null;
+  config: WatermarkConfig;
+  onConfigChange: (update: Partial<WatermarkConfig>) => void;
+  interactive?: boolean;
+}) {
+  const [uiMode, setUiMode] = useState<'idle' | 'options' | 'editing'>('idle');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (uiMode === 'idle') return;
+    const handler = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setUiMode('idle');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [uiMode]);
+
+  const markContent = (
+    <div className="flex items-center gap-1 leading-none" style={{ opacity: config.opacity / 100 }}>
+      <img
+        src={logoDataUrl}
+        alt="Company mark"
+        className="h-5 w-auto max-w-[72px] object-contain"
+      />
+      {companyName && (
+        <span className="text-[8px] uppercase tracking-widest text-neutral-500 font-medium">
+          {companyName}
+        </span>
+      )}
+    </div>
+  );
+
+  if (!interactive) {
+    return <div className="flex items-center">{markContent}</div>;
+  }
+
+  return (
+    <div ref={containerRef} className="relative inline-flex no-print">
+      <button
+        type="button"
+        className={cn(
+          'rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+          uiMode !== 'idle' && 'ring-2 ring-brand-400 ring-offset-1',
+        )}
+        aria-label="Company watermark — click to edit"
+        onClick={() => setUiMode(uiMode === 'idle' ? 'options' : 'idle')}
+      >
+        {markContent}
+      </button>
+      {uiMode === 'options' && (
+        <div
+          role="menu"
+          className="absolute bottom-full left-0 z-50 mb-1 min-w-[7rem] rounded-lg border border-black/10 bg-canvas-chrome py-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className={catalogMenuItemClassName}
+            onClick={() => setUiMode('editing')}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center rounded px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+            onClick={() => {
+              onConfigChange({ enabled: false });
+              setUiMode('idle');
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+      {uiMode === 'editing' && (
+        <WatermarkEditorPopover
+          config={config}
+          onChange={onConfigChange}
+          onDelete={() => {
+            onConfigChange({ enabled: false });
+            setUiMode('idle');
+          }}
+          onClose={() => setUiMode('idle')}
+        />
+      )}
+    </div>
+  );
+}
+
+function WatermarkEditorPopover({
+  config,
+  onChange,
+  onDelete,
+  onClose,
+}: {
+  config: WatermarkConfig;
+  onChange: (update: Partial<WatermarkConfig>) => void;
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-lg border border-black/10 bg-canvas-chrome p-3 shadow-xl">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="eyebrow text-[10px]">Logo Mark</span>
+        <button
+          type="button"
+          aria-label="Close editor"
+          onClick={onClose}
+          className="text-neutral-400 hover:text-neutral-700"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            aria-hidden="true"
+            className="h-3 w-3"
+          >
+            <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+          </svg>
+        </button>
+      </div>
+      <label className="mb-2 flex cursor-pointer select-none items-center gap-2 text-xs text-neutral-600">
+        <input
+          type="checkbox"
+          checked={config.includeName}
+          onChange={(e) => onChange({ includeName: e.target.checked })}
+          className="h-3.5 w-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+        />
+        Include company name
+      </label>
+      <p className="mb-1 text-[9px] uppercase tracking-wide text-neutral-400">Position</p>
+      <div className="mb-2 flex gap-1">
+        {(['header', 'footer'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            className={cn(
+              'flex-1 rounded px-2 py-1 text-[11px] capitalize transition-colors',
+              config.placementV === v
+                ? 'bg-brand-600 text-white'
+                : 'border border-black/10 bg-white text-neutral-600 hover:bg-brand-50',
+            )}
+            onClick={() => onChange({ placementV: v })}
+          >
+            {v[0]!.toUpperCase() + v.slice(1)}
+          </button>
+        ))}
+      </div>
+      <div className="mb-2 flex gap-1">
+        {(['left', 'center', 'right'] as const).map((h) => (
+          <button
+            key={h}
+            type="button"
+            className={cn(
+              'flex-1 rounded px-2 py-1 text-[11px] capitalize transition-colors',
+              config.placementH === h
+                ? 'bg-brand-600 text-white'
+                : 'border border-black/10 bg-white text-neutral-600 hover:bg-brand-50',
+            )}
+            onClick={() => onChange({ placementH: h })}
+          >
+            {h[0]!.toUpperCase() + h.slice(1)}
+          </button>
+        ))}
+      </div>
+      <div className="mb-3">
+        <div className="mb-1 flex items-center justify-between">
+          <span className="text-[9px] uppercase tracking-wide text-neutral-400">Opacity</span>
+          <span className="num text-[10px] text-neutral-600">{config.opacity}%</span>
+        </div>
+        <input
+          type="range"
+          min={5}
+          max={100}
+          step={5}
+          value={config.opacity}
+          onChange={(e) => onChange({ opacity: Number(e.target.value) })}
+          className="h-1.5 w-full cursor-pointer accent-brand-600"
+        />
+      </div>
+      <button
+        type="button"
+        className="w-full rounded border border-red-200 bg-red-50 px-3 py-1.5 text-[11px] text-red-600 transition-colors hover:bg-red-100"
+        onClick={onDelete}
+      >
+        Remove Watermark
+      </button>
+    </div>
+  );
 }
