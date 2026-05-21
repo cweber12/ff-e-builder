@@ -69,21 +69,25 @@ export function DashboardPage() {
                   (p) => p.companyName?.trim() === companyName,
                 ).length;
                 return (
-                  <span
+                  <Link
                     key={companyName}
-                    className="inline-flex items-center gap-2 border border-black/10 bg-canvas-chrome px-2.5 py-1 text-sm text-neutral-800"
+                    to="/company"
+                    className="inline-flex items-center gap-2 border border-black/10 bg-canvas-chrome px-2.5 py-1 text-sm text-neutral-800 transition hover:border-brand-500/40 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                   >
                     {companyName}
                     <span className="num border-l border-black/10 pl-2 text-xs font-semibold text-neutral-500">
                       {count}
                     </span>
-                  </span>
+                  </Link>
                 );
               })}
             </div>
           ) : (
             <p className="mt-3 text-sm text-neutral-500">
-              Company groupings appear here once projects have a company name assigned.
+              Company groupings appear here once projects have a company name assigned.{' '}
+              <Link to="/company" className="font-medium text-brand-600 hover:underline">
+                Set up your company profile.
+              </Link>
             </p>
           )}
         </section>

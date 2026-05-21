@@ -243,6 +243,16 @@ function UserMenu() {
                 type="button"
                 onClick={() => {
                   setOpen(false);
+                  navigate('/company');
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-canvas-shell hover:text-brand-700"
+              >
+                Company profile
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
                   navigate('/projects');
                 }}
                 className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-canvas-shell hover:text-brand-700"
