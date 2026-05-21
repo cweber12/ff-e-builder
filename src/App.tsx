@@ -43,6 +43,7 @@ import {
   useProposalWithItems,
 } from './hooks';
 import { DashboardPage } from './pages/DashboardPage';
+import { CompanyProfilePage } from './pages/CompanyProfilePage';
 import { PlanCanvasPage } from './pages/PlanCanvasPage';
 import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
 import { PlansPage } from './pages/PlansPage';
@@ -79,6 +80,7 @@ function App() {
         }
       >
         <Route path="/projects" element={<DashboardPage />} />
+        <Route path="/company" element={<CompanyProfilePage />} />
         <Route path="/projects/:id" element={<ProjectLayout />}>
           <Route index element={<ProjectOverviewRoute />} />
           <Route path="snapshot" element={<Navigate to=".." replace />} />

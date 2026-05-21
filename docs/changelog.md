@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - feat(company): add Company entity — DB migration, GET/PUT /api/v1/company, company_logo image support, and removal of company_name from UserProfile
+- feat(company): add Company client types, API client, and hooks (slice 2)
+- feat(company): add CompanyProfilePage at /company — identity, brand colours, document mark, logo upload
 
 - refactor(src): reorganise file layout — move ChangeConfirmModal to shared/modals, proposalStatusConfig to lib/table, BRAND_RGB to lib/constants, PDF plan utils to lib/plans, table hooks to hooks/shared, and table-UI components to shared/table
 

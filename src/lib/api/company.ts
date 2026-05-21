@@ -19,7 +19,7 @@ export interface RawCompany {
 }
 
 export interface UpsertCompanyInput {
-  name?: string;
+  name: string;
   location?: string | null;
   colorPrimary?: string | null;
   colorSecondary?: string | null;
