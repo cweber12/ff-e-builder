@@ -26,40 +26,38 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-neutral-950/40 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-neutral-950/45 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl"
+        className="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 border-b border-neutral-100 bg-surface px-5 py-3">
+        <div className="flex items-center gap-3 border-b border-black/10 px-5 py-3.5">
           <div className="min-w-0 flex-1">
-            {roomName && (
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-                {roomName}
-              </p>
-            )}
-            <h2 className="truncate text-base font-semibold text-neutral-900">{item.itemName}</h2>
+            {roomName && <p className="eyebrow">{roomName}</p>}
+            <h2 className="mt-0.5 truncate font-display text-base font-semibold text-neutral-950">
+              {item.itemName}
+            </h2>
           </div>
           <StatusBadge status={item.status} />
           <button
             type="button"
             onClick={onClose}
             aria-label="Close detail panel"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="icon-btn"
           >
             <CloseIcon />
           </button>
         </div>
 
         <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-          <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-neutral-100 p-4">
+          <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-black/10 bg-canvas-shell p-5">
             <ImageSection label="Rendering">
               <ImageFrame
                 entityType="item"
                 entityId={item.id}
                 alt={item.itemName}
                 fallbackUrl={null}
-                className="w-full aspect-[117/75] rounded-lg"
+                className="w-full aspect-[117/75]"
                 disabled
               />
             </ImageSection>
@@ -75,29 +73,27 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
             </ImageSection>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5">
-            <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-5">
               <MetaField label="Description" value={item.description} />
-              <MetaField label="ID" value={item.itemIdTag} />
+              <MetaField label="ID" value={item.itemIdTag} numeric />
               <MetaField label="Category" value={item.category} />
-              <MetaField label="Dimensions" value={item.dimensions} />
+              <MetaField label="Dimensions" value={item.dimensions} numeric />
               <MetaField label="Lead Time" value={item.leadTime} />
               <MetaField label="Notes" value={item.notes} />
 
               {item.materials.length > 0 && (
                 <div>
-                  <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400">
-                    Materials
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="eyebrow mb-2">Materials</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {item.materials.map((m) => (
                       <span
                         key={m.id}
-                        className="inline-flex items-center gap-1.5 rounded-pill border border-neutral-200 px-2.5 py-1 text-sm text-neutral-700"
+                        className="inline-flex items-center gap-2 border border-black/10 bg-canvas-shell px-2.5 py-1 text-sm text-neutral-800"
                       >
                         {m.swatchHex && (
                           <span
-                            className="h-3 w-3 flex-shrink-0 rounded-full border border-neutral-200"
+                            className="h-3 w-3 flex-shrink-0 rounded-full border border-black/20"
                             style={{ background: m.swatchHex }}
                           />
                         )}
@@ -108,28 +104,24 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                 </div>
               )}
 
-              <div className="border-t border-neutral-100 pt-4">
-                <dl className="grid grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-                      Quantity
-                    </dt>
-                    <dd className="mt-1 text-sm text-neutral-900">{item.qty}</dd>
+              <div className="border-t border-black/10 pt-5">
+                <dl className="grid grid-cols-2 gap-6">
+                  <div className="border-l border-black/10 pl-3">
+                    <dt className="eyebrow">Quantity</dt>
+                    <dd className="num mt-1 text-sm font-medium text-neutral-950">{item.qty}</dd>
                   </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-                      Unit Cost
-                    </dt>
-                    <dd className="mt-1 text-sm text-neutral-900">
+                  <div className="border-l border-black/10 pl-3">
+                    <dt className="eyebrow">Unit Cost</dt>
+                    <dd className="num mt-1 text-sm font-medium text-neutral-950">
                       {formatMoney(cents(item.unitCostCents))}
                     </dd>
                   </div>
                 </dl>
-                <div className="mt-4 rounded-lg bg-brand-50 px-4 py-3">
-                  <span className="text-xs font-medium uppercase tracking-wide text-brand-600">
+                <div className="mt-5 flex items-baseline justify-between border-y border-brand-700/30 bg-brand-50/60 px-4 py-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
                     Total
                   </span>
-                  <p className="mt-0.5 text-lg font-semibold text-brand-700">
+                  <p className="num text-2xl font-semibold tracking-tight text-brand-700">
                     {formatMoney(cents(total))}
                   </p>
                 </div>
@@ -145,18 +137,26 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
 function ImageSection({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="w-full">
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
+      <p className="eyebrow mb-2">{label}</p>
       {children}
     </div>
   );
 }
 
-function MetaField({ label, value }: { label: string; value: string | null }) {
+function MetaField({
+  label,
+  value,
+  numeric = false,
+}: {
+  label: string;
+  value: string | null;
+  numeric?: boolean;
+}) {
   if (!value) return null;
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
-      <p className="mt-0.5 text-sm text-neutral-900">{value}</p>
+      <p className="eyebrow">{label}</p>
+      <p className={['mt-1 text-sm text-neutral-950', numeric ? 'num' : ''].join(' ')}>{value}</p>
     </div>
   );
 }

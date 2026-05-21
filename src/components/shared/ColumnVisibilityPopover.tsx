@@ -230,7 +230,7 @@ export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilit
               top: triggerRect.bottom + 6,
               right: window.innerWidth - triggerRect.right,
             }}
-            className="z-[200] w-64 rounded-lg border border-neutral-200 bg-white shadow-lg"
+            className="z-[200] w-64 rounded-sm border border-black/10 bg-canvas-chrome shadow-lg"
           >
             {/* Density section */}
             <div className="border-b border-neutral-100 px-3 py-2.5">
@@ -244,10 +244,10 @@ export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilit
                     type="button"
                     onClick={() => setDensity(value)}
                     className={cn(
-                      'flex-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors',
+                      'flex-1 rounded-sm border px-2 py-1 text-xs font-medium transition-colors',
                       density === value
                         ? 'border-brand-500 bg-brand-50 text-brand-700'
-                        : 'border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50',
+                        : 'border-black/10 text-neutral-600 hover:border-black/20 hover:bg-canvas-shell',
                     )}
                   >
                     {label}

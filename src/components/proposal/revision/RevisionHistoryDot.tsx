@@ -109,19 +109,22 @@ export function RevisionHistoryDot({
               top: triggerRect.bottom + 4,
               left: triggerRect.left,
             }}
-            className="z-[100] min-w-56 max-w-xs rounded-lg border border-neutral-200 bg-white shadow-lg"
+            className="z-[100] min-w-56 max-w-xs rounded-sm border border-black/10 bg-canvas-chrome shadow-lg"
           >
-            <div className="border-b border-neutral-100 px-3 py-2 text-xs font-semibold text-neutral-600">
+            <div className="border-b border-black/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
               {title}
             </div>
             <ul className="max-h-56 overflow-y-auto">
               {groupedEntries.map((group) => (
                 <Fragment key={group.label}>
-                  <li className="sticky top-0 border-b border-neutral-100 bg-neutral-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
+                  <li className="sticky top-0 border-b border-black/10 bg-canvas-shell px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
                     {group.label === 'General' ? 'General' : `Round ${group.label}`}
                   </li>
                   {group.entries.map((entry) => (
-                    <li key={entry.id} className="divide-y divide-neutral-50 px-3 py-2 text-xs">
+                    <li
+                      key={entry.id}
+                      className="border-b border-black/5 px-3 py-2 text-xs last:border-b-0"
+                    >
                       <div className="flex items-center gap-1.5">
                         <span
                           className={cn(
@@ -129,28 +132,26 @@ export function RevisionHistoryDot({
                             proposalStatusConfig[entry.proposalStatus].dotClass,
                           )}
                         />
-                        <span className="text-neutral-400">
+                        <span className="num text-neutral-500">
                           {formatRevisionDate(entry.changedAt)}
                         </span>
                       </div>
-                      <div className="mt-0.5 flex items-baseline gap-1">
+                      <div className="num mt-1 flex items-baseline gap-1.5">
                         <span className="text-neutral-400 line-through">
                           {entry.previousValue || '-'}
                         </span>
-                        <span className="text-neutral-300">-&gt;</span>
-                        <span className="font-medium text-neutral-700">
+                        <span className="text-neutral-300">→</span>
+                        <span className="font-medium text-neutral-900">
                           {entry.newValue || '-'}
                         </span>
                       </div>
-                      {entry.notes && (
-                        <p className="mt-0.5 italic text-neutral-500">{entry.notes}</p>
-                      )}
+                      {entry.notes && <p className="mt-1 italic text-neutral-500">{entry.notes}</p>}
                     </li>
                   ))}
                 </Fragment>
               ))}
             </ul>
-            {footer && <div className="border-t border-neutral-100 px-3 py-2">{footer}</div>}
+            {footer && <div className="border-t border-black/10 px-3 py-2">{footer}</div>}
           </div>,
           document.body,
         )}

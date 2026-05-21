@@ -71,7 +71,7 @@ export function ImageOptionsMenu({
     <div
       ref={menuRef}
       style={{ top: pos.top, left: pos.left }}
-      className="fixed z-50 min-w-28 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+      className="fixed z-50 min-w-28 menu-panel"
     >
       {canUpdate && (
         <button

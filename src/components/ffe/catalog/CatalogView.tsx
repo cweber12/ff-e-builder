@@ -5,11 +5,15 @@ import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
   useDeleteImage,
+  useFfeItemSort,
   useImages,
+  useItemMaterialActions,
   useUpdateImageCrop,
   useUpdateItem,
   useUploadImage,
+  type FfeItemSortMode,
 } from '../../../hooks';
+import { toast } from 'sonner';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
@@ -42,7 +46,8 @@ type CatalogViewProps = {
 export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const entries = useMemo(() => flattenCatalogEntries(rooms), [rooms]);
+  const { sortMode } = useFfeItemSort(project.id);
+  const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
   const entry = entries[pageIndex];
@@ -57,10 +62,13 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
 
   if (!entry) {
     return (
-      <div className="min-h-screen bg-surface-muted px-6 py-12">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-12 text-center">
-          <h1 className="text-2xl font-semibold text-neutral-950">No catalog items yet</h1>
-          <p className="text-sm text-neutral-600">
+      <div className="min-h-screen bg-canvas-bg px-6 py-16">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 border-y border-dashed border-black/15 bg-canvas-chrome px-6 py-14 text-center">
+          <p className="eyebrow">Catalog</p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
+            No catalog items yet
+          </h1>
+          <p className="max-w-md text-sm leading-6 text-neutral-500">
             Add FF&amp;E items to locations before creating a printable catalog.
           </p>
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
@@ -72,7 +80,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted">
+    <div className="min-h-screen bg-canvas-bg">
       <CatalogNav
         project={project}
         rooms={rooms}
@@ -132,13 +140,13 @@ function CatalogNav({
   let itemIndex = 0;
 
   return (
-    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-neutral-200 bg-surface-muted/95 px-4 py-3 backdrop-blur">
+    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-black/10 bg-canvas-bg/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="mt-1 truncate text-sm font-semibold text-neutral-950">
+          {currentEntry?.room.name && <p className="eyebrow truncate">{currentEntry.room.name}</p>}
+          <p className="mt-0.5 truncate font-display text-base font-semibold tracking-tight text-neutral-950">
             {currentEntry?.item.itemName ?? 'Catalog'}
           </p>
-          <p className="text-xs text-neutral-500">{currentEntry?.room.name}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -158,7 +166,7 @@ function CatalogNav({
             id="catalog-jump"
             value={currentIndex}
             onChange={(event) => onPageChange(Number(event.target.value))}
-            className="min-w-56 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
+            className="min-w-56 rounded-sm border border-black/15 bg-canvas-chrome px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
           >
             {rooms.map((room) => (
               <optgroup key={room.id} label={room.name}>
@@ -186,13 +194,13 @@ function CatalogNav({
           </Button>
           <CatalogActionsMenu project={project} rooms={rooms} currentItemId={currentItemId} />
         </div>
-        <div className="flex min-w-24 flex-col items-end gap-1">
-          <span className="text-sm font-semibold tabular-nums text-neutral-700">
+        <div className="flex min-w-24 flex-col items-end gap-1.5">
+          <span className="num text-sm font-semibold text-neutral-950">
             {currentIndex + 1} / {total}
           </span>
-          <div className="h-1.5 w-24 overflow-hidden rounded-pill bg-neutral-200">
+          <div className="h-1 w-24 overflow-hidden bg-canvas-shell">
             <div
-              className="h-full rounded-pill bg-brand-500 transition-all"
+              className="h-full bg-brand-600 transition-all"
               style={{ width: `${total > 0 ? ((currentIndex + 1) / total) * 100 : 0}%` }}
             />
           </div>
@@ -212,6 +220,7 @@ function CatalogActionsMenu({
   rooms: RoomWithItems[];
   currentItemId: string | undefined;
 }) {
+  const { sortMode } = useFfeItemSort(project.id);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -239,15 +248,12 @@ function CatalogActionsMenu({
         aria-expanded={open}
         aria-label="Open catalog options"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-canvas-chrome text-neutral-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         <MoreIcon />
       </button>
       {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-30 mt-1 min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
-        >
+        <div role="menu" className="absolute right-0 top-full z-30 mt-1 min-w-48 menu-panel">
           <button
             type="button"
             role="menuitem"
@@ -260,21 +266,53 @@ function CatalogActionsMenu({
             type="button"
             role="menuitem"
             className={catalogMenuItemClassName}
-            onClick={() => runAction(() => void exportCatalogPdf(project, rooms))}
+            onClick={() => runAction(() => void exportCatalogPdf(project, rooms, { sortMode }))}
           >
             Export PDF
           </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={catalogMenuItemClassName}
+            onClick={() =>
+              runAction(
+                () => void exportCatalogPdf(project, rooms, { showSwatchLabels: false, sortMode }),
+              )
+            }
+          >
+            Export PDF — swatches only
+          </button>
           {currentItemId && (
-            <button
-              type="button"
-              role="menuitem"
-              className={catalogMenuItemClassName}
-              onClick={() =>
-                runAction(() => void exportCatalogItemPdf(project, rooms, currentItemId))
-              }
-            >
-              Export this item
-            </button>
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                className={catalogMenuItemClassName}
+                onClick={() =>
+                  runAction(
+                    () => void exportCatalogItemPdf(project, rooms, currentItemId, { sortMode }),
+                  )
+                }
+              >
+                Export this item
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={catalogMenuItemClassName}
+                onClick={() =>
+                  runAction(
+                    () =>
+                      void exportCatalogItemPdf(project, rooms, currentItemId, {
+                        showSwatchLabels: false,
+                        sortMode,
+                      }),
+                  )
+                }
+              >
+                Export this item — swatches only
+              </button>
+            </>
           )}
         </div>
       )}
@@ -308,6 +346,32 @@ export function CatalogPage({
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
+  const materialActions = useItemMaterialActions({
+    kind: 'ffe',
+    itemGroupId: room.id,
+    projectId: project.id,
+  });
+  const uploadSwatchImage = useUploadImage();
+
+  const handlePasteSwatchImage = async (file: File) => {
+    try {
+      const generatedName = `Swatch ${item.materials.length + 1}`;
+      const material = await materialActions.createAndAssign.mutateAsync({
+        itemId: item.id,
+        input: { name: generatedName },
+      });
+      await uploadSwatchImage.mutateAsync({
+        entityType: 'material',
+        entityId: material.id,
+        file,
+        altText: material.name,
+      });
+      toast.success(`Added ${material.name} to the finish library.`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add swatch.';
+      toast.error(message);
+    }
+  };
 
   const optionImagesQuery = useImages('item_option', item.id);
   const optionImages = useMemo(
@@ -356,7 +420,7 @@ export function CatalogPage({
               value={item.itemName}
               aria-label={`Name for ${item.itemName}`}
               className="min-w-0 inline-block"
-              inputClassName="w-full text-[22px] font-bold uppercase tracking-wide text-brand-700"
+              inputClassName="w-full text-[22px] font-medium uppercase tracking-wide text-gray-800"
               onSave={(value) => saveField('itemName', value, true)}
               renderDisplay={(value) => (
                 <span className="catalog-header-name">{value.toUpperCase()}</span>
@@ -532,32 +596,31 @@ export function CatalogPage({
                 }
               />
             </div>
-            <div className="justify-self-end">
+            <div className={cn('justify-self-end', item.materials.length === 0 && 'no-print')}>
               <h2 className="catalog-spec-heading catalog-sub-heading">FINISH SCHEDULE</h2>
               <div className="catalog-materials-row">
-                {item.materials.length > 0
-                  ? item.materials.slice(0, 4).map((material) => (
-                      <div key={material.id} className="catalog-material-cell">
-                        <span className="catalog-material-id">{material.materialId || 'ID'}</span>
-                        <div className="catalog-material-swatch">
-                          <MaterialSwatchImage material={material} />
-                        </div>
-                        <span className="catalog-material-name">
-                          {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
-                        </span>
-                      </div>
-                    ))
-                  : Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="catalog-material-cell catalog-material-cell-empty"
-                      >
-                        <span className="catalog-material-id">ID</span>
-                        <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
-                        <span className="catalog-material-name">MATERIAL</span>
-                        <span className="catalog-material-color">COLOR</span>
-                      </div>
-                    ))}
+                {item.materials.slice(0, 4).map((material) => (
+                  <div key={material.id} className="catalog-material-cell">
+                    <span className="catalog-material-id">{material.materialId || 'ID'}</span>
+                    <div className="catalog-material-swatch">
+                      <MaterialSwatchImage material={material} className="!h-[60px] !w-[60px]" />
+                    </div>
+                    <span className="catalog-material-name">
+                      {material.name?.trim().split(/\s+/)[0] || 'MATERIAL'}
+                    </span>
+                  </div>
+                ))}
+                {Array.from({
+                  length: Math.max(0, 4 - Math.min(item.materials.length, 4)),
+                }).map((_, index) => (
+                  <EmptyMaterialSlot
+                    key={`empty-${index}`}
+                    disabled={
+                      materialActions.createAndAssign.isPending || uploadSwatchImage.isPending
+                    }
+                    onPaste={(file) => void handlePasteSwatchImage(file)}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -803,6 +866,96 @@ function CatalogUploadSlot({
         }}
       />
     </>
+  );
+}
+
+function EmptyMaterialSlot({
+  disabled,
+  onPaste,
+}: {
+  disabled: boolean;
+  onPaste: (file: File) => void;
+}) {
+  // Refs to the latest props so a registered listener always reads current
+  // values, never the stale closure from the render when it was attached.
+  // This fixes the "previously-pasted images appear" bug — without it, the
+  // document-level listener captures `onPaste` once and never updates, so
+  // re-renders (caused by every successful paste mutating item.materials)
+  // leave behind handlers wired to the old callback.
+  const onPasteRef = useRef(onPaste);
+  const disabledRef = useRef(disabled);
+  useEffect(() => {
+    onPasteRef.current = onPaste;
+  }, [onPaste]);
+  useEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
+
+  const pasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
+  const [isHovering, setHovering] = useState(false);
+
+  const removeListener = () => {
+    const handler = pasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    pasteHandlerRef.current = null;
+  };
+
+  useEffect(() => () => removeListener(), []);
+
+  const enablePaste = () => {
+    setHovering(true);
+    if (disabledRef.current || pasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => {
+      const file = Array.from(event.clipboardData?.items ?? [])
+        .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
+        ?.getAsFile();
+      if (!file) return;
+      event.preventDefault();
+      // Single-shot: detach immediately so this handler can never run again
+      // with stale state. The user re-hovers to arm another paste.
+      removeListener();
+      if (disabledRef.current) return;
+      onPasteRef.current(file);
+    };
+    pasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disablePaste = () => {
+    setHovering(false);
+    removeListener();
+  };
+
+  return (
+    <div
+      className={cn(
+        'no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste',
+        isHovering && !disabled && 'catalog-material-slot-paste--hover',
+        disabled && 'opacity-60',
+      )}
+      tabIndex={0}
+      role="button"
+      aria-label="Paste an image (Ctrl+V) to add a finish swatch"
+      title={
+        disabled
+          ? 'Adding swatch…'
+          : isHovering
+            ? 'Press Ctrl+V to paste an image'
+            : 'Hover and press Ctrl+V to paste an image'
+      }
+      onMouseEnter={enablePaste}
+      onMouseLeave={disablePaste}
+      onFocus={enablePaste}
+      onBlur={disablePaste}
+    >
+      <span className="catalog-material-id">ID</span>
+      <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
+      <span className="catalog-material-name">MATERIAL</span>
+      <span className="catalog-material-color">
+        {isHovering && !disabled ? 'PASTE (CTRL+V)' : 'COLOR'}
+      </span>
+    </div>
   );
 }
 
@@ -1066,14 +1219,29 @@ function CatalogApprovalSection({ shown, onToggle }: { shown: boolean; onToggle:
   );
 }
 
-function flattenCatalogEntries(rooms: RoomWithItems[]): CatalogEntry[] {
+function flattenCatalogEntries(
+  rooms: RoomWithItems[],
+  sortMode: FfeItemSortMode = 'manual',
+): CatalogEntry[] {
+  const itemCompare =
+    sortMode === 'idTag'
+      ? (() => {
+          const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+          return (a: Item, b: Item) => {
+            const aId = a.itemIdTag?.trim() ?? '';
+            const bId = b.itemIdTag?.trim() ?? '';
+            if (aId && bId) {
+              return collator.compare(aId, bId) || a.itemName.localeCompare(b.itemName);
+            }
+            if (aId) return -1;
+            if (bId) return 1;
+            return a.itemName.localeCompare(b.itemName);
+          };
+        })()
+      : (a: Item, b: Item) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName);
   return [...rooms]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-    .flatMap((room) =>
-      [...room.items]
-        .sort((a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName))
-        .map((item) => ({ item, room })),
-    );
+    .flatMap((room) => [...room.items].sort(itemCompare).map((item) => ({ item, room })));
 }
 
 function clampPageIndex(index: number, total: number) {

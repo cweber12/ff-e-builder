@@ -20,63 +20,69 @@ export function ProposalSummaryView({ project, categories }: ProposalSummaryView
         : 'bg-success-500';
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-10">
+      <section>
+        <p className="eyebrow">Proposal · Budget vs Actual</p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-b border-black/10 pb-4">
           <div>
-            <h2 className="text-lg font-semibold text-neutral-950">Proposal budget vs actual</h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              {formatMoney(cents(actualCents))} actual against {formatMoney(cents(budgetCents))}{' '}
-              budget
+            <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-950">
+              {formatMoney(cents(actualCents))}
+              <span className="ml-2 text-base font-medium text-neutral-500">
+                of {formatMoney(cents(budgetCents))}
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              {budgetCents > 0 && actualCents > budgetCents
+                ? 'Over budget'
+                : budgetCents === 0
+                  ? 'No budget set'
+                  : 'Within budget'}
             </p>
           </div>
-          <span className="text-sm font-semibold tabular-nums text-neutral-700">
-            {budgetCents > 0 ? `${budgetPercent}%` : 'No budget'}
+          <span className="num text-2xl font-semibold tracking-tight text-neutral-950">
+            {budgetCents > 0 ? `${budgetPercent}%` : '—'}
           </span>
         </div>
-        <div className="mt-4 h-3 overflow-hidden rounded-pill bg-neutral-100">
-          <div
-            className={`h-full rounded-pill ${budgetTone}`}
-            style={{ width: `${budgetPercent}%` }}
-          />
+        <div className="mt-4 h-1.5 overflow-hidden bg-canvas-shell">
+          <div className={`h-full ${budgetTone}`} style={{ width: `${budgetPercent}%` }} />
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="border-b border-neutral-100 px-4 py-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
-            Categories
-          </h2>
+      <section className="bg-paper border-y border-black/10">
+        <div className="border-b border-black/10 px-5 py-3">
+          <h2 className="eyebrow">Categories</h2>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-neutral-500">
+          <thead className="border-b border-black/10 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
             <tr>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3 text-right">Rows</th>
-              <th className="px-4 py-3 text-right">Quantity</th>
-              <th className="px-4 py-3 text-right">Subtotal</th>
+              <th className="px-5 py-3">Category</th>
+              <th className="px-5 py-3 text-right">Rows</th>
+              <th className="px-5 py-3 text-right">Quantity</th>
+              <th className="px-5 py-3 text-right">Subtotal</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-black/10">
             {categories.map((category) => (
               <tr key={category.id}>
-                <td className="px-4 py-3 font-medium text-neutral-950">{category.name}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                <td className="px-5 py-3 font-medium text-neutral-950">{category.name}</td>
+                <td className="num px-5 py-3 text-right text-neutral-700">
                   {category.items.length}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                <td className="num px-5 py-3 text-right text-neutral-700">
                   {category.items.reduce((sum, item) => sum + item.quantity, 0)}
                 </td>
-                <td className="px-4 py-3 text-right font-medium tabular-nums text-neutral-950">
+                <td className="num px-5 py-3 text-right font-medium text-neutral-950">
                   {formatMoney(cents(proposalCategorySubtotalCents(category.items)))}
                 </td>
               </tr>
             ))}
-            <tr className="bg-brand-50/50">
-              <td className="px-4 py-3 font-semibold text-neutral-950">Grand total</td>
-              <td className="px-4 py-3" />
-              <td className="px-4 py-3" />
-              <td className="px-4 py-3 text-right font-bold tabular-nums text-brand-700">
+            <tr className="border-t-2 border-brand-700/40 bg-brand-50/50">
+              <td className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+                Grand total
+              </td>
+              <td className="px-5 py-4" />
+              <td className="px-5 py-4" />
+              <td className="num px-5 py-4 text-right text-lg font-semibold tracking-tight text-brand-700">
                 {formatMoney(cents(actualCents))}
               </td>
             </tr>

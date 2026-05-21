@@ -134,7 +134,7 @@ function ItemOptionImageSlot({
         </p>
       </div>
 
-      <div className="relative overflow-hidden rounded-lg border border-neutral-200 bg-surface-muted shadow-sm">
+      <div className="relative overflow-hidden rounded-sm border border-black/10 bg-canvas-shell shadow-sm">
         {image ? (
           <label className="absolute right-3 top-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-[11px] font-medium text-neutral-700 shadow-sm">
             <input

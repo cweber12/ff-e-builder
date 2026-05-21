@@ -65,27 +65,21 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         }
       }}
       className={cn(
-        'rounded-lg border border-neutral-300 shadow-xl backdrop:bg-neutral-950/45 backdrop:backdrop-blur-sm',
-        'p-0 w-full max-w-lg bg-surface',
+        'rounded-sm border border-black/10 shadow-xl backdrop:bg-neutral-950/50 backdrop:backdrop-blur-sm',
+        'p-0 w-full max-w-lg bg-canvas-chrome',
         'open:animate-in open:fade-in-0 open:zoom-in-95',
         className,
       )}
     >
       <div className="flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-300 bg-neutral-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-black/10 bg-canvas-shell px-6 py-3.5">
           <h2
             id={titleId}
             className="font-display text-lg font-semibold tracking-tight text-neutral-950"
           >
             {title}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          >
+          <button type="button" onClick={onClose} aria-label="Close dialog" className="icon-btn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 16 16"
@@ -98,8 +92,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-5">{children}</div>
       </div>
     </dialog>
   );

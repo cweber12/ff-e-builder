@@ -11,7 +11,7 @@ interface RevisionQtyCellProps {
 }
 
 const inputClassName =
-  'w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm tabular-nums text-neutral-700 focus:border-brand-500 focus:outline-none';
+  'w-full rounded-sm border border-amber-400 bg-canvas-chrome px-2 py-1 text-sm tabular-nums text-neutral-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30';
 
 export function RevisionQtyCell({
   snapshot,
@@ -38,7 +38,7 @@ export function RevisionQtyCell({
     return (
       <td
         className={cn(
-          'w-44 min-w-[176px] border-l-2 border-l-brand-300 bg-amber-50 px-3 py-2',
+          'w-44 min-w-[176px] border-l-2 border-l-brand-400 bg-amber-50/70 px-3 py-2',
           tdClassName,
         )}
         onClick={(e) => e.stopPropagation()}
@@ -75,8 +75,8 @@ export function RevisionQtyCell({
     return (
       <td
         className={cn(
-          'w-44 min-w-[176px] border-l-2 border-l-brand-300 px-3 py-2 text-sm text-neutral-300',
-          canEdit && 'cursor-pointer hover:bg-neutral-50',
+          'w-44 min-w-[176px] border-l-2 border-l-brand-400 px-3 py-2 text-sm text-neutral-300',
+          canEdit && 'cursor-pointer hover:bg-canvas-shell',
           tdClassName,
         )}
         title={canEdit ? 'Click to set revised quantity' : undefined}
@@ -92,9 +92,9 @@ export function RevisionQtyCell({
   return (
     <td
       className={cn(
-        'w-44 min-w-[176px] border-l-2 border-l-brand-300 px-3 py-2 text-sm tabular-nums',
-        changed ? 'text-amber-600' : 'text-neutral-500',
-        canEdit && 'cursor-pointer hover:bg-neutral-50',
+        'w-44 min-w-[176px] border-l-2 border-l-brand-400 px-3 py-2 text-sm tabular-nums',
+        changed ? 'text-amber-700' : 'text-neutral-500',
+        canEdit && 'cursor-pointer hover:bg-canvas-shell',
         tdClassName,
       )}
       title={canEdit ? 'Click to update revised quantity' : undefined}

@@ -15,31 +15,23 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
   const updateProject = useUpdateProject();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 py-2">
-      {/* Project images */}
+    <div className="mx-auto max-w-4xl space-y-12 py-4">
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-            Project Images
-          </h2>
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="eyebrow">Project Images</h2>
         </div>
         <ProjectImagesPanel project={project} />
       </section>
 
-      <div className="border-t border-neutral-200" />
-
-      {/* Project information + Company information */}
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-            Project Information
-          </h2>
+      <section className="section-rule">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="eyebrow">Project Information</h2>
           <Button type="button" variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
             Edit
           </Button>
         </div>
 
-        <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
           <InfoField label="Project name" value={project.name} />
           <InfoField label="Client" value={project.clientName || null} />
           <InfoField label="Location" value={project.projectLocation ?? null} />
@@ -47,6 +39,7 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
           <InfoField
             label="Budget"
             value={project.budgetCents > 0 ? formatMoney(cents(project.budgetCents)) : null}
+            numeric
           />
           <InfoField
             label="Created"
@@ -55,8 +48,9 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
               month: 'long',
               day: 'numeric',
             })}
+            numeric
           />
-        </div>
+        </dl>
       </section>
 
       <EditProjectModal
@@ -73,11 +67,21 @@ export function ProjectOverviewPage({ project }: ProjectOverviewPageProps) {
   );
 }
 
-function InfoField({ label, value }: { label: string; value: string | null | undefined }) {
+function InfoField({
+  label,
+  value,
+  numeric = false,
+}: {
+  label: string;
+  value: string | null | undefined;
+  numeric?: boolean;
+}) {
   return (
-    <div className="flex flex-col gap-1">
-      <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</dt>
-      <dd className="text-sm font-medium text-neutral-900">
+    <div className="flex flex-col gap-1.5 border-l border-black/10 pl-3">
+      <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+        {label}
+      </dt>
+      <dd className={['text-sm font-medium text-neutral-950', numeric ? 'num' : ''].join(' ')}>
         {value ?? <span className="text-neutral-400">—</span>}
       </dd>
     </div>

@@ -106,7 +106,7 @@ export function PanZoomFrame({ entityType, entityId, alt }: Props) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-[117/75] overflow-hidden rounded-lg border border-neutral-200 bg-surface-muted select-none"
+      className="relative w-full aspect-[117/75] overflow-hidden border border-black/10 bg-canvas-shell select-none"
       style={{ cursor: url ? (isZoomed ? 'grab' : 'zoom-in') : 'default' }}
       onPointerDown={url ? handlePointerDown : undefined}
       onPointerMove={url ? handlePointerMove : undefined}
@@ -114,7 +114,7 @@ export function PanZoomFrame({ entityType, entityId, alt }: Props) {
       onPointerCancel={url ? handlePointerUp : undefined}
       onDoubleClick={url ? reset : undefined}
     >
-      {images.isLoading && <div className="absolute inset-0 animate-pulse bg-surface-muted" />}
+      {images.isLoading && <div className="absolute inset-0 animate-pulse bg-canvas-shell" />}
       {!images.isLoading && !url && (
         <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
           No plan image

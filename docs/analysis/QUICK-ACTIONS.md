@@ -6,16 +6,6 @@
 
 ---
 
-## 🚨 High Priority — Delete Stray Files
-
-These files serve no purpose and clutter the repo root:
-
-- [ ] **Delete `items.csv`** — Demo data export, not referenced anywhere
-- [ ] **Delete `projects.csv`** — Demo data export, not referenced anywhere
-- [ ] **Delete `layout - letter size (1).pdf`** — Stray design artifact, no references
-
----
-
 ## ⚠️ Medium Priority — Fix Documentation Contradictions
 
 ### 1. Check-Run Policy Conflict

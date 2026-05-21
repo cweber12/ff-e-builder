@@ -125,10 +125,10 @@ export function InlineTextEdit({
             }
           }}
           className={cn(
-            'rounded border px-2 py-1 text-inherit bg-surface focus:outline-none',
+            'rounded-sm border px-2 py-1 text-inherit bg-canvas-chrome focus:outline-none focus:ring-1 focus:ring-brand-500/30',
             saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
             saveState === 'error' && 'border-danger-500',
-            saveState === 'idle' && 'border-neutral-300 focus:border-brand-500',
+            saveState === 'idle' && 'border-black/15 focus:border-brand-500',
             inputClassName,
           )}
         />
@@ -150,10 +150,10 @@ export function InlineTextEdit({
             }
           }}
           className={cn(
-            'rounded border px-2 py-0.5 text-inherit bg-surface focus:outline-none',
+            'rounded-sm border px-2 py-0.5 text-inherit bg-canvas-chrome focus:outline-none focus:ring-1 focus:ring-brand-500/30',
             saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
             saveState === 'error' && 'border-danger-500',
-            saveState === 'idle' && 'border-neutral-300 focus:border-brand-500',
+            saveState === 'idle' && 'border-black/15 focus:border-brand-500',
             inputClassName,
           )}
         />

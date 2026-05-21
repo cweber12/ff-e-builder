@@ -39,31 +39,29 @@ export function DashboardPage() {
   );
 
   return (
-    <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <header className="flex items-start justify-between gap-4">
+    <main className="min-h-screen px-4 py-10 md:px-8">
+      <div className="mx-auto max-w-4xl space-y-10">
+        <header className="flex items-start justify-between gap-4 pb-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">
               Dashboard
             </p>
-            <h1 className="font-display mt-1 text-3xl font-semibold text-neutral-900">
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-neutral-950">
               {firstName ? `Welcome back, ${firstName}` : 'Welcome'}
             </h1>
           </div>
           <button
             type="button"
             onClick={() => setNewProjectOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             <PlusIcon />
             New Project
           </button>
         </header>
 
-        <section>
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
-            Companies
-          </h2>
+        <section className="section-rule">
+          <h2 className="eyebrow">Companies</h2>
           {companies.length ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {companies.map((companyName) => {
@@ -73,10 +71,10 @@ export function DashboardPage() {
                 return (
                   <span
                     key={companyName}
-                    className="inline-flex items-center gap-2 rounded-pill border border-neutral-200 bg-surface px-3 py-1.5 text-sm text-neutral-700"
+                    className="inline-flex items-center gap-2 border border-black/10 bg-canvas-chrome px-2.5 py-1 text-sm text-neutral-800"
                   >
                     {companyName}
-                    <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-xs font-medium text-neutral-500">
+                    <span className="num border-l border-black/10 pl-2 text-xs font-semibold text-neutral-500">
                       {count}
                     </span>
                   </span>
@@ -84,34 +82,34 @@ export function DashboardPage() {
               })}
             </div>
           ) : (
-            <p className="mt-3 text-sm text-neutral-400">
+            <p className="mt-3 text-sm text-neutral-500">
               Company groupings appear here once projects have a company name assigned.
             </p>
           )}
         </section>
 
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
-              Projects
+        <section className="section-rule">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-baseline gap-2">
+              <span className="eyebrow">Projects</span>
               {projects?.length ? (
-                <span className="ml-2 font-normal normal-case tracking-normal text-neutral-300">
+                <span className="num text-[11px] font-semibold text-neutral-400">
                   {projects.length}
                 </span>
               ) : null}
             </h2>
             {(projects?.length ?? 0) > 1 && (
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-4">
                 {(['updated', 'name', 'company'] as const).map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => setSort(option)}
                     className={[
-                      'rounded px-2 py-1 text-xs transition',
+                      'border-b-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] transition focus-visible:outline-none',
                       sort === option
-                        ? 'bg-neutral-100 font-medium text-neutral-700'
-                        : 'text-neutral-400 hover:text-neutral-600',
+                        ? 'border-brand-600 text-neutral-900'
+                        : 'border-transparent text-neutral-400 hover:text-neutral-700',
                     ].join(' ')}
                   >
                     {option === 'updated' ? 'Recent' : option === 'name' ? 'Name' : 'Company'}
@@ -126,19 +124,18 @@ export function DashboardPage() {
           ) : !projects?.length ? (
             <NoProjectsEmptyState onCreate={() => setNewProjectOpen(true)} />
           ) : (
-            <div className="rounded-xl border border-neutral-200 bg-surface shadow-sm">
+            <div className="surface-paper">
               {sortedProjects.map((project, index) => (
                 <article
                   key={project.id}
                   className={[
                     'project-row flex items-center gap-4 px-4 py-3',
-                    index > 0 ? 'border-t border-neutral-100' : 'rounded-t-xl',
-                    index === sortedProjects.length - 1 ? 'rounded-b-xl' : '',
-                    openProjectMenuId === project.id ? 'bg-neutral-50' : 'hover:bg-neutral-50',
+                    index > 0 ? 'border-t border-black/5' : '',
+                    openProjectMenuId === project.id ? 'bg-canvas-shell' : 'hover:bg-canvas-shell',
                   ].join(' ')}
                 >
                   <div
-                    className="flex-shrink-0 overflow-hidden rounded-lg"
+                    className="flex-shrink-0 overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
@@ -152,19 +149,19 @@ export function DashboardPage() {
 
                   <Link
                     to={`/projects/${project.id}/snapshot`}
-                    className="flex min-w-0 flex-1 items-center gap-4 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                    className="flex min-w-0 flex-1 items-center gap-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                     aria-label={`Open ${project.name} snapshot`}
                   >
                     <div className="min-w-0 flex-1">
                       {project.clientName && (
-                        <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-600">
                           {project.clientName}
                         </p>
                       )}
-                      <h3 className="font-display mt-0.5 truncate text-lg font-semibold leading-snug text-neutral-900">
+                      <h3 className="mt-0.5 truncate font-display text-lg font-semibold leading-snug text-neutral-950">
                         {project.name}
                       </h3>
-                      <p className="mt-0.5 truncate text-sm text-neutral-400">
+                      <p className="mt-0.5 truncate text-sm text-neutral-500">
                         {[
                           project.companyName,
                           project.projectLocation,
@@ -258,23 +255,23 @@ function PlusIcon() {
 
 function ProjectListSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-surface shadow-sm">
+    <div className="surface-paper">
       {[0, 1, 2].map((i) => (
         <div
           key={i}
           className={[
             'flex items-center gap-4 px-4 py-3',
-            i > 0 ? 'border-t border-neutral-100' : '',
+            i > 0 ? 'border-t border-black/5' : '',
           ].join(' ')}
         >
-          <div className="h-16 w-24 flex-shrink-0 animate-pulse rounded-lg bg-neutral-100" />
+          <div className="h-16 w-24 flex-shrink-0 animate-pulse bg-canvas-shell" />
           <div className="flex-1 space-y-2">
-            <div className="h-2.5 w-20 animate-pulse rounded bg-neutral-100" />
-            <div className="h-4 w-48 animate-pulse rounded bg-neutral-100" />
-            <div className="h-3 w-32 animate-pulse rounded bg-neutral-100" />
+            <div className="h-2.5 w-20 animate-pulse bg-canvas-shell" />
+            <div className="h-4 w-48 animate-pulse bg-canvas-shell" />
+            <div className="h-3 w-32 animate-pulse bg-canvas-shell" />
           </div>
           <div className="flex gap-2">
-            <div className="h-7 w-14 animate-pulse rounded-md bg-neutral-100" />
+            <div className="h-7 w-14 animate-pulse rounded-sm bg-canvas-shell" />
           </div>
         </div>
       ))}
@@ -284,24 +281,41 @@ function ProjectListSkeleton() {
 
 function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="flex min-h-64 items-center justify-center rounded-xl border border-dashed border-neutral-200 bg-surface px-6 py-12 text-center">
-      <div className="flex max-w-sm flex-col items-center gap-4">
-        <svg aria-hidden="true" viewBox="0 0 220 160" className="h-28 w-40 opacity-60">
-          <rect x="38" y="36" width="132" height="92" rx="8" fill="#ECF3F9" />
-          <path d="M62 62h84M62 82h64M62 102h76" stroke="#4B7FAB" strokeWidth="6" />
-          <circle cx="164" cy="46" r="24" fill="#4B7FAB" opacity="0.12" />
-          <path d="M154 46h20M164 36v20" stroke="#4B7FAB" strokeWidth="6" />
+    <div className="flex min-h-64 items-center justify-center border-y border-dashed border-black/15 px-6 py-16 text-center">
+      <div className="flex max-w-sm flex-col items-center gap-5">
+        <svg aria-hidden="true" viewBox="0 0 220 160" className="h-28 w-40 opacity-70">
+          <rect
+            x="38"
+            y="36"
+            width="132"
+            height="92"
+            fill="rgb(var(--color-canvas-chrome))"
+            stroke="rgb(var(--color-brand-700) / 0.25)"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M62 62h84M62 82h64M62 102h76"
+            stroke="rgb(var(--color-brand-600))"
+            strokeWidth="5"
+            strokeLinecap="square"
+          />
+          <path
+            d="M154 46h20M164 36v20"
+            stroke="rgb(var(--color-brand-600))"
+            strokeWidth="5"
+            strokeLinecap="square"
+          />
         </svg>
         <div>
-          <h2 className="font-display text-xl font-semibold text-neutral-800">No projects yet</h2>
-          <p className="mt-1.5 text-sm text-neutral-400">
+          <h2 className="font-display text-xl font-semibold text-neutral-950">No projects yet</h2>
+          <p className="mt-1.5 text-sm text-neutral-500">
             Create your first project to start building FF&amp;E and proposal deliverables.
           </p>
         </div>
         <button
           type="button"
           onClick={onCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <PlusIcon />
           Create your first project

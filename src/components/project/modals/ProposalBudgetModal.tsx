@@ -31,7 +31,7 @@ export function ProposalBudgetModal({ open, onClose, project, categories }: Prop
       <div className="flex flex-col" style={{ maxHeight: 'calc(90vh - 9rem)' }}>
         <div className="flex-1 overflow-y-auto space-y-5 pb-4">
           {/* Budget vs actual */}
-          <section className="rounded-lg border border-neutral-200 bg-surface-muted p-4">
+          <section className="border border-black/10 bg-canvas-shell p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-neutral-950">
@@ -67,7 +67,7 @@ export function ProposalBudgetModal({ open, onClose, project, categories }: Prop
               </h3>
             </div>
             <table className="w-full text-sm">
-              <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-neutral-500">
+              <thead className="bg-canvas-shell text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
                 <tr>
                   <th className="px-4 py-2">Category</th>
                   <th className="px-4 py-2 text-right">Rows</th>

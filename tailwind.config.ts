@@ -55,6 +55,7 @@ const config: Config = {
           shell: 'rgb(var(--color-canvas-shell)  / <alpha-value>)',
           chrome: 'rgb(var(--color-canvas-chrome) / <alpha-value>)',
         },
+        paper: 'rgb(var(--color-paper) / <alpha-value>)',
         plan: {
           line: 'rgb(var(--color-plan-line)    / <alpha-value>)',
           measure: 'rgb(var(--color-plan-measure) / <alpha-value>)',

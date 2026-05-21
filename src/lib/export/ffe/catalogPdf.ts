@@ -47,6 +47,7 @@ const BRAND_600: RGB = [58, 100, 138];
 const BRAND_700: RGB = [40, 71, 101];
 const BRAND_200: RGB = [158, 192, 220];
 const BRAND_50: RGB = [236, 243, 249];
+const GRAY_800: RGB = [31, 41, 55];
 const GRAY_700: RGB = [55, 65, 81];
 const GRAY_600: RGB = [75, 85, 99];
 const GRAY_500: RGB = [107, 114, 128];
@@ -84,6 +85,17 @@ export type CatalogPdfPageModel = {
 };
 
 type CatalogPdfOptionLayout = 'stacked' | 'row';
+
+export type CatalogPdfOptions = {
+  /** When false, the finish-schedule swatches are drawn without their ID and name labels. */
+  showSwatchLabels?: boolean;
+  /**
+   * Item ordering within each room.
+   * - 'manual' (default): respects each item's `sortOrder`.
+   * - 'idTag': alphanumeric sort by `itemIdTag` (untagged items fall to the bottom).
+   */
+  sortMode?: 'manual' | 'idTag';
+};
 
 // ── Pure helpers used by tests ────────────────────────────────────────────────
 function compactText(value: string | null | undefined): string | null {
@@ -124,13 +136,30 @@ export function pickCatalogPdfOptionLayout(
 }
 
 // ── Asset loading ─────────────────────────────────────────────────────────────
-function sortedEntries(rooms: RoomWithItems[]): CatalogItemEntry[] {
+function sortedEntries(
+  rooms: RoomWithItems[],
+  sortMode: 'manual' | 'idTag' = 'manual',
+): CatalogItemEntry[] {
+  const itemCompare =
+    sortMode === 'idTag'
+      ? (() => {
+          const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+          return (a: Item, b: Item) => {
+            const aId = a.itemIdTag?.trim() ?? '';
+            const bId = b.itemIdTag?.trim() ?? '';
+            if (aId && bId) {
+              return collator.compare(aId, bId) || a.itemName.localeCompare(b.itemName);
+            }
+            if (aId) return -1;
+            if (bId) return 1;
+            return a.itemName.localeCompare(b.itemName);
+          };
+        })()
+      : (a: Item, b: Item) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName);
   return [...rooms]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
     .flatMap((room) =>
-      [...room.items]
-        .sort((a, b) => a.sortOrder - b.sortOrder || a.itemName.localeCompare(b.itemName))
-        .map((item) => ({ item, roomName: room.name })),
+      [...room.items].sort(itemCompare).map((item) => ({ item, roomName: room.name })),
     );
 }
 
@@ -334,15 +363,19 @@ function drawHeader(
   const leftX = PAGE_PADDING_X;
   const rightX = PAGE_W - PAGE_PADDING_X;
 
-  // LEFT: optional ID tag + item name (uppercase, brand-700, bold)
+  // LEFT: ID tag (brand-700, bold) sets the line; the item name follows in a
+  // lighter weight + neutral gray so it reads as the descriptor, not a second
+  // emphasis. Matches the on-screen catalog header treatment.
   const idTag = compactText(item.itemIdTag);
   let cursorX = leftX;
-  applyFont(doc, font, 'bold', 13);
-  setText(doc, BRAND_700);
   if (idTag) {
+    applyFont(doc, font, 'bold', 13);
+    setText(doc, BRAND_700);
     doc.text(idTag.toUpperCase(), cursorX, HEADER_TITLE_Y);
-    cursorX += doc.getTextWidth(idTag.toUpperCase()) + 3;
+    cursorX += doc.getTextWidth(idTag.toUpperCase()) + 4;
   }
+  applyFont(doc, font, 'normal', 13);
+  setText(doc, GRAY_800);
   const itemName = item.itemName.toUpperCase();
   const nameMaxW = rightX - cursorX - 70; // leave room for project text on right
   const nameLines = (doc.splitTextToSize(itemName, Math.max(40, nameMaxW)) as string[]).slice(0, 1);
@@ -374,7 +407,7 @@ function drawRendering(
   y: number,
 ) {
   if (rendering) {
-    setFill(doc, BRAND_50);
+    setFill(doc, WHITE);
     doc.rect(x, y, RENDER_SIZE, RENDER_SIZE, 'F');
     addContainedImage(doc, rendering, x, y, RENDER_SIZE, RENDER_SIZE, 0);
   } else {
@@ -423,6 +456,7 @@ function drawSpecColumn(
   y: number,
   width: number,
   maxBottomY: number,
+  showSwatchLabels: boolean,
 ) {
   let cursorY = y + 4;
 
@@ -476,15 +510,18 @@ function drawSpecColumn(
     cursorY += notesResult.height + 4;
   }
 
-  // FINISH SCHEDULE — bottom-aligned within the right column
-  const fsHeight = 36; // sub-heading + materials row
+  // FINISH SCHEDULE — bottom-aligned within the right column.
+  // Hidden entirely when the item has no materials (per export spec).
+  if (materials.length === 0) return;
+
+  const fsHeight = showSwatchLabels ? 36 : 26; // sub-heading + materials row
   const fsTop = Math.max(cursorY, maxBottomY - fsHeight);
 
   applyFont(doc, font, 'bold', 8.5);
   setText(doc, GRAY_600);
   doc.text('FINISH SCHEDULE', x, fsTop);
 
-  drawMaterialsRow(doc, font, materials, materialImages, x, fsTop + 4, width);
+  drawMaterialsRow(doc, font, materials, materialImages, x, fsTop + 4, width, showSwatchLabels);
 }
 
 function drawMaterialsRow(
@@ -495,69 +532,60 @@ function drawMaterialsRow(
   x: number,
   y: number,
   width: number,
+  showSwatchLabels: boolean,
 ) {
-  // Match browser: render only actual material cells when any exist; otherwise
-  // fall back to MAX_MATERIALS empty placeholders. Either way the row keeps a
-  // 4-column grid so a single material lands in the leftmost slot (per CSS
-  // grid-template-columns: repeat(4, 1fr)).
+  // Caller is responsible for skipping the section when materials.length === 0.
+  // We always render only real material cells in a 4-column grid so a single
+  // material lands in the leftmost slot (per CSS grid-template-columns).
   const slotCount = MAX_MATERIALS;
-  const cellCount = materials.length > 0 ? Math.min(materials.length, MAX_MATERIALS) : slotCount;
+  const cellCount = Math.min(materials.length, MAX_MATERIALS);
   const cells = materials.slice(0, MAX_MATERIALS);
   const cellW = width / slotCount;
-  const swatchSize = 10;
+  // 1.5x larger than the previous 10mm swatch per export spec.
+  const swatchSize = 15;
+  const idGap = showSwatchLabels ? 4.4 : 0;
 
   for (let index = 0; index < cellCount; index++) {
     const cellX = x + index * cellW;
     const centerX = cellX + cellW / 2;
-    const material = cells[index] ?? null;
-    const isEmpty = !material;
+    const material = cells[index]!;
 
-    // ID label (top)
-    applyFont(doc, font, 'bold', 6.5);
-    setText(doc, isEmpty ? GRAY_300 : GRAY_500);
-    const idLabel = material ? (compactText(material.materialId) ?? 'ID') : 'ID';
-    doc.text(idLabel.toUpperCase(), centerX, y + 2.6, { align: 'center' });
+    if (showSwatchLabels) {
+      // ID label (top)
+      applyFont(doc, font, 'bold', 6.5);
+      setText(doc, GRAY_500);
+      const idLabel = compactText(material.materialId) ?? 'ID';
+      doc.text(idLabel.toUpperCase(), centerX, y + 2.6, { align: 'center' });
+    }
 
-    // Swatch (circle if no image, square w/ image if available)
-    const swatchY = y + 4.4;
+    // Swatch (square with image, or circle filled with hex when no image)
+    const swatchY = y + idGap;
     const swatchCx = centerX;
     const swatchCy = swatchY + swatchSize / 2;
-    if (material) {
-      const image = materialImages.get(material.id);
-      if (image) {
-        setFill(doc, GRAY_100);
-        setStroke(doc, GRAY_200);
-        doc.rect(swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize, 'FD');
-        addContainedImage(
-          doc,
-          image,
-          swatchCx - swatchSize / 2,
-          swatchY,
-          swatchSize,
-          swatchSize,
-          0.6,
-        );
-      } else {
-        const fill = hexToRgb(material.swatchHex);
-        setFill(doc, fill);
-        setStroke(doc, GRAY_200);
-        doc.circle(swatchCx, swatchCy, swatchSize / 2, 'FD');
-      }
+    const image = materialImages.get(material.id);
+    if (image) {
+      // White backing fill, no border (per export spec).
+      setFill(doc, WHITE);
+      doc.rect(swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize, 'F');
+      addContainedImage(doc, image, swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize, 0);
     } else {
-      setFill(doc, GRAY_100);
+      const fill = hexToRgb(material.swatchHex);
+      setFill(doc, fill);
       setStroke(doc, GRAY_200);
       doc.circle(swatchCx, swatchCy, swatchSize / 2, 'FD');
     }
 
-    // Name (single word, uppercase)
-    const nameRaw = material ? compactText(material.name) : null;
-    const nameLabel = nameRaw ? nameRaw.split(/\s+/)[0]! : 'MATERIAL';
-    applyFont(doc, font, 'bold', 6);
-    setText(doc, isEmpty ? GRAY_300 : GRAY_500);
-    doc.text(nameLabel.toUpperCase(), centerX, swatchY + swatchSize + 2.4, {
-      align: 'center',
-      maxWidth: cellW - 1,
-    });
+    if (showSwatchLabels) {
+      // Name (single word, uppercase)
+      const nameRaw = compactText(material.name);
+      const nameLabel = nameRaw ? nameRaw.split(/\s+/)[0]! : 'MATERIAL';
+      applyFont(doc, font, 'bold', 6);
+      setText(doc, GRAY_500);
+      doc.text(nameLabel.toUpperCase(), centerX, swatchY + swatchSize + 2.4, {
+        align: 'center',
+        maxWidth: cellW - 1,
+      });
+    }
   }
 }
 
@@ -741,6 +769,7 @@ function drawCatalogPage(
   assets: CatalogItemAssets,
   pageNum: number,
   total: number,
+  options: Required<CatalogPdfOptions>,
 ): void {
   const model = buildCatalogPdfPageModel(entry.item, assets.options);
 
@@ -765,6 +794,7 @@ function drawCatalogPage(
     mainY,
     RIGHT_COL_W,
     mainBottomY,
+    options.showSwatchLabels,
   );
 
   // ── Bottom row: options + location/plan ─────────────────────────────────────
@@ -792,8 +822,20 @@ const EMPTY_ASSETS: CatalogItemAssets = {
   materialImages: new Map(),
 };
 
-export async function exportCatalogPdf(project: Project, rooms: RoomWithItems[]): Promise<void> {
-  const entries = sortedEntries(rooms);
+function resolveOptions(options: CatalogPdfOptions | undefined): Required<CatalogPdfOptions> {
+  return {
+    showSwatchLabels: options?.showSwatchLabels ?? true,
+    sortMode: options?.sortMode ?? 'manual',
+  };
+}
+
+export async function exportCatalogPdf(
+  project: Project,
+  rooms: RoomWithItems[],
+  options?: CatalogPdfOptions,
+): Promise<void> {
+  const resolved = resolveOptions(options);
+  const entries = sortedEntries(rooms, resolved.sortMode);
   if (entries.length === 0) return;
 
   const assets = await buildCatalogAssets(entries);
@@ -810,6 +852,7 @@ export async function exportCatalogPdf(project: Project, rooms: RoomWithItems[])
       assets.get(entry.item.id) ?? EMPTY_ASSETS,
       index + 1,
       entries.length,
+      resolved,
     );
   }
 
@@ -820,8 +863,10 @@ export async function exportCatalogItemPdf(
   project: Project,
   rooms: RoomWithItems[],
   itemId: string,
+  options?: CatalogPdfOptions,
 ): Promise<void> {
-  const entries = sortedEntries(rooms);
+  const resolved = resolveOptions(options);
+  const entries = sortedEntries(rooms, resolved.sortMode);
   const entryIndex = entries.findIndex((entry) => entry.item.id === itemId);
   if (entryIndex === -1) return;
 
@@ -837,6 +882,7 @@ export async function exportCatalogItemPdf(
     assets.get(entry.item.id) ?? EMPTY_ASSETS,
     entryIndex + 1,
     entries.length,
+    resolved,
   );
   doc.save(`${safeName(project.name)}-${safeName(entry.item.itemName)}.pdf`);
 }

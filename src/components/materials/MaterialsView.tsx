@@ -186,16 +186,16 @@ export function MaterialsView({
   };
 
   return (
-    <div className="grid gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="grid gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-black/10 pb-4">
         <div>
-          <h2 className="text-base font-semibold text-neutral-950">Finish Library</h2>
-          <p className="mt-1 text-sm text-neutral-600">
-            Manage the reusable finish library for {project.name}.
-          </p>
+          <p className="eyebrow">Finish Library</p>
+          <h2 className="mt-1 font-display text-xl font-semibold tracking-tight text-neutral-950">
+            {project.name}
+          </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-md border border-neutral-200 bg-white p-1">
+          <div className="inline-flex border border-black/10 bg-canvas-chrome p-0.5">
             {(['all', 'ffe', 'proposal'] as const).map((nextScope) => (
               <button
                 key={nextScope}
@@ -215,7 +215,7 @@ export function MaterialsView({
             <select
               value={selectedRoomId}
               onChange={(e) => setSelectedRoomId(e.target.value)}
-              className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs font-semibold text-neutral-600 focus:border-brand-500 focus:outline-none"
+              className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
               aria-label="Filter by room"
             >
               <option value="">All rooms</option>
@@ -230,7 +230,7 @@ export function MaterialsView({
             <select
               value={selectedCategoryId}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
-              className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs font-semibold text-neutral-600 focus:border-brand-500 focus:outline-none"
+              className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
               aria-label="Filter by category"
             >
               <option value="">All categories</option>
@@ -241,7 +241,7 @@ export function MaterialsView({
               ))}
             </select>
           )}
-          <div className="inline-flex rounded-md border border-neutral-200 bg-white p-1">
+          <div className="inline-flex border border-black/10 bg-canvas-chrome p-0.5">
             <button
               type="button"
               className={viewMode === 'grid' ? activeToggleClassName : toggleClassName}
@@ -275,7 +275,7 @@ export function MaterialsView({
         </div>
       </div>
 
-      <div className={`grid gap-5 ${showForm ? 'xl:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
+      <div className={`grid gap-6 ${showForm ? 'xl:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
         {showForm && (
           <MaterialForm
             draft={draft}
@@ -287,11 +287,11 @@ export function MaterialsView({
           />
         )}
 
-        <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
+        <section>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-3">
             <div className="flex items-baseline gap-3">
-              <h3 className="text-sm font-semibold text-neutral-950">Project library</h3>
-              <span className="text-xs font-medium text-neutral-500">
+              <h3 className="eyebrow">Project library</h3>
+              <span className="num text-[11px] font-semibold text-neutral-500">
                 {filteredMaterials.length} {filteredMaterials.length === 1 ? 'item' : 'items'}
               </span>
             </div>
@@ -310,11 +310,11 @@ export function MaterialsView({
               )}
             </div>
           </div>
-          <div className="max-h-[48rem] overflow-auto bg-surface-muted/40 p-5">
+          <div className="max-h-[48rem] overflow-auto py-5">
             {materials.isLoading ? (
-              <p className="text-sm text-neutral-500">Loading materials...</p>
+              <p className="text-sm text-neutral-500">Loading materials…</p>
             ) : filteredMaterials.length === 0 ? (
-              <p className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-8 text-center text-sm text-neutral-500">
+              <p className="border-y border-dashed border-black/15 px-4 py-10 text-center text-sm text-neutral-500">
                 No materials match the current search.
               </p>
             ) : viewMode === 'grid' ? (
@@ -352,7 +352,7 @@ function MaterialGridCard({
   onDelete: () => void;
 }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md">
+    <article className="tile-card flex flex-col">
       <ImageFrame
         entityType="material"
         entityId={material.id}
@@ -363,7 +363,7 @@ function MaterialGridCard({
       />
       <div className="flex flex-1 flex-col gap-2.5 p-3">
         <div className="min-w-0">
-          <p className="truncate font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+          <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
             {material.materialId || 'No ID'}
           </p>
           <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-neutral-950">
@@ -405,17 +405,17 @@ function MaterialsTable({
 }) {
   return (
     <table className="w-full min-w-[900px] border-collapse text-sm">
-      <thead className="sticky top-0 bg-white text-left text-xs uppercase tracking-wide text-neutral-500 shadow-[0_1px_0_rgb(243_244_246)]">
+      <thead className="sticky top-0 border-b border-black/10 bg-canvas-chrome text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
         <tr>
-          <th className="px-3 py-3 font-semibold">Swatch</th>
-          <th className="px-3 py-3 font-semibold">Material</th>
-          <th className="px-3 py-3 font-semibold">ID</th>
-          <th className="px-3 py-3 font-semibold">Manufacturer</th>
-          <th className="px-3 py-3 font-semibold">Description</th>
-          <th className="px-3 py-3 font-semibold" aria-label="Actions" />
+          <th className="px-3 py-3">Swatch</th>
+          <th className="px-3 py-3">Material</th>
+          <th className="px-3 py-3">ID</th>
+          <th className="px-3 py-3">Manufacturer</th>
+          <th className="px-3 py-3">Description</th>
+          <th className="px-3 py-3" aria-label="Actions" />
         </tr>
       </thead>
-      <tbody className="divide-y divide-neutral-100">
+      <tbody className="divide-y divide-black/10">
         {materials.map((material) => (
           <tr key={material.id}>
             <td className="px-3 py-3">
@@ -424,9 +424,9 @@ function MaterialsTable({
                   entityType="material"
                   entityId={material.id}
                   alt={`${material.name} swatch`}
-                  className="h-12 w-12 rounded-full border-neutral-200 shadow-none"
+                  className="h-12 w-12 rounded-full border-black/10 shadow-none"
                   imageClassName="object-cover"
-                  placeholderClassName="bg-white"
+                  placeholderClassName="bg-canvas-shell"
                   placeholderContent={
                     <span className="text-[10px] font-semibold text-neutral-400">IMG</span>
                   }
@@ -437,9 +437,9 @@ function MaterialsTable({
               </div>
             </td>
             <td className="px-3 py-3 font-medium text-neutral-950">{material.name}</td>
-            <td className="px-3 py-3 text-neutral-600">{material.materialId || '-'}</td>
-            <td className="px-3 py-3 text-neutral-600">{material.manufacturer || '-'}</td>
-            <td className="max-w-sm px-3 py-3 text-neutral-600">{material.description || '-'}</td>
+            <td className="num px-3 py-3 text-neutral-700">{material.materialId || '—'}</td>
+            <td className="px-3 py-3 text-neutral-700">{material.manufacturer || '—'}</td>
+            <td className="max-w-sm px-3 py-3 text-neutral-600">{material.description || '—'}</td>
             <td className="px-3 py-3">
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" size="sm" onClick={() => onEdit(material)}>
@@ -458,9 +458,9 @@ function MaterialsTable({
 }
 
 const toggleClassName =
-  'rounded px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+  'rounded-sm px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 const activeToggleClassName =
-  'rounded bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+  'rounded-sm bg-brand-600 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
 function materialMatchesQuery(material: Material, query: string) {
   if (!query) return true;

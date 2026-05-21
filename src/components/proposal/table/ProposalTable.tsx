@@ -132,7 +132,7 @@ const PROPOSAL_COLUMN_META = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnMeta;
 
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 const editInputClassName =
-  'rounded border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700 focus:border-brand-500 focus:outline-none';
+  'rounded-sm border border-black/15 bg-canvas-chrome px-2 py-1 text-sm text-neutral-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30';
 // Qty and Unit Cost sticky-right columns (always visible, not draggable).
 // right offsets: unitCost = options(40) + total(96) = 136px
 //               qty = unitCost(136) + unitCost-width(96) = 232px
@@ -140,22 +140,23 @@ const editInputClassName =
 // When a revision is open the sticky block expands to show Rev Qty | Rev UC | Rev Total.
 // right offsets are identical: rev-qty=232px, rev-uc=136px, rev-total=40px (right-10).
 const stickyRevQtyHeaderClassName =
-  'sticky right-[232px] z-40 bg-surface w-20 min-w-[80px] border-l-2 border-l-brand-300';
-const stickyRevUnitCostHeaderClassName = 'sticky right-[136px] z-40 bg-surface w-24 min-w-[96px]';
-const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-surface w-24 min-w-[96px]';
+  'sticky right-[232px] z-40 bg-canvas-chrome w-20 min-w-[80px] border-l-2 border-l-brand-400';
+const stickyRevUnitCostHeaderClassName =
+  'sticky right-[136px] z-40 bg-canvas-chrome w-24 min-w-[96px]';
+const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-canvas-chrome w-24 min-w-[96px]';
 // Span header: covers all 3 revision cols (80+96+96=272px), anchored at right-10.
 const stickyRevQtyExpandedHeaderClassName =
-  'sticky top-0 right-[232px] z-50 bg-surface w-20 min-w-[80px] border-l-2 border-l-brand-300';
+  'sticky top-0 right-[232px] z-50 bg-canvas-chrome w-20 min-w-[80px] border-l-2 border-l-brand-400';
 const stickyRevUnitCostExpandedHeaderClassName =
-  'sticky top-0 right-[136px] z-50 bg-surface w-24 min-w-[96px]';
+  'sticky top-0 right-[136px] z-50 bg-canvas-chrome w-24 min-w-[96px]';
 const stickyRevTotalExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-surface w-24 min-w-[96px]';
+  'sticky top-0 right-10 z-50 bg-canvas-chrome w-24 min-w-[96px]';
 const stickyRevQtyCellClassName =
-  'sticky right-[232px] z-10 bg-surface w-20 min-w-[80px] group-hover:bg-neutral-50';
+  'sticky right-[232px] z-10 bg-canvas-chrome w-20 min-w-[80px] group-hover:bg-canvas-shell';
 const stickyRevUnitCostCellClassName =
-  'sticky right-[136px] z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
+  'sticky right-[136px] z-10 bg-canvas-chrome w-24 min-w-[96px] group-hover:bg-canvas-shell';
 const stickyRevTotalCellClassName =
-  'sticky right-10 z-10 bg-surface w-24 min-w-[96px] group-hover:bg-neutral-50';
+  'sticky right-10 z-10 bg-canvas-chrome w-24 min-w-[96px] group-hover:bg-canvas-shell';
 // Baseline reference columns stay scrollable while an open revision keeps only revised
 // values pinned on the right.
 const baselineQtyColumnClassName = 'w-20 min-w-[80px]';
@@ -233,12 +234,12 @@ export function ProposalTable({
   if (isLoading) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="h-9 border-b border-neutral-200 bg-neutral-50" />
+        <div className="h-9 border-b border-black/10 bg-canvas-chrome" />
         <div>
           {Array.from({ length: 5 }, (_, index) => (
             <div
               key={index}
-              className="grid h-13 grid-cols-6 items-center gap-4 border-b border-neutral-200/60 px-4"
+              className="grid h-13 grid-cols-6 items-center gap-4 border-b border-black/10 px-4"
             >
               <div className="col-span-2 h-3 rounded bg-neutral-100" />
               <div className="h-3 rounded bg-neutral-100" />
@@ -392,7 +393,7 @@ function DeleteCategoryModal({
               . Choose what to do with them before deleting.
             </p>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-200 p-3 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50/30">
+              <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-black/10 p-3 transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/40">
                 <input
                   type="radio"
                   name="delete-category-action"
@@ -404,7 +405,7 @@ function DeleteCategoryModal({
                   Move items to another category
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-200 p-3 has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
+              <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-black/10 p-3 transition has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
                 <input
                   type="radio"
                   name="delete-category-action"
@@ -522,7 +523,7 @@ function ExpandIcon({ expanded }: { expanded?: boolean }) {
 }
 
 const menuItemClassName =
-  'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+  'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
 function CategoryActionsMenu({
   categoryName,
@@ -593,7 +594,7 @@ function CategoryActionsMenu({
               top: triggerRect.bottom + 4,
               right: window.innerWidth - triggerRect.right,
             }}
-            className="z-[100] min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+            className="z-[100] min-w-48 menu-panel"
           >
             <button
               type="button"
@@ -630,7 +631,7 @@ function CategoryActionsMenu({
                         columnTriggerRef.current.getBoundingClientRect().left +
                         4,
                     }}
-                    className="z-[100] min-w-44 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+                    className="z-[100] min-w-44 menu-panel"
                   >
                     {hiddenDefaults.map((col) => (
                       <button
@@ -915,14 +916,14 @@ function ProposalCategorySection({
               'w-full border-collapse text-left text-sm',
             )}
           >
-            <thead className="sticky top-11 z-30 bg-surface text-xs">
+            <thead className="sticky top-11 z-30 bg-canvas-chrome text-xs">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleColumnDragEnd}
               >
                 <tr>
-                  <th className="h-10 border-b border-neutral-200 w-8 min-w-8 px-1" />
+                  <th className="h-10 border-b border-black/10 w-8 min-w-8 px-1" />
                   <SortableContext
                     items={draggableColOrder}
                     strategy={horizontalListSortingStrategy}
@@ -936,7 +937,7 @@ function ProposalCategorySection({
                             colId={colId}
                             label={meta.label}
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                               meta.className,
                             )}
                             onHide={() => onHideColumn(colId)}
@@ -949,7 +950,7 @@ function ProposalCategorySection({
                         <SortableColHeader
                           key={colId}
                           colId={colId}
-                          className="h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                          className="h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
                           onHide={() => onHideColumn(colId)}
                         >
                           <CustomColumnHeader
@@ -966,7 +967,7 @@ function ProposalCategorySection({
                       {/* Baseline cols scroll with the rest of the table. */}
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           baselineQtyColumnClassName,
                         )}
                       >
@@ -974,7 +975,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           baselineUnitCostColumnClassName,
                         )}
                       >
@@ -982,7 +983,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           baselineTotalColumnClassName,
                         )}
                       >
@@ -991,7 +992,7 @@ function ProposalCategorySection({
                       {/* Revision notes scroll with the baseline reference columns. */}
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           revisionNotesColumnClassName,
                         )}
                       >
@@ -1000,7 +1001,7 @@ function ProposalCategorySection({
                       {/* Revision sticky column headers */}
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           stickyRevQtyHeaderClassName,
                         )}
                       >
@@ -1008,7 +1009,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           stickyRevUnitCostHeaderClassName,
                         )}
                       >
@@ -1016,7 +1017,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           stickyRevTotalHeaderClassName,
                         )}
                       >
@@ -1027,7 +1028,7 @@ function ProposalCategorySection({
                     <>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           proposalStickyValueColumnClassNames.quantity.header,
                         )}
                       >
@@ -1035,7 +1036,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           proposalStickyValueColumnClassNames.unitCost.header,
                         )}
                       >
@@ -1043,7 +1044,7 @@ function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           proposalStickyEdgeColumnClassNames.totalHeader,
                         )}
                       >
@@ -1053,7 +1054,7 @@ function ProposalCategorySection({
                   )}
                   <th
                     className={cn(
-                      'h-10 border-b border-neutral-200',
+                      'h-10 border-b border-black/10',
                       proposalStickyEdgeColumnClassNames.actionsHeader,
                     )}
                   />
@@ -1171,8 +1172,8 @@ function ProposalCategorySection({
 
       {isExpanded && (
         <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
-          <div className="flex h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-neutral-100 bg-surface px-4 py-3">
+          <div className="flex h-full flex-col overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-black/10 bg-canvas-chrome px-4 py-3">
               <div className="min-w-0">
                 <h2 className="truncate text-base font-semibold text-neutral-950">
                   {categoryName}
@@ -1205,14 +1206,14 @@ function ProposalCategorySection({
                   'w-full border-collapse text-left text-sm',
                 )}
               >
-                <thead className="sticky top-0 z-30 bg-surface text-xs">
+                <thead className="sticky top-0 z-30 bg-canvas-chrome text-xs">
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={handleColumnDragEnd}
                   >
                     <tr>
-                      <th className="h-10 border-b border-neutral-200 w-8 min-w-8 px-1" />
+                      <th className="h-10 border-b border-black/10 w-8 min-w-8 px-1" />
                       <SortableContext
                         items={draggableColOrder}
                         strategy={horizontalListSortingStrategy}
@@ -1226,7 +1227,7 @@ function ProposalCategorySection({
                                 colId={colId}
                                 label={meta.label}
                                 className={cn(
-                                  'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface',
+                                  'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                   meta.className,
                                 )}
                                 onHide={() => onHideColumn(colId)}
@@ -1239,7 +1240,7 @@ function ProposalCategorySection({
                             <SortableColHeader
                               key={colId}
                               colId={colId}
-                              className="h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500 bg-surface min-w-36"
+                              className="h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
                               onHide={() => onHideColumn(colId)}
                             >
                               <CustomColumnHeader
@@ -1255,7 +1256,7 @@ function ProposalCategorySection({
                         <>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               baselineQtyColumnClassName,
                             )}
                           >
@@ -1263,7 +1264,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               baselineUnitCostColumnClassName,
                             )}
                           >
@@ -1271,7 +1272,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               baselineTotalColumnClassName,
                             )}
                           >
@@ -1279,7 +1280,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 bg-surface px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               revisionNotesColumnClassName,
                             )}
                           >
@@ -1288,7 +1289,7 @@ function ProposalCategorySection({
                           {/* Revision sticky column headers */}
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               stickyRevQtyExpandedHeaderClassName,
                             )}
                           >
@@ -1296,7 +1297,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               stickyRevUnitCostExpandedHeaderClassName,
                             )}
                           >
@@ -1304,7 +1305,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               stickyRevTotalExpandedHeaderClassName,
                             )}
                           >
@@ -1315,7 +1316,7 @@ function ProposalCategorySection({
                         <>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               proposalStickyValueColumnClassNames.quantity.expandedHeader,
                             )}
                           >
@@ -1323,7 +1324,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               proposalStickyValueColumnClassNames.unitCost.expandedHeader,
                             )}
                           >
@@ -1331,7 +1332,7 @@ function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-medium uppercase tracking-[0.08em] text-neutral-500',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               proposalStickyEdgeColumnClassNames.totalExpandedHeader,
                             )}
                           >
@@ -1341,7 +1342,7 @@ function ProposalCategorySection({
                       )}
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200',
+                          'h-10 border-b border-black/10',
                           proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
                         )}
                       />
@@ -1626,7 +1627,7 @@ function ProposalRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group border-b border-neutral-200/60 align-top last:border-b-0',
+        'group border-b border-black/10 align-top last:border-b-0',
         isDragging && 'bg-brand-50 shadow-md opacity-80',
       )}
     >
@@ -1806,7 +1807,7 @@ function ProposalItemActionsMenu({
               top: menuRect.bottom + 4,
               right: window.innerWidth - menuRect.right,
             }}
-            className="z-[100] min-w-48 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+            className="z-[100] min-w-48 menu-panel"
           >
             <button
               type="button"
@@ -1861,7 +1862,7 @@ function ProposalItemActionsMenu({
                           moveTriggerRef.current.getBoundingClientRect().left +
                           4,
                       }}
-                      className="z-[100] min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+                      className="z-[100] min-w-40 menu-panel"
                     >
                       {otherCategories.map((cat) => (
                         <button
@@ -1927,7 +1928,7 @@ function MobileProposalCards({
         return (
           <article
             key={item.id}
-            className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+            className="rounded-sm border border-black/10 bg-canvas-chrome p-4 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">

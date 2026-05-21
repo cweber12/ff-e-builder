@@ -11,14 +11,14 @@ import type { SaveState } from '../../hooks/shared/useSaveStatus';
 function SkeletonBar() {
   return (
     <div className="shrink-0">
-      <div className="flex h-10 items-center gap-3 border-b border-neutral-200 bg-surface px-4">
-        <div className="h-2.5 w-16 rounded-sm bg-neutral-200" />
-        <div className="h-2.5 w-2 rounded-sm bg-neutral-200" />
-        <div className="h-4 w-40 rounded-sm bg-neutral-200" />
+      <div className="flex h-10 items-center gap-3 border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur">
+        <div className="h-2.5 w-16 animate-pulse bg-canvas-shell" />
+        <div className="h-2.5 w-2 animate-pulse bg-canvas-shell" />
+        <div className="h-4 w-40 animate-pulse bg-canvas-shell" />
       </div>
-      <div className="flex h-12 items-center gap-4 border-b border-neutral-200 bg-surface px-4">
+      <div className="flex h-12 items-center gap-4 border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur">
         {[80, 64, 56, 72, 56].map((w, i) => (
-          <div key={i} className="h-3 rounded-sm bg-neutral-100" style={{ width: w }} />
+          <div key={i} className="h-3 animate-pulse bg-canvas-shell" style={{ width: w }} />
         ))}
       </div>
     </div>
@@ -45,7 +45,7 @@ function TabNav({ projectId }: { projectId: string }) {
           to={href(projectId)}
           className={({ isActive }) =>
             [
-              'relative inline-flex h-12 items-center px-3 text-sm font-medium transition-colors',
+              'relative inline-flex h-12 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors',
               isActive ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900',
             ].join(' ')
           }
@@ -55,7 +55,7 @@ function TabNav({ projectId }: { projectId: string }) {
               {label}
               {isActive && (
                 <span
-                  className="absolute inset-x-3 -bottom-px h-0.5 bg-brand-500"
+                  className="absolute inset-x-3 -bottom-px h-0.5 bg-brand-600"
                   aria-hidden="true"
                 />
               )}
@@ -109,8 +109,7 @@ export function ProjectHeader({
 
   return (
     <header className="no-print relative z-10 shrink-0 overflow-visible">
-      {/* ── Row 1: Identity ───────────────────────────────────────── */}
-      <div className="flex h-11 items-center gap-3 border-b border-neutral-300 bg-surface px-4 shadow-[0_1px_0_rgb(0_0_0_/_0.02)]">
+      <div className="flex h-11 items-center gap-3 border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur">
         <Link to="/projects" className="eyebrow shrink-0 transition-colors hover:text-brand-700">
           Projects
         </Link>
@@ -119,7 +118,7 @@ export function ProjectHeader({
         </span>
         <Link
           to={`/projects/${project.id}`}
-          className="min-w-0 truncate text-[18px] font-semibold leading-none tracking-tight text-neutral-950 transition-colors hover:text-brand-700"
+          className="min-w-0 truncate font-display text-[18px] font-semibold leading-none tracking-tight text-neutral-950 transition-colors hover:text-brand-700"
           title={project.name}
         >
           {project.name}
@@ -135,25 +134,23 @@ export function ProjectHeader({
             onEdit={onEditProject}
             onImages={onProjectImages}
             onDelete={onDeleteProject}
-            buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+            buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 transition hover:bg-canvas-shell hover:text-brand-700"
           />
         )}
       </div>
 
-      {/* ── Row 2: Working bar ────────────────────────────────────── */}
-      <div className="flex h-12 items-center border-b border-neutral-300 bg-surface px-4">
+      <div className="flex h-12 items-center border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur">
         <TabNav projectId={project.id} />
 
-        {/* View toggle (FF&E only) */}
         {showViewToggle && (
-          <div className="ml-6 inline-flex rounded-md bg-neutral-100 p-0.5">
+          <div className="ml-6 inline-flex border border-black/10 bg-canvas-shell p-0.5">
             <Link
               to={`/projects/${project.id}/ffe/catalog`}
               className={[
-                'inline-flex h-8 items-center rounded-[5px] px-3 text-xs font-medium transition',
+                'inline-flex h-7 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
                 isCatalogRoute
-                  ? 'bg-surface text-neutral-900 shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-900',
+                  ? 'bg-brand-600 text-white'
+                  : 'text-neutral-500 hover:text-brand-700',
               ].join(' ')}
             >
               Catalog
@@ -161,10 +158,10 @@ export function ProjectHeader({
             <Link
               to={`/projects/${project.id}/ffe/table`}
               className={[
-                'inline-flex h-8 items-center rounded-[5px] px-3 text-xs font-medium transition',
+                'inline-flex h-7 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
                 !isCatalogRoute
-                  ? 'bg-surface text-neutral-900 shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-900',
+                  ? 'bg-brand-600 text-white'
+                  : 'text-neutral-500 hover:text-brand-700',
               ].join(' ')}
             >
               Table

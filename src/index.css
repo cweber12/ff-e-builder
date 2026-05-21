@@ -82,6 +82,10 @@
   --color-plan-measure: 31 88 145;
   --color-plan-active: 16 52 92;
 
+  /* Paper — a slightly warmer near-white for printed-artifact surfaces
+     (proposal totals, catalog pages) sitting on top of the warm app body. */
+  --color-paper: 248 245 238;
+
   /* Shadows — warm-tinted, lower opacity than Tailwind defaults */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
@@ -123,7 +127,7 @@
       sans-serif;
     font-feature-settings: 'ss01', 'ss02', 'cv11';
     letter-spacing: -0.005em;
-    background: rgb(var(--color-surface-muted));
+    background: rgb(var(--color-canvas-bg));
     color: rgb(var(--color-neutral-900));
   }
 
@@ -195,7 +199,7 @@
      status dropdowns. Slightly stronger border + tightened shadow so the
      panel reads as a clearly separated surface. */
   .menu-panel {
-    @apply rounded-md border border-neutral-300 bg-white p-1 shadow-lg;
+    @apply rounded-sm border border-black/10 bg-canvas-chrome p-1 shadow-lg;
   }
 
   .menu-item {
@@ -242,6 +246,39 @@
   }
 
   /* ──────────────────────────────────────────────────────────────────────
+     Surface vocabulary — the replacement for the legacy
+     `rounded-2xl border border-neutral-200 bg-white shadow-sm` pattern.
+
+     Pick by intent:
+       .surface-flat   → transparent group, separated by hairline rules.
+                         Default for page sections (Dashboard, Overview,
+                         Plans header, etc.). Lets the warm body show through.
+       .surface-paper  → opaque chrome with hairline edges. Use for tables,
+                         drawers, modals, action bars — anywhere data density
+                         needs a contained background for legibility.
+       .section-rule   → hairline divider between transparent sections.
+     ────────────────────────────────────────────────────────────────────── */
+
+  .surface-flat {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .surface-paper {
+    background-color: rgb(var(--color-canvas-chrome));
+    border-top: 1px solid rgb(0 0 0 / 0.1);
+    border-bottom: 1px solid rgb(0 0 0 / 0.1);
+    border-radius: 0;
+  }
+
+  .section-rule {
+    border-top: 1px solid rgb(0 0 0 / 0.1);
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
      Plan-redesign primitives
      Shared building blocks for the plan library and measurement workspace.
      Slice 1 of the plan redesign: tokens only. No components consume these
@@ -280,7 +317,7 @@
 
   /* Metric card — larger hero key/value used for calibration state, etc. */
   .metric-card {
-    @apply flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white px-3 py-2.5;
+    @apply flex flex-col gap-1 rounded-md border border-black/10 bg-canvas-chrome px-3 py-2.5;
   }
 
   .metric-card__label {
@@ -368,7 +405,7 @@
   /* Inspector action bar — pinned to the bottom of the inspector when a
      measurement is selected and has an "apply to item" action. */
   .action-bar {
-    @apply sticky bottom-0 z-10 -mx-4 mt-4 border-t border-neutral-200
+    @apply sticky bottom-0 z-10 -mx-4 mt-4 border-t border-black/10
            bg-canvas-chrome/95 px-4 py-3 backdrop-blur;
   }
 
@@ -390,7 +427,7 @@
   /* Library tile — softer plan-card surface with a hover lift.
      Will replace the inline border/shadow stack on MeasuredPlanCard. */
   .tile-card {
-    @apply overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm;
+    @apply overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-sm;
     transition:
       transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
       box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -401,7 +438,7 @@
   .tile-card:focus-within {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
-    border-color: rgb(var(--color-brand-200));
+    border-color: rgb(var(--color-brand-300));
   }
 
   /* Project list rows */
@@ -493,11 +530,16 @@
   }
 
   .catalog-header-id {
-    margin-right: 6px;
+    margin-right: 8px;
+    font-weight: 800;
+    color: theme('colors.brand.700');
   }
 
   .catalog-header-name {
     display: inline;
+    font-weight: 500;
+    color: theme('colors.gray.800');
+    letter-spacing: 0.02em;
   }
 
   .catalog-header-project {
@@ -564,7 +606,7 @@
     width: 100%;
     aspect-ratio: 1;
     flex: 0 0 auto;
-    background: theme('colors.brand.50');
+    background: white;
     overflow: hidden;
   }
 
@@ -781,6 +823,35 @@
   .catalog-material-cell-empty .catalog-material-name,
   .catalog-material-cell-empty .catalog-material-color {
     color: theme('colors.gray.300');
+  }
+
+  /* Paste-target swatch placeholders — used in the on-screen catalog only when
+     an item has no finishes yet. Hidden in print so the exported PDF stays
+     clean. Hover reveals a brand-tinted border + label cue. */
+  .catalog-material-slot-paste {
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1px dashed transparent;
+    padding: 4px 2px;
+    outline-offset: 2px;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease;
+  }
+
+  .catalog-material-slot-paste:focus-visible {
+    outline: 2px solid theme('colors.brand.500');
+  }
+
+  .catalog-material-slot-paste--hover {
+    border-color: theme('colors.brand.400');
+    background-color: rgb(var(--color-brand-50) / 0.6);
+  }
+
+  .catalog-material-slot-paste--hover .catalog-material-id,
+  .catalog-material-slot-paste--hover .catalog-material-name,
+  .catalog-material-slot-paste--hover .catalog-material-color {
+    color: theme('colors.brand.700');
   }
 
   /* ---------- Location & plan thumbnail ---------- */

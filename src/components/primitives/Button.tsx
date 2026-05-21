@@ -7,9 +7,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-700 focus-visible:outline-brand-500',
   secondary:
-    'bg-surface border border-neutral-300 text-neutral-700 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-50 focus-visible:outline-brand-500',
+    'bg-canvas-chrome border border-black/15 text-neutral-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-50 focus-visible:outline-brand-500',
   ghost:
-    'bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-brand-700 active:bg-neutral-100 focus-visible:outline-brand-500',
+    'bg-transparent text-neutral-700 hover:bg-canvas-shell hover:text-brand-700 active:bg-canvas-shell focus-visible:outline-brand-500',
   danger:
     'bg-danger-500 text-white shadow-sm hover:bg-danger-600 active:bg-danger-600 focus-visible:outline-danger-500',
 };

@@ -56,7 +56,7 @@ export function MeasuredPlanCard({ plan, projectId, deleting, onDelete }: Measur
           aria-label={`Open ${plan.name}`}
           className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500"
         >
-          <div className="relative aspect-[4/3] overflow-hidden bg-neutral-100">
+          <div className="relative aspect-[4/3] overflow-hidden bg-canvas-shell">
             {previewUrl ? (
               <img
                 src={previewUrl}
@@ -64,8 +64,8 @@ export function MeasuredPlanCard({ plan, projectId, deleting, onDelete }: Measur
                 className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
               />
             ) : (
-              <div className="canvas-hatch flex h-full items-center justify-center text-xs font-medium text-neutral-400">
-                {loading ? 'Loading preview…' : 'Preview unavailable'}
+              <div className="canvas-hatch flex h-full items-center justify-center text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                {loading ? 'Loading preview' : 'Preview unavailable'}
               </div>
             )}
 
@@ -119,16 +119,18 @@ export function MeasuredPlanCard({ plan, projectId, deleting, onDelete }: Measur
           >
             {calibrated ? 'Calibrated' : 'Needs calibration'}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
-            <span className="num">{plan.measurementCount}</span>
-            <span>{plan.measurementCount === 1 ? 'measurement' : 'measurements'}</span>
+          <span className="inline-flex items-center gap-1.5 border border-black/10 bg-canvas-shell px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-700">
+            <span className="num text-neutral-950">{plan.measurementCount}</span>
+            <span className="text-neutral-500">
+              {plan.measurementCount === 1 ? 'measurement' : 'measurements'}
+            </span>
           </span>
           <span className="sr-only">{measurementLabel}</span>
         </div>
 
-        <p className="border-t border-neutral-200/70 pt-3 text-[11px] uppercase tracking-[0.12em] text-neutral-400">
+        <p className="border-t border-black/10 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
           Added{' '}
-          <span className="num normal-case tracking-normal text-neutral-500">
+          <span className="num normal-case tracking-normal text-neutral-700">
             {formatDate(plan.createdAt)}
           </span>
         </p>

@@ -83,40 +83,32 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
 
   return (
     <>
-      {/* Backdrop */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 z-40 bg-neutral-950/40 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-40 bg-neutral-950/45 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Panel */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'fixed inset-0 z-50 flex w-full flex-col bg-surface shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md md:border-l md:border-neutral-300',
+          'fixed inset-0 z-50 flex w-full flex-col bg-canvas-chrome shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md md:border-l md:border-black/10',
           'transition-transform duration-300 ease-in-out',
           'translate-x-0',
           className,
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-300 bg-neutral-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-black/10 bg-canvas-shell px-6 py-3.5">
           <h2
             id={titleId}
             className="font-display text-lg font-semibold tracking-tight text-neutral-950"
           >
             {title}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close drawer"
-            className="rounded p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-          >
+          <button type="button" onClick={onClose} aria-label="Close drawer" className="icon-btn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 16 16"
@@ -129,8 +121,7 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </>
   );

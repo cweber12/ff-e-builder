@@ -34,9 +34,8 @@ export function BulkActionBar({
 
   return (
     <>
-      <div className="flex h-10 shrink-0 items-center border-t-2 border-brand-500/30 bg-surface pl-0 pr-4">
-        {/* Brand accent strip */}
-        <div className="h-full w-1 shrink-0 bg-brand-500" aria-hidden="true" />
+      <div className="flex h-10 shrink-0 items-center border-t-2 border-brand-600/40 bg-canvas-chrome pl-0 pr-4">
+        <div className="h-full w-1 shrink-0 bg-brand-600" aria-hidden="true" />
 
         <span className="ml-3 text-sm font-medium text-neutral-900">{selectedCount} selected</span>
 
@@ -101,7 +100,7 @@ export function BulkActionBar({
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="inline-flex h-8 items-center rounded-md border border-neutral-200 bg-surface px-3 text-sm text-neutral-700 hover:bg-neutral-50"
+                className="inline-flex h-8 items-center rounded-md border border-black/10 bg-canvas-chrome px-3 text-sm text-neutral-700 hover:bg-canvas-shell"
               >
                 Cancel
               </button>

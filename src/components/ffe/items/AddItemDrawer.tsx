@@ -271,16 +271,16 @@ export function AddItemDrawer({
                 return (
                   <span
                     key={`${selection.type}-${name}-${index}`}
-                    className="inline-flex items-center gap-1.5 rounded-pill border border-neutral-200 bg-white px-2 py-1 text-xs font-medium text-neutral-700"
+                    className="inline-flex items-center gap-1.5 border border-black/10 bg-canvas-chrome px-2 py-1 text-xs font-medium text-neutral-700"
                   >
                     {material ? (
                       <MaterialSwatchImage material={material} size="sm" />
                     ) : (
-                      <span className="h-6 w-6 rounded-full border border-neutral-200 bg-surface-muted" />
+                      <span className="h-6 w-6 rounded-full border border-black/15 bg-canvas-shell" />
                     )}
                     <span>{name}</span>
                     {selection.type === 'new' && (
-                      <span className="rounded-pill bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-700">
+                      <span className="bg-brand-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
                         New
                       </span>
                     )}
@@ -303,7 +303,7 @@ export function AddItemDrawer({
           <textarea {...register('notes')} rows={4} className={inputClassName} />
         </Field>
 
-        <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-neutral-100 bg-white px-6 py-4">
+        <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-black/10 bg-canvas-chrome/95 px-6 py-4 backdrop-blur">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>

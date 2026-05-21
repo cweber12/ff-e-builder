@@ -13,7 +13,7 @@ interface RevisionCostCellProps {
 }
 
 const inputClassName =
-  'w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm text-neutral-700 focus:border-brand-500 focus:outline-none';
+  'w-full rounded-sm border border-amber-400 bg-canvas-chrome px-2 py-1 text-sm text-neutral-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30';
 
 export function RevisionCostCell({
   snapshot,
@@ -42,7 +42,7 @@ export function RevisionCostCell({
   if (isFlagged && editing) {
     return (
       <td
-        className={cn('w-32 min-w-[128px] bg-amber-50 px-3 py-2', tdClassName)}
+        className={cn('w-32 min-w-[128px] bg-amber-50/70 px-3 py-2', tdClassName)}
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -77,7 +77,7 @@ export function RevisionCostCell({
     <td
       className={cn(
         'w-32 min-w-[128px] px-3 py-2 text-sm tabular-nums',
-        isFlagged && 'cursor-pointer bg-amber-50 text-amber-700',
+        isFlagged && 'cursor-pointer bg-amber-50/70 text-amber-700',
         isResolved && 'text-green-700',
         !isFlagged && !isResolved && 'text-neutral-500',
         tdClassName,

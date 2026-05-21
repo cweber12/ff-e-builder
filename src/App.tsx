@@ -169,9 +169,7 @@ function ProjectLayout() {
     <main
       className={[
         'flex flex-col',
-        isPlanCanvasRoute || isTableRoute
-          ? 'h-screen overflow-hidden bg-neutral-50'
-          : 'min-h-screen bg-surface-muted',
+        isPlanCanvasRoute || isTableRoute ? 'h-screen overflow-hidden' : 'min-h-screen',
       ].join(' ')}
     >
       {isPlanCanvasRoute ? (
@@ -231,7 +229,7 @@ function ProjectLayout() {
               <h1 className="sr-only">{project.name}</h1>
               {isTableRoute ? (
                 // Full-width flush layout for FF&E and Proposal table routes
-                <div className="flex flex-1 flex-col overflow-hidden bg-surface">
+                <div className="flex flex-1 flex-col overflow-hidden">
                   <Outlet
                     context={
                       {
@@ -339,14 +337,14 @@ function BudgetPageActions({
       <button
         type="button"
         onClick={() => setFfeOpen(true)}
-        className="rounded-md border border-neutral-200 bg-surface px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        className="rounded-md border border-black/10 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
       >
         FF&amp;E Budget
       </button>
       <button
         type="button"
         onClick={() => setProposalOpen(true)}
-        className="rounded-md border border-neutral-200 bg-surface px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        className="rounded-md border border-black/10 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
       >
         Proposal Budget
       </button>
@@ -478,13 +476,17 @@ function useProjectContext() {
 
 function NotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-surface-muted px-6 text-center">
-      <div className="rounded-lg border border-neutral-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">404</p>
-        <h1 className="mt-2 text-2xl font-semibold text-neutral-950">Page not found</h1>
+    <main className="flex min-h-screen items-center justify-center px-6 text-center">
+      <div className="border-y border-black/10 bg-canvas-chrome px-10 py-12 shadow-sm">
+        <p className="num text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+          404
+        </p>
+        <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-neutral-950">
+          Page not found
+        </h1>
         <Link
           to="/projects"
-          className="mt-6 inline-flex rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className="mt-6 inline-flex rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           Back to projects
         </Link>

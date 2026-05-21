@@ -15,7 +15,7 @@ import {
   exportProposalCsv,
   exportProposalExcel,
 } from '../../lib/export';
-import { useUserProfile } from '../../hooks';
+import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
 import { useUpdateProject, useProposalRevisions } from '../../hooks';
@@ -158,6 +158,7 @@ export function FfeActions({
   onImport,
 }: FfeActionsProps) {
   const hasItems = roomsWithItems.some((r) => r.items.length > 0);
+  const { sortMode } = useFfeItemSort(project.id);
 
   return (
     <div className="flex items-center gap-1">
@@ -172,6 +173,8 @@ export function FfeActions({
         </button>
       )}
 
+      {!isCatalog && <FfeSortToggle projectId={project.id} />}
+
       <button type="button" onClick={onImport} className={ghostBtn} title="Import from Excel">
         <UploadIcon />
         <span className="hidden sm:inline">Import</span>
@@ -184,7 +187,15 @@ export function FfeActions({
             ? [
                 {
                   label: 'Export PDF',
-                  onSelect: () => void exportCatalogPdf(project, roomsWithItems),
+                  onSelect: () => void exportCatalogPdf(project, roomsWithItems, { sortMode }),
+                },
+                {
+                  label: 'Export PDF — swatches only',
+                  onSelect: () =>
+                    void exportCatalogPdf(project, roomsWithItems, {
+                      showSwatchLabels: false,
+                      sortMode,
+                    }),
                 },
               ]
             : [
@@ -205,6 +216,52 @@ export function FfeActions({
       />
 
       {!isCatalog && <ColumnVisibilityPopover projectId={project.id} tableKey="ffe" />}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// FF&E item sort toggle
+// ---------------------------------------------------------------------------
+function FfeSortToggle({ projectId }: { projectId: string }) {
+  const { sortMode, setSortMode } = useFfeItemSort(projectId);
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Item sort order"
+      className="ml-1 inline-flex h-8 items-stretch border border-black/10 bg-canvas-chrome p-0.5"
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={sortMode === 'manual'}
+        onClick={() => setSortMode('manual')}
+        title="Custom drag-and-drop order"
+        className={[
+          'inline-flex items-center px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
+          sortMode === 'manual'
+            ? 'bg-brand-600 text-white'
+            : 'text-neutral-500 hover:text-brand-700',
+        ].join(' ')}
+      >
+        Custom
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={sortMode === 'idTag'}
+        onClick={() => setSortMode('idTag')}
+        title="Sort items alphanumerically by ID"
+        className={[
+          'inline-flex items-center px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
+          sortMode === 'idTag'
+            ? 'bg-brand-600 text-white'
+            : 'text-neutral-500 hover:text-brand-700',
+        ].join(' ')}
+      >
+        By ID
+      </button>
     </div>
   );
 }

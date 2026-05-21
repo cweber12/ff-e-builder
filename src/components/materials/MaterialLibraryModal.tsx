@@ -253,11 +253,11 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           />
         )}
 
-        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
+        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-black/10 bg-canvas-chrome">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 px-5 py-4">
             <div className="flex items-baseline gap-3">
-              <h3 className="text-sm font-semibold text-neutral-950">Project library</h3>
-              <span className="text-xs font-medium text-neutral-500">
+              <h3 className="eyebrow">Project library</h3>
+              <span className="num text-[11px] font-semibold text-neutral-500">
                 {visibleMaterials.length} {visibleMaterials.length === 1 ? 'item' : 'items'}
               </span>
             </div>
@@ -276,7 +276,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
               )}
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface-muted/40 p-5">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-canvas-shell p-5">
             {materials.isLoading ? (
               <p className="text-sm text-neutral-500">Loading library...</p>
             ) : visibleMaterials.length ? (
@@ -293,7 +293,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
                 ))}
               </div>
             ) : (
-              <p className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-10 text-center text-sm text-neutral-500">
+              <p className="border-y border-dashed border-black/15 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
                 {searchQuery.trim()
                   ? 'No library items match the current search.'
                   : activeItem
@@ -322,11 +322,13 @@ function AssignedMaterialsStrip({
   onRemove: (material: Material) => void;
 }) {
   return (
-    <section className="rounded-lg border border-brand-200 bg-brand-50/40 px-5 py-4">
+    <section className="border-y border-brand-700/30 bg-brand-50/60 px-5 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
-          <h3 className="text-sm font-semibold text-brand-800">Assigned to this item</h3>
-          <span className="text-xs font-medium text-brand-700/80">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+            Assigned to this item
+          </h3>
+          <span className="num text-[11px] font-semibold text-brand-700/80">
             {materials.length} {materials.length === 1 ? 'material' : 'materials'}
           </span>
         </div>
@@ -369,12 +371,12 @@ function AssignedMaterialChip({
   onRemove: () => void;
 }) {
   return (
-    <span className="group inline-flex max-w-xs items-center gap-2 rounded-full border border-brand-200 bg-white py-1 pl-1 pr-1 shadow-sm transition hover:border-brand-400">
+    <span className="group inline-flex max-w-xs items-center gap-2 border border-black/10 bg-canvas-chrome py-1 pl-1 pr-1 shadow-sm transition hover:border-brand-400">
       <MaterialSwatchImage material={material} size="sm" />
       <span className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-sm font-semibold text-neutral-950">{material.name}</span>
         {material.materialId && (
-          <span className="truncate font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+          <span className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
             {material.materialId}
           </span>
         )}
@@ -382,7 +384,7 @@ function AssignedMaterialChip({
       <button
         type="button"
         onClick={onEdit}
-        className="ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="ml-1 rounded-sm px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label={`Edit ${material.name}`}
       >
         Edit
@@ -390,7 +392,7 @@ function AssignedMaterialChip({
       <button
         type="button"
         onClick={onRemove}
-        className="rounded-full p-1 text-neutral-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="rounded-sm p-1 text-neutral-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label={`Remove ${material.name} from item`}
         title="Remove from item"
       >
@@ -458,10 +460,8 @@ export function MaterialForm({
   };
 
   return (
-    <section className="rounded-lg border border-neutral-200 bg-surface-muted p-4">
-      <h3 className="text-sm font-semibold text-neutral-950">
-        {editing ? 'Edit item' : 'Add to library'}
-      </h3>
+    <section className="border-y border-black/10 bg-canvas-shell p-5">
+      <p className="eyebrow">{editing ? 'Edit Item' : 'Add To Library'}</p>
       <div className="mt-3 grid gap-3">
         <div className="grid gap-1 text-sm font-medium text-neutral-700">
           <label htmlFor="material-source-url">Product URL or ID</label>
@@ -513,7 +513,7 @@ export function MaterialForm({
           <span>Swatch</span>
           <div className="grid gap-2">
             <div className="flex items-center gap-3">
-              <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-neutral-200 bg-white">
+              <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-black/15 bg-canvas-chrome">
                 {previewUrl ? (
                   <img src={previewUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -530,7 +530,7 @@ export function MaterialForm({
                     type="color"
                     value={draft.swatchHex || '#D9D4C8'}
                     onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                    className="h-7 w-10 cursor-pointer rounded border border-neutral-300 bg-white p-0.5"
+                    className="h-7 w-10 cursor-pointer rounded-sm border border-black/15 bg-canvas-chrome p-0.5"
                     aria-label="Swatch color"
                   />
                   <input
@@ -539,7 +539,7 @@ export function MaterialForm({
                     onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
                     placeholder="#D9D4C8"
                     maxLength={7}
-                    className="w-24 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none"
+                    className="num w-24 rounded-sm border border-black/15 bg-canvas-chrome px-2 py-1 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
                     aria-label="Swatch hex value"
                   />
                 </div>
@@ -611,7 +611,7 @@ function MaterialPickerCard({
       aria-busy={assigning}
       onClick={assignable ? onSelect : undefined}
       onKeyDown={assignable ? handleKeyDown : undefined}
-      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+      className={`tile-card group relative flex min-w-0 flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
         assignable ? 'cursor-pointer' : ''
       }`}
     >
@@ -638,7 +638,7 @@ function MaterialPickerCard({
         )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
-        <p className="truncate font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+        <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
           {material.materialId || 'No ID'}
         </p>
         <h4 className="truncate text-sm font-semibold leading-tight text-neutral-950">
@@ -655,7 +655,7 @@ function MaterialPickerCard({
               e.stopPropagation();
               onEdit();
             }}
-            className="rounded px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="rounded-sm px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             aria-label={`Edit ${material.name}`}
           >
             Edit
@@ -684,7 +684,7 @@ export function MaterialBadges({
         materials.map((material) => (
           <span
             key={material.id}
-            className="inline-flex max-w-full items-center gap-1 rounded-pill bg-white px-2 py-0.5 text-xs font-medium text-neutral-700"
+            className="inline-flex max-w-full items-center gap-1 border border-black/10 bg-canvas-chrome px-2 py-0.5 text-xs font-medium text-neutral-800"
           >
             <MaterialSwatchImage material={material} size="sm" />
             <span className="truncate">{material.name}</span>
@@ -773,7 +773,7 @@ export function MaterialSwatchImage({
       alt={`${material.name} swatch`}
       className={`${frameClassName} shrink-0 border-0 shadow-none ${className}`}
       imageClassName="object-cover"
-      placeholderClassName="bg-white"
+      placeholderClassName="bg-canvas-shell"
       placeholderContent={hexPlaceholder}
       compact
       disabled

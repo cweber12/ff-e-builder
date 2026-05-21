@@ -254,7 +254,7 @@ export function ImageFrame({
     <div
       className={cn(
         'flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400',
-        !isRoomImage && 'bg-surface-muted',
+        !isRoomImage && 'bg-canvas-shell',
         placeholderClassName,
       )}
     >

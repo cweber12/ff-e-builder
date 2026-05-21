@@ -38,7 +38,7 @@ export function TableViewStack({
       <div
         ref={scrollRef}
         className={cn(
-          'relative flex flex-1 flex-col overflow-auto bg-surface-muted scroll-smooth',
+          'relative flex flex-1 flex-col overflow-auto bg-canvas-bg scroll-smooth',
           className,
         )}
       >
@@ -58,7 +58,7 @@ export function GroupedTableSection({
   return (
     <section
       className={cn(
-        'relative w-fit min-w-full border border-neutral-300 bg-surface shadow-sm',
+        'relative w-fit min-w-full border border-black/10 bg-canvas-chrome shadow-sm',
         className,
       )}
     >
@@ -113,10 +113,12 @@ export function StickyGrandTotal({
   value: string;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 rounded-md border border-brand-500/20 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+    <div className="sticky bottom-0 z-10 border-y border-brand-700/30 bg-canvas-chrome/95 px-4 py-3 shadow-lg backdrop-blur">
       <div className="flex items-center justify-between gap-4">
-        <span className="eyebrow">{label}</span>
-        <span className="font-mono text-lg font-bold tabular-nums text-brand-700">{value}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+          {label}
+        </span>
+        <span className="num text-lg font-semibold tracking-tight text-brand-700">{value}</span>
       </div>
     </div>
   );
@@ -185,14 +187,14 @@ export function ColumnNavArrows({
   };
 
   const btn =
-    'inline-flex h-7 w-7 items-center justify-center text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-brand-700 disabled:cursor-not-allowed disabled:text-neutral-300 disabled:hover:bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+    'inline-flex h-7 w-7 items-center justify-center text-neutral-600 transition-colors hover:bg-canvas-shell hover:text-brand-700 disabled:cursor-not-allowed disabled:text-neutral-300 disabled:hover:bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
   return (
     <div
       role="group"
       aria-label="Scroll table columns"
       className={cn(
-        'inline-flex items-center overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm',
+        'inline-flex items-center overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-sm',
         className,
       )}
     >
@@ -206,7 +208,7 @@ export function ColumnNavArrows({
       >
         <NavChevron direction="left" />
       </button>
-      <span aria-hidden className="h-4 w-px bg-neutral-200" />
+      <span aria-hidden className="h-4 w-px bg-black/10" />
       <button
         type="button"
         onClick={() => scroll(1)}

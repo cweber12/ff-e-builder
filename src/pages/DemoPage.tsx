@@ -168,7 +168,7 @@ export function DemoPage() {
   );
 
   return (
-    <main className="min-h-screen bg-surface-muted px-4 py-8 md:px-8">
+    <main className="min-h-screen px-4 py-8 md:px-8">
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Header */}
         <header>

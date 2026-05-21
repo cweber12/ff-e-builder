@@ -87,7 +87,7 @@ export function DimensionEditorModal({
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 rounded-md bg-surface-muted p-1">
+        <div className="grid grid-cols-2 gap-2 rounded-sm border border-black/10 bg-canvas-shell p-1">
           {(['imperial', 'metric'] as const).map((mode) => (
             <button
               key={mode}
@@ -202,7 +202,7 @@ export function DimensionEditorModal({
           ))}
         </div>
 
-        <p className="rounded-md bg-surface-muted px-3 py-2 text-sm font-medium text-neutral-700">
+        <p className="rounded-sm border border-black/10 bg-canvas-shell px-3 py-2 text-sm font-medium text-neutral-700">
           {label || 'No dimensions set'}
         </p>
 

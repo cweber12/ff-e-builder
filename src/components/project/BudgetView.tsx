@@ -56,33 +56,38 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
         : 'bg-success-500';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Combined total */}
-      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <section>
+        <p className="eyebrow">Combined Budget</p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-b border-black/10 pb-4">
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Combined budget
-            </h2>
-            <p className="mt-1 text-2xl font-bold text-neutral-950">
+            <h2 className="num font-display text-3xl font-semibold tracking-tight text-neutral-950">
               {formatMoney(cents(combinedActualCents))}
-            </p>
-            <p className="mt-0.5 text-sm text-neutral-500">
-              {hasCombinedBudget
-                ? `against ${formatMoney(cents(combinedBudgetCents))} budget`
-                : 'No budget target set'}
+              {hasCombinedBudget && (
+                <span className="ml-2 text-base font-medium text-neutral-500">
+                  of {formatMoney(cents(combinedBudgetCents))}
+                </span>
+              )}
+            </h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              {!hasCombinedBudget
+                ? 'No budget target set'
+                : combinedActualCents > combinedBudgetCents
+                  ? 'Over budget'
+                  : 'Within budget'}
             </p>
           </div>
           {hasCombinedBudget && (
-            <span className="text-lg font-semibold tabular-nums text-neutral-700">
+            <span className="num text-3xl font-semibold tracking-tight text-neutral-950">
               {combinedPercent}%
             </span>
           )}
         </div>
         {hasCombinedBudget && (
-          <div className="mt-4 h-3 overflow-hidden rounded-pill bg-neutral-100">
+          <div className="mt-4 h-1.5 overflow-hidden bg-canvas-shell">
             <div
-              className={`h-full rounded-pill ${combinedTone} transition-all`}
+              className={`h-full ${combinedTone} transition-all`}
               style={{ width: `${combinedPercent}%` }}
             />
           </div>
@@ -90,7 +95,7 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
       </section>
 
       {/* Tool cards */}
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-px bg-black/10 md:grid-cols-2">
         <ToolCard
           label="FF&E"
           actualCents={ffeActualCents}
@@ -110,94 +115,94 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
       </section>
 
       {/* Breakdowns */}
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-10 lg:grid-cols-2">
         {/* FF&E rooms */}
-        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 px-4 py-2.5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              FF&amp;E by room
-            </h3>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-4 py-2">Room</th>
-                <th className="px-4 py-2 text-right">Items</th>
-                <th className="px-4 py-2 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {roomsWithItems.map((room) => (
-                <tr key={room.id}>
-                  <td className="px-4 py-2 font-medium text-neutral-950">{room.name}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-neutral-600">
-                    {room.items.length}
+        <div>
+          <h3 className="eyebrow mb-3">FF&amp;E by room</h3>
+          <div className="bg-paper border-y border-black/10">
+            <table className="w-full text-sm">
+              <thead className="border-b border-black/10 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+                <tr>
+                  <th className="px-4 py-3">Room</th>
+                  <th className="px-4 py-3 text-right">Items</th>
+                  <th className="px-4 py-3 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/10">
+                {roomsWithItems.map((room) => (
+                  <tr key={room.id}>
+                    <td className="px-4 py-2.5 font-medium text-neutral-950">{room.name}</td>
+                    <td className="num px-4 py-2.5 text-right text-neutral-700">
+                      {room.items.length}
+                    </td>
+                    <td className="num px-4 py-2.5 text-right font-medium text-neutral-950">
+                      {formatMoney(cents(roomSubtotalCents(room.items)))}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-brand-700/40 bg-brand-50/50">
+                  <td className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+                    Total
                   </td>
-                  <td className="px-4 py-2 text-right font-medium tabular-nums text-neutral-950">
-                    {formatMoney(cents(roomSubtotalCents(room.items)))}
+                  <td className="px-4 py-3" />
+                  <td className="num px-4 py-3 text-right text-base font-semibold tracking-tight text-brand-700">
+                    {formatMoney(cents(ffeActualCents))}
                   </td>
                 </tr>
-              ))}
-              <tr className="bg-brand-50/50">
-                <td className="px-4 py-2 font-semibold text-neutral-950">Total</td>
-                <td className="px-4 py-2" />
-                <td className="px-4 py-2 text-right font-bold tabular-nums text-brand-700">
-                  {formatMoney(cents(ffeActualCents))}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="flex flex-wrap gap-2 border-t border-neutral-100 px-4 py-3">
+              </tbody>
+            </table>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 px-1 pt-4">
             {itemStatuses.map((s) => (
               <div key={s} className="flex items-center gap-1.5">
                 <StatusBadge status={s} />
-                <span className="text-xs tabular-nums text-neutral-500">{statusCounts[s]}</span>
+                <span className="num text-xs text-neutral-500">{statusCounts[s]}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Proposal categories */}
-        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 px-4 py-2.5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Proposal by category
-            </h3>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-4 py-2">Category</th>
-                <th className="px-4 py-2 text-right">Rows</th>
-                <th className="px-4 py-2 text-right">Quantity</th>
-                <th className="px-4 py-2 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {proposalCategoriesWithItems.map((category) => (
-                <tr key={category.id}>
-                  <td className="px-4 py-2 font-medium text-neutral-950">{category.name}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-neutral-600">
-                    {category.items.length}
+        <div>
+          <h3 className="eyebrow mb-3">Proposal by category</h3>
+          <div className="bg-paper border-y border-black/10">
+            <table className="w-full text-sm">
+              <thead className="border-b border-black/10 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+                <tr>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3 text-right">Rows</th>
+                  <th className="px-4 py-3 text-right">Quantity</th>
+                  <th className="px-4 py-3 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/10">
+                {proposalCategoriesWithItems.map((category) => (
+                  <tr key={category.id}>
+                    <td className="px-4 py-2.5 font-medium text-neutral-950">{category.name}</td>
+                    <td className="num px-4 py-2.5 text-right text-neutral-700">
+                      {category.items.length}
+                    </td>
+                    <td className="num px-4 py-2.5 text-right text-neutral-700">
+                      {category.items.reduce((sum, item) => sum + item.quantity, 0)}
+                    </td>
+                    <td className="num px-4 py-2.5 text-right font-medium text-neutral-950">
+                      {formatMoney(cents(proposalCategorySubtotalCents(category.items)))}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-brand-700/40 bg-brand-50/50">
+                  <td className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+                    Total
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-neutral-600">
-                    {category.items.reduce((sum, item) => sum + item.quantity, 0)}
-                  </td>
-                  <td className="px-4 py-2 text-right font-medium tabular-nums text-neutral-950">
-                    {formatMoney(cents(proposalCategorySubtotalCents(category.items)))}
+                  <td className="px-4 py-3" />
+                  <td className="px-4 py-3" />
+                  <td className="num px-4 py-3 text-right text-base font-semibold tracking-tight text-brand-700">
+                    {formatMoney(cents(proposalActualCents))}
                   </td>
                 </tr>
-              ))}
-              <tr className="bg-brand-50/50">
-                <td className="px-4 py-2 font-semibold text-neutral-950">Total</td>
-                <td className="px-4 py-2" />
-                <td className="px-4 py-2" />
-                <td className="px-4 py-2 text-right font-bold tabular-nums text-brand-700">
-                  {formatMoney(cents(proposalActualCents))}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
@@ -229,24 +234,32 @@ function ToolCard({
         : 'bg-success-500';
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="bg-canvas-chrome p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{label}</h3>
-        <Link to={linkTo} className="text-xs font-medium text-brand-600 hover:text-brand-700">
+        <h3 className="eyebrow">{label}</h3>
+        <Link
+          to={linkTo}
+          className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 hover:text-brand-800"
+        >
           View →
         </Link>
       </div>
-      <p className="mt-2 text-xl font-bold text-neutral-950">{formatMoney(cents(actualCents))}</p>
-      <p className="mt-0.5 text-xs text-neutral-500">
-        {itemCount} {itemLabel}
-        {hasBudget && ` · ${pct}% of ${formatMoney(cents(budgetCents))}`}
+      <p className="num mt-2 font-display text-2xl font-semibold tracking-tight text-neutral-950">
+        {formatMoney(cents(actualCents))}
+      </p>
+      <p className="mt-1 text-xs text-neutral-500">
+        <span className="num text-neutral-700">{itemCount}</span> {itemLabel}
+        {hasBudget && (
+          <>
+            {' · '}
+            <span className="num text-neutral-700">{pct}%</span> of{' '}
+            <span className="num">{formatMoney(cents(budgetCents))}</span>
+          </>
+        )}
       </p>
       {hasBudget && (
-        <div className="mt-3 h-2 overflow-hidden rounded-pill bg-neutral-100">
-          <div
-            className={`h-full rounded-pill ${tone} transition-all`}
-            style={{ width: `${pct}%` }}
-          />
+        <div className="mt-4 h-1 overflow-hidden bg-canvas-shell">
+          <div className={`h-full ${tone} transition-all`} style={{ width: `${pct}%` }} />
         </div>
       )}
     </div>

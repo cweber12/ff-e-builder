@@ -17,8 +17,8 @@ import { DemoPage } from '../../../pages/DemoPage';
 
 function FullScreenSpinner() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-surface-muted">
-      <div className="h-10 w-10 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="h-10 w-10 rounded-full border-4 border-brand-600 border-t-transparent animate-spin" />
     </main>
   );
 }
@@ -74,17 +74,24 @@ export function SignInPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-surface-muted">
-      <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center gap-6 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-brand-500">Chill Design Studio</h1>
-        <p className="text-sm text-neutral-500 text-center">
+    <main className="min-h-screen flex items-center justify-center px-4">
+      <div className="border-y border-black/10 bg-canvas-chrome px-10 py-12 flex flex-col items-center gap-6 w-full max-w-sm shadow-sm">
+        <div className="flex flex-col items-center gap-1.5">
+          <p className="num text-[10px] font-semibold uppercase tracking-[0.24em] text-brand-700">
+            Studio
+          </p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
+            Chill Design
+          </h1>
+        </div>
+        <p className="text-sm text-neutral-500 text-center max-w-[28ch]">
           Sign in to manage your projects and specifications.
         </p>
 
         {error && (
           <p
             role="alert"
-            className="w-full rounded-md border border-danger-500/30 bg-red-50 px-3 py-2 text-sm text-danger-600"
+            className="w-full border border-danger-500/40 bg-danger-50 px-3 py-2 text-sm text-danger-600"
           >
             {error}
           </p>
@@ -94,7 +101,7 @@ export function SignInPage() {
           onSubmit={(event) => void handleEmailSubmit(event)}
           className="flex w-full flex-col gap-3"
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
+          <label className="flex flex-col gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
             Email
             <input
               type="email"
@@ -102,10 +109,10 @@ export function SignInPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+              className="input-base normal-case tracking-normal"
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
+          <label className="flex flex-col gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
             Password
             <input
               type="password"
@@ -114,13 +121,13 @@ export function SignInPage() {
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+              className="input-base normal-case tracking-normal"
             />
           </label>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-brand-500 px-4 py-2 text-white font-medium hover:bg-brand-600 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-1 w-full rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {authMode === 'create-account' ? 'Create account' : 'Sign in with email'}
           </button>
@@ -132,24 +139,24 @@ export function SignInPage() {
             clearErrors();
             setAuthMode((mode) => (mode === 'sign-in' ? 'create-account' : 'sign-in'));
           }}
-          className="text-sm font-medium text-brand-600 hover:text-brand-700"
+          className="text-sm font-medium text-brand-700 hover:text-brand-800"
         >
           {authMode === 'create-account'
             ? 'Already have an account? Sign in'
             : 'Need an account? Create one'}
         </button>
 
-        <div className="flex w-full items-center gap-3 text-xs uppercase tracking-wide text-neutral-600">
-          <span className="h-px flex-1 bg-neutral-200" />
+        <div className="flex w-full items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+          <span className="h-px flex-1 bg-black/10" />
           or
-          <span className="h-px flex-1 bg-neutral-200" />
+          <span className="h-px flex-1 bg-black/10" />
         </div>
 
         <button
           type="button"
           onClick={() => void handleGoogleSignIn()}
           disabled={isSubmitting}
-          className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-neutral-800 font-medium hover:bg-neutral-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-md border border-black/15 bg-canvas-chrome px-4 py-2 text-sm font-semibold text-neutral-800 transition-colors hover:border-brand-500 hover:bg-canvas-shell hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Sign in with Google
         </button>
@@ -203,7 +210,7 @@ function UserMenu() {
           aria-label="User menu"
           aria-expanded={open}
           aria-haspopup="true"
-          className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ring-2 ring-neutral-200 transition-all hover:ring-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ring-1 ring-black/15 transition-all hover:ring-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
           {user?.photoURL ? (
             <img src={user.photoURL} alt="" className="h-full w-full object-cover" />
@@ -216,9 +223,9 @@ function UserMenu() {
         {open && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden="true" />
-            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-md border border-neutral-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-sm border border-black/10 bg-canvas-chrome py-1 shadow-lg">
               {(profile?.name || user?.email) && (
-                <p className="truncate border-b border-neutral-100 px-3 py-1.5 text-xs text-neutral-500">
+                <p className="truncate border-b border-black/10 px-3 py-1.5 text-xs text-neutral-500">
                   {profile?.name || user?.email}
                 </p>
               )}
@@ -228,7 +235,7 @@ function UserMenu() {
                   setOpen(false);
                   setProfileOpen(true);
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-canvas-shell hover:text-brand-700"
               >
                 Update profile
               </button>
@@ -238,18 +245,18 @@ function UserMenu() {
                   setOpen(false);
                   navigate('/projects');
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+                className="w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-canvas-shell hover:text-brand-700"
               >
                 Projects
               </button>
-              <div className="my-1 border-t border-neutral-100" />
+              <div className="my-1 border-t border-black/10" />
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
                   void signOut();
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-danger-600 hover:bg-neutral-50"
+                className="w-full px-3 py-2 text-left text-sm text-danger-600 hover:bg-canvas-shell"
               >
                 Sign out
               </button>
@@ -264,10 +271,10 @@ function UserMenu() {
 
 function TopBar() {
   return (
-    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
+    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur md:px-6">
       <Link
         to="/projects"
-        className="text-sm font-bold tracking-tight text-brand-500 hover:text-brand-600 transition-colors"
+        className="font-display text-sm font-semibold tracking-tight text-brand-700 hover:text-brand-800 transition-colors"
       >
         Chill Design Studio
       </Link>
@@ -281,17 +288,19 @@ function TopBar() {
 function DemoLayout() {
   return (
     <>
-      <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
-        <span className="text-sm font-bold tracking-tight text-brand-500">Chill Design Studio</span>
+      <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur md:px-6">
+        <span className="font-display text-sm font-semibold tracking-tight text-brand-700">
+          Chill Design Studio
+        </span>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-sm text-neutral-500 hover:text-neutral-700"
+          className="text-sm text-neutral-500 hover:text-neutral-800"
         >
           Sign out
         </button>
       </header>
-      <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-800">
+      <div className="border-b border-amber-500/40 bg-amber-50 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-800">
         Demo mode — your account is not yet authorized. Contact the studio administrator to request
         access.
       </div>

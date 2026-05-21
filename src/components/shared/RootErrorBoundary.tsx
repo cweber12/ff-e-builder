@@ -32,10 +32,15 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
     if (!this.state.error) return this.props.children;
 
     return (
-      <main className="flex min-h-screen items-center justify-center bg-surface-muted px-6">
-        <div className="max-w-lg rounded-lg border border-danger-500/30 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-2xl font-semibold text-neutral-950">Something went wrong</h1>
-          <p className="mt-2 text-sm text-neutral-600">
+      <main className="flex min-h-screen items-center justify-center px-6">
+        <div className="max-w-lg border-y border-danger-500/40 bg-canvas-chrome px-10 py-12 text-center shadow-sm">
+          <p className="num text-[11px] font-semibold uppercase tracking-[0.18em] text-danger-600">
+            Error
+          </p>
+          <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-neutral-950">
+            Something went wrong
+          </h1>
+          <p className="mt-2 text-sm text-neutral-500">
             Reload the app to try again, or copy the error details for debugging.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">

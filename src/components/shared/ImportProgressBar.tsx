@@ -19,7 +19,7 @@ export function ImportProgressBar({
       : undefined;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-surface-muted p-3">
+    <div className="rounded-sm border border-black/10 bg-canvas-shell p-3">
       <div className="mb-1 flex items-center justify-between text-xs text-neutral-600">
         <span>
           Import progress: {progress.processed} of {progress.total}

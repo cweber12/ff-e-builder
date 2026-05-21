@@ -70,7 +70,7 @@ export function SummaryView({ project, roomsWithItems }: SummaryViewProps) {
           </h2>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-neutral-500">
+          <thead className="bg-canvas-shell text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
             <tr>
               <th className="px-4 py-3">Location</th>
               <th className="px-4 py-3 text-right">Item count</th>
