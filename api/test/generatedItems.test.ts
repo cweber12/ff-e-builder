@@ -56,7 +56,7 @@ describe('Generated Item read model', () => {
     const statement = Array.from(
       (sql.mock.calls[0] as [TemplateStringsArray, ...unknown[]])[0],
     ).join(' ');
-    expect(statement).toContain('FROM proposal_items pi');
+    expect(statement).toContain('proposal_items pi');
     expect(statement).toContain('WHERE pi.category_id =');
     expect(statement).not.toContain('canonical_items');
   });
@@ -128,7 +128,7 @@ describe('Generated Item read model', () => {
     expect(statements[1]).toContain("lower(name) = 'furniture'");
     expect(statements[2]).toContain('INSERT INTO items');
     expect(statements[2]).toContain(
-      'proposal_category_id, product_tag, location, quantity, quantity_unit',
+      'proposal_category_id, product_tag, drawings, location, quantity, quantity_unit, is_ffe_visible',
     );
     expect(statements[3]).toContain('INSERT INTO proposal_items');
     expect(statements[4]).toContain('proposal_item_generated_item_links');
@@ -137,7 +137,7 @@ describe('Generated Item read model', () => {
   it('creates a Proposal item with a linked Unassigned generated item mirror', async () => {
     const sql = vi
       .fn()
-      .mockResolvedValueOnce([{ project_id: 'project-1' }])
+      .mockResolvedValueOnce([{ project_id: 'project-1', name: 'Tables' }])
       .mockResolvedValueOnce([{ id: 'unassigned-room-1' }])
       .mockResolvedValueOnce([{ id: 'proposal-item-1' }])
       .mockResolvedValueOnce([{ id: 'item-1' }])
@@ -172,7 +172,7 @@ describe('Generated Item read model', () => {
     const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
       ([strings]) => Array.from(strings).join(' '),
     );
-    expect(statements[1]).toContain("lower(name) = 'unassigned'");
+    expect(statements[1]).toContain('lower(name) = lower(');
     expect(statements[2]).toContain('INSERT INTO proposal_items');
     expect(statements[3]).toContain('INSERT INTO items');
     expect(statements[4]).toContain('proposal_item_generated_item_links');

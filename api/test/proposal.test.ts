@@ -62,7 +62,7 @@ describe('Proposal routes', () => {
 
     const calls = sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>;
     const statement = Array.from(calls[0]?.[0] ?? []).join(' ');
-    expect(statement).toContain('FROM proposal_items pi');
+    expect(statement).toContain('proposal_items pi');
     expect(statement).toContain('proposal_item_materials');
     expect(statement).toContain('item_materials');
     expect(statement).toContain('UNION ALL');

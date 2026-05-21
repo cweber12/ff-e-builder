@@ -27,8 +27,10 @@ export const authMiddleware: MiddlewareHandler<{
       .split(',')
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
+    // Empty allowlist = open mode (no email restrictions).
+    // When AUTHORIZED_EMAILS is set in production, only listed emails pass.
     const isAuthorized =
-      allowlist.length > 0 && email !== null && allowlist.includes(email.toLowerCase());
+      allowlist.length === 0 || (email !== null && allowlist.includes(email.toLowerCase()));
 
     c.set('uid', uid);
     c.set('email', email);
