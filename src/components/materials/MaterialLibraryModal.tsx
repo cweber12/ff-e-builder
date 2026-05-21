@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   useCreateMaterial,
   useItemMaterialActions,
@@ -431,6 +431,7 @@ export function MaterialForm({
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [lookupHint, setLookupHint] = useState<string | null>(null);
+  const [pasteFlash, setPasteFlash] = useState(false);
 
   useEffect(() => {
     if (!draft.swatchFile) {
@@ -441,6 +442,28 @@ export function MaterialForm({
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [draft.swatchFile]);
+
+  // Ctrl+V paste while the form is mounted sets the swatch image. Skips when
+  // the paste lacks an image (text paste in form fields keeps default behavior).
+  const onDraftChangeRef = useRef(onDraftChange);
+  useEffect(() => {
+    onDraftChangeRef.current = onDraftChange;
+  }, [onDraftChange]);
+
+  useEffect(() => {
+    const handler = (event: ClipboardEvent) => {
+      const file = Array.from(event.clipboardData?.items ?? [])
+        .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
+        ?.getAsFile();
+      if (!file) return;
+      event.preventDefault();
+      onDraftChangeRef.current((current: MaterialDraft) => ({ ...current, swatchFile: file }));
+      setPasteFlash(true);
+      window.setTimeout(() => setPasteFlash(false), 1500);
+    };
+    document.addEventListener('paste', handler);
+    return () => document.removeEventListener('paste', handler);
+  }, []);
 
   const runLookup = () => {
     const entry = lookupCatalogEntry(draft.sourceUrl || draft.materialId);
@@ -544,7 +567,11 @@ export function MaterialForm({
                   />
                 </div>
                 <p className="text-xs font-normal text-neutral-500">
-                  {draft.swatchFile ? draft.swatchFile.name : 'Image overrides color if uploaded.'}
+                  {pasteFlash
+                    ? 'Pasted image attached.'
+                    : draft.swatchFile
+                      ? draft.swatchFile.name
+                      : 'Image overrides color if uploaded. Tip: Ctrl+V to paste.'}
                 </p>
               </div>
             </div>

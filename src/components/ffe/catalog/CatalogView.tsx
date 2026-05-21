@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
@@ -20,7 +20,7 @@ import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
 import { CropModal } from '../../shared/image/CropModal';
-import { MaterialSwatchImage } from '../../materials';
+import { MaterialLibraryModal, MaterialSwatchImage } from '../../materials';
 import { api } from '../../../lib/api';
 import type { CropParams, ImageAsset } from '../../../types';
 
@@ -352,26 +352,93 @@ export function CatalogPage({
     projectId: project.id,
   });
   const uploadSwatchImage = useUploadImage();
+  const [isLibraryOpen, setLibraryOpen] = useState(false);
 
-  const handlePasteSwatchImage = async (file: File) => {
-    try {
-      const generatedName = `Swatch ${item.materials.length + 1}`;
-      const material = await materialActions.createAndAssign.mutateAsync({
-        itemId: item.id,
-        input: { name: generatedName },
-      });
-      await uploadSwatchImage.mutateAsync({
-        entityType: 'material',
-        entityId: material.id,
-        file,
-        altText: material.name,
-      });
-      toast.success(`Added ${material.name} to the finish library.`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add swatch.';
-      toast.error(message);
-    }
-  };
+  const isSwatchMutating = materialActions.createAndAssign.isPending || uploadSwatchImage.isPending;
+
+  // Refs read by the single document-level paste listener so it always
+  // sees the latest state without forcing re-registration on every render.
+  const itemRef = useRef(item);
+  const isLibraryOpenRef = useRef(isLibraryOpen);
+  const isMutatingRef = useRef(isSwatchMutating);
+  const armedSlotsRef = useRef(0);
+  const inFlightRef = useRef(false);
+  useEffect(() => {
+    itemRef.current = item;
+  }, [item]);
+  useEffect(() => {
+    isLibraryOpenRef.current = isLibraryOpen;
+  }, [isLibraryOpen]);
+  useEffect(() => {
+    isMutatingRef.current = isSwatchMutating;
+  }, [isSwatchMutating]);
+
+  const createAndAssignMutateAsync = materialActions.createAndAssign.mutateAsync;
+  const uploadSwatchImageMutateAsync = uploadSwatchImage.mutateAsync;
+
+  const handlePasteSwatchImage = useCallback(
+    async (file: File) => {
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+      try {
+        const currentItem = itemRef.current;
+        const generatedName = `Swatch ${currentItem.materials.length + 1}`;
+        const material = await createAndAssignMutateAsync({
+          itemId: currentItem.id,
+          input: { name: generatedName },
+        });
+        await uploadSwatchImageMutateAsync({
+          entityType: 'material',
+          entityId: material.id,
+          file,
+          altText: material.name,
+        });
+        toast.success(`Added ${material.name} to the finish library.`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to add swatch.';
+        toast.error(message);
+      } finally {
+        inFlightRef.current = false;
+      }
+    },
+    [createAndAssignMutateAsync, uploadSwatchImageMutateAsync],
+  );
+
+  // Single document-level paste listener for the entire catalog page.
+  // Per-slot listeners were unreliable: multiple instances accumulating
+  // their own listeners caused stale closures and duplicate handlers.
+  // This listener is the *only* paste handler the empty swatch slots use.
+  const handlePasteRef = useRef(handlePasteSwatchImage);
+  useEffect(() => {
+    handlePasteRef.current = handlePasteSwatchImage;
+  }, [handlePasteSwatchImage]);
+
+  useEffect(() => {
+    const handler = (event: ClipboardEvent) => {
+      if (isLibraryOpenRef.current) return;
+      if (armedSlotsRef.current <= 0) return;
+      if (isMutatingRef.current || inFlightRef.current) return;
+      const file = Array.from(event.clipboardData?.items ?? [])
+        .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
+        ?.getAsFile();
+      if (!file) return;
+      event.preventDefault();
+      void handlePasteRef.current(file);
+    };
+    document.addEventListener('paste', handler);
+    return () => document.removeEventListener('paste', handler);
+  }, []);
+
+  const armEmptySlot = useCallback(() => {
+    armedSlotsRef.current += 1;
+  }, []);
+  const disarmEmptySlot = useCallback(() => {
+    armedSlotsRef.current = Math.max(0, armedSlotsRef.current - 1);
+  }, []);
+  const openLibrary = useCallback(() => {
+    armedSlotsRef.current = 0;
+    setLibraryOpen(true);
+  }, []);
 
   const optionImagesQuery = useImages('item_option', item.id);
   const optionImages = useMemo(
@@ -615,10 +682,10 @@ export function CatalogPage({
                 }).map((_, index) => (
                   <EmptyMaterialSlot
                     key={`empty-${index}`}
-                    disabled={
-                      materialActions.createAndAssign.isPending || uploadSwatchImage.isPending
-                    }
-                    onPaste={(file) => void handlePasteSwatchImage(file)}
+                    disabled={isSwatchMutating}
+                    onArm={armEmptySlot}
+                    onDisarm={disarmEmptySlot}
+                    onClick={openLibrary}
                   />
                 ))}
               </div>
@@ -682,6 +749,14 @@ export function CatalogPage({
           PAGE {pageNumber} of {pageCount}
         </span>
       </footer>
+      <MaterialLibraryModal
+        open={isLibraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        projectId={project.id}
+        context="ffe"
+        item={item}
+        roomId={room.id}
+      />
     </article>
   );
 }
@@ -871,83 +946,86 @@ function CatalogUploadSlot({
 
 function EmptyMaterialSlot({
   disabled,
-  onPaste,
+  onArm,
+  onDisarm,
+  onClick,
 }: {
   disabled: boolean;
-  onPaste: (file: File) => void;
+  onArm: () => void;
+  onDisarm: () => void;
+  onClick: () => void;
 }) {
-  // Refs to the latest props so a registered listener always reads current
-  // values, never the stale closure from the render when it was attached.
-  // This fixes the "previously-pasted images appear" bug — without it, the
-  // document-level listener captures `onPaste` once and never updates, so
-  // re-renders (caused by every successful paste mutating item.materials)
-  // leave behind handlers wired to the old callback.
-  const onPasteRef = useRef(onPaste);
-  const disabledRef = useRef(disabled);
-  useEffect(() => {
-    onPasteRef.current = onPaste;
-  }, [onPaste]);
-  useEffect(() => {
-    disabledRef.current = disabled;
-  }, [disabled]);
-
-  const pasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
   const [isHovering, setHovering] = useState(false);
+  const isArmedRef = useRef(false);
 
-  const removeListener = () => {
-    const handler = pasteHandlerRef.current;
-    if (!handler) return;
-    document.removeEventListener('paste', handler);
-    pasteHandlerRef.current = null;
+  const arm = () => {
+    if (disabled || isArmedRef.current) return;
+    isArmedRef.current = true;
+    onArm();
+  };
+  const disarm = () => {
+    if (!isArmedRef.current) return;
+    isArmedRef.current = false;
+    onDisarm();
   };
 
-  useEffect(() => () => removeListener(), []);
+  useEffect(
+    () => () => {
+      // On unmount, make sure we release the page-level counter.
+      if (isArmedRef.current) {
+        isArmedRef.current = false;
+        onDisarm();
+      }
+    },
+    [onDisarm],
+  );
 
-  const enablePaste = () => {
-    setHovering(true);
-    if (disabledRef.current || pasteHandlerRef.current) return;
-    const handler = (event: ClipboardEvent) => {
-      const file = Array.from(event.clipboardData?.items ?? [])
-        .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
-        ?.getAsFile();
-      if (!file) return;
-      event.preventDefault();
-      // Single-shot: detach immediately so this handler can never run again
-      // with stale state. The user re-hovers to arm another paste.
-      removeListener();
-      if (disabledRef.current) return;
-      onPasteRef.current(file);
-    };
-    pasteHandlerRef.current = handler;
-    document.addEventListener('paste', handler);
-  };
-
-  const disablePaste = () => {
-    setHovering(false);
-    removeListener();
-  };
+  // If the slot becomes disabled while armed, drop the arm to prevent paste
+  // racing the in-flight mutation.
+  useEffect(() => {
+    if (disabled && isArmedRef.current) {
+      isArmedRef.current = false;
+      onDisarm();
+    }
+  }, [disabled, onDisarm]);
 
   return (
-    <div
+    <button
+      type="button"
+      disabled={disabled}
       className={cn(
         'no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste',
         isHovering && !disabled && 'catalog-material-slot-paste--hover',
-        disabled && 'opacity-60',
+        disabled && 'opacity-60 cursor-not-allowed',
       )}
-      tabIndex={0}
-      role="button"
-      aria-label="Paste an image (Ctrl+V) to add a finish swatch"
+      aria-label="Add finish swatch — click to open library or paste an image"
       title={
         disabled
           ? 'Adding swatch…'
           : isHovering
-            ? 'Press Ctrl+V to paste an image'
-            : 'Hover and press Ctrl+V to paste an image'
+            ? 'Click to open library, or press Ctrl+V to paste an image'
+            : 'Click to open library, or hover and press Ctrl+V to paste'
       }
-      onMouseEnter={enablePaste}
-      onMouseLeave={disablePaste}
-      onFocus={enablePaste}
-      onBlur={disablePaste}
+      onClick={() => {
+        disarm();
+        onClick();
+      }}
+      onMouseEnter={() => {
+        setHovering(true);
+        arm();
+      }}
+      onMouseLeave={() => {
+        setHovering(false);
+        disarm();
+      }}
+      onFocus={() => {
+        setHovering(true);
+        arm();
+      }}
+      onBlur={() => {
+        setHovering(false);
+        disarm();
+      }}
     >
       <span className="catalog-material-id">ID</span>
       <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
@@ -955,7 +1033,7 @@ function EmptyMaterialSlot({
       <span className="catalog-material-color">
         {isHovering && !disabled ? 'PASTE (CTRL+V)' : 'COLOR'}
       </span>
-    </div>
+    </button>
   );
 }
 
