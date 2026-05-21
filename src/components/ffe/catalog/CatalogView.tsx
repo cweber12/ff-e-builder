@@ -53,6 +53,8 @@ type WatermarkConfig = {
   includeName: boolean;
 };
 
+type CatalogImageAlignment = 'center' | 'top';
+
 const DEFAULT_WATERMARK: WatermarkConfig = {
   enabled: false,
   placementH: 'left',
@@ -69,6 +71,11 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
     `ffe-catalog-cost-visibility:${project.id}`,
   );
   const showCostInfo = costVisibility !== 'hidden';
+  const [mainImageAlignment, setMainImageAlignment] =
+    useCatalogSessionPreference<CatalogImageAlignment>(
+      `ffe-catalog-image-alignment:${project.id}`,
+      'center',
+    );
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
@@ -164,6 +171,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         companyName={companyName}
         showCostInfo={showCostInfo}
         onToggleCostInfo={() => setCostVisibility(showCostInfo ? 'hidden' : '')}
+        mainImageAlignment={mainImageAlignment}
+        onToggleMainImageAlignment={() =>
+          setMainImageAlignment(mainImageAlignment === 'center' ? 'top' : 'center')
+        }
         onWatermarkChange={updateWatermark}
       />
 
@@ -182,6 +193,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             showCostInfo={showCostInfo}
+            mainImageAlignment={mainImageAlignment}
           />
         </div>
       </div>
@@ -199,6 +211,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             companyName={companyName}
             watermarkInteractive={false}
             showCostInfo={showCostInfo}
+            mainImageAlignment={mainImageAlignment}
           />
         ))}
       </div>
@@ -219,6 +232,8 @@ function CatalogNav({
   companyName,
   showCostInfo,
   onToggleCostInfo,
+  mainImageAlignment,
+  onToggleMainImageAlignment,
   onWatermarkChange,
 }: {
   project: Project;
@@ -233,6 +248,8 @@ function CatalogNav({
   companyName: string | null;
   showCostInfo: boolean;
   onToggleCostInfo: () => void;
+  mainImageAlignment: CatalogImageAlignment;
+  onToggleMainImageAlignment: () => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   let itemIndex = 0;
@@ -299,6 +316,8 @@ function CatalogNav({
             companyName={companyName}
             showCostInfo={showCostInfo}
             onToggleCostInfo={onToggleCostInfo}
+            mainImageAlignment={mainImageAlignment}
+            onToggleMainImageAlignment={onToggleMainImageAlignment}
             onWatermarkChange={onWatermarkChange}
           />
         </div>
@@ -328,6 +347,8 @@ function CatalogActionsMenu({
   companyName,
   showCostInfo,
   onToggleCostInfo,
+  mainImageAlignment,
+  onToggleMainImageAlignment,
   onWatermarkChange: _onWatermarkChange,
 }: {
   project: Project;
@@ -338,6 +359,8 @@ function CatalogActionsMenu({
   companyName: string | null;
   showCostInfo: boolean;
   onToggleCostInfo: () => void;
+  mainImageAlignment: CatalogImageAlignment;
+  onToggleMainImageAlignment: () => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   const { sortMode } = useFfeItemSort(project.id);
@@ -405,10 +428,21 @@ function CatalogActionsMenu({
             type="button"
             role="menuitem"
             className={catalogMenuItemClassName}
+            onClick={() => runAction(onToggleMainImageAlignment)}
+          >
+            {mainImageAlignment === 'center'
+              ? 'Align main image to top'
+              : 'Align main image to center'}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={catalogMenuItemClassName}
             onClick={() =>
               runAction(
                 () =>
                   void exportCatalogPdf(project, rooms, {
+                    mainImageAlignment,
                     showCostInfo,
                     sortMode,
                     watermark: watermarkOpts,
@@ -426,6 +460,7 @@ function CatalogActionsMenu({
               runAction(
                 () =>
                   void exportCatalogPdf(project, rooms, {
+                    mainImageAlignment,
                     showCostInfo,
                     showSwatchLabels: false,
                     sortMode,
@@ -446,6 +481,7 @@ function CatalogActionsMenu({
                   runAction(
                     () =>
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
+                        mainImageAlignment,
                         showCostInfo,
                         sortMode,
                         watermark: watermarkOpts,
@@ -463,6 +499,7 @@ function CatalogActionsMenu({
                   runAction(
                     () =>
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
+                        mainImageAlignment,
                         showCostInfo,
                         showSwatchLabels: false,
                         sortMode,
@@ -505,6 +542,7 @@ export function CatalogPage({
   companyName,
   watermarkInteractive = true,
   showCostInfo = true,
+  mainImageAlignment = 'center',
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -516,6 +554,7 @@ export function CatalogPage({
   companyName?: string | null;
   watermarkInteractive?: boolean;
   showCostInfo?: boolean;
+  mainImageAlignment?: CatalogImageAlignment;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -714,14 +753,20 @@ export function CatalogPage({
         <section className="catalog-main">
           <div className="catalog-main-left">
             <div className="catalog-image-block">
-              <div className="catalog-rendering-square">
+              <div
+                className="catalog-rendering-square"
+                data-main-image-alignment={mainImageAlignment}
+              >
                 <ImageFrame
                   entityType="item"
                   entityId={item.id}
                   alt={item.itemName}
                   fallbackUrl={null}
                   className="border-0 shadow-none h-full w-full rounded-none"
-                  imageClassName="catalog-image"
+                  imageClassName={cn(
+                    'catalog-image',
+                    mainImageAlignment === 'top' && 'catalog-image-top',
+                  )}
                   placeholderClassName="catalog-placeholder"
                   placeholderContent={<span>{initials(item.itemName)}</span>}
                 />
@@ -1009,6 +1054,34 @@ function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
       /* storage unavailable — silently ignore */
     }
   }, [key, value]);
+  return [value, setValue];
+}
+
+function useCatalogSessionPreference<T extends string>(
+  key: string,
+  defaultValue: T,
+): [T, (value: T) => void] {
+  const [value, setValue] = useState<T>(defaultValue);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(key, defaultValue);
+    } catch {
+      /* storage unavailable — silently ignore */
+    }
+    setValue(defaultValue);
+  }, [defaultValue, key]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch {
+      /* storage unavailable — silently ignore */
+    }
+  }, [key, value]);
+
   return [value, setValue];
 }
 

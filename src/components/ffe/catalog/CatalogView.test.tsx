@@ -53,4 +53,28 @@ describe('CatalogPage', () => {
     expect(screen.queryByText('PRICE PER ITEM')).not.toBeInTheDocument();
     expect(screen.queryByText('TOTAL')).not.toBeInTheDocument();
   });
+
+  it('marks the main rendering alignment so export prep can switch between center and top', () => {
+    const room = catalogRoomsFixture[0]!;
+    const item = room.items[0]!;
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CatalogPage
+            project={catalogProjectFixture}
+            entry={{ room, item }}
+            pageNumber={1}
+            pageCount={3}
+            mainImageAlignment="top"
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(container.querySelector('[data-main-image-alignment="top"]')).toBeTruthy();
+  });
 });

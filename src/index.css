@@ -1017,7 +1017,12 @@
     width: auto;
     height: auto;
     object-fit: contain;
+    object-position: center;
     border-radius: 0px;
+  }
+
+  .catalog-image-top {
+    object-position: top center;
   }
 
   .catalog-placeholder {

@@ -62,6 +62,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         >
           <div
             class="catalog-rendering-square"
+            data-main-image-alignment="center"
           >
             <div
               class="grid gap-1"

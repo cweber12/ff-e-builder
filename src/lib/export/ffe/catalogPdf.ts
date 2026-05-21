@@ -74,6 +74,8 @@ type CatalogItemAssets = {
   materialImages: Map<string, string | null>;
 };
 
+export type CatalogPdfImageAlignment = 'center' | 'top';
+
 export type CatalogPdfPageModel = {
   itemIdTag: string | null;
   dimensions: string | null;
@@ -102,6 +104,8 @@ export type CatalogPdfOptions = {
   showSwatchLabels?: boolean;
   /** When false, the rendering section shows only a compact quantity callout under the image. */
   showCostInfo?: boolean;
+  /** Vertical alignment for the main rendering image inside its square frame. */
+  mainImageAlignment?: CatalogPdfImageAlignment;
   /**
    * Item ordering within each room.
    * - 'manual' (default): respects each item's `sortOrder`.
@@ -147,6 +151,12 @@ export function pickCatalogPdfOptionLayout(
   void materials;
   void availableHeight;
   return optionCount > 1 ? 'row' : 'stacked';
+}
+
+export function resolveCatalogPdfImageAlignment(
+  alignment: CatalogPdfImageAlignment | null | undefined,
+): CatalogPdfImageAlignment {
+  return alignment === 'top' ? 'top' : 'center';
 }
 
 // ── Asset loading ─────────────────────────────────────────────────────────────
@@ -251,6 +261,7 @@ function addContainedImage(
   width: number,
   height: number,
   padding = 0,
+  verticalAlign: CatalogPdfImageAlignment = 'center',
 ) {
   const props = doc.getImageProperties(dataUrl);
   const innerW = Math.max(1, width - padding * 2);
@@ -259,7 +270,7 @@ function addContainedImage(
   const drawW = props.width * scale;
   const drawH = props.height * scale;
   const drawX = x + padding + (innerW - drawW) / 2;
-  const drawY = y + padding + (innerH - drawH) / 2;
+  const drawY = verticalAlign === 'top' ? y + padding : y + padding + (innerH - drawH) / 2;
   doc.addImage(dataUrl, 'PNG', drawX, drawY, drawW, drawH);
 }
 
@@ -424,11 +435,12 @@ function drawRendering(
   item: Item,
   x: number,
   y: number,
+  imageAlignment: CatalogPdfImageAlignment,
 ) {
   if (rendering) {
     setFill(doc, WHITE);
     doc.rect(x, y, RENDER_SIZE, RENDER_SIZE, 'F');
-    addContainedImage(doc, rendering, x, y, RENDER_SIZE, RENDER_SIZE, 0);
+    addContainedImage(doc, rendering, x, y, RENDER_SIZE, RENDER_SIZE, 0, imageAlignment);
   } else {
     drawImagePlaceholder(doc, font, initials(item.itemName), x, y, RENDER_SIZE, RENDER_SIZE);
   }
@@ -896,7 +908,15 @@ function drawCatalogPage(
   // ── Main two-column section ─────────────────────────────────────────────────
   const mainY = BODY_START_Y;
   // Left column: rendering + qty band
-  drawRendering(doc, font, assets.rendering, entry.item, PAGE_PADDING_X, mainY);
+  drawRendering(
+    doc,
+    font,
+    assets.rendering,
+    entry.item,
+    PAGE_PADDING_X,
+    mainY,
+    options.mainImageAlignment,
+  );
   const qtyY = mainY + RENDER_SIZE + 3;
   drawQtyBand(doc, font, entry.item, PAGE_PADDING_X, qtyY, LEFT_COL_W, options.showCostInfo);
 
@@ -944,6 +964,7 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
   return {
     showSwatchLabels: options?.showSwatchLabels ?? true,
     showCostInfo: options?.showCostInfo ?? true,
+    mainImageAlignment: resolveCatalogPdfImageAlignment(options?.mainImageAlignment),
     sortMode: options?.sortMode ?? 'manual',
     watermark: options?.watermark ?? null,
   };

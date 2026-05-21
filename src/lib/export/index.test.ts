@@ -6,7 +6,11 @@ import {
   exportProposalCsv,
   exportMaterialsExcel,
 } from './index';
-import { buildCatalogPdfPageModel, pickCatalogPdfOptionLayout } from './ffe/catalogPdf';
+import {
+  buildCatalogPdfPageModel,
+  pickCatalogPdfOptionLayout,
+  resolveCatalogPdfImageAlignment,
+} from './ffe/catalogPdf';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,
@@ -412,5 +416,11 @@ describe('catalog PDF page model', () => {
 
   it('renders two option images in a horizontal two-up row', () => {
     expect(pickCatalogPdfOptionLayout(2, [makeMaterial()], 60)).toBe('row');
+  });
+
+  it('defaults catalog PDF image alignment to center and preserves top when requested', () => {
+    expect(resolveCatalogPdfImageAlignment(undefined)).toBe('center');
+    expect(resolveCatalogPdfImageAlignment(null)).toBe('center');
+    expect(resolveCatalogPdfImageAlignment('top')).toBe('top');
   });
 });
