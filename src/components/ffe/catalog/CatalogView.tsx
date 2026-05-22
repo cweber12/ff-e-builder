@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { type Item, type Project } from '../../../types';
+import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
   useCompany,
@@ -53,6 +53,10 @@ type WatermarkConfig = {
   includeName: boolean;
 };
 
+type CatalogImageAlignment = 'center' | 'top';
+type CatalogCostDisplay = 'qtyOnly' | 'cost';
+type CatalogToggleValue = 'shown' | 'hidden';
+
 const DEFAULT_WATERMARK: WatermarkConfig = {
   enabled: false,
   placementH: 'left',
@@ -65,6 +69,24 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sortMode } = useFfeItemSort(project.id);
+  const [mainImageAlignment, setMainImageAlignment] =
+    useCatalogSessionPreference<CatalogImageAlignment>(
+      `ffe-catalog-main-image-alignment:${project.id}`,
+      'center',
+    );
+  const [costDisplay, setCostDisplay] = useCatalogSessionPreference<CatalogCostDisplay>(
+    `ffe-catalog-cost-display:${project.id}`,
+    'qtyOnly',
+  );
+  const [swatchLabelDisplay, setSwatchLabelDisplay] =
+    useCatalogSessionPreference<CatalogToggleValue>(
+      `ffe-catalog-swatch-labels:${project.id}`,
+      'shown',
+    );
+  const [approvalDisplay, setApprovalDisplay] = useCatalogSessionPreference<CatalogToggleValue>(
+    `ffe-catalog-approval:${project.id}`,
+    'shown',
+  );
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
@@ -158,6 +180,18 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         watermarkConfig={watermarkConfig}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
+        mainImageAlignment={mainImageAlignment}
+        onMainImageAlignmentChange={setMainImageAlignment}
+        showCostInfo={costDisplay === 'cost'}
+        onShowCostInfoChange={(showCostInfo) => setCostDisplay(showCostInfo ? 'cost' : 'qtyOnly')}
+        showSwatchLabels={swatchLabelDisplay === 'shown'}
+        onShowSwatchLabelsChange={(showSwatchLabels) =>
+          setSwatchLabelDisplay(showSwatchLabels ? 'shown' : 'hidden')
+        }
+        showApproval={approvalDisplay === 'shown'}
+        onShowApprovalChange={(showApproval) =>
+          setApprovalDisplay(showApproval ? 'shown' : 'hidden')
+        }
         onWatermarkChange={updateWatermark}
       />
 
@@ -175,6 +209,13 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
+            mainImageAlignment={mainImageAlignment}
+            showCostInfo={costDisplay === 'cost'}
+            showSwatchLabels={swatchLabelDisplay === 'shown'}
+            showApproval={approvalDisplay === 'shown'}
+            onShowApprovalChange={(showApproval) =>
+              setApprovalDisplay(showApproval ? 'shown' : 'hidden')
+            }
           />
         </div>
       </div>
@@ -191,6 +232,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             watermarkInteractive={false}
+            mainImageAlignment={mainImageAlignment}
+            showCostInfo={costDisplay === 'cost'}
+            showSwatchLabels={swatchLabelDisplay === 'shown'}
+            showApproval={approvalDisplay === 'shown'}
           />
         ))}
       </div>
@@ -209,6 +254,14 @@ function CatalogNav({
   watermarkConfig,
   logoDataUrl,
   companyName,
+  mainImageAlignment,
+  onMainImageAlignmentChange,
+  showCostInfo,
+  onShowCostInfoChange,
+  showSwatchLabels,
+  onShowSwatchLabelsChange,
+  showApproval,
+  onShowApprovalChange,
   onWatermarkChange,
 }: {
   project: Project;
@@ -221,6 +274,14 @@ function CatalogNav({
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
+  mainImageAlignment: CatalogImageAlignment;
+  onMainImageAlignmentChange: (alignment: CatalogImageAlignment) => void;
+  showCostInfo: boolean;
+  onShowCostInfoChange: (showCostInfo: boolean) => void;
+  showSwatchLabels: boolean;
+  onShowSwatchLabelsChange: (showSwatchLabels: boolean) => void;
+  showApproval: boolean;
+  onShowApprovalChange: (showApproval: boolean) => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   let itemIndex = 0;
@@ -285,6 +346,14 @@ function CatalogNav({
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
+            mainImageAlignment={mainImageAlignment}
+            onMainImageAlignmentChange={onMainImageAlignmentChange}
+            showCostInfo={showCostInfo}
+            onShowCostInfoChange={onShowCostInfoChange}
+            showSwatchLabels={showSwatchLabels}
+            onShowSwatchLabelsChange={onShowSwatchLabelsChange}
+            showApproval={showApproval}
+            onShowApprovalChange={onShowApprovalChange}
             onWatermarkChange={onWatermarkChange}
           />
         </div>
@@ -312,7 +381,15 @@ function CatalogActionsMenu({
   watermarkConfig,
   logoDataUrl,
   companyName,
-  onWatermarkChange: _onWatermarkChange,
+  mainImageAlignment,
+  onMainImageAlignmentChange,
+  showCostInfo,
+  onShowCostInfoChange,
+  showSwatchLabels,
+  onShowSwatchLabelsChange,
+  showApproval,
+  onShowApprovalChange,
+  onWatermarkChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
@@ -320,25 +397,33 @@ function CatalogActionsMenu({
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
+  mainImageAlignment: CatalogImageAlignment;
+  onMainImageAlignmentChange: (alignment: CatalogImageAlignment) => void;
+  showCostInfo: boolean;
+  onShowCostInfoChange: (showCostInfo: boolean) => void;
+  showSwatchLabels: boolean;
+  onShowSwatchLabelsChange: (showSwatchLabels: boolean) => void;
+  showApproval: boolean;
+  onShowApprovalChange: (showApproval: boolean) => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   const { sortMode } = useFfeItemSort(project.id);
-  const [open, setOpen] = useState(false);
+  const [surface, setSurface] = useState<'closed' | 'menu' | 'layout'>('closed');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (surface === 'closed') return;
     const handler = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
+        setSurface('closed');
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  }, [surface]);
 
   const runAction = (action: () => void) => {
-    setOpen(false);
+    setSurface('closed');
     action();
   };
 
@@ -352,25 +437,45 @@ function CatalogActionsMenu({
           opacity: watermarkConfig.opacity,
         }
       : null;
+  const exportOptions = {
+    mainImageAlignment,
+    showCostInfo,
+    showSwatchLabels,
+    showApproval,
+    sortMode,
+    watermark: watermarkOpts,
+  };
 
   return (
     <div ref={ref} className="relative inline-flex">
       <button
         type="button"
         aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Open catalog options"
-        onClick={() => setOpen((current) => !current)}
+        aria-expanded={surface !== 'closed'}
+        aria-label="Open catalog options menu"
+        onClick={() => setSurface((current) => (current === 'menu' ? 'closed' : 'menu'))}
         className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-canvas-chrome text-neutral-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         <MoreIcon />
       </button>
-      {open && (
-        <div role="menu" className="absolute right-0 top-full z-30 mt-1 min-w-48 menu-panel">
+      {surface === 'menu' && (
+        <div
+          role="menu"
+          aria-label="Catalog options"
+          className="catalog-actions-dropdown menu-panel"
+        >
           <button
             type="button"
             role="menuitem"
-            className={catalogMenuItemClassName}
+            className="menu-item catalog-actions-dropdown-item"
+            onClick={() => setSurface('layout')}
+          >
+            Layout
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="menu-item catalog-actions-dropdown-item"
             onClick={() => runAction(() => window.print())}
           >
             Print
@@ -378,77 +483,209 @@ function CatalogActionsMenu({
           <button
             type="button"
             role="menuitem"
-            className={catalogMenuItemClassName}
-            onClick={() =>
-              runAction(
-                () => void exportCatalogPdf(project, rooms, { sortMode, watermark: watermarkOpts }),
-              )
-            }
+            className="menu-item catalog-actions-dropdown-item"
+            onClick={() => runAction(() => void exportCatalogPdf(project, rooms, exportOptions))}
           >
             Export PDF
           </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={catalogMenuItemClassName}
-            onClick={() =>
-              runAction(
-                () =>
-                  void exportCatalogPdf(project, rooms, {
-                    showSwatchLabels: false,
-                    sortMode,
-                    watermark: watermarkOpts,
-                  }),
-              )
-            }
-          >
-            Export PDF — swatches only
-          </button>
-          {currentItemId && (
-            <>
+          {currentItemId ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="menu-item catalog-actions-dropdown-item"
+              onClick={() =>
+                runAction(
+                  () => void exportCatalogItemPdf(project, rooms, currentItemId, exportOptions),
+                )
+              }
+            >
+              Export current item
+            </button>
+          ) : null}
+        </div>
+      )}
+      {surface === 'layout' && (
+        <div role="dialog" aria-label="Catalog layout options" className="catalog-layout-popover">
+          <div className="catalog-layout-popover-header">
+            <div>
+              <p className="catalog-layout-eyebrow">Layout</p>
+              <h2 className="catalog-layout-title">Catalog options</h2>
+            </div>
+            <button
+              type="button"
+              className="catalog-layout-close"
+              aria-label="Close layout options"
+              onClick={() => setSurface('closed')}
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="catalog-layout-section">
+            <div className="catalog-layout-grid">
+              <LayoutOptionCard label="Main image align">
+                <SegmentedToggle
+                  ariaLabel="Main image alignment"
+                  value={mainImageAlignment}
+                  options={[
+                    { value: 'center', label: 'Center' },
+                    { value: 'top', label: 'Top' },
+                  ]}
+                  onChange={onMainImageAlignmentChange}
+                />
+              </LayoutOptionCard>
+              <LayoutOptionCard label="Cost display">
+                <SegmentedToggle
+                  ariaLabel="Cost display"
+                  value={showCostInfo ? 'cost' : 'qtyOnly'}
+                  options={[
+                    { value: 'qtyOnly', label: 'Qty only' },
+                    { value: 'cost', label: 'Qty + cost' },
+                  ]}
+                  onChange={(value) => onShowCostInfoChange(value === 'cost')}
+                />
+              </LayoutOptionCard>
+              <LayoutOptionCard label="Swatches">
+                <SegmentedToggle
+                  ariaLabel="Swatch display"
+                  value={showSwatchLabels ? 'labels' : 'swatches'}
+                  options={[
+                    { value: 'labels', label: 'Labels' },
+                    { value: 'swatches', label: 'Swatches only' },
+                  ]}
+                  onChange={(value) => onShowSwatchLabelsChange(value === 'labels')}
+                />
+              </LayoutOptionCard>
+              <LayoutOptionCard label="Client approval">
+                <SegmentedToggle
+                  ariaLabel="Client approval section"
+                  value={showApproval ? 'shown' : 'hidden'}
+                  options={[
+                    { value: 'shown', label: 'Show' },
+                    { value: 'hidden', label: 'Remove' },
+                  ]}
+                  onChange={(value) => onShowApprovalChange(value === 'shown')}
+                />
+              </LayoutOptionCard>
+            </div>
+          </div>
+
+          <div className="catalog-layout-section catalog-watermark-section">
+            <div className="catalog-layout-row">
+              <div>
+                <p className="catalog-layout-label">Watermark</p>
+                <p className="catalog-layout-note">
+                  {logoDataUrl
+                    ? 'Use company mark on export pages.'
+                    : 'Add a company logo to enable.'}
+                </p>
+              </div>
               <button
                 type="button"
-                role="menuitem"
-                className={catalogMenuItemClassName}
-                onClick={() =>
-                  runAction(
-                    () =>
-                      void exportCatalogItemPdf(project, rooms, currentItemId, {
-                        sortMode,
-                        watermark: watermarkOpts,
-                      }),
-                  )
-                }
+                className={cn('catalog-switch', watermarkConfig.enabled && 'catalog-switch-active')}
+                disabled={!logoDataUrl}
+                aria-pressed={watermarkConfig.enabled}
+                onClick={() => onWatermarkChange({ enabled: !watermarkConfig.enabled })}
               >
-                Export this item
+                <span className="catalog-switch-knob" />
               </button>
-              <button
-                type="button"
-                role="menuitem"
-                className={catalogMenuItemClassName}
-                onClick={() =>
-                  runAction(
-                    () =>
-                      void exportCatalogItemPdf(project, rooms, currentItemId, {
-                        showSwatchLabels: false,
-                        sortMode,
-                        watermark: watermarkOpts,
-                      }),
-                  )
-                }
-              >
-                Export this item — swatches only
-              </button>
-            </>
-          )}
+            </div>
+            <LayoutOptionRow label="Placement">
+              <SegmentedToggle
+                ariaLabel="Watermark placement"
+                value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
+                options={[
+                  { value: 'footer-left', label: 'Left' },
+                  { value: 'footer-center', label: 'Center' },
+                  { value: 'footer-right', label: 'Right' },
+                  { value: 'header-left', label: 'Header' },
+                ]}
+                onChange={(value) => {
+                  const [placementV, placementH] = value.split('-') as [
+                    WatermarkConfig['placementV'],
+                    WatermarkConfig['placementH'],
+                  ];
+                  onWatermarkChange({ placementV, placementH, enabled: true });
+                }}
+              />
+            </LayoutOptionRow>
+            <div className="catalog-opacity-row">
+              <div className="catalog-opacity-header">
+                <p className="catalog-layout-label">Opacity</p>
+                <span className="catalog-opacity-value">{watermarkConfig.opacity}%</span>
+              </div>
+              <input
+                type="range"
+                min={5}
+                max={100}
+                step={5}
+                value={watermarkConfig.opacity}
+                disabled={!logoDataUrl || !watermarkConfig.enabled}
+                onChange={(event) => onWatermarkChange({ opacity: Number(event.target.value) })}
+                className="catalog-opacity-slider"
+              />
+            </div>
+            <button
+              type="button"
+              className="catalog-layout-delete"
+              disabled={!watermarkConfig.enabled}
+              onClick={() => onWatermarkChange({ enabled: false })}
+            >
+              Remove watermark
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-const catalogMenuItemClassName =
-  'flex w-full items-center rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+function LayoutOptionCard({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="catalog-layout-card">
+      <p className="catalog-layout-label">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function LayoutOptionRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="catalog-layout-row">
+      <p className="catalog-layout-label">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function SegmentedToggle<T extends string>({
+  ariaLabel,
+  value,
+  options,
+  onChange,
+}: {
+  ariaLabel: string;
+  value: T;
+  options: Array<{ value: T; label: string }>;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="radiogroup" aria-label={ariaLabel} className="catalog-segmented-toggle">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          className={cn('catalog-segmented-option', value === option.value && 'is-active')}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function MoreIcon() {
   return (
@@ -470,6 +707,11 @@ export function CatalogPage({
   logoDataUrl,
   companyName,
   watermarkInteractive = true,
+  mainImageAlignment = 'center',
+  showCostInfo = false,
+  showSwatchLabels = true,
+  showApproval = true,
+  onShowApprovalChange,
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -480,6 +722,11 @@ export function CatalogPage({
   logoDataUrl?: string | null;
   companyName?: string | null;
   watermarkInteractive?: boolean;
+  mainImageAlignment?: CatalogImageAlignment;
+  showCostInfo?: boolean;
+  showSwatchLabels?: boolean;
+  showApproval?: boolean;
+  onShowApprovalChange?: (showApproval: boolean) => void;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -605,10 +852,6 @@ export function CatalogPage({
   // For now these are stored in localStorage keyed by item id so authors can preview the layout.
   const [vendor, setVendor] = useCatalogPlaceholder(`ffe-catalog-vendor:${item.id}`);
   const [vendorUrl, setVendorUrl] = useCatalogPlaceholder(`ffe-catalog-vendor-url:${item.id}`);
-  const [approvalHidden, setApprovalHidden] = useCatalogPlaceholder(
-    `ffe-catalog-approval-hidden:${item.id}`,
-  );
-
   const hasFooterMark =
     !!watermarkConfig?.enabled && watermarkConfig.placementV === 'footer' && !!logoDataUrl;
   const hasHeaderMark =
@@ -623,6 +866,8 @@ export function CatalogPage({
         interactive={watermarkInteractive}
       />
     ) : null;
+  const isTopAligned = mainImageAlignment === 'top';
+  const lineTotalCents = item.unitCostCents * item.qty;
 
   return (
     <article
@@ -676,28 +921,60 @@ export function CatalogPage({
 
       <div className="catalog-content-block">
         <section className="catalog-main">
-          <div className="catalog-main-left">
+          <div
+            className={cn(
+              'catalog-main-left',
+              isTopAligned ? 'catalog-main-left-top' : 'catalog-main-left-center',
+            )}
+          >
             <div className="catalog-image-block">
-              <div className="catalog-rendering-square">
+              <div className={cn('catalog-qty-band', !showCostInfo && 'catalog-qty-band-compact')}>
+                {showCostInfo ? (
+                  <>
+                    <div className="catalog-qty-label-row">
+                      <span className="catalog-qty-label">PRODUCT QTY</span>
+                      <span className="catalog-qty-label">PRICE PER ITEM</span>
+                      <span className="catalog-qty-label">TOTAL</span>
+                    </div>
+                    <div className="catalog-qty-value-row">
+                      <span className="catalog-qty-value">{item.qty}</span>
+                      <span className="catalog-qty-value">
+                        {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
+                      </span>
+                      <span className="catalog-qty-value">
+                        {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="catalog-qty-label-row catalog-qty-label-row-compact">
+                    <span className="catalog-qty-label catalog-qty-label-compact">
+                      Qty
+                      <span className="catalog-qty-inline-value">{item.qty}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div
+                className={cn(
+                  'catalog-rendering-square',
+                  isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
+                )}
+                data-main-image-alignment={mainImageAlignment}
+              >
                 <ImageFrame
                   entityType="item"
                   entityId={item.id}
                   alt={item.itemName}
                   fallbackUrl={null}
-                  className="border-0 shadow-none h-full w-full rounded-none"
-                  imageClassName="catalog-image"
+                  className="catalog-rendering-frame border-0 shadow-none rounded-none"
+                  imageClassName={cn(
+                    'catalog-image !h-auto !w-auto',
+                    isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
+                  )}
                   placeholderClassName="catalog-placeholder"
                   placeholderContent={<span>{initials(item.itemName)}</span>}
                 />
-              </div>
-
-              <div className="catalog-qty-band catalog-qty-band-compact">
-                <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                  <span className="catalog-qty-label catalog-qty-label-compact">
-                    Qty
-                    <span className="catalog-qty-inline-value">{item.qty}</span>
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -821,7 +1098,12 @@ export function CatalogPage({
             </div>
             <div className={cn('justify-self-end', item.materials.length === 0 && 'no-print')}>
               <h2 className="catalog-spec-heading catalog-sub-heading">FINISH SCHEDULE</h2>
-              <div className="catalog-materials-row">
+              <div
+                className={cn(
+                  'catalog-materials-row',
+                  !showSwatchLabels && 'catalog-materials-row-swatch-only',
+                )}
+              >
                 {item.materials.slice(0, 4).map((material) => (
                   <div key={material.id} className="catalog-material-cell">
                     <span className="catalog-material-id">{material.materialId || 'ID'}</span>
@@ -894,8 +1176,8 @@ export function CatalogPage({
       </div>
 
       <CatalogApprovalSection
-        shown={approvalHidden !== 'hidden'}
-        onToggle={() => setApprovalHidden(approvalHidden === 'hidden' ? '' : 'hidden')}
+        shown={showApproval}
+        onToggle={() => onShowApprovalChange?.(!showApproval)}
       />
 
       <footer className="catalog-footer">
@@ -954,6 +1236,34 @@ function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
       /* storage unavailable — silently ignore */
     }
   }, [key, value]);
+  return [value, setValue];
+}
+
+function useCatalogSessionPreference<T extends string>(
+  key: string,
+  defaultValue: T,
+): [T, (value: T) => void] {
+  const [value, setValue] = useState<T>(defaultValue);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(key, defaultValue);
+    } catch {
+      /* storage unavailable — silently ignore */
+    }
+    setValue(defaultValue);
+  }, [defaultValue, key]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch {
+      /* storage unavailable — silently ignore */
+    }
+  }, [key, value]);
+
   return [value, setValue];
 }
 
@@ -1563,7 +1873,7 @@ function WatermarkMark({
           <button
             type="button"
             role="menuitem"
-            className={catalogMenuItemClassName}
+            className="flex w-full items-center rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700"
             onClick={() => setUiMode('editing')}
           >
             Edit

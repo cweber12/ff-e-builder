@@ -109,6 +109,8 @@ export type CatalogPdfOptions = {
   showSwatchLabels?: boolean;
   /** When false, the rendering section shows only a compact quantity callout under the image. */
   showCostInfo?: boolean;
+  /** When false, the approval band is omitted from each catalog page. */
+  showApproval?: boolean;
   /** Vertical alignment for the main rendering image inside its square frame. */
   mainImageAlignment?: CatalogPdfImageAlignment;
   /**
@@ -483,13 +485,12 @@ function drawQtyBand(
   showCostInfo: boolean,
 ) {
   if (!showCostInfo) {
-    setFill(doc, GRAY_600);
-    setStroke(doc, GRAY_300);
-    doc.rect(x, y, width, QTY_BAND_H, 'FD');
     applyFont(doc, font, 'bold', 8.5);
-    setText(doc, WHITE);
-    doc.text('QUANTITY', x + width / 2 - 8, y + QTY_BAND_H / 2 + 1.2, { align: 'right' });
-    doc.text(String(item.qty), x + width / 2 + 8, y + QTY_BAND_H / 2 + 1.2, { align: 'left' });
+    setText(doc, GRAY_800);
+    doc.text('Qty', x, y + 6.2);
+    applyFont(doc, font, 'bold', 14);
+    setText(doc, GRAY_800);
+    doc.text(String(item.qty), x + doc.getTextWidth('Qty') + 3, y + 6.2);
     return;
   }
 
@@ -980,8 +981,10 @@ function drawCatalogPage(
   drawLocationBlock(doc, font, entry.roomName, assets.plan, RIGHT_COL_X, bottomY);
 
   // ── Approval band ───────────────────────────────────────────────────────────
-  const approvalY = FOOTER_Y - APPROVAL_H - 6;
-  drawApprovalBand(doc, font, entry.item.id, PAGE_PADDING_X, approvalY, CONTENT_W);
+  if (options.showApproval) {
+    const approvalY = FOOTER_Y - APPROVAL_H - 6;
+    drawApprovalBand(doc, font, entry.item.id, PAGE_PADDING_X, approvalY, CONTENT_W);
+  }
 
   // ── Footer ──────────────────────────────────────────────────────────────────
   drawFooter(doc, font, project, pageNum, total, options.watermark);
@@ -1003,6 +1006,7 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
   return {
     showSwatchLabels: options?.showSwatchLabels ?? true,
     showCostInfo: options?.showCostInfo ?? true,
+    showApproval: options?.showApproval ?? true,
     mainImageAlignment: resolveCatalogPdfImageAlignment(options?.mainImageAlignment),
     sortMode: options?.sortMode ?? 'manual',
     watermark: options?.watermark ?? null,
