@@ -949,14 +949,12 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     background: theme('colors.gray.600');
-    padding: 6px 14px;
   }
 
   .catalog-qty-label-row-compact {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     justify-items: start;
-    padding: 10px 0 0;
     background: transparent;
     text-align: left;
   }
