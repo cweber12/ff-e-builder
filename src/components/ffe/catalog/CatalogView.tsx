@@ -302,12 +302,7 @@ function CatalogNav({
   return (
     <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-black/10 bg-canvas-bg/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          {currentEntry?.room.name && <p className="eyebrow truncate">{currentEntry.room.name}</p>}
-          <p className="mt-0.5 truncate font-display text-base font-semibold tracking-tight text-neutral-950">
-            {currentEntry?.item.itemName ?? 'Catalog'}
-          </p>
-        </div>
+        <div className="min-w-0">{currentEntry?.room.name && <p>{currentEntry.room.name}</p>}</div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -982,9 +977,9 @@ export function CatalogPage({
                   </>
                 ) : (
                   <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                    <span className="catalog-qty-label catalog-qty-label-compact">
+                    <span className="catalog-qty-inline-value catalog-qty-label-compact">
                       QTY
-                      <span className="catalog-qty-inline-value">{item.qty}</span>
+                      <span>{item.qty}</span>
                     </span>
                   </div>
                 )}
@@ -1185,7 +1180,6 @@ export function CatalogPage({
                 <span className="catalog-location-key">LOCATION:</span>{' '}
                 <span className="catalog-location-value">{room.name}</span>
               </p>
-              <p className="catalog-location-sub">LOCATION AND SNIPPET ARE OPTIONAL</p>
               <div
                 className={cn(
                   'catalog-plan-frame',

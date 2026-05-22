@@ -963,6 +963,7 @@
     justify-items: start;
     background: transparent;
     text-align: left;
+    justify-self: flex-start;
   }
 
   .catalog-qty-value-row {
@@ -1127,7 +1128,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
-    margin-top: 10px;
+    margin-top: 12px;
   }
 
   .catalog-materials-row-swatch-only {
