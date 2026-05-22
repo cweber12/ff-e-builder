@@ -982,7 +982,7 @@ export function CatalogPage({
                   </>
                 ) : (
                   <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                    <span className="catalog-qty-inline-value catalog-qty-label-compact">
+                    <span className="catalog-qty-label catalog-qty-label-compact">
                       QTY
                       <span className="catalog-qty-inline-value">{item.qty}</span>
                     </span>

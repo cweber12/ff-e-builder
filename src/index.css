@@ -854,11 +854,13 @@
 
   /* ---------- Main two-column layout ---------- */
   .catalog-content-block {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 196px;
+    gap: 20px;
+    height: 100%;
     min-height: 0;
     margin-top: -12px;
+    overflow: hidden;
   }
 
   .catalog-main {
@@ -867,6 +869,7 @@
     gap: 32px;
     align-items: stretch;
     min-height: 0;
+    overflow: hidden;
   }
 
   .catalog-main-left {
@@ -899,12 +902,16 @@
     gap: 8px;
     width: fit-content;
     max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
     margin-inline: auto;
   }
 
   .catalog-rendering-square {
     position: relative;
     flex: 0 0 auto;
+    max-height: 100%;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -1017,6 +1024,8 @@
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 32px;
     align-items: stretch;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .catalog-option-ghost {
@@ -1222,6 +1231,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .catalog-location-content {
@@ -1269,8 +1280,9 @@
 
   .catalog-plan-frame-expanded {
     max-width: none;
-    height: 100%;
-    min-height: 220px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
   }
 
   /* ImageFrame renders a div.grid wrapper — give it height so h-full children fill the frame */
@@ -1526,12 +1538,16 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
+    height: 100%;
+    min-height: 0;
   }
 
   .catalog-option-slot {
     display: flex;
     flex-direction: column;
+    align-items: center;
     min-width: 0;
+    min-height: 0;
     gap: 6px;
   }
 
@@ -1552,8 +1568,11 @@
 
   .catalog-option-card {
     position: relative;
+    width: min(100%, 168px);
     aspect-ratio: 1;
+    flex: 1 1 auto;
     min-height: 0;
+    max-height: 168px;
     overflow: hidden;
     background: theme('colors.gray.100');
   }
