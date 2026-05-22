@@ -54,7 +54,7 @@ type WatermarkConfig = {
 };
 
 type CatalogImageAlignment = 'center' | 'top';
-type CatalogMainImageSize = 'thumbnail' | 'expanded';
+type CatalogPlanImageSize = 'thumbnail' | 'expanded';
 type CatalogCostDisplay = 'qtyOnly' | 'cost';
 type CatalogToggleValue = 'shown' | 'hidden';
 
@@ -75,8 +75,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       `ffe-catalog-main-image-alignment:${project.id}`,
       'center',
     );
-  const [mainImageSize, setMainImageSize] = useCatalogSessionPreference<CatalogMainImageSize>(
-    `ffe-catalog-main-image-size:${project.id}`,
+  const [planImageSize, setPlanImageSize] = useCatalogSessionPreference<CatalogPlanImageSize>(
+    `ffe-catalog-plan-image-size:${project.id}`,
     'thumbnail',
   );
   const [costDisplay, setCostDisplay] = useCatalogSessionPreference<CatalogCostDisplay>(
@@ -187,8 +187,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         companyName={companyName}
         mainImageAlignment={mainImageAlignment}
         onMainImageAlignmentChange={setMainImageAlignment}
-        mainImageSize={mainImageSize}
-        onMainImageSizeChange={setMainImageSize}
+        planImageSize={planImageSize}
+        onPlanImageSizeChange={setPlanImageSize}
         showCostInfo={costDisplay === 'cost'}
         onShowCostInfoChange={(showCostInfo) => setCostDisplay(showCostInfo ? 'cost' : 'qtyOnly')}
         showSwatchLabels={swatchLabelDisplay === 'shown'}
@@ -217,7 +217,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             mainImageAlignment={mainImageAlignment}
-            mainImageSize={mainImageSize}
+            planImageSize={planImageSize}
             showCostInfo={costDisplay === 'cost'}
             showSwatchLabels={swatchLabelDisplay === 'shown'}
             showApproval={approvalDisplay === 'shown'}
@@ -241,7 +241,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             companyName={companyName}
             watermarkInteractive={false}
             mainImageAlignment={mainImageAlignment}
-            mainImageSize={mainImageSize}
+            planImageSize={planImageSize}
             showCostInfo={costDisplay === 'cost'}
             showSwatchLabels={swatchLabelDisplay === 'shown'}
             showApproval={approvalDisplay === 'shown'}
@@ -265,8 +265,8 @@ function CatalogNav({
   companyName,
   mainImageAlignment,
   onMainImageAlignmentChange,
-  mainImageSize,
-  onMainImageSizeChange,
+  planImageSize,
+  onPlanImageSizeChange,
   showCostInfo,
   onShowCostInfoChange,
   showSwatchLabels,
@@ -287,8 +287,8 @@ function CatalogNav({
   companyName: string | null;
   mainImageAlignment: CatalogImageAlignment;
   onMainImageAlignmentChange: (alignment: CatalogImageAlignment) => void;
-  mainImageSize: CatalogMainImageSize;
-  onMainImageSizeChange: (size: CatalogMainImageSize) => void;
+  planImageSize: CatalogPlanImageSize;
+  onPlanImageSizeChange: (size: CatalogPlanImageSize) => void;
   showCostInfo: boolean;
   onShowCostInfoChange: (showCostInfo: boolean) => void;
   showSwatchLabels: boolean;
@@ -361,8 +361,8 @@ function CatalogNav({
             companyName={companyName}
             mainImageAlignment={mainImageAlignment}
             onMainImageAlignmentChange={onMainImageAlignmentChange}
-            mainImageSize={mainImageSize}
-            onMainImageSizeChange={onMainImageSizeChange}
+            planImageSize={planImageSize}
+            onPlanImageSizeChange={onPlanImageSizeChange}
             showCostInfo={showCostInfo}
             onShowCostInfoChange={onShowCostInfoChange}
             showSwatchLabels={showSwatchLabels}
@@ -398,8 +398,8 @@ function CatalogActionsMenu({
   companyName,
   mainImageAlignment,
   onMainImageAlignmentChange,
-  mainImageSize,
-  onMainImageSizeChange,
+  planImageSize,
+  onPlanImageSizeChange,
   showCostInfo,
   onShowCostInfoChange,
   showSwatchLabels,
@@ -416,8 +416,8 @@ function CatalogActionsMenu({
   companyName: string | null;
   mainImageAlignment: CatalogImageAlignment;
   onMainImageAlignmentChange: (alignment: CatalogImageAlignment) => void;
-  mainImageSize: CatalogMainImageSize;
-  onMainImageSizeChange: (size: CatalogMainImageSize) => void;
+  planImageSize: CatalogPlanImageSize;
+  onPlanImageSizeChange: (size: CatalogPlanImageSize) => void;
   showCostInfo: boolean;
   onShowCostInfoChange: (showCostInfo: boolean) => void;
   showSwatchLabels: boolean;
@@ -458,7 +458,7 @@ function CatalogActionsMenu({
       : null;
   const exportOptions = {
     mainImageAlignment,
-    mainImageSize,
+    planImageSize,
     showCostInfo,
     showSwatchLabels,
     showApproval,
@@ -554,15 +554,15 @@ function CatalogActionsMenu({
                   onChange={onMainImageAlignmentChange}
                 />
               </LayoutOptionCard>
-              <LayoutOptionCard label="Image size">
+              <LayoutOptionCard label="Plan image size">
                 <SegmentedToggle
-                  ariaLabel="Main image size"
-                  value={mainImageSize}
+                  ariaLabel="Plan image size"
+                  value={planImageSize}
                   options={[
                     { value: 'thumbnail', label: 'Thumb' },
                     { value: 'expanded', label: 'Expanded' },
                   ]}
-                  onChange={onMainImageSizeChange}
+                  onChange={onPlanImageSizeChange}
                 />
               </LayoutOptionCard>
               <LayoutOptionCard label="Cost display">
@@ -739,7 +739,7 @@ export function CatalogPage({
   companyName,
   watermarkInteractive = true,
   mainImageAlignment = 'center',
-  mainImageSize = 'thumbnail',
+  planImageSize = 'thumbnail',
   showCostInfo = false,
   showSwatchLabels = true,
   showApproval = true,
@@ -755,7 +755,7 @@ export function CatalogPage({
   companyName?: string | null;
   watermarkInteractive?: boolean;
   mainImageAlignment?: CatalogImageAlignment;
-  mainImageSize?: CatalogMainImageSize;
+  planImageSize?: CatalogPlanImageSize;
   showCostInfo?: boolean;
   showSwatchLabels?: boolean;
   showApproval?: boolean;
@@ -900,7 +900,7 @@ export function CatalogPage({
       />
     ) : null;
   const isTopAligned = mainImageAlignment === 'top';
-  const isExpandedImage = mainImageSize === 'expanded';
+  const isExpandedPlanImage = planImageSize === 'expanded';
   const lineTotalCents = item.unitCostCents * item.qty;
 
   return (
@@ -961,46 +961,8 @@ export function CatalogPage({
               isTopAligned ? 'catalog-main-left-top' : 'catalog-main-left-center',
             )}
           >
-            <div
-              className={cn(
-                'catalog-image-block',
-                isExpandedImage && 'catalog-image-block-expanded',
-              )}
-            >
-              <div
-                className={cn(
-                  'catalog-rendering-square',
-                  isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
-                  isExpandedImage && 'catalog-rendering-square-expanded',
-                )}
-                data-main-image-alignment={mainImageAlignment}
-                data-main-image-size={mainImageSize}
-              >
-                <ImageFrame
-                  entityType="item"
-                  entityId={item.id}
-                  alt={item.itemName}
-                  fallbackUrl={null}
-                  className={cn(
-                    'catalog-rendering-frame border-0 shadow-none rounded-none',
-                    isExpandedImage && 'catalog-rendering-frame-expanded',
-                  )}
-                  imageClassName={cn(
-                    'catalog-image',
-                    isExpandedImage ? '!h-full !w-full' : '!h-auto !w-auto',
-                    isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
-                  )}
-                  placeholderClassName="catalog-placeholder"
-                  placeholderContent={<span>{initials(item.itemName)}</span>}
-                />
-              </div>
-              <div
-                className={cn(
-                  'catalog-qty-band',
-                  !showCostInfo && 'catalog-qty-band-compact',
-                  isExpandedImage && 'catalog-qty-band-expanded',
-                )}
-              >
+            <div className="catalog-image-block">
+              <div className={cn('catalog-qty-band', !showCostInfo && 'catalog-qty-band-compact')}>
                 {showCostInfo ? (
                   <>
                     <div className="catalog-qty-label-row">
@@ -1020,12 +982,33 @@ export function CatalogPage({
                   </>
                 ) : (
                   <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                    <span className="catalog-qty-label catalog-qty-label-compact">
+                    <span className="catalog-qty-inline-value catalog-qty-label-compact">
                       QTY
                       <span className="catalog-qty-inline-value">{item.qty}</span>
                     </span>
                   </div>
                 )}
+              </div>
+              <div
+                className={cn(
+                  'catalog-rendering-square',
+                  isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
+                )}
+                data-main-image-alignment={mainImageAlignment}
+              >
+                <ImageFrame
+                  entityType="item"
+                  entityId={item.id}
+                  alt={item.itemName}
+                  fallbackUrl={null}
+                  className="catalog-rendering-frame border-0 shadow-none rounded-none"
+                  imageClassName={cn(
+                    'catalog-image !h-auto !w-auto',
+                    isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
+                  )}
+                  placeholderClassName="catalog-placeholder"
+                  placeholderContent={<span>{initials(item.itemName)}</span>}
+                />
               </div>
             </div>
           </div>
@@ -1203,13 +1186,20 @@ export function CatalogPage({
                 <span className="catalog-location-value">{room.name}</span>
               </p>
               <p className="catalog-location-sub">LOCATION AND SNIPPET ARE OPTIONAL</p>
-              <div className="catalog-plan-frame">
+              <div
+                className={cn(
+                  'catalog-plan-frame',
+                  isExpandedPlanImage && 'catalog-plan-frame-expanded',
+                )}
+                data-plan-image-size={planImageSize}
+              >
                 <ImageFrame
                   entityType="item_plan"
                   entityId={item.id}
                   alt={`${item.itemName} plan`}
                   fallbackUrl={null}
                   className="border-0 shadow-none h-full w-full rounded-none"
+                  imageClassName="!h-full !w-full object-contain"
                   placeholderClassName="catalog-plan-placeholder"
                   placeholderContent={
                     <span className="catalog-plan-placeholder-text">

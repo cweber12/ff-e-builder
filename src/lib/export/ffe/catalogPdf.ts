@@ -75,7 +75,7 @@ type CatalogItemAssets = {
 };
 
 export type CatalogPdfImageAlignment = 'center' | 'top';
-export type CatalogPdfMainImageSize = 'thumbnail' | 'expanded';
+export type CatalogPdfPlanImageSize = 'thumbnail' | 'expanded';
 
 type ContainedImageBox = {
   drawW: number;
@@ -114,8 +114,8 @@ export type CatalogPdfOptions = {
   showApproval?: boolean;
   /** Vertical alignment for the main rendering image inside its square frame. */
   mainImageAlignment?: CatalogPdfImageAlignment;
-  /** Browser layout preference for the main rendering scale. */
-  mainImageSize?: CatalogPdfMainImageSize;
+  /** Browser layout preference for the location plan image scale. */
+  planImageSize?: CatalogPdfPlanImageSize;
   /**
    * Item ordering within each room.
    * - 'manual' (default): respects each item's `sortOrder`.
@@ -731,6 +731,7 @@ function drawLocationBlock(
   plan: string | null,
   x: number,
   y: number,
+  planImageSize: CatalogPdfPlanImageSize,
 ) {
   // "LOCATION: <room>"
   applyFont(doc, font, 'bold', 8);
@@ -743,15 +744,18 @@ function drawLocationBlock(
 
   // Plan frame
   const frameY = y + 7;
+  const frameW = planImageSize === 'expanded' ? RIGHT_COL_W : PLAN_FRAME_W;
+  const frameH =
+    planImageSize === 'expanded' ? Math.min(52, FOOTER_Y - frameY - APPROVAL_H - 12) : PLAN_FRAME_H;
   setFill(doc, GRAY_100);
-  doc.rect(x, frameY, PLAN_FRAME_W, PLAN_FRAME_H, 'F');
+  doc.rect(x, frameY, frameW, frameH, 'F');
   if (plan) {
-    addContainedImage(doc, plan, x, frameY, PLAN_FRAME_W, PLAN_FRAME_H, 0);
+    addContainedImage(doc, plan, x, frameY, frameW, frameH, 0);
   } else {
     applyFont(doc, font, 'bold', 7);
     setText(doc, GRAY_400);
-    doc.text('LOCATION', x + PLAN_FRAME_W / 2, frameY + PLAN_FRAME_H / 2 - 1, { align: 'center' });
-    doc.text('SNIPPET', x + PLAN_FRAME_W / 2, frameY + PLAN_FRAME_H / 2 + 3, { align: 'center' });
+    doc.text('LOCATION', x + frameW / 2, frameY + frameH / 2 - 1, { align: 'center' });
+    doc.text('SNIPPET', x + frameW / 2, frameY + frameH / 2 + 3, { align: 'center' });
   }
 }
 
@@ -980,7 +984,15 @@ function drawCatalogPage(
   // ── Bottom row: options + location/plan ─────────────────────────────────────
   const bottomY = mainBottomY + SECTION_GAP;
   drawOptionStrip(doc, font, assets.options, PAGE_PADDING_X, bottomY);
-  drawLocationBlock(doc, font, entry.roomName, assets.plan, RIGHT_COL_X, bottomY);
+  drawLocationBlock(
+    doc,
+    font,
+    entry.roomName,
+    assets.plan,
+    RIGHT_COL_X,
+    bottomY,
+    options.planImageSize,
+  );
 
   // ── Approval band ───────────────────────────────────────────────────────────
   if (options.showApproval) {
@@ -1010,7 +1022,7 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
     showCostInfo: options?.showCostInfo ?? true,
     showApproval: options?.showApproval ?? true,
     mainImageAlignment: resolveCatalogPdfImageAlignment(options?.mainImageAlignment),
-    mainImageSize: options?.mainImageSize ?? 'thumbnail',
+    planImageSize: options?.planImageSize ?? 'thumbnail',
     sortMode: options?.sortMode ?? 'manual',
     watermark: options?.watermark ?? null,
   };
