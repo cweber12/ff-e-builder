@@ -11,17 +11,21 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
     <div
       class="catalog-header-left"
     >
-      <h1
-        class="catalog-header-title"
+      <div
+        class="gap-2 flex items-center"
       >
-        <span
-          class="catalog-header-id"
+        <h1
+          class="catalog-header-title"
         >
-          LR-CH-01
-        </span>
+          <span
+            class="catalog-header-id"
+          >
+            LR-CH-01
+          </span>
+        </h1>
         <div
           aria-label="Name for Channel Lounge Chair"
-          class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 min-w-0 inline-block"
+          class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 min-w-0 inline-block text-[18px]"
           role="button"
           tabindex="0"
         >
@@ -31,7 +35,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             CHANNEL LOUNGE CHAIR
           </span>
         </div>
-      </h1>
+      </div>
     </div>
     <div
       class="catalog-header-right"
@@ -55,20 +59,19 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       class="catalog-main"
     >
       <div
-        class="catalog-main-left catalog-main-left-center"
+        class="catalog-main-left"
       >
         <div
           class="catalog-image-block"
         >
           <div
-            class="catalog-rendering-square catalog-rendering-square-center"
-            data-main-image-alignment="center"
+            class="catalog-rendering-square"
           >
             <div
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden bg-white catalog-rendering-frame border-0 shadow-none rounded-none"
+                class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
                   class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell catalog-placeholder"
@@ -81,44 +84,20 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             </div>
           </div>
           <div
-            class="catalog-qty-band"
+            class="catalog-qty-band catalog-qty-band-compact"
           >
             <div
-              class="catalog-qty-label-row"
+              class="catalog-qty-label-row catalog-qty-label-row-compact"
             >
               <span
-                class="catalog-qty-label"
+                class="catalog-qty-label catalog-qty-label-compact"
               >
-                PRODUCT QTY
-              </span>
-              <span
-                class="catalog-qty-label"
-              >
-                PRICE PER ITEM
-              </span>
-              <span
-                class="catalog-qty-label"
-              >
-                TOTAL
-              </span>
-            </div>
-            <div
-              class="catalog-qty-value-row"
-            >
-              <span
-                class="catalog-qty-value"
-              >
-                2
-              </span>
-              <span
-                class="catalog-qty-value"
-              >
-                $2,450.00
-              </span>
-              <span
-                class="catalog-qty-value"
-              >
-                $4,900.00
+                Qty
+                <span
+                  class="catalog-qty-inline-value"
+                >
+                  2
+                </span>
               </span>
             </div>
           </div>

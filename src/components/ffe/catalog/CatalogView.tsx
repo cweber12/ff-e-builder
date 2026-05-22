@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { cents, formatMoney, type Item, type Project } from '../../../types';
+import { type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
   useCompany,
@@ -53,8 +53,6 @@ type WatermarkConfig = {
   includeName: boolean;
 };
 
-type CatalogImageAlignment = 'center' | 'top';
-
 const DEFAULT_WATERMARK: WatermarkConfig = {
   enabled: false,
   placementH: 'left',
@@ -67,15 +65,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sortMode } = useFfeItemSort(project.id);
-  const [costVisibility, setCostVisibility] = useCatalogPlaceholder(
-    `ffe-catalog-cost-visibility:${project.id}`,
-  );
-  const showCostInfo = costVisibility !== 'hidden';
-  const [mainImageAlignment, setMainImageAlignment] =
-    useCatalogSessionPreference<CatalogImageAlignment>(
-      `ffe-catalog-image-alignment:${project.id}`,
-      'center',
-    );
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
@@ -169,12 +158,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         watermarkConfig={watermarkConfig}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
-        showCostInfo={showCostInfo}
-        onToggleCostInfo={() => setCostVisibility(showCostInfo ? 'hidden' : '')}
-        mainImageAlignment={mainImageAlignment}
-        onToggleMainImageAlignment={() =>
-          setMainImageAlignment(mainImageAlignment === 'center' ? 'top' : 'center')
-        }
         onWatermarkChange={updateWatermark}
       />
 
@@ -192,8 +175,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
-            showCostInfo={showCostInfo}
-            mainImageAlignment={mainImageAlignment}
           />
         </div>
       </div>
@@ -210,8 +191,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             watermarkInteractive={false}
-            showCostInfo={showCostInfo}
-            mainImageAlignment={mainImageAlignment}
           />
         ))}
       </div>
@@ -230,10 +209,6 @@ function CatalogNav({
   watermarkConfig,
   logoDataUrl,
   companyName,
-  showCostInfo,
-  onToggleCostInfo,
-  mainImageAlignment,
-  onToggleMainImageAlignment,
   onWatermarkChange,
 }: {
   project: Project;
@@ -246,10 +221,6 @@ function CatalogNav({
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
-  showCostInfo: boolean;
-  onToggleCostInfo: () => void;
-  mainImageAlignment: CatalogImageAlignment;
-  onToggleMainImageAlignment: () => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   let itemIndex = 0;
@@ -314,10 +285,6 @@ function CatalogNav({
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
-            showCostInfo={showCostInfo}
-            onToggleCostInfo={onToggleCostInfo}
-            mainImageAlignment={mainImageAlignment}
-            onToggleMainImageAlignment={onToggleMainImageAlignment}
             onWatermarkChange={onWatermarkChange}
           />
         </div>
@@ -345,10 +312,6 @@ function CatalogActionsMenu({
   watermarkConfig,
   logoDataUrl,
   companyName,
-  showCostInfo,
-  onToggleCostInfo,
-  mainImageAlignment,
-  onToggleMainImageAlignment,
   onWatermarkChange: _onWatermarkChange,
 }: {
   project: Project;
@@ -357,10 +320,6 @@ function CatalogActionsMenu({
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
-  showCostInfo: boolean;
-  onToggleCostInfo: () => void;
-  mainImageAlignment: CatalogImageAlignment;
-  onToggleMainImageAlignment: () => void;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
 }) {
   const { sortMode } = useFfeItemSort(project.id);
@@ -420,33 +379,9 @@ function CatalogActionsMenu({
             type="button"
             role="menuitem"
             className={catalogMenuItemClassName}
-            onClick={() => runAction(onToggleCostInfo)}
-          >
-            {showCostInfo ? 'Hide cost information' : 'Show cost information'}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={catalogMenuItemClassName}
-            onClick={() => runAction(onToggleMainImageAlignment)}
-          >
-            {mainImageAlignment === 'center'
-              ? 'Align main image to top'
-              : 'Align main image to center'}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={catalogMenuItemClassName}
             onClick={() =>
               runAction(
-                () =>
-                  void exportCatalogPdf(project, rooms, {
-                    mainImageAlignment,
-                    showCostInfo,
-                    sortMode,
-                    watermark: watermarkOpts,
-                  }),
+                () => void exportCatalogPdf(project, rooms, { sortMode, watermark: watermarkOpts }),
               )
             }
           >
@@ -460,8 +395,6 @@ function CatalogActionsMenu({
               runAction(
                 () =>
                   void exportCatalogPdf(project, rooms, {
-                    mainImageAlignment,
-                    showCostInfo,
                     showSwatchLabels: false,
                     sortMode,
                     watermark: watermarkOpts,
@@ -481,8 +414,6 @@ function CatalogActionsMenu({
                   runAction(
                     () =>
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
-                        mainImageAlignment,
-                        showCostInfo,
                         sortMode,
                         watermark: watermarkOpts,
                       }),
@@ -499,8 +430,6 @@ function CatalogActionsMenu({
                   runAction(
                     () =>
                       void exportCatalogItemPdf(project, rooms, currentItemId, {
-                        mainImageAlignment,
-                        showCostInfo,
                         showSwatchLabels: false,
                         sortMode,
                         watermark: watermarkOpts,
@@ -541,8 +470,6 @@ export function CatalogPage({
   logoDataUrl,
   companyName,
   watermarkInteractive = true,
-  showCostInfo = true,
-  mainImageAlignment = 'center',
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -553,8 +480,6 @@ export function CatalogPage({
   logoDataUrl?: string | null;
   companyName?: string | null;
   watermarkInteractive?: boolean;
-  showCostInfo?: boolean;
-  mainImageAlignment?: CatalogImageAlignment;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -684,8 +609,6 @@ export function CatalogPage({
     `ffe-catalog-approval-hidden:${item.id}`,
   );
 
-  const lineTotalCents = item.unitCostCents * item.qty;
-
   const hasFooterMark =
     !!watermarkConfig?.enabled && watermarkConfig.placementV === 'footer' && !!logoDataUrl;
   const hasHeaderMark =
@@ -700,7 +623,6 @@ export function CatalogPage({
         interactive={watermarkInteractive}
       />
     ) : null;
-  const isTopAligned = mainImageAlignment === 'top';
 
   return (
     <article
@@ -721,19 +643,21 @@ export function CatalogPage({
           </div>
         )}
         <div className="catalog-header-left">
-          <h1 className="catalog-header-title">
-            {item.itemIdTag ? <span className="catalog-header-id">{item.itemIdTag}</span> : null}
+          <div className="gap-2 flex items-center">
+            <h1 className="catalog-header-title">
+              {item.itemIdTag ? <span className="catalog-header-id">{item.itemIdTag}</span> : null}
+            </h1>
             <InlineTextEdit
               value={item.itemName}
               aria-label={`Name for ${item.itemName}`}
-              className="min-w-0 inline-block"
-              inputClassName="w-full text-[22px] font-medium uppercase tracking-wide text-gray-800"
+              className="min-w-0 inline-block text-[18px]"
+              inputClassName="w-full font-medium uppercase tracking-wide text-gray-800"
               onSave={(value) => saveField('itemName', value, true)}
               renderDisplay={(value) => (
                 <span className="catalog-header-name">{value.toUpperCase()}</span>
               )}
             />
-          </h1>
+          </div>
         </div>
         <div className="catalog-header-right">
           <p className="catalog-header-project">{project.name.toUpperCase()}</p>
@@ -752,61 +676,28 @@ export function CatalogPage({
 
       <div className="catalog-content-block">
         <section className="catalog-main">
-          <div
-            className={cn(
-              'catalog-main-left',
-              isTopAligned ? 'catalog-main-left-top' : 'catalog-main-left-center',
-            )}
-          >
+          <div className="catalog-main-left">
             <div className="catalog-image-block">
-              <div
-                className={cn(
-                  'catalog-rendering-square',
-                  isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
-                )}
-                data-main-image-alignment={mainImageAlignment}
-              >
+              <div className="catalog-rendering-square">
                 <ImageFrame
                   entityType="item"
                   entityId={item.id}
                   alt={item.itemName}
                   fallbackUrl={null}
-                  className="catalog-rendering-frame border-0 shadow-none rounded-none"
-                  imageClassName={cn(
-                    'catalog-image !h-auto !w-auto',
-                    isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
-                  )}
+                  className="border-0 shadow-none h-full w-full rounded-none"
+                  imageClassName="catalog-image"
                   placeholderClassName="catalog-placeholder"
                   placeholderContent={<span>{initials(item.itemName)}</span>}
                 />
               </div>
 
-              <div className="catalog-qty-band">
-                {showCostInfo ? (
-                  <>
-                    <div className="catalog-qty-label-row">
-                      <span className="catalog-qty-label">PRODUCT QTY</span>
-                      <span className="catalog-qty-label">PRICE PER ITEM</span>
-                      <span className="catalog-qty-label">TOTAL</span>
-                    </div>
-                    <div className="catalog-qty-value-row">
-                      <span className="catalog-qty-value">{item.qty}</span>
-                      <span className="catalog-qty-value">
-                        {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
-                      </span>
-                      <span className="catalog-qty-value">
-                        {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                    <span className="catalog-qty-label catalog-qty-label-compact">
-                      QUANTITY
-                      <span className="catalog-qty-inline-value">{item.qty}</span>
-                    </span>
-                  </div>
-                )}
+              <div className="catalog-qty-band catalog-qty-band-compact">
+                <div className="catalog-qty-label-row catalog-qty-label-row-compact">
+                  <span className="catalog-qty-label catalog-qty-label-compact">
+                    Qty
+                    <span className="catalog-qty-inline-value">{item.qty}</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1043,8 +934,8 @@ function LinkIcon() {
   );
 }
 
-// Persistent localStorage-backed helper for catalog-only presentation state.
-// TODO: Replace vendor / vendor link storage with real Item columns in a follow-up iteration.
+// Persistent localStorage-backed placeholder for the vendor / vendor link fields.
+// TODO: Replace with a real Item column (and migration) in a follow-up iteration.
 function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
   const [value, setValue] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -1063,34 +954,6 @@ function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
       /* storage unavailable — silently ignore */
     }
   }, [key, value]);
-  return [value, setValue];
-}
-
-function useCatalogSessionPreference<T extends string>(
-  key: string,
-  defaultValue: T,
-): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(defaultValue);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      window.sessionStorage.setItem(key, defaultValue);
-    } catch {
-      /* storage unavailable — silently ignore */
-    }
-    setValue(defaultValue);
-  }, [defaultValue, key]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      window.sessionStorage.setItem(key, value);
-    } catch {
-      /* storage unavailable — silently ignore */
-    }
-  }, [key, value]);
-
   return [value, setValue];
 }
 

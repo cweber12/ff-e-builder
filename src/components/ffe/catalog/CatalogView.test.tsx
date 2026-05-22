@@ -28,7 +28,7 @@ describe('CatalogPage', () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it('collapses the image band to a quantity callout when cost information is hidden', () => {
+  it('shows the quantity-only callout beneath the main image', () => {
     const room = catalogRoomsFixture[0]!;
     const item = room.items[0]!;
     const queryClient = new QueryClient({
@@ -43,38 +43,14 @@ describe('CatalogPage', () => {
             entry={{ room, item }}
             pageNumber={1}
             pageCount={3}
-            showCostInfo={false}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText('QUANTITY')).toBeInTheDocument();
+    expect(screen.getByText('Qty')).toBeInTheDocument();
+    expect(screen.getByText(String(item.qty))).toBeInTheDocument();
     expect(screen.queryByText('PRICE PER ITEM')).not.toBeInTheDocument();
     expect(screen.queryByText('TOTAL')).not.toBeInTheDocument();
-  });
-
-  it('marks the main rendering alignment so export prep can switch between center and top', () => {
-    const room = catalogRoomsFixture[0]!;
-    const item = room.items[0]!;
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-
-    const { container } = render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <CatalogPage
-            project={catalogProjectFixture}
-            entry={{ room, item }}
-            pageNumber={1}
-            pageCount={3}
-            mainImageAlignment="top"
-          />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    expect(container.querySelector('[data-main-image-alignment="top"]')).toBeTruthy();
   });
 });
