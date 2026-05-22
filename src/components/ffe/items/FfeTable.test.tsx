@@ -39,6 +39,7 @@ vi.mock('../../../hooks', () => ({
   useCreateRoom: () => ({ mutateAsync: mockCreateRoomMutateAsync }),
   useDeleteRoom: () => ({ mutateAsync: mockDeleteRoomMutateAsync }),
   useUpdateRoom: () => ({ mutateAsync: vi.fn() }),
+  useFfeItemSort: () => ({ sortMode: 'by-room', updateSortMode: vi.fn() }),
   useMaterials: () => ({ data: [], isLoading: false }),
   useCreateMaterial: () => ({ mutateAsync: vi.fn() }),
   useUpdateMaterial: () => ({ mutateAsync: vi.fn() }),
@@ -92,6 +93,8 @@ vi.mock('../../../hooks', () => ({
     data: mockProposalRevisionsData,
     isLoading: false,
   }),
+  useCompany: () => ({ data: undefined, isError: false }),
+  useUpdateCompany: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock('../../../lib/export', () => ({

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-21T18:31:59.061Z",
+  "generatedAt": "2026-05-22T03:41:03.733Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 253,
-      "internalImports": 784,
-      "externalImports": 271,
+      "files": 257,
+      "internalImports": 802,
+      "externalImports": 275,
       "unresolvedImports": 2
     },
     {
@@ -160,8 +160,8 @@
     {
       "area": "ffe",
       "files": 26,
-      "importsIn": 39,
-      "importsOut": 135,
+      "importsIn": 40,
+      "importsOut": 136,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
@@ -193,7 +193,7 @@
       "area": "project-shell",
       "files": 24,
       "importsIn": 46,
-      "importsOut": 120,
+      "importsOut": 121,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -209,16 +209,24 @@
     {
       "area": "shared-ui",
       "files": 44,
-      "importsIn": 153,
+      "importsIn": 155,
       "importsOut": 112,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
-      "importedBy": ["ffe", "proposal", "plans", "finish-library", "project-shell", "tests"]
+      "importedBy": [
+        "ffe",
+        "proposal",
+        "plans",
+        "finish-library",
+        "project-shell",
+        "tests",
+        "unknown"
+      ]
     },
     {
       "area": "shared-lib",
-      "files": 45,
-      "importsIn": 279,
-      "importsOut": 114,
+      "files": 47,
+      "importsIn": 290,
+      "importsOut": 124,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
         "ffe",
@@ -241,9 +249,9 @@
     },
     {
       "area": "types",
-      "files": 10,
-      "importsIn": 160,
-      "importsOut": 21,
+      "files": 11,
+      "importsIn": 163,
+      "importsOut": 22,
       "dependsOn": [],
       "importedBy": [
         "ffe",
@@ -286,10 +294,10 @@
     },
     {
       "area": "unknown",
-      "files": 10,
-      "importsIn": 19,
-      "importsOut": 11,
-      "dependsOn": ["shared-lib", "types"],
+      "files": 11,
+      "importsIn": 20,
+      "importsOut": 16,
+      "dependsOn": ["shared-ui", "shared-lib", "types"],
       "importedBy": ["ffe", "proposal", "finish-library", "project-shell", "shared-ui", "tests"]
     }
   ],
@@ -369,7 +377,7 @@
       "paths": [
         {
           "path": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
-          "files": 26
+          "files": 28
         },
         {
           "path": "src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/pdf.ts, src/lib/query/**, src/lib/theme/**, src/lib/utils/**",
@@ -391,7 +399,7 @@
       "paths": [
         {
           "path": "src/types/**",
-          "files": 10
+          "files": 11
         }
       ]
     },
@@ -423,6 +431,10 @@
         {
           "path": "src/data/**",
           "files": 3
+        },
+        {
+          "path": "src/pages",
+          "files": 1
         },
         {
           "path": "src/pages/DemoPage.tsx",
@@ -507,6 +519,16 @@
       "importerArea": "ffe",
       "specifier": "../../../lib/api",
       "resolved": "src/lib/api.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/catalog/CatalogView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../lib/export/imageHelpers",
+      "resolved": "src/lib/export/imageHelpers.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -2913,6 +2935,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/App.tsx",
+      "importerArea": "project-shell",
+      "specifier": "./pages/CompanyProfilePage",
+      "resolved": "src/pages/CompanyProfilePage.tsx",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/components/project/modals/NewProjectModal.tsx",
       "importerArea": "project-shell",
       "specifier": "../../../data/sampleProject",
@@ -3853,6 +3885,16 @@
       "reviewSection": "Facade/Barrel Aggregation"
     },
     {
+      "importer": "src/lib/export/index.ts",
+      "importerArea": "shared-lib",
+      "specifier": "./ffe/catalogPdf",
+      "resolved": "src/lib/export/ffe/catalogPdf.ts",
+      "resolvedArea": "ffe",
+      "kind": "export",
+      "reviewNote": "expected: facade/barrel aggregates product namespaces",
+      "reviewSection": "Facade/Barrel Aggregation"
+    },
+    {
       "importer": "src/lib/import/index.ts",
       "importerArea": "shared-lib",
       "specifier": "./formats/ffe",
@@ -4053,6 +4095,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/hooks/shared/useCompany.ts",
+      "importerArea": "shared-lib",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: shared code uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/hooks/shared/useImages.ts",
       "importerArea": "shared-lib",
       "specifier": "../../types",
@@ -4084,6 +4136,16 @@
     },
     {
       "importer": "src/lib/api/columnDefs.ts",
+      "importerArea": "shared-lib",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: shared code uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/lib/api/company.ts",
       "importerArea": "shared-lib",
       "specifier": "../../types",
       "resolved": "src/types/index.ts",
@@ -5733,6 +5795,56 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "importerArea": "unknown",
+      "specifier": "../hooks",
+      "resolved": "src/hooks/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "importerArea": "unknown",
+      "specifier": "../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "importerArea": "unknown",
+      "specifier": "../lib/api",
+      "resolved": "src/lib/api.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "importerArea": "unknown",
+      "specifier": "../components/shared/image/ImageFrame",
+      "resolved": "src/components/shared/image/ImageFrame.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "importerArea": "unknown",
+      "specifier": "../components/primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/data/catalogFixture.ts",
       "importerArea": "unknown",
       "specifier": "../types",
@@ -5961,7 +6073,7 @@
       "section": "Facade/Barrel Aggregation",
       "from": "shared-lib",
       "to": "ffe",
-      "imports": 6,
+      "imports": 7,
       "reviewNote": "expected: facade/barrel aggregates product namespaces",
       "examples": [
         {
@@ -6204,7 +6316,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-lib",
-      "imports": 49,
+      "imports": 50,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6847,7 +6959,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-lib",
       "to": "types",
-      "imports": 17,
+      "imports": 19,
       "reviewNote": "expected: shared code uses shared types",
       "examples": [
         {
@@ -6871,7 +6983,7 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/hooks/shared/useImages.ts",
+          "importer": "src/hooks/shared/useCompany.ts",
           "importerArea": "shared-lib",
           "specifier": "../../types",
           "resolved": "src/types/index.ts",
@@ -7003,9 +7115,19 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "project-shell",
       "to": "unknown",
-      "imports": 1,
+      "imports": 2,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
+        {
+          "importer": "src/App.tsx",
+          "importerArea": "project-shell",
+          "specifier": "./pages/CompanyProfilePage",
+          "resolved": "src/pages/CompanyProfilePage.tsx",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
         {
           "importer": "src/components/project/modals/NewProjectModal.tsx",
           "importerArea": "project-shell",
@@ -7060,8 +7182,37 @@
     {
       "section": "Unknown / Ambiguous Dependencies",
       "from": "unknown",
+      "to": "shared-ui",
+      "imports": 2,
+      "reviewNote": "unknown: ownership unclear",
+      "examples": [
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "importerArea": "unknown",
+          "specifier": "../components/shared/image/ImageFrame",
+          "resolved": "src/components/shared/image/ImageFrame.tsx",
+          "resolvedArea": "shared-ui",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "importerArea": "unknown",
+          "specifier": "../components/primitives",
+          "resolved": "src/components/primitives/index.ts",
+          "resolvedArea": "shared-ui",
+          "kind": "import",
+          "reviewNote": "unknown: ownership unclear",
+          "reviewSection": "Unknown / Ambiguous Dependencies"
+        }
+      ]
+    },
+    {
+      "section": "Unknown / Ambiguous Dependencies",
+      "from": "unknown",
       "to": "shared-lib",
-      "imports": 4,
+      "imports": 7,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -7673,6 +7824,73 @@
       ]
     },
     {
+      "path": "src/pages/CompanyProfilePage.tsx",
+      "project": "React client",
+      "module": "src/pages",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/pages",
+      "imports": [
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "react-router-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-router-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../components/shared/image/ImageFrame",
+          "kind": "import",
+          "resolved": "src/components/shared/image/ImageFrame.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../components/primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/pages/DemoPage.tsx",
       "project": "React client",
       "module": "src/pages",
@@ -7761,15 +7979,15 @@
       "path": "src/App.tsx",
       "files": 1,
       "importsIn": 1,
-      "importsOut": 27,
+      "importsOut": 28,
       "internalDependencies": ["src/components", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": ["@tanstack/react-query", "react", "react-router-dom"]
     },
     {
       "path": "src/components",
       "files": 117,
-      "importsIn": 245,
-      "importsOut": 548,
+      "importsIn": 247,
+      "importsOut": 549,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -7799,9 +8017,9 @@
     },
     {
       "path": "src/hooks",
-      "files": 28,
-      "importsIn": 70,
-      "importsOut": 122,
+      "files": 29,
+      "importsIn": 72,
+      "importsOut": 129,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -7814,9 +8032,9 @@
     },
     {
       "path": "src/lib",
-      "files": 81,
-      "importsIn": 294,
-      "importsOut": 251,
+      "files": 82,
+      "importsIn": 304,
+      "importsOut": 256,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -7848,9 +8066,9 @@
     },
     {
       "path": "src/pages",
-      "files": 10,
-      "importsIn": 9,
-      "importsOut": 68,
+      "files": 11,
+      "importsIn": 10,
+      "importsOut": 75,
       "internalDependencies": ["src/components", "src/hooks", "src/lib", "src/types"],
       "externalDependencies": [
         "@tanstack/react-query",
@@ -7871,9 +8089,9 @@
     },
     {
       "path": "src/types",
-      "files": 10,
-      "importsIn": 160,
-      "importsOut": 23,
+      "files": 11,
+      "importsIn": 163,
+      "importsOut": 24,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
     },
@@ -8085,6 +8303,14 @@
           "specifier": "./pages/DashboardPage",
           "kind": "import",
           "resolved": "src/pages/DashboardPage.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/App.tsx",
+          "specifier": "./pages/CompanyProfilePage",
+          "kind": "import",
+          "resolved": "src/pages/CompanyProfilePage.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -8307,6 +8533,14 @@
           "specifier": "../../../lib/api",
           "kind": "import",
           "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/catalog/CatalogView.tsx",
+          "specifier": "../../../lib/export/imageHelpers",
+          "kind": "import",
+          "resolved": "src/lib/export/imageHelpers.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -14618,6 +14852,14 @@
         },
         {
           "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useCompany",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useCompany.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
           "specifier": "./useColumnConfig",
           "kind": "export",
           "resolved": "src/hooks/shared/useColumnConfig.ts",
@@ -14819,6 +15061,65 @@
         },
         {
           "importer": "src/hooks/shared/useColumnDefs.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/shared/useCompany.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useCompany.ts",
+          "specifier": "@tanstack/react-query",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@tanstack/react-query",
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useCompany.ts",
+          "specifier": "sonner",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "sonner",
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useCompany.ts",
+          "specifier": "../../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useCompany.ts",
+          "specifier": "../../lib/query",
+          "kind": "import",
+          "resolved": "src/lib/query/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useCompany.ts",
+          "specifier": "../../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/useCompany.ts",
           "specifier": "../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -15174,6 +15475,14 @@
         },
         {
           "importer": "src/lib/api.ts",
+          "specifier": "./api/company",
+          "kind": "import",
+          "resolved": "src/lib/api/company.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/api.ts",
           "specifier": "./api/images",
           "kind": "import",
           "resolved": "src/lib/api/images.ts",
@@ -15307,6 +15616,14 @@
           "resolved": "src/lib/api/users.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/lib/api.ts",
+          "specifier": "./api/company",
+          "kind": "export",
+          "resolved": "src/lib/api/company.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -15337,6 +15654,33 @@
         },
         {
           "importer": "src/lib/api/columnDefs.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/lib/api/company.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/lib/api/company.ts",
+          "specifier": "./transport",
+          "kind": "import",
+          "resolved": "src/lib/api/transport.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/api/company.ts",
           "specifier": "../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -16763,6 +17107,14 @@
           "resolved": "src/lib/export/ffe/catalogPdf.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/lib/export/index.ts",
+          "specifier": "./ffe/catalogPdf",
+          "kind": "export",
+          "resolved": "src/lib/export/ffe/catalogPdf.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -18143,6 +18495,73 @@
       ]
     },
     {
+      "path": "src/pages/CompanyProfilePage.tsx",
+      "project": "React client",
+      "module": "src/pages",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/pages",
+      "imports": [
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "react-router-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-router-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../components/shared/image/ImageFrame",
+          "kind": "import",
+          "resolved": "src/components/shared/image/ImageFrame.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../components/primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/CompanyProfilePage.tsx",
+          "specifier": "../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/pages/DashboardPage.test.tsx",
       "project": "React client",
       "module": "src/pages",
@@ -18835,6 +19254,16 @@
       ]
     },
     {
+      "path": "src/types/company.ts",
+      "project": "React client",
+      "module": "src/types",
+      "productArea": "types",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared domain type path",
+      "ownerPath": "src/types/**",
+      "imports": []
+    },
+    {
       "path": "src/types/image.ts",
       "project": "React client",
       "module": "src/types",
@@ -18922,6 +19351,14 @@
           "specifier": "./image",
           "kind": "export",
           "resolved": "src/types/image.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/types/index.ts",
+          "specifier": "./company",
+          "kind": "export",
+          "resolved": "src/types/company.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -20591,6 +21028,14 @@
     },
     {
       "importer": "src/App.tsx",
+      "specifier": "./pages/CompanyProfilePage",
+      "kind": "import",
+      "resolved": "src/pages/CompanyProfilePage.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/App.tsx",
       "specifier": "./pages/PlanCanvasPage",
       "kind": "import",
       "resolved": "src/pages/PlanCanvasPage.tsx",
@@ -20786,6 +21231,14 @@
       "specifier": "../../../lib/api",
       "kind": "import",
       "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/catalog/CatalogView.tsx",
+      "specifier": "../../../lib/export/imageHelpers",
+      "kind": "import",
+      "resolved": "src/lib/export/imageHelpers.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25615,6 +26068,14 @@
     },
     {
       "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useCompany",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useCompany.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
       "specifier": "./useColumnConfig",
       "kind": "export",
       "resolved": "src/hooks/shared/useColumnConfig.ts",
@@ -25783,6 +26244,54 @@
     },
     {
       "importer": "src/hooks/shared/useColumnDefs.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useCompany.ts",
+      "specifier": "@tanstack/react-query",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@tanstack/react-query",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useCompany.ts",
+      "specifier": "sonner",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "sonner",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useCompany.ts",
+      "specifier": "../../lib/api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useCompany.ts",
+      "specifier": "../../lib/query",
+      "kind": "import",
+      "resolved": "src/lib/query/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useCompany.ts",
+      "specifier": "../../lib/api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useCompany.ts",
       "specifier": "../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -26039,6 +26548,14 @@
     },
     {
       "importer": "src/lib/api.ts",
+      "specifier": "./api/company",
+      "kind": "import",
+      "resolved": "src/lib/api/company.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/api.ts",
       "specifier": "./api/images",
       "kind": "import",
       "resolved": "src/lib/api/images.ts",
@@ -26174,6 +26691,14 @@
       "asset": false
     },
     {
+      "importer": "src/lib/api.ts",
+      "specifier": "./api/company",
+      "kind": "export",
+      "resolved": "src/lib/api/company.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/lib/api/columnDefs.ts",
       "specifier": "./transport",
       "kind": "import",
@@ -26191,6 +26716,22 @@
     },
     {
       "importer": "src/lib/api/columnDefs.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/api/company.ts",
+      "specifier": "./transport",
+      "kind": "import",
+      "resolved": "src/lib/api/transport.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/api/company.ts",
       "specifier": "../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -27214,6 +27755,14 @@
       "asset": false
     },
     {
+      "importer": "src/lib/export/index.ts",
+      "specifier": "./ffe/catalogPdf",
+      "kind": "export",
+      "resolved": "src/lib/export/ffe/catalogPdf.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/lib/export/materials.ts",
       "specifier": "jspdf",
       "kind": "import",
@@ -28126,6 +28675,62 @@
       "asset": false
     },
     {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "react-router-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-router-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "../components/shared/image/ImageFrame",
+      "kind": "import",
+      "resolved": "src/components/shared/image/ImageFrame.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "../components/primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "../hooks",
+      "kind": "import",
+      "resolved": "src/hooks/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/CompanyProfilePage.tsx",
+      "specifier": "../lib/api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/pages/DashboardPage.test.tsx",
       "specifier": "@testing-library/react",
       "kind": "import",
@@ -28754,6 +29359,14 @@
       "specifier": "./image",
       "kind": "export",
       "resolved": "src/types/image.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/types/index.ts",
+      "specifier": "./company",
+      "kind": "export",
+      "resolved": "src/types/company.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -29853,7 +30466,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 81
+      "imports": 82
     },
     {
       "name": "vitest",
@@ -29861,22 +30474,22 @@
     },
     {
       "name": "@tanstack/react-query",
-      "imports": 23
+      "imports": 24
+    },
+    {
+      "name": "react-router-dom",
+      "imports": 24
     },
     {
       "name": "@testing-library/react",
       "imports": 23
     },
     {
-      "name": "react-router-dom",
-      "imports": 23
+      "name": "sonner",
+      "imports": 15
     },
     {
       "name": "hono",
-      "imports": 14
-    },
-    {
-      "name": "sonner",
       "imports": 14
     },
     {
