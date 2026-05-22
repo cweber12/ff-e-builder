@@ -896,10 +896,16 @@
   .catalog-image-block {
     display: flex;
     flex-direction: column;
-    gap: 0px;
+    gap: 8px;
     width: fit-content;
     max-width: 100%;
     margin-inline: auto;
+  }
+
+  .catalog-image-block-expanded {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
   }
 
   .catalog-rendering-square {
@@ -921,6 +927,18 @@
     height: auto;
   }
 
+  .catalog-rendering-square-expanded {
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 360px;
+  }
+
+  .catalog-rendering-square-expanded > div {
+    width: 100%;
+    height: 100%;
+  }
+
   .catalog-rendering-frame {
     display: inline-block;
     min-width: 240px;
@@ -929,6 +947,14 @@
     width: auto;
     height: auto;
     background: white;
+  }
+
+  .catalog-rendering-frame-expanded {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
   }
 
   /* ---------- Qty / Price / Total band ---------- */
@@ -942,6 +968,10 @@
   .catalog-qty-band-compact {
     border: 0;
     overflow: visible;
+  }
+
+  .catalog-qty-band-expanded {
+    flex: 0 0 auto;
   }
 
   .catalog-qty-label-row {
@@ -979,15 +1009,15 @@
     display: inline-flex;
     align-items: baseline;
     gap: 8px;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 500;
     letter-spacing: 0.04em;
-    text-transform: none;
+    text-transform: uppercase;
     color: theme('colors.gray.800');
   }
 
   .catalog-qty-inline-value {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     letter-spacing: 0;
     font-variant-numeric: tabular-nums;
@@ -1119,7 +1149,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
-    margin-top: 2px;
+    margin-top: 10px;
   }
 
   .catalog-materials-row-swatch-only {
@@ -1140,12 +1170,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     text-align: center;
     min-width: 0;
   }
 
   .catalog-material-id {
+    margin-top: 2px;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -1365,6 +1396,10 @@
 
   .catalog-image-center {
     object-position: center;
+  }
+
+  .catalog-rendering-frame-expanded .catalog-image {
+    max-height: none;
   }
 
   .catalog-placeholder {

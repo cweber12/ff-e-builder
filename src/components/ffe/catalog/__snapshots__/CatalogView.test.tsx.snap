@@ -67,6 +67,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           <div
             class="catalog-rendering-square catalog-rendering-square-center"
             data-main-image-alignment="center"
+            data-main-image-size="thumbnail"
           >
             <div
               class="grid gap-1"
@@ -93,7 +94,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               <span
                 class="catalog-qty-label catalog-qty-label-compact"
               >
-                Qty
+                QTY
                 <span
                   class="catalog-qty-inline-value"
                 >
@@ -229,11 +230,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
             <div
               class="catalog-material-cell"
             >
-              <span
-                class="catalog-material-id"
-              >
-                FAB-001
-              </span>
               <div
                 class="catalog-material-swatch"
               >
@@ -256,6 +252,11 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                 </div>
               </div>
               <span
+                class="catalog-material-id"
+              >
+                FAB-001
+              </span>
+              <span
                 class="catalog-material-name"
               >
                 Ivory
@@ -267,14 +268,14 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               title="Click to open library, or hover and press Ctrl+V to paste"
               type="button"
             >
+              <div
+                class="catalog-material-swatch catalog-material-swatch-placeholder"
+              />
               <span
                 class="catalog-material-id"
               >
                 ID
               </span>
-              <div
-                class="catalog-material-swatch catalog-material-swatch-placeholder"
-              />
               <span
                 class="catalog-material-name"
               >
@@ -292,14 +293,14 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               title="Click to open library, or hover and press Ctrl+V to paste"
               type="button"
             >
+              <div
+                class="catalog-material-swatch catalog-material-swatch-placeholder"
+              />
               <span
                 class="catalog-material-id"
               >
                 ID
               </span>
-              <div
-                class="catalog-material-swatch catalog-material-swatch-placeholder"
-              />
               <span
                 class="catalog-material-name"
               >
@@ -317,14 +318,14 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               title="Click to open library, or hover and press Ctrl+V to paste"
               type="button"
             >
+              <div
+                class="catalog-material-swatch catalog-material-swatch-placeholder"
+              />
               <span
                 class="catalog-material-id"
               >
                 ID
               </span>
-              <div
-                class="catalog-material-swatch catalog-material-swatch-placeholder"
-              />
               <span
                 class="catalog-material-name"
               >

@@ -75,6 +75,7 @@ type CatalogItemAssets = {
 };
 
 export type CatalogPdfImageAlignment = 'center' | 'top';
+export type CatalogPdfMainImageSize = 'thumbnail' | 'expanded';
 
 type ContainedImageBox = {
   drawW: number;
@@ -113,6 +114,8 @@ export type CatalogPdfOptions = {
   showApproval?: boolean;
   /** Vertical alignment for the main rendering image inside its square frame. */
   mainImageAlignment?: CatalogPdfImageAlignment;
+  /** Browser layout preference for the main rendering scale. */
+  mainImageSize?: CatalogPdfMainImageSize;
   /**
    * Item ordering within each room.
    * - 'manual' (default): respects each item's `sortOrder`.
@@ -485,12 +488,12 @@ function drawQtyBand(
   showCostInfo: boolean,
 ) {
   if (!showCostInfo) {
-    applyFont(doc, font, 'bold', 8.5);
+    applyFont(doc, font, 'normal', 13);
     setText(doc, GRAY_800);
-    doc.text('Qty', x, y + 6.2);
-    applyFont(doc, font, 'bold', 14);
+    doc.text('QTY', x, y + 6.2);
+    applyFont(doc, font, 'bold', 13);
     setText(doc, GRAY_800);
-    doc.text(String(item.qty), x + doc.getTextWidth('Qty') + 3, y + 6.2);
+    doc.text(String(item.qty), x + doc.getTextWidth('QTY') + 3, y + 6.2);
     return;
   }
 
@@ -592,14 +595,14 @@ function drawSpecColumn(
   // Hidden entirely when the item has no materials (per export spec).
   if (materials.length === 0) return;
 
-  const fsHeight = showSwatchLabels ? 36 : 26; // sub-heading + materials row
+  const fsHeight = showSwatchLabels ? 38 : 26; // sub-heading + padded materials row
   const fsTop = Math.max(cursorY, maxBottomY - fsHeight);
 
   applyFont(doc, font, 'bold', 8.5);
   setText(doc, GRAY_600);
   doc.text('FINISH SCHEDULE', x, fsTop);
 
-  drawMaterialsRow(doc, font, materials, materialImages, x, fsTop + 4, width, showSwatchLabels);
+  drawMaterialsRow(doc, font, materials, materialImages, x, fsTop + 7, width, showSwatchLabels);
 }
 
 function drawMaterialsRow(
@@ -621,23 +624,14 @@ function drawMaterialsRow(
   const cellW = width / slotCount;
   // 1.5x larger than the previous 10mm swatch per export spec.
   const swatchSize = 15;
-  const idGap = showSwatchLabels ? 4.4 : 0;
 
   for (let index = 0; index < cellCount; index++) {
     const cellX = x + index * cellW;
     const centerX = cellX + cellW / 2;
     const material = cells[index]!;
 
-    if (showSwatchLabels) {
-      // ID label (top)
-      applyFont(doc, font, 'bold', 6.5);
-      setText(doc, GRAY_500);
-      const idLabel = compactText(material.materialId) ?? 'ID';
-      doc.text(idLabel.toUpperCase(), centerX, y + 2.6, { align: 'center' });
-    }
-
     // Swatch (square with image, or circle filled with hex when no image)
-    const swatchY = y + idGap;
+    const swatchY = y;
     const swatchCx = centerX;
     const swatchCy = swatchY + swatchSize / 2;
     const image = materialImages.get(material.id);
@@ -654,12 +648,20 @@ function drawMaterialsRow(
     }
 
     if (showSwatchLabels) {
+      const idLabel = compactText(material.materialId) ?? 'ID';
+      applyFont(doc, font, 'bold', 6.5);
+      setText(doc, GRAY_500);
+      doc.text(idLabel.toUpperCase(), centerX, swatchY + swatchSize + 3.2, {
+        align: 'center',
+        maxWidth: cellW - 1,
+      });
+
       // Name (single word, uppercase)
       const nameRaw = compactText(material.name);
       const nameLabel = nameRaw ? nameRaw.split(/\s+/)[0]! : 'MATERIAL';
       applyFont(doc, font, 'bold', 6);
       setText(doc, GRAY_500);
-      doc.text(nameLabel.toUpperCase(), centerX, swatchY + swatchSize + 2.4, {
+      doc.text(nameLabel.toUpperCase(), centerX, swatchY + swatchSize + 6.2, {
         align: 'center',
         maxWidth: cellW - 1,
       });
@@ -1008,6 +1010,7 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
     showCostInfo: options?.showCostInfo ?? true,
     showApproval: options?.showApproval ?? true,
     mainImageAlignment: resolveCatalogPdfImageAlignment(options?.mainImageAlignment),
+    mainImageSize: options?.mainImageSize ?? 'thumbnail',
     sortMode: options?.sortMode ?? 'manual',
     watermark: options?.watermark ?? null,
   };
