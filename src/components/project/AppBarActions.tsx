@@ -325,19 +325,10 @@ export function ProposalActions({
 
   return (
     <div className="flex items-center gap-1">
-      <ProposalStatusSelect
-        status={project.proposalStatus}
-        onChange={handleStatusChange}
-        disabled={updateProject.isPending}
-        {...(openRev
-          ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
-          : {})}
-      />
-
       <button
         type="button"
         onClick={onAddCategory}
-        className="ml-1 inline-flex h-8 items-center gap-1.5 rounded-md bg-brand-500 px-3 text-sm font-medium text-white hover:bg-brand-600 transition-colors"
+        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-brand-500 px-3 text-sm font-medium text-white hover:bg-brand-600 transition-colors"
       >
         <PlusIcon />
         Add Category
@@ -382,6 +373,17 @@ export function ProposalActions({
       />
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />
+
+      <div className="ml-auto flex items-center border-l border-black/10 pl-2">
+        <ProposalStatusSelect
+          status={project.proposalStatus}
+          onChange={handleStatusChange}
+          disabled={updateProject.isPending}
+          {...(openRev
+            ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
+            : {})}
+        />
+      </div>
     </div>
   );
 }
