@@ -1696,8 +1696,18 @@ function ProposalRow({
     <tr
       ref={setNodeRef}
       style={style}
+      tabIndex={0}
+      aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
+      onClick={onRowClick}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter') return;
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        onRowClick();
+      }}
       className={cn(
-        'group border-b border-black/10 align-top last:border-b-0',
+        'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
         isDragging && 'bg-brand-50 shadow-md opacity-80',
       )}
     >
