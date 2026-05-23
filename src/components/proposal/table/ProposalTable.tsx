@@ -176,7 +176,7 @@ type ProposalTableProps = {
 export function ProposalTable({
   projectId,
   project,
-  onImport: _onImport,
+  onImport,
   addCategoryOpen: addCategoryOpenProp,
   onAddCategoryOpenChange,
 }: ProposalTableProps) {
@@ -256,11 +256,33 @@ export function ProposalTable({
   return (
     <TableViewStack>
       {categoriesWithItems.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-6 py-12 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <h2 className="font-display text-2xl text-neutral-900">No categories yet</h2>
-            <p className="max-w-md text-sm text-neutral-600">
-              Create a category to start your Proposal Table.
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <div className="flex w-full max-w-md flex-col items-center gap-5 rounded-lg border border-black/10 bg-canvas-chrome px-8 py-10 text-center shadow-sm">
+            <div className="flex flex-col items-center gap-2">
+              <h2 className="font-display text-2xl text-neutral-900">No categories yet</h2>
+              <p className="text-sm text-neutral-600">
+                Add your first Proposal Category, or import an existing spreadsheet.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                onClick={() => setAddCategoryOpen(true)}
+              >
+                <EmptyStatePlusIcon />
+                Add Category
+              </Button>
+              {onImport && (
+                <Button type="button" variant="secondary" size="md" onClick={onImport}>
+                  <EmptyStateUploadIcon />
+                  Import from Excel
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-neutral-500">
+              Tip: Proposal Status in the toolbar drives revision tracking once you start pricing.
             </p>
           </div>
         </div>
@@ -462,6 +484,28 @@ function DeleteCategoryModal({
         </div>
       </div>
     </Modal>
+  );
+}
+
+function EmptyStatePlusIcon() {
+  return (
+    <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+      <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function EmptyStateUploadIcon() {
+  return (
+    <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+      <path
+        d="M7 1v8M4 4l3-3 3 3M2 11h10"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
