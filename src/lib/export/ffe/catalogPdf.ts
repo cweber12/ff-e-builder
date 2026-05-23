@@ -12,10 +12,10 @@ const PAGE_PADDING_X = 13;
 const PAGE_PADDING_Y = 12;
 const CONTENT_W = PAGE_W - PAGE_PADDING_X * 2;
 
-const HEADER_TITLE_Y = PAGE_PADDING_Y + 6.5;
+const HEADER_TITLE_Y = PAGE_PADDING_Y + 9;
 const HEADER_SUBTITLE_Y = HEADER_TITLE_Y + 4;
-const HEADER_RULE_Y = HEADER_SUBTITLE_Y + 3;
-const BODY_START_Y = HEADER_RULE_Y + 5;
+const HEADER_RULE_Y = HEADER_SUBTITLE_Y + 1.5;
+const BODY_START_Y = HEADER_RULE_Y + 4;
 const SECTION_GAP = 6;
 
 const FOOTER_Y = PAGE_H - PAGE_PADDING_Y;
@@ -36,7 +36,6 @@ const PLAN_FRAME_W = 56;
 const PLAN_FRAME_H = PLAN_FRAME_W * (3 / 4);
 
 const APPROVAL_H = 26;
-const APPROVAL_RADIUS = 6;
 
 const MAX_OPTION_IMAGES = 2;
 const MAX_MATERIALS = 4;
@@ -46,7 +45,6 @@ const BRAND_500: RGB = [75, 127, 171];
 const BRAND_600: RGB = [58, 100, 138];
 const BRAND_700: RGB = [40, 71, 101];
 const BRAND_200: RGB = [158, 192, 220];
-const BRAND_50: RGB = [236, 243, 249];
 const GRAY_800: RGB = [31, 41, 55];
 const GRAY_700: RGB = [55, 65, 81];
 const GRAY_600: RGB = [75, 85, 99];
@@ -201,6 +199,31 @@ function primaryImage(images: ImageAsset[]): ImageAsset | null {
   return images.find((image) => image.isPrimary) ?? images[0] ?? null;
 }
 
+// Converts a rectangular image data URL into a circular PNG (cover-fit, transparent corners).
+// Done on canvas before PDF generation so no raw PDF clip operators are needed.
+function circularizeImage(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const SIZE = 120; // px — ~15 mm at 203 dpi, enough resolution for a swatch circle
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+      const ctx = canvas.getContext('2d')!;
+      ctx.beginPath();
+      ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      const scale = Math.max(SIZE / img.width, SIZE / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      ctx.drawImage(img, (SIZE - w) / 2, (SIZE - h) / 2, w, h);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.src = dataUrl;
+  });
+}
+
 async function buildCatalogAssets(
   entries: CatalogItemEntry[],
 ): Promise<Map<string, CatalogItemAssets>> {
@@ -232,7 +255,8 @@ async function buildCatalogAssets(
       for (const material of item.materials.slice(0, MAX_MATERIALS)) {
         const matImages = await api.images.list({ entityType: 'material', entityId: material.id });
         const matImage = matImages.find((img) => img.isPrimary) ?? matImages[0] ?? null;
-        materialImages.set(material.id, matImage ? await imageAssetToPngDataUrl(matImage) : null);
+        const rawDataUrl = matImage ? await imageAssetToPngDataUrl(matImage) : null;
+        materialImages.set(material.id, rawDataUrl ? await circularizeImage(rawDataUrl) : null);
       }
 
       return [item.id, { rendering, plan, options, materialImages }] as const;
@@ -614,12 +638,14 @@ function drawMaterialsRow(
     const swatchCy = swatchY + swatchSize / 2;
     const image = materialImages.get(material.id);
     if (image) {
-      // White backing fill, no border (per export spec).
-      setFill(doc, WHITE);
-      doc.rect(swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize, 'F');
-      addContainedImage(doc, image, swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize, 0);
+      // Image was pre-circularized on canvas (transparent corners) — draw as square, looks circular.
+      doc.addImage(image, 'PNG', swatchCx - swatchSize / 2, swatchY, swatchSize, swatchSize);
+      setStroke(doc, GRAY_200);
+      doc.setLineWidth(0.3);
+      doc.circle(swatchCx, swatchCy, swatchSize / 2, 'S');
+      doc.setLineWidth(0.2);
     } else {
-      const fill = hexToRgb(material.swatchHex);
+      const fill = hexToRgb(material.swatchHex ?? '#e8e8e8');
       setFill(doc, fill);
       setStroke(doc, GRAY_200);
       doc.circle(swatchCx, swatchCy, swatchSize / 2, 'FD');
@@ -734,18 +760,6 @@ function drawLocationBlock(
   }
 }
 
-function drawRoundedRect(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-  style: 'F' | 'S' | 'FD',
-) {
-  doc.roundedRect(x, y, width, height, radius, radius, style);
-}
-
 function drawApprovalBand(
   doc: jsPDF,
   font: string,
@@ -754,9 +768,11 @@ function drawApprovalBand(
   y: number,
   width: number,
 ) {
-  setFill(doc, BRAND_50);
-  setStroke(doc, BRAND_200);
-  drawRoundedRect(doc, x, y, width, APPROVAL_H, APPROVAL_RADIUS, 'FD');
+  setFill(doc, GRAY_200);
+  setStroke(doc, GRAY_300);
+  doc.setLineWidth(0.3);
+  doc.rect(x, y, width, APPROVAL_H, 'FD');
+  doc.setLineWidth(0.2);
 
   const innerX = x + 7;
   const innerRight = x + width - 7;
@@ -913,23 +929,19 @@ function drawCatalogPage(
   const renderingMeasure = assets.rendering
     ? measureContainedImage(doc, assets.rendering, LEFT_COL_W, RENDER_SIZE, 0)
     : { drawW: LEFT_COL_W, drawH: RENDER_SIZE };
-  const leftContentHeight = renderingMeasure.drawH + 3 + QTY_BAND_H;
+  const leftContentHeight = QTY_BAND_H + 3 + renderingMeasure.drawH;
   const leftOffsetY =
     options.mainImageAlignment === 'top'
       ? 0
       : Math.max(0, (leftSectionHeight - leftContentHeight) / 2);
-  const renderingY = mainY + leftOffsetY;
-  const renderingFrame = drawRendering(
-    doc,
-    font,
-    assets.rendering,
-    entry.item,
-    PAGE_PADDING_X,
-    renderingY,
-  );
-  const qtyX = PAGE_PADDING_X + (LEFT_COL_W - renderingFrame.width) / 2;
-  const qtyY = renderingY + renderingFrame.height + 3;
-  drawQtyBand(doc, font, entry.item, qtyX, qtyY, renderingFrame.width, options.showCostInfo);
+
+  // Qty band above rendering (matches browser layout)
+  const qtyBandY = mainY + leftOffsetY;
+  const qtyX = PAGE_PADDING_X + (LEFT_COL_W - renderingMeasure.drawW) / 2;
+  drawQtyBand(doc, font, entry.item, qtyX, qtyBandY, renderingMeasure.drawW, options.showCostInfo);
+
+  const renderingY = qtyBandY + QTY_BAND_H + 3;
+  drawRendering(doc, font, assets.rendering, entry.item, PAGE_PADDING_X, renderingY);
 
   // Right column: specifications, dims, description, notes, finish schedule
   const mainBottomY = mainY + leftSectionHeight;
@@ -961,7 +973,7 @@ function drawCatalogPage(
 
   // ── Approval band ───────────────────────────────────────────────────────────
   if (options.showApproval) {
-    const approvalY = FOOTER_Y - APPROVAL_H - 6;
+    const approvalY = FOOTER_Y - APPROVAL_H - 14;
     drawApprovalBand(doc, font, entry.item.id, PAGE_PADDING_X, approvalY, CONTENT_W);
   }
 
