@@ -98,6 +98,14 @@ _Avoid_: Lookbook, booklet
 The quantity and cost tool for category-based design or construction scope.
 _Avoid_: room table, construction quantity survey
 
+**Proposal Table**:
+The Proposal-view of the **Generated Item Table** — a grouped table where each **Proposal Category** is a Table Group, with a fixed sticky-right block of editable Quantity / Unit Cost columns and a derived Total. The Proposal Table is one of two co-equal edit surfaces for Proposal Items; the other is the **Proposal Item Detail Panel**, used for focused single-item editing. When a Revision Round is open, the sticky-right block expands to show Rev Qty / Rev Cost / Rev Total alongside the baseline values.
+_Avoid_: Proposal page, proposal grid, items table when ambiguous
+
+**Proposal Item Detail Panel**:
+The focused single-item edit surface for a **Proposal Item**, opened from the **Proposal Table** as a right-side docked panel. Hosts inline editing of all Proposal Item fields, prev/next navigation across items in the active Proposal Category, quick actions (duplicate, add to FF&E, delete), and the item-scoped changelog when a Revision Round is open. On narrow viewports the same component renders full-screen as the mobile editor.
+_Avoid_: Detail modal, item viewer, item preview
+
 **Export Mode**:
 The presentation format used when generating a Proposal export, such as continuous or separated.
 _Avoid_: Print style, sheet mode
