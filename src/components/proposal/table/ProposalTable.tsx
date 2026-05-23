@@ -885,6 +885,26 @@ function ProposalCategorySection({
   );
   const itemCount = items.length;
 
+  const productTagPrefix = categoryName.slice(0, 2).toUpperCase();
+  const nextProductTag = useMemo(() => {
+    let max = 0;
+    for (const item of items) {
+      if (!item.productTag.startsWith(`${productTagPrefix}-`)) continue;
+      const suffix = item.productTag.slice(productTagPrefix.length + 1);
+      const n = Number(suffix);
+      if (Number.isInteger(n) && n > max) max = n;
+    }
+    return `${productTagPrefix}-${max + 1}`;
+  }, [items, productTagPrefix]);
+
+  const handleAddItem = useCallback(() => {
+    createItem.mutate({
+      sortOrder: items.length,
+      productTag: nextProductTag,
+      itemName: '',
+    });
+  }, [createItem, items.length, nextProductTag]);
+
   return (
     <GroupedTableSection>
       <GroupedTableHeader>
@@ -913,6 +933,18 @@ function ProposalCategorySection({
           <span className="shrink-0 rounded-pill bg-white/15 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
+          <button
+            type="button"
+            onClick={handleAddItem}
+            title={`Add item to ${categoryName}`}
+            aria-label={`Add item to ${categoryName}`}
+            className="shrink-0 inline-flex items-center gap-1 rounded-pill bg-white/10 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15 transition-colors hover:bg-white/20 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+          >
+            <span aria-hidden="true" className="text-sm leading-none">
+              +
+            </span>
+            Add item
+          </button>
           {hasOpenRevision && openRev && (
             <span className="shrink-0 rounded-pill bg-brand-500/25 px-2 py-0.5 text-xs font-medium text-brand-100 ring-1 ring-inset ring-brand-300/50">
               Revision {openRev.label}
@@ -928,13 +960,7 @@ function ProposalCategorySection({
             categoryName={categoryName}
             hiddenDefaults={hiddenDefaults}
             onCategoryDelete={onCategoryDelete}
-            onAddItem={() =>
-              createItem.mutate({
-                sortOrder: items.length,
-                productTag: `${categoryName.slice(0, 2).toUpperCase()}-${items.length + 1}`,
-                itemName: '',
-              })
-            }
+            onAddItem={handleAddItem}
             onRestoreDefault={onRestoreDefault}
             onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
           />
