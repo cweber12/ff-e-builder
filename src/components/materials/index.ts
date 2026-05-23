@@ -1,4 +1,5 @@
 export { MaterialsView } from './MaterialsView';
+export type { MaterialDraft } from './MaterialsView';
 export {
   MaterialLibraryModal,
   MaterialLibraryPanel,

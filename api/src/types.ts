@@ -101,6 +101,8 @@ export interface ItemColumnDef {
   updated_at: string;
 }
 
+export type MaterialCategory = 'wood' | 'metal' | 'stone' | 'glass' | 'fabric' | 'solid_color';
+
 export interface Material {
   id: string;
   project_id: string;
@@ -110,6 +112,8 @@ export interface Material {
   swatch_hex: string;
   manufacturer: string;
   source_url: string;
+  category: MaterialCategory | null;
+  sub_category: string;
   created_at: string;
   updated_at: string;
 }
@@ -372,6 +376,7 @@ export const UpdateItemColumnDefSchema = CreateItemColumnDefSchema.partial();
 export type UpdateItemColumnDefInput = z.infer<typeof UpdateItemColumnDefSchema>;
 
 const SwatchHexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
+const materialCategories = ['wood', 'metal', 'stone', 'glass', 'fabric', 'solid_color'] as const;
 
 export const CreateMaterialSchema = z.object({
   name: z.string().max(255).default(''),
@@ -380,6 +385,8 @@ export const CreateMaterialSchema = z.object({
   swatch_hex: SwatchHexSchema.default('#D9D4C8'),
   manufacturer: z.string().max(255).default(''),
   source_url: z.string().max(2048).default(''),
+  category: z.enum(materialCategories).nullable().optional(),
+  sub_category: z.string().max(255).default(''),
 });
 export type CreateMaterialInput = z.infer<typeof CreateMaterialSchema>;
 

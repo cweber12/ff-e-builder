@@ -163,16 +163,28 @@ The unified project-scoped library of reusable finish entries accessible from bo
 _Avoid_: Material library, swatch library, swatches tab
 
 **Finish Library Filters**:
-The filters available in the Finish Library UI: All, Used in FF&E, Used in Proposal. When "Used in FF&E" is active, a secondary Location dropdown narrows to materials assigned within a specific Location. When "Used in Proposal" is active, a secondary Category dropdown narrows to materials assigned within a specific Proposal Category. A material ID search field is always available.
-_Avoid_: Materials tab, Swatches tab, classification-based sections
+The filters available in the Finish Library UI: a single category dropdown offering All, Wood, Metal, Stone, Glass, Fabric, Solid Color, and Uncategorized. "All" shows every Material in the project library. Each category option shows only Materials with that Finish Category set. "Uncategorized" shows Materials with no Finish Category — making it easy to locate and classify untagged entries.
+_Avoid_: Materials tab, Swatches tab, scope-based filters (Used in FF&E / Used in Proposal)
 
 **Import Material ID**:
 For spreadsheet imports, when material*id is missing, generate a plain numeric string using the next integer after the current highest numeric material_id in the Project (for example: 1, 2, 3).
 \_Avoid*: Zero-padded generated IDs
 
 **Material**:
-A Finish Library entry — a finish, fabric, surface, or product material reference. A Material has a name, an optional ID, an optional description, and a visual which is either an uploaded image or a hex color. Image takes precedence over hex color when both are set. There is no type distinction between a material used in FF&E and one used in Proposal; the same entry can be assigned to items in either tool.
+A Finish Library entry — a finish, fabric, surface, or product material reference. A Material has a name, an optional ID, an optional Finish Category, an optional Sub-category, an optional description, an optional manufacturer, an optional source URL, and a Material Visual. Color and image are mutually exclusive: selecting an image removes any saved color; selecting a color removes any saved image. There is no type distinction between a material used in FF&E and one used in Proposal; the same entry can be assigned to items in either tool.
 _Avoid_: Swatch as a separate entity type; Finish Classification as a user-facing concept
+
+**Finish Category**:
+One of six enumerated material types that classify a Material in the Finish Library: Wood, Metal, Stone, Glass, Fabric, Solid Color. Stored as a strict enum in the database. A Material with no Finish Category is considered Uncategorized and surfaces under the "Uncategorized" filter option.
+_Avoid_: finish_classification (legacy removed field), material type, material kind
+
+**Material Sub-category**:
+A free-text refinement below a Finish Category, entered by the user. Optional and unconstrained — for example "Walnut Veneer" under Wood or "Brushed Nickel" under Metal.
+_Avoid_: tag, label, variant
+
+**Swatch Mode**:
+The mutually exclusive selection on a Material determining whether its visual is rendered from an uploaded image or a hex color. Switching modes on save removes the previously active visual: choosing Image deletes any saved color value; choosing Color deletes any uploaded image from cloud storage.
+_Avoid_: image-first fallback (the old precedence model where both could coexist)
 
 **Material Visual**:
 The rendered representation of a Material — either the uploaded image (if present) or a solid block rendered from the Material's hex color. Used as a swatch image in Proposal exports and as an image + ID pair in FF&E exports.

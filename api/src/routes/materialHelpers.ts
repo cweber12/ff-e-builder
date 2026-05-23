@@ -77,6 +77,8 @@ type ForkPatch = {
   swatch_hex?: string | undefined;
   manufacturer?: string | undefined;
   source_url?: string | undefined;
+  category?: string | null | undefined;
+  sub_category?: string | undefined;
 };
 
 export async function forkMaterial(
@@ -96,6 +98,8 @@ export async function forkMaterial(
     swatch_hex: string;
     manufacturer: string;
     source_url: string;
+    category: string | null;
+    sub_category: string;
   };
 
   const newName = patch.name ?? cur.name;
@@ -104,14 +108,18 @@ export async function forkMaterial(
   const newHex = patch.swatch_hex ?? cur.swatch_hex;
   const newManufacturer = patch.manufacturer ?? cur.manufacturer;
   const newSourceUrl = patch.source_url ?? cur.source_url;
+  const newCategory = patch.category !== undefined ? patch.category : cur.category;
+  const newSubCategory = patch.sub_category ?? cur.sub_category;
 
   const newRows = await sql`
     INSERT INTO materials (
-      project_id, name, material_id, description, swatch_hex, manufacturer, source_url
+      project_id, name, material_id, description, swatch_hex, manufacturer, source_url,
+      category, sub_category
     )
     VALUES (
       ${cur.project_id}, ${newName}, ${newMatId}, ${newDesc},
-      ${newHex}, ${newManufacturer}, ${newSourceUrl}
+      ${newHex}, ${newManufacturer}, ${newSourceUrl},
+      ${newCategory}, ${newSubCategory}
     )
     RETURNING *
   `;

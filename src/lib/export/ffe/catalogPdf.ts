@@ -324,15 +324,6 @@ function drawWrappedText(
   };
 }
 
-function initials(value: string): string {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
 function hexToRgb(hex: string): RGB {
   const clean = hex.replace('#', '');
   const full =
@@ -346,27 +337,6 @@ function hexToRgb(hex: string): RGB {
   const g = parseInt(full.slice(2, 4), 16);
   const b = parseInt(full.slice(4, 6), 16);
   return [Number.isNaN(r) ? 232 : r, Number.isNaN(g) ? 232 : g, Number.isNaN(b) ? 232 : b];
-}
-
-function drawImagePlaceholder(
-  doc: jsPDF,
-  font: string,
-  label: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  setFill(doc, BRAND_50);
-  doc.rect(x, y, width, height, 'F');
-  const cx = x + width / 2;
-  const cy = y + height / 2;
-  const radius = Math.min(width * 0.16, height * 0.18);
-  setFill(doc, [BRAND_500[0], BRAND_500[1], BRAND_500[2]]);
-  doc.circle(cx, cy, radius, 'F');
-  applyFont(doc, font, 'bold', 22);
-  setText(doc, WHITE);
-  doc.text(label || '·', cx, cy + 2.4, { align: 'center' });
 }
 
 // ── AcroForm fields (approval band) ───────────────────────────────────────────
@@ -457,9 +427,9 @@ function drawHeader(
 
 function drawRendering(
   doc: jsPDF,
-  font: string,
+  _font: string,
   rendering: string | null,
-  item: Item,
+  _item: Item,
   x: number,
   y: number,
 ): { width: number; height: number } {
@@ -471,10 +441,7 @@ function drawRendering(
     doc.addImage(rendering, 'PNG', frameX, y, measured.drawW, measured.drawH);
     return { width: measured.drawW, height: measured.drawH };
   } else {
-    const fallbackSize = Math.min(LEFT_COL_W, RENDER_SIZE * 0.8);
-    const frameX = x + (LEFT_COL_W - fallbackSize) / 2;
-    drawImagePlaceholder(doc, font, initials(item.itemName), frameX, y, fallbackSize, fallbackSize);
-    return { width: fallbackSize, height: fallbackSize };
+    return { width: LEFT_COL_W, height: RENDER_SIZE };
   }
 }
 
@@ -547,13 +514,24 @@ function drawSpecColumn(
   doc.text('PRODUCT SPECIFICATIONS', x, cursorY);
   cursorY += 5;
 
-  // Dimensions (small neutral-700)
-  const dim = model.dimensions ?? 'W __" x D __" x H __"';
-  const dimColor: RGB = model.dimensions ? GRAY_700 : GRAY_400;
-  const dimResult = drawWrappedText(doc, font, 'normal', 9, dimColor, dim, x, cursorY, width, {
-    maxLines: 1,
-  });
-  cursorY += dimResult.height + 2;
+  // Dimensions (small neutral-700) — omitted when not set
+  if (model.dimensions) {
+    const dimResult = drawWrappedText(
+      doc,
+      font,
+      'normal',
+      9,
+      GRAY_700,
+      model.dimensions,
+      x,
+      cursorY,
+      width,
+      {
+        maxLines: 1,
+      },
+    );
+    cursorY += dimResult.height + 2;
+  }
 
   // Description (neutral-700, 9pt, up to 4 lines, italic-ish leading)
   if (model.description) {
@@ -742,20 +720,17 @@ function drawLocationBlock(
   setText(doc, GRAY_700);
   doc.text(roomName, x + keyWidth, y + 3);
 
-  // Plan frame
-  const frameY = y + 7;
-  const frameW = planImageSize === 'expanded' ? RIGHT_COL_W : PLAN_FRAME_W;
-  const frameH =
-    planImageSize === 'expanded' ? Math.min(52, FOOTER_Y - frameY - APPROVAL_H - 12) : PLAN_FRAME_H;
-  setFill(doc, GRAY_100);
-  doc.rect(x, frameY, frameW, frameH, 'F');
+  // Plan frame — omitted entirely when no plan image exists
   if (plan) {
+    const frameY = y + 7;
+    const frameW = planImageSize === 'expanded' ? RIGHT_COL_W : PLAN_FRAME_W;
+    const frameH =
+      planImageSize === 'expanded'
+        ? Math.min(52, FOOTER_Y - frameY - APPROVAL_H - 12)
+        : PLAN_FRAME_H;
+    setFill(doc, GRAY_100);
+    doc.rect(x, frameY, frameW, frameH, 'F');
     addContainedImage(doc, plan, x, frameY, frameW, frameH, 0);
-  } else {
-    applyFont(doc, font, 'bold', 7);
-    setText(doc, GRAY_400);
-    doc.text('LOCATION', x + frameW / 2, frameY + frameH / 2 - 1, { align: 'center' });
-    doc.text('SNIPPET', x + frameW / 2, frameY + frameH / 2 + 3, { align: 'center' });
   }
 }
 
@@ -836,23 +811,16 @@ function drawApprovalBand(
 function drawFooter(
   doc: jsPDF,
   font: string,
-  project: Project,
+  _project: Project,
   pageNum: number,
   total: number,
   watermark?: CatalogWatermarkPdfOptions | null,
 ) {
-  const leftX = PAGE_PADDING_X;
   const rightX = PAGE_W - PAGE_PADDING_X;
   // Page number — always on the right
   applyFont(doc, font, 'bold', 7);
   setText(doc, GRAY_500);
   doc.text(`PAGE ${pageNum} of ${total}`, rightX, FOOTER_Y, { align: 'right' });
-  // Project name in center, skipped when the center slot is taken by the watermark
-  if (!watermark || watermark.placementV !== 'footer' || watermark.placementH !== 'center') {
-    applyFont(doc, font, 'normal', 7);
-    setText(doc, GRAY_400);
-    doc.text(safeName(project.name), (leftX + rightX) / 2, FOOTER_Y, { align: 'center' });
-  }
   if (watermark && watermark.placementV === 'footer') {
     drawWatermarkInZone(doc, font, watermark, 'footer');
   }
@@ -944,10 +912,7 @@ function drawCatalogPage(
   const leftSectionHeight = RENDER_SIZE + 3 + QTY_BAND_H;
   const renderingMeasure = assets.rendering
     ? measureContainedImage(doc, assets.rendering, LEFT_COL_W, RENDER_SIZE, 0)
-    : {
-        drawW: Math.min(LEFT_COL_W, RENDER_SIZE * 0.8),
-        drawH: Math.min(LEFT_COL_W, RENDER_SIZE * 0.8),
-      };
+    : { drawW: LEFT_COL_W, drawH: RENDER_SIZE };
   const leftContentHeight = renderingMeasure.drawH + 3 + QTY_BAND_H;
   const leftOffsetY =
     options.mainImageAlignment === 'top'

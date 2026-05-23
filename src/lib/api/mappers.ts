@@ -6,9 +6,10 @@ import type {
   CustomColumnDef,
   ItemStatus,
   LengthLine,
+  Material,
+  MaterialCategory,
   Measurement,
   PlanCalibration,
-  Material,
   MeasuredPlan,
   Project,
   ProposalCategory,
@@ -150,6 +151,8 @@ export interface RawMaterial {
   swatch_hex: string;
   manufacturer?: string;
   source_url?: string;
+  category?: string | null;
+  sub_category?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -372,6 +375,15 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   linkedFfeItemId: r.linked_ffe_item_id ?? null,
 });
 
+const validCategories = new Set<string>([
+  'wood',
+  'metal',
+  'stone',
+  'glass',
+  'fabric',
+  'solid_color',
+]);
+
 export const mapMaterial = (r: RawMaterial): Material => ({
   id: r.id,
   projectId: r.project_id,
@@ -381,6 +393,9 @@ export const mapMaterial = (r: RawMaterial): Material => ({
   swatchHex: r.swatch_hex,
   manufacturer: r.manufacturer ?? '',
   sourceUrl: r.source_url ?? '',
+  category:
+    r.category != null && validCategories.has(r.category) ? (r.category as MaterialCategory) : null,
+  subCategory: r.sub_category ?? '',
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

@@ -1,57 +1,77 @@
 import { useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import {
   useCreateMaterial,
+  useDeleteImage,
   useDeleteMaterial,
   useMaterials,
+  useImages,
   useUpdateMaterial,
   useUploadImage,
 } from '../../hooks';
-import type { Material, Project, RoomWithItems, ProposalCategoryWithItems } from '../../types';
+import type { ImageAsset, Material, MaterialCategory, Project } from '../../types';
+import { imageKeys } from '../../lib/query';
 import { Button } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
-import { MaterialForm, MaterialSwatchImage, ProductLinkIcon } from './MaterialLibraryModal';
-import {
-  describeCatalogEntry,
-  productCatalog,
-  type CatalogEntry,
-} from '../../lib/materials/catalog';
+import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
 
 type MaterialsViewProps = {
   project: Project;
   tool?: 'ffe' | 'proposal';
-  roomsWithItems?: RoomWithItems[];
-  proposalCategoriesWithItems?: ProposalCategoryWithItems[];
 };
 
-type MaterialDraft = {
+export type MaterialDraft = {
   name: string;
   materialId: string;
+  category: MaterialCategory | '';
+  subCategory: string;
   description: string;
-  swatchFile: File | null;
-  swatchHex: string;
   manufacturer: string;
   sourceUrl: string;
+  swatchMode: 'color' | 'image';
+  swatchFile: File | null;
+  swatchHex: string;
 };
 
 const emptyDraft: MaterialDraft = {
   name: '',
   materialId: '',
+  category: '',
+  subCategory: '',
   description: '',
-  swatchFile: null,
-  swatchHex: '#D9D4C8',
   manufacturer: '',
   sourceUrl: '',
+  swatchMode: 'color',
+  swatchFile: null,
+  swatchHex: '#D9D4C8',
 };
 
-export function MaterialsView({
-  project,
+type CategoryFilter = 'all' | MaterialCategory | 'uncategorized';
 
-  tool: _tool = 'ffe',
-  roomsWithItems = [],
-  proposalCategoriesWithItems = [],
-}: MaterialsViewProps) {
+const CATEGORY_LABELS: Record<MaterialCategory, string> = {
+  wood: 'Wood',
+  metal: 'Metal',
+  stone: 'Stone',
+  glass: 'Glass',
+  fabric: 'Fabric',
+  solid_color: 'Solid Color',
+};
+
+const FILTER_OPTIONS: Array<{ value: CategoryFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'wood', label: 'Wood' },
+  { value: 'metal', label: 'Metal' },
+  { value: 'stone', label: 'Stone' },
+  { value: 'glass', label: 'Glass' },
+  { value: 'fabric', label: 'Fabric' },
+  { value: 'solid_color', label: 'Solid Color' },
+  { value: 'uncategorized', label: 'Uncategorized' },
+];
+
+export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewProps) {
+  const queryClient = useQueryClient();
   const materials = useMaterials(project.id);
   const createMaterial = useCreateMaterial(project.id);
   const updateMaterial = useUpdateMaterial(project.id);
@@ -59,54 +79,27 @@ export function MaterialsView({
   const uploadImage = useUploadImage();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
-  const [scope, setScope] = useState<'all' | 'ffe' | 'proposal'>('all');
-  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  const editingMaterialImages = useImages('material', editingId ?? '');
+  const deleteImage = useDeleteImage('material', editingId ?? '');
+
   const editingMaterial = materials.data?.find((material) => material.id === editingId);
+
   const filteredMaterials = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-
-    const ffeIdsByRoom = new Map<string, Set<string>>();
-    for (const room of roomsWithItems) {
-      const ids = new Set(room.items.flatMap((item) => item.materials.map((m) => m.id)));
-      ffeIdsByRoom.set(room.id, ids);
-    }
-    const allFfeIds = new Set([...ffeIdsByRoom.values()].flatMap((s) => [...s]));
-
-    const proposalIdsByCategory = new Map<string, Set<string>>();
-    for (const cat of proposalCategoriesWithItems) {
-      const ids = new Set(cat.items.flatMap((item) => item.materials.map((m) => m.id)));
-      proposalIdsByCategory.set(cat.id, ids);
-    }
-    const allProposalIds = new Set([...proposalIdsByCategory.values()].flatMap((s) => [...s]));
-
     return [...(materials.data ?? [])]
       .filter((material) => {
-        if (scope === 'ffe') {
-          if (selectedRoomId) return ffeIdsByRoom.get(selectedRoomId)?.has(material.id) ?? false;
-          return allFfeIds.has(material.id);
-        }
-        if (scope === 'proposal') {
-          if (selectedCategoryId)
-            return proposalIdsByCategory.get(selectedCategoryId)?.has(material.id) ?? false;
-          return allProposalIds.has(material.id);
-        }
+        if (categoryFilter === 'uncategorized') return material.category === null;
+        if (categoryFilter !== 'all') return material.category === categoryFilter;
         return true;
       })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [
-    materials.data,
-    query,
-    roomsWithItems,
-    scope,
-    selectedCategoryId,
-    selectedRoomId,
-    proposalCategoriesWithItems,
-  ]);
+  }, [materials.data, query, categoryFilter]);
 
   const resetDraft = () => {
     setDraft(emptyDraft);
@@ -115,15 +108,21 @@ export function MaterialsView({
   };
 
   const startEdit = (material: Material) => {
+    const cachedImages = queryClient.getQueryData<ImageAsset[]>(
+      imageKeys.forEntity('material', material.id),
+    );
     setEditingId(material.id);
     setDraft({
       name: material.name,
       materialId: material.materialId,
+      category: material.category ?? '',
+      subCategory: material.subCategory,
       description: material.description,
-      swatchFile: null,
-      swatchHex: material.swatchHex || '#D9D4C8',
       manufacturer: material.manufacturer,
       sourceUrl: material.sourceUrl,
+      swatchMode: (cachedImages?.length ?? 0) > 0 ? 'image' : 'color',
+      swatchFile: null,
+      swatchHex: material.swatchHex || '#D9D4C8',
     });
     setShowForm(true);
   };
@@ -138,51 +137,36 @@ export function MaterialsView({
     const input = {
       name: draft.name.trim(),
       materialId: draft.materialId.trim(),
+      category: draft.category || null,
+      subCategory: draft.subCategory.trim(),
       description: draft.description.trim(),
-      ...(draft.swatchHex ? { swatchHex: draft.swatchHex } : {}),
-      ...(draft.manufacturer.trim() ? { manufacturer: draft.manufacturer.trim() } : {}),
-      ...(draft.sourceUrl.trim() ? { sourceUrl: draft.sourceUrl.trim() } : {}),
+      swatchHex: draft.swatchHex || '#D9D4C8',
+      manufacturer: draft.manufacturer.trim(),
+      sourceUrl: draft.sourceUrl.trim(),
     };
     if (!input.name) return;
+
     let savedMaterial: Material;
     if (editingId) {
       savedMaterial = await updateMaterial.mutateAsync({ id: editingId, patch: input });
     } else {
       savedMaterial = await createMaterial.mutateAsync(input);
     }
-    if (draft.swatchFile) {
+
+    if (draft.swatchMode === 'image' && draft.swatchFile) {
       await uploadImage.mutateAsync({
         entityType: 'material',
         entityId: savedMaterial.id,
         file: draft.swatchFile,
         altText: savedMaterial.name,
       });
+    } else if (draft.swatchMode === 'color' && editingId) {
+      for (const img of editingMaterialImages.data ?? []) {
+        await deleteImage.mutateAsync(img.id);
+      }
     }
-    resetDraft();
-  };
 
-  const importFromCatalog = async () => {
-    const existingByUrl = new Map(
-      (materials.data ?? []).map((m) => [m.sourceUrl.toLowerCase(), m] as const),
-    );
-    const existingByMaterialId = new Map(
-      (materials.data ?? []).map((m) => [m.materialId, m] as const),
-    );
-    const toCreate: CatalogEntry[] = productCatalog.filter(
-      (entry) =>
-        !existingByUrl.has(entry.sourceUrl.toLowerCase()) &&
-        !existingByMaterialId.has(entry.materialId),
-    );
-    if (toCreate.length === 0) return;
-    for (const entry of toCreate) {
-      await createMaterial.mutateAsync({
-        name: entry.name,
-        materialId: entry.materialId,
-        description: describeCatalogEntry(entry),
-        manufacturer: entry.manufacturer,
-        sourceUrl: entry.sourceUrl,
-      });
-    }
+    resetDraft();
   };
 
   return (
@@ -195,52 +179,18 @@ export function MaterialsView({
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex border border-black/10 bg-canvas-chrome p-0.5">
-            {(['all', 'ffe', 'proposal'] as const).map((nextScope) => (
-              <button
-                key={nextScope}
-                type="button"
-                className={scope === nextScope ? activeToggleClassName : toggleClassName}
-                onClick={() => {
-                  setScope(nextScope);
-                  setSelectedRoomId('');
-                  setSelectedCategoryId('');
-                }}
-              >
-                {nextScope === 'all' ? 'All' : nextScope === 'ffe' ? 'FF&E' : 'Proposal'}
-              </button>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+            className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
+            aria-label="Filter by category"
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
-          </div>
-          {scope === 'ffe' && roomsWithItems.length > 0 && (
-            <select
-              value={selectedRoomId}
-              onChange={(e) => setSelectedRoomId(e.target.value)}
-              className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
-              aria-label="Filter by room"
-            >
-              <option value="">All rooms</option>
-              {roomsWithItems.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          )}
-          {scope === 'proposal' && proposalCategoriesWithItems.length > 0 && (
-            <select
-              value={selectedCategoryId}
-              onChange={(e) => setSelectedCategoryId(e.target.value)}
-              className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
-              aria-label="Filter by category"
-            >
-              <option value="">All categories</option>
-              {proposalCategoriesWithItems.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          )}
+          </select>
           <div className="inline-flex border border-black/10 bg-canvas-chrome p-0.5">
             <button
               type="button"
@@ -257,20 +207,13 @@ export function MaterialsView({
               Table
             </button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => void importFromCatalog()}
-            title="Add known products from the built-in catalog (currently Formica laminates)"
-          >
-            Import from catalog
-          </Button>
           <ExportMenu
+            label={<ExportIcon />}
             onCsv={() => void exportMaterialsExcel(project, filteredMaterials, 'csv')}
             onExcel={() => void exportMaterialsExcel(project, filteredMaterials)}
             onPdf={() => void exportMaterialsPdf(project, filteredMaterials)}
             disabled={filteredMaterials.length === 0}
+            className="[&>button]:px-2"
           />
         </div>
       </div>
@@ -280,6 +223,7 @@ export function MaterialsView({
           <MaterialForm
             draft={draft}
             editing={Boolean(editingMaterial)}
+            editingMaterialId={editingId ?? undefined}
             submitLabel={editingId ? 'Save changes' : 'Add to library'}
             onDraftChange={setDraft}
             onCancel={resetDraft}
@@ -369,6 +313,12 @@ function MaterialGridCard({
           <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-neutral-950">
             {material.name}
           </h4>
+          {material.category && (
+            <p className="mt-0.5 truncate text-[10px] text-neutral-500">
+              {CATEGORY_LABELS[material.category]}
+              {material.subCategory ? ` · ${material.subCategory}` : ''}
+            </p>
+          )}
         </div>
         {material.description && (
           <p className="line-clamp-2 text-xs leading-snug text-neutral-600">
@@ -376,10 +326,7 @@ function MaterialGridCard({
           </p>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <div className="flex items-center gap-1.5">
-            <MaterialSwatchImage material={material} size="sm" />
-            <ProductLinkIcon url={material.sourceUrl} label={material.name} />
-          </div>
+          <ProductLinkIcon url={material.sourceUrl} label={material.name} />
           <div className="flex gap-1">
             <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
               Edit
@@ -410,6 +357,7 @@ function MaterialsTable({
           <th className="px-3 py-3">Swatch</th>
           <th className="px-3 py-3">Material</th>
           <th className="px-3 py-3">ID</th>
+          <th className="px-3 py-3">Category</th>
           <th className="px-3 py-3">Manufacturer</th>
           <th className="px-3 py-3">Description</th>
           <th className="px-3 py-3" aria-label="Actions" />
@@ -438,6 +386,18 @@ function MaterialsTable({
             </td>
             <td className="px-3 py-3 font-medium text-neutral-950">{material.name}</td>
             <td className="num px-3 py-3 text-neutral-700">{material.materialId || '—'}</td>
+            <td className="px-3 py-3 text-neutral-700">
+              {material.category ? (
+                <span>
+                  {CATEGORY_LABELS[material.category]}
+                  {material.subCategory ? (
+                    <span className="ml-1 text-neutral-500">· {material.subCategory}</span>
+                  ) : null}
+                </span>
+              ) : (
+                '—'
+              )}
+            </td>
             <td className="px-3 py-3 text-neutral-700">{material.manufacturer || '—'}</td>
             <td className="max-w-sm px-3 py-3 text-neutral-600">{material.description || '—'}</td>
             <td className="px-3 py-3">
@@ -464,19 +424,23 @@ const activeToggleClassName =
 
 function materialMatchesQuery(material: Material, query: string) {
   if (!query) return true;
-  const haystack = [
-    material.name,
-    material.materialId,
-    material.description,
-    material.manufacturer,
-    material.sourceUrl,
-  ]
+  return [material.name, material.materialId, material.description, material.manufacturer]
     .join(' ')
-    .toLowerCase();
-  if (haystack.includes(query)) return true;
-  // Match queries like "07197" or "7197" against the urlCode embedded in
-  // the source URL even when the materialId has been edited.
-  const digits = query.replace(/\D/g, '');
-  if (!digits) return false;
-  return material.sourceUrl.includes(digits) || material.materialId.includes(digits);
+    .toLowerCase()
+    .includes(query);
+}
+
+function ExportIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      className="h-4 w-4"
+      aria-label="Export"
+    >
+      <path d="M8.75 2.75a.75.75 0 0 0-1.5 0v5.69L5.03 6.22a.75.75 0 0 0-1.06 1.06l3.5 3.5a.75.75 0 0 0 1.06 0l3.5-3.5a.75.75 0 0 0-1.06-1.06L8.75 8.44V2.75Z" />
+      <path d="M3.5 9.75a.75.75 0 0 0-1.5 0v1.5A2.75 2.75 0 0 0 4.75 14h6.5A2.75 2.75 0 0 0 14 11.25v-1.5a.75.75 0 0 0-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5Z" />
+    </svg>
+  );
 }

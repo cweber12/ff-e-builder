@@ -1,6 +1,6 @@
 import { apiFetch } from './transport';
 import { mapMaterial, type RawMaterial } from './mappers';
-import type { Material } from '../../types';
+import type { Material, MaterialCategory } from '../../types';
 
 const DEFAULT_SWATCH_HEX = '#D9D4C8';
 
@@ -11,6 +11,8 @@ export type CreateMaterialInput = {
   swatchHex?: string;
   manufacturer?: string;
   sourceUrl?: string;
+  category?: MaterialCategory | null;
+  subCategory?: string;
 };
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
@@ -22,6 +24,8 @@ const materialCreatePayload = (input: CreateMaterialInput) => ({
   swatch_hex: input.swatchHex ?? DEFAULT_SWATCH_HEX,
   manufacturer: input.manufacturer ?? '',
   source_url: input.sourceUrl ?? '',
+  category: input.category ?? null,
+  sub_category: input.subCategory ?? '',
 });
 
 const materialUpdatePayload = (patch: UpdateMaterialInput) => ({
@@ -31,6 +35,8 @@ const materialUpdatePayload = (patch: UpdateMaterialInput) => ({
   swatch_hex: patch.swatchHex,
   manufacturer: patch.manufacturer,
   source_url: patch.sourceUrl,
+  category: patch.category,
+  sub_category: patch.subCategory,
 });
 
 const assignedMaterialUpdatePayload = (patch: UpdateMaterialInput) => ({
@@ -39,6 +45,8 @@ const assignedMaterialUpdatePayload = (patch: UpdateMaterialInput) => ({
   description: patch.description,
   manufacturer: patch.manufacturer,
   source_url: patch.sourceUrl,
+  category: patch.category,
+  sub_category: patch.subCategory,
 });
 
 export const materialsApi = {

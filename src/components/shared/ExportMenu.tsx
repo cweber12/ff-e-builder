@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 type ExportMenuProps = {
-  label?: string;
+  label?: ReactNode;
   onCsv?: () => void;
   onExcel?: () => void;
   onPdf: () => void;

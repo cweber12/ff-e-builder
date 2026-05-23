@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useCreateMaterial,
+  useDeleteImage,
+  useImages,
   useItemMaterialActions,
   useMaterials,
   useUpdateMaterial,
   useUploadImage,
 } from '../../hooks';
-import type { Item, Material, ProposalItem } from '../../types';
+import type { ImageAsset, Item, Material, MaterialCategory, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
-import { describeCatalogEntry, lookupCatalogEntry } from '../../lib/materials/catalog';
+import { imageKeys } from '../../lib/query';
 
 type FfeContext = {
   context: 'ffe';
@@ -54,12 +57,70 @@ type MaterialLibraryPanelProps =
       priorityMaterialIds?: string[] | undefined;
     } & ProposalContext);
 
+export type MaterialDraft = {
+  name: string;
+  materialId: string;
+  category: MaterialCategory | '';
+  subCategory: string;
+  description: string;
+  manufacturer: string;
+  sourceUrl: string;
+  swatchMode: 'color' | 'image';
+  swatchFile: File | null;
+  swatchHex: string;
+};
+
+const CATEGORY_LABELS: Record<MaterialCategory, string> = {
+  wood: 'Wood',
+  metal: 'Metal',
+  stone: 'Stone',
+  glass: 'Glass',
+  fabric: 'Fabric',
+  solid_color: 'Solid Color',
+};
+
+const MATERIAL_CATEGORIES: MaterialCategory[] = [
+  'wood',
+  'metal',
+  'stone',
+  'glass',
+  'fabric',
+  'solid_color',
+];
+
+type CategoryFilter = 'all' | MaterialCategory | 'uncategorized';
+
+const FILTER_OPTIONS: Array<{ value: CategoryFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'wood', label: 'Wood' },
+  { value: 'metal', label: 'Metal' },
+  { value: 'stone', label: 'Stone' },
+  { value: 'glass', label: 'Glass' },
+  { value: 'fabric', label: 'Fabric' },
+  { value: 'solid_color', label: 'Solid Color' },
+  { value: 'uncategorized', label: 'Uncategorized' },
+];
+
+const emptyDraft: MaterialDraft = {
+  name: '',
+  materialId: '',
+  category: '',
+  subCategory: '',
+  description: '',
+  manufacturer: '',
+  sourceUrl: '',
+  swatchMode: 'color',
+  swatchFile: null,
+  swatchHex: '#D9D4C8',
+};
+
 export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const { projectId, priorityMaterialIds = [] } = props;
   const roomId = props.context === 'ffe' ? props.roomId : '';
   const categoryId = props.context === 'proposal' ? props.categoryId : '';
   const activeItem: Item | ProposalItem | undefined = props.item;
 
+  const queryClient = useQueryClient();
   const materials = useMaterials(projectId);
   const createMaterial = useCreateMaterial(projectId);
   const updateMaterial = useUpdateMaterial(projectId);
@@ -70,22 +131,18 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   );
   const uploadImage = useUploadImage();
 
-  const [draft, setDraft] = useState({
-    name: '',
-    materialId: '',
-    description: '',
-    swatchFile: null as File | null,
-    swatchHex: '#D9D4C8',
-    manufacturer: '',
-    sourceUrl: '',
-  });
+  const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingAssigned, setEditingAssigned] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [pendingAssignmentId, setPendingAssignmentId] = useState<string | null>(null);
   const [addedMaterialName, setAddedMaterialName] = useState<string | null>(null);
   const [removedMaterialName, setRemovedMaterialName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  const editingMaterialImages = useImages('material', editingId ?? '');
+  const deleteImage = useDeleteImage('material', editingId ?? '');
 
   const assignedIds = useMemo(
     () => new Set(activeItem?.materials.map((m) => m.id) ?? []),
@@ -102,40 +159,43 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     const query = searchQuery.trim().toLowerCase();
     return [...(materials.data ?? [])]
       .filter((m) => !assignedIds.has(m.id) && m.id !== pendingAssignmentId)
+      .filter((m) => {
+        if (categoryFilter === 'uncategorized') return m.category === null;
+        if (categoryFilter !== 'all') return m.category === categoryFilter;
+        return true;
+      })
       .filter((m) => materialMatchesQuery(m, query))
       .sort((a, b) => {
         const prioritySort = Number(priorityIds.has(b.id)) - Number(priorityIds.has(a.id));
         if (prioritySort !== 0) return prioritySort;
         return a.name.localeCompare(b.name);
       });
-  }, [assignedIds, materials.data, pendingAssignmentId, priorityIds, searchQuery]);
+  }, [assignedIds, categoryFilter, materials.data, pendingAssignmentId, priorityIds, searchQuery]);
 
   const resetDraft = () => {
-    setDraft({
-      name: '',
-      materialId: '',
-      description: '',
-      swatchFile: null,
-      swatchHex: '#D9D4C8',
-      manufacturer: '',
-      sourceUrl: '',
-    });
+    setDraft(emptyDraft);
     setEditingId(null);
     setEditingAssigned(false);
     setShowForm(false);
   };
 
   const startEdit = (material: Material, isAssigned = false) => {
+    const cachedImages = queryClient.getQueryData<ImageAsset[]>(
+      imageKeys.forEntity('material', material.id),
+    );
     setEditingId(material.id);
     setEditingAssigned(isAssigned);
     setDraft({
       name: material.name,
       materialId: material.materialId,
+      category: material.category ?? '',
+      subCategory: material.subCategory,
       description: material.description,
-      swatchFile: null,
-      swatchHex: material.swatchHex || '#D9D4C8',
       manufacturer: material.manufacturer,
       sourceUrl: material.sourceUrl,
+      swatchMode: (cachedImages?.length ?? 0) > 0 ? 'image' : 'color',
+      swatchFile: null,
+      swatchHex: material.swatchHex || '#D9D4C8',
     });
     setShowForm(true);
   };
@@ -143,15 +203,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const openCreateForm = () => {
     setEditingId(null);
     setEditingAssigned(false);
-    setDraft({
-      name: '',
-      materialId: '',
-      description: '',
-      swatchFile: null,
-      swatchHex: '#D9D4C8',
-      manufacturer: '',
-      sourceUrl: '',
-    });
+    setDraft(emptyDraft);
     setShowForm(true);
   };
 
@@ -159,16 +211,17 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     const input = {
       name: draft.name.trim(),
       materialId: draft.materialId.trim(),
+      category: draft.category || null,
+      subCategory: draft.subCategory.trim(),
       description: draft.description.trim(),
-      ...(draft.swatchHex ? { swatchHex: draft.swatchHex } : {}),
-      ...(draft.manufacturer.trim() ? { manufacturer: draft.manufacturer.trim() } : {}),
-      ...(draft.sourceUrl.trim() ? { sourceUrl: draft.sourceUrl.trim() } : {}),
+      swatchHex: draft.swatchHex || '#D9D4C8',
+      manufacturer: draft.manufacturer.trim(),
+      sourceUrl: draft.sourceUrl.trim(),
     };
     if (!input.name) return;
     let savedMaterial: Material;
 
     if (editingId && editingAssigned && activeItem) {
-      // Scoped update: fork-if-shared
       savedMaterial = await materialActions.update.mutateAsync({
         itemId: activeItem.id,
         materialId: editingId,
@@ -187,14 +240,19 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       savedMaterial = await createMaterial.mutateAsync(input);
     }
 
-    if (draft.swatchFile) {
+    if (draft.swatchMode === 'image' && draft.swatchFile) {
       await uploadImage.mutateAsync({
         entityType: 'material',
         entityId: savedMaterial.id,
         file: draft.swatchFile,
         altText: savedMaterial.name,
       });
+    } else if (draft.swatchMode === 'color' && editingId) {
+      for (const img of editingMaterialImages.data ?? []) {
+        await deleteImage.mutateAsync(img.id);
+      }
     }
+
     resetDraft();
   };
 
@@ -246,6 +304,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           <MaterialForm
             draft={draft}
             editing={Boolean(editingMaterial)}
+            editingMaterialId={editingId ?? undefined}
             submitLabel={submitLabel}
             onDraftChange={setDraft}
             onCancel={resetDraft}
@@ -262,11 +321,23 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
               </span>
             </div>
             <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+                className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
+                aria-label="Filter by category"
+              >
+                {FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or ID…"
-                className="input-base sm:w-80"
+                className="input-base sm:w-64"
                 aria-label="Search project library"
               />
               {!showForm && (
@@ -404,19 +475,10 @@ function AssignedMaterialChip({
   );
 }
 
-type MaterialDraft = {
-  name: string;
-  materialId: string;
-  description: string;
-  swatchFile: File | null;
-  swatchHex: string;
-  manufacturer: string;
-  sourceUrl: string;
-};
-
 export function MaterialForm({
   draft,
   editing,
+  editingMaterialId,
   submitLabel,
   onDraftChange,
   onCancel,
@@ -424,13 +486,13 @@ export function MaterialForm({
 }: {
   draft: MaterialDraft;
   editing: boolean;
+  editingMaterialId?: string | undefined;
   submitLabel: string;
   onDraftChange: (updater: (current: MaterialDraft) => MaterialDraft) => void;
   onCancel?: (() => void) | undefined;
   onSubmit: () => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [lookupHint, setLookupHint] = useState<string | null>(null);
   const [pasteFlash, setPasteFlash] = useState(false);
 
   useEffect(() => {
@@ -443,8 +505,6 @@ export function MaterialForm({
     return () => URL.revokeObjectURL(url);
   }, [draft.swatchFile]);
 
-  // Ctrl+V paste while the form is mounted sets the swatch image. Skips when
-  // the paste lacks an image (text paste in form fields keeps default behavior).
   const onDraftChangeRef = useRef(onDraftChange);
   useEffect(() => {
     onDraftChangeRef.current = onDraftChange;
@@ -457,7 +517,11 @@ export function MaterialForm({
         ?.getAsFile();
       if (!file) return;
       event.preventDefault();
-      onDraftChangeRef.current((current: MaterialDraft) => ({ ...current, swatchFile: file }));
+      onDraftChangeRef.current((current: MaterialDraft) => ({
+        ...current,
+        swatchFile: file,
+        swatchMode: 'image',
+      }));
       setPasteFlash(true);
       window.setTimeout(() => setPasteFlash(false), 1500);
     };
@@ -465,47 +529,19 @@ export function MaterialForm({
     return () => document.removeEventListener('paste', handler);
   }, []);
 
-  const runLookup = () => {
-    const entry = lookupCatalogEntry(draft.sourceUrl || draft.materialId);
-    if (!entry) {
-      setLookupHint('No catalog match found — fill the fields manually.');
-      return;
-    }
+  const switchMode = (mode: 'color' | 'image') => {
     onDraftChange((c) => ({
       ...c,
-      name: c.name.trim() || entry.name,
-      materialId: c.materialId.trim() || entry.materialId,
-      manufacturer: c.manufacturer.trim() || entry.manufacturer,
-      sourceUrl: entry.sourceUrl,
-      description: c.description.trim() || describeCatalogEntry(entry),
+      swatchMode: mode,
+      swatchFile: mode === 'color' ? null : c.swatchFile,
     }));
-    setLookupHint(`Matched ${entry.manufacturer} ${entry.urlCode} — ${entry.name}.`);
+    if (mode === 'color') setPreviewUrl(null);
   };
 
   return (
     <section className="border-y border-black/10 bg-canvas-shell p-5">
       <p className="eyebrow">{editing ? 'Edit Item' : 'Add To Library'}</p>
       <div className="mt-3 grid gap-3">
-        <div className="grid gap-1 text-sm font-medium text-neutral-700">
-          <label htmlFor="material-source-url">Product URL or ID</label>
-          <div className="flex gap-2">
-            <input
-              id="material-source-url"
-              type="text"
-              value={draft.sourceUrl}
-              onChange={(e) => {
-                setLookupHint(null);
-                onDraftChange((c) => ({ ...c, sourceUrl: e.target.value }));
-              }}
-              placeholder="https://www.formica.com/.../07197  or  7197"
-              className={inputClassName}
-            />
-            <Button type="button" variant="ghost" size="sm" onClick={runLookup}>
-              Look up
-            </Button>
-          </div>
-          {lookupHint && <p className="text-xs font-normal text-neutral-500">{lookupHint}</p>}
-        </div>
         <label className="grid gap-1 text-sm font-medium text-neutral-700">
           Name
           <input
@@ -514,6 +550,7 @@ export function MaterialForm({
             className={inputClassName}
           />
         </label>
+
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
           <label className="grid gap-1 text-sm font-medium text-neutral-700">
             ID
@@ -523,6 +560,50 @@ export function MaterialForm({
               className={inputClassName}
             />
           </label>
+          <div className="grid gap-1 text-sm font-medium text-neutral-700">
+            <label htmlFor="material-category">Category</label>
+            <select
+              id="material-category"
+              value={draft.category}
+              onChange={(e) =>
+                onDraftChange((c) => ({
+                  ...c,
+                  category: e.target.value as MaterialCategory | '',
+                }))
+              }
+              className={inputClassName}
+            >
+              <option value="">— None —</option>
+              {MATERIAL_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {CATEGORY_LABELS[cat]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <label className="grid gap-1 text-sm font-medium text-neutral-700">
+          Sub-category
+          <input
+            value={draft.subCategory}
+            onChange={(e) => onDraftChange((c) => ({ ...c, subCategory: e.target.value }))}
+            placeholder="Optional — e.g. Walnut Veneer"
+            className={inputClassName}
+          />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium text-neutral-700">
+          Description
+          <textarea
+            value={draft.description}
+            onChange={(e) => onDraftChange((c) => ({ ...c, description: e.target.value }))}
+            rows={3}
+            className={inputClassName}
+          />
+        </label>
+
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
           <label className="grid gap-1 text-sm font-medium text-neutral-700">
             Manufacturer
             <input
@@ -531,70 +612,107 @@ export function MaterialForm({
               className={inputClassName}
             />
           </label>
+          <label className="grid gap-1 text-sm font-medium text-neutral-700">
+            Source URL
+            <input
+              type="url"
+              value={draft.sourceUrl}
+              onChange={(e) => onDraftChange((c) => ({ ...c, sourceUrl: e.target.value }))}
+              placeholder="https://…"
+              className={inputClassName}
+            />
+          </label>
         </div>
+
         <div className="grid gap-2 text-sm font-medium text-neutral-700">
           <span>Swatch</span>
-          <div className="grid gap-2">
-            <div className="flex items-center gap-3">
-              <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full border border-black/15 bg-canvas-chrome">
-                {previewUrl ? (
+          <div className="grid gap-3">
+            <div className="flex h-20 w-20 shrink-0 overflow-hidden rounded-md border border-black/15 bg-canvas-chrome">
+              {draft.swatchMode === 'image' ? (
+                previewUrl ? (
                   <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                ) : editingMaterialId ? (
+                  <ImageFrame
+                    entityType="material"
+                    entityId={editingMaterialId}
+                    alt="Current swatch"
+                    className="h-full w-full border-0 shadow-none"
+                    imageClassName="object-cover"
+                    compact
+                    disabled
+                  />
                 ) : (
-                  <span
-                    className="h-full w-full rounded-full"
-                    style={{ backgroundColor: draft.swatchHex }}
-                  />
-                )}
-              </span>
-              <div className="min-w-0 grid gap-1.5">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-normal text-neutral-600 shrink-0">Color</label>
-                  <input
-                    type="color"
-                    value={draft.swatchHex || '#D9D4C8'}
-                    onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                    className="h-7 w-10 cursor-pointer rounded-sm border border-black/15 bg-canvas-chrome p-0.5"
-                    aria-label="Swatch color"
-                  />
-                  <input
-                    type="text"
-                    value={draft.swatchHex || ''}
-                    onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                    placeholder="#D9D4C8"
-                    maxLength={7}
-                    className="num w-24 rounded-sm border border-black/15 bg-canvas-chrome px-2 py-1 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
-                    aria-label="Swatch hex value"
-                  />
-                </div>
+                  <span className="flex h-full w-full items-center justify-center text-xs text-neutral-400">
+                    No image
+                  </span>
+                )
+              ) : (
+                <span
+                  className="h-full w-full"
+                  style={{ backgroundColor: draft.swatchHex || '#D9D4C8' }}
+                />
+              )}
+            </div>
+
+            <div className="inline-flex self-start border border-black/10 bg-canvas-chrome p-0.5">
+              <button
+                type="button"
+                className={draft.swatchMode === 'color' ? activeSwatchToggle : inactiveSwatchToggle}
+                onClick={() => switchMode('color')}
+              >
+                Color
+              </button>
+              <button
+                type="button"
+                className={draft.swatchMode === 'image' ? activeSwatchToggle : inactiveSwatchToggle}
+                onClick={() => switchMode('image')}
+              >
+                Image
+              </button>
+            </div>
+
+            {draft.swatchMode === 'color' ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={draft.swatchHex || '#D9D4C8'}
+                  onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
+                  className="h-8 w-10 cursor-pointer rounded-sm border border-black/15 bg-canvas-chrome p-0.5"
+                  aria-label="Swatch color"
+                />
+                <input
+                  type="text"
+                  value={draft.swatchHex || ''}
+                  onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
+                  placeholder="#D9D4C8"
+                  maxLength={7}
+                  className="num w-24 rounded-sm border border-black/15 bg-canvas-chrome px-2 py-1.5 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
+                  aria-label="Swatch hex value"
+                />
+              </div>
+            ) : (
+              <div className="grid gap-1.5">
                 <p className="text-xs font-normal text-neutral-500">
                   {pasteFlash
                     ? 'Pasted image attached.'
                     : draft.swatchFile
                       ? draft.swatchFile.name
-                      : 'Image overrides color if uploaded. Tip: Ctrl+V to paste.'}
+                      : 'Upload or paste an image (Ctrl+V).'}
                 </p>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) =>
+                    onDraftChange((c) => ({ ...c, swatchFile: e.target.files?.[0] ?? null }))
+                  }
+                  className="input-base file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700"
+                  aria-label="Swatch image"
+                />
               </div>
-            </div>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={(e) =>
-                onDraftChange((c) => ({ ...c, swatchFile: e.target.files?.[0] ?? null }))
-              }
-              className="input-base file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700"
-              aria-label="Swatch image"
-            />
+            )}
           </div>
         </div>
-        <label className="grid gap-1 text-sm font-medium text-neutral-700">
-          Description
-          <textarea
-            value={draft.description}
-            onChange={(e) => onDraftChange((c) => ({ ...c, description: e.target.value }))}
-            rows={4}
-            className={inputClassName}
-          />
-        </label>
+
         <div className="flex flex-wrap justify-end gap-2">
           {onCancel && (
             <Button type="button" variant="ghost" onClick={onCancel}>
@@ -671,11 +789,13 @@ function MaterialPickerCard({
         <h4 className="truncate text-sm font-semibold leading-tight text-neutral-950">
           {material.name}
         </h4>
-        <div className="mt-2 flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5">
-            <MaterialSwatchImage material={material} size="sm" />
-            <ProductLinkIcon url={material.sourceUrl} label={material.name} />
-          </div>
+        {material.category && (
+          <p className="truncate text-[10px] text-neutral-500">
+            {CATEGORY_LABELS[material.category]}
+            {material.subCategory ? ` · ${material.subCategory}` : ''}
+          </p>
+        )}
+        <div className="mt-auto flex items-center justify-end pt-1">
           <button
             type="button"
             onClick={(e) => {
@@ -816,5 +936,9 @@ function materialMatchesQuery(material: Material, query: string) {
     .includes(query);
 }
 
-// Shared input visual — see `.input-base` in src/index.css for the full ruleset.
 const inputClassName = 'input-base';
+
+const activeSwatchToggle =
+  'rounded-sm bg-brand-600 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+const inactiveSwatchToggle =
+  'rounded-sm px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';

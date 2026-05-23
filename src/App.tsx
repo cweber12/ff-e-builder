@@ -433,14 +433,8 @@ function ProjectCatalogRoute() {
 }
 
 function ProjectMaterialsRoute() {
-  const { project, roomsWithItems, proposalCategoriesWithItems } = useProjectContext();
-  return (
-    <MaterialsView
-      project={project}
-      roomsWithItems={roomsWithItems}
-      proposalCategoriesWithItems={proposalCategoriesWithItems}
-    />
-  );
+  const { project } = useProjectContext();
+  return <MaterialsView project={project} />;
 }
 
 function ProjectBudgetRoute() {

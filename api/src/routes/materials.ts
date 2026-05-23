@@ -137,7 +137,8 @@ async function createProjectMaterial(c: AppContext) {
     parsed.data.material_id.trim() || (await generateImportMaterialId(sql, projectId));
   const rows = await sql`
     INSERT INTO materials (
-      project_id, name, material_id, description, swatch_hex, manufacturer, source_url
+      project_id, name, material_id, description, swatch_hex, manufacturer, source_url,
+      category, sub_category
     )
     VALUES (
       ${projectId},
@@ -146,7 +147,9 @@ async function createProjectMaterial(c: AppContext) {
       ${parsed.data.description},
       ${parsed.data.swatch_hex ?? DEFAULT_SWATCH},
       ${parsed.data.manufacturer},
-      ${parsed.data.source_url}
+      ${parsed.data.source_url},
+      ${parsed.data.category ?? null},
+      ${parsed.data.sub_category ?? ''}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
@@ -154,7 +157,9 @@ async function createProjectMaterial(c: AppContext) {
       description  = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
       swatch_hex   = EXCLUDED.swatch_hex,
       manufacturer = COALESCE(NULLIF(EXCLUDED.manufacturer, ''), materials.manufacturer),
-      source_url   = COALESCE(NULLIF(EXCLUDED.source_url, ''),   materials.source_url)
+      source_url   = COALESCE(NULLIF(EXCLUDED.source_url, ''),   materials.source_url),
+      category     = EXCLUDED.category,
+      sub_category = EXCLUDED.sub_category
     RETURNING *
   `;
   const material = rows[0] as MaterialRow;
@@ -188,7 +193,9 @@ router.patch('/materials/:id', async (c) => {
       description  = COALESCE(${parsed.data.description ?? null},  description),
       swatch_hex   = COALESCE(${parsed.data.swatch_hex ?? null},   swatch_hex),
       manufacturer = COALESCE(${parsed.data.manufacturer ?? null}, manufacturer),
-      source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url)
+      source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url),
+      category     = ${parsed.data.category ?? null},
+      sub_category = ${parsed.data.sub_category ?? ''}
     WHERE id = ${id}
     RETURNING *
   `;
@@ -274,7 +281,8 @@ router.post('/items/:itemId/materials/new', async (c) => {
     parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemContext.projectId));
   const materialRows = await sql`
     INSERT INTO materials (
-      project_id, name, material_id, description, swatch_hex, manufacturer, source_url
+      project_id, name, material_id, description, swatch_hex, manufacturer, source_url,
+      category, sub_category
     )
     VALUES (
       ${itemContext.projectId},
@@ -283,7 +291,9 @@ router.post('/items/:itemId/materials/new', async (c) => {
       ${parsed.data.description},
       ${parsed.data.swatch_hex ?? DEFAULT_SWATCH},
       ${parsed.data.manufacturer},
-      ${parsed.data.source_url}
+      ${parsed.data.source_url},
+      ${parsed.data.category ?? null},
+      ${parsed.data.sub_category ?? ''}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
@@ -291,7 +301,9 @@ router.post('/items/:itemId/materials/new', async (c) => {
       description  = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
       swatch_hex   = EXCLUDED.swatch_hex,
       manufacturer = COALESCE(NULLIF(EXCLUDED.manufacturer, ''), materials.manufacturer),
-      source_url   = COALESCE(NULLIF(EXCLUDED.source_url, ''),   materials.source_url)
+      source_url   = COALESCE(NULLIF(EXCLUDED.source_url, ''),   materials.source_url),
+      category     = EXCLUDED.category,
+      sub_category = EXCLUDED.sub_category
     RETURNING *
   `;
   const material = materialRows[0] as { id: string };
@@ -368,7 +380,9 @@ router.patch('/items/:itemId/materials/:materialId', async (c) => {
         description  = COALESCE(${parsed.data.description ?? null},  description),
         swatch_hex   = COALESCE(${parsed.data.swatch_hex ?? null},   swatch_hex),
         manufacturer = COALESCE(${parsed.data.manufacturer ?? null}, manufacturer),
-        source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url)
+        source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url),
+        category     = ${parsed.data.category ?? null},
+        sub_category = ${parsed.data.sub_category ?? ''}
       WHERE id = ${materialId}
     `;
   }
@@ -410,7 +424,9 @@ router.patch('/proposal/items/:proposalItemId/materials/:materialId', async (c) 
         description  = COALESCE(${parsed.data.description ?? null},  description),
         swatch_hex   = COALESCE(${parsed.data.swatch_hex ?? null},   swatch_hex),
         manufacturer = COALESCE(${parsed.data.manufacturer ?? null}, manufacturer),
-        source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url)
+        source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url),
+        category     = ${parsed.data.category ?? null},
+        sub_category = ${parsed.data.sub_category ?? ''}
       WHERE id = ${materialId}
     `;
   }
