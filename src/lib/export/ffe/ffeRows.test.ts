@@ -30,6 +30,8 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
       swatchHex: '#5c3a21',
       manufacturer: '',
       sourceUrl: '',
+      category: null,
+      subCategory: '',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
     },
