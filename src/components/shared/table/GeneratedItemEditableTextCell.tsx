@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
+import { EditablePencilHint } from './EditablePencilHint';
 
 type GeneratedItemEditableTextCellProps = {
   value: string;
@@ -31,7 +32,10 @@ export function GeneratedItemEditableTextCell({
   normalizeValue,
 }: GeneratedItemEditableTextCellProps) {
   return (
-    <td className={cn('px-3 py-2', className)} onClick={(event) => event.stopPropagation()}>
+    <td
+      className={cn('relative px-3 py-2', className)}
+      onClick={(event) => event.stopPropagation()}
+    >
       <GeneratedItemEditableTextControl
         value={value}
         onSave={onSave}
@@ -40,6 +44,7 @@ export function GeneratedItemEditableTextCell({
         ariaLabel={ariaLabel}
         normalizeValue={normalizeValue}
       />
+      <EditablePencilHint />
     </td>
   );
 }
@@ -116,7 +121,7 @@ export function GeneratedItemEditableTextControl({
             }
           }}
           className={cn(
-            'block w-full cursor-pointer rounded px-2 py-1 text-sm',
+            'block w-full cursor-text rounded px-2 py-1 text-sm',
             isEmpty
               ? 'border border-neutral-300 text-neutral-400 hover:border-brand-500'
               : 'text-neutral-700 hover:bg-brand-50',

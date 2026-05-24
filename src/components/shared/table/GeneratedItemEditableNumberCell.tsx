@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
 import { cents, dollarsToCents, formatMoney, parseUnitCostDollarsInput } from '../../../types';
 import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
+import { EditablePencilHint } from './EditablePencilHint';
 
 type GeneratedItemEditableNumberControlProps = {
   value: number;
@@ -90,7 +91,10 @@ export function GeneratedItemEditableNumberCell({
 
   if (!editing) {
     return (
-      <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+      <td
+        className={cn('relative px-3 py-2', tdClassName)}
+        onClick={(event) => event.stopPropagation()}
+      >
         {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
@@ -103,12 +107,13 @@ export function GeneratedItemEditableNumberCell({
             }
           }}
           className={cn(
-            'block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
+            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
             className,
           )}
         >
           {value}
         </span>
+        <EditablePencilHint />
       </td>
     );
   }
@@ -181,7 +186,10 @@ export function GeneratedItemEditableMoneyCell({
 
   if (!editing) {
     return (
-      <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+      <td
+        className={cn('relative px-3 py-2', tdClassName)}
+        onClick={(event) => event.stopPropagation()}
+      >
         {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
@@ -193,10 +201,11 @@ export function GeneratedItemEditableMoneyCell({
               setEditing(true);
             }
           }}
-          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
+          className="block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
         >
           {formatMoney(cents(valueCents))}
         </span>
+        <EditablePencilHint />
       </td>
     );
   }
@@ -261,7 +270,10 @@ export function GeneratedItemEditableQuantityCell({
 
   if (!editing) {
     return (
-      <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
+      <td
+        className={cn('relative px-3 py-2', tdClassName)}
+        onClick={(event) => event.stopPropagation()}
+      >
         {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
@@ -273,10 +285,11 @@ export function GeneratedItemEditableQuantityCell({
               setEditing(true);
             }
           }}
-          className="block cursor-pointer rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
+          className="block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
         >
           {quantity} {quantityUnit}
         </span>
+        <EditablePencilHint />
       </td>
     );
   }
