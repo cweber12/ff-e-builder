@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
 import { api } from '../../../lib/api';
-import { useImages, useProposalWithItems, useUpdateProposalItem } from '../../../hooks';
+import {
+  useAddProposalItemToFfe,
+  useCreateProposalItem,
+  useDeleteProposalItem,
+  useImages,
+  useProposalWithItems,
+  useUpdateProposalItem,
+} from '../../../hooks';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { PanZoomFrame } from '../../shared/image/PanZoomFrame';
 import { cents, formatMoney } from '../../../types';
@@ -14,6 +22,10 @@ import {
   GeneratedItemEditableQuantityControl,
 } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemSizeControl } from '../../shared/table/GeneratedItemSizeModal';
+import { GeneratedItemMaterialsControl } from '../../shared/table/GeneratedItemMaterialsCell';
+import { MaterialLibraryModal } from '../../materials';
+import { Button, Modal } from '../../primitives';
+import { toast } from '../../primitives/toast-api';
 import type { UpdateProposalItemInput } from '../../../lib/api';
 
 const PROPOSAL_QUANTITY_UNITS = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
@@ -35,6 +47,12 @@ export function ProposalItemDetailPanel({
 }: Props) {
   const { categoriesWithItems } = useProposalWithItems(projectId);
   const updateItem = useUpdateProposalItem();
+  const createItem = useCreateProposalItem(categoryId);
+  const deleteItem = useDeleteProposalItem(categoryId);
+  const addToFfe = useAddProposalItemToFfe(projectId);
+
+  const [materialsOpen, setMaterialsOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const category = useMemo(
     () => categoriesWithItems.find((c) => c.id === categoryId),
@@ -72,6 +90,45 @@ export function ProposalItemDetailPanel({
     });
   };
 
+  const handleDuplicate = () => {
+    createItem.mutate({
+      productTag: item.productTag,
+      description: item.description,
+      plan: item.plan,
+      drawings: item.drawings,
+      location: item.location,
+      sizeLabel: item.sizeLabel,
+      sizeMode: item.sizeMode,
+      sizeUnit: item.sizeUnit,
+      sizeW: item.sizeW,
+      sizeD: item.sizeD,
+      sizeH: item.sizeH,
+      cbm: item.cbm,
+      quantity: item.quantity,
+      quantityUnit: item.quantityUnit,
+      unitCostCents: item.unitCostCents,
+      sortOrder: item.sortOrder + 0.5,
+      ...(Object.keys(item.customData).length > 0 && { customData: item.customData }),
+    });
+  };
+
+  const handleAddToFfe = () => {
+    const displayName = item.itemName || item.productTag || item.description || 'Item';
+    const locationName = item.location || 'Unassigned';
+    addToFfe.mutate(item.id, {
+      onSuccess: () => {
+        toast.success(`${displayName} added to FF&E location ${locationName}.`);
+      },
+    });
+  };
+
+  const handleDelete = () => {
+    deleteItem.mutate(item.id);
+    onClose();
+  };
+
+  const itemDisplayName = item.itemName || item.productTag || item.description || 'item';
+
   const goPrev = () => {
     if (sortedItems.length < 2) return;
     const prevIndex = (currentIndex - 1 + sortedItems.length) % sortedItems.length;
@@ -103,6 +160,12 @@ export function ProposalItemDetailPanel({
           position={`${currentIndex + 1} of ${sortedItems.length}`}
           onPrev={goPrev}
           onNext={goNext}
+        />
+        <PanelActionsMenu
+          itemName={itemDisplayName}
+          onDuplicate={handleDuplicate}
+          onAddToFfe={handleAddToFfe}
+          onDelete={() => setDeleteOpen(true)}
         />
         <button
           type="button"
@@ -213,27 +276,13 @@ export function ProposalItemDetailPanel({
             </FormField>
           </div>
 
-          {item.materials.length > 0 && (
-            <div className="mt-6">
-              <p className="eyebrow mb-2">Materials</p>
-              <div className="flex flex-wrap gap-1.5">
-                {item.materials.map((m) => (
-                  <span
-                    key={m.id}
-                    className="inline-flex items-center gap-2 border border-black/10 bg-canvas-shell px-2.5 py-1 text-sm text-neutral-800"
-                  >
-                    {m.swatchHex && (
-                      <span
-                        className="h-3 w-3 flex-shrink-0 rounded-full border border-black/20"
-                        style={{ background: m.swatchHex }}
-                      />
-                    )}
-                    {m.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="mt-6">
+            <p className="eyebrow mb-2">Materials</p>
+            <GeneratedItemMaterialsControl
+              materials={item.materials}
+              onOpen={() => setMaterialsOpen(true)}
+            />
+          </div>
 
           <div className="mt-7 border-t border-black/10 pt-5">
             <dl className="grid grid-cols-3 gap-6">
@@ -276,7 +325,163 @@ export function ProposalItemDetailPanel({
           </div>
         </div>
       </div>
+
+      <MaterialLibraryModal
+        open={materialsOpen}
+        projectId={projectId}
+        context="proposal"
+        categoryId={categoryId}
+        item={item}
+        onClose={() => setMaterialsOpen(false)}
+      />
+
+      <DeleteItemConfirm
+        open={deleteOpen}
+        itemName={itemDisplayName}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+      />
     </aside>
+  );
+}
+
+function DeleteItemConfirm({
+  open,
+  itemName,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  itemName: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal open={open} onClose={onClose} title={`Delete ${itemName}?`}>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-neutral-600">
+          This will permanently remove <strong>{itemName}</strong> from the proposal. This cannot be
+          undone.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+          >
+            Delete item
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function PanelActionsMenu({
+  itemName,
+  onDuplicate,
+  onAddToFfe,
+  onDelete,
+}: {
+  itemName: string;
+  onDuplicate: () => void;
+  onAddToFfe: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: globalThis.MouseEvent) => {
+      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
+      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
+      if (!inTrigger && !inMenu) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const run = (action: () => void) => (event: ReactMouseEvent) => {
+    event.stopPropagation();
+    setOpen(false);
+    action();
+  };
+
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Open actions for ${itemName}`}
+        onClick={() => setOpen((v) => !v)}
+        className="icon-btn"
+      >
+        <MoreIcon />
+      </button>
+      {open &&
+        triggerRect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: triggerRect.bottom + 4,
+              right: window.innerWidth - triggerRect.right,
+            }}
+            className="z-[100] min-w-48 menu-panel"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700"
+              onClick={run(onDuplicate)}
+            >
+              Duplicate
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700"
+              onClick={run(onAddToFfe)}
+            >
+              Add to FF&amp;E
+            </button>
+            <div className="my-1 h-px bg-neutral-100" />
+            <button
+              type="button"
+              role="menuitem"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-danger-600 hover:bg-brand-50"
+              onClick={run(onDelete)}
+            >
+              Delete item
+            </button>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+      <circle cx="5" cy="10" r="1.5" />
+      <circle cx="10" cy="10" r="1.5" />
+      <circle cx="15" cy="10" r="1.5" />
+    </svg>
   );
 }
 
