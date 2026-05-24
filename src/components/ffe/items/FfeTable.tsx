@@ -98,7 +98,7 @@ import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
 import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
-import { GeneratedItemImageFrame } from '../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemImageControl } from '../../shared/table/GeneratedItemImageCell';
 import { GeneratedItemMaterialBadges } from '../../shared/table/GeneratedItemMaterialsCell';
 import {
   GeneratedItemSizeModal,
@@ -634,7 +634,7 @@ const createColumns = (
     id: 'image',
     header: 'Rendering',
     cell: ({ row }) => (
-      <GeneratedItemImageFrame
+      <GeneratedItemImageControl
         view="ffe"
         kind="rendering"
         entityId={row.original.id}
@@ -646,7 +646,7 @@ const createColumns = (
     id: 'plan',
     header: 'Plan',
     cell: ({ row }) => (
-      <GeneratedItemImageFrame
+      <GeneratedItemImageControl
         view="ffe"
         kind="plan"
         entityId={row.original.id}
