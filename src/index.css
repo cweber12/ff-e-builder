@@ -1151,6 +1151,18 @@
     margin-top: -4px;
   }
 
+  .catalog-page--edit-mode {
+    outline: 2px solid rgb(59 130 246 / 0.35);
+    outline-offset: -2px;
+  }
+
+  .catalog-page--edit-mode .catalog-spec-dim,
+  .catalog-page--edit-mode .catalog-spec-desc,
+  .catalog-page--edit-mode .catalog-vendor-block,
+  .catalog-page--edit-mode .catalog-notes-block {
+    cursor: text;
+  }
+
   .catalog-option-ghost {
     aspect-ratio: 1;
   }
@@ -1222,6 +1234,17 @@
 
   .catalog-vendor-link-empty {
     color: theme('colors.gray.300');
+  }
+
+  .catalog-vendor-chip {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: rgb(146 64 14);
+    background: rgb(254 243 199);
+    border-radius: 3px;
   }
 
   .catalog-placeholder-text {

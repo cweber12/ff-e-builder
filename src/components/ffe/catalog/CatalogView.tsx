@@ -170,6 +170,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
   const entry = entries[pageIndex];
   const [slideDirection, setSlideDirection] = useState<'next' | 'previous'>('next');
+  const [editMode, setEditMode] = useState(false);
 
   // ── Company watermark ──────────────────────────────────────────────────────
   const { data: company, isError: companyLoadError } = useCompany();
@@ -262,6 +263,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         logoDataUrl={logoDataUrl}
         companyName={companyName}
         sortMode={sortMode}
+        editMode={editMode}
+        onEditModeToggle={() => setEditMode((v) => !v)}
       />
 
       <div className="screen-only catalog-stage">
@@ -280,6 +283,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
+            editMode={editMode}
           />
         </div>
       </div>
@@ -319,6 +323,8 @@ function CatalogNav({
   logoDataUrl,
   companyName,
   sortMode,
+  editMode,
+  onEditModeToggle,
 }: {
   project: Project;
   rooms: RoomWithItems[];
@@ -334,6 +340,8 @@ function CatalogNav({
   logoDataUrl: string | null;
   companyName: string | null;
   sortMode: FfeItemSortMode;
+  editMode: boolean;
+  onEditModeToggle: () => void;
 }) {
   let itemIndex = 0;
 
@@ -396,6 +404,16 @@ function CatalogNav({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={cn('catalog-nav-icon-btn', editMode && 'catalog-nav-icon-btn--active')}
+            aria-label={editMode ? 'Exit edit mode' : 'Edit fields'}
+            aria-pressed={editMode}
+            onClick={onEditModeToggle}
+          >
+            <EditIcon />
+            <span className="catalog-nav-btn-label">{editMode ? 'Editing' : 'Edit'}</span>
+          </button>
           <button
             type="button"
             className="catalog-nav-icon-btn"
@@ -909,6 +927,20 @@ function SlidersIcon() {
   );
 }
 
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M13.5 3.5l3 3L5.5 17H3v-2.5L13.5 3.5z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function CatalogPage({
   project,
   entry,
@@ -921,6 +953,7 @@ export function CatalogPage({
   watermarkInteractive = true,
   layoutConfig: layoutConfigProp,
   onLayoutChange,
+  editMode = false,
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -933,6 +966,7 @@ export function CatalogPage({
   watermarkInteractive?: boolean;
   layoutConfig?: Partial<CatalogLayoutConfig>;
   onLayoutChange?: (update: Partial<CatalogLayoutConfig>) => void;
+  editMode?: boolean;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -1079,7 +1113,10 @@ export function CatalogPage({
 
   return (
     <article
-      className="catalog-page mx-auto bg-white text-neutral-950 shadow-xl"
+      className={cn(
+        'catalog-page mx-auto bg-white text-neutral-950 shadow-xl',
+        editMode && 'catalog-page--edit-mode',
+      )}
       aria-label={`${item.itemName} catalog page`}
     >
       <header className={cn('catalog-header', hasHeaderMark && 'relative')}>
@@ -1291,6 +1328,9 @@ export function CatalogPage({
                   </span>
                 )}
               </div>
+              {editMode && (
+                <p className="catalog-vendor-chip no-print">Preview only — not saved to project</p>
+              )}
             </div>
 
             <div className="catalog-notes-block">

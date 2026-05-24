@@ -14,15 +14,15 @@
 
 - **Confirm `pnpm typecheck && pnpm lint && pnpm test && pnpm build` pass before drafting the commit message.** Exception: if the user explicitly says they will run checks or tests manually, do not run those commands yourself. Finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop.
 
-- **Never commit automatically.** After every change, output the commit message in conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
+- **Commit automatically after every change.** Stage all changes and commit using conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 
 - **MANDATORY — Sliced-work flow.** When a multi-slice plan has been agreed with the user, follow this loop for **every** slice without exception:
   1. Implement the slice.
   2. **Do not run `pnpm test`, `pnpm typecheck`, `pnpm lint`, or `pnpm build` yourself** unless the user explicitly asks. The user runs them manually.
-  3. Output the commit message in a fenced code block and **STOP**.
+  3. Commit the changes automatically and output the commit message in a fenced code block.
   4. Wait for the user to confirm their manual checks are green before starting the next slice.
-  5. If the user reports failures, fix them in the same slice and re-issue the commit message; do not advance.
-     This rule overrides any default urge to chain slices, run verification commands, or proceed without confirmation.
+  5. If the user reports failures, fix them in the same slice, amend or add a follow-up commit, and re-issue the commit message; do not advance.
+     This rule overrides any default urge to chain slices or run verification commands without confirmation.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
