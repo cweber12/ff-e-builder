@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-22T03:41:03.733Z",
+  "generatedAt": "2026-05-24T04:22:45.439Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -135,8 +135,8 @@
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
       "files": 257,
-      "internalImports": 802,
-      "externalImports": 275,
+      "internalImports": 815,
+      "externalImports": 280,
       "unresolvedImports": 2
     },
     {
@@ -169,7 +169,7 @@
       "area": "proposal",
       "files": 24,
       "importsIn": 36,
-      "importsOut": 109,
+      "importsOut": 118,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
     },
@@ -184,8 +184,8 @@
     {
       "area": "finish-library",
       "files": 7,
-      "importsIn": 16,
-      "importsOut": 29,
+      "importsIn": 18,
+      "importsOut": 30,
       "dependsOn": ["shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "proposal", "project-shell", "shared-ui", "shared-lib", "tests"]
     },
@@ -208,9 +208,9 @@
     },
     {
       "area": "shared-ui",
-      "files": 44,
-      "importsIn": 155,
-      "importsOut": 112,
+      "files": 45,
+      "importsIn": 165,
+      "importsOut": 115,
       "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
       "importedBy": [
         "ffe",
@@ -225,7 +225,7 @@
     {
       "area": "shared-lib",
       "files": 47,
-      "importsIn": 290,
+      "importsIn": 293,
       "importsOut": 124,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
@@ -294,8 +294,8 @@
     },
     {
       "area": "unknown",
-      "files": 11,
-      "importsIn": 20,
+      "files": 10,
+      "importsIn": 18,
       "importsOut": 16,
       "dependsOn": ["shared-ui", "shared-lib", "types"],
       "importedBy": ["ffe", "proposal", "finish-library", "project-shell", "shared-ui", "tests"]
@@ -368,7 +368,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 44
+          "files": 45
         }
       ]
     },
@@ -426,7 +426,7 @@
       "paths": [
         {
           "path": "src/lib",
-          "files": 6
+          "files": 5
         },
         {
           "path": "src/data/**",
@@ -1615,6 +1615,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/materials/MaterialLibraryModal.tsx",
+      "importerArea": "finish-library",
+      "specifier": "../../lib/query",
+      "resolved": "src/lib/query/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/materials/MaterialsView.tsx",
       "importerArea": "finish-library",
       "specifier": "../../lib/export",
@@ -1629,6 +1639,16 @@
       "importerArea": "finish-library",
       "specifier": "../../hooks",
       "resolved": "src/hooks/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/materials/MaterialsView.tsx",
+      "importerArea": "finish-library",
+      "specifier": "../../lib/query",
+      "resolved": "src/lib/query/index.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -1813,26 +1833,6 @@
       "kind": "import",
       "reviewNote": "expected: product uses shared types",
       "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/materials/MaterialLibraryModal.tsx",
-      "importerArea": "finish-library",
-      "specifier": "../../lib/materials/catalog",
-      "resolved": "src/lib/materials/catalog.ts",
-      "resolvedArea": "unknown",
-      "kind": "import",
-      "reviewNote": "unknown: ownership unclear",
-      "reviewSection": "Unknown / Ambiguous Dependencies"
-    },
-    {
-      "importer": "src/components/materials/MaterialsView.tsx",
-      "importerArea": "finish-library",
-      "specifier": "../../lib/materials/catalog",
-      "resolved": "src/lib/materials/catalog.ts",
-      "resolvedArea": "unknown",
-      "kind": "import",
-      "reviewNote": "unknown: ownership unclear",
-      "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
       "importer": "src/lib/export/materials.ts",
@@ -2955,6 +2955,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../materials",
+      "resolved": "src/components/materials/index.ts",
+      "resolvedArea": "finish-library",
+      "kind": "import",
+      "reviewNote": "expected: product uses public Finish Library surface",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
       "specifier": "../../materials",
@@ -3139,6 +3149,16 @@
       "importerArea": "proposal",
       "specifier": "../../../lib/money",
       "resolved": "src/lib/money/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/api",
+      "resolved": "src/lib/api.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -3385,10 +3405,80 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../shared/table/GeneratedItemEditableTextCell",
+      "resolved": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../shared/table/GeneratedItemEditableNumberCell",
+      "resolved": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../shared/table/GeneratedItemSizeModal",
+      "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../shared/table/GeneratedItemMaterialsCell",
+      "resolved": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../primitives/toast-api",
+      "resolved": "src/components/primitives/toast-api.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "importerArea": "proposal",
       "specifier": "../../primitives",
       "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../primitives/toast-api",
+      "resolved": "src/components/primitives/toast-api.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -6394,9 +6484,19 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "finish-library",
-      "imports": 1,
+      "imports": 2,
       "reviewNote": "expected: product uses public Finish Library surface",
       "examples": [
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "importerArea": "proposal",
+          "specifier": "../../materials",
+          "resolved": "src/components/materials/index.ts",
+          "resolvedArea": "finish-library",
+          "kind": "import",
+          "reviewNote": "expected: product uses public Finish Library surface",
+          "reviewSection": "Expected Shared Dependencies"
+        },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
           "importerArea": "proposal",
@@ -6413,7 +6513,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-ui",
-      "imports": 22,
+      "imports": 29,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6452,7 +6552,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-lib",
-      "imports": 38,
+      "imports": 39,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6686,7 +6786,7 @@
       "section": "Expected Shared Dependencies",
       "from": "finish-library",
       "to": "shared-lib",
-      "imports": 11,
+      "imports": 13,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6700,10 +6800,10 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/materials/MaterialsView.tsx",
+          "importer": "src/components/materials/MaterialLibraryModal.tsx",
           "importerArea": "finish-library",
-          "specifier": "../../lib/export",
-          "resolved": "src/lib/export/index.ts",
+          "specifier": "../../lib/query",
+          "resolved": "src/lib/query/index.ts",
           "resolvedArea": "shared-lib",
           "kind": "import",
           "reviewNote": "expected: product uses shared lib",
@@ -6712,8 +6812,8 @@
         {
           "importer": "src/components/materials/MaterialsView.tsx",
           "importerArea": "finish-library",
-          "specifier": "../../hooks",
-          "resolved": "src/hooks/index.ts",
+          "specifier": "../../lib/export",
+          "resolved": "src/lib/export/index.ts",
           "resolvedArea": "shared-lib",
           "kind": "import",
           "reviewNote": "expected: product uses shared lib",
@@ -7076,29 +7176,9 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "finish-library",
       "to": "unknown",
-      "imports": 3,
+      "imports": 1,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
-        {
-          "importer": "src/components/materials/MaterialLibraryModal.tsx",
-          "importerArea": "finish-library",
-          "specifier": "../../lib/materials/catalog",
-          "resolved": "src/lib/materials/catalog.ts",
-          "resolvedArea": "unknown",
-          "kind": "import",
-          "reviewNote": "unknown: ownership unclear",
-          "reviewSection": "Unknown / Ambiguous Dependencies"
-        },
-        {
-          "importer": "src/components/materials/MaterialsView.tsx",
-          "importerArea": "finish-library",
-          "specifier": "../../lib/materials/catalog",
-          "resolved": "src/lib/materials/catalog.ts",
-          "resolvedArea": "unknown",
-          "kind": "import",
-          "reviewNote": "unknown: ownership unclear",
-          "reviewSection": "Unknown / Ambiguous Dependencies"
-        },
         {
           "importer": "src/lib/export/materials.ts",
           "importerArea": "finish-library",
@@ -7740,16 +7820,6 @@
       "imports": []
     },
     {
-      "path": "src/lib/materials/catalog.ts",
-      "project": "React client",
-      "module": "src/lib",
-      "productArea": "unknown",
-      "ownershipConfidence": "low",
-      "ownershipReason": "no product-area path heuristic matched",
-      "ownerPath": "src/lib",
-      "imports": []
-    },
-    {
       "path": "src/lib/table/generatedItemChangeFields.ts",
       "project": "React client",
       "module": "src/lib",
@@ -7985,9 +8055,9 @@
     },
     {
       "path": "src/components",
-      "files": 117,
-      "importsIn": 247,
-      "importsOut": 549,
+      "files": 118,
+      "importsIn": 259,
+      "importsOut": 567,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8032,8 +8102,8 @@
     },
     {
       "path": "src/lib",
-      "files": 82,
-      "importsIn": 304,
+      "files": 81,
+      "importsIn": 305,
       "importsOut": 256,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
@@ -9505,6 +9575,14 @@
         },
         {
           "importer": "src/components/materials/index.ts",
+          "specifier": "./MaterialsView",
+          "kind": "export",
+          "resolved": "src/components/materials/MaterialsView.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/materials/index.ts",
           "specifier": "./MaterialLibraryModal",
           "kind": "export",
           "resolved": "src/components/materials/MaterialLibraryModal.tsx",
@@ -9528,6 +9606,14 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/materials/MaterialLibraryModal.tsx",
+          "specifier": "@tanstack/react-query",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@tanstack/react-query",
           "asset": false
         },
         {
@@ -9564,9 +9650,9 @@
         },
         {
           "importer": "src/components/materials/MaterialLibraryModal.tsx",
-          "specifier": "../../lib/materials/catalog",
+          "specifier": "../../lib/query",
           "kind": "import",
-          "resolved": "src/lib/materials/catalog.ts",
+          "resolved": "src/lib/query/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -9591,6 +9677,14 @@
         },
         {
           "importer": "src/components/materials/MaterialsView.tsx",
+          "specifier": "@tanstack/react-query",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@tanstack/react-query",
+          "asset": false
+        },
+        {
+          "importer": "src/components/materials/MaterialsView.tsx",
           "specifier": "../../lib/export",
           "kind": "import",
           "resolved": "src/lib/export/index.ts",
@@ -9610,6 +9704,14 @@
           "specifier": "../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/materials/MaterialsView.tsx",
+          "specifier": "../../lib/query",
+          "kind": "import",
+          "resolved": "src/lib/query/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -9642,14 +9744,6 @@
           "specifier": "./MaterialLibraryModal",
           "kind": "import",
           "resolved": "src/components/materials/MaterialLibraryModal.tsx",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/materials/MaterialsView.tsx",
-          "specifier": "../../lib/materials/catalog",
-          "kind": "import",
-          "resolved": "src/lib/materials/catalog.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -12117,6 +12211,14 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -12186,6 +12288,70 @@
           "resolved": "src/types/index.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../shared/table/GeneratedItemEditableTextCell",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../shared/table/GeneratedItemEditableNumberCell",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../shared/table/GeneratedItemSizeModal",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../shared/table/GeneratedItemMaterialsCell",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../materials",
+          "kind": "import",
+          "resolved": "src/components/materials/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../primitives/toast-api",
+          "kind": "import",
+          "resolved": "src/components/primitives/toast-api.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+          "specifier": "../../../lib/api",
+          "kind": "import",
+          "resolved": "src/lib/api.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -12243,6 +12409,14 @@
           "specifier": "../../primitives",
           "kind": "import",
           "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "../../primitives/toast-api",
+          "kind": "import",
+          "resolved": "src/components/primitives/toast-api.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -13687,6 +13861,16 @@
       ]
     },
     {
+      "path": "src/components/shared/table/EditablePencilHint.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": []
+    },
+    {
       "path": "src/components/shared/table/GeneratedItemActionControls.tsx",
       "project": "React client",
       "module": "src/components",
@@ -13772,6 +13956,14 @@
           "resolved": "src/components/primitives/InlineNumberEdit.tsx",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+          "specifier": "./EditablePencilHint",
+          "kind": "import",
+          "resolved": "src/components/shared/table/EditablePencilHint.tsx",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -13797,6 +13989,14 @@
           "specifier": "../../../lib/utils",
           "kind": "import",
           "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+          "specifier": "./EditablePencilHint",
+          "kind": "import",
+          "resolved": "src/components/shared/table/EditablePencilHint.tsx",
           "externalPackage": null,
           "asset": false
         }
@@ -13883,6 +14083,22 @@
       "imports": [
         {
           "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -13902,6 +14118,14 @@
           "specifier": "../modals/DimensionEditorModal",
           "kind": "import",
           "resolved": "src/components/shared/modals/DimensionEditorModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+          "specifier": "./EditablePencilHint",
+          "kind": "import",
+          "resolved": "src/components/shared/table/EditablePencilHint.tsx",
           "externalPackage": null,
           "asset": false
         }
@@ -17922,16 +18146,6 @@
           "asset": false
         }
       ]
-    },
-    {
-      "path": "src/lib/materials/catalog.ts",
-      "project": "React client",
-      "module": "src/lib",
-      "productArea": "unknown",
-      "ownershipConfidence": "low",
-      "ownershipReason": "no product-area path heuristic matched",
-      "ownerPath": "src/lib",
-      "imports": []
     },
     {
       "path": "src/lib/money/budgetCalc.test.ts",
@@ -22060,6 +22274,14 @@
     },
     {
       "importer": "src/components/materials/index.ts",
+      "specifier": "./MaterialsView",
+      "kind": "export",
+      "resolved": "src/components/materials/MaterialsView.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/materials/index.ts",
       "specifier": "./MaterialLibraryModal",
       "kind": "export",
       "resolved": "src/components/materials/MaterialLibraryModal.tsx",
@@ -22072,6 +22294,14 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/materials/MaterialLibraryModal.tsx",
+      "specifier": "@tanstack/react-query",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@tanstack/react-query",
       "asset": false
     },
     {
@@ -22108,9 +22338,9 @@
     },
     {
       "importer": "src/components/materials/MaterialLibraryModal.tsx",
-      "specifier": "../../lib/materials/catalog",
+      "specifier": "../../lib/query",
       "kind": "import",
-      "resolved": "src/lib/materials/catalog.ts",
+      "resolved": "src/lib/query/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -22120,6 +22350,14 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/materials/MaterialsView.tsx",
+      "specifier": "@tanstack/react-query",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@tanstack/react-query",
       "asset": false
     },
     {
@@ -22143,6 +22381,14 @@
       "specifier": "../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/materials/MaterialsView.tsx",
+      "specifier": "../../lib/query",
+      "kind": "import",
+      "resolved": "src/lib/query/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -22175,14 +22421,6 @@
       "specifier": "./MaterialLibraryModal",
       "kind": "import",
       "resolved": "src/components/materials/MaterialLibraryModal.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/materials/MaterialsView.tsx",
-      "specifier": "../../lib/materials/catalog",
-      "kind": "import",
-      "resolved": "src/lib/materials/catalog.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -23980,6 +24218,14 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -24051,6 +24297,70 @@
       "asset": false
     },
     {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../shared/table/GeneratedItemEditableTextCell",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../shared/table/GeneratedItemEditableNumberCell",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../shared/table/GeneratedItemSizeModal",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../shared/table/GeneratedItemMaterialsCell",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../materials",
+      "kind": "import",
+      "resolved": "src/components/materials/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../primitives/toast-api",
+      "kind": "import",
+      "resolved": "src/components/primitives/toast-api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemDetailPanel.tsx",
+      "specifier": "../../../lib/api",
+      "kind": "import",
+      "resolved": "src/lib/api.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "specifier": "react",
       "kind": "import",
@@ -24095,6 +24405,14 @@
       "specifier": "../../primitives",
       "kind": "import",
       "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "../../primitives/toast-api",
+      "kind": "import",
+      "resolved": "src/components/primitives/toast-api.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25307,6 +25625,14 @@
       "asset": false
     },
     {
+      "importer": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+      "specifier": "./EditablePencilHint",
+      "kind": "import",
+      "resolved": "src/components/shared/table/EditablePencilHint.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
       "specifier": "react",
       "kind": "import",
@@ -25319,6 +25645,14 @@
       "specifier": "../../../lib/utils",
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+      "specifier": "./EditablePencilHint",
+      "kind": "import",
+      "resolved": "src/components/shared/table/EditablePencilHint.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -25372,6 +25706,22 @@
     },
     {
       "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -25391,6 +25741,14 @@
       "specifier": "../modals/DimensionEditorModal",
       "kind": "import",
       "resolved": "src/components/shared/modals/DimensionEditorModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemSizeModal.tsx",
+      "specifier": "./EditablePencilHint",
+      "kind": "import",
+      "resolved": "src/components/shared/table/EditablePencilHint.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -30466,7 +30824,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 82
+      "imports": 83
     },
     {
       "name": "vitest",
@@ -30474,7 +30832,7 @@
     },
     {
       "name": "@tanstack/react-query",
-      "imports": 24
+      "imports": 26
     },
     {
       "name": "react-router-dom",
@@ -30493,12 +30851,12 @@
       "imports": 14
     },
     {
-      "name": "@testing-library/user-event",
-      "imports": 9
+      "name": "react-dom",
+      "imports": 10
     },
     {
-      "name": "react-dom",
-      "imports": 8
+      "name": "@testing-library/user-event",
+      "imports": 9
     },
     {
       "name": "@dnd-kit/sortable",

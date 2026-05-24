@@ -13,3 +13,5 @@ export {
   useProposalRevisions,
   useUpdateRevisionItemCost,
 } from './useProposal';
+export { useRevisionInfoForItem } from './useRevisionInfoForItem';
+export type { RevisionInfoForItem } from './useRevisionInfoForItem';

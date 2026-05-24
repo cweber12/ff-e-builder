@@ -23,7 +23,10 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(pnpm tsc *)",
-      "Bash(gh issue create --title 'Proposal Table: hide row drag handle until row hover' --label enhancement --body ' *)"
+      "Bash(gh issue create --title 'Proposal Table: hide row drag handle until row hover' --label enhancement --body ' *)",
+      "Bash(gh issue create --title 'Combined categories+items fetch endpoint; lazy item bodies for collapsed groups' --label needs-triage --body ' *)",
+      "Bash(gh issue create --title 'Split useProposalRevisions\\(\\) into three focused hooks' --label needs-triage --body ' *)",
+      "Bash(gh issue create --title 'Proposal table chrome header + route shell split \\(with skeleton state\\)' --label needs-triage --body ' *)"
     ]
   }
 }

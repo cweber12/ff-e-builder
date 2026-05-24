@@ -1,5 +1,6 @@
 import {
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -49,6 +50,7 @@ import {
   useDeleteColumnDef,
   useIsMobileViewport,
   useProposalRevisions,
+  useRevisionInfoForItem,
 } from '../../../hooks';
 import { MaterialLibraryModal } from '../../materials';
 import {
@@ -56,10 +58,8 @@ import {
   formatMoney,
   type Project,
   type ProposalItem,
-  type ProposalItemChangelogEntry,
   type ProposalCategoryWithItems,
   type CustomColumnDef,
-  type ProposalRevision,
   type ProposalStatus,
   type RevisionCostStatus,
   type RevisionSnapshot,
@@ -226,6 +226,19 @@ export function ProposalTable({
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
   const totalItemCount = categoriesWithItems.reduce((sum, c) => sum + c.items.length, 0);
 
+  // Stable per-category otherCategories arrays — computed once and reused across renders
+  // so ProposalRow memo can do reference equality on this prop (cross-cut X2).
+  const otherCategoriesMap = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }[]>();
+    for (const cat of categoriesWithItems) {
+      map.set(
+        cat.id,
+        categoriesWithItems.filter((c) => c.id !== cat.id).map((c) => ({ id: c.id, name: c.name })),
+      );
+    }
+    return map;
+  }, [categoriesWithItems]);
+
   const openRev = useMemo(
     () => revisionsData?.revisions.find((r) => r.closedAt === null) ?? null,
     [revisionsData?.revisions],
@@ -346,7 +359,7 @@ export function ProposalTable({
           categoryId={category.id}
           categoryName={category.name}
           items={category.items}
-          otherCategories={categoriesWithItems.filter((c) => c.id !== category.id)}
+          otherCategories={otherCategoriesMap.get(category.id) ?? []}
           subtotalCents={proposalCategorySubtotalCents(category.items)}
           collapsed={collapsed[category.id] ?? false}
           onToggle={() => toggleCollapsed(category.id)}
@@ -884,19 +897,10 @@ function ProposalCategorySection({
     return map;
   }, [revisionsData?.snapshots]);
 
-  // Derive open revision and per-item changelog for the Notes column.
+  // Derive open revision — used for the revision badge in the category header,
+  // the table min-width switch, and the pending-change modal.
   const openRev = useMemo(() => revisions.find((r) => r.closedAt === null) ?? null, [revisions]);
   const hasOpenRevision = openRev !== null;
-  const changelogByItemId = useMemo(() => {
-    const map = new Map<string, ProposalItemChangelogEntry[]>();
-    if (!openRev) return map;
-    for (const entry of revisionsData?.changelog ?? []) {
-      if (entry.revisionId !== openRev.id) continue;
-      if (!map.has(entry.proposalItemId)) map.set(entry.proposalItemId, []);
-      map.get(entry.proposalItemId)!.push(entry);
-    }
-    return map;
-  }, [revisionsData?.changelog, openRev]);
 
   type PendingChange = GeneratedItemChangeInfo & {
     item: ProposalItem;
@@ -1301,10 +1305,6 @@ function ProposalCategorySection({
                       visibleColOrder={visibleColOrder}
                       customColumnDefs={customColumnDefs}
                       proposalStatus={proposalStatus}
-                      revisions={revisions}
-                      snapshotMap={snapshotsByRevThenItem}
-                      openRev={openRev}
-                      changelogByItemId={changelogByItemId}
                     />
                   ))}
                 </SortableContext>
@@ -1598,10 +1598,6 @@ function ProposalCategorySection({
                           visibleColOrder={visibleColOrder}
                           customColumnDefs={customColumnDefs}
                           proposalStatus={proposalStatus}
-                          revisions={revisions}
-                          snapshotMap={snapshotsByRevThenItem}
-                          openRev={openRev}
-                          changelogByItemId={changelogByItemId}
                         />
                       ))}
                     </SortableContext>
@@ -1635,6 +1631,10 @@ function ProposalCategorySection({
   );
 }
 
+// ─── ProposalRow — sortable shell ────────────────────────────────────────────
+// Thin wrapper that owns the dnd-kit subscription.  Re-renders on every drag
+// event (all useSortable hooks do), then forwards stable drag props to the
+// memoized ProposalRowContent which can bail out for non-dragged rows.
 function ProposalRow({
   projectId,
   categoryId,
@@ -1649,10 +1649,6 @@ function ProposalRow({
   visibleColOrder,
   customColumnDefs,
   proposalStatus,
-  revisions,
-  snapshotMap,
-  openRev,
-  changelogByItemId,
 }: {
   projectId: string;
   categoryId: string;
@@ -1667,284 +1663,388 @@ function ProposalRow({
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
   proposalStatus: ProposalStatus;
-  revisions: ProposalRevision[];
-  snapshotMap: Map<string, Map<string, RevisionSnapshot>>;
-  openRev: ProposalRevision | null;
-  changelogByItemId: Map<string, ProposalItemChangelogEntry[]>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
   });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-  const [swatchOpen, setSwatchOpen] = useState(false);
-  const lineTotal = proposalLineTotalCents(item);
-  const stopProp = (e: MouseEvent) => e.stopPropagation();
-
-  const showDots = proposalStatus !== 'in_progress';
-  const dot = (columnKey: string) =>
-    showDots ? (
-      <GeneratedItemColumnChangeDot itemId={item.id} columnKey={columnKey} revisions={revisions} />
-    ) : null;
-
-  const cellRenderMap: Record<string, ReactNode> = {
-    rendering: (
-      <GeneratedItemImageCell
-        view="proposal"
-        kind="rendering"
-        entityId={item.id}
-        alt={`${item.productTag || 'Proposal'} rendering`}
-        onClick={stopProp}
-      />
-    ),
-    productTag: (
-      <GeneratedItemEditableTextCell
-        value={item.productTag}
-        onSave={(productTag) => onSave({ productTag })}
-        indicator={dot('productTag')}
-        inputClassName={editInputClassName}
-      />
-    ),
-    itemName: (
-      <GeneratedItemEditableTextCell
-        value={item.itemName}
-        onSave={(itemName) => onSave({ itemName })}
-        className="min-w-48"
-        indicator={dot('itemName')}
-        inputClassName={editInputClassName}
-      />
-    ),
-    plan: (
-      <GeneratedItemImageCell
-        view="proposal"
-        kind="plan"
-        entityId={item.id}
-        alt={`${item.productTag || 'Proposal'} plan`}
-        onClick={stopProp}
-      />
-    ),
-    drawings: (
-      <GeneratedItemEditableTextCell
-        value={item.drawings}
-        onSave={(drawings) => onSave({ drawings })}
-        indicator={dot('drawings')}
-        inputClassName={editInputClassName}
-      />
-    ),
-    location: (
-      <GeneratedItemEditableTextCell
-        value={item.location}
-        onSave={(location) => onSave({ location })}
-        indicator={dot('location')}
-        inputClassName={editInputClassName}
-      />
-    ),
-    description: (
-      <GeneratedItemEditableTextCell
-        value={item.description}
-        onSave={(description) => onSave({ description })}
-        className="min-w-64"
-        indicator={dot('description')}
-        inputClassName={editInputClassName}
-      />
-    ),
-    notes: (
-      <GeneratedItemEditableTextCell
-        value={item.notes}
-        onSave={(notes) => onSave({ notes })}
-        className="min-w-48"
-        indicator={dot('notes')}
-        inputClassName={editInputClassName}
-      />
-    ),
-    size: (
-      <GeneratedItemSizeCell
-        value={item.sizeLabel}
-        initial={{
-          mode: item.sizeMode,
-          unit: item.sizeUnit,
-          w: item.sizeW,
-          d: item.sizeD,
-          h: item.sizeH,
-        }}
-        indicator={dot('size')}
-        onSave={({ label, mode, unit, w, d, h }) =>
-          onSave({
-            sizeMode: mode,
-            sizeUnit: unit,
-            sizeW: w,
-            sizeD: d,
-            sizeH: h,
-            sizeLabel: label,
-          })
-        }
-      />
-    ),
-    swatch: (
-      <GeneratedItemMaterialsCell materials={item.materials} onOpen={() => setSwatchOpen(true)}>
-        <MaterialLibraryModal
-          open={swatchOpen}
-          projectId={projectId}
-          context="proposal"
-          categoryId={categoryId}
-          item={item}
-          onClose={() => setSwatchOpen(false)}
-        />
-      </GeneratedItemMaterialsCell>
-    ),
-    cbm: (
-      <GeneratedItemEditableNumberCell
-        value={item.cbm}
-        step="0.001"
-        onSave={(cbm) => onSave({ cbm })}
-        className="w-24"
-        inputClassName={editInputClassName}
-        indicator={dot('cbm')}
-      />
-    ),
-    // quantity and unitCost are rendered as fixed sticky-right cells below.
-    ...Object.fromEntries(
-      customColumnDefs.map((def) => [
-        def.id,
-        <GeneratedItemEditableTextCell
-          value={item.customData[def.id] ?? ''}
-          onSave={(value) => {
-            onSave({ customData: { ...item.customData, [def.id]: value } });
-          }}
-          indicator={dot(def.id)}
-          inputClassName={editInputClassName}
-        />,
-      ]),
-    ),
-  };
-
+  // Serialise transform to a primitive string so ProposalRowContent's memo
+  // comparator can use strict equality — avoids new object references on every
+  // drag tick for rows that haven't moved.
+  const dragTransform = CSS.Transform.toString(transform);
   return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      tabIndex={0}
-      data-dragging={isDragging || undefined}
-      data-item-id={item.id}
-      aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
-      onClick={onRowClick}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter') return;
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        onRowClick();
-      }}
-      className={cn(
-        'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
-        isDragging && 'bg-brand-50 shadow-md opacity-80',
-      )}
-    >
-      <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
-        <GeneratedItemDragHandle
-          ariaLabel={`Drag ${item.productTag || 'item'}`}
-          {...attributes}
-          {...listeners}
-        />
-      </td>
-      {visibleColOrder.map((colId) => (
-        <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
-      ))}
-      {openRev ? (
-        (() => {
-          const snap = snapshotMap.get(openRev.id)?.get(item.id);
-          const revEntries = changelogByItemId.get(item.id) ?? [];
-          return (
-            <>
-              {/* Notes scroll first, then baseline group, so baseline sits adjacent to the sticky revised values. */}
-              <RevisionNotesCell entries={revEntries} tdClassName={revisionNotesColumnClassName} />
-              <td
-                className={cn(
-                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
-                  baselineQtyColumnClassName,
-                )}
-              >
-                {item.quantity} {item.quantityUnit}
-              </td>
-              <td
-                className={cn(
-                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
-                  baselineUnitCostColumnClassName,
-                )}
-              >
-                {formatMoney(cents(item.unitCostCents))}
-              </td>
-              <td
-                className={cn(
-                  'px-3 py-2 text-sm tabular-nums text-neutral-400',
-                  baselineTotalColumnClassName,
-                )}
-              >
-                {formatMoney(cents(lineTotal))}
-              </td>
-              {/* Revision snapshot cells (sticky) */}
-              <RevisionQtyCell
-                snapshot={snap}
-                currentQuantity={item.quantity}
-                currentUnit={item.quantityUnit}
-                onSaveQuantity={(quantity) => onSave({ quantity })}
-                tdClassName={stickyRevQtyCellClassName}
-              />
-              <RevisionCostCell
-                snapshot={snap}
-                projectId={projectId}
-                revisionId={openRev.id}
-                itemId={item.id}
-                tdClassName={stickyRevUnitCostCellClassName}
-              />
-              <RevisionTotalCell snapshot={snap} tdClassName={stickyRevTotalCellClassName} />
-            </>
-          );
-        })()
-      ) : (
-        <>
-          <GeneratedItemEditableQuantityCell
-            quantity={item.quantity}
-            quantityUnit={item.quantityUnit}
-            quantityUnits={quantityUnits}
-            onSaveQuantity={(quantity) => onSave({ quantity })}
-            onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
-            indicator={dot('quantity')}
-            tdClassName={proposalStickyValueColumnClassNames.quantity.cell}
-            inputClassName={editInputClassName}
-          />
-          <GeneratedItemEditableMoneyCell
-            valueCents={item.unitCostCents}
-            onSave={(unitCostCents) => onSave({ unitCostCents })}
-            indicator={dot('unitCostCents')}
-            tdClassName={proposalStickyValueColumnClassNames.unitCost.cell}
-            inputClassName={editInputClassName}
-          />
-          <td
-            className={cn(
-              'px-3 py-2 font-semibold text-neutral-900',
-              proposalStickyEdgeColumnClassNames.totalCell,
-            )}
-          >
-            {formatMoney(cents(lineTotal))}
-          </td>
-        </>
-      )}
-      <td
-        className={cn('px-1 py-2', proposalStickyEdgeColumnClassNames.actionsCell)}
-        onClick={stopProp}
-      >
-        <ProposalItemActionsMenu
-          itemName={item.itemName || item.productTag || item.description || 'item'}
-          otherCategories={otherCategories}
-          onViewDetails={onRowClick}
-          onDuplicate={onDuplicate}
-          onAddToFfe={onAddToFfe}
-          onMove={onMove}
-          onDelete={onDelete}
-        />
-      </td>
-    </tr>
+    <ProposalRowContent
+      projectId={projectId}
+      categoryId={categoryId}
+      item={item}
+      otherCategories={otherCategories}
+      onSave={onSave}
+      onDelete={onDelete}
+      onDuplicate={onDuplicate}
+      onAddToFfe={onAddToFfe}
+      onMove={onMove}
+      onRowClick={onRowClick}
+      visibleColOrder={visibleColOrder}
+      customColumnDefs={customColumnDefs}
+      proposalStatus={proposalStatus}
+      dragRef={setNodeRef}
+      dragTransform={dragTransform}
+      dragTransition={transition}
+      isDragging={isDragging}
+      dragAttributes={attributes}
+      dragListeners={listeners}
+    />
   );
 }
+
+// ─── ProposalRowContent — memoized render ─────────────────────────────────────
+// Skips re-renders for rows whose item data and drag state have not changed.
+// During a 100-item category drag, only the dragged row and repositioned rows
+// cross the comparator; all others exit immediately (Stop 5, X7).
+const ProposalRowContent = memo(
+  function ProposalRowContent({
+    projectId,
+    categoryId,
+    item,
+    otherCategories,
+    onSave,
+    onDelete,
+    onDuplicate,
+    onAddToFfe,
+    onMove,
+    onRowClick,
+    visibleColOrder,
+    customColumnDefs,
+    proposalStatus,
+    dragRef,
+    dragTransform,
+    dragTransition,
+    isDragging,
+    dragAttributes,
+    dragListeners,
+  }: {
+    projectId: string;
+    categoryId: string;
+    item: ProposalItem;
+    otherCategories: { id: string; name: string }[];
+    onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
+    onDelete: () => void;
+    onDuplicate: () => void;
+    onAddToFfe: () => void;
+    onMove: (toCategoryId: string) => void;
+    onRowClick: () => void;
+    visibleColOrder: string[];
+    customColumnDefs: CustomColumnDef[];
+    proposalStatus: ProposalStatus;
+    dragRef: (node: HTMLElement | null) => void;
+    dragTransform: string | undefined;
+    dragTransition: string | null | undefined;
+    isDragging: boolean;
+    dragAttributes: ReturnType<typeof useSortable>['attributes'];
+    dragListeners: ReturnType<typeof useSortable>['listeners'];
+  }) {
+    // Selector hook: reads only this item's revision slice from the shared
+    // React Query cache — no extra network request (X7).
+    const { openRev, revisions, snapshot, changelog } = useRevisionInfoForItem(projectId, item.id);
+
+    const style = { transform: dragTransform, transition: dragTransition ?? undefined };
+    const [swatchOpen, setSwatchOpen] = useState(false);
+    const lineTotal = proposalLineTotalCents(item);
+    const stopProp = (e: MouseEvent) => e.stopPropagation();
+
+    const showDots = proposalStatus !== 'in_progress';
+    const dot = (columnKey: string) =>
+      showDots ? (
+        <GeneratedItemColumnChangeDot
+          itemId={item.id}
+          columnKey={columnKey}
+          revisions={revisions}
+        />
+      ) : null;
+
+    const cellRenderMap: Record<string, ReactNode> = {
+      rendering: (
+        <GeneratedItemImageCell
+          view="proposal"
+          kind="rendering"
+          entityId={item.id}
+          alt={`${item.productTag || 'Proposal'} rendering`}
+          onClick={stopProp}
+        />
+      ),
+      productTag: (
+        <GeneratedItemEditableTextCell
+          value={item.productTag}
+          onSave={(productTag) => onSave({ productTag })}
+          indicator={dot('productTag')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      itemName: (
+        <GeneratedItemEditableTextCell
+          value={item.itemName}
+          onSave={(itemName) => onSave({ itemName })}
+          className="min-w-48"
+          indicator={dot('itemName')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      plan: (
+        <GeneratedItemImageCell
+          view="proposal"
+          kind="plan"
+          entityId={item.id}
+          alt={`${item.productTag || 'Proposal'} plan`}
+          onClick={stopProp}
+        />
+      ),
+      drawings: (
+        <GeneratedItemEditableTextCell
+          value={item.drawings}
+          onSave={(drawings) => onSave({ drawings })}
+          indicator={dot('drawings')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      location: (
+        <GeneratedItemEditableTextCell
+          value={item.location}
+          onSave={(location) => onSave({ location })}
+          indicator={dot('location')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      description: (
+        <GeneratedItemEditableTextCell
+          value={item.description}
+          onSave={(description) => onSave({ description })}
+          className="min-w-64"
+          indicator={dot('description')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      notes: (
+        <GeneratedItemEditableTextCell
+          value={item.notes}
+          onSave={(notes) => onSave({ notes })}
+          className="min-w-48"
+          indicator={dot('notes')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      size: (
+        <GeneratedItemSizeCell
+          value={item.sizeLabel}
+          initial={{
+            mode: item.sizeMode,
+            unit: item.sizeUnit,
+            w: item.sizeW,
+            d: item.sizeD,
+            h: item.sizeH,
+          }}
+          indicator={dot('size')}
+          onSave={({ label, mode, unit, w, d, h }) =>
+            onSave({
+              sizeMode: mode,
+              sizeUnit: unit,
+              sizeW: w,
+              sizeD: d,
+              sizeH: h,
+              sizeLabel: label,
+            })
+          }
+        />
+      ),
+      swatch: (
+        <GeneratedItemMaterialsCell materials={item.materials} onOpen={() => setSwatchOpen(true)}>
+          <MaterialLibraryModal
+            open={swatchOpen}
+            projectId={projectId}
+            context="proposal"
+            categoryId={categoryId}
+            item={item}
+            onClose={() => setSwatchOpen(false)}
+          />
+        </GeneratedItemMaterialsCell>
+      ),
+      cbm: (
+        <GeneratedItemEditableNumberCell
+          value={item.cbm}
+          step="0.001"
+          onSave={(cbm) => onSave({ cbm })}
+          className="w-24"
+          inputClassName={editInputClassName}
+          indicator={dot('cbm')}
+        />
+      ),
+      // quantity and unitCost are rendered as fixed sticky-right cells below.
+      ...Object.fromEntries(
+        customColumnDefs.map((def) => [
+          def.id,
+          <GeneratedItemEditableTextCell
+            value={item.customData[def.id] ?? ''}
+            onSave={(value) => {
+              onSave({ customData: { ...item.customData, [def.id]: value } });
+            }}
+            indicator={dot(def.id)}
+            inputClassName={editInputClassName}
+          />,
+        ]),
+      ),
+    };
+
+    return (
+      <tr
+        ref={dragRef}
+        style={style}
+        tabIndex={0}
+        data-dragging={isDragging || undefined}
+        data-item-id={item.id}
+        aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
+        onClick={onRowClick}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return;
+          if (event.target !== event.currentTarget) return;
+          event.preventDefault();
+          onRowClick();
+        }}
+        className={cn(
+          'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
+          isDragging && 'bg-brand-50 shadow-md opacity-80',
+        )}
+      >
+        <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
+          <GeneratedItemDragHandle
+            ariaLabel={`Drag ${item.productTag || 'item'}`}
+            {...dragAttributes}
+            {...dragListeners}
+          />
+        </td>
+        {visibleColOrder.map((colId) => (
+          <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
+        ))}
+        {openRev ? (
+          (() => {
+            const revEntries = changelog;
+            return (
+              <>
+                {/* Notes scroll first, then baseline group, so baseline sits adjacent to the sticky revised values. */}
+                <RevisionNotesCell
+                  entries={revEntries}
+                  tdClassName={revisionNotesColumnClassName}
+                />
+                <td
+                  className={cn(
+                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    baselineQtyColumnClassName,
+                  )}
+                >
+                  {item.quantity} {item.quantityUnit}
+                </td>
+                <td
+                  className={cn(
+                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    baselineUnitCostColumnClassName,
+                  )}
+                >
+                  {formatMoney(cents(item.unitCostCents))}
+                </td>
+                <td
+                  className={cn(
+                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    baselineTotalColumnClassName,
+                  )}
+                >
+                  {formatMoney(cents(lineTotal))}
+                </td>
+                {/* Revision snapshot cells (sticky) */}
+                <RevisionQtyCell
+                  snapshot={snapshot}
+                  currentQuantity={item.quantity}
+                  currentUnit={item.quantityUnit}
+                  onSaveQuantity={(quantity) => onSave({ quantity })}
+                  tdClassName={stickyRevQtyCellClassName}
+                />
+                <RevisionCostCell
+                  snapshot={snapshot}
+                  projectId={projectId}
+                  revisionId={openRev.id}
+                  itemId={item.id}
+                  tdClassName={stickyRevUnitCostCellClassName}
+                />
+                <RevisionTotalCell snapshot={snapshot} tdClassName={stickyRevTotalCellClassName} />
+              </>
+            );
+          })()
+        ) : (
+          <>
+            <GeneratedItemEditableQuantityCell
+              quantity={item.quantity}
+              quantityUnit={item.quantityUnit}
+              quantityUnits={quantityUnits}
+              onSaveQuantity={(quantity) => onSave({ quantity })}
+              onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+              indicator={dot('quantity')}
+              tdClassName={proposalStickyValueColumnClassNames.quantity.cell}
+              inputClassName={editInputClassName}
+            />
+            <GeneratedItemEditableMoneyCell
+              valueCents={item.unitCostCents}
+              onSave={(unitCostCents) => onSave({ unitCostCents })}
+              indicator={dot('unitCostCents')}
+              tdClassName={proposalStickyValueColumnClassNames.unitCost.cell}
+              inputClassName={editInputClassName}
+            />
+            <td
+              className={cn(
+                'px-3 py-2 font-semibold text-neutral-900',
+                proposalStickyEdgeColumnClassNames.totalCell,
+              )}
+            >
+              {formatMoney(cents(lineTotal))}
+            </td>
+          </>
+        )}
+        <td
+          className={cn('px-1 py-2', proposalStickyEdgeColumnClassNames.actionsCell)}
+          onClick={stopProp}
+        >
+          <ProposalItemActionsMenu
+            itemName={item.itemName || item.productTag || item.description || 'item'}
+            otherCategories={otherCategories}
+            onViewDetails={onRowClick}
+            onDuplicate={onDuplicate}
+            onAddToFfe={onAddToFfe}
+            onMove={onMove}
+            onDelete={onDelete}
+          />
+        </td>
+      </tr>
+    );
+  },
+  // ─── Item-id comparator ──────────────────────────────────────────────────────
+  // Re-render only when this item's data, drag position, or display config
+  // changes.  Callback props are intentionally excluded: they always change
+  // reference in the parent's sortedItems.map() but their semantics are driven
+  // by item.version, which IS checked.  During a drag event, non-dragged rows
+  // whose transform and isDragging state are unchanged exit here without any
+  // work in the render path.
+  (prev, next) => {
+    if (prev.item.id !== next.item.id) return false;
+    if (prev.item.version !== next.item.version) return false;
+    if (prev.isDragging !== next.isDragging) return false;
+    // transform is a serialised string — stable for non-shifting rows
+    if (prev.dragTransform !== next.dragTransform) return false;
+    // transition is deliberately excluded: it changes for all rows on drag start
+    // but only matters visually when transform also changes, so skipping it for
+    // stationary rows is safe and prevents a full-table re-render on drag start.
+    if (prev.proposalStatus !== next.proposalStatus) return false;
+    if (prev.visibleColOrder !== next.visibleColOrder) return false;
+    if (prev.customColumnDefs !== next.customColumnDefs) return false;
+    if (prev.otherCategories !== next.otherCategories) return false;
+    return true;
+  },
+);
 
 function ProposalItemActionsMenu({
   itemName,
