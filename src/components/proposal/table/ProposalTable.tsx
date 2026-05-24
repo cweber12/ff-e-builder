@@ -1,6 +1,8 @@
 import {
   Fragment,
+  lazy,
   memo,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -53,7 +55,9 @@ import {
   useProposalRevisions,
   useRevisionInfoForItem,
 } from '../../../hooks';
-import { MaterialLibraryModal } from '../../materials';
+const MaterialLibraryModal = lazy(() =>
+  import('../../materials').then((m) => ({ default: m.MaterialLibraryModal })),
+);
 import {
   cents,
   formatMoney,
@@ -908,6 +912,8 @@ function ProposalCategorySection({
     patch: Omit<UpdateProposalItemInput, 'version'>;
   };
   const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
+  const [activeSwatchItemId, setActiveSwatchItemId] = useState<string | null>(null);
+  const activeSwatchItem = items.find((i) => i.id === activeSwatchItemId) ?? null;
 
   function handleItemSave(item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) {
     // Normal in_progress (no open revision): direct save, no changelog.
@@ -1255,7 +1261,6 @@ function ProposalCategorySection({
                     <ProposalRow
                       key={item.id}
                       projectId={projectId}
-                      categoryId={categoryId}
                       item={item}
                       otherCategories={otherCategories}
                       onSave={(patch) => handleItemSave(item, patch)}
@@ -1296,6 +1301,7 @@ function ProposalCategorySection({
                       visibleColOrder={visibleColOrder}
                       customColumnDefs={customColumnDefs}
                       proposalStatus={proposalStatus}
+                      onSwatchOpen={setActiveSwatchItemId}
                     />
                   ))}
                 </SortableContext>
@@ -1548,7 +1554,6 @@ function ProposalCategorySection({
                         <ProposalRow
                           key={item.id}
                           projectId={projectId}
-                          categoryId={categoryId}
                           item={item}
                           otherCategories={otherCategories}
                           onSave={(patch) => handleItemSave(item, patch)}
@@ -1589,6 +1594,7 @@ function ProposalCategorySection({
                           visibleColOrder={visibleColOrder}
                           customColumnDefs={customColumnDefs}
                           proposalStatus={proposalStatus}
+                          onSwatchOpen={setActiveSwatchItemId}
                         />
                       ))}
                     </SortableContext>
@@ -1618,6 +1624,19 @@ function ProposalCategorySection({
           onCancel={() => setPendingChange(null)}
         />
       )}
+
+      <Suspense fallback={null}>
+        {activeSwatchItem && (
+          <MaterialLibraryModal
+            open
+            projectId={projectId}
+            context="proposal"
+            categoryId={categoryId}
+            item={activeSwatchItem}
+            onClose={() => setActiveSwatchItemId(null)}
+          />
+        )}
+      </Suspense>
     </GroupedTableSection>
   );
 }
@@ -1628,7 +1647,6 @@ function ProposalCategorySection({
 // memoized ProposalRowContent which can bail out for non-dragged rows.
 function ProposalRow({
   projectId,
-  categoryId,
   item,
   otherCategories,
   onSave,
@@ -1640,9 +1658,9 @@ function ProposalRow({
   visibleColOrder,
   customColumnDefs,
   proposalStatus,
+  onSwatchOpen,
 }: {
   projectId: string;
-  categoryId: string;
   item: ProposalItem;
   otherCategories: { id: string; name: string }[];
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
@@ -1654,6 +1672,7 @@ function ProposalRow({
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
   proposalStatus: ProposalStatus;
+  onSwatchOpen: (itemId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -1665,7 +1684,6 @@ function ProposalRow({
   return (
     <ProposalRowContent
       projectId={projectId}
-      categoryId={categoryId}
       item={item}
       otherCategories={otherCategories}
       onSave={onSave}
@@ -1677,6 +1695,7 @@ function ProposalRow({
       visibleColOrder={visibleColOrder}
       customColumnDefs={customColumnDefs}
       proposalStatus={proposalStatus}
+      onSwatchOpen={onSwatchOpen}
       dragRef={setNodeRef}
       dragTransform={dragTransform}
       dragTransition={transition}
@@ -1694,7 +1713,6 @@ function ProposalRow({
 const ProposalRowContent = memo(
   function ProposalRowContent({
     projectId,
-    categoryId,
     item,
     otherCategories,
     onSave,
@@ -1706,6 +1724,7 @@ const ProposalRowContent = memo(
     visibleColOrder,
     customColumnDefs,
     proposalStatus,
+    onSwatchOpen,
     dragRef,
     dragTransform,
     dragTransition,
@@ -1714,7 +1733,6 @@ const ProposalRowContent = memo(
     dragListeners,
   }: {
     projectId: string;
-    categoryId: string;
     item: ProposalItem;
     otherCategories: { id: string; name: string }[];
     onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
@@ -1726,6 +1744,7 @@ const ProposalRowContent = memo(
     visibleColOrder: string[];
     customColumnDefs: CustomColumnDef[];
     proposalStatus: ProposalStatus;
+    onSwatchOpen: (itemId: string) => void;
     dragRef: (node: HTMLElement | null) => void;
     dragTransform: string | undefined;
     dragTransition: string | null | undefined;
@@ -1738,7 +1757,6 @@ const ProposalRowContent = memo(
     const { openRev, revisions, snapshot, changelog } = useRevisionInfoForItem(projectId, item.id);
 
     const style = { transform: dragTransform, transition: dragTransition ?? undefined };
-    const [swatchOpen, setSwatchOpen] = useState(false);
     const lineTotal = proposalLineTotalCents(item);
     const stopProp = (e: MouseEvent) => e.stopPropagation();
 
@@ -1846,16 +1864,10 @@ const ProposalRowContent = memo(
         />
       ),
       swatch: (
-        <GeneratedItemMaterialsCell materials={item.materials} onOpen={() => setSwatchOpen(true)}>
-          <MaterialLibraryModal
-            open={swatchOpen}
-            projectId={projectId}
-            context="proposal"
-            categoryId={categoryId}
-            item={item}
-            onClose={() => setSwatchOpen(false)}
-          />
-        </GeneratedItemMaterialsCell>
+        <GeneratedItemMaterialsCell
+          materials={item.materials}
+          onOpen={() => onSwatchOpen(item.id)}
+        />
       ),
       cbm: (
         <GeneratedItemEditableNumberCell
