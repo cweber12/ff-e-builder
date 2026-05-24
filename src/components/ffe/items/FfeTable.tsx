@@ -99,7 +99,7 @@ import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHan
 import { GeneratedItemEditableNumberControl } from '../../shared/table/GeneratedItemEditableNumberCell';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageControl } from '../../shared/table/GeneratedItemImageCell';
-import { GeneratedItemMaterialBadges } from '../../shared/table/GeneratedItemMaterialsCell';
+import { GeneratedItemMaterialsControl } from '../../shared/table/GeneratedItemMaterialsCell';
 import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
@@ -706,7 +706,7 @@ const createColumns = (
     id: 'materials',
     header: 'Swatch',
     cell: ({ row }) => (
-      <GeneratedItemMaterialBadges
+      <GeneratedItemMaterialsControl
         materials={row.original.materials}
         onOpen={() => actions.onEditMaterials(row.original)}
       />
@@ -1201,7 +1201,7 @@ function MobileItemCards({
               />
             </MobileField>
             <MobileField label="Swatch">
-              <GeneratedItemMaterialBadges
+              <GeneratedItemMaterialsControl
                 materials={item.materials}
                 onOpen={() => actions.onEditMaterials(item)}
               />

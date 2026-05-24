@@ -2,19 +2,19 @@ import type { ReactNode } from 'react';
 import type { Material } from '../../../types';
 import { MaterialBadges } from '../../materials';
 
-type GeneratedItemMaterialBadgesProps = {
+type GeneratedItemMaterialsControlProps = {
   materials: Material[];
   onOpen: () => void;
 };
 
-type GeneratedItemMaterialsCellProps = GeneratedItemMaterialBadgesProps & {
+type GeneratedItemMaterialsCellProps = GeneratedItemMaterialsControlProps & {
   children?: ReactNode;
 };
 
-export function GeneratedItemMaterialBadges({
+export function GeneratedItemMaterialsControl({
   materials,
   onOpen,
-}: GeneratedItemMaterialBadgesProps) {
+}: GeneratedItemMaterialsControlProps) {
   return <MaterialBadges materials={materials} onOpen={onOpen} />;
 }
 
@@ -25,7 +25,7 @@ export function GeneratedItemMaterialsCell({
 }: GeneratedItemMaterialsCellProps) {
   return (
     <td className="min-w-36 px-3 py-2" onClick={(event) => event.stopPropagation()}>
-      <GeneratedItemMaterialBadges materials={materials} onOpen={onOpen} />
+      <GeneratedItemMaterialsControl materials={materials} onOpen={onOpen} />
       {children}
     </td>
   );
