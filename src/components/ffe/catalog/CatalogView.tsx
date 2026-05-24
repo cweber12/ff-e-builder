@@ -941,6 +941,38 @@ function EditIcon() {
   );
 }
 
+function CameraIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-5 w-5">
+      <path
+        d="M7.5 3.5L8.75 2h2.5L12.5 3.5H16a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1v-9a1 1 0 011-1h3.5z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="9.5" r="2.5" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function AlignCenterIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+      <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5 8h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AlignTopIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+      <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5 5.5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function CatalogPage({
   project,
   entry,
@@ -1207,27 +1239,64 @@ export function CatalogPage({
                   </div>
                 )}
               </div>
-              <div
-                className={cn(
-                  'catalog-rendering-square',
-                  isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
-                )}
-                data-main-image-alignment={layout.mainImageAlignment}
-              >
-                <ImageFrame
-                  entityType="item"
-                  entityId={item.id}
-                  alt={item.itemName}
-                  fallbackUrl={null}
-                  className="catalog-rendering-frame border-0 shadow-none rounded-none"
-                  imageClassName={cn(
-                    'catalog-image !h-auto !w-auto',
-                    isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
+              <div className="catalog-image-hover-wrapper">
+                <div
+                  className={cn(
+                    'catalog-rendering-square',
+                    isTopAligned
+                      ? 'catalog-rendering-square-top'
+                      : 'catalog-rendering-square-center',
                   )}
-                  placeholderClassName="catalog-placeholder"
-                  placeholderContent={<span>{initials(item.itemName)}</span>}
-                />
+                  data-main-image-alignment={layout.mainImageAlignment}
+                >
+                  <ImageFrame
+                    entityType="item"
+                    entityId={item.id}
+                    alt={item.itemName}
+                    fallbackUrl={null}
+                    className="catalog-rendering-frame border-0 shadow-none rounded-none"
+                    imageClassName={cn(
+                      'catalog-image !h-auto !w-auto',
+                      isTopAligned ? 'catalog-image-top' : 'catalog-image-center',
+                    )}
+                    placeholderClassName="catalog-placeholder catalog-placeholder--dashed"
+                    placeholderContent={
+                      <div className="catalog-placeholder-upload-hint">
+                        <CameraIcon />
+                        <span>{initials(item.itemName)}</span>
+                      </div>
+                    }
+                  />
+                </div>
               </div>
+              {onLayoutChange && (
+                <div className="catalog-image-align-toggle no-print">
+                  <button
+                    type="button"
+                    className={cn(
+                      'catalog-align-btn',
+                      layout.mainImageAlignment === 'center' && 'is-active',
+                    )}
+                    aria-label="Center image alignment"
+                    aria-pressed={layout.mainImageAlignment === 'center'}
+                    onClick={() => onLayoutChange({ mainImageAlignment: 'center' })}
+                  >
+                    <AlignCenterIcon />
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      'catalog-align-btn',
+                      layout.mainImageAlignment === 'top' && 'is-active',
+                    )}
+                    aria-label="Top image alignment"
+                    aria-pressed={layout.mainImageAlignment === 'top'}
+                    onClick={() => onLayoutChange({ mainImageAlignment: 'top' })}
+                  >
+                    <AlignTopIcon />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1425,7 +1494,7 @@ export function CatalogPage({
                   fallbackUrl={null}
                   className="border-0 shadow-none h-full w-full rounded-none"
                   imageClassName="!h-full !w-full object-contain"
-                  placeholderClassName="catalog-plan-placeholder"
+                  placeholderClassName="catalog-plan-placeholder catalog-plan-placeholder--dashed"
                   placeholderContent={
                     <span className="catalog-plan-placeholder-text">
                       LOCATION
@@ -1889,6 +1958,9 @@ function CatalogOptionCard({
           }}
         />
       </label>
+      <div className="catalog-option-hover-overlay no-print" aria-hidden="true">
+        <CameraIcon />
+      </div>
       {previewUrl ? (
         <button
           ref={menuAnchorRef}
