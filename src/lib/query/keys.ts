@@ -46,6 +46,7 @@ export const materialKeys = {
 export const proposalKeys = {
   all: ['proposal'] as const,
   categories: (projectId: string) => ['proposal', projectId, 'categories'] as const,
+  withItems: (projectId: string) => ['proposal', projectId, 'with-items'] as const,
   items: (categoryId: string) => ['proposal', 'category', categoryId, 'items'] as const,
   changelog: (itemId: string) => ['proposal', 'item', itemId, 'changelog'] as const,
   revisions: (projectId: string) => ['proposal', projectId, 'revisions'] as const,

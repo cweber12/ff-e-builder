@@ -1,6 +1,7 @@
 export {
   useProposalCategories,
   useProposalWithItems,
+  usePrefetchProposalItems,
   useCreateProposalCategory,
   useUpdateProposalCategory,
   useDeleteProposalCategory,

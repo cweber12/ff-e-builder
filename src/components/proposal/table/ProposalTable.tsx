@@ -43,6 +43,7 @@ import {
   useAddProposalItemToFfe,
   useMoveProposalItem,
   useProposalWithItems,
+  usePrefetchProposalItems,
   useUpdateProposalCategory,
   useUpdateProposalItem,
   useReorderProposalItems,
@@ -184,7 +185,13 @@ export function ProposalTable({
   addCategoryOpen: addCategoryOpenProp,
   onAddCategoryOpenChange,
 }: ProposalTableProps) {
-  const { categoriesWithItems, isLoading } = useProposalWithItems(projectId);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const collapsedCategoryIds = useMemo(
+    () => new Set(Object.keys(collapsed).filter((id) => collapsed[id])),
+    [collapsed],
+  );
+  const prefetchProposalItems = usePrefetchProposalItems();
+  const { categoriesWithItems, isLoading } = useProposalWithItems(projectId, collapsedCategoryIds);
   const { data: revisionsData } = useProposalRevisions(projectId);
   const createCategory = useCreateProposalCategory(projectId);
   const updateCategory = useUpdateProposalCategory(projectId);
@@ -225,7 +232,6 @@ export function ProposalTable({
   const setAddCategoryOpen = isControlledAddCategory
     ? onAddCategoryOpenChange
     : setAddCategoryOpenInternal;
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [selection, setSelection] = useState<{ itemId: string; categoryId: string } | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
@@ -390,6 +396,7 @@ export function ProposalTable({
             await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
           }}
           proposalStatus={project?.proposalStatus ?? 'in_progress'}
+          onPrefetchItems={() => prefetchProposalItems(category.id)}
         />
       ))}
 
@@ -861,6 +868,7 @@ function ProposalCategorySection({
   onRestoreDefault,
   onAddCustomColumn,
   proposalStatus,
+  onPrefetchItems,
 }: {
   projectId: string;
   categoryId: string;
@@ -884,6 +892,7 @@ function ProposalCategorySection({
   onRestoreDefault: (id: string) => void;
   onAddCustomColumn: (label: string) => Promise<void>;
   proposalStatus: ProposalStatus;
+  onPrefetchItems: () => void;
 }) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -1021,6 +1030,7 @@ function ProposalCategorySection({
           <button
             type="button"
             onClick={onToggle}
+            onMouseEnter={collapsed ? onPrefetchItems : undefined}
             aria-expanded={!collapsed}
             aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
             title={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}

@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
@@ -33,29 +34,65 @@ export function useProposalCategories(projectId: string) {
   });
 }
 
-export function useProposalWithItems(projectId: string) {
-  const categoriesQuery = useProposalCategories(projectId);
+// Five minutes — long enough to avoid redundant refetches during a session,
+// short enough that a hard-refresh or tab-switch picks up server changes.
+const ITEMS_STALE_MS = 5 * 60 * 1000;
+
+export function useProposalWithItems(projectId: string, collapsedCategoryIds: ReadonlySet<string>) {
+  // Capture collapsed state at mount time so the combined query key stays
+  // stable even as the user collapses/expands categories during the session.
+  const initialCollapsedRef = useRef(collapsedCategoryIds);
+
+  const combinedQuery = useQuery({
+    queryKey: proposalKeys.withItems(projectId),
+    queryFn: () => api.proposal.withItems(projectId, [...initialCollapsedRef.current]),
+    enabled: Boolean(projectId),
+    staleTime: ITEMS_STALE_MS,
+  });
+
+  const categories = combinedQuery.data?.categories ?? [];
+  const seedItems = combinedQuery.data?.items ?? {};
+
+  // Per-category queries subscribe to the per-category cache so mutations
+  // (setQueryData / invalidateQueries keyed on proposalKeys.items) remain
+  // reactive.  initialData + initialDataUpdatedAt seeds them from the combined
+  // response without firing extra network requests.
   const itemQueries = useQueries({
-    queries: (categoriesQuery.data ?? []).map((category) => ({
-      queryKey: proposalKeys.items(category.id),
-      queryFn: () => api.proposal.items(category.id),
-      enabled: Boolean(category.id && projectId),
+    queries: categories.map((cat) => ({
+      queryKey: proposalKeys.items(cat.id),
+      queryFn: () => api.proposal.items(cat.id),
+      enabled: !collapsedCategoryIds.has(cat.id),
+      initialData: seedItems[cat.id],
+      initialDataUpdatedAt: combinedQuery.dataUpdatedAt,
+      staleTime: ITEMS_STALE_MS,
     })),
   });
 
-  const categoriesWithItems: ProposalCategoryWithItems[] = (categoriesQuery.data ?? []).map(
-    (category, index) => ({
-      ...category,
-      items: itemQueries[index]?.data ?? [],
-    }),
-  );
+  const categoriesWithItems: ProposalCategoryWithItems[] = categories.map((category, index) => ({
+    ...category,
+    items: itemQueries[index]?.data ?? [],
+  }));
 
   const isLoading =
-    categoriesQuery.isLoading ||
-    (categoriesQuery.data !== undefined && itemQueries.some((q) => q.isLoading && !q.data));
-  const error = categoriesQuery.error ?? itemQueries.find((q) => q.error)?.error ?? null;
+    combinedQuery.isLoading ||
+    (categories.length > 0 && itemQueries.some((q) => q.isLoading && !q.data));
+  const error = combinedQuery.error ?? itemQueries.find((q) => q.error)?.error ?? null;
 
   return { categoriesWithItems, isLoading, error };
+}
+
+export function usePrefetchProposalItems() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (categoryId: string) => {
+      void queryClient.prefetchQuery({
+        queryKey: proposalKeys.items(categoryId),
+        queryFn: () => api.proposal.items(categoryId),
+        staleTime: ITEMS_STALE_MS,
+      });
+    },
+    [queryClient],
+  );
 }
 
 export function useCreateProposalCategory(projectId: string) {

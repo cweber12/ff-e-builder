@@ -1190,3 +1190,52 @@ export async function selectCompatibleProposalItemsByCategory(sql: Sql, category
     ORDER BY pi.sort_order, pi.created_at
   `;
 }
+
+export async function selectCompatibleProposalItemsByCategories(sql: Sql, categoryIds: string[]) {
+  if (categoryIds.length === 0) return [];
+  return sql`
+    SELECT
+      pi.*,
+      COALESCE(
+        NULLIF(pi.item_name, ''),
+        NULLIF(i.item_name, ''),
+        NULLIF(pi.product_tag, ''),
+        'Proposal item'
+      ) AS item_name,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id',          m.id,
+            'project_id',  m.project_id,
+            'name',        m.name,
+            'material_id', m.material_id,
+            'description', m.description,
+            'swatch_hex',  m.swatch_hex,
+            'created_at',  m.created_at,
+            'updated_at',  m.updated_at
+          ) ORDER BY generated_materials.sort_order, lower(m.name)
+        ) FILTER (WHERE m.id IS NOT NULL),
+        '[]'::json
+      ) AS materials
+    FROM  proposal_items pi
+    LEFT JOIN proposal_item_generated_item_links link ON link.proposal_item_id = pi.id
+    LEFT JOIN items i ON i.id = link.item_id
+    LEFT JOIN LATERAL (
+      SELECT DISTINCT ON (material_id) material_id, sort_order
+      FROM (
+        SELECT pim.material_id, pim.sort_order
+        FROM proposal_item_materials pim
+        WHERE pim.proposal_item_id = pi.id
+        UNION ALL
+        SELECT im.material_id, im.sort_order
+        FROM item_materials im
+        WHERE im.item_id = link.item_id
+      ) material_refs
+      ORDER BY material_id, sort_order
+    ) generated_materials ON true
+    LEFT  JOIN materials m                 ON m.id = generated_materials.material_id
+    WHERE pi.category_id = ANY(${categoryIds}::uuid[])
+    GROUP BY pi.id, i.item_name
+    ORDER BY pi.sort_order, pi.created_at
+  `;
+}

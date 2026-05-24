@@ -17,6 +17,7 @@ import {
   createGeneratedItemFromProposal,
   mirrorProposalItemToGeneratedItem,
   selectCompatibleProposalItemsByCategory,
+  selectCompatibleProposalItemsByCategories,
 } from '../lib/generatedItems';
 import {
   assertProjectOwnership,
@@ -83,6 +84,43 @@ router.get('/projects/:id/proposal/categories', async (c) => {
     ORDER BY sort_order, created_at
   `;
   return c.json({ categories: rows });
+});
+
+// GET /api/v1/projects/:id/proposal/with-items
+// Returns all categories + items for non-collapsed categories in two queries.
+// ?collapsed=id1,id2,... — category IDs whose items should be omitted.
+router.get('/projects/:id/proposal/with-items', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('id');
+
+  try {
+    await assertProjectOwnership(c.env, projectId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const categoryRows = await sql`
+    SELECT *
+    FROM proposal_categories
+    WHERE project_id = ${projectId}
+    ORDER BY sort_order, created_at
+  `;
+
+  const allCategoryIds = (categoryRows as { id: string }[]).map((r) => r.id);
+  const collapsedParam = c.req.query('collapsed') ?? '';
+  const collapsedSet = new Set(collapsedParam ? collapsedParam.split(',') : []);
+  const expandedIds = allCategoryIds.filter((id) => !collapsedSet.has(id));
+
+  const itemRows = await selectCompatibleProposalItemsByCategories(sql, expandedIds);
+
+  const itemsByCategory: Record<string, unknown[]> = {};
+  for (const id of expandedIds) itemsByCategory[id] = [];
+  for (const row of itemRows as (Record<string, unknown> & { category_id: string })[]) {
+    itemsByCategory[row.category_id]?.push(row);
+  }
+
+  return c.json({ categories: categoryRows, items: itemsByCategory });
 });
 
 router.post('/projects/:id/proposal/categories', async (c) => {

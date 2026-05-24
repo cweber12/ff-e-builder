@@ -152,6 +152,23 @@ export const proposalApi = {
   deleteCategory: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/proposal/categories/${id}`, { method: 'DELETE' }),
 
+  withItems: (
+    projectId: string,
+    collapsedCategoryIds: string[] = [],
+  ): Promise<{ categories: ProposalCategory[]; items: Record<string, ProposalItem[]> }> => {
+    const collapsed = collapsedCategoryIds.join(',');
+    const qs = collapsed ? `?collapsed=${collapsed}` : '';
+    return apiFetch<{
+      categories: RawProposalCategory[];
+      items: Record<string, RawProposalItem[]>;
+    }>(`/api/v1/projects/${projectId}/proposal/with-items${qs}`).then((r) => ({
+      categories: r.categories.map(mapProposalCategory),
+      items: Object.fromEntries(
+        Object.entries(r.items).map(([id, rows]) => [id, rows.map(mapProposalItem)]),
+      ),
+    }));
+  },
+
   items: (categoryId: string): Promise<ProposalItem[]> =>
     apiFetch<{ items: RawProposalItem[] }>(`/api/v1/proposal/categories/${categoryId}/items`).then(
       (r) => r.items.map(mapProposalItem),
