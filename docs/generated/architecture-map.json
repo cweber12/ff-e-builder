@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-24T04:22:45.439Z",
+  "generatedAt": "2026-05-24T20:32:58.372Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 257,
-      "internalImports": 815,
-      "externalImports": 280,
+      "files": 261,
+      "internalImports": 827,
+      "externalImports": 285,
       "unresolvedImports": 2
     },
     {
@@ -160,18 +160,18 @@
     {
       "area": "ffe",
       "files": 26,
-      "importsIn": 40,
-      "importsOut": 136,
+      "importsIn": 39,
+      "importsOut": 135,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
       "area": "proposal",
-      "files": 24,
-      "importsIn": 36,
-      "importsOut": 118,
+      "files": 25,
+      "importsIn": 40,
+      "importsOut": 122,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
-      "importedBy": ["ffe", "project-shell", "shared-lib", "tests"]
+      "importedBy": ["ffe", "project-shell", "shared-ui", "shared-lib", "tests"]
     },
     {
       "area": "plans",
@@ -193,7 +193,7 @@
       "area": "project-shell",
       "files": 24,
       "importsIn": 46,
-      "importsOut": 121,
+      "importsOut": 122,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -208,10 +208,10 @@
     },
     {
       "area": "shared-ui",
-      "files": 45,
-      "importsIn": 165,
-      "importsOut": 115,
-      "dependsOn": ["finish-library", "shared-lib", "types", "unknown"],
+      "files": 46,
+      "importsIn": 168,
+      "importsOut": 119,
+      "dependsOn": ["proposal", "finish-library", "shared-lib", "types", "unknown"],
       "importedBy": [
         "ffe",
         "proposal",
@@ -225,7 +225,7 @@
     {
       "area": "shared-lib",
       "files": 47,
-      "importsIn": 293,
+      "importsIn": 294,
       "importsOut": 124,
       "dependsOn": ["ffe", "proposal", "plans", "finish-library", "project-shell", "types"],
       "importedBy": [
@@ -250,7 +250,7 @@
     {
       "area": "types",
       "files": 11,
-      "importsIn": 163,
+      "importsIn": 167,
       "importsOut": 22,
       "dependsOn": [],
       "importedBy": [
@@ -267,9 +267,9 @@
     },
     {
       "area": "tests",
-      "files": 49,
+      "files": 51,
       "importsIn": 0,
-      "importsOut": 93,
+      "importsOut": 97,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -295,7 +295,7 @@
     {
       "area": "unknown",
       "files": 10,
-      "importsIn": 18,
+      "importsIn": 19,
       "importsOut": 16,
       "dependsOn": ["shared-ui", "shared-lib", "types"],
       "importedBy": ["ffe", "proposal", "finish-library", "project-shell", "shared-ui", "tests"]
@@ -320,7 +320,7 @@
       "paths": [
         {
           "path": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-          "files": 22
+          "files": 23
         },
         {
           "path": "src/lib/import/formats/proposal.ts, src/lib/api/proposal.ts",
@@ -368,7 +368,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 45
+          "files": 46
         }
       ]
     },
@@ -408,7 +408,7 @@
       "paths": [
         {
           "path": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-          "files": 49
+          "files": 51
         }
       ]
     },
@@ -2515,6 +2515,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/project/AppBarActions.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../shared/modals/ProposalExportModal",
+      "resolved": "src/components/shared/modals/ProposalExportModal.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/project/BudgetView.tsx",
       "importerArea": "project-shell",
       "specifier": "../primitives/StatusBadge",
@@ -2970,7 +2980,7 @@
       "specifier": "../../materials",
       "resolved": "src/components/materials/index.ts",
       "resolvedArea": "finish-library",
-      "kind": "import",
+      "kind": "dynamic-import",
       "reviewNote": "expected: product uses public Finish Library surface",
       "reviewSection": "Expected Shared Dependencies"
     },
@@ -3805,6 +3815,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
+      "importerArea": "proposal",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/lib/api/proposal.ts",
       "importerArea": "proposal",
       "specifier": "../../types",
@@ -4365,6 +4385,16 @@
       "reviewSection": "Review Targets"
     },
     {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../lib/export/proposal/proposalDocument",
+      "resolved": "src/lib/export/proposal/proposalDocument.ts",
+      "resolvedArea": "proposal",
+      "kind": "import",
+      "reviewNote": "review: shared core imports product-specific code",
+      "reviewSection": "Review Targets"
+    },
+    {
       "importer": "src/components/primitives/Button.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../lib/utils",
@@ -4585,6 +4615,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../lib/export",
+      "resolved": "src/lib/export/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/shared/modals/UserProfileModal.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../hooks",
@@ -4776,6 +4816,16 @@
     },
     {
       "importer": "src/components/shared/modals/DimensionEditorModal.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: shared code uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -5645,6 +5695,16 @@
       "reviewSection": "Test Dependencies"
     },
     {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "importerArea": "tests",
+      "specifier": "./ProposalExportModal",
+      "resolved": "src/components/shared/modals/ProposalExportModal.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
       "importer": "src/components/ffe/items/FfeTable.test.tsx",
       "importerArea": "tests",
       "specifier": "../../../types",
@@ -5678,6 +5738,16 @@
       "importer": "src/components/project/ProjectHeader.test.tsx",
       "importerArea": "tests",
       "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "importerArea": "tests",
+      "specifier": "../../../types",
       "resolved": "src/types/index.ts",
       "resolvedArea": "types",
       "kind": "import",
@@ -5795,6 +5865,16 @@
       "reviewSection": "Test Dependencies"
     },
     {
+      "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+      "importerArea": "tests",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
       "importer": "src/pages/PlanCanvasPage.test.tsx",
       "importerArea": "tests",
       "specifier": "../types",
@@ -5839,6 +5919,16 @@
       "importerArea": "tests",
       "specifier": "../../../data/catalogFixture",
       "resolved": "src/data/catalogFixture.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
+      "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+      "importerArea": "tests",
+      "specifier": "./generatedItemChangeInfo",
+      "resolved": "src/lib/table/generatedItemChangeInfo.ts",
       "resolvedArea": "unknown",
       "kind": "import",
       "reviewNote": "expected: test coverage dependency",
@@ -6001,6 +6091,25 @@
           "resolvedArea": "proposal",
           "kind": "import",
           "reviewNote": "review: product module imports another product module directly",
+          "reviewSection": "Review Targets"
+        }
+      ]
+    },
+    {
+      "section": "Review Targets",
+      "from": "shared-ui",
+      "to": "proposal",
+      "imports": 1,
+      "reviewNote": "review: shared core imports product-specific code",
+      "examples": [
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+          "importerArea": "shared-ui",
+          "specifier": "../../../lib/export/proposal/proposalDocument",
+          "resolved": "src/lib/export/proposal/proposalDocument.ts",
+          "resolvedArea": "proposal",
+          "kind": "import",
+          "reviewNote": "review: shared core imports product-specific code",
           "reviewSection": "Review Targets"
         }
       ]
@@ -6503,7 +6612,7 @@
           "specifier": "../../materials",
           "resolved": "src/components/materials/index.ts",
           "resolvedArea": "finish-library",
-          "kind": "import",
+          "kind": "dynamic-import",
           "reviewNote": "expected: product uses public Finish Library surface",
           "reviewSection": "Expected Shared Dependencies"
         }
@@ -6591,7 +6700,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "types",
-      "imports": 22,
+      "imports": 23,
       "reviewNote": "expected: product uses shared types",
       "examples": [
         {
@@ -6864,7 +6973,7 @@
       "section": "Expected Shared Dependencies",
       "from": "project-shell",
       "to": "shared-ui",
-      "imports": 23,
+      "imports": 24,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6981,7 +7090,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "shared-lib",
-      "imports": 36,
+      "imports": 37,
       "reviewNote": "expected: shared UI/lib dependency",
       "examples": [
         {
@@ -7020,7 +7129,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "types",
-      "imports": 16,
+      "imports": 17,
       "reviewNote": "expected: shared code uses shared types",
       "examples": [
         {
@@ -7545,7 +7654,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "shared-ui",
-      "imports": 8,
+      "imports": 9,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7662,7 +7771,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "types",
-      "imports": 18,
+      "imports": 20,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7701,7 +7810,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "unknown",
-      "imports": 2,
+      "imports": 3,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -7719,6 +7828,16 @@
           "importerArea": "tests",
           "specifier": "../../../data/catalogFixture",
           "resolved": "src/data/catalogFixture.ts",
+          "resolvedArea": "unknown",
+          "kind": "import",
+          "reviewNote": "expected: test coverage dependency",
+          "reviewSection": "Test Dependencies"
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+          "importerArea": "tests",
+          "specifier": "./generatedItemChangeInfo",
+          "resolved": "src/lib/table/generatedItemChangeInfo.ts",
           "resolvedArea": "unknown",
           "kind": "import",
           "reviewNote": "expected: test coverage dependency",
@@ -8055,9 +8174,9 @@
     },
     {
       "path": "src/components",
-      "files": 118,
-      "importsIn": 259,
-      "importsOut": 567,
+      "files": 120,
+      "importsIn": 262,
+      "importsOut": 575,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8087,9 +8206,9 @@
     },
     {
       "path": "src/hooks",
-      "files": 29,
-      "importsIn": 72,
-      "importsOut": 129,
+      "files": 30,
+      "importsIn": 75,
+      "importsOut": 135,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -8102,9 +8221,9 @@
     },
     {
       "path": "src/lib",
-      "files": 81,
-      "importsIn": 305,
-      "importsOut": 256,
+      "files": 82,
+      "importsIn": 307,
+      "importsOut": 259,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -8160,7 +8279,7 @@
     {
       "path": "src/types",
       "files": 11,
-      "importsIn": 163,
+      "importsIn": 167,
       "importsOut": 24,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -9080,14 +9199,6 @@
           "specifier": "../../../lib/money",
           "kind": "import",
           "resolved": "src/lib/money/index.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../../lib/items",
-          "kind": "import",
-          "resolved": "src/lib/items/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -10821,6 +10932,14 @@
           "resolved": "src/components/shared/ColumnVisibilityPopover.tsx",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/project/AppBarActions.tsx",
+          "specifier": "../shared/modals/ProposalExportModal",
+          "kind": "import",
+          "resolved": "src/components/shared/modals/ProposalExportModal.tsx",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -12455,7 +12574,7 @@
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
           "specifier": "../../materials",
-          "kind": "import",
+          "kind": "dynamic-import",
           "resolved": "src/components/materials/index.ts",
           "externalPackage": null,
           "asset": false
@@ -13538,6 +13657,108 @@
       ]
     },
     {
+      "path": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "tests",
+      "ownershipConfidence": "high",
+      "ownershipReason": "test or snapshot path",
+      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+          "specifier": "@testing-library/react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@testing-library/react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+          "specifier": "@testing-library/user-event",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@testing-library/user-event",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+          "specifier": "vitest",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "vitest",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+          "specifier": "./ProposalExportModal",
+          "kind": "import",
+          "resolved": "src/components/shared/modals/ProposalExportModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/shared/modals/ProposalExportModal.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+          "specifier": "../../../lib/export",
+          "kind": "import",
+          "resolved": "src/lib/export/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+          "specifier": "../../../lib/export/proposal/proposalDocument",
+          "kind": "import",
+          "resolved": "src/lib/export/proposal/proposalDocument.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/shared/modals/UserProfileModal.tsx",
       "project": "React client",
       "module": "src/components",
@@ -13692,14 +13913,6 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
-          "asset": false
-        },
-        {
-          "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
-          "specifier": "react-dom",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react-dom",
           "asset": false
         },
         {
@@ -14046,14 +14259,6 @@
       "ownershipReason": "shared UI primitive/chrome path",
       "ownerPath": "src/components/shared/**, src/components/primitives/**",
       "imports": [
-        {
-          "importer": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
-          "specifier": "react",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react",
-          "asset": false
-        },
         {
           "importer": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
           "specifier": "../../../types",
@@ -14971,6 +15176,22 @@
           "resolved": "src/hooks/proposal/useProposal.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/hooks/proposal/index.ts",
+          "specifier": "./useRevisionInfoForItem",
+          "kind": "export",
+          "resolved": "src/hooks/proposal/useRevisionInfoForItem.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/proposal/index.ts",
+          "specifier": "./useRevisionInfoForItem",
+          "kind": "export",
+          "resolved": "src/hooks/proposal/useRevisionInfoForItem.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -14983,6 +15204,14 @@
       "ownershipReason": "Proposal-owned feature path",
       "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
       "imports": [
+        {
+          "importer": "src/hooks/proposal/useProposal.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
         {
           "importer": "src/hooks/proposal/useProposal.ts",
           "specifier": "@tanstack/react-query",
@@ -15033,6 +15262,41 @@
         },
         {
           "importer": "src/hooks/proposal/useProposal.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/proposal/useRevisionInfoForItem.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "proposal",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Proposal-owned feature path",
+      "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
+      "imports": [
+        {
+          "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
+          "specifier": "./useProposal",
+          "kind": "import",
+          "resolved": "src/hooks/proposal/useProposal.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
           "specifier": "../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -18481,6 +18745,41 @@
       "imports": []
     },
     {
+      "path": "src/lib/table/generatedItemChangeInfo.test.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "tests",
+      "ownershipConfidence": "high",
+      "ownershipReason": "test or snapshot path",
+      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
+      "imports": [
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+          "specifier": "vitest",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "vitest",
+          "asset": false
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+          "specifier": "./generatedItemChangeInfo",
+          "kind": "import",
+          "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/lib/table/generatedItemChangeInfo.ts",
       "project": "React client",
       "module": "src/lib",
@@ -21850,14 +22149,6 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../../lib/items",
-      "kind": "import",
-      "resolved": "src/lib/items/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
       "specifier": "../../../lib/table/generatedItemChangeInfo",
       "kind": "import",
       "resolved": "src/lib/table/generatedItemChangeInfo.ts",
@@ -23193,6 +23484,14 @@
       "asset": false
     },
     {
+      "importer": "src/components/project/AppBarActions.tsx",
+      "specifier": "../shared/modals/ProposalExportModal",
+      "kind": "import",
+      "resolved": "src/components/shared/modals/ProposalExportModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/project/BudgetView.tsx",
       "specifier": "react-router-dom",
       "kind": "import",
@@ -24451,7 +24750,7 @@
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
       "specifier": "../../materials",
-      "kind": "import",
+      "kind": "dynamic-import",
       "resolved": "src/components/materials/index.ts",
       "externalPackage": null,
       "asset": false
@@ -25345,6 +25644,86 @@
       "asset": false
     },
     {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "specifier": "@testing-library/react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@testing-library/react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "specifier": "@testing-library/user-event",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@testing-library/user-event",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "specifier": "vitest",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "vitest",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "specifier": "./ProposalExportModal",
+      "kind": "import",
+      "resolved": "src/components/shared/modals/ProposalExportModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.test.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "specifier": "../../../lib/export",
+      "kind": "import",
+      "resolved": "src/lib/export/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/modals/ProposalExportModal.tsx",
+      "specifier": "../../../lib/export/proposal/proposalDocument",
+      "kind": "import",
+      "resolved": "src/lib/export/proposal/proposalDocument.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/shared/modals/UserProfileModal.tsx",
       "specifier": "react",
       "kind": "import",
@@ -25446,14 +25825,6 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
-      "specifier": "react-dom",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react-dom",
       "asset": false
     },
     {
@@ -25678,14 +26049,6 @@
       "kind": "import",
       "resolved": "src/components/shared/image/ImageFrame.tsx",
       "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
-      "specifier": "react",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react",
       "asset": false
     },
     {
@@ -26345,6 +26708,30 @@
       "asset": false
     },
     {
+      "importer": "src/hooks/proposal/index.ts",
+      "specifier": "./useRevisionInfoForItem",
+      "kind": "export",
+      "resolved": "src/hooks/proposal/useRevisionInfoForItem.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/proposal/index.ts",
+      "specifier": "./useRevisionInfoForItem",
+      "kind": "export",
+      "resolved": "src/hooks/proposal/useRevisionInfoForItem.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/proposal/useProposal.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
       "importer": "src/hooks/proposal/useProposal.ts",
       "specifier": "@tanstack/react-query",
       "kind": "import",
@@ -26394,6 +26781,30 @@
     },
     {
       "importer": "src/hooks/proposal/useProposal.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
+      "specifier": "./useProposal",
+      "kind": "import",
+      "resolved": "src/hooks/proposal/useProposal.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/proposal/useRevisionInfoForItem.ts",
       "specifier": "../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -28889,6 +29300,30 @@
       "asset": false
     },
     {
+      "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+      "specifier": "vitest",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "vitest",
+      "asset": false
+    },
+    {
+      "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+      "specifier": "./generatedItemChangeInfo",
+      "kind": "import",
+      "resolved": "src/lib/table/generatedItemChangeInfo.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/lib/table/generatedItemChangeInfo.ts",
       "specifier": "../../types",
       "kind": "import",
@@ -30824,23 +31259,23 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 83
+      "imports": 85
     },
     {
       "name": "vitest",
-      "imports": 50
+      "imports": 52
     },
     {
       "name": "@tanstack/react-query",
       "imports": 26
     },
     {
-      "name": "react-router-dom",
+      "name": "@testing-library/react",
       "imports": 24
     },
     {
-      "name": "@testing-library/react",
-      "imports": 23
+      "name": "react-router-dom",
+      "imports": 24
     },
     {
       "name": "sonner",
@@ -30851,11 +31286,11 @@
       "imports": 14
     },
     {
-      "name": "react-dom",
+      "name": "@testing-library/user-event",
       "imports": 10
     },
     {
-      "name": "@testing-library/user-event",
+      "name": "react-dom",
       "imports": 9
     },
     {

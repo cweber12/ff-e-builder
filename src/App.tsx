@@ -117,7 +117,7 @@ function ProjectLayout() {
   const deleteProject = useDeleteProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
   const { categoriesWithItems: proposalCategoriesWithItems, isLoading: proposalLoading } =
-    useProposalWithItems(id ?? '');
+    useProposalWithItems(id ?? '', new Set());
   const [importOpen, setImportOpen] = useState(false);
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);

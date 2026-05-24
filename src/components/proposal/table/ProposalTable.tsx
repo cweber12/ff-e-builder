@@ -934,6 +934,21 @@ function ProposalCategorySection({
       onItemSave(item, { ...patch, version: item.version });
       return;
     }
+    // Non-price columns: log silently without the confirmation modal (ADR-0009).
+    if (!changeInfo.isPriceAffecting) {
+      onItemSave(item, {
+        ...patch,
+        version: item.version,
+        changeLog: {
+          columnKey: changeInfo.columnKey,
+          previousValue: changeInfo.previousValue,
+          newValue: changeInfo.newValue,
+          proposalStatus,
+          isPriceAffecting: false,
+        },
+      });
+      return;
+    }
     setPendingChange({ ...changeInfo, item, patch });
   }
 

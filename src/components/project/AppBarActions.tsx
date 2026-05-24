@@ -9,11 +9,8 @@ import { createPortal } from 'react-dom';
 import {
   exportTablePdf,
   exportCatalogPdf,
-  exportProposalPdf,
   exportTableCsv,
   exportTableExcel,
-  exportProposalCsv,
-  exportProposalExcel,
 } from '../../lib/export';
 import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
@@ -26,6 +23,7 @@ import {
 } from '../../hooks';
 import { useColumnConfig } from '../../hooks/shared';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
+import { ProposalExportModal } from '../shared/modals/ProposalExportModal';
 
 // ---------------------------------------------------------------------------
 // Shared icon buttons
@@ -315,6 +313,7 @@ export function ProposalActions({
     customColumnDefs,
   );
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const openRev = revisions.find((r) => r.closedAt === null) ?? null;
   const unresolvedCount = openRev
@@ -344,37 +343,26 @@ export function ProposalActions({
         <span className="hidden sm:inline">Import</span>
       </button>
 
-      <ExportMenu
+      <button
+        type="button"
         disabled={!hasItems}
-        items={[
-          {
-            label: 'Export PDF',
-            onSelect: () =>
-              void exportProposalPdf(
-                project,
-                categoriesWithItems,
-                userProfile,
-                { mode: 'continuous' },
-                customColumnDefs,
-              ),
-          },
-          {
-            label: 'Export Excel',
-            onSelect: () =>
-              void exportProposalExcel(
-                project,
-                categoriesWithItems,
-                userProfile,
-                customColumnDefs,
-                { revisions, snapshots, changelog },
-                visibleOrder,
-              ),
-          },
-          {
-            label: 'Export CSV',
-            onSelect: () => exportProposalCsv(project, categoriesWithItems, customColumnDefs),
-          },
-        ]}
+        onClick={() => setExportModalOpen(true)}
+        className={`${ghostBtn} disabled:cursor-not-allowed disabled:opacity-40`}
+        title="Export"
+      >
+        <DownloadIcon />
+        <span className="hidden sm:inline">Export</span>
+      </button>
+
+      <ProposalExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        project={project}
+        categoriesWithItems={categoriesWithItems}
+        userProfile={userProfile ?? null}
+        customColumnDefs={customColumnDefs}
+        revisionData={{ revisions, snapshots, changelog }}
+        visibleOrder={visibleOrder}
       />
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />

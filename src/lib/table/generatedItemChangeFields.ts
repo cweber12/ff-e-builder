@@ -71,7 +71,8 @@ export const GENERATED_ITEM_CHANGE_FIELDS = {
     unitCostCents: {
       columnKey: 'unitCostCents',
       columnLabel: 'Unit Cost',
-      isPriceAffecting: false,
+      isPriceAffecting: true,
+      lockPriceAffecting: true,
     },
     productTag: {
       columnKey: 'productTag',
