@@ -63,6 +63,17 @@ describe('autoMapProposalColumns', () => {
     expect(mapping.unitCost).toBe('cost__12');
   });
 
+  it('prefers exact "Location" column over broader aliases like "Room"', () => {
+    const mapping = autoMapProposalColumns([
+      { key: 'tag__1', label: 'Tag', columnNumber: 1 },
+      { key: 'room__2', label: 'Room', columnNumber: 2 },
+      { key: 'name__3', label: 'Name', columnNumber: 3 },
+      { key: 'location__4', label: 'Location', columnNumber: 4 },
+    ]);
+
+    expect(mapping.location).toBe('location__4');
+  });
+
   it('maps combined Drawings / Location columns to both fields', () => {
     const mapping = autoMapProposalColumns([
       { key: 'tag__2', label: 'ID', columnNumber: 2 },

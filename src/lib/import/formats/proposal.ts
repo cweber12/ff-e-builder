@@ -144,12 +144,13 @@ export function autoMapProposalColumns(columns: ProposalImportColumn[]): Proposa
   const unused = new Set(columns.map((column) => column.key));
 
   for (const field of Object.keys(FIELD_ALIASES) as ProposalImportField[]) {
-    const match = columns.find((column) => {
-      if (!unused.has(column.key)) return false;
-      return FIELD_ALIASES[field].some(
-        (alias) => normalizeLabel(alias) === normalizeLabel(column.label),
+    let match: ProposalImportColumn | undefined;
+    for (const alias of FIELD_ALIASES[field]) {
+      match = columns.find(
+        (col) => unused.has(col.key) && normalizeLabel(alias) === normalizeLabel(col.label),
       );
-    });
+      if (match) break;
+    }
     if (match) {
       result[field] = match.key;
       unused.delete(match.key);

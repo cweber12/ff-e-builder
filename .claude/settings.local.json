@@ -22,7 +22,8 @@
       "Bash(pnpm --filter ./app tsc --noEmit)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(pnpm tsc *)"
+      "Bash(pnpm tsc *)",
+      "Bash(gh issue create --title 'Proposal Table: hide row drag handle until row hover' --label enhancement --body ' *)"
     ]
   }
 }

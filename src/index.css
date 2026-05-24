@@ -226,6 +226,75 @@
     font-weight: 650;
   }
 
+  /* ---- Nav icon buttons (print, export, sliders) ---- */
+  .catalog-nav-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid rgb(0 0 0 / 0.1);
+    border-radius: 2px;
+    background: rgb(var(--color-canvas-chrome));
+    color: theme('colors.neutral.600');
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+    transition:
+      border-color 150ms ease,
+      color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .catalog-nav-icon-btn:hover {
+    border-color: theme('colors.brand.400');
+    color: theme('colors.brand.700');
+    background: theme('colors.brand.50');
+  }
+
+  .catalog-nav-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .catalog-nav-icon-btn--active {
+    border-color: theme('colors.brand.500');
+    background: theme('colors.brand.50');
+    color: theme('colors.brand.700');
+  }
+
+  .catalog-nav-btn-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---- Nav room eyebrow ---- */
+  .catalog-nav-room-eyebrow {
+    margin: 0;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: theme('colors.brand.500');
+    line-height: 1;
+  }
+
+  .catalog-nav-room-name {
+    margin: 2px 0 0;
+    font-size: 13px;
+    font-weight: 650;
+    color: theme('colors.neutral.800');
+    line-height: 1.2;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .catalog-layout-popover {
     position: absolute;
     right: 0;
@@ -306,6 +375,48 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+  }
+
+  /* ---- Redesigned layout panel groups ---- */
+  .catalog-layout-group {
+    border-bottom: 1px solid rgb(0 0 0 / 0.08);
+    padding: 14px 0;
+  }
+
+  .catalog-layout-group:last-of-type {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .catalog-layout-group-label {
+    margin: 0 0 10px;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: theme('colors.brand.500');
+  }
+
+  .catalog-layout-group-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .catalog-layout-option-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.75fr) minmax(0, 1.25fr);
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+  }
+
+  .catalog-layout-watermark-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0 10px;
   }
 
   .catalog-layout-card {
@@ -872,6 +983,12 @@
     overflow: hidden;
   }
 
+  .catalog-main--v-divide .catalog-main-left {
+    border-right: 1px solid rgb(0 0 0 / 0.12);
+    padding-right: 32px;
+    margin-right: -32px;
+  }
+
   .catalog-main-left {
     display: flex;
     flex-direction: column;
@@ -1026,6 +1143,12 @@
     align-items: stretch;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .catalog-bottom-row--divided {
+    border-top: 1px solid rgb(0 0 0 / 0.12);
+    padding-top: 20px;
+    margin-top: -4px;
   }
 
   .catalog-option-ghost {

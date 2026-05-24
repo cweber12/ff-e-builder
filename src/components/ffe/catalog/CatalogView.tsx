@@ -58,6 +58,26 @@ type CatalogPlanImageSize = 'thumbnail' | 'expanded';
 type CatalogCostDisplay = 'qtyOnly' | 'cost';
 type CatalogToggleValue = 'shown' | 'hidden';
 
+type CatalogLayoutConfig = {
+  mainImageAlignment: CatalogImageAlignment;
+  planImageSize: CatalogPlanImageSize;
+  showCostInfo: boolean;
+  showSwatchLabels: boolean;
+  showApproval: boolean;
+  showVerticalDivider: boolean;
+  showHorizontalDivider: boolean;
+};
+
+const DEFAULT_LAYOUT_CONFIG: CatalogLayoutConfig = {
+  mainImageAlignment: 'center',
+  planImageSize: 'thumbnail',
+  showCostInfo: false,
+  showSwatchLabels: true,
+  showApproval: true,
+  showVerticalDivider: false,
+  showHorizontalDivider: false,
+};
+
 const DEFAULT_WATERMARK: WatermarkConfig = {
   enabled: false,
   placementH: 'left',
@@ -91,6 +111,59 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [approvalDisplay, setApprovalDisplay] = useCatalogSessionPreference<CatalogToggleValue>(
     `ffe-catalog-approval:${project.id}`,
     'shown',
+  );
+  const [verticalDividerDisplay, setVerticalDividerDisplay] =
+    useCatalogSessionPreference<CatalogToggleValue>(
+      `ffe-catalog-v-divider:${project.id}`,
+      'hidden',
+    );
+  const [horizontalDividerDisplay, setHorizontalDividerDisplay] =
+    useCatalogSessionPreference<CatalogToggleValue>(
+      `ffe-catalog-h-divider:${project.id}`,
+      'hidden',
+    );
+  const layoutConfig = useMemo<CatalogLayoutConfig>(
+    () => ({
+      mainImageAlignment,
+      planImageSize,
+      showCostInfo: costDisplay === 'cost',
+      showSwatchLabels: swatchLabelDisplay === 'shown',
+      showApproval: approvalDisplay === 'shown',
+      showVerticalDivider: verticalDividerDisplay === 'shown',
+      showHorizontalDivider: horizontalDividerDisplay === 'shown',
+    }),
+    [
+      mainImageAlignment,
+      planImageSize,
+      costDisplay,
+      swatchLabelDisplay,
+      approvalDisplay,
+      verticalDividerDisplay,
+      horizontalDividerDisplay,
+    ],
+  );
+  const handleLayoutChange = useCallback(
+    (update: Partial<CatalogLayoutConfig>) => {
+      if ('mainImageAlignment' in update) setMainImageAlignment(update.mainImageAlignment);
+      if ('planImageSize' in update) setPlanImageSize(update.planImageSize);
+      if ('showCostInfo' in update) setCostDisplay(update.showCostInfo ? 'cost' : 'qtyOnly');
+      if ('showSwatchLabels' in update)
+        setSwatchLabelDisplay(update.showSwatchLabels ? 'shown' : 'hidden');
+      if ('showApproval' in update) setApprovalDisplay(update.showApproval ? 'shown' : 'hidden');
+      if ('showVerticalDivider' in update)
+        setVerticalDividerDisplay(update.showVerticalDivider ? 'shown' : 'hidden');
+      if ('showHorizontalDivider' in update)
+        setHorizontalDividerDisplay(update.showHorizontalDivider ? 'shown' : 'hidden');
+    },
+    [
+      setMainImageAlignment,
+      setPlanImageSize,
+      setCostDisplay,
+      setSwatchLabelDisplay,
+      setApprovalDisplay,
+      setVerticalDividerDisplay,
+      setHorizontalDividerDisplay,
+    ],
   );
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
@@ -182,24 +255,13 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         currentEntry={entry}
         currentItemId={entry?.item.id}
         onPageChange={setPage}
+        layoutConfig={layoutConfig}
+        onLayoutChange={handleLayoutChange}
         watermarkConfig={watermarkConfig}
+        onWatermarkChange={updateWatermark}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
-        mainImageAlignment={mainImageAlignment}
-        onMainImageAlignmentChange={setMainImageAlignment}
-        planImageSize={planImageSize}
-        onPlanImageSizeChange={setPlanImageSize}
-        showCostInfo={costDisplay === 'cost'}
-        onShowCostInfoChange={(showCostInfo) => setCostDisplay(showCostInfo ? 'cost' : 'qtyOnly')}
-        showSwatchLabels={swatchLabelDisplay === 'shown'}
-        onShowSwatchLabelsChange={(showSwatchLabels) =>
-          setSwatchLabelDisplay(showSwatchLabels ? 'shown' : 'hidden')
-        }
-        showApproval={approvalDisplay === 'shown'}
-        onShowApprovalChange={(showApproval) =>
-          setApprovalDisplay(showApproval ? 'shown' : 'hidden')
-        }
-        onWatermarkChange={updateWatermark}
+        sortMode={sortMode}
       />
 
       <div className="screen-only catalog-stage">
@@ -212,18 +274,12 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             entry={entry}
             pageNumber={pageIndex + 1}
             pageCount={entries.length}
+            layoutConfig={layoutConfig}
+            onLayoutChange={handleLayoutChange}
             watermarkConfig={watermarkConfig}
             onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
-            mainImageAlignment={mainImageAlignment}
-            planImageSize={planImageSize}
-            showCostInfo={costDisplay === 'cost'}
-            showSwatchLabels={swatchLabelDisplay === 'shown'}
-            showApproval={approvalDisplay === 'shown'}
-            onShowApprovalChange={(showApproval) =>
-              setApprovalDisplay(showApproval ? 'shown' : 'hidden')
-            }
           />
         </div>
       </div>
@@ -236,15 +292,11 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             entry={catalogEntry}
             pageNumber={index + 1}
             pageCount={entries.length}
+            layoutConfig={layoutConfig}
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             watermarkInteractive={false}
-            mainImageAlignment={mainImageAlignment}
-            planImageSize={planImageSize}
-            showCostInfo={costDisplay === 'cost'}
-            showSwatchLabels={swatchLabelDisplay === 'shown'}
-            showApproval={approvalDisplay === 'shown'}
           />
         ))}
       </div>
@@ -260,20 +312,13 @@ function CatalogNav({
   currentEntry,
   currentItemId,
   onPageChange,
+  layoutConfig,
+  onLayoutChange,
   watermarkConfig,
+  onWatermarkChange,
   logoDataUrl,
   companyName,
-  mainImageAlignment,
-  onMainImageAlignmentChange,
-  planImageSize,
-  onPlanImageSizeChange,
-  showCostInfo,
-  onShowCostInfoChange,
-  showSwatchLabels,
-  onShowSwatchLabelsChange,
-  showApproval,
-  onShowApprovalChange,
-  onWatermarkChange,
+  sortMode,
 }: {
   project: Project;
   rooms: RoomWithItems[];
@@ -282,27 +327,30 @@ function CatalogNav({
   currentEntry: CatalogEntry | undefined;
   currentItemId: string | undefined;
   onPageChange: (index: number) => void;
+  layoutConfig: CatalogLayoutConfig;
+  onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
+  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl: string | null;
   companyName: string | null;
-  mainImageAlignment: CatalogImageAlignment;
-  onMainImageAlignmentChange: (alignment: CatalogImageAlignment) => void;
-  planImageSize: CatalogPlanImageSize;
-  onPlanImageSizeChange: (size: CatalogPlanImageSize) => void;
-  showCostInfo: boolean;
-  onShowCostInfoChange: (showCostInfo: boolean) => void;
-  showSwatchLabels: boolean;
-  onShowSwatchLabelsChange: (showSwatchLabels: boolean) => void;
-  showApproval: boolean;
-  onShowApprovalChange: (showApproval: boolean) => void;
-  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
+  sortMode: FfeItemSortMode;
 }) {
   let itemIndex = 0;
 
   return (
     <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-black/10 bg-canvas-bg/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">{currentEntry?.room.name && <p>{currentEntry.room.name}</p>}</div>
+        <div className="min-w-0">
+          {currentEntry?.room.name ? (
+            <div>
+              <p className="catalog-nav-room-eyebrow">Room</p>
+              <p className="catalog-nav-room-name">{currentEntry.room.name}</p>
+            </div>
+          ) : (
+            <span className="sr-only">{project.name}</span>
+          )}
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -311,8 +359,7 @@ function CatalogNav({
             aria-label="Previous catalog item"
             onClick={() => onPageChange(currentIndex - 1)}
           >
-            <span aria-hidden="true">&lt;</span>
-            <span className="sr-only">Previous</span>
+            <ChevronLeftIcon />
           </Button>
           <label className="sr-only" htmlFor="catalog-jump">
             Jump to catalog item
@@ -344,102 +391,83 @@ function CatalogNav({
             aria-label="Next catalog item"
             onClick={() => onPageChange(currentIndex + 1)}
           >
-            <span aria-hidden="true">&gt;</span>
-            <span className="sr-only">Next</span>
+            <ChevronRightIcon />
           </Button>
-          <CatalogActionsMenu
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="catalog-nav-icon-btn"
+            aria-label="Print catalog"
+            onClick={() => window.print()}
+          >
+            <PrintIcon />
+          </button>
+          <CatalogExportButton
             project={project}
             rooms={rooms}
             currentItemId={currentItemId}
+            layoutConfig={layoutConfig}
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
-            mainImageAlignment={mainImageAlignment}
-            onMainImageAlignmentChange={onMainImageAlignmentChange}
-            planImageSize={planImageSize}
-            onPlanImageSizeChange={onPlanImageSizeChange}
-            showCostInfo={showCostInfo}
-            onShowCostInfoChange={onShowCostInfoChange}
-            showSwatchLabels={showSwatchLabels}
-            onShowSwatchLabelsChange={onShowSwatchLabelsChange}
-            showApproval={showApproval}
-            onShowApprovalChange={onShowApprovalChange}
-            onWatermarkChange={onWatermarkChange}
+            sortMode={sortMode}
           />
-        </div>
-        <div className="flex min-w-24 flex-col items-end gap-1.5">
-          <span className="num text-sm font-semibold text-neutral-950">
-            {currentIndex + 1} / {total}
-          </span>
-          <div className="h-1 w-24 overflow-hidden bg-canvas-shell">
-            <div
-              className="h-full bg-brand-600 transition-all"
-              style={{ width: `${total > 0 ? ((currentIndex + 1) / total) * 100 : 0}%` }}
-            />
+          <CatalogLayoutPanelButton
+            layoutConfig={layoutConfig}
+            onLayoutChange={onLayoutChange}
+            watermarkConfig={watermarkConfig}
+            onWatermarkChange={onWatermarkChange}
+            logoDataUrl={logoDataUrl}
+          />
+          <div className="flex min-w-24 flex-col items-end gap-1.5">
+            <span className="num text-sm font-semibold text-neutral-950">
+              {currentIndex + 1} / {total}
+            </span>
+            <div className="h-1 w-24 overflow-hidden bg-canvas-shell">
+              <div
+                className="h-full bg-brand-600 transition-all"
+                style={{ width: `${total > 0 ? ((currentIndex + 1) / total) * 100 : 0}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
-      <span className="sr-only">{project.name}</span>
     </nav>
   );
 }
 
-function CatalogActionsMenu({
+function CatalogExportButton({
   project,
   rooms,
   currentItemId,
+  layoutConfig,
   watermarkConfig,
   logoDataUrl,
   companyName,
-  mainImageAlignment,
-  onMainImageAlignmentChange,
-  planImageSize,
-  onPlanImageSizeChange,
-  showCostInfo,
-  onShowCostInfoChange,
-  showSwatchLabels,
-  onShowSwatchLabelsChange,
-  showApproval,
-  onShowApprovalChange,
-  onWatermarkChange,
+  sortMode,
 }: {
   project: Project;
   rooms: RoomWithItems[];
   currentItemId: string | undefined;
+  layoutConfig: CatalogLayoutConfig;
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
-  mainImageAlignment: CatalogImageAlignment;
-  onMainImageAlignmentChange: (alignment: CatalogImageAlignment) => void;
-  planImageSize: CatalogPlanImageSize;
-  onPlanImageSizeChange: (size: CatalogPlanImageSize) => void;
-  showCostInfo: boolean;
-  onShowCostInfoChange: (showCostInfo: boolean) => void;
-  showSwatchLabels: boolean;
-  onShowSwatchLabelsChange: (showSwatchLabels: boolean) => void;
-  showApproval: boolean;
-  onShowApprovalChange: (showApproval: boolean) => void;
-  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
+  sortMode: FfeItemSortMode;
 }) {
-  const { sortMode } = useFfeItemSort(project.id);
-  const [surface, setSurface] = useState<'closed' | 'menu' | 'layout'>('closed');
+  const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (surface === 'closed') return;
+    if (!open) return;
     const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setSurface('closed');
-      }
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [surface]);
-
-  const runAction = (action: () => void) => {
-    setSurface('closed');
-    action();
-  };
+  }, [open]);
 
   const watermarkOpts =
     watermarkConfig.enabled && logoDataUrl
@@ -451,57 +479,49 @@ function CatalogActionsMenu({
           opacity: watermarkConfig.opacity,
         }
       : null;
+
   const exportOptions = {
-    mainImageAlignment,
-    planImageSize,
-    showCostInfo,
-    showSwatchLabels,
-    showApproval,
+    mainImageAlignment: layoutConfig.mainImageAlignment,
+    planImageSize: layoutConfig.planImageSize,
+    showCostInfo: layoutConfig.showCostInfo,
+    showSwatchLabels: layoutConfig.showSwatchLabels,
+    showApproval: layoutConfig.showApproval,
     sortMode,
     watermark: watermarkOpts,
   };
 
+  const run = (action: () => void) => {
+    setOpen(false);
+    action();
+  };
+
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div ref={ref} className="relative">
       <button
         type="button"
+        className="catalog-nav-icon-btn"
         aria-haspopup="menu"
-        aria-expanded={surface !== 'closed'}
-        aria-label="Open catalog options menu"
-        onClick={() => setSurface((current) => (current === 'menu' ? 'closed' : 'menu'))}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-canvas-chrome text-neutral-600 shadow-sm hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-expanded={open}
+        aria-label="Export catalog"
+        onClick={() => setOpen((v) => !v)}
       >
-        <MoreIcon />
+        <DownloadIcon />
+        <span className="catalog-nav-btn-label">Export</span>
+        <ChevronDownIcon />
       </button>
-      {surface === 'menu' && (
+      {open && (
         <div
           role="menu"
-          aria-label="Catalog options"
+          aria-label="Export options"
           className="catalog-actions-dropdown menu-panel"
         >
           <button
             type="button"
             role="menuitem"
             className="menu-item catalog-actions-dropdown-item"
-            onClick={() => setSurface('layout')}
+            onClick={() => run(() => void exportCatalogPdf(project, rooms, exportOptions))}
           >
-            Layout
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className="menu-item catalog-actions-dropdown-item"
-            onClick={() => runAction(() => window.print())}
-          >
-            Print
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className="menu-item catalog-actions-dropdown-item"
-            onClick={() => runAction(() => void exportCatalogPdf(project, rooms, exportOptions))}
-          >
-            Export PDF
+            Export all pages
           </button>
           {currentItemId ? (
             <button
@@ -509,175 +529,262 @@ function CatalogActionsMenu({
               role="menuitem"
               className="menu-item catalog-actions-dropdown-item"
               onClick={() =>
-                runAction(
-                  () => void exportCatalogItemPdf(project, rooms, currentItemId, exportOptions),
-                )
+                run(() => void exportCatalogItemPdf(project, rooms, currentItemId, exportOptions))
               }
             >
-              Export current item
+              Export this page
             </button>
           ) : null}
         </div>
       )}
-      {surface === 'layout' && (
-        <div role="dialog" aria-label="Catalog layout options" className="catalog-layout-popover">
-          <div className="catalog-layout-popover-header">
-            <div>
-              <p className="catalog-layout-eyebrow">Layout</p>
-              <h2 className="catalog-layout-title">Catalog options</h2>
-            </div>
-            <button
-              type="button"
-              className="catalog-layout-close"
-              aria-label="Close layout options"
-              onClick={() => setSurface('closed')}
-            >
-              ×
-            </button>
-          </div>
+    </div>
+  );
+}
 
-          <div className="catalog-layout-section">
-            <div className="catalog-layout-grid">
-              <LayoutOptionCard label="Main image align">
-                <SegmentedToggle
-                  ariaLabel="Main image alignment"
-                  value={mainImageAlignment}
-                  options={[
-                    { value: 'center', label: 'Center' },
-                    { value: 'top', label: 'Top' },
-                  ]}
-                  onChange={onMainImageAlignmentChange}
-                />
-              </LayoutOptionCard>
-              <LayoutOptionCard label="Plan image size">
-                <SegmentedToggle
-                  ariaLabel="Plan image size"
-                  value={planImageSize}
-                  options={[
-                    { value: 'thumbnail', label: 'Thumb' },
-                    { value: 'expanded', label: 'Expanded' },
-                  ]}
-                  onChange={onPlanImageSizeChange}
-                />
-              </LayoutOptionCard>
-              <LayoutOptionCard label="Cost display">
-                <SegmentedToggle
-                  ariaLabel="Cost display"
-                  value={showCostInfo ? 'cost' : 'qtyOnly'}
-                  options={[
-                    { value: 'qtyOnly', label: 'Qty only' },
-                    { value: 'cost', label: 'Qty + cost' },
-                  ]}
-                  onChange={(value) => onShowCostInfoChange(value === 'cost')}
-                />
-              </LayoutOptionCard>
-              <LayoutOptionCard label="Swatches">
-                <SegmentedToggle
-                  ariaLabel="Swatch display"
-                  value={showSwatchLabels ? 'labels' : 'swatches'}
-                  options={[
-                    { value: 'labels', label: 'Labels' },
-                    { value: 'swatches', label: 'Swatches only' },
-                  ]}
-                  onChange={(value) => onShowSwatchLabelsChange(value === 'labels')}
-                />
-              </LayoutOptionCard>
-              <LayoutOptionCard label="Client approval">
-                <SegmentedToggle
-                  ariaLabel="Client approval section"
-                  value={showApproval ? 'shown' : 'hidden'}
-                  options={[
-                    { value: 'shown', label: 'Show' },
-                    { value: 'hidden', label: 'Remove' },
-                  ]}
-                  onChange={(value) => onShowApprovalChange(value === 'shown')}
-                />
-              </LayoutOptionCard>
-            </div>
-          </div>
+function CatalogLayoutPanelButton({
+  layoutConfig,
+  onLayoutChange,
+  watermarkConfig,
+  onWatermarkChange,
+  logoDataUrl,
+}: {
+  layoutConfig: CatalogLayoutConfig;
+  onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
+  watermarkConfig: WatermarkConfig;
+  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
+  logoDataUrl: string | null;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-          <div className="catalog-layout-section catalog-watermark-section">
-            <div className="catalog-layout-row">
-              <div>
-                <p className="catalog-layout-label">Watermark</p>
-                <p className="catalog-layout-note">
-                  {logoDataUrl
-                    ? 'Use company mark on export pages.'
-                    : 'Add a company logo to enable.'}
-                </p>
-              </div>
-              <button
-                type="button"
-                className={cn('catalog-switch', watermarkConfig.enabled && 'catalog-switch-active')}
-                disabled={!logoDataUrl}
-                aria-pressed={watermarkConfig.enabled}
-                onClick={() => onWatermarkChange({ enabled: !watermarkConfig.enabled })}
-              >
-                <span className="catalog-switch-knob" />
-              </button>
-            </div>
-            <LayoutOptionRow label="Placement">
-              <SegmentedToggle
-                ariaLabel="Watermark placement"
-                value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
-                options={[
-                  { value: 'footer-left', label: 'Left' },
-                  { value: 'footer-center', label: 'Center' },
-                  { value: 'footer-right', label: 'Right' },
-                  { value: 'header-left', label: 'Header' },
-                ]}
-                onChange={(value) => {
-                  const [placementV, placementH] = value.split('-') as [
-                    WatermarkConfig['placementV'],
-                    WatermarkConfig['placementH'],
-                  ];
-                  onWatermarkChange({ placementV, placementH, enabled: true });
-                }}
-              />
-            </LayoutOptionRow>
-            <div className="catalog-opacity-row">
-              <div className="catalog-opacity-header">
-                <p className="catalog-layout-label">Opacity</p>
-                <span className="catalog-opacity-value">{watermarkConfig.opacity}%</span>
-              </div>
-              <input
-                type="range"
-                min={5}
-                max={100}
-                step={5}
-                value={watermarkConfig.opacity}
-                disabled={!logoDataUrl || !watermarkConfig.enabled}
-                onChange={(event) => onWatermarkChange({ opacity: Number(event.target.value) })}
-                className="catalog-opacity-slider"
-              />
-            </div>
-            <button
-              type="button"
-              className="catalog-layout-delete"
-              disabled={!watermarkConfig.enabled}
-              onClick={() => onWatermarkChange({ enabled: false })}
-            >
-              Remove watermark
-            </button>
-          </div>
-        </div>
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        type="button"
+        aria-label="Page layout options"
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+        className={cn('catalog-nav-icon-btn', isOpen && 'catalog-nav-icon-btn--active')}
+        onClick={() => setIsOpen((v) => !v)}
+      >
+        <SlidersIcon />
+      </button>
+      {isOpen && (
+        <CatalogLayoutPanel
+          layoutConfig={layoutConfig}
+          onLayoutChange={onLayoutChange}
+          watermarkConfig={watermarkConfig}
+          onWatermarkChange={onWatermarkChange}
+          logoDataUrl={logoDataUrl}
+          onClose={() => setIsOpen(false)}
+        />
       )}
     </div>
   );
 }
 
-function LayoutOptionCard({ label, children }: { label: string; children: ReactNode }) {
+function CatalogLayoutPanel({
+  layoutConfig,
+  onLayoutChange,
+  watermarkConfig,
+  onWatermarkChange,
+  logoDataUrl,
+  onClose,
+}: {
+  layoutConfig: CatalogLayoutConfig;
+  onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
+  watermarkConfig: WatermarkConfig;
+  onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
+  logoDataUrl: string | null;
+  onClose: () => void;
+}) {
   return (
-    <div className="catalog-layout-card">
-      <p className="catalog-layout-label">{label}</p>
-      {children}
+    <div role="dialog" aria-label="Catalog layout options" className="catalog-layout-popover">
+      <div className="catalog-layout-popover-header">
+        <div>
+          <p className="catalog-layout-eyebrow">Catalog</p>
+          <h2 className="catalog-layout-title">Page options</h2>
+        </div>
+        <button
+          type="button"
+          className="catalog-layout-close"
+          aria-label="Close layout options"
+          onClick={onClose}
+        >
+          ×
+        </button>
+      </div>
+
+      <LayoutGroup label="Layout">
+        <LayoutRow label="Main image">
+          <SegmentedToggle
+            ariaLabel="Main image alignment"
+            value={layoutConfig.mainImageAlignment}
+            options={[
+              { value: 'center', label: 'Center' },
+              { value: 'top', label: 'Top' },
+            ]}
+            onChange={(value) => onLayoutChange({ mainImageAlignment: value })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Vertical divider">
+          <SegmentedToggle
+            ariaLabel="Vertical divider between image and specs"
+            value={layoutConfig.showVerticalDivider ? 'shown' : 'hidden'}
+            options={[
+              { value: 'hidden', label: 'None' },
+              { value: 'shown', label: 'Show' },
+            ]}
+            onChange={(value) => onLayoutChange({ showVerticalDivider: value === 'shown' })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Plan image">
+          <SegmentedToggle
+            ariaLabel="Plan image size"
+            value={layoutConfig.planImageSize}
+            options={[
+              { value: 'thumbnail', label: 'Thumb' },
+              { value: 'expanded', label: 'Expanded' },
+            ]}
+            onChange={(value) => onLayoutChange({ planImageSize: value })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Section divider">
+          <SegmentedToggle
+            ariaLabel="Horizontal divider between main and bottom sections"
+            value={layoutConfig.showHorizontalDivider ? 'shown' : 'hidden'}
+            options={[
+              { value: 'hidden', label: 'None' },
+              { value: 'shown', label: 'Show' },
+            ]}
+            onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
+          />
+        </LayoutRow>
+      </LayoutGroup>
+
+      <LayoutGroup label="Content">
+        <LayoutRow label="Cost display">
+          <SegmentedToggle
+            ariaLabel="Cost display"
+            value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
+            options={[
+              { value: 'qtyOnly', label: 'Qty only' },
+              { value: 'cost', label: 'Qty + cost' },
+            ]}
+            onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Finish labels">
+          <SegmentedToggle
+            ariaLabel="Finish label display"
+            value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
+            options={[
+              { value: 'labels', label: 'Labels' },
+              { value: 'swatches', label: 'Swatches only' },
+            ]}
+            onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Client approval">
+          <SegmentedToggle
+            ariaLabel="Client approval section"
+            value={layoutConfig.showApproval ? 'shown' : 'hidden'}
+            options={[
+              { value: 'shown', label: 'Show' },
+              { value: 'hidden', label: 'Remove' },
+            ]}
+            onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
+          />
+        </LayoutRow>
+      </LayoutGroup>
+
+      <LayoutGroup label="Watermark">
+        <div className="catalog-layout-watermark-row">
+          <div>
+            <p className="catalog-layout-label">Company mark</p>
+            <p className="catalog-layout-note">
+              {logoDataUrl ? 'Apply to all export pages.' : 'Upload a company logo to enable.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={cn('catalog-switch', watermarkConfig.enabled && 'catalog-switch-active')}
+            disabled={!logoDataUrl}
+            aria-pressed={watermarkConfig.enabled}
+            onClick={() => onWatermarkChange({ enabled: !watermarkConfig.enabled })}
+          >
+            <span className="catalog-switch-knob" />
+          </button>
+        </div>
+        <LayoutRow label="Placement">
+          <SegmentedToggle
+            ariaLabel="Watermark placement"
+            value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
+            options={[
+              { value: 'footer-left', label: 'Left' },
+              { value: 'footer-center', label: 'Center' },
+              { value: 'footer-right', label: 'Right' },
+              { value: 'header-left', label: 'Header' },
+            ]}
+            onChange={(value) => {
+              const [placementV, placementH] = value.split('-') as [
+                WatermarkConfig['placementV'],
+                WatermarkConfig['placementH'],
+              ];
+              onWatermarkChange({ placementV, placementH, enabled: true });
+            }}
+          />
+        </LayoutRow>
+        <div className="catalog-opacity-row">
+          <div className="catalog-opacity-header">
+            <p className="catalog-layout-label">Opacity</p>
+            <span className="catalog-opacity-value">{watermarkConfig.opacity}%</span>
+          </div>
+          <input
+            type="range"
+            min={5}
+            max={100}
+            step={5}
+            value={watermarkConfig.opacity}
+            disabled={!logoDataUrl || !watermarkConfig.enabled}
+            onChange={(event) => onWatermarkChange({ opacity: Number(event.target.value) })}
+            className="catalog-opacity-slider"
+          />
+        </div>
+        <button
+          type="button"
+          className="catalog-layout-delete"
+          disabled={!watermarkConfig.enabled}
+          onClick={() => onWatermarkChange({ enabled: false })}
+        >
+          Remove watermark
+        </button>
+      </LayoutGroup>
     </div>
   );
 }
 
-function LayoutOptionRow({ label, children }: { label: string; children: ReactNode }) {
+function LayoutGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="catalog-layout-row">
+    <div className="catalog-layout-group">
+      <p className="catalog-layout-group-label">{label}</p>
+      <div className="catalog-layout-group-body">{children}</div>
+    </div>
+  );
+}
+
+function LayoutRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="catalog-layout-option-row">
       <p className="catalog-layout-label">{label}</p>
       {children}
     </div>
@@ -713,12 +820,91 @@ function SegmentedToggle<T extends string>({
   );
 }
 
-function MoreIcon() {
+function ChevronLeftIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-      <circle cx="5" cy="10" r="1.5" />
-      <circle cx="10" cy="10" r="1.5" />
-      <circle cx="15" cy="10" r="1.5" />
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+      <path
+        d="M10 3L5 8l5 5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+      <path
+        d="M6 3l5 5-5 5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" aria-hidden="true" className="h-3 w-3">
+      <path
+        d="M2 4l4 4 4-4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function PrintIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <rect x="5" y="2" width="10" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M5 14H3a1 1 0 01-1-1V9a1 1 0 011-1h14a1 1 0 011 1v4a1 1 0 01-1 1h-2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <rect x="5" y="12" width="10" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7 16h6M7 14h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M10 3v10M6 9l4 4 4-4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M4 16h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SlidersIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M4 6h12M4 10h12M4 14h12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="6" r="1.75" fill="currentColor" />
+      <circle cx="12" cy="10" r="1.75" fill="currentColor" />
+      <circle cx="8" cy="14" r="1.75" fill="currentColor" />
     </svg>
   );
 }
@@ -733,12 +919,8 @@ export function CatalogPage({
   logoDataUrl,
   companyName,
   watermarkInteractive = true,
-  mainImageAlignment = 'center',
-  planImageSize = 'thumbnail',
-  showCostInfo = false,
-  showSwatchLabels = true,
-  showApproval = true,
-  onShowApprovalChange,
+  layoutConfig: layoutConfigProp,
+  onLayoutChange,
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -749,12 +931,8 @@ export function CatalogPage({
   logoDataUrl?: string | null;
   companyName?: string | null;
   watermarkInteractive?: boolean;
-  mainImageAlignment?: CatalogImageAlignment;
-  planImageSize?: CatalogPlanImageSize;
-  showCostInfo?: boolean;
-  showSwatchLabels?: boolean;
-  showApproval?: boolean;
-  onShowApprovalChange?: (showApproval: boolean) => void;
+  layoutConfig?: Partial<CatalogLayoutConfig>;
+  onLayoutChange?: (update: Partial<CatalogLayoutConfig>) => void;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -894,8 +1072,9 @@ export function CatalogPage({
         interactive={watermarkInteractive}
       />
     ) : null;
-  const isTopAligned = mainImageAlignment === 'top';
-  const isExpandedPlanImage = planImageSize === 'expanded';
+  const layout: CatalogLayoutConfig = { ...DEFAULT_LAYOUT_CONFIG, ...layoutConfigProp };
+  const isTopAligned = layout.mainImageAlignment === 'top';
+  const isExpandedPlanImage = layout.planImageSize === 'expanded';
   const lineTotalCents = item.unitCostCents * item.qty;
 
   return (
@@ -949,7 +1128,9 @@ export function CatalogPage({
       </header>
 
       <div className="catalog-content-block">
-        <section className="catalog-main">
+        <section
+          className={cn('catalog-main', layout.showVerticalDivider && 'catalog-main--v-divide')}
+        >
           <div
             className={cn(
               'catalog-main-left',
@@ -957,8 +1138,13 @@ export function CatalogPage({
             )}
           >
             <div className="catalog-image-block">
-              <div className={cn('catalog-qty-band', !showCostInfo && 'catalog-qty-band-compact')}>
-                {showCostInfo ? (
+              <div
+                className={cn(
+                  'catalog-qty-band',
+                  !layout.showCostInfo && 'catalog-qty-band-compact',
+                )}
+              >
+                {layout.showCostInfo ? (
                   <>
                     <div className="catalog-qty-label-row">
                       <span className="catalog-qty-label">PRODUCT QTY</span>
@@ -989,7 +1175,7 @@ export function CatalogPage({
                   'catalog-rendering-square',
                   isTopAligned ? 'catalog-rendering-square-top' : 'catalog-rendering-square-center',
                 )}
-                data-main-image-alignment={mainImageAlignment}
+                data-main-image-alignment={layout.mainImageAlignment}
               >
                 <ImageFrame
                   entityType="item"
@@ -1130,7 +1316,7 @@ export function CatalogPage({
               <div
                 className={cn(
                   'catalog-materials-row',
-                  !showSwatchLabels && 'catalog-materials-row-swatch-only',
+                  !layout.showSwatchLabels && 'catalog-materials-row-swatch-only',
                 )}
               >
                 {item.materials.slice(0, 4).map((material) => (
@@ -1160,7 +1346,12 @@ export function CatalogPage({
           </div>
         </section>
 
-        <div className="catalog-bottom-row">
+        <div
+          className={cn(
+            'catalog-bottom-row',
+            layout.showHorizontalDivider && 'catalog-bottom-row--divided',
+          )}
+        >
           <CatalogOptionRenderings
             itemId={item.id}
             optionImages={optionImages}
@@ -1185,7 +1376,7 @@ export function CatalogPage({
                   'catalog-plan-frame',
                   isExpandedPlanImage && 'catalog-plan-frame-expanded',
                 )}
-                data-plan-image-size={planImageSize}
+                data-plan-image-size={layout.planImageSize}
               >
                 <ImageFrame
                   entityType="item_plan"
@@ -1211,8 +1402,8 @@ export function CatalogPage({
       </div>
 
       <CatalogApprovalSection
-        shown={showApproval}
-        onToggle={() => onShowApprovalChange?.(!showApproval)}
+        shown={layout.showApproval}
+        onToggle={() => onLayoutChange?.({ showApproval: !layout.showApproval })}
       />
 
       <footer className="catalog-footer">

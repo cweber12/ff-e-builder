@@ -110,6 +110,10 @@ export type CatalogPdfOptions = {
   showCostInfo?: boolean;
   /** When false, the approval band is omitted from each catalog page. */
   showApproval?: boolean;
+  /** When true, a vertical rule separates the main image column from the spec column. */
+  showVerticalDivider?: boolean;
+  /** When true, a horizontal rule separates the main content section from the bottom options/location row. */
+  showHorizontalDivider?: boolean;
   /** Vertical alignment for the main rendering image inside its square frame. */
   mainImageAlignment?: CatalogPdfImageAlignment;
   /** Browser layout preference for the location plan image scale. */
@@ -998,6 +1002,8 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
     showSwatchLabels: options?.showSwatchLabels ?? true,
     showCostInfo: options?.showCostInfo ?? true,
     showApproval: options?.showApproval ?? true,
+    showVerticalDivider: options?.showVerticalDivider ?? false,
+    showHorizontalDivider: options?.showHorizontalDivider ?? false,
     mainImageAlignment: resolveCatalogPdfImageAlignment(options?.mainImageAlignment),
     planImageSize: options?.planImageSize ?? 'thumbnail',
     sortMode: options?.sortMode ?? 'manual',
