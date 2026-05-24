@@ -8,6 +8,7 @@ import {
   useCreateProposalItem,
   useDeleteProposalItem,
   useImages,
+  useProposalRevisions,
   useProposalWithItems,
   useUpdateProposalItem,
 } from '../../../hooks';
@@ -15,7 +16,7 @@ import { ImageFrame } from '../../shared/image/ImageFrame';
 import { PanZoomFrame } from '../../shared/image/PanZoomFrame';
 import { cents, formatMoney } from '../../../types';
 import { proposalLineTotalCents } from '../../../lib/money';
-import type { ImageAsset } from '../../../types';
+import type { ImageAsset, ProposalItemChangelogEntry } from '../../../types';
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import {
   GeneratedItemEditableMoneyControl,
@@ -46,10 +47,22 @@ export function ProposalItemDetailPanel({
   onSelectItemId,
 }: Props) {
   const { categoriesWithItems } = useProposalWithItems(projectId);
+  const { data: revisionsData } = useProposalRevisions(projectId);
   const updateItem = useUpdateProposalItem();
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const addToFfe = useAddProposalItemToFfe(projectId);
+
+  const openRev = useMemo(
+    () => revisionsData?.revisions.find((r) => r.closedAt === null) ?? null,
+    [revisionsData?.revisions],
+  );
+  const itemChangelog = useMemo<ProposalItemChangelogEntry[]>(() => {
+    if (!openRev || !revisionsData?.changelog) return [];
+    return revisionsData.changelog
+      .filter((entry) => entry.revisionId === openRev.id && entry.proposalItemId === itemId)
+      .sort((a, b) => b.changedAt.localeCompare(a.changedAt));
+  }, [revisionsData?.changelog, openRev, itemId]);
 
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -323,6 +336,8 @@ export function ProposalItemDetailPanel({
               </p>
             )}
           </div>
+
+          {openRev && <ChangelogSection revisionLabel={openRev.label} entries={itemChangelog} />}
         </div>
       </div>
 
@@ -482,6 +497,66 @@ function MoreIcon() {
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="15" cy="10" r="1.5" />
     </svg>
+  );
+}
+
+function ChangelogSection({
+  revisionLabel,
+  entries,
+}: {
+  revisionLabel: string;
+  entries: ProposalItemChangelogEntry[];
+}) {
+  return (
+    <section className="mt-7 border-t border-black/10 pt-5">
+      <div className="mb-3 flex items-baseline gap-2">
+        <p className="eyebrow">Changes this revision</p>
+        <span className="rounded-pill bg-brand-500/15 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+          Revision {revisionLabel}
+        </span>
+      </div>
+      {entries.length === 0 ? (
+        <p className="text-sm text-neutral-500">
+          No tracked changes to this item in the current revision yet.
+        </p>
+      ) : (
+        <ol className="flex flex-col gap-2">
+          {entries.map((entry) => (
+            <ChangelogEntryRow key={entry.id} entry={entry} />
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+function ChangelogEntryRow({ entry }: { entry: ProposalItemChangelogEntry }) {
+  const previous = entry.previousValue || '—';
+  const next = entry.newValue || '—';
+  const when = new Date(entry.changedAt).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  return (
+    <li className="rounded-sm border border-black/10 bg-canvas-shell px-3 py-2 text-sm">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="font-medium text-neutral-800">{entry.columnKey}</span>
+        <span className="text-[11px] tabular-nums text-neutral-500">{when}</span>
+      </div>
+      <div className="mt-1 flex items-baseline gap-2 text-neutral-700">
+        <span className="text-neutral-500 line-through">{previous}</span>
+        <span aria-hidden="true">→</span>
+        <span className="font-medium">{next}</span>
+        {entry.isPriceAffecting && (
+          <span className="ml-auto rounded-pill bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+            Price
+          </span>
+        )}
+      </div>
+      {entry.notes && <p className="mt-1.5 text-sm text-neutral-600">{entry.notes}</p>}
+    </li>
   );
 }
 
