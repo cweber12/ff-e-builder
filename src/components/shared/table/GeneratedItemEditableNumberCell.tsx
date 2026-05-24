@@ -143,21 +143,23 @@ export function GeneratedItemEditableNumberCell({
   );
 }
 
-type GeneratedItemEditableMoneyCellProps = {
+type GeneratedItemEditableMoneyControlProps = {
   valueCents: number;
   onSave: (valueCents: number) => Promise<void> | void;
   indicator?: ReactNode;
-  tdClassName?: string;
-  inputClassName?: string;
+  inputClassName?: string | undefined;
+  displayClassName?: string | undefined;
+  ariaLabel?: string | undefined;
 };
 
-export function GeneratedItemEditableMoneyCell({
+export function GeneratedItemEditableMoneyControl({
   valueCents,
   onSave,
   indicator,
-  tdClassName,
   inputClassName,
-}: GeneratedItemEditableMoneyCellProps) {
+  displayClassName,
+  ariaLabel,
+}: GeneratedItemEditableMoneyControlProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState((valueCents / 100).toString());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -186,14 +188,12 @@ export function GeneratedItemEditableMoneyCell({
 
   if (!editing) {
     return (
-      <td
-        className={cn('relative px-3 py-2', tdClassName)}
-        onClick={(event) => event.stopPropagation()}
-      >
+      <>
         {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
         <span
           role="button"
           tabIndex={0}
+          aria-label={ariaLabel ?? `Edit value, currently ${formatMoney(cents(valueCents))}`}
           onClick={() => setEditing(true)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -201,41 +201,73 @@ export function GeneratedItemEditableMoneyCell({
               setEditing(true);
             }
           }}
-          className="block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
+          className={cn(
+            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
+            displayClassName,
+          )}
         >
           {formatMoney(cents(valueCents))}
         </span>
-        <EditablePencilHint />
-      </td>
+      </>
     );
   }
 
   return (
-    <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
-      <div className="relative w-28">
-        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-neutral-400">
-          $
-        </span>
-        <input
-          ref={inputRef}
-          type="number"
-          min="0"
-          step="0.01"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={() => void commit()}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              void commit();
-            } else if (event.key === 'Escape') {
-              event.preventDefault();
-              cancel();
-            }
-          }}
-          className={cn('w-full py-1 pl-5 pr-2', inputClassName)}
-        />
-      </div>
+    <div className="relative w-28">
+      <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-neutral-400">
+        $
+      </span>
+      <input
+        ref={inputRef}
+        type="number"
+        min="0"
+        step="0.01"
+        value={draft}
+        aria-label={ariaLabel}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => void commit()}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            void commit();
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            cancel();
+          }
+        }}
+        className={cn('w-full py-1 pl-5 pr-2', inputClassName)}
+      />
+    </div>
+  );
+}
+
+type GeneratedItemEditableMoneyCellProps = {
+  valueCents: number;
+  onSave: (valueCents: number) => Promise<void> | void;
+  indicator?: ReactNode;
+  tdClassName?: string;
+  inputClassName?: string;
+};
+
+export function GeneratedItemEditableMoneyCell({
+  valueCents,
+  onSave,
+  indicator,
+  tdClassName,
+  inputClassName,
+}: GeneratedItemEditableMoneyCellProps) {
+  return (
+    <td
+      className={cn('relative px-3 py-2', tdClassName)}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <GeneratedItemEditableMoneyControl
+        valueCents={valueCents}
+        onSave={onSave}
+        indicator={indicator}
+        inputClassName={inputClassName}
+      />
+      <EditablePencilHint />
     </td>
   );
 }
