@@ -89,10 +89,7 @@ import {
 import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
 import { GeneratedItemMaterialsCell } from '../../shared/table/GeneratedItemMaterialsCell';
-import {
-  GeneratedItemSizeModal,
-  GeneratedItemSizeTrigger,
-} from '../../shared/table/GeneratedItemSizeModal';
+import { GeneratedItemSizeCell } from '../../shared/table/GeneratedItemSizeModal';
 import {
   proposalStickyEdgeColumnClassNames,
   proposalStickyValueColumnClassNames,
@@ -1566,7 +1563,6 @@ function ProposalRow({
     id: item.id,
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const [sizeOpen, setSizeOpen] = useState(false);
   const [swatchOpen, setSwatchOpen] = useState(false);
   const lineTotal = proposalLineTotalCents(item);
   const stopProp = (e: MouseEvent) => e.stopPropagation();
@@ -1648,25 +1644,27 @@ function ProposalRow({
       />
     ),
     size: (
-      <td className="px-3 py-2" onClick={stopProp}>
-        <div className="flex items-start justify-between gap-1">
-          <GeneratedItemSizeTrigger
-            value={item.sizeLabel}
-            placeholder="Set size"
-            onClick={() => setSizeOpen(true)}
-          />
-          {dot('size')}
-        </div>
-        <SizeModal
-          item={item}
-          open={sizeOpen}
-          onClose={() => setSizeOpen(false)}
-          onSave={(patch) => {
-            onSave(patch);
-            setSizeOpen(false);
-          }}
-        />
-      </td>
+      <GeneratedItemSizeCell
+        value={item.sizeLabel}
+        initial={{
+          mode: item.sizeMode,
+          unit: item.sizeUnit,
+          w: item.sizeW,
+          d: item.sizeD,
+          h: item.sizeH,
+        }}
+        indicator={dot('size')}
+        onSave={({ label, mode, unit, w, d, h }) =>
+          onSave({
+            sizeMode: mode,
+            sizeUnit: unit,
+            sizeW: w,
+            sizeD: d,
+            sizeH: h,
+            sizeLabel: label,
+          })
+        }
+      />
     ),
     swatch: (
       <GeneratedItemMaterialsCell materials={item.materials} onOpen={() => setSwatchOpen(true)}>
@@ -2122,42 +2120,5 @@ function MobileProposalCards({
         );
       })}
     </div>
-  );
-}
-
-function SizeModal({
-  item,
-  open,
-  onClose,
-  onSave,
-}: {
-  item: ProposalItem;
-  open: boolean;
-  onClose: () => void;
-  onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
-}) {
-  return (
-    <GeneratedItemSizeModal
-      open={open}
-      title="Set size"
-      initial={{
-        mode: item.sizeMode,
-        unit: item.sizeUnit,
-        w: item.sizeW,
-        d: item.sizeD,
-        h: item.sizeH,
-      }}
-      onClose={onClose}
-      onSave={({ label, mode, unit, w, d, h }) =>
-        onSave({
-          sizeMode: mode,
-          sizeUnit: unit,
-          sizeW: w,
-          sizeD: d,
-          sizeH: h,
-          sizeLabel: label,
-        })
-      }
-    />
   );
 }

@@ -38,39 +38,43 @@ const emptyDraft: DimensionDraft = {
   },
 };
 
-type DimensionEditorModalProps = {
-  open: boolean;
-  title?: string;
-  initial?: Partial<{
-    mode: SizeMode;
-    unit: string;
-    w: string;
-    d: string;
-    h: string;
-  }>;
-  onClose: () => void;
-  onSave: (result: {
-    label: string;
-    mode: SizeMode;
-    unit: string;
-    w: string;
-    d: string;
-    h: string;
-  }) => void;
+export type DimensionEditorInitial = Partial<{
+  mode: SizeMode;
+  unit: string;
+  w: string;
+  d: string;
+  h: string;
+}>;
+
+export type DimensionEditorResult = {
+  label: string;
+  mode: SizeMode;
+  unit: string;
+  w: string;
+  d: string;
+  h: string;
 };
 
-export function DimensionEditorModal({
-  open,
-  title = 'Set dimensions',
+type DimensionEditorBodyProps = {
+  initial?: DimensionEditorInitial;
+  /** Increments to force a state reset (e.g. when reopening a popover with new initial). */
+  resetKey?: unknown;
+  onCancel: () => void;
+  onSave: (result: DimensionEditorResult) => void;
+};
+
+export function DimensionEditorBody({
   initial,
-  onClose,
+  resetKey,
+  onCancel,
   onSave,
-}: DimensionEditorModalProps) {
+}: DimensionEditorBodyProps) {
   const [draft, setDraft] = useState<DimensionDraft>(() => fromInitial(initial));
 
   useEffect(() => {
-    if (open) setDraft(fromInitial(initial));
-  }, [initial, open]);
+    setDraft(fromInitial(initial));
+    // resetKey intentionally in deps: callers use it to force a refresh when reopening.
+  }, [initial, resetKey]);
 
   const label = useMemo(() => formatDimensionLabel(draft), [draft]);
 
@@ -85,136 +89,161 @@ export function DimensionEditorModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={title}>
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 rounded-sm border border-black/10 bg-canvas-shell p-1">
-          {(['imperial', 'metric'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() =>
-                setDraft((current) => ({
-                  ...current,
-                  mode,
-                  unit: mode === 'imperial' ? 'ft/in' : 'mm',
-                }))
-              }
-              className={`rounded px-3 py-2 text-sm font-medium ${
-                draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-600'
-              }`}
-            >
-              {mode === 'imperial' ? 'Imperial' : 'Metric'}
-            </button>
-          ))}
-        </div>
-
-        {draft.mode === 'metric' && (
-          <select
-            value={draft.unit}
-            onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-            aria-label="Metric unit"
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2 rounded-sm border border-black/10 bg-canvas-shell p-1">
+        {(['imperial', 'metric'] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() =>
+              setDraft((current) => ({
+                ...current,
+                mode,
+                unit: mode === 'imperial' ? 'ft/in' : 'mm',
+              }))
+            }
+            className={`rounded px-3 py-2 text-sm font-medium ${
+              draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-600'
+            }`}
           >
-            {metricUnits.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
-        )}
+            {mode === 'imperial' ? 'Imperial' : 'Metric'}
+          </button>
+        ))}
+      </div>
 
-        <div className="grid gap-3">
-          {axes.map((axis) => (
-            <div key={axis} className="grid gap-2 rounded-md border border-neutral-200 p-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                {axis.toUpperCase()}
-              </span>
-              {draft.mode === 'imperial' ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <NumberField
-                    label="ft"
-                    value={draft.imperial[axis].ft}
-                    onChange={(value) =>
-                      setDraft((current) => ({
-                        ...current,
-                        imperial: {
-                          ...current.imperial,
-                          [axis]: { ...current.imperial[axis], ft: value },
-                        },
-                      }))
-                    }
-                  />
-                  <NumberField
-                    label="in"
-                    value={draft.imperial[axis].in}
-                    onChange={(value) =>
-                      setDraft((current) => ({
-                        ...current,
-                        imperial: {
-                          ...current.imperial,
-                          [axis]: { ...current.imperial[axis], in: value },
-                        },
-                      }))
-                    }
-                  />
-                  <label className="grid gap-1 text-xs font-medium text-neutral-600">
-                    fraction
-                    <select
-                      value={draft.imperial[axis].fraction}
-                      onChange={(event) =>
-                        setDraft((current) => ({
-                          ...current,
-                          imperial: {
-                            ...current.imperial,
-                            [axis]: { ...current.imperial[axis], fraction: event.target.value },
-                          },
-                        }))
-                      }
-                      className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
-                    >
-                      {fractions.map((fraction) => (
-                        <option key={fraction || 'none'} value={fraction}>
-                          {fraction || '-'}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ) : (
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={draft.metric[axis].value}
-                  onChange={(event) =>
+      {draft.mode === 'metric' && (
+        <select
+          value={draft.unit}
+          onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value }))}
+          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+          aria-label="Metric unit"
+        >
+          {metricUnits.map((unit) => (
+            <option key={unit} value={unit}>
+              {unit}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <div className="grid gap-3">
+        {axes.map((axis) => (
+          <div key={axis} className="grid gap-2 rounded-md border border-neutral-200 p-3">
+            <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              {axis.toUpperCase()}
+            </span>
+            {draft.mode === 'imperial' ? (
+              <div className="grid grid-cols-3 gap-2">
+                <NumberField
+                  label="ft"
+                  value={draft.imperial[axis].ft}
+                  onChange={(value) =>
                     setDraft((current) => ({
                       ...current,
-                      metric: {
-                        ...current.metric,
-                        [axis]: { value: event.target.value },
+                      imperial: {
+                        ...current.imperial,
+                        [axis]: { ...current.imperial[axis], ft: value },
                       },
                     }))
                   }
-                  className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                 />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <p className="rounded-sm border border-black/10 bg-canvas-shell px-3 py-2 text-sm font-medium text-neutral-700">
-          {label || 'No dimensions set'}
-        </p>
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="button" variant="primary" onClick={save}>
-            Save
-          </Button>
-        </div>
+                <NumberField
+                  label="in"
+                  value={draft.imperial[axis].in}
+                  onChange={(value) =>
+                    setDraft((current) => ({
+                      ...current,
+                      imperial: {
+                        ...current.imperial,
+                        [axis]: { ...current.imperial[axis], in: value },
+                      },
+                    }))
+                  }
+                />
+                <label className="grid gap-1 text-xs font-medium text-neutral-600">
+                  fraction
+                  <select
+                    value={draft.imperial[axis].fraction}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        imperial: {
+                          ...current.imperial,
+                          [axis]: { ...current.imperial[axis], fraction: event.target.value },
+                        },
+                      }))
+                    }
+                    className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+                  >
+                    {fractions.map((fraction) => (
+                      <option key={fraction || 'none'} value={fraction}>
+                        {fraction || '-'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ) : (
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={draft.metric[axis].value}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    metric: {
+                      ...current.metric,
+                      [axis]: { value: event.target.value },
+                    },
+                  }))
+                }
+                className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+              />
+            )}
+          </div>
+        ))}
       </div>
+
+      <p className="rounded-sm border border-black/10 bg-canvas-shell px-3 py-2 text-sm font-medium text-neutral-700">
+        {label || 'No dimensions set'}
+      </p>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="button" variant="primary" onClick={save}>
+          Save
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type DimensionEditorModalProps = {
+  open: boolean;
+  title?: string;
+  initial?: DimensionEditorInitial;
+  onClose: () => void;
+  onSave: (result: DimensionEditorResult) => void;
+};
+
+export function DimensionEditorModal({
+  open,
+  title = 'Set dimensions',
+  initial,
+  onClose,
+  onSave,
+}: DimensionEditorModalProps) {
+  return (
+    <Modal open={open} onClose={onClose} title={title}>
+      <DimensionEditorBody
+        {...(initial !== undefined ? { initial } : {})}
+        resetKey={open}
+        onCancel={onClose}
+        onSave={onSave}
+      />
     </Modal>
   );
 }
@@ -243,7 +272,7 @@ function NumberField({
   );
 }
 
-function fromInitial(initial?: DimensionEditorModalProps['initial']): DimensionDraft {
+function fromInitial(initial?: DimensionEditorInitial): DimensionDraft {
   const draft = structuredClone(emptyDraft);
   draft.mode = initial?.mode ?? 'imperial';
   draft.unit = initial?.unit ?? (draft.mode === 'imperial' ? 'ft/in' : 'mm');
