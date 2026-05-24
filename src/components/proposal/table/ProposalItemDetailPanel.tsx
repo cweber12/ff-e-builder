@@ -8,6 +8,7 @@ import {
   useCreateProposalItem,
   useDeleteProposalItem,
   useImages,
+  useIsMobileViewport,
   useProposalRevisions,
   useProposalWithItems,
   useUpdateProposalItem,
@@ -48,6 +49,7 @@ export function ProposalItemDetailPanel({
 }: Props) {
   const { categoriesWithItems } = useProposalWithItems(projectId);
   const { data: revisionsData } = useProposalRevisions(projectId);
+  const isMobile = useIsMobileViewport();
   const updateItem = useUpdateProposalItem();
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -159,7 +161,12 @@ export function ProposalItemDetailPanel({
     <aside
       role="dialog"
       aria-label={`Item details for ${item.productTag || 'item'}`}
-      className="fixed inset-y-0 right-0 z-50 flex w-[clamp(420px,45vw,720px)] flex-col overflow-hidden border-l border-black/10 bg-canvas-chrome shadow-2xl"
+      className={cn(
+        'fixed z-50 flex flex-col overflow-hidden bg-canvas-chrome shadow-2xl',
+        isMobile
+          ? 'inset-0'
+          : 'inset-y-0 right-0 w-[clamp(420px,45vw,720px)] border-l border-black/10',
+      )}
     >
       <header className="flex flex-shrink-0 items-center gap-2 border-b border-black/10 px-5 py-3.5">
         <div className="min-w-0 flex-1">

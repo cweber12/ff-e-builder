@@ -61,6 +61,7 @@ import {
   type CustomColumnDef,
   type ProposalRevision,
   type ProposalStatus,
+  type RevisionCostStatus,
   type RevisionSnapshot,
 } from '../../../types';
 import {
@@ -1219,6 +1220,9 @@ function ProposalCategorySection({
           <MobileProposalCards
             items={sortedItems}
             otherCategories={otherCategories}
+            snapshotsByItem={
+              openRev ? (snapshotsByRevThenItem.get(openRev.id) ?? new Map()) : new Map()
+            }
             onDelete={(item) => deleteItem.mutate(item.id)}
             onDuplicate={(item) =>
               createItem.mutate({
@@ -2037,6 +2041,7 @@ function DeleteItemModal({
 function MobileProposalCards({
   items,
   otherCategories,
+  snapshotsByItem,
   onDelete,
   onDuplicate,
   onAddToFfe,
@@ -2045,6 +2050,7 @@ function MobileProposalCards({
 }: {
   items: ProposalItem[];
   otherCategories: { id: string; name: string }[];
+  snapshotsByItem: Map<string, RevisionSnapshot>;
   onDelete: (item: ProposalItem) => void;
   onDuplicate: (item: ProposalItem) => void;
   onAddToFfe: (item: ProposalItem) => void;
@@ -2054,19 +2060,32 @@ function MobileProposalCards({
   if (items.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-neutral-300 px-4 py-6 text-center text-sm text-neutral-500">
-        Add first item -&gt;
+        Tap “+ Add item” above to add the first item.
       </div>
     );
   }
+
+  const stopProp = (event: MouseEvent) => event.stopPropagation();
 
   return (
     <div className="grid gap-3">
       {items.map((item) => {
         const lineTotal = proposalLineTotalCents(item);
+        const snapshot = snapshotsByItem.get(item.id);
         return (
           <article
             key={item.id}
-            className="rounded-sm border border-black/10 bg-canvas-chrome p-4 shadow-sm"
+            role="button"
+            tabIndex={0}
+            aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
+            onClick={() => onItemClick(item)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return;
+              if (event.target !== event.currentTarget) return;
+              event.preventDefault();
+              onItemClick(item);
+            }}
+            className="cursor-pointer rounded-sm border border-black/10 bg-canvas-chrome p-4 shadow-sm transition-colors hover:border-brand-300 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
@@ -2079,27 +2098,28 @@ function MobileProposalCards({
                   compact
                 />
                 <div className="min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => onItemClick(item)}
-                    className="truncate text-base font-semibold text-neutral-950 hover:underline text-left"
-                  >
+                  <p className="truncate text-base font-semibold text-neutral-950">
                     {item.itemName || item.productTag || item.description || 'Unnamed item'}
-                  </button>
-                  {item.location && (
-                    <p className="mt-0.5 truncate text-sm text-neutral-500">{item.location}</p>
-                  )}
+                  </p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    {item.location && (
+                      <span className="truncate text-sm text-neutral-500">{item.location}</span>
+                    )}
+                    {snapshot && <RevisionCardBadge status={snapshot.costStatus} />}
+                  </div>
                 </div>
               </div>
-              <ProposalItemActionsMenu
-                itemName={item.itemName || item.productTag || item.description || 'item'}
-                otherCategories={otherCategories}
-                onViewDetails={() => onItemClick(item)}
-                onDuplicate={() => onDuplicate(item)}
-                onAddToFfe={() => onAddToFfe(item)}
-                onMove={(toCategoryId) => onMove(item, toCategoryId)}
-                onDelete={() => onDelete(item)}
-              />
+              <div onClick={stopProp}>
+                <ProposalItemActionsMenu
+                  itemName={item.itemName || item.productTag || item.description || 'item'}
+                  otherCategories={otherCategories}
+                  onViewDetails={() => onItemClick(item)}
+                  onDuplicate={() => onDuplicate(item)}
+                  onAddToFfe={() => onAddToFfe(item)}
+                  onMove={(toCategoryId) => onMove(item, toCategoryId)}
+                  onDelete={() => onDelete(item)}
+                />
+              </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -2125,4 +2145,22 @@ function MobileProposalCards({
       })}
     </div>
   );
+}
+
+function RevisionCardBadge({ status }: { status: RevisionCostStatus }) {
+  if (status === 'flagged') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-pill bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+        Flagged
+      </span>
+    );
+  }
+  if (status === 'resolved') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-pill bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+        Resolved
+      </span>
+    );
+  }
+  return null;
 }
