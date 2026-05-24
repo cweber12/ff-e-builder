@@ -12,7 +12,7 @@ export function GeneratedItemDragHandle({ ariaLabel, ...dragProps }: GeneratedIt
     <button
       type="button"
       aria-label={ariaLabel}
-      className="cursor-grab rounded px-1 text-neutral-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      className="cursor-grab rounded px-1 text-neutral-400 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-data-[dragging=true]:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       {...dragProps}
     >
       <GripIcon />

@@ -1043,6 +1043,7 @@ function SortableItemRow({
     <tr
       ref={setNodeRef}
       style={style}
+      data-dragging={isDragging || undefined}
       className={cn(
         'group border-b border-black/10',
         densityRowClass(density),

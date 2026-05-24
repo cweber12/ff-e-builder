@@ -1697,6 +1697,7 @@ function ProposalRow({
       ref={setNodeRef}
       style={style}
       tabIndex={0}
+      data-dragging={isDragging || undefined}
       aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
       onClick={onRowClick}
       onKeyDown={(event) => {
