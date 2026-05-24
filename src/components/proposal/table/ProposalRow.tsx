@@ -1,0 +1,431 @@
+import { Fragment, memo, type MouseEvent, type ReactNode } from 'react';
+import { CSS } from '@dnd-kit/utilities';
+import { useSortable } from '@dnd-kit/sortable';
+import {
+  cents,
+  formatMoney,
+  type CustomColumnDef,
+  type ProposalItem,
+  type ProposalStatus,
+} from '../../../types';
+import { proposalLineTotalCents } from '../../../lib/money';
+import type { UpdateProposalItemInput } from '../../../lib/api';
+import { useRevisionInfoForItem } from '../../../hooks';
+import { cn } from '../../../lib/utils';
+import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
+import {
+  GeneratedItemEditableMoneyCell,
+  GeneratedItemEditableNumberCell,
+  GeneratedItemEditableQuantityCell,
+} from '../../shared/table/GeneratedItemEditableNumberCell';
+import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
+import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemMaterialsCell } from '../../shared/table/GeneratedItemMaterialsCell';
+import { GeneratedItemSizeCell } from '../../shared/table/GeneratedItemSizeModal';
+import {
+  proposalStickyEdgeColumnClassNames,
+  proposalStickyValueColumnClassNames,
+} from '../../shared/table/generatedItemStickyStyles';
+import {
+  RevisionCostCell,
+  GeneratedItemColumnChangeDot,
+  RevisionNotesCell,
+  RevisionQtyCell,
+  RevisionTotalCell,
+} from '../revision';
+import {
+  baselineQtyColumnClassName,
+  baselineTotalColumnClassName,
+  baselineUnitCostColumnClassName,
+  editInputClassName,
+  quantityUnits,
+  revisionNotesColumnClassName,
+  stickyRevQtyCellClassName,
+  stickyRevTotalCellClassName,
+  stickyRevUnitCostCellClassName,
+} from './proposalTableConstants';
+import { ProposalItemActionsMenu } from './ProposalItemActionsMenu';
+
+type ProposalRowProps = {
+  projectId: string;
+  item: ProposalItem;
+  otherCategories: { id: string; name: string }[];
+  onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onAddToFfe: () => void;
+  onMove: (toCategoryId: string) => void;
+  onRowClick: () => void;
+  visibleColOrder: string[];
+  customColumnDefs: CustomColumnDef[];
+  proposalStatus: ProposalStatus;
+  onSwatchOpen: (itemId: string) => void;
+};
+
+export function ProposalRow({
+  projectId,
+  item,
+  otherCategories,
+  onSave,
+  onDelete,
+  onDuplicate,
+  onAddToFfe,
+  onMove,
+  onRowClick,
+  visibleColOrder,
+  customColumnDefs,
+  proposalStatus,
+  onSwatchOpen,
+}: ProposalRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
+
+  const dragTransform = CSS.Transform.toString(transform);
+  return (
+    <ProposalRowContent
+      projectId={projectId}
+      item={item}
+      otherCategories={otherCategories}
+      onSave={onSave}
+      onDelete={onDelete}
+      onDuplicate={onDuplicate}
+      onAddToFfe={onAddToFfe}
+      onMove={onMove}
+      onRowClick={onRowClick}
+      visibleColOrder={visibleColOrder}
+      customColumnDefs={customColumnDefs}
+      proposalStatus={proposalStatus}
+      onSwatchOpen={onSwatchOpen}
+      dragRef={setNodeRef}
+      dragTransform={dragTransform}
+      dragTransition={transition}
+      isDragging={isDragging}
+      dragAttributes={attributes}
+      dragListeners={listeners}
+    />
+  );
+}
+
+const ProposalRowContent = memo(
+  function ProposalRowContent({
+    projectId,
+    item,
+    otherCategories,
+    onSave,
+    onDelete,
+    onDuplicate,
+    onAddToFfe,
+    onMove,
+    onRowClick,
+    visibleColOrder,
+    customColumnDefs,
+    proposalStatus,
+    onSwatchOpen,
+    dragRef,
+    dragTransform,
+    dragTransition,
+    isDragging,
+    dragAttributes,
+    dragListeners,
+  }: {
+    projectId: string;
+    item: ProposalItem;
+    otherCategories: { id: string; name: string }[];
+    onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
+    onDelete: () => void;
+    onDuplicate: () => void;
+    onAddToFfe: () => void;
+    onMove: (toCategoryId: string) => void;
+    onRowClick: () => void;
+    visibleColOrder: string[];
+    customColumnDefs: CustomColumnDef[];
+    proposalStatus: ProposalStatus;
+    onSwatchOpen: (itemId: string) => void;
+    dragRef: (node: HTMLElement | null) => void;
+    dragTransform: string | undefined;
+    dragTransition: string | null | undefined;
+    isDragging: boolean;
+    dragAttributes: ReturnType<typeof useSortable>['attributes'];
+    dragListeners: ReturnType<typeof useSortable>['listeners'];
+  }) {
+    const { openRev, revisions, snapshot, changelog } = useRevisionInfoForItem(projectId, item.id);
+
+    const style = { transform: dragTransform, transition: dragTransition ?? undefined };
+    const lineTotal = proposalLineTotalCents(item);
+    const stopProp = (e: MouseEvent) => e.stopPropagation();
+
+    const showDots = proposalStatus !== 'in_progress';
+    const dot = (columnKey: string) =>
+      showDots ? (
+        <GeneratedItemColumnChangeDot
+          itemId={item.id}
+          columnKey={columnKey}
+          revisions={revisions}
+        />
+      ) : null;
+
+    const cellRenderMap: Record<string, ReactNode> = {
+      rendering: (
+        <GeneratedItemImageCell
+          view="proposal"
+          kind="rendering"
+          entityId={item.id}
+          alt={`${item.productTag || 'Proposal'} rendering`}
+          onClick={stopProp}
+        />
+      ),
+      productTag: (
+        <GeneratedItemEditableTextCell
+          value={item.productTag}
+          onSave={(productTag) => onSave({ productTag })}
+          indicator={dot('productTag')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      itemName: (
+        <GeneratedItemEditableTextCell
+          value={item.itemName}
+          onSave={(itemName) => onSave({ itemName })}
+          className="min-w-48"
+          indicator={dot('itemName')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      plan: (
+        <GeneratedItemImageCell
+          view="proposal"
+          kind="plan"
+          entityId={item.id}
+          alt={`${item.productTag || 'Proposal'} plan`}
+          onClick={stopProp}
+        />
+      ),
+      drawings: (
+        <GeneratedItemEditableTextCell
+          value={item.drawings}
+          onSave={(drawings) => onSave({ drawings })}
+          indicator={dot('drawings')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      location: (
+        <GeneratedItemEditableTextCell
+          value={item.location}
+          onSave={(location) => onSave({ location })}
+          indicator={dot('location')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      description: (
+        <GeneratedItemEditableTextCell
+          value={item.description}
+          onSave={(description) => onSave({ description })}
+          className="min-w-64"
+          indicator={dot('description')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      notes: (
+        <GeneratedItemEditableTextCell
+          value={item.notes}
+          onSave={(notes) => onSave({ notes })}
+          className="min-w-48"
+          indicator={dot('notes')}
+          inputClassName={editInputClassName}
+        />
+      ),
+      size: (
+        <GeneratedItemSizeCell
+          value={item.sizeLabel}
+          initial={{
+            mode: item.sizeMode,
+            unit: item.sizeUnit,
+            w: item.sizeW,
+            d: item.sizeD,
+            h: item.sizeH,
+          }}
+          indicator={dot('size')}
+          onSave={({ label, mode, unit, w, d, h }) =>
+            onSave({
+              sizeMode: mode,
+              sizeUnit: unit,
+              sizeW: w,
+              sizeD: d,
+              sizeH: h,
+              sizeLabel: label,
+            })
+          }
+        />
+      ),
+      swatch: (
+        <GeneratedItemMaterialsCell
+          materials={item.materials}
+          onOpen={() => onSwatchOpen(item.id)}
+        />
+      ),
+      cbm: (
+        <GeneratedItemEditableNumberCell
+          value={item.cbm}
+          step="0.001"
+          onSave={(cbm) => onSave({ cbm })}
+          className="w-24"
+          inputClassName={editInputClassName}
+          indicator={dot('cbm')}
+        />
+      ),
+      ...Object.fromEntries(
+        customColumnDefs.map((def) => [
+          def.id,
+          <GeneratedItemEditableTextCell
+            value={item.customData[def.id] ?? ''}
+            onSave={(value) => {
+              onSave({ customData: { ...item.customData, [def.id]: value } });
+            }}
+            indicator={dot(def.id)}
+            inputClassName={editInputClassName}
+          />,
+        ]),
+      ),
+    };
+
+    return (
+      <tr
+        ref={dragRef}
+        style={style}
+        tabIndex={0}
+        data-dragging={isDragging || undefined}
+        data-item-id={item.id}
+        aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
+        onClick={onRowClick}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return;
+          if (event.target !== event.currentTarget) return;
+          event.preventDefault();
+          onRowClick();
+        }}
+        className={cn(
+          'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
+          isDragging && 'bg-brand-50 shadow-md opacity-80',
+        )}
+      >
+        <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
+          <GeneratedItemDragHandle
+            ariaLabel={`Drag ${item.productTag || 'item'}`}
+            {...dragAttributes}
+            {...dragListeners}
+          />
+        </td>
+        {visibleColOrder.map((colId) => (
+          <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
+        ))}
+        {openRev ? (
+          (() => {
+            const revEntries = changelog;
+            return (
+              <>
+                <RevisionNotesCell
+                  entries={revEntries}
+                  tdClassName={revisionNotesColumnClassName}
+                />
+                <td
+                  className={cn(
+                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    baselineQtyColumnClassName,
+                  )}
+                >
+                  {item.quantity} {item.quantityUnit}
+                </td>
+                <td
+                  className={cn(
+                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    baselineUnitCostColumnClassName,
+                  )}
+                >
+                  {formatMoney(cents(item.unitCostCents))}
+                </td>
+                <td
+                  className={cn(
+                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    baselineTotalColumnClassName,
+                  )}
+                >
+                  {formatMoney(cents(lineTotal))}
+                </td>
+                <RevisionQtyCell
+                  snapshot={snapshot}
+                  currentQuantity={item.quantity}
+                  currentUnit={item.quantityUnit}
+                  onSaveQuantity={(quantity) => onSave({ quantity })}
+                  tdClassName={stickyRevQtyCellClassName}
+                />
+                <RevisionCostCell
+                  snapshot={snapshot}
+                  projectId={projectId}
+                  revisionId={openRev.id}
+                  itemId={item.id}
+                  tdClassName={stickyRevUnitCostCellClassName}
+                />
+                <RevisionTotalCell snapshot={snapshot} tdClassName={stickyRevTotalCellClassName} />
+              </>
+            );
+          })()
+        ) : (
+          <>
+            <GeneratedItemEditableQuantityCell
+              quantity={item.quantity}
+              quantityUnit={item.quantityUnit}
+              quantityUnits={quantityUnits}
+              onSaveQuantity={(quantity) => onSave({ quantity })}
+              onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+              indicator={dot('quantity')}
+              tdClassName={proposalStickyValueColumnClassNames.quantity.cell}
+              inputClassName={editInputClassName}
+            />
+            <GeneratedItemEditableMoneyCell
+              valueCents={item.unitCostCents}
+              onSave={(unitCostCents) => onSave({ unitCostCents })}
+              indicator={dot('unitCostCents')}
+              tdClassName={proposalStickyValueColumnClassNames.unitCost.cell}
+              inputClassName={editInputClassName}
+            />
+            <td
+              className={cn(
+                'px-3 py-2 font-semibold text-neutral-900',
+                proposalStickyEdgeColumnClassNames.totalCell,
+              )}
+            >
+              {formatMoney(cents(lineTotal))}
+            </td>
+          </>
+        )}
+        <td
+          className={cn('px-1 py-2', proposalStickyEdgeColumnClassNames.actionsCell)}
+          onClick={stopProp}
+        >
+          <ProposalItemActionsMenu
+            itemName={item.itemName || item.productTag || item.description || 'item'}
+            otherCategories={otherCategories}
+            onViewDetails={onRowClick}
+            onDuplicate={onDuplicate}
+            onAddToFfe={onAddToFfe}
+            onMove={onMove}
+            onDelete={onDelete}
+          />
+        </td>
+      </tr>
+    );
+  },
+  (prev, next) => {
+    if (prev.item.id !== next.item.id) return false;
+    if (prev.item.version !== next.item.version) return false;
+    if (prev.isDragging !== next.isDragging) return false;
+    if (prev.dragTransform !== next.dragTransform) return false;
+    if (prev.proposalStatus !== next.proposalStatus) return false;
+    if (prev.visibleColOrder !== next.visibleColOrder) return false;
+    if (prev.customColumnDefs !== next.customColumnDefs) return false;
+    if (prev.otherCategories !== next.otherCategories) return false;
+    return true;
+  },
+);
