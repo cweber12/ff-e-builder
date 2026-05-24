@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Modal } from '../../primitives';
+import { toast } from '../../primitives/toast-api';
 import { TotalsBar } from '../../shared/table/TotalsBar';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ImageFrame } from '../../shared/image/ImageFrame';
@@ -905,6 +906,19 @@ function ProposalCategorySection({
     });
   }, [createItem, items.length, nextProductTag]);
 
+  const handleAddItemToFfe = useCallback(
+    (item: ProposalItem) => {
+      const displayName = item.itemName || item.productTag || item.description || 'Item';
+      const locationName = item.location || 'Unassigned';
+      addItemToFfe.mutate(item.id, {
+        onSuccess: () => {
+          toast.success(`${displayName} added to FF&E location ${locationName}.`);
+        },
+      });
+    },
+    [addItemToFfe],
+  );
+
   return (
     <GroupedTableSection>
       <GroupedTableHeader>
@@ -1173,7 +1187,7 @@ function ProposalCategorySection({
                           }),
                         })
                       }
-                      onAddToFfe={() => addItemToFfe.mutate(item.id)}
+                      onAddToFfe={() => handleAddItemToFfe(item)}
                       onMove={(toCategoryId) =>
                         moveItem.mutate({
                           id: item.id,
@@ -1226,7 +1240,7 @@ function ProposalCategorySection({
                 ...(Object.keys(item.customData).length > 0 && { customData: item.customData }),
               })
             }
-            onAddToFfe={(item) => addItemToFfe.mutate(item.id)}
+            onAddToFfe={(item) => handleAddItemToFfe(item)}
             onMove={(item, toCategoryId) =>
               moveItem.mutate({
                 id: item.id,
@@ -1461,7 +1475,7 @@ function ProposalCategorySection({
                               }),
                             })
                           }
-                          onAddToFfe={() => addItemToFfe.mutate(item.id)}
+                          onAddToFfe={() => handleAddItemToFfe(item)}
                           onMove={(toCategoryId) =>
                             moveItem.mutate({
                               id: item.id,
