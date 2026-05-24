@@ -30,3 +30,9 @@ export { useSaveStatus } from './useSaveStatus';
 export type { SaveState } from './useSaveStatus';
 export { useTableDensity, densityRowClass } from './useTableDensity';
 export type { TableDensity } from './useTableDensity';
+export { useActionsMenu } from './useActionsMenu';
+export { useGeneratedItemColumns } from './useGeneratedItemColumns';
+export type {
+  DefaultColumnDescriptor,
+  GeneratedItemColumnsPreset,
+} from './useGeneratedItemColumns';

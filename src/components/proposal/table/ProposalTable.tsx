@@ -3,12 +3,12 @@ import { Button } from '../../primitives';
 import { TotalsBar } from '../../shared/table/TotalsBar';
 import { TableViewStack } from '../../shared/table/TableViewWrappers';
 import {
-  useColumnConfig,
   useColumnDefs,
   useCreateColumnDef,
   useCreateProposalCategory,
   useDeleteColumnDef,
   useDeleteProposalCategory,
+  useGeneratedItemColumns,
   usePrefetchProposalItems,
   useProposalRevisions,
   useProposalWithItems,
@@ -23,11 +23,7 @@ import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ProposalCategorySection } from './ProposalCategorySection';
 import { AddGroupModal } from './AddGroupModal';
 import { DeleteCategoryModal } from './DeleteCategoryModal';
-import {
-  PROPOSAL_COLUMN_META,
-  PROPOSAL_HIDEABLE_IDS,
-  type ProposalColumnId,
-} from './proposalTableConstants';
+import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 
 type ProposalTableProps = {
   projectId: string;
@@ -64,20 +60,21 @@ export function ProposalTable({
   const createColumnDef = useCreateColumnDef(projectId, 'proposal');
   const updateColumnDef = useUpdateColumnDef(projectId, 'proposal');
   const deleteColumnDef = useDeleteColumnDef(projectId, 'proposal');
-  const columnConfig = useColumnConfig(
+  const proposalColumns = useGeneratedItemColumns<string>({
     projectId,
-    'proposal',
-    PROPOSAL_HIDEABLE_IDS,
+    preset: PROPOSAL_GENERATED_ITEM_TABLE_PRESET,
     customColumnDefs,
-  );
+    defaultColumns: PROPOSAL_GENERATED_ITEM_TABLE_PRESET.hideableColumnIds.map((id) => ({
+      id,
+      column: id,
+    })),
+    buildCustomColumn: (def) => def.id,
+    nonDraggableIds: PROPOSAL_GENERATED_ITEM_TABLE_PRESET.fixedColumnIds,
+  });
 
-  const hiddenColumnDefaults = useMemo(
-    () =>
-      columnConfig.hiddenDefaults.map((id) => ({
-        id,
-        label: PROPOSAL_COLUMN_META[id as ProposalColumnId]?.label ?? id,
-      })),
-    [columnConfig.hiddenDefaults],
+  const visibleColOrder = useMemo(
+    () => proposalColumns.visibleColumns,
+    [proposalColumns.visibleColumns],
   );
 
   const [addCategoryOpenInternal, setAddCategoryOpenInternal] = useState(false);
@@ -252,16 +249,16 @@ export function ProposalTable({
           onItemClick={(item) => {
             setSelection({ itemId: item.id, categoryId: category.id });
           }}
-          visibleColOrder={columnConfig.visibleOrder}
+          visibleColOrder={visibleColOrder}
           customColumnDefs={customColumnDefs}
-          onMoveColumn={(fromId, toId) => columnConfig.moveColumn(fromId, toId)}
-          onHideColumn={(id) => columnConfig.hideDefaultColumn(id)}
+          onMoveColumn={(fromId, toId) => proposalColumns.columnConfig.moveColumn(fromId, toId)}
+          onHideColumn={(id) => proposalColumns.columnConfig.hideDefaultColumn(id)}
           onRenameCustomColumn={async (defId, label) => {
             await updateColumnDef.mutateAsync({ defId, patch: { label } });
           }}
           onDeleteCustomColumn={(defId) => deleteColumnDef.mutate(defId)}
-          hiddenDefaults={hiddenColumnDefaults}
-          onRestoreDefault={columnConfig.restoreDefaultColumn}
+          hiddenDefaults={proposalColumns.hiddenDefaults}
+          onRestoreDefault={proposalColumns.columnConfig.restoreDefaultColumn}
           onAddCustomColumn={async (label) => {
             await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
           }}

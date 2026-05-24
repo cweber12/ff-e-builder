@@ -1,10 +1,10 @@
 import { createPortal } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
 import { cents, formatMoney } from '../../../types';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
 import { ColumnNavArrows, GroupedTableHeader } from '../../shared/table/TableViewWrappers';
 import { menuItemClassName } from './proposalTableConstants';
+import { useActionsMenu } from '../../../hooks';
 
 type ProposalCategoryHeaderProps = {
   categoryName: string;
@@ -135,60 +135,41 @@ function CategoryActionsMenu({
   onRestoreDefault,
   onOpenAddColumnModal,
 }: CategoryActionsMenuProps) {
-  const [open, setOpen] = useState(false);
-  const [columnSubmenuOpen, setColumnSubmenuOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const columnTriggerRef = useRef<HTMLButtonElement>(null);
-  const columnSubmenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: globalThis.MouseEvent) => {
-      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
-      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
-      const inSubmenu = columnSubmenuRef.current?.contains(event.target as Node) ?? false;
-      if (!inTrigger && !inMenu && !inSubmenu) {
-        setOpen(false);
-        setColumnSubmenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  const actionsMenu = useActionsMenu();
 
   const runAction = (action: () => void) => {
-    setOpen(false);
+    actionsMenu.closeMenu();
     action();
   };
 
-  const triggerRect = triggerRef.current?.getBoundingClientRect();
+  const menuPosition = actionsMenu.getPortalPosition(actionsMenu.triggerRef);
+  const submenuPosition = actionsMenu.getPortalPosition(actionsMenu.submenuTriggerRef, {
+    align: 'top',
+    edge: 'left',
+    offsetX: -4,
+  });
 
   return (
     <div className="inline-flex">
       <button
-        ref={triggerRef}
+        ref={actionsMenu.triggerRef}
         type="button"
         aria-haspopup="menu"
-        aria-expanded={open}
+        aria-expanded={actionsMenu.open}
         aria-label={`Open category actions for ${categoryName}`}
         title={`Open category actions for ${categoryName}`}
         className="icon-btn"
-        onClick={() => setOpen((value) => !value)}
+        onClick={actionsMenu.toggleMenu}
       >
         <MoreIcon />
       </button>
-      {open &&
-        triggerRect &&
+      {actionsMenu.open &&
+        menuPosition &&
         createPortal(
           <div
-            ref={menuRef}
+            ref={actionsMenu.panelRef}
             role="menu"
-            style={{
-              position: 'fixed',
-              top: triggerRect.bottom + 4,
-              right: window.innerWidth - triggerRect.right,
-            }}
+            style={menuPosition}
             className="z-[100] min-w-52 menu-panel"
           >
             <button
@@ -201,31 +182,24 @@ function CategoryActionsMenu({
             </button>
             <div className="relative">
               <button
-                ref={columnTriggerRef}
+                ref={actionsMenu.submenuTriggerRef}
                 type="button"
                 role="menuitem"
                 aria-haspopup="menu"
-                aria-expanded={columnSubmenuOpen}
+                aria-expanded={actionsMenu.submenuOpen}
                 className={menuItemClassName}
-                onClick={() => setColumnSubmenuOpen((value) => !value)}
+                onClick={actionsMenu.toggleSubmenu}
               >
                 Restore or add columns
                 <ChevronIcon direction="right" />
               </button>
-              {columnSubmenuOpen &&
-                columnTriggerRef.current &&
+              {actionsMenu.submenuOpen &&
+                submenuPosition &&
                 createPortal(
                   <div
-                    ref={columnSubmenuRef}
+                    ref={actionsMenu.submenuPanelRef}
                     role="menu"
-                    style={{
-                      position: 'fixed',
-                      top: columnTriggerRef.current.getBoundingClientRect().top,
-                      right:
-                        window.innerWidth -
-                        columnTriggerRef.current.getBoundingClientRect().left +
-                        4,
-                    }}
+                    style={submenuPosition}
                     className="z-[100] min-w-44 menu-panel"
                   >
                     {hiddenDefaults.map((col) => (
@@ -235,8 +209,7 @@ function CategoryActionsMenu({
                         role="menuitem"
                         className={menuItemClassName}
                         onClick={() => {
-                          setColumnSubmenuOpen(false);
-                          setOpen(false);
+                          actionsMenu.closeMenu();
                           onRestoreDefault(col.id);
                         }}
                       >
@@ -249,8 +222,7 @@ function CategoryActionsMenu({
                       role="menuitem"
                       className={menuItemClassName}
                       onClick={() => {
-                        setColumnSubmenuOpen(false);
-                        setOpen(false);
+                        actionsMenu.closeMenu();
                         onOpenAddColumnModal();
                       }}
                     >

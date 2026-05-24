@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): add shared `useGeneratedItemColumns` and `useActionsMenu` hooks; migrate Proposal and FF&E tables to use shared column and portaled-menu behavior
 - refactor(proposal): extract Proposal table category section, header, row, item actions, and delete modals into dedicated `src/components/proposal/table/*` files and slim `ProposalTable.tsx` orchestration
 
 - perf(proposal): add POST /proposal/categories/:id/reorder and POST /rooms/:id/reorder endpoints; replace N-sequential-PATCH drag-end handlers on proposal and FFE tables with a single batched call plus optimistic reorder and rollback

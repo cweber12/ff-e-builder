@@ -44,18 +44,19 @@ import {
   useFfeItemSort,
   useMaterials,
   useMoveItem,
-  useUpdateItem,
   useReorderItems,
+  useUpdateItem,
   useUpdateRoom,
-  useItemColumnDefs,
+  useActionsMenu,
   useCreateItemColumnDef,
   useDeleteItemColumnDef,
-  useUpdateItemColumnDef,
-  useColumnConfig,
+  useGeneratedItemColumns,
   useIsMobileViewport,
+  useItemColumnDefs,
   useProposalRevisions,
   useRevisionChangelog,
   useTableDensity,
+  useUpdateItemColumnDef,
   densityRowClass,
   type TableDensity,
 } from '../../../hooks';
@@ -115,10 +116,6 @@ import {
 import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } from '../../proposal/revision';
 
 const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;
-
-type DefaultColumnId = (typeof DEFAULT_COLUMN_IDS)[number];
-
-const DEFAULT_COLUMN_LABELS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnLabels;
 const DEFAULT_COLUMN_META = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnMeta;
 
 function defaultColumnClassName(columnId: string) {
@@ -411,54 +408,36 @@ function EditableDimensionsCell({
 }
 
 function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }) {
-  const [open, setOpen] = useState(false);
+  const menu = useActionsMenu();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const targetRooms = actions.rooms.filter((room) => room.id !== item.roomId);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: MouseEvent) => {
-      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
-      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
-      if (!inTrigger && !inMenu) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const menuRect = triggerRef.current?.getBoundingClientRect();
+  const menuPosition = menu.getPortalPosition(menu.triggerRef);
 
   return (
     <>
       <span className="inline-flex items-center">
         <GeneratedItemActionTrigger
-          ref={triggerRef}
+          ref={menu.triggerRef}
           variant="inline"
           aria-label={`Open item actions for ${item.itemName}`}
-          aria-expanded={open}
+          aria-expanded={menu.open}
           title={`Open item actions for ${item.itemName}`}
-          onClick={() => setOpen((current) => !current)}
+          onClick={menu.toggleMenu}
         />
-        {open &&
-          menuRect &&
+        {menu.open &&
+          menuPosition &&
           createPortal(
             <div
-              ref={menuRef}
+              ref={menu.panelRef}
               role="menu"
-              style={{
-                position: 'fixed',
-                top: menuRect.bottom + 4,
-                right: window.innerWidth - menuRect.right,
-              }}
+              style={menuPosition}
               className="menu-panel z-[100] min-w-48"
             >
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => {
-                  setOpen(false);
+                  menu.closeMenu();
                   void actions.onDuplicate(item);
                 }}
                 className={menuItemClassName}
@@ -476,7 +455,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                       type="button"
                       role="menuitem"
                       onClick={() => {
-                        setOpen(false);
+                        menu.closeMenu();
                         void actions.onMove(item, room.id);
                       }}
                       className={menuItemClassName}
@@ -490,7 +469,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                 type="button"
                 role="menuitem"
                 onClick={() => {
-                  setOpen(false);
+                  menu.closeMenu();
                   setConfirmDelete(true);
                 }}
                 className={cn(menuItemClassName, 'text-danger-600')}
@@ -822,57 +801,6 @@ const createColumns = (
     cell: ({ row }) => <RowActionsCell item={row.original} actions={actions} />,
   },
 ];
-
-/**
- * Build the full visible column list from the user's column config.
- * Default columns are filtered/reordered by visibleOrder; custom columns
- * are appended as inline-editable text columns reading from item.customData.
- */
-function buildColumns(
-  onSave: SaveItemPatch,
-  actions: TableActions,
-  visibleOrder: string[],
-  customDefs: import('../../../types').CustomColumnDef[],
-  onSaveCustomCell: (item: Item, defId: string, value: string) => Promise<void>,
-  onDeleteCustomDef: (defId: string) => void,
-  onRenameCustomDef: (defId: string, label: string) => Promise<void>,
-  revisionIndicator?: FfeRevisionIndicator,
-): ColumnDef<Item>[] {
-  const allDefaultCols = createColumns(onSave, actions, revisionIndicator);
-  const defaultColMap = new Map(
-    allDefaultCols.map((col) => [col.id ?? (col as { accessorKey?: string }).accessorKey, col]),
-  );
-  const customDefMap = new Map(customDefs.map((d) => [d.id, d]));
-
-  return visibleOrder
-    .map((colId): ColumnDef<Item> | null => {
-      const defaultCol = defaultColMap.get(colId);
-      if (defaultCol) return defaultCol;
-
-      const def = customDefMap.get(colId);
-      if (!def) return null;
-
-      return {
-        id: def.id,
-        header: () => (
-          <CustomColumnHeader
-            def={def}
-            onDelete={() => onDeleteCustomDef(def.id)}
-            onRename={(label) => onRenameCustomDef(def.id, label)}
-          />
-        ),
-        cell: ({ row }) => (
-          <GeneratedItemEditableTextControl
-            value={row.original.customData[def.id] ?? ''}
-            ariaLabel={`${def.label} for ${row.original.itemName}`}
-            normalizeValue={(value) => value.trim()}
-            onSave={(value) => onSaveCustomCell(row.original, def.id, value)}
-          />
-        ),
-      };
-    })
-    .filter((col): col is ColumnDef<Item> => col !== null);
-}
 
 function useCollapsedRooms(rooms: RoomWithItems[]) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
@@ -1286,60 +1214,41 @@ function RoomActionsMenu({
   onRestoreDefault: (id: string) => void;
   onOpenAddColumnModal: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [columnSubmenuOpen, setColumnSubmenuOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const columnTriggerRef = useRef<HTMLButtonElement>(null);
-  const columnSubmenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: MouseEvent) => {
-      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
-      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
-      const inSubmenu = columnSubmenuRef.current?.contains(event.target as Node) ?? false;
-      if (!inTrigger && !inMenu && !inSubmenu) {
-        setOpen(false);
-        setColumnSubmenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  const actionsMenu = useActionsMenu();
 
   const runAction = (action: () => void) => {
-    setOpen(false);
+    actionsMenu.closeMenu();
     action();
   };
 
-  const triggerRect = triggerRef.current?.getBoundingClientRect();
+  const menuPosition = actionsMenu.getPortalPosition(actionsMenu.triggerRef);
+  const submenuPosition = actionsMenu.getPortalPosition(actionsMenu.submenuTriggerRef, {
+    align: 'top',
+    edge: 'left',
+    offsetX: -4,
+  });
 
   return (
     <div className="inline-flex">
       <button
-        ref={triggerRef}
+        ref={actionsMenu.triggerRef}
         type="button"
         aria-haspopup="menu"
-        aria-expanded={open}
+        aria-expanded={actionsMenu.open}
         aria-label={`Open options for ${room.name}`}
         title={`Open options for ${room.name}`}
-        onClick={() => setOpen((current) => !current)}
+        onClick={actionsMenu.toggleMenu}
         className="icon-btn"
       >
         <MoreIcon />
       </button>
-      {open &&
-        triggerRect &&
+      {actionsMenu.open &&
+        menuPosition &&
         createPortal(
           <div
-            ref={menuRef}
+            ref={actionsMenu.panelRef}
             role="menu"
-            style={{
-              position: 'fixed',
-              top: triggerRect.bottom + 4,
-              right: window.innerWidth - triggerRect.right,
-            }}
+            style={menuPosition}
             className="z-[100] min-w-48 menu-panel"
           >
             <button
@@ -1352,31 +1261,24 @@ function RoomActionsMenu({
             </button>
             <div className="relative">
               <button
-                ref={columnTriggerRef}
+                ref={actionsMenu.submenuTriggerRef}
                 type="button"
                 role="menuitem"
                 aria-haspopup="menu"
-                aria-expanded={columnSubmenuOpen}
+                aria-expanded={actionsMenu.submenuOpen}
                 className={cn(menuItemClassName, 'justify-between')}
-                onClick={() => setColumnSubmenuOpen((v) => !v)}
+                onClick={actionsMenu.toggleSubmenu}
               >
                 Add column
                 <ChevronIcon direction="right" />
               </button>
-              {columnSubmenuOpen &&
-                columnTriggerRef.current &&
+              {actionsMenu.submenuOpen &&
+                submenuPosition &&
                 createPortal(
                   <div
-                    ref={columnSubmenuRef}
+                    ref={actionsMenu.submenuPanelRef}
                     role="menu"
-                    style={{
-                      position: 'fixed',
-                      top: columnTriggerRef.current.getBoundingClientRect().top,
-                      right:
-                        window.innerWidth -
-                        columnTriggerRef.current.getBoundingClientRect().left +
-                        4,
-                    }}
+                    style={submenuPosition}
                     className="z-50 min-w-44 menu-panel"
                   >
                     {hiddenDefaults.map((col) => (
@@ -1386,8 +1288,7 @@ function RoomActionsMenu({
                         role="menuitem"
                         className={menuItemClassName}
                         onClick={() => {
-                          setColumnSubmenuOpen(false);
-                          setOpen(false);
+                          actionsMenu.closeMenu();
                           onRestoreDefault(col.id);
                         }}
                       >
@@ -1400,8 +1301,7 @@ function RoomActionsMenu({
                       role="menuitem"
                       className={menuItemClassName}
                       onClick={() => {
-                        setColumnSubmenuOpen(false);
-                        setOpen(false);
+                        actionsMenu.closeMenu();
                         onOpenAddColumnModal();
                       }}
                     >
@@ -1495,7 +1395,6 @@ function RoomItemsSection({
   const createColumnDef = useCreateItemColumnDef(projectId);
   const updateColumnDef = useUpdateItemColumnDef(projectId);
   const deleteColumnDef = useDeleteItemColumnDef(projectId);
-  const columnConfig = useColumnConfig(projectId, 'ffe', DEFAULT_COLUMN_IDS, columnDefs, 'qty');
   const { density } = useTableDensity();
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
@@ -1680,49 +1579,52 @@ function RoomItemsSection({
     },
     [updateColumnDef],
   );
-  const columns = useMemo(
+  const defaultColumns = useMemo(
     () =>
-      buildColumns(
-        saveItemPatch,
-        actions,
-        columnConfig.visibleOrder,
-        columnDefs,
-        saveCustomCell,
-        handleDeleteCustomDef,
-        handleRenameCustomDef,
-        revisionIndicator,
-      ),
-    [
-      actions,
-      saveItemPatch,
-      columnConfig.visibleOrder,
-      columnDefs,
-      saveCustomCell,
-      handleDeleteCustomDef,
-      handleRenameCustomDef,
-      revisionIndicator,
-    ],
-  );
-  const hiddenDefaultColumns = useMemo(
-    () =>
-      columnConfig.hiddenDefaults.map((id) => ({
-        id,
-        label: DEFAULT_COLUMN_LABELS[id as DefaultColumnId] ?? id,
+      createColumns(saveItemPatch, actions, revisionIndicator).map((column) => ({
+        id: String(column.id ?? (column as { accessorKey?: string }).accessorKey ?? ''),
+        column,
       })),
-    [columnConfig.hiddenDefaults],
+    [actions, revisionIndicator, saveItemPatch],
   );
+  const buildCustomColumn = useCallback(
+    (def: import('../../../types').CustomColumnDef): ColumnDef<Item> => ({
+      id: def.id,
+      header: () => (
+        <CustomColumnHeader
+          def={def}
+          onDelete={() => handleDeleteCustomDef(def.id)}
+          onRename={(label) => handleRenameCustomDef(def.id, label)}
+        />
+      ),
+      cell: ({ row }) => (
+        <GeneratedItemEditableTextControl
+          value={row.original.customData[def.id] ?? ''}
+          ariaLabel={`${def.label} for ${row.original.itemName}`}
+          normalizeValue={(value) => value.trim()}
+          onSave={(value) => saveCustomCell(row.original, def.id, value)}
+        />
+      ),
+    }),
+    [handleDeleteCustomDef, handleRenameCustomDef, saveCustomCell],
+  );
+  const generatedColumns = useGeneratedItemColumns<ColumnDef<Item>>({
+    projectId,
+    preset: FFE_GENERATED_ITEM_TABLE_PRESET,
+    customColumnDefs: columnDefs,
+    defaultColumns,
+    buildCustomColumn,
+    insertBeforeId: 'qty',
+    nonDraggableIds: ['drag', 'actions', 'lineTotal'],
+  });
+  const columns = generatedColumns.visibleColumns;
+  const hiddenDefaultColumns = generatedColumns.hiddenDefaults;
   const table = useReactTable({
     data: sortedItems,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-  const draggableColumnIds = useMemo(
-    () =>
-      columnConfig.visibleOrder.filter(
-        (id) => id !== 'drag' && id !== 'actions' && id !== 'lineTotal',
-      ),
-    [columnConfig.visibleOrder],
-  );
+  const draggableColumnIds = generatedColumns.draggableColumnIds;
   const draggableColumnIdSet = useMemo(() => new Set(draggableColumnIds), [draggableColumnIds]);
   const sortedItemIdSet = useMemo(() => new Set(sortedItems.map((item) => item.id)), [sortedItems]);
   const subtotal = roomSubtotalCents(room.items);
@@ -1734,7 +1636,7 @@ function RoomItemsSection({
     const activeId = String(active.id);
     const overId = String(over.id);
     if (draggableColumnIdSet.has(activeId) && draggableColumnIdSet.has(overId)) {
-      columnConfig.moveColumn(activeId, overId);
+      generatedColumns.columnConfig.moveColumn(activeId, overId);
       return;
     }
 
@@ -1797,7 +1699,7 @@ function RoomItemsSection({
               hiddenDefaults={hiddenDefaultColumns}
               onDeleteRoom={() => onDeleteRoom(room)}
               onAddItem={() => setAddDrawerOpen(true)}
-              onRestoreDefault={(id) => columnConfig.restoreDefaultColumn(id)}
+              onRestoreDefault={(id) => generatedColumns.columnConfig.restoreDefaultColumn(id)}
               onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
             />
             {!isMobile && !collapsed && (
@@ -1962,7 +1864,9 @@ function RoomItemsSection({
                                   'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                   defaultColumnClassName(colId),
                                 )}
-                                onHide={() => columnConfig.hideDefaultColumn(colId)}
+                                onHide={() =>
+                                  generatedColumns.columnConfig.hideDefaultColumn(colId)
+                                }
                               />
                             );
                           }
@@ -2117,7 +2021,9 @@ function RoomItemsSection({
                                       'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                       defaultColumnClassName(colId),
                                     )}
-                                    onHide={() => columnConfig.hideDefaultColumn(colId)}
+                                    onHide={() =>
+                                      generatedColumns.columnConfig.hideDefaultColumn(colId)
+                                    }
                                   />
                                 );
                               }

@@ -1,9 +1,10 @@
 import { createPortal } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { GeneratedItemActionTrigger } from '../../shared/table/GeneratedItemActionControls';
 import { cn } from '../../../lib/utils';
 import { DeleteItemModal } from './DeleteItemModal';
 import { menuItemClassName } from './proposalTableConstants';
+import { useActionsMenu } from '../../../hooks';
 
 type ProposalItemActionsMenuProps = {
   itemName: string;
@@ -24,58 +25,38 @@ export function ProposalItemActionsMenu({
   onMove,
   onDelete,
 }: ProposalItemActionsMenuProps) {
-  const [open, setOpen] = useState(false);
-  const [moveOpen, setMoveOpen] = useState(false);
+  const actionsMenu = useActionsMenu();
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const moveTriggerRef = useRef<HTMLButtonElement>(null);
-  const moveMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: globalThis.MouseEvent) => {
-      const inTrigger = triggerRef.current?.contains(event.target as Node) ?? false;
-      const inMenu = menuRef.current?.contains(event.target as Node) ?? false;
-      const inMoveMenu = moveMenuRef.current?.contains(event.target as Node) ?? false;
-      if (!inTrigger && !inMenu && !inMoveMenu) {
-        setOpen(false);
-        setMoveOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
 
   const runAction = (action: () => void) => {
-    setOpen(false);
-    setMoveOpen(false);
+    actionsMenu.closeMenu();
     action();
   };
 
-  const menuRect = triggerRef.current?.getBoundingClientRect();
+  const menuPosition = actionsMenu.getPortalPosition(actionsMenu.triggerRef);
+  const submenuPosition = actionsMenu.getPortalPosition(actionsMenu.submenuTriggerRef, {
+    align: 'top',
+    edge: 'left',
+    offsetX: -4,
+  });
 
   return (
     <div className="inline-flex">
       <GeneratedItemActionTrigger
-        ref={triggerRef}
+        ref={actionsMenu.triggerRef}
         aria-haspopup="menu"
-        aria-expanded={open}
+        aria-expanded={actionsMenu.open}
         aria-label={`Open options for ${itemName}`}
         title={`Open options for ${itemName}`}
-        onClick={() => setOpen((current) => !current)}
+        onClick={actionsMenu.toggleMenu}
       />
-      {open &&
-        menuRect &&
+      {actionsMenu.open &&
+        menuPosition &&
         createPortal(
           <div
-            ref={menuRef}
+            ref={actionsMenu.panelRef}
             role="menu"
-            style={{
-              position: 'fixed',
-              top: menuRect.bottom + 4,
-              right: window.innerWidth - menuRect.right,
-            }}
+            style={menuPosition}
             className="z-[100] min-w-48 menu-panel"
           >
             <button
@@ -106,31 +87,24 @@ export function ProposalItemActionsMenu({
             {otherCategories.length > 0 && (
               <div className="relative">
                 <button
-                  ref={moveTriggerRef}
+                  ref={actionsMenu.submenuTriggerRef}
                   type="button"
                   role="menuitem"
                   aria-haspopup="menu"
-                  aria-expanded={moveOpen}
+                  aria-expanded={actionsMenu.submenuOpen}
                   className={menuItemClassName}
-                  onClick={() => setMoveOpen((v) => !v)}
+                  onClick={actionsMenu.toggleSubmenu}
                 >
                   Move to...
                   <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
                 </button>
-                {moveOpen &&
-                  moveTriggerRef.current &&
+                {actionsMenu.submenuOpen &&
+                  submenuPosition &&
                   createPortal(
                     <div
-                      ref={moveMenuRef}
+                      ref={actionsMenu.submenuPanelRef}
                       role="menu"
-                      style={{
-                        position: 'fixed',
-                        top: moveTriggerRef.current.getBoundingClientRect().top,
-                        right:
-                          window.innerWidth -
-                          moveTriggerRef.current.getBoundingClientRect().left +
-                          4,
-                      }}
+                      style={submenuPosition}
                       className="z-[100] min-w-40 menu-panel"
                     >
                       {otherCategories.map((cat) => (
