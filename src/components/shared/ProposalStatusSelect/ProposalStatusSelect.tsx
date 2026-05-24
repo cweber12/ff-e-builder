@@ -1,9 +1,8 @@
-import { useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { cn } from '../../../lib/utils';
 import type { ProposalStatus } from '../../../types';
 import { proposalStatuses } from '../../../types';
-import { ProposalStatusDots, PROPOSAL_STATUS_CONFIG } from './ProposalStatusDots';
+import { PROPOSAL_STATUS_CONFIG } from './ProposalStatusDots';
 import { ProposalStatusConfirmModal } from './ProposalStatusConfirmModal';
 
 interface ProposalStatusSelectProps {
@@ -14,6 +13,23 @@ interface ProposalStatusSelectProps {
   revisionGuard?: { openRevisionLabel: string; unresolvedCount: number };
 }
 
+const STAGE_TOOLTIPS: Record<ProposalStatus, string> = {
+  in_progress: 'Free editing. No change records are created; revision rounds are not triggered.',
+  pricing_complete:
+    'Price-affecting edits (qty, size, CBM, unit cost) open a new revision round. Other edits are logged silently.',
+  submitted:
+    'Awaiting client review. Same edit semantics as Pricing Complete — price changes open a sub-revision.',
+  approved:
+    'Pricing is locked in. Further price changes start the next acceptance cycle as a new major revision.',
+};
+
+const STAGE_LABEL: Record<ProposalStatus, string> = {
+  in_progress: 'In progress',
+  pricing_complete: 'Pricing complete',
+  submitted: 'Submitted',
+  approved: 'Approved',
+};
+
 export function ProposalStatusSelect({
   status,
   onChange,
@@ -21,108 +37,68 @@ export function ProposalStatusSelect({
   className,
   revisionGuard,
 }: ProposalStatusSelectProps) {
-  const [open, setOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const currentIndex = PROPOSAL_STATUS_CONFIG[status].stageIndex;
+  const isAdvanceBlocked = revisionGuard != null && revisionGuard.unresolvedCount > 0;
 
-  const cfg = PROPOSAL_STATUS_CONFIG[status];
-
-  function handleOptionClick(next: ProposalStatus) {
-    if (next === status) {
-      setOpen(false);
-      return;
-    }
+  const handleStageClick = (next: ProposalStatus) => {
+    if (disabled) return;
+    if (next === status) return;
     setPendingStatus(next);
-    setOpen(false);
-  }
+  };
 
-  async function handleConfirm() {
+  const handleConfirm = async () => {
     if (!pendingStatus) return;
     await onChange(pendingStatus);
     setPendingStatus(null);
-  }
-
-  function handleCancelConfirm() {
-    setPendingStatus(null);
-  }
-
-  const triggerRect = triggerRef.current?.getBoundingClientRect();
+  };
 
   return (
     <>
-      <div className={className}>
-        <button
-          ref={triggerRef}
-          type="button"
-          disabled={disabled}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-label={`Proposal status: ${cfg.label}`}
-          onClick={() => setOpen((o) => !o)}
-          className="inline-flex h-8 items-center gap-2 rounded-md border border-neutral-200 bg-surface px-2.5 text-xs hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <ProposalStatusDots status={status} />
-          <span className="font-medium uppercase tracking-[0.08em] text-neutral-700">
-            {cfg.label}
-          </span>
-          <ChevronDownIcon />
-        </button>
+      <ol
+        role="list"
+        aria-label="Proposal status"
+        className={cn(
+          'flex items-center gap-0',
+          disabled && 'pointer-events-none opacity-60',
+          className,
+        )}
+      >
+        {proposalStatuses.map((stage, index) => {
+          const stageIndex = PROPOSAL_STATUS_CONFIG[stage].stageIndex;
+          const isCurrent = stageIndex === currentIndex;
+          const isPast = stageIndex < currentIndex;
+          const isFuture = stageIndex > currentIndex;
+          const blocksHere = isAdvanceBlocked && stage !== 'in_progress' && isFuture;
+          const isFirst = index === 0;
 
-        {open &&
-          triggerRect &&
-          createPortal(
-            <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 z-[99]"
-                aria-hidden="true"
-                onClick={() => setOpen(false)}
+          return (
+            <li key={stage} className="flex items-center">
+              {!isFirst && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'h-px w-4 sm:w-6',
+                    isPast || isCurrent ? 'bg-brand-400' : 'bg-neutral-300',
+                  )}
+                />
+              )}
+              <StageButton
+                stage={stage}
+                isCurrent={isCurrent}
+                isPast={isPast}
+                blocked={blocksHere}
+                tooltip={
+                  blocksHere
+                    ? `Cannot advance: ${revisionGuard?.unresolvedCount ?? 0} flagged item${revisionGuard?.unresolvedCount === 1 ? '' : 's'} in revision ${revisionGuard?.openRevisionLabel ?? ''}.`
+                    : STAGE_TOOLTIPS[stage]
+                }
+                onClick={() => handleStageClick(stage)}
               />
-              {/* Dropdown */}
-              <div
-                role="listbox"
-                aria-label="Select proposal status"
-                style={{
-                  position: 'fixed',
-                  top: triggerRect.bottom + 4,
-                  left: triggerRect.left,
-                }}
-                className="z-[100] w-56 overflow-hidden rounded-md border border-neutral-200 bg-surface shadow-md"
-              >
-                {proposalStatuses.map((s) => {
-                  const sCfg = PROPOSAL_STATUS_CONFIG[s];
-                  const isActive = s === status;
-                  return (
-                    <button
-                      key={s}
-                      role="option"
-                      aria-selected={isActive}
-                      type="button"
-                      onClick={() => handleOptionClick(s)}
-                      className={cn(
-                        'relative flex h-9 w-full items-center gap-2.5 px-3 text-left text-sm hover:bg-neutral-50',
-                        isActive && 'bg-neutral-50',
-                      )}
-                    >
-                      {isActive && (
-                        <span
-                          className="absolute inset-y-0 left-0 w-1 rounded-r-sm bg-brand-500"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <ProposalStatusDots status={s} />
-                      <span className="text-neutral-700">
-                        {sCfg.label.charAt(0) +
-                          sCfg.label.slice(1).toLowerCase().replace(/_/g, ' ')}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </>,
-            document.body,
-          )}
-      </div>
+            </li>
+          );
+        })}
+      </ol>
 
       {pendingStatus && (
         <ProposalStatusConfirmModal
@@ -130,23 +106,101 @@ export function ProposalStatusSelect({
           to={pendingStatus}
           {...(status === 'in_progress' && revisionGuard ? { revisionGuard } : {})}
           onConfirm={handleConfirm}
-          onCancel={handleCancelConfirm}
+          onCancel={() => setPendingStatus(null)}
         />
       )}
     </>
   );
 }
 
-function ChevronDownIcon() {
+function StageButton({
+  stage,
+  isCurrent,
+  isPast,
+  blocked,
+  tooltip,
+  onClick,
+}: {
+  stage: ProposalStatus;
+  isCurrent: boolean;
+  isPast: boolean;
+  blocked: boolean;
+  tooltip: string;
+  onClick: () => void;
+}) {
   return (
-    <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3 text-neutral-400" aria-hidden="true">
-      <path
-        d="M2.5 4.5 6 8l3.5-3.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <button
+      type="button"
+      onClick={onClick}
+      title={tooltip}
+      aria-label={`${STAGE_LABEL[stage]} — ${tooltip}`}
+      aria-current={isCurrent ? 'step' : undefined}
+      className={cn(
+        'group inline-flex h-8 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium uppercase tracking-[0.08em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+        isCurrent
+          ? 'text-brand-700 hover:bg-brand-50'
+          : isPast
+            ? 'text-neutral-600 hover:bg-neutral-100'
+            : blocked
+              ? 'text-amber-600 hover:bg-amber-50 cursor-not-allowed'
+              : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600',
+      )}
+    >
+      <StageMarker isCurrent={isCurrent} isPast={isPast} blocked={blocked} />
+      <span className="hidden md:inline">{STAGE_LABEL[stage]}</span>
+    </button>
+  );
+}
+
+function StageMarker({
+  isCurrent,
+  isPast,
+  blocked,
+}: {
+  isCurrent: boolean;
+  isPast: boolean;
+  blocked: boolean;
+}) {
+  if (blocked) {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-amber-500 bg-amber-100 text-[9px] font-bold text-amber-700"
+      >
+        !
+      </span>
+    );
+  }
+  if (isCurrent) {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-block h-3.5 w-3.5 rounded-full border-2 border-brand-500 bg-brand-100"
       />
-    </svg>
+    );
+  }
+  if (isPast) {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-brand-500 text-white"
+      >
+        <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5">
+          <path
+            d="m3 6 2 2 4-4"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block h-3.5 w-3.5 rounded-full border border-neutral-300 bg-transparent"
+    />
   );
 }
