@@ -1522,7 +1522,9 @@ export function CatalogPage({
         </span>
         <span className="catalog-footer-page">
           {watermarkConfig?.placementH === 'right' ? watermarkMark : null}
-          PAGE {pageNumber} of {pageCount}
+          <span className="catalog-footer-page-num">
+            PAGE {pageNumber} of {pageCount}
+          </span>
         </span>
       </footer>
       <MaterialLibraryModal
@@ -1624,51 +1626,54 @@ function CatalogOptionRenderings({
   const slot1 = optionImages[1] ?? null;
 
   return (
-    <div className="catalog-option-grid">
-      {/* Slot 0: card when filled, upload slot when empty */}
-      <div className="catalog-option-slot">
-        {slot0 ? (
-          <>
-            <CatalogOptionCard
-              image={slot0}
-              itemId={itemId}
-              itemName={itemName}
-              index={0}
-              disabled={isBusy}
-              checked={selectedId === slot0.id}
-              onSelect={(id) => setSelectedId(id)}
-              onUpload={(file) => onUpload(file, 0)}
-              onDelete={onDelete}
-            />
-            <p className="catalog-option-label">Option 1</p>
-          </>
-        ) : (
-          <CatalogUploadSlot label="Add option" disabled={isBusy} onFile={onAdd} />
-        )}
-      </div>
+    <div className="catalog-options-strip">
+      <h2 className="catalog-spec-heading">OPTION RENDERINGS</h2>
+      <div className="catalog-option-grid">
+        {/* Slot 0: card when filled, upload slot when empty */}
+        <div className="catalog-option-slot">
+          {slot0 ? (
+            <>
+              <CatalogOptionCard
+                image={slot0}
+                itemId={itemId}
+                itemName={itemName}
+                index={0}
+                disabled={isBusy}
+                checked={selectedId === slot0.id}
+                onSelect={(id) => setSelectedId(id)}
+                onUpload={(file) => onUpload(file, 0)}
+                onDelete={onDelete}
+              />
+              <p className="catalog-option-label">Option 1</p>
+            </>
+          ) : (
+            <CatalogUploadSlot label="Add option" disabled={isBusy} onFile={onAdd} />
+          )}
+        </div>
 
-      {/* Slot 1: always in DOM — card, upload slot, or transparent ghost */}
-      <div className="catalog-option-slot">
-        {slot1 ? (
-          <>
-            <CatalogOptionCard
-              image={slot1}
-              itemId={itemId}
-              itemName={itemName}
-              index={1}
-              disabled={isBusy}
-              checked={selectedId === slot1.id}
-              onSelect={(id) => setSelectedId(id)}
-              onUpload={(file) => onUpload(file, 1)}
-              onDelete={onDelete}
-            />
-            <p className="catalog-option-label">Option 2</p>
-          </>
-        ) : slot0 ? (
-          <CatalogUploadSlot label="Add option 2" disabled={isBusy} onFile={onAdd} />
-        ) : (
-          <div className="catalog-option-ghost" />
-        )}
+        {/* Slot 1: always in DOM — card, upload slot, or transparent ghost */}
+        <div className="catalog-option-slot">
+          {slot1 ? (
+            <>
+              <CatalogOptionCard
+                image={slot1}
+                itemId={itemId}
+                itemName={itemName}
+                index={1}
+                disabled={isBusy}
+                checked={selectedId === slot1.id}
+                onSelect={(id) => setSelectedId(id)}
+                onUpload={(file) => onUpload(file, 1)}
+                onDelete={onDelete}
+              />
+              <p className="catalog-option-label">Option 2</p>
+            </>
+          ) : slot0 ? (
+            <CatalogUploadSlot label="Add option 2" disabled={isBusy} onFile={onAdd} />
+          ) : (
+            <div className="catalog-option-ghost" />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2064,24 +2069,26 @@ function CatalogApprovalSection({ shown, onToggle }: { shown: boolean; onToggle:
 
   return (
     <section className="catalog-approval-band">
-      <button
-        type="button"
-        className="no-print catalog-approval-remove"
-        aria-label="Remove client approval section"
-        onClick={onToggle}
-      >
-        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-          <path
-            d="M3 3l10 10M13 3L3 13"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
+      <div className="catalog-approval-header">
+        <span className="catalog-section-label">CLIENT SIGN-OFF</span>
+        <button
+          type="button"
+          className="no-print catalog-approval-remove"
+          aria-label="Remove client approval section"
+          onClick={onToggle}
+        >
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+            <path
+              d="M3 3l10 10M13 3L3 13"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </div>
       <div className="catalog-approval-row">
         <div className="catalog-approval-field catalog-signature-field">
-          <div className="catalog-section-label catalog-approval-label">Client Approval</div>
           <div className="catalog-approval-line" />
           <span>Authorized Signature</span>
         </div>
