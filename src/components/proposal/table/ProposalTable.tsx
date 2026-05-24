@@ -1838,6 +1838,7 @@ function ProposalItemActionsMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const moveTriggerRef = useRef<HTMLButtonElement>(null);
@@ -1965,14 +1966,54 @@ function ProposalItemActionsMenu({
               type="button"
               role="menuitem"
               className={cn(menuItemClassName, 'text-danger-600')}
-              onClick={() => runAction(onDelete)}
+              onClick={() => runAction(() => setDeleteOpen(true))}
             >
               Delete item
             </button>
           </div>,
           document.body,
         )}
+      <DeleteItemModal
+        open={deleteOpen}
+        itemName={itemName}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          onDelete();
+          setDeleteOpen(false);
+        }}
+      />
     </div>
+  );
+}
+
+function DeleteItemModal({
+  open,
+  itemName,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  itemName: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal open={open} onClose={onClose} title={`Delete ${itemName}?`}>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-neutral-600">
+          This will permanently remove <strong>{itemName}</strong> from the proposal. This cannot be
+          undone.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="button" variant="danger" onClick={onConfirm}>
+            Delete item
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
