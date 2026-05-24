@@ -158,9 +158,8 @@ export function useUpdateProposalItem() {
     }: {
       id: string;
       patch: UpdateProposalItemInput;
-      /** Required when patch.changeLog.isPriceAffecting may be true so the
-       *  revision block and proposal status are refreshed after the API
-       *  opens (or updates) a Revision Round. */
+      /** Required when patch.changeLog exists so the revision changelog and
+       *  (for price-affecting changes) revision list + snapshots are refreshed. */
       projectId?: string;
     }) => api.proposal.updateItem(id, patch),
     onSuccess: (item, { patch, projectId }) => {
@@ -168,14 +167,20 @@ export function useUpdateProposalItem() {
         updateListItem(old, item.id, () => item),
       );
       void queryClient.invalidateQueries({ queryKey: proposalKeys.changelog(item.id) });
-      // Any confirmed change (price-affecting or notes-only) must refresh the
-      // revision block so the Notes column stays up to date.
+      // Any confirmed change (price-affecting or notes-only) refreshes the
+      // revision changelog so the Notes column stays up to date.
       if (patch.changeLog && projectId) {
-        void queryClient.invalidateQueries({ queryKey: proposalKeys.revisions(projectId) });
+        void queryClient.invalidateQueries({
+          queryKey: proposalKeys.revisionChangelog(projectId),
+        });
       }
-      // Only a price-affecting change can open a Revision Round and revert
-      // proposal_status to in_progress — refresh project cache for status badge.
+      // A price-affecting change can open a new Revision Round, which changes
+      // the revisions list, snapshots, and proposal_status.
       if (patch.changeLog?.isPriceAffecting && projectId) {
+        void queryClient.invalidateQueries({ queryKey: proposalKeys.revisions(projectId) });
+        void queryClient.invalidateQueries({
+          queryKey: proposalKeys.revisionSnapshots(projectId),
+        });
         void queryClient.invalidateQueries({ queryKey: projectKeys.all });
       }
     },
@@ -264,13 +269,25 @@ export function useDeleteProposalItem(categoryId: string) {
 // ─── Revision Rounds ────────────────────────────────────────────────────────
 
 export function useProposalRevisions(projectId: string) {
-  return useQuery<{
-    revisions: ProposalRevision[];
-    snapshots: RevisionSnapshot[];
-    changelog: ProposalItemChangelogEntry[];
-  }>({
+  return useQuery<ProposalRevision[]>({
     queryKey: proposalKeys.revisions(projectId),
     queryFn: () => api.proposal.revisions(projectId),
+    enabled: Boolean(projectId),
+  });
+}
+
+export function useRevisionSnapshots(projectId: string) {
+  return useQuery<RevisionSnapshot[]>({
+    queryKey: proposalKeys.revisionSnapshots(projectId),
+    queryFn: () => api.proposal.revisionSnapshots(projectId),
+    enabled: Boolean(projectId),
+  });
+}
+
+export function useRevisionChangelog(projectId: string) {
+  return useQuery<ProposalItemChangelogEntry[]>({
+    queryKey: proposalKeys.revisionChangelog(projectId),
+    queryFn: () => api.proposal.revisionChangelog(projectId),
     enabled: Boolean(projectId),
   });
 }
@@ -288,7 +305,8 @@ export function useUpdateRevisionItemCost(projectId: string) {
       unitCostCents: number;
     }) => api.proposal.updateRevisionItemCost(revisionId, itemId, unitCostCents),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: proposalKeys.revisions(projectId) });
+      // A cost update only affects snapshot values — no new revision opened.
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.revisionSnapshots(projectId) });
     },
     onError: (err) => toast.error(`Revision cost update failed: ${err.message}`),
   });

@@ -54,6 +54,7 @@ import {
   useColumnConfig,
   useIsMobileViewport,
   useProposalRevisions,
+  useRevisionChangelog,
   useTableDensity,
   densityRowClass,
   type TableDensity,
@@ -1488,7 +1489,8 @@ function RoomItemsSection({
   const reorderItems = useReorderItems(room.id);
   const projectMaterials = useMaterials(projectId);
   const materialActions = useItemMaterialActions({ kind: 'ffe', itemGroupId: room.id, projectId });
-  const { data: revisionsData } = useProposalRevisions(projectId);
+  const { data: revisions = [] } = useProposalRevisions(projectId);
+  const { data: changelogAll = [] } = useRevisionChangelog(projectId);
   const { data: columnDefs = [] } = useItemColumnDefs(projectId);
   const createColumnDef = useCreateItemColumnDef(projectId);
   const updateColumnDef = useUpdateItemColumnDef(projectId);
@@ -1508,14 +1510,13 @@ function RoomItemsSection({
   const isMobile = useIsMobileViewport();
   const proposalStatus = project?.proposalStatus ?? 'in_progress';
   const openRevision = useMemo(
-    () => revisionsData?.revisions.find((revision) => revision.closedAt === null) ?? null,
-    [revisionsData?.revisions],
+    () => revisions.find((revision) => revision.closedAt === null) ?? null,
+    [revisions],
   );
-  const revisions = useMemo(() => revisionsData?.revisions ?? [], [revisionsData?.revisions]);
   const changelogByGeneratedItemId = useMemo(() => {
     const map = new Map<string, ProposalItemChangelogEntry[]>();
     const currentRevisionIds = new Set(revisions.map((revision) => revision.id));
-    for (const entry of revisionsData?.changelog ?? []) {
+    for (const entry of changelogAll) {
       if (
         !entry.generatedItemId ||
         !entry.revisionId ||
@@ -1527,7 +1528,7 @@ function RoomItemsSection({
       map.get(entry.generatedItemId)!.push(entry);
     }
     return map;
-  }, [revisions, revisionsData?.changelog]);
+  }, [revisions, changelogAll]);
   const revisionIndicator = useMemo<FfeRevisionIndicator>(
     () => ({ revisions, changelogByGeneratedItemId }),
     [changelogByGeneratedItemId, revisions],

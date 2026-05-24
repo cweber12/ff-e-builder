@@ -220,19 +220,11 @@ export const proposalApi = {
       })),
     ),
 
-  revisions: (
-    projectId: string,
-  ): Promise<{
-    revisions: ProposalRevision[];
-    snapshots: RevisionSnapshot[];
-    changelog: ProposalItemChangelogEntry[];
-  }> =>
-    apiFetch<{
-      revisions: Record<string, unknown>[];
-      snapshots: Record<string, unknown>[];
-      changelog: Record<string, unknown>[];
-    }>(`/api/v1/projects/${projectId}/proposal/revisions`).then((r) => ({
-      revisions: r.revisions.map(
+  revisions: (projectId: string): Promise<ProposalRevision[]> =>
+    apiFetch<{ revisions: Record<string, unknown>[] }>(
+      `/api/v1/projects/${projectId}/proposal/revisions`,
+    ).then((r) =>
+      r.revisions.map(
         (row): ProposalRevision => ({
           id: row.id as string,
           projectId: row.project_id as string,
@@ -247,7 +239,13 @@ export const proposalApi = {
           closedAt: (row.closed_at as string | null) ?? null,
         }),
       ),
-      snapshots: r.snapshots.map(
+    ),
+
+  revisionSnapshots: (projectId: string): Promise<RevisionSnapshot[]> =>
+    apiFetch<{ snapshots: Record<string, unknown>[] }>(
+      `/api/v1/projects/${projectId}/proposal/revision-snapshots`,
+    ).then((r) =>
+      r.snapshots.map(
         (row): RevisionSnapshot => ({
           revisionId: row.revision_id as string,
           itemId: row.item_id as string,
@@ -256,7 +254,13 @@ export const proposalApi = {
           costStatus: row.cost_status as 'none' | 'flagged' | 'resolved',
         }),
       ),
-      changelog: r.changelog.map(
+    ),
+
+  revisionChangelog: (projectId: string): Promise<ProposalItemChangelogEntry[]> =>
+    apiFetch<{ changelog: Record<string, unknown>[] }>(
+      `/api/v1/projects/${projectId}/proposal/revision-changelog`,
+    ).then((r) =>
+      r.changelog.map(
         (row): ProposalItemChangelogEntry => ({
           id: row.id as string,
           proposalItemId: row.proposal_item_id as string,
@@ -272,7 +276,7 @@ export const proposalApi = {
           changedAt: row.changed_at as string,
         }),
       ),
-    })),
+    ),
 
   updateRevisionItemCost: (
     revisionId: string,

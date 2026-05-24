@@ -440,9 +440,8 @@ router.patch('/proposal/revisions/:revisionId/items/:itemId/cost', async (c) => 
 
 // GET /api/v1/projects/:projectId/proposal/revisions
 // Returns Revision Rounds for the CURRENT acceptance cycle only (revision_major
-// = last_revision_major + 1), with their snapshots and changelog entries.
-// Historical rounds from prior cycles are preserved in the DB for future
-// export but are not included here to keep the table view clean.
+// Revision rounds for the current cycle (last_revision_major + 1).
+// Historical cycles are preserved in the DB but not returned here.
 router.get('/projects/:projectId/proposal/revisions', async (c) => {
   const uid = c.get('uid');
   const projectId = c.req.param('projectId');
@@ -454,7 +453,6 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
 
   const sql = getDb(c.env);
 
-  // Determine the current cycle's MAJOR number.
   const projectRows = await sql`
     SELECT last_revision_major FROM projects WHERE id = ${projectId}
   `;
@@ -470,6 +468,28 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
       AND  revision_major = ${currentMajor}
     ORDER  BY revision_minor DESC
   `;
+
+  return c.json({ revisions });
+});
+
+router.get('/projects/:projectId/proposal/revision-snapshots', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  try {
+    await assertProjectOwnership(c.env, projectId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+
+  const projectRows = await sql`
+    SELECT last_revision_major FROM projects WHERE id = ${projectId}
+  `;
+  const lastMajor =
+    (projectRows[0] as { last_revision_major: number } | undefined)?.last_revision_major ?? 0;
+  const currentMajor = lastMajor + 1;
+
   const snapshots = await sql`
     SELECT s.revision_id, s.item_id, s.quantity, s.unit_cost_cents, s.cost_status
     FROM   proposal_revision_snapshots s
@@ -478,8 +498,29 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
       AND  r.revision_major = ${currentMajor}
   `;
 
-  // Include changelog entries for all revisions in the current cycle so the
-  // client can show change history for both open and closed rounds.
+  return c.json({ snapshots });
+});
+
+// Changelog entries for all revision rounds in the current cycle so the
+// client can show change history for both open and closed rounds.
+router.get('/projects/:projectId/proposal/revision-changelog', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  try {
+    await assertProjectOwnership(c.env, projectId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+
+  const projectRows = await sql`
+    SELECT last_revision_major FROM projects WHERE id = ${projectId}
+  `;
+  const lastMajor =
+    (projectRows[0] as { last_revision_major: number } | undefined)?.last_revision_major ?? 0;
+  const currentMajor = lastMajor + 1;
+
   const changelog = await sql`
     SELECT cl.id, cl.proposal_item_id, cl.generated_item_id, cl.column_key, cl.previous_value,
            cl.new_value, cl.notes, cl.proposal_status, cl.revision_id,
@@ -491,7 +532,7 @@ router.get('/projects/:projectId/proposal/revisions', async (c) => {
     ORDER  BY cl.changed_at ASC
   `;
 
-  return c.json({ revisions, snapshots, changelog });
+  return c.json({ changelog });
 });
 
 router.get('/proposal/items/:id/changelog', async (c) => {

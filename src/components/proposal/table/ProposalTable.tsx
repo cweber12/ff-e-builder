@@ -54,6 +54,7 @@ import {
   useDeleteColumnDef,
   useIsMobileViewport,
   useProposalRevisions,
+  useRevisionSnapshots,
   useRevisionInfoForItem,
 } from '../../../hooks';
 const MaterialLibraryModal = lazy(() =>
@@ -192,7 +193,8 @@ export function ProposalTable({
   );
   const prefetchProposalItems = usePrefetchProposalItems();
   const { categoriesWithItems, isLoading } = useProposalWithItems(projectId, collapsedCategoryIds);
-  const { data: revisionsData } = useProposalRevisions(projectId);
+  const { data: revisions = [] } = useProposalRevisions(projectId);
+  const { data: snapshots = [] } = useRevisionSnapshots(projectId);
   const createCategory = useCreateProposalCategory(projectId);
   const updateCategory = useUpdateProposalCategory(projectId);
   const deleteCategory = useDeleteProposalCategory(projectId);
@@ -250,25 +252,22 @@ export function ProposalTable({
     return map;
   }, [categoriesWithItems]);
 
-  const openRev = useMemo(
-    () => revisionsData?.revisions.find((r) => r.closedAt === null) ?? null,
-    [revisionsData?.revisions],
-  );
+  const openRev = useMemo(() => revisions.find((r) => r.closedAt === null) ?? null, [revisions]);
   const revisionCounts = useMemo(() => {
-    if (!openRev || !revisionsData?.snapshots) return { flagged: 0, resolved: 0 };
+    if (!openRev) return { flagged: 0, resolved: 0 };
     let flagged = 0;
     let resolved = 0;
-    for (const snap of revisionsData.snapshots) {
+    for (const snap of snapshots) {
       if (snap.revisionId !== openRev.id) continue;
       if (snap.costStatus === 'flagged') flagged += 1;
       else if (snap.costStatus === 'resolved') resolved += 1;
     }
     return { flagged, resolved };
-  }, [openRev, revisionsData?.snapshots]);
+  }, [openRev, snapshots]);
   const orderedFlaggedItemIds = useMemo(() => {
-    if (!openRev || !revisionsData?.snapshots) return [] as string[];
+    if (!openRev) return [] as string[];
     const flagged = new Set(
-      revisionsData.snapshots
+      snapshots
         .filter((s) => s.revisionId === openRev.id && s.costStatus === 'flagged')
         .map((s) => s.itemId),
     );
@@ -278,7 +277,7 @@ export function ProposalTable({
       for (const item of sorted) if (flagged.has(item.id)) ids.push(item.id);
     }
     return ids;
-  }, [openRev, revisionsData?.snapshots, categoriesWithItems]);
+  }, [openRev, snapshots, categoriesWithItems]);
 
   const jumpToNextFlagged = () => {
     if (orderedFlaggedItemIds.length === 0) return;
@@ -900,16 +899,16 @@ function ProposalCategorySection({
   const moveItem = useMoveProposalItem();
   const reorderItems = useReorderProposalItems(categoryId);
   const isMobile = useIsMobileViewport();
-  const { data: revisionsData } = useProposalRevisions(projectId);
-  const revisions = useMemo(() => revisionsData?.revisions ?? [], [revisionsData]);
+  const { data: revisions = [] } = useProposalRevisions(projectId);
+  const { data: snapshots = [] } = useRevisionSnapshots(projectId);
   const snapshotsByRevThenItem = useMemo(() => {
     const map = new Map<string, Map<string, RevisionSnapshot>>();
-    for (const snap of revisionsData?.snapshots ?? []) {
+    for (const snap of snapshots) {
       if (!map.has(snap.revisionId)) map.set(snap.revisionId, new Map());
       map.get(snap.revisionId)!.set(snap.itemId, snap);
     }
     return map;
-  }, [revisionsData?.snapshots]);
+  }, [snapshots]);
 
   // Derive open revision — used for the revision badge in the category header,
   // the table min-width switch, and the pending-change modal.

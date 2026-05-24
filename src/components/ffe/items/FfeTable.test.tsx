@@ -26,7 +26,6 @@ const {
   mockCreateAndAssignMaterialMutateAsync: vi.fn(),
   mockProposalRevisionsData: {
     revisions: [] as unknown[],
-    snapshots: [] as unknown[],
     changelog: [] as unknown[],
   },
 }));
@@ -90,7 +89,11 @@ vi.mock('../../../hooks', () => ({
   useTableDensity: () => ({ density: 'default', setDensity: vi.fn() }),
   densityRowClass: () => 'h-13',
   useProposalRevisions: () => ({
-    data: mockProposalRevisionsData,
+    data: mockProposalRevisionsData.revisions,
+    isLoading: false,
+  }),
+  useRevisionChangelog: () => ({
+    data: mockProposalRevisionsData.changelog,
     isLoading: false,
   }),
   useCompany: () => ({ data: undefined, isError: false }),
@@ -228,7 +231,6 @@ describe('FfeTable', () => {
       updatedAt: '2026-01-01T00:00:00Z',
     });
     mockProposalRevisionsData.revisions = [];
-    mockProposalRevisionsData.snapshots = [];
     mockProposalRevisionsData.changelog = [];
     window.localStorage.clear();
   });

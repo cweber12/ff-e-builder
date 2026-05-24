@@ -50,6 +50,8 @@ export const proposalKeys = {
   items: (categoryId: string) => ['proposal', 'category', categoryId, 'items'] as const,
   changelog: (itemId: string) => ['proposal', 'item', itemId, 'changelog'] as const,
   revisions: (projectId: string) => ['proposal', projectId, 'revisions'] as const,
+  revisionSnapshots: (projectId: string) => ['proposal', projectId, 'revision-snapshots'] as const,
+  revisionChangelog: (projectId: string) => ['proposal', projectId, 'revision-changelog'] as const,
 };
 
 export const columnDefKeys = {

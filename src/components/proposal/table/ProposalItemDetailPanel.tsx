@@ -10,6 +10,7 @@ import {
   useImages,
   useIsMobileViewport,
   useProposalRevisions,
+  useRevisionChangelog,
   useProposalWithItems,
   useUpdateProposalItem,
 } from '../../../hooks';
@@ -47,24 +48,22 @@ export function ProposalItemDetailPanel({
   onClose,
   onSelectItemId,
 }: Props) {
-  const { categoriesWithItems } = useProposalWithItems(projectId);
-  const { data: revisionsData } = useProposalRevisions(projectId);
+  const { categoriesWithItems } = useProposalWithItems(projectId, new Set());
+  const { data: revisions = [] } = useProposalRevisions(projectId);
+  const { data: changelogAll = [] } = useRevisionChangelog(projectId);
   const isMobile = useIsMobileViewport();
   const updateItem = useUpdateProposalItem();
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const addToFfe = useAddProposalItemToFfe(projectId);
 
-  const openRev = useMemo(
-    () => revisionsData?.revisions.find((r) => r.closedAt === null) ?? null,
-    [revisionsData?.revisions],
-  );
+  const openRev = useMemo(() => revisions.find((r) => r.closedAt === null) ?? null, [revisions]);
   const itemChangelog = useMemo<ProposalItemChangelogEntry[]>(() => {
-    if (!openRev || !revisionsData?.changelog) return [];
-    return revisionsData.changelog
+    if (!openRev) return [];
+    return changelogAll
       .filter((entry) => entry.revisionId === openRev.id && entry.proposalItemId === itemId)
       .sort((a, b) => b.changedAt.localeCompare(a.changedAt));
-  }, [revisionsData?.changelog, openRev, itemId]);
+  }, [changelogAll, openRev, itemId]);
 
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);

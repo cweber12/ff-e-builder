@@ -12,6 +12,8 @@ export {
   useAddProposalItemToFfe,
   useDeleteProposalItem,
   useProposalRevisions,
+  useRevisionSnapshots,
+  useRevisionChangelog,
   useUpdateRevisionItemCost,
   useReorderProposalItems,
 } from './useProposal';

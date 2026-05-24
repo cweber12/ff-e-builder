@@ -18,7 +18,12 @@ import {
 import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
-import { useUpdateProject, useProposalRevisions } from '../../hooks';
+import {
+  useUpdateProject,
+  useProposalRevisions,
+  useRevisionSnapshots,
+  useRevisionChangelog,
+} from '../../hooks';
 import { useColumnConfig } from '../../hooks/shared';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
 
@@ -300,7 +305,9 @@ export function ProposalActions({
   const { data: userProfile } = useUserProfile();
   const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
   const updateProject = useUpdateProject();
-  const { data: revisionsData } = useProposalRevisions(project.id);
+  const { data: revisions = [] } = useProposalRevisions(project.id);
+  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
+  const { data: changelog = [] } = useRevisionChangelog(project.id);
   const { visibleOrder } = useColumnConfig(
     project.id,
     'proposal',
@@ -309,11 +316,9 @@ export function ProposalActions({
   );
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
 
-  const openRev = revisionsData?.revisions.find((r) => r.closedAt === null) ?? null;
+  const openRev = revisions.find((r) => r.closedAt === null) ?? null;
   const unresolvedCount = openRev
-    ? (revisionsData?.snapshots ?? []).filter(
-        (s) => s.revisionId === openRev.id && s.costStatus === 'flagged',
-      ).length
+    ? snapshots.filter((s) => s.revisionId === openRev.id && s.costStatus === 'flagged').length
     : 0;
 
   async function handleStatusChange(next: ProposalStatus) {
@@ -361,7 +366,7 @@ export function ProposalActions({
                 categoriesWithItems,
                 userProfile,
                 customColumnDefs,
-                revisionsData,
+                { revisions, snapshots, changelog },
                 visibleOrder,
               ),
           },
