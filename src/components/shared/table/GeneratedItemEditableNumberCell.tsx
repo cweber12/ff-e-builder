@@ -272,6 +272,95 @@ export function GeneratedItemEditableMoneyCell({
   );
 }
 
+type GeneratedItemEditableQuantityControlProps = {
+  quantity: number;
+  quantityUnit: string;
+  quantityUnits: readonly string[];
+  onSaveQuantity: (value: number) => Promise<void> | void;
+  onSaveUnit: (value: string) => Promise<void> | void;
+  indicator?: ReactNode;
+  inputClassName?: string | undefined;
+  displayClassName?: string | undefined;
+};
+
+export function GeneratedItemEditableQuantityControl({
+  quantity,
+  quantityUnit,
+  quantityUnits,
+  onSaveQuantity,
+  onSaveUnit,
+  indicator,
+  inputClassName,
+  displayClassName,
+}: GeneratedItemEditableQuantityControlProps) {
+  const [editing, setEditing] = useState(false);
+
+  const saveQuantity = (rawValue: string) => {
+    const value = Number(rawValue);
+    if (Number.isFinite(value) && value >= 0) void onSaveQuantity(value);
+  };
+
+  if (!editing) {
+    return (
+      <>
+        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={`Edit quantity, currently ${quantity} ${quantityUnit}`}
+          onClick={() => setEditing(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setEditing(true);
+            }
+          }}
+          className={cn(
+            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
+            displayClassName,
+          )}
+        >
+          {quantity} {quantityUnit}
+        </span>
+      </>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-col gap-1"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setEditing(false);
+        }
+      }}
+    >
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        defaultValue={quantity}
+        autoFocus
+        onChange={(event) => saveQuantity(event.target.value)}
+        className={cn('w-20', inputClassName)}
+        aria-label="Quantity"
+      />
+      <select
+        value={quantityUnit}
+        onChange={(event) => void onSaveUnit(event.target.value)}
+        className={cn('w-20', inputClassName)}
+        aria-label="Quantity unit"
+      >
+        {quantityUnits.map((unit) => (
+          <option key={unit} value={unit}>
+            {unit}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 type GeneratedItemEditableQuantityCellProps = {
   quantity: number;
   quantityUnit: string;
@@ -293,72 +382,21 @@ export function GeneratedItemEditableQuantityCell({
   tdClassName,
   inputClassName,
 }: GeneratedItemEditableQuantityCellProps) {
-  const [editing, setEditing] = useState(false);
-
-  const saveQuantity = (rawValue: string) => {
-    const value = Number(rawValue);
-    if (Number.isFinite(value) && value >= 0) void onSaveQuantity(value);
-  };
-
-  if (!editing) {
-    return (
-      <td
-        className={cn('relative px-3 py-2', tdClassName)}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {indicator && <span className="float-right ml-1 mt-0.5">{indicator}</span>}
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => setEditing(true)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              setEditing(true);
-            }
-          }}
-          className="block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50"
-        >
-          {quantity} {quantityUnit}
-        </span>
-        <EditablePencilHint />
-      </td>
-    );
-  }
-
   return (
-    <td className={cn('px-3 py-2', tdClassName)} onClick={(event) => event.stopPropagation()}>
-      <div
-        className="flex flex-col gap-1"
-        onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) {
-            setEditing(false);
-          }
-        }}
-      >
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          defaultValue={quantity}
-          autoFocus
-          onChange={(event) => saveQuantity(event.target.value)}
-          className={cn('w-20', inputClassName)}
-          aria-label="Quantity"
-        />
-        <select
-          value={quantityUnit}
-          onChange={(event) => void onSaveUnit(event.target.value)}
-          className={cn('w-20', inputClassName)}
-          aria-label="Quantity unit"
-        >
-          {quantityUnits.map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
-      </div>
+    <td
+      className={cn('relative px-3 py-2', tdClassName)}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <GeneratedItemEditableQuantityControl
+        quantity={quantity}
+        quantityUnit={quantityUnit}
+        quantityUnits={quantityUnits}
+        onSaveQuantity={onSaveQuantity}
+        onSaveUnit={onSaveUnit}
+        indicator={indicator}
+        inputClassName={inputClassName}
+      />
+      <EditablePencilHint />
     </td>
   );
 }
