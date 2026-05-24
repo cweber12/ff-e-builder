@@ -180,6 +180,7 @@ export function ProposalTable({
   onAddCategoryOpenChange,
 }: ProposalTableProps) {
   const { categoriesWithItems, isLoading } = useProposalWithItems(projectId);
+  const { data: revisionsData } = useProposalRevisions(projectId);
   const createCategory = useCreateProposalCategory(projectId);
   const updateCategory = useUpdateProposalCategory(projectId);
   const deleteCategory = useDeleteProposalCategory(projectId);
@@ -225,6 +226,49 @@ export function ProposalTable({
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
   const totalItemCount = categoriesWithItems.reduce((sum, c) => sum + c.items.length, 0);
 
+  const openRev = useMemo(
+    () => revisionsData?.revisions.find((r) => r.closedAt === null) ?? null,
+    [revisionsData?.revisions],
+  );
+  const revisionCounts = useMemo(() => {
+    if (!openRev || !revisionsData?.snapshots) return { flagged: 0, resolved: 0 };
+    let flagged = 0;
+    let resolved = 0;
+    for (const snap of revisionsData.snapshots) {
+      if (snap.revisionId !== openRev.id) continue;
+      if (snap.costStatus === 'flagged') flagged += 1;
+      else if (snap.costStatus === 'resolved') resolved += 1;
+    }
+    return { flagged, resolved };
+  }, [openRev, revisionsData?.snapshots]);
+  const orderedFlaggedItemIds = useMemo(() => {
+    if (!openRev || !revisionsData?.snapshots) return [] as string[];
+    const flagged = new Set(
+      revisionsData.snapshots
+        .filter((s) => s.revisionId === openRev.id && s.costStatus === 'flagged')
+        .map((s) => s.itemId),
+    );
+    const ids: string[] = [];
+    for (const category of categoriesWithItems) {
+      const sorted = [...category.items].sort((a, b) => a.sortOrder - b.sortOrder);
+      for (const item of sorted) if (flagged.has(item.id)) ids.push(item.id);
+    }
+    return ids;
+  }, [openRev, revisionsData?.snapshots, categoriesWithItems]);
+
+  const jumpToNextFlagged = () => {
+    if (orderedFlaggedItemIds.length === 0) return;
+    const rows = orderedFlaggedItemIds
+      .map((id) => document.querySelector<HTMLTableRowElement>(`tr[data-item-id="${id}"]`))
+      .filter((el): el is HTMLTableRowElement => el !== null);
+    if (rows.length === 0) return;
+    const scrollY = window.scrollY;
+    const next = rows.find((row) => row.getBoundingClientRect().top + scrollY > scrollY + 80);
+    const target = next ?? rows[0];
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target?.focus();
+  };
+
   const toggleCollapsed = (id: string) => {
     setCollapsed((current) => ({ ...current, [id]: !current[id] }));
   };
@@ -253,6 +297,15 @@ export function ProposalTable({
 
   return (
     <TableViewStack>
+      {openRev && (
+        <RevisionBanner
+          revisionLabel={openRev.label}
+          flaggedCount={revisionCounts.flagged}
+          resolvedCount={revisionCounts.resolved}
+          onJumpToNextFlagged={jumpToNextFlagged}
+        />
+      )}
+
       {categoriesWithItems.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-6 py-12">
           <div className="flex w-full max-w-md flex-col items-center gap-5 rounded-lg border border-black/10 bg-canvas-chrome px-8 py-10 text-center shadow-sm">
@@ -487,6 +540,45 @@ function DeleteCategoryModal({
         </div>
       </div>
     </Modal>
+  );
+}
+
+function RevisionBanner({
+  revisionLabel,
+  flaggedCount,
+  resolvedCount,
+  onJumpToNextFlagged,
+}: {
+  revisionLabel: string;
+  flaggedCount: number;
+  resolvedCount: number;
+  onJumpToNextFlagged: () => void;
+}) {
+  return (
+    <div className="sticky top-0 z-40 flex flex-wrap items-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+      <span className="font-semibold uppercase tracking-[0.1em]">Revision {revisionLabel}</span>
+      <span className="flex items-center gap-1">
+        <span className="inline-block h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+        <span>
+          <strong className="tabular-nums">{flaggedCount}</strong> flagged
+        </span>
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+        <span>
+          <strong className="tabular-nums">{resolvedCount}</strong> resolved
+        </span>
+      </span>
+      {flaggedCount > 0 && (
+        <button
+          type="button"
+          onClick={onJumpToNextFlagged}
+          className="ml-auto inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2.5 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
+        >
+          Jump to next flagged →
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -1050,32 +1142,7 @@ function ProposalCategorySection({
                   </SortableContext>
                   {hasOpenRevision ? (
                     <>
-                      {/* Baseline cols scroll with the rest of the table. */}
-                      <th
-                        className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          baselineQtyColumnClassName,
-                        )}
-                      >
-                        Quantity
-                      </th>
-                      <th
-                        className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          baselineUnitCostColumnClassName,
-                        )}
-                      >
-                        Unit Cost
-                      </th>
-                      <th
-                        className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          baselineTotalColumnClassName,
-                        )}
-                      >
-                        Total
-                      </th>
-                      {/* Revision notes scroll with the baseline reference columns. */}
+                      {/* Notes scrolls before the baseline group so baseline sits adjacent to the sticky revised values. */}
                       <th
                         className={cn(
                           'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
@@ -1084,30 +1151,62 @@ function ProposalCategorySection({
                       >
                         Notes
                       </th>
-                      {/* Revision sticky column headers */}
+                      {/* BEFORE — baseline values, scroll with the rest of the table. */}
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'border-l border-l-neutral-300',
+                          baselineQtyColumnClassName,
+                        )}
+                      >
+                        <span className="block text-[10px] text-neutral-400">Before</span>
+                        Quantity
+                      </th>
+                      <th
+                        className={cn(
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          baselineUnitCostColumnClassName,
+                        )}
+                      >
+                        <span className="block text-[10px] text-neutral-400">Before</span>
+                        Unit Cost
+                      </th>
+                      <th
+                        className={cn(
+                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          baselineTotalColumnClassName,
+                        )}
+                      >
+                        <span className="block text-[10px] text-neutral-400">Before</span>
+                        Total
+                      </th>
+                      {/* AFTER — revised values, sticky to the right edge. */}
+                      <th
+                        className={cn(
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                           stickyRevQtyHeaderClassName,
                         )}
                       >
-                        Rev Qty
+                        <span className="block text-[10px] text-brand-500">After</span>
+                        New Qty
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                           stickyRevUnitCostHeaderClassName,
                         )}
                       >
-                        Rev Cost
+                        <span className="block text-[10px] text-brand-500">After</span>
+                        New Cost
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                           stickyRevTotalHeaderClassName,
                         )}
                       >
-                        Rev Total
+                        <span className="block text-[10px] text-brand-500">After</span>
+                        New Total
                       </th>
                     </>
                   ) : (
@@ -1346,59 +1445,65 @@ function ProposalCategorySection({
                           <th
                             className={cn(
                               'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              baselineQtyColumnClassName,
-                            )}
-                          >
-                            Quantity
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              baselineUnitCostColumnClassName,
-                            )}
-                          >
-                            Unit Cost
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              baselineTotalColumnClassName,
-                            )}
-                          >
-                            Total
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               revisionNotesColumnClassName,
                             )}
                           >
                             Notes
                           </th>
-                          {/* Revision sticky column headers */}
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                              'border-l border-l-neutral-300',
+                              baselineQtyColumnClassName,
+                            )}
+                          >
+                            <span className="block text-[10px] text-neutral-400">Before</span>
+                            Quantity
+                          </th>
+                          <th
+                            className={cn(
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                              baselineUnitCostColumnClassName,
+                            )}
+                          >
+                            <span className="block text-[10px] text-neutral-400">Before</span>
+                            Unit Cost
+                          </th>
+                          <th
+                            className={cn(
+                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                              baselineTotalColumnClassName,
+                            )}
+                          >
+                            <span className="block text-[10px] text-neutral-400">Before</span>
+                            Total
+                          </th>
+                          <th
+                            className={cn(
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                               stickyRevQtyExpandedHeaderClassName,
                             )}
                           >
-                            Rev Qty
+                            <span className="block text-[10px] text-brand-500">After</span>
+                            New Qty
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                               stickyRevUnitCostExpandedHeaderClassName,
                             )}
                           >
-                            Rev Cost
+                            <span className="block text-[10px] text-brand-500">After</span>
+                            New Cost
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                               stickyRevTotalExpandedHeaderClassName,
                             )}
                           >
-                            Rev Total
+                            <span className="block text-[10px] text-brand-500">After</span>
+                            New Total
                           </th>
                         </>
                       ) : (
@@ -1718,6 +1823,7 @@ function ProposalRow({
       style={style}
       tabIndex={0}
       data-dragging={isDragging || undefined}
+      data-item-id={item.id}
       aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
       onClick={onRowClick}
       onKeyDown={(event) => {
@@ -1748,7 +1854,8 @@ function ProposalRow({
           const revEntries = changelogByItemId.get(item.id) ?? [];
           return (
             <>
-              {/* Baseline reference values scroll with the main table while revised values stay pinned. */}
+              {/* Notes scroll first, then baseline group, so baseline sits adjacent to the sticky revised values. */}
+              <RevisionNotesCell entries={revEntries} tdClassName={revisionNotesColumnClassName} />
               <td
                 className={cn(
                   'px-3 py-2 text-sm tabular-nums text-neutral-400',
@@ -1773,7 +1880,6 @@ function ProposalRow({
               >
                 {formatMoney(cents(lineTotal))}
               </td>
-              <RevisionNotesCell entries={revEntries} tdClassName={revisionNotesColumnClassName} />
               {/* Revision snapshot cells (sticky) */}
               <RevisionQtyCell
                 snapshot={snap}
