@@ -5,6 +5,7 @@ import {
   CreateAndAssignMaterialSchema,
   CreateProposalCategorySchema,
   CreateProposalItemSchema,
+  ReorderItemsSchema,
   UpdateProposalCategorySchema,
   UpdateProposalItemSchema,
   UpdateRevisionItemCostSchema,
@@ -613,6 +614,36 @@ router.delete('/proposal/items/:id/materials/:materialId', async (c) => {
   `;
   await deleteProposalMaterialFromLinkedItem(sql, proposalItemId, materialId);
   return c.body(null, 204);
+});
+
+// POST /api/v1/proposal/categories/:id/reorder — atomically reorder all items in a category
+router.post('/proposal/categories/:id/reorder', async (c) => {
+  const uid = c.get('uid');
+  const categoryId = c.req.param('id');
+
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = ReorderItemsSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  try {
+    await assertProposalCategoryOwnership(c.env, categoryId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const { orderedItemIds } = parsed.data;
+  const sql = getDb(c.env);
+  await sql`
+    UPDATE proposal_items
+    SET sort_order = v.idx
+    FROM (
+      SELECT id, (ordinality - 1)::int AS idx
+      FROM unnest(${orderedItemIds}::uuid[]) WITH ORDINALITY AS t(id, ordinality)
+    ) v
+    WHERE proposal_items.id = v.id
+      AND proposal_items.category_id = ${categoryId}
+  `;
+  return c.json({ ok: true });
 });
 
 export { router as proposalRouter };

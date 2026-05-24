@@ -43,6 +43,7 @@ import {
   useProposalWithItems,
   useUpdateProposalCategory,
   useUpdateProposalItem,
+  useReorderProposalItems,
   useColumnConfig,
   useColumnDefs,
   useCreateColumnDef,
@@ -884,7 +885,7 @@ function ProposalCategorySection({
   const deleteItem = useDeleteProposalItem(categoryId);
   const addItemToFfe = useAddProposalItemToFfe(projectId);
   const moveItem = useMoveProposalItem();
-  const updateItem = useUpdateProposalItem();
+  const reorderItems = useReorderProposalItems(categoryId);
   const isMobile = useIsMobileViewport();
   const { data: revisionsData } = useProposalRevisions(projectId);
   const revisions = useMemo(() => revisionsData?.revisions ?? [], [revisionsData]);
@@ -968,19 +969,9 @@ function ProposalCategorySection({
       const newIndex = sortedItems.findIndex((item) => item.id === over.id);
       if (oldIndex < 0 || newIndex < 0) return;
       const reordered = arrayMove(sortedItems, oldIndex, newIndex);
-      const patches = reordered
-        .map((item, sortOrder) => ({ item, sortOrder }))
-        .filter(({ item, sortOrder }) => item.sortOrder !== sortOrder);
-      void (async () => {
-        for (const { item, sortOrder } of patches) {
-          await updateItem.mutateAsync({
-            id: item.id,
-            patch: { sortOrder, version: item.version },
-          });
-        }
-      })();
+      reorderItems.mutate(reordered.map((item) => item.id));
     },
-    [sortedItems, updateItem],
+    [sortedItems, reorderItems],
   );
   const itemCount = items.length;
 

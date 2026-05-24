@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Env, HonoVariables } from '../types';
-import { UpdateRoomSchema, CreateItemSchema } from '../types';
+import { UpdateRoomSchema, CreateItemSchema, ReorderItemsSchema } from '../types';
 import { assertRoomOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import {
@@ -106,6 +106,36 @@ router.post('/:id/items', async (c) => {
   const sql = getDb(c.env);
   const item = await createGeneratedItemFromFfe(sql, roomId, parsed.data);
   return c.json({ item }, 201);
+});
+
+// POST /api/v1/rooms/:id/reorder — atomically reorder all items in a room
+router.post('/:id/reorder', async (c) => {
+  const uid = c.get('uid');
+  const roomId = c.req.param('id');
+
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = ReorderItemsSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  try {
+    await assertRoomOwnership(c.env, roomId, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const { orderedItemIds } = parsed.data;
+  const sql = getDb(c.env);
+  await sql`
+    UPDATE items
+    SET sort_order = v.idx
+    FROM (
+      SELECT id, (ordinality - 1)::int AS idx
+      FROM unnest(${orderedItemIds}::uuid[]) WITH ORDINALITY AS t(id, ordinality)
+    ) v
+    WHERE items.id = v.id
+      AND items.room_id = ${roomId}
+  `;
+  return c.json({ ok: true });
 });
 
 export { router as roomsRouter };

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- perf(proposal): add POST /proposal/categories/:id/reorder and POST /rooms/:id/reorder endpoints; replace N-sequential-PATCH drag-end handlers on proposal and FFE tables with a single batched call plus optimistic reorder and rollback
+
 - feat(catalog): add a show or hide cost toggle for FF&E catalog browser, print, and PDF exports with a compact quantity-only image band when costs are hidden
 - feat(catalog): add a session-only main rendering top or center alignment control for FF&E catalog preview and PDF export prep
 - feat(catalog): consolidate catalog presentation controls into a layout options popover with browser-preview-aware image alignment, cost display, swatch labels, watermark placement, and approval visibility

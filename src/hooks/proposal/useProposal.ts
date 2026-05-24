@@ -256,3 +256,25 @@ export function useUpdateRevisionItemCost(projectId: string) {
     onError: (err) => toast.error(`Revision cost update failed: ${err.message}`),
   });
 }
+
+export function useReorderProposalItems(categoryId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedItemIds: string[]) => api.proposal.reorderItems(categoryId, orderedItemIds),
+    onMutate: async (orderedItemIds) => {
+      const queryKey = proposalKeys.items(categoryId);
+      const previous = await snapshotQueryList<ProposalItem>(queryClient, queryKey);
+      const indexMap = new Map(orderedItemIds.map((id, i) => [id, i]));
+      queryClient.setQueryData<ProposalItem[]>(queryKey, (old) => {
+        if (!old) return old;
+        return [...old].sort((a, b) => (indexMap.get(a.id) ?? 0) - (indexMap.get(b.id) ?? 0));
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      restoreQueryList(queryClient, proposalKeys.items(categoryId), ctx?.previous);
+      toast.error('Reorder failed — order restored');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: proposalKeys.items(categoryId) }),
+  });
+}

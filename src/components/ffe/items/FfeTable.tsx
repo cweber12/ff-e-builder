@@ -11,6 +11,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
+  arrayMove,
   horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
@@ -29,7 +30,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { lineTotalCents, projectTotalCents, roomSubtotalCents } from '../../../lib/money';
-import { getSortOrderPatches } from '../../../lib/items';
 import {
   ffePatchToGeneratedItemChangeInfo,
   type GeneratedItemChangeInfo,
@@ -45,6 +45,7 @@ import {
   useMaterials,
   useMoveItem,
   useUpdateItem,
+  useReorderItems,
   useUpdateRoom,
   useItemColumnDefs,
   useCreateItemColumnDef,
@@ -1484,6 +1485,7 @@ function RoomItemsSection({
   const createItem = useCreateItem(room.id);
   const deleteItem = useDeleteItem(room.id);
   const moveItem = useMoveItem();
+  const reorderItems = useReorderItems(room.id);
   const projectMaterials = useMaterials(projectId);
   const materialActions = useItemMaterialActions({ kind: 'ffe', itemGroupId: room.id, projectId });
   const { data: revisionsData } = useProposalRevisions(projectId);
@@ -1739,12 +1741,11 @@ function RoomItemsSection({
     // ID-tag sort overrides manual sortOrder, so row reordering is a no-op.
     if (sortMode === 'idTag') return;
 
-    const patches = getSortOrderPatches(sortedItems, activeId, overId);
-    void (async () => {
-      for (const { item, sortOrder } of patches) {
-        await updateItem.mutateAsync({ id: item.id, patch: { sortOrder, version: item.version } });
-      }
-    })();
+    const oldIndex = sortedItems.findIndex((item) => item.id === activeId);
+    const newIndex = sortedItems.findIndex((item) => item.id === overId);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(sortedItems, oldIndex, newIndex);
+    reorderItems.mutate(reordered.map((item) => item.id));
   };
 
   return (

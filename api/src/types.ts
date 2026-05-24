@@ -482,6 +482,11 @@ export const UpdateRevisionItemCostSchema = z.object({
 });
 export type UpdateRevisionItemCostInput = z.infer<typeof UpdateRevisionItemCostSchema>;
 
+export const ReorderItemsSchema = z.object({
+  orderedItemIds: z.array(z.string().uuid()).min(1),
+});
+export type ReorderItemsInput = z.infer<typeof ReorderItemsSchema>;
+
 export const CreateMeasuredPlanSchema = z.object({
   name: z.string().min(1).max(255),
   sheet_reference: z.string().max(100).default(''),

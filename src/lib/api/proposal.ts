@@ -177,6 +177,12 @@ export const proposalApi = {
   deleteItem: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
 
+  reorderItems: (categoryId: string, orderedItemIds: string[]): Promise<void> =>
+    apiFetch<unknown>(`/api/v1/proposal/categories/${categoryId}/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ orderedItemIds }),
+    }).then(() => undefined),
+
   itemChangelog: (itemId: string): Promise<ProposalItemChangelogEntry[]> =>
     apiFetch<{ changelog: Record<string, unknown>[] }>(
       `/api/v1/proposal/items/${itemId}/changelog`,

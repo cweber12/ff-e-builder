@@ -165,3 +165,25 @@ export function useMoveItem() {
     },
   });
 }
+
+export function useReorderItems(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedItemIds: string[]) => api.items.reorderItems(roomId, orderedItemIds),
+    onMutate: async (orderedItemIds) => {
+      const queryKey = itemKeys.forRoom(roomId);
+      const previous = await snapshotQueryList<Item>(queryClient, queryKey);
+      const indexMap = new Map(orderedItemIds.map((id, i) => [id, i]));
+      queryClient.setQueryData<Item[]>(queryKey, (old) => {
+        if (!old) return old;
+        return [...old].sort((a, b) => (indexMap.get(a.id) ?? 0) - (indexMap.get(b.id) ?? 0));
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      restoreQueryList(queryClient, itemKeys.forRoom(roomId), ctx?.previous);
+      toast.error('Reorder failed — order restored');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: itemKeys.forRoom(roomId) }),
+  });
+}

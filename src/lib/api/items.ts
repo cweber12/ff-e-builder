@@ -105,4 +105,10 @@ export const itemsApi = {
 
   delete: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/items/${id}`, { method: 'DELETE' }),
+
+  reorderItems: (roomId: string, orderedItemIds: string[]): Promise<void> =>
+    apiFetch<unknown>(`/api/v1/rooms/${roomId}/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ orderedItemIds }),
+    }).then(() => undefined),
 };
