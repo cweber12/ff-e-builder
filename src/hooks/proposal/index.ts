@@ -14,6 +14,7 @@ export {
   useProposalRevisions,
   useRevisionSnapshots,
   useRevisionChangelog,
+  useUpdateChangelogEntryNotes,
   useUpdateRevisionItemCost,
   useReorderProposalItems,
 } from './useProposal';

@@ -12,6 +12,7 @@ import {
   useProposalRevisions,
   useRevisionChangelog,
   useProposalWithItems,
+  useUpdateChangelogEntryNotes,
   useUpdateProposalItem,
 } from '../../../hooks';
 import { ImageFrame } from '../../shared/image/ImageFrame';
@@ -343,7 +344,13 @@ export function ProposalItemDetailPanel({
             )}
           </div>
 
-          {openRev && <ChangelogSection revisionLabel={openRev.label} entries={itemChangelog} />}
+          {openRev && (
+            <ChangelogSection
+              revisionLabel={openRev.label}
+              entries={itemChangelog}
+              projectId={projectId}
+            />
+          )}
         </div>
       </div>
 
@@ -509,9 +516,11 @@ function MoreIcon() {
 function ChangelogSection({
   revisionLabel,
   entries,
+  projectId,
 }: {
   revisionLabel: string;
   entries: ProposalItemChangelogEntry[];
+  projectId: string;
 }) {
   return (
     <section className="mt-7 border-t border-black/10 pt-5">
@@ -528,7 +537,7 @@ function ChangelogSection({
       ) : (
         <ol className="flex flex-col gap-2">
           {entries.map((entry) => (
-            <ChangelogEntryRow key={entry.id} entry={entry} />
+            <ChangelogEntryRow key={entry.id} entry={entry} projectId={projectId} />
           ))}
         </ol>
       )}
@@ -536,7 +545,32 @@ function ChangelogSection({
   );
 }
 
-function ChangelogEntryRow({ entry }: { entry: ProposalItemChangelogEntry }) {
+function ChangelogEntryRow({
+  entry,
+  projectId,
+}: {
+  entry: ProposalItemChangelogEntry;
+  projectId: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(entry.notes ?? '');
+  const updateNotes = useUpdateChangelogEntryNotes(projectId);
+
+  useEffect(() => {
+    if (!editing) setDraft(entry.notes ?? '');
+  }, [entry.notes, editing]);
+
+  async function handleSave() {
+    const trimmed = draft.trim();
+    await updateNotes.mutateAsync({ entryId: entry.id, notes: trimmed || null });
+    setEditing(false);
+  }
+
+  function handleCancel() {
+    setDraft(entry.notes ?? '');
+    setEditing(false);
+  }
+
   const previous = entry.previousValue || '—';
   const next = entry.newValue || '—';
   const when = new Date(entry.changedAt).toLocaleString(undefined, {
@@ -545,6 +579,7 @@ function ChangelogEntryRow({ entry }: { entry: ProposalItemChangelogEntry }) {
     hour: 'numeric',
     minute: '2-digit',
   });
+
   return (
     <li className="rounded-sm border border-black/10 bg-canvas-shell px-3 py-2 text-sm">
       <div className="flex items-baseline justify-between gap-2">
@@ -561,7 +596,56 @@ function ChangelogEntryRow({ entry }: { entry: ProposalItemChangelogEntry }) {
           </span>
         )}
       </div>
-      {entry.notes && <p className="mt-1.5 text-sm text-neutral-600">{entry.notes}</p>}
+      {editing ? (
+        <div className="mt-2">
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleSave();
+              if (e.key === 'Escape') handleCancel();
+            }}
+            placeholder="Add a note…"
+            autoFocus
+            className="w-full rounded border border-black/15 bg-white px-2 py-1 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+          <div className="mt-1 flex gap-3">
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={updateNotes.isPending}
+              className="text-xs font-medium text-brand-600 hover:underline disabled:opacity-50"
+            >
+              {updateNotes.isPending ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-xs text-neutral-500 hover:underline"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : entry.notes ? (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="group mt-1.5 block w-full text-left text-sm text-neutral-600 hover:text-neutral-800"
+        >
+          {entry.notes}
+          <span className="ml-1 hidden text-[11px] text-neutral-400 group-hover:inline">edit</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="mt-1.5 text-xs text-neutral-400 hover:text-brand-600 hover:underline"
+        >
+          + Add notes
+        </button>
+      )}
     </li>
   );
 }

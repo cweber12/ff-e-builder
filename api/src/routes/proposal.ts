@@ -8,6 +8,7 @@ import {
   ReorderItemsSchema,
   UpdateProposalCategorySchema,
   UpdateProposalItemSchema,
+  UpdateChangelogEntryNotesSchema,
   UpdateRevisionItemCostSchema,
 } from '../types';
 import { getDb } from '../lib/db';
@@ -550,6 +551,33 @@ router.get('/proposal/items/:id/changelog', async (c) => {
     ORDER BY changed_at DESC
   `;
   return c.json({ changelog: rows });
+});
+
+router.patch('/proposal/changelog/:id', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = UpdateChangelogEntryNotesSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const authRows = await sql`
+    SELECT 1
+    FROM   proposal_item_changelog cl
+    JOIN   proposal_items i   ON cl.proposal_item_id = i.id
+    JOIN   proposal_categories cat ON i.category_id = cat.id
+    JOIN   projects p         ON cat.project_id = p.id
+    WHERE  cl.id = ${id} AND p.owner_uid = ${uid}
+    LIMIT  1
+  `;
+  if (authRows.length === 0) return c.json({ error: 'Not found' }, 404);
+
+  await sql`
+    UPDATE proposal_item_changelog
+    SET    notes = ${parsed.data.notes}
+    WHERE  id = ${id}
+  `;
+  return c.json({ ok: true });
 });
 
 router.delete('/proposal/items/:id', async (c) => {

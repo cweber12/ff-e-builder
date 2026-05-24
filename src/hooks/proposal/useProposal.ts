@@ -292,6 +292,18 @@ export function useRevisionChangelog(projectId: string) {
   });
 }
 
+export function useUpdateChangelogEntryNotes(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ entryId, notes }: { entryId: string; notes: string | null }) =>
+      api.proposal.patchChangelogNotes(entryId, notes),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.revisionChangelog(projectId) });
+    },
+    onError: (err) => toast.error(`Notes update failed: ${err.message}`),
+  });
+}
+
 export function useUpdateRevisionItemCost(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

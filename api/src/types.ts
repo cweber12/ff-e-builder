@@ -487,6 +487,11 @@ export const ReorderItemsSchema = z.object({
 });
 export type ReorderItemsInput = z.infer<typeof ReorderItemsSchema>;
 
+export const UpdateChangelogEntryNotesSchema = z.object({
+  notes: z.string().nullable(),
+});
+export type UpdateChangelogEntryNotesInput = z.infer<typeof UpdateChangelogEntryNotesSchema>;
+
 export const CreateMeasuredPlanSchema = z.object({
   name: z.string().min(1).max(255),
   sheet_reference: z.string().max(100).default(''),

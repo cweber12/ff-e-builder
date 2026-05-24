@@ -194,6 +194,12 @@ export const proposalApi = {
   deleteItem: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
 
+  patchChangelogNotes: (entryId: string, notes: string | null): Promise<void> =>
+    apiFetch<void>(`/api/v1/proposal/changelog/${entryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes }),
+    }),
+
   reorderItems: (categoryId: string, orderedItemIds: string[]): Promise<void> =>
     apiFetch<unknown>(`/api/v1/proposal/categories/${categoryId}/reorder`, {
       method: 'POST',
