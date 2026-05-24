@@ -72,7 +72,7 @@ describe('ProposalExportModal', () => {
 
   it('renders format picker and all categories checked by default', () => {
     renderModal();
-    expect(screen.getByRole('button', { name: 'PDF' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'PDF' })).toHaveAttribute('aria-checked', 'true');
     categories.forEach((c) => {
       expect(screen.getByLabelText(c.name)).toBeChecked();
     });
@@ -130,7 +130,7 @@ describe('ProposalExportModal', () => {
   it('switches to Excel and calls exportProposalExcel without revision data when no open revision', async () => {
     const user = userEvent.setup();
     renderModal();
-    await user.click(screen.getByRole('button', { name: 'EXCEL' }));
+    await user.click(screen.getByRole('radio', { name: 'EXCEL' }));
     await user.click(screen.getByRole('button', { name: 'Export' }));
     expect(mockExportExcel).toHaveBeenCalledWith(project, categories, null, [], undefined, []);
   });
@@ -138,7 +138,7 @@ describe('ProposalExportModal', () => {
   it('calls exportProposalCsv for CSV format with filtered categories', async () => {
     const user = userEvent.setup();
     renderModal();
-    await user.click(screen.getByRole('button', { name: 'CSV' }));
+    await user.click(screen.getByRole('radio', { name: 'CSV' }));
     await user.click(screen.getByLabelText('Kitchen'));
     await user.click(screen.getByRole('button', { name: 'Export' }));
     expect(mockExportCsv).toHaveBeenCalledWith(project, [categories[0], categories[1]], []);

@@ -26,8 +26,7 @@ describe('ProjectHeader', () => {
   it('shows shimmer skeleton while project is undefined', () => {
     const { container } = renderWithRouter(<ProjectHeader project={undefined} />);
 
-    // SkeletonBar uses bg-neutral-200 animated placeholders (no animate-pulse class in new design)
-    expect(container.querySelector('[class*="bg-neutral-200"]')).toBeInTheDocument();
+    expect(container.querySelector('[class*="bg-canvas-shell"]')).toBeInTheDocument();
     expect(screen.queryByText('Living Room Reno')).not.toBeInTheDocument();
   });
 

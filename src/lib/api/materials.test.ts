@@ -43,6 +43,8 @@ describe('materialsApi', () => {
       swatch_hex: '#D9D4C8',
       manufacturer: '',
       source_url: '',
+      category: null,
+      sub_category: '',
     });
     expect(material).toMatchObject({
       id: 'material-1',

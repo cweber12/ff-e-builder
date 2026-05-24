@@ -35,6 +35,7 @@ vi.mock('../../../hooks', () => ({
   useCreateItem: () => ({ mutateAsync: mockCreateItemMutateAsync }),
   useDeleteItem: () => ({ mutateAsync: mockDeleteItemMutateAsync }),
   useMoveItem: () => ({ mutateAsync: mockMoveItemMutateAsync }),
+  useReorderItems: () => ({ mutateAsync: vi.fn() }),
   useCreateRoom: () => ({ mutateAsync: mockCreateRoomMutateAsync }),
   useDeleteRoom: () => ({ mutateAsync: mockDeleteRoomMutateAsync }),
   useUpdateRoom: () => ({ mutateAsync: vi.fn() }),
@@ -512,6 +513,10 @@ describe('FfeTable', () => {
         materialId: 'FAB-001',
         description: '',
         swatchHex: '#D9D4C8',
+        manufacturer: '',
+        sourceUrl: '',
+        category: null,
+        subCategory: '',
       },
     });
   });

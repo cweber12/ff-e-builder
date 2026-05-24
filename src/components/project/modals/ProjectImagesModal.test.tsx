@@ -165,7 +165,7 @@ describe('ProjectImagesModal – full slot flow', () => {
     expect(errors).toHaveLength(1);
 
     // The error is inside the second slot, not the first
-    const slots = container.querySelectorAll<HTMLElement>('div.grid.gap-2');
+    const slots = container.querySelectorAll<HTMLElement>('div.grid.gap-2\\.5');
     expect(within(slots[1]!).getByText('Projects can have up to 3 images')).toBeInTheDocument();
     expect(within(slots[0]!).queryByText('Projects can have up to 3 images')).toBeNull();
   });
