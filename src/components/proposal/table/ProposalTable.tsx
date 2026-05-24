@@ -219,8 +219,7 @@ export function ProposalTable({
     ? onAddCategoryOpenChange
     : setAddCategoryOpenInternal;
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [selectedItem, setSelectedItem] = useState<ProposalItem | null>(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>(undefined);
+  const [selection, setSelection] = useState<{ itemId: string; categoryId: string } | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
   const totalItemCount = categoriesWithItems.reduce((sum, c) => sum + c.items.length, 0);
@@ -303,8 +302,7 @@ export function ProposalTable({
           onCategoryDelete={() => setCategoryToDelete(category)}
           onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch, projectId })}
           onItemClick={(item) => {
-            setSelectedItem(item);
-            setSelectedCategoryName(category.name);
+            setSelection({ itemId: item.id, categoryId: category.id });
           }}
           visibleColOrder={columnConfig.visibleOrder}
           customColumnDefs={customColumnDefs}
@@ -339,11 +337,17 @@ export function ProposalTable({
         }}
       />
 
-      {selectedItem && (
+      {selection && (
         <ProposalItemDetailPanel
-          item={selectedItem}
-          categoryName={selectedCategoryName}
-          onClose={() => setSelectedItem(null)}
+          itemId={selection.itemId}
+          categoryId={selection.categoryId}
+          projectId={projectId}
+          onClose={() => setSelection(null)}
+          onSelectItemId={(nextItemId: string) =>
+            setSelection((current) =>
+              current ? { categoryId: current.categoryId, itemId: nextItemId } : current,
+            )
+          }
         />
       )}
 
