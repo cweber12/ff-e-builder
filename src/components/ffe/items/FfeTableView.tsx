@@ -249,6 +249,7 @@ function EditableTextCell({
   onSave,
   required = false,
   displayClassName,
+  multiline = false,
   revisionEntries = [],
   revisions = [],
 }: {
@@ -259,6 +260,7 @@ function EditableTextCell({
   onSave: SaveItemPatch;
   required?: boolean | undefined;
   displayClassName?: string | undefined;
+  multiline?: boolean | undefined;
   revisionEntries?: ProposalItemChangelogEntry[] | undefined;
   revisions?: ProposalRevision[] | undefined;
 }) {
@@ -271,6 +273,7 @@ function EditableTextCell({
         ariaLabel={`${label} for ${item.itemName}`}
         displayClassName={displayClassName}
         affordance="hover"
+        multiline={multiline}
         normalizeValue={(nextValue) => nextValue.trim()}
         onSave={(nextValue) => {
           const patchValue = required ? nextValue : emptyToNull(nextValue);
@@ -600,6 +603,7 @@ const createColumns = (
         field="drawings"
         label="Drawings"
         onSave={onSave}
+        multiline
         revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'drawings')}
         revisions={revisionIndicator?.revisions ?? []}
       />
@@ -639,6 +643,7 @@ const createColumns = (
         field="description"
         label="Product Description"
         onSave={onSave}
+        multiline
         revisionEntries={revisionEntriesForFfeCell(
           revisionIndicator,
           row.original.id,
@@ -784,6 +789,7 @@ const createColumns = (
         field="notes"
         label="Notes"
         onSave={onSave}
+        multiline
         revisionEntries={revisionEntriesForFfeCell(revisionIndicator, row.original.id, 'notes')}
         revisions={revisionIndicator?.revisions ?? []}
       />
@@ -972,6 +978,7 @@ function MobileItemCards({
                 field="drawings"
                 label="Drawings"
                 onSave={onSave}
+                multiline
                 revisionEntries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'drawings')}
                 revisions={revisionIndicator?.revisions ?? []}
               />
@@ -1041,6 +1048,7 @@ function MobileItemCards({
               field="notes"
               label="Notes"
               onSave={onSave}
+              multiline
               revisionEntries={revisionEntriesForFfeCell(revisionIndicator, item.id, 'notes')}
               revisions={revisionIndicator?.revisions ?? []}
             />
@@ -1608,6 +1616,7 @@ export function RoomItemsSection({
           value={row.original.customData[def.id] ?? ''}
           ariaLabel={`${def.label} for ${row.original.itemName}`}
           affordance="hover"
+          multiline
           normalizeValue={(value) => value.trim()}
           onSave={(value) => saveCustomCell(row.original, def.id, value)}
         />

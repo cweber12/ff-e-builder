@@ -241,6 +241,7 @@ export function ProposalItemDetailPanel({
                 value={item.location}
                 onSave={(location) => save({ location })}
                 ariaLabel="Location"
+                multiline
               />
             </FormField>
             <FormField label="Drawings">
@@ -248,6 +249,7 @@ export function ProposalItemDetailPanel({
                 value={item.drawings}
                 onSave={(drawings) => save({ drawings })}
                 ariaLabel="Drawings"
+                multiline
               />
             </FormField>
             <FormField label="Plan reference">
@@ -255,6 +257,7 @@ export function ProposalItemDetailPanel({
                 value={item.plan}
                 onSave={(plan) => save({ plan })}
                 ariaLabel="Plan reference"
+                multiline
               />
             </FormField>
             <FormField label="Size">
@@ -285,6 +288,7 @@ export function ProposalItemDetailPanel({
                 value={item.description}
                 onSave={(description) => save({ description })}
                 ariaLabel="Description"
+                multiline
               />
             </FormField>
             <FormField label="Notes" wide>
@@ -292,6 +296,7 @@ export function ProposalItemDetailPanel({
                 value={item.notes}
                 onSave={(notes) => save({ notes })}
                 ariaLabel="Notes"
+                multiline
               />
             </FormField>
           </div>

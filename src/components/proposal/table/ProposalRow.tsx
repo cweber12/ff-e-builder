@@ -225,6 +225,7 @@ const ProposalRowContent = memo(
           indicator={dot('drawings')}
           inputClassName={editInputClassName}
           affordance="hover"
+          multiline
         />
       ),
       location: (
@@ -236,6 +237,7 @@ const ProposalRowContent = memo(
           indicator={dot('location')}
           inputClassName={editInputClassName}
           affordance="hover"
+          multiline
         />
       ),
       description: (
@@ -247,6 +249,7 @@ const ProposalRowContent = memo(
           indicator={dot('description')}
           inputClassName={editInputClassName}
           affordance="hover"
+          multiline
         />
       ),
       notes: (
@@ -258,6 +261,7 @@ const ProposalRowContent = memo(
           indicator={dot('notes')}
           inputClassName={editInputClassName}
           affordance="hover"
+          multiline
         />
       ),
       size: (
@@ -320,6 +324,7 @@ const ProposalRowContent = memo(
             indicator={dot(def.id)}
             inputClassName={editInputClassName}
             affordance="hover"
+            multiline
           />,
         ]),
       ),
