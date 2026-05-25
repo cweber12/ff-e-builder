@@ -826,11 +826,23 @@ const MATERIAL_BADGE_LIMIT = 4;
 export function MaterialBadges({
   materials,
   onOpen,
+  recentMaterials,
+  onQuickApply,
 }: {
   materials: Material[];
   onOpen: () => void;
+  recentMaterials?: Material[] | undefined;
+  onQuickApply?: ((materialId: string) => void) | undefined;
 }) {
-  if (materials.length === 0) {
+  const assigned = materials.slice(0, MATERIAL_BADGE_LIMIT);
+  const overflow = materials.length - assigned.length;
+  const slotsLeft = Math.max(0, MATERIAL_BADGE_LIMIT - assigned.length);
+  const fillerRecents =
+    slotsLeft > 0 && onQuickApply && recentMaterials
+      ? recentMaterials.filter((r) => !materials.some((m) => m.id === r.id)).slice(0, slotsLeft)
+      : [];
+
+  if (assigned.length === 0 && fillerRecents.length === 0) {
     return (
       <button
         type="button"
@@ -842,36 +854,56 @@ export function MaterialBadges({
       </button>
     );
   }
-  const visible = materials.slice(0, MATERIAL_BADGE_LIMIT);
-  const overflow = materials.length - visible.length;
+
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      aria-label="Edit item materials"
-      className="group relative inline-block text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-    >
-      <span className="grid grid-cols-2 gap-0.5">
-        {visible.map((material) => (
-          <span key={material.id} title={material.name} className="block">
+    <div className="inline-block max-w-[8.5rem] text-left">
+      <div className="grid grid-cols-2 gap-x-1.5 gap-y-1">
+        {assigned.map((material) => (
+          <button
+            key={material.id}
+            type="button"
+            onClick={onOpen}
+            aria-label={`Edit ${material.name}`}
+            className="flex flex-col items-center gap-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          >
             <MaterialSwatchImage material={material} size="sm" />
-          </span>
+            <span
+              title={material.name}
+              className="block w-full truncate text-center text-[10px] leading-tight text-neutral-700"
+            >
+              {material.name}
+            </span>
+          </button>
         ))}
-      </span>
+        {fillerRecents.map((material) => (
+          <button
+            key={`recent-${material.id}`}
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onQuickApply?.(material.id);
+            }}
+            aria-label={`Apply ${material.name}`}
+            title={`Apply ${material.name}`}
+            className="flex flex-col items-center gap-0.5 opacity-60 transition hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          >
+            <MaterialSwatchImage material={material} size="sm" />
+            <span className="block w-full truncate text-center text-[10px] italic leading-tight text-neutral-400">
+              {material.name}
+            </span>
+          </button>
+        ))}
+      </div>
       {overflow > 0 && (
-        <span className="mt-0.5 block text-[10px] font-medium text-neutral-500">+{overflow}</span>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="mt-0.5 block text-[10px] font-medium text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          +{overflow} more
+        </button>
       )}
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute left-0 top-full z-20 mt-1 hidden min-w-max max-w-[14rem] flex-col gap-0.5 rounded-md bg-neutral-900/95 px-2 py-1.5 text-[11px] leading-tight text-white shadow-lg ring-1 ring-black/10 group-hover:flex"
-      >
-        {materials.map((material) => (
-          <span key={material.id} className="truncate">
-            {material.name}
-          </span>
-        ))}
-      </span>
-    </button>
+    </div>
   );
 }
 

@@ -347,7 +347,10 @@ const ProposalRowContent = memo(
           isDragging && 'bg-brand-50 shadow-md opacity-80',
         )}
       >
-        <td className="w-8 min-w-8 px-1 py-3" onClick={stopProp}>
+        <td
+          className="sticky left-0 z-20 w-8 min-w-8 bg-canvas-chrome px-1 py-3 group-hover:bg-canvas-shell/90"
+          onClick={stopProp}
+        >
           <GeneratedItemDragHandle
             ariaLabel={`Drag ${item.productTag || 'item'}`}
             {...dragAttributes}
