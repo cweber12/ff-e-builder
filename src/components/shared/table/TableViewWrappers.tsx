@@ -1,21 +1,10 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type RefObject,
-} from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
-
-type TableScrollRef = RefObject<HTMLDivElement>;
-
-const TableScrollContext = createContext<TableScrollRef | null>(null);
-
-export function useTableScrollRef(): TableScrollRef | null {
-  return useContext(TableScrollContext);
-}
+import {
+  useTableScrollRef,
+  TableScrollContext,
+  type TableScrollRef,
+} from '../../../hooks/shared/useTableScrollRef';
 
 /**
  * Outer scroll container for FF&E and Proposal table views. Provides a shared

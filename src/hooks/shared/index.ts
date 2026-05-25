@@ -33,6 +33,7 @@ export type { TableDensity } from './useTableDensity';
 export { useActionsMenu } from './useActionsMenu';
 export { useGeneratedItemColumns } from './useGeneratedItemColumns';
 export { useRecentMaterials } from './useRecentMaterials';
+export { useTableScrollRef, TableScrollContext, type TableScrollRef } from './useTableScrollRef';
 export type {
   DefaultColumnDescriptor,
   GeneratedItemColumnsPreset,
