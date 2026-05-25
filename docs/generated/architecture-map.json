@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-25T00:27:51.941Z",
+  "generatedAt": "2026-05-25T02:49:01.333Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 275,
-      "internalImports": 873,
-      "externalImports": 296,
+      "files": 285,
+      "internalImports": 898,
+      "externalImports": 308,
       "unresolvedImports": 2
     },
     {
@@ -159,17 +159,17 @@
   "productAreas": [
     {
       "area": "ffe",
-      "files": 26,
-      "importsIn": 39,
-      "importsOut": 135,
+      "files": 31,
+      "importsIn": 44,
+      "importsOut": 151,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
       "area": "proposal",
-      "files": 35,
-      "importsIn": 54,
-      "importsOut": 157,
+      "files": 36,
+      "importsIn": 55,
+      "importsOut": 159,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-ui", "shared-lib", "tests"]
     },
@@ -208,9 +208,9 @@
     },
     {
       "area": "shared-ui",
-      "files": 46,
-      "importsIn": 175,
-      "importsOut": 121,
+      "files": 48,
+      "importsIn": 183,
+      "importsOut": 126,
       "dependsOn": ["proposal", "finish-library", "shared-lib", "types", "unknown"],
       "importedBy": [
         "ffe",
@@ -224,9 +224,9 @@
     },
     {
       "area": "shared-lib",
-      "files": 49,
-      "importsIn": 311,
-      "importsOut": 130,
+      "files": 50,
+      "importsIn": 317,
+      "importsOut": 131,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -258,7 +258,7 @@
     {
       "area": "types",
       "files": 11,
-      "importsIn": 172,
+      "importsIn": 177,
       "importsOut": 22,
       "dependsOn": [],
       "importedBy": [
@@ -275,9 +275,9 @@
     },
     {
       "area": "tests",
-      "files": 53,
+      "files": 54,
       "importsIn": 0,
-      "importsOut": 100,
+      "importsOut": 101,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -323,7 +323,7 @@
       "paths": [
         {
           "path": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
-          "files": 23
+          "files": 28
         },
         {
           "path": "src/lib/items/**, src/lib/import/formats/ffe.ts",
@@ -336,7 +336,7 @@
       "paths": [
         {
           "path": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
-          "files": 33
+          "files": 34
         },
         {
           "path": "src/lib/import/formats/proposal.ts, src/lib/api/proposal.ts",
@@ -384,7 +384,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 46
+          "files": 48
         }
       ]
     },
@@ -393,7 +393,7 @@
       "paths": [
         {
           "path": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
-          "files": 30
+          "files": 31
         },
         {
           "path": "src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/pdf.ts, src/lib/query/**, src/lib/theme/**, src/lib/utils/**",
@@ -424,7 +424,7 @@
       "paths": [
         {
           "path": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
-          "files": 53
+          "files": 54
         }
       ]
     },
@@ -481,7 +481,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../materials",
       "resolved": "src/components/materials/index.ts",
@@ -491,7 +491,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../proposal/revision",
       "resolved": "src/components/proposal/revision/index.ts",
@@ -611,7 +611,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../lib/utils",
       "resolved": "src/lib/utils/index.ts",
@@ -621,7 +621,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../lib/money",
       "resolved": "src/lib/money/index.ts",
@@ -631,7 +631,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../hooks",
       "resolved": "src/hooks/index.ts",
@@ -641,7 +641,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../lib/api",
       "resolved": "src/lib/api.ts",
@@ -651,7 +651,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../lib/export",
       "resolved": "src/lib/export/index.ts",
@@ -682,6 +682,36 @@
     },
     {
       "importer": "src/components/ffe/items/ItemOptionImagesPanel.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../hooks",
+      "resolved": "src/hooks/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../hooks",
+      "resolved": "src/hooks/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
       "importerArea": "ffe",
       "specifier": "../../../hooks",
       "resolved": "src/hooks/index.ts",
@@ -1091,6 +1121,26 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../primitives/Button",
+      "resolved": "src/components/primitives/Button.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../primitives/Modal",
+      "resolved": "src/components/primitives/Modal.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/ffe/items/FfeItemDetailPanel.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/image/ImageFrame",
@@ -1121,7 +1171,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/ItemStatusChip",
       "resolved": "src/components/shared/table/ItemStatusChip.tsx",
@@ -1131,7 +1181,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/TotalsBar",
       "resolved": "src/components/shared/table/TotalsBar.tsx",
@@ -1141,7 +1191,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../primitives/Button",
       "resolved": "src/components/primitives/Button.tsx",
@@ -1151,7 +1201,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../primitives/InlineTextEdit",
       "resolved": "src/components/primitives/InlineTextEdit.tsx",
@@ -1161,7 +1211,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../primitives/Modal",
       "resolved": "src/components/primitives/Modal.tsx",
@@ -1171,7 +1221,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/image/ImageFrame",
       "resolved": "src/components/shared/image/ImageFrame.tsx",
@@ -1181,7 +1231,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/TableViewWrappers",
       "resolved": "src/components/shared/table/TableViewWrappers.tsx",
@@ -1191,7 +1241,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/modals/AddGroupModal",
       "resolved": "src/components/shared/modals/AddGroupModal.tsx",
@@ -1201,7 +1251,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/modals/AddColumnModal",
       "resolved": "src/components/shared/modals/AddColumnModal.tsx",
@@ -1211,7 +1261,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/GeneratedItemActionControls",
       "resolved": "src/components/shared/table/GeneratedItemActionControls.tsx",
@@ -1221,7 +1271,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/CustomColumnHeader",
       "resolved": "src/components/shared/table/CustomColumnHeader.tsx",
@@ -1231,17 +1281,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
-      "importerArea": "ffe",
-      "specifier": "../../shared/table/GeneratedItemDragHandle",
-      "resolved": "src/components/shared/table/GeneratedItemDragHandle.tsx",
-      "resolvedArea": "shared-ui",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared UI",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/GeneratedItemEditableNumberCell",
       "resolved": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
@@ -1251,7 +1291,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/GeneratedItemEditableTextCell",
       "resolved": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
@@ -1261,7 +1301,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/GeneratedItemImageCell",
       "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
@@ -1271,7 +1311,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/GeneratedItemMaterialsCell",
       "resolved": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
@@ -1281,7 +1321,17 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../shared/table/ColumnsPanel",
+      "resolved": "src/components/shared/table/ColumnsPanel.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/GeneratedItemSizeModal",
       "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
@@ -1291,7 +1341,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/SortableColHeader",
       "resolved": "src/components/shared/table/SortableColHeader.tsx",
@@ -1301,7 +1351,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/table/generatedItemStickyStyles",
       "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
@@ -1311,7 +1361,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../shared/modals/ChangeConfirmModal",
       "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
@@ -1335,6 +1385,26 @@
       "importerArea": "ffe",
       "specifier": "../../shared/image/ImageOptionsMenu",
       "resolved": "src/components/shared/image/ImageOptionsMenu.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../shared/table/GeneratedItemDragHandle",
+      "resolved": "src/components/shared/table/GeneratedItemDragHandle.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../shared/table/generatedItemStickyStyles",
+      "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -1411,7 +1481,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeItemDetailPanel.tsx",
+      "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
       "importerArea": "ffe",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -1431,7 +1501,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeItemDetailPanel.tsx",
       "importerArea": "ffe",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -1441,7 +1511,17 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -1451,7 +1531,27 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import-type",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import-type",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -1462,6 +1562,16 @@
     },
     {
       "importer": "src/components/ffe/items/ItemOptionImagesPanel.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
       "importerArea": "ffe",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -1591,7 +1701,7 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../lib/table/generatedItemChangeInfo",
       "resolved": "src/lib/table/generatedItemChangeInfo.ts",
@@ -1601,7 +1711,7 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "importerArea": "ffe",
       "specifier": "../../../lib/table/generatedItemTablePresets",
       "resolved": "src/lib/table/generatedItemTablePresets.ts",
@@ -3573,6 +3683,16 @@
     {
       "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
       "importerArea": "proposal",
+      "specifier": "../../shared/table/ColumnsPanel",
+      "resolved": "src/components/shared/table/ColumnsPanel.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+      "importerArea": "proposal",
       "specifier": "../../shared/table/TableViewWrappers",
       "resolved": "src/components/shared/table/TableViewWrappers.tsx",
       "resolvedArea": "shared-ui",
@@ -3645,6 +3765,16 @@
       "importerArea": "proposal",
       "specifier": "../../shared/image/ImageFrame",
       "resolved": "src/components/shared/image/ImageFrame.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalEmptyState.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -3805,16 +3935,6 @@
       "importerArea": "proposal",
       "specifier": "../../shared/table/generatedItemStickyStyles",
       "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
-      "resolvedArea": "shared-ui",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared UI",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalTable.tsx",
-      "importerArea": "proposal",
-      "specifier": "../../primitives",
-      "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -4941,6 +5061,26 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../hooks",
+      "resolved": "src/hooks/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/shared/table/GeneratedItemActionControls.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../lib/utils",
@@ -5132,6 +5272,16 @@
     },
     {
       "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: shared code uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../../types",
       "resolved": "src/types/index.ts",
@@ -5991,6 +6141,16 @@
       "reviewSection": "Test Dependencies"
     },
     {
+      "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+      "importerArea": "tests",
+      "specifier": "./useDebouncedSave",
+      "resolved": "src/components/shared/table/useDebouncedSave.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
       "importer": "src/components/ffe/items/FfeTable.test.tsx",
       "importerArea": "tests",
       "specifier": "../../../types",
@@ -6380,7 +6540,7 @@
       "reviewNote": "review: product module imports another product module directly",
       "examples": [
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "importerArea": "ffe",
           "specifier": "../../proposal/revision",
           "resolved": "src/components/proposal/revision/index.ts",
@@ -6757,7 +6917,7 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "importerArea": "ffe",
           "specifier": "../../materials",
           "resolved": "src/components/materials/index.ts",
@@ -6772,7 +6932,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-ui",
-      "imports": 35,
+      "imports": 39,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6811,7 +6971,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-lib",
-      "imports": 50,
+      "imports": 53,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -6850,7 +7010,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "types",
-      "imports": 24,
+      "imports": 28,
       "reviewNote": "expected: product uses shared types",
       "examples": [
         {
@@ -6918,7 +7078,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-ui",
-      "imports": 35,
+      "imports": 36,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -7386,7 +7546,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "shared-lib",
-      "imports": 39,
+      "imports": 41,
       "reviewNote": "expected: shared UI/lib dependency",
       "examples": [
         {
@@ -7425,7 +7585,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "types",
-      "imports": 17,
+      "imports": 18,
       "reviewNote": "expected: shared code uses shared types",
       "examples": [
         {
@@ -7507,7 +7667,7 @@
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "importerArea": "ffe",
           "specifier": "../../../lib/table/generatedItemChangeInfo",
           "resolved": "src/lib/table/generatedItemChangeInfo.ts",
@@ -7517,7 +7677,7 @@
           "reviewSection": "Unknown / Ambiguous Dependencies"
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "importerArea": "ffe",
           "specifier": "../../../lib/table/generatedItemTablePresets",
           "resolved": "src/lib/table/generatedItemTablePresets.ts",
@@ -7969,7 +8129,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "shared-ui",
-      "imports": 10,
+      "imports": 11,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -8489,9 +8649,9 @@
     },
     {
       "path": "src/components",
-      "files": 131,
-      "importsIn": 283,
-      "importsOut": 622,
+      "files": 140,
+      "importsIn": 297,
+      "importsOut": 657,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8521,9 +8681,9 @@
     },
     {
       "path": "src/hooks",
-      "files": 32,
-      "importsIn": 84,
-      "importsOut": 143,
+      "files": 33,
+      "importsIn": 88,
+      "importsOut": 145,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -8537,7 +8697,7 @@
     {
       "path": "src/lib",
       "files": 83,
-      "importsIn": 318,
+      "importsIn": 320,
       "importsOut": 261,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
@@ -8594,7 +8754,7 @@
     {
       "path": "src/types",
       "files": 11,
-      "importsIn": 172,
+      "importsIn": 177,
       "importsOut": 24,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -9263,6 +9423,41 @@
       ]
     },
     {
+      "path": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+          "specifier": "../../primitives/Button",
+          "kind": "import",
+          "resolved": "src/components/primitives/Button.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+          "specifier": "../../primitives/Modal",
+          "kind": "import",
+          "resolved": "src/components/primitives/Modal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/ffe/items/FfeItemDetailPanel.tsx",
       "project": "React client",
       "module": "src/components",
@@ -9439,6 +9634,25 @@
       "imports": [
         {
           "importer": "src/components/ffe/items/FfeTable.tsx",
+          "specifier": "./FfeTableView",
+          "kind": "export",
+          "resolved": "src/components/ffe/items/FfeTableView.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/ffe/items/FfeTableView.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -9446,7 +9660,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -9454,7 +9668,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "react-dom",
           "kind": "import",
           "resolved": null,
@@ -9462,7 +9676,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "@dnd-kit/core",
           "kind": "import",
           "resolved": null,
@@ -9470,7 +9684,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "@dnd-kit/sortable",
           "kind": "import",
           "resolved": null,
@@ -9478,15 +9692,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "@dnd-kit/utilities",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "@dnd-kit/utilities",
-          "asset": false
-        },
-        {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "@tanstack/react-table",
           "kind": "import",
           "resolved": null,
@@ -9494,7 +9700,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "@tanstack/react-query",
           "kind": "import",
           "resolved": null,
@@ -9502,7 +9708,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "@tanstack/react-query",
           "kind": "import",
           "resolved": null,
@@ -9510,7 +9716,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../lib/utils",
           "kind": "import",
           "resolved": "src/lib/utils/index.ts",
@@ -9518,7 +9724,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../lib/money",
           "kind": "import",
           "resolved": "src/lib/money/index.ts",
@@ -9526,7 +9732,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../lib/table/generatedItemChangeInfo",
           "kind": "import",
           "resolved": "src/lib/table/generatedItemChangeInfo.ts",
@@ -9534,7 +9740,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../lib/table/generatedItemTablePresets",
           "kind": "import",
           "resolved": "src/lib/table/generatedItemTablePresets.ts",
@@ -9542,7 +9748,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../hooks",
           "kind": "import",
           "resolved": "src/hooks/index.ts",
@@ -9550,7 +9756,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -9558,7 +9764,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../lib/api",
           "kind": "import",
           "resolved": "src/lib/api.ts",
@@ -9566,7 +9772,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../lib/export",
           "kind": "import",
           "resolved": "src/lib/export/index.ts",
@@ -9574,7 +9780,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/ItemStatusChip",
           "kind": "import",
           "resolved": "src/components/shared/table/ItemStatusChip.tsx",
@@ -9582,7 +9788,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/TotalsBar",
           "kind": "import",
           "resolved": "src/components/shared/table/TotalsBar.tsx",
@@ -9590,7 +9796,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../primitives/Button",
           "kind": "import",
           "resolved": "src/components/primitives/Button.tsx",
@@ -9598,7 +9804,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../primitives/InlineTextEdit",
           "kind": "import",
           "resolved": "src/components/primitives/InlineTextEdit.tsx",
@@ -9606,7 +9812,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../primitives/Modal",
           "kind": "import",
           "resolved": "src/components/primitives/Modal.tsx",
@@ -9614,7 +9820,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "./AddItemDrawer",
           "kind": "import",
           "resolved": "src/components/ffe/items/AddItemDrawer.tsx",
@@ -9622,7 +9828,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/image/ImageFrame",
           "kind": "import",
           "resolved": "src/components/shared/image/ImageFrame.tsx",
@@ -9630,7 +9836,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../materials",
           "kind": "import",
           "resolved": "src/components/materials/index.ts",
@@ -9638,7 +9844,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/TableViewWrappers",
           "kind": "import",
           "resolved": "src/components/shared/table/TableViewWrappers.tsx",
@@ -9646,7 +9852,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/modals/AddGroupModal",
           "kind": "import",
           "resolved": "src/components/shared/modals/AddGroupModal.tsx",
@@ -9654,7 +9860,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "./FfeItemDetailPanel",
           "kind": "import",
           "resolved": "src/components/ffe/items/FfeItemDetailPanel.tsx",
@@ -9662,7 +9868,23 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "./DeleteRoomModal",
+          "kind": "import",
+          "resolved": "src/components/ffe/items/DeleteRoomModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "./SortableItemRow",
+          "kind": "import",
+          "resolved": "src/components/ffe/items/SortableItemRow.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/modals/AddColumnModal",
           "kind": "import",
           "resolved": "src/components/shared/modals/AddColumnModal.tsx",
@@ -9670,7 +9892,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/GeneratedItemActionControls",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemActionControls.tsx",
@@ -9678,7 +9900,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/CustomColumnHeader",
           "kind": "import",
           "resolved": "src/components/shared/table/CustomColumnHeader.tsx",
@@ -9686,15 +9908,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
-          "specifier": "../../shared/table/GeneratedItemDragHandle",
-          "kind": "import",
-          "resolved": "src/components/shared/table/GeneratedItemDragHandle.tsx",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/GeneratedItemEditableNumberCell",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
@@ -9702,7 +9916,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/GeneratedItemEditableTextCell",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
@@ -9710,7 +9924,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/GeneratedItemImageCell",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
@@ -9718,7 +9932,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/GeneratedItemMaterialsCell",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
@@ -9726,7 +9940,15 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "../../shared/table/ColumnsPanel",
+          "kind": "import",
+          "resolved": "src/components/shared/table/ColumnsPanel.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/GeneratedItemSizeModal",
           "kind": "import",
           "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
@@ -9734,7 +9956,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/SortableColHeader",
           "kind": "import",
           "resolved": "src/components/shared/table/SortableColHeader.tsx",
@@ -9742,7 +9964,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/table/generatedItemStickyStyles",
           "kind": "import",
           "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
@@ -9750,7 +9972,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../shared/modals/ChangeConfirmModal",
           "kind": "import",
           "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
@@ -9758,7 +9980,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../proposal/revision",
           "kind": "import",
           "resolved": "src/components/proposal/revision/index.ts",
@@ -9766,7 +9988,7 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../types",
           "kind": "import-type",
           "resolved": "src/types/index.ts",
@@ -9774,7 +9996,23 @@
           "asset": false
         },
         {
-          "importer": "src/components/ffe/items/FfeTable.tsx",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "../../../types",
+          "kind": "import-type",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "../../../types",
+          "kind": "import-type",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../types",
           "kind": "import-type",
           "resolved": "src/types/index.ts",
@@ -9864,6 +10102,135 @@
           "specifier": "../../shared/image/ImageOptionsMenu",
           "kind": "import",
           "resolved": "src/components/shared/image/ImageOptionsMenu.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/ffe/items/RoomHeader.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/components/ffe/items/RoomHeader.tsx",
+          "specifier": "./FfeTableView",
+          "kind": "export",
+          "resolved": "src/components/ffe/items/FfeTableView.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/ffe/items/RoomItemsSection.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/components/ffe/items/RoomItemsSection.tsx",
+          "specifier": "./FfeTableView",
+          "kind": "export",
+          "resolved": "src/components/ffe/items/FfeTableView.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/ffe/items/SortableItemRow.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "@dnd-kit/sortable",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@dnd-kit/sortable",
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "@dnd-kit/utilities",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@dnd-kit/utilities",
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "@tanstack/react-table",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@tanstack/react-table",
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "../../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "../../shared/table/GeneratedItemDragHandle",
+          "kind": "import",
+          "resolved": "src/components/shared/table/GeneratedItemDragHandle.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "../../shared/table/generatedItemStickyStyles",
+          "kind": "import",
+          "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "../../../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/SortableItemRow.tsx",
+          "specifier": "../../../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -12788,6 +13155,14 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+          "specifier": "../../shared/table/ColumnsPanel",
+          "kind": "import",
+          "resolved": "src/components/shared/table/ColumnsPanel.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
           "specifier": "../../shared/table/TableViewWrappers",
           "kind": "import",
           "resolved": "src/components/shared/table/TableViewWrappers.tsx",
@@ -13002,6 +13377,25 @@
           "specifier": "../../materials",
           "kind": "dynamic-import",
           "resolved": "src/components/materials/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/proposal/table/ProposalEmptyState.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "proposal",
+      "ownershipConfidence": "high",
+      "ownershipReason": "Proposal-owned feature path",
+      "ownerPath": "src/components/proposal/**, src/hooks/proposal/**, src/lib/export/proposal/**",
+      "imports": [
+        {
+          "importer": "src/components/proposal/table/ProposalEmptyState.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13411,14 +13805,6 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalTable.tsx",
-          "specifier": "../../primitives",
-          "kind": "import",
-          "resolved": "src/components/primitives/index.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalTable.tsx",
           "specifier": "../../shared/table/TotalsBar",
           "kind": "import",
           "resolved": "src/components/shared/table/TotalsBar.tsx",
@@ -13486,6 +13872,14 @@
           "specifier": "./DeleteCategoryModal",
           "kind": "import",
           "resolved": "src/components/proposal/table/DeleteCategoryModal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "./ProposalEmptyState",
+          "kind": "import",
+          "resolved": "src/components/proposal/table/ProposalEmptyState.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -14808,6 +15202,81 @@
       ]
     },
     {
+      "path": "src/components/shared/table/ColumnsPanel.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "@dnd-kit/core",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@dnd-kit/core",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "@dnd-kit/sortable",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@dnd-kit/sortable",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "@dnd-kit/utilities",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@dnd-kit/utilities",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "../../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "../../../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/ColumnsPanel.tsx",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/shared/table/CustomColumnHeader.tsx",
       "project": "React client",
       "module": "src/components",
@@ -14938,6 +15407,14 @@
           "resolved": "src/components/shared/table/EditablePencilHint.tsx",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+          "specifier": "./useDebouncedSave",
+          "kind": "import",
+          "resolved": "src/components/shared/table/useDebouncedSave.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -15006,6 +15483,14 @@
           "specifier": "./EditablePencilHint",
           "kind": "import",
           "resolved": "src/components/shared/table/EditablePencilHint.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+          "specifier": "./useDebouncedSave",
+          "kind": "import",
+          "resolved": "src/components/shared/table/useDebouncedSave.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -15264,6 +15749,60 @@
       "ownershipReason": "shared UI primitive/chrome path",
       "ownerPath": "src/components/shared/**, src/components/primitives/**",
       "imports": []
+    },
+    {
+      "path": "src/components/shared/table/useDebouncedSave.test.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "tests",
+      "ownershipConfidence": "high",
+      "ownershipReason": "test or snapshot path",
+      "ownerPath": "tests/**/*, **/*.test.*, **/*.spec.*, **/__snapshots__/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+          "specifier": "@testing-library/react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@testing-library/react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+          "specifier": "vitest",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "vitest",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+          "specifier": "./useDebouncedSave",
+          "kind": "import",
+          "resolved": "src/components/shared/table/useDebouncedSave.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/shared/table/useDebouncedSave.ts",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/shared/table/useDebouncedSave.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        }
+      ]
     },
     {
       "path": "src/data/catalogFixture.ts",
@@ -16256,6 +16795,14 @@
         },
         {
           "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useRecentMaterials",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useRecentMaterials.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
           "specifier": "./useGeneratedItemColumns",
           "kind": "export",
           "resolved": "src/hooks/shared/useGeneratedItemColumns.ts",
@@ -16714,6 +17261,25 @@
           "kind": "import",
           "resolved": "src/types/index.ts",
           "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/shared/useRecentMaterials.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useRecentMaterials.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
           "asset": false
         }
       ]
@@ -22849,6 +23415,30 @@
       "asset": false
     },
     {
+      "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "specifier": "../../primitives/Button",
+      "kind": "import",
+      "resolved": "src/components/primitives/Button.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "specifier": "../../primitives/Modal",
+      "kind": "import",
+      "resolved": "src/components/primitives/Modal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/ffe/items/FfeItemDetailPanel.tsx",
       "specifier": "react",
       "kind": "import",
@@ -22994,6 +23584,14 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTable.tsx",
+      "specifier": "./FfeTableView",
+      "kind": "export",
+      "resolved": "src/components/ffe/items/FfeTableView.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -23001,7 +23599,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -23009,7 +23607,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "react-dom",
       "kind": "import",
       "resolved": null,
@@ -23017,7 +23615,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "@dnd-kit/core",
       "kind": "import",
       "resolved": null,
@@ -23025,7 +23623,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "@dnd-kit/sortable",
       "kind": "import",
       "resolved": null,
@@ -23033,15 +23631,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "@dnd-kit/utilities",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "@dnd-kit/utilities",
-      "asset": false
-    },
-    {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "@tanstack/react-table",
       "kind": "import",
       "resolved": null,
@@ -23049,7 +23639,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "@tanstack/react-query",
       "kind": "import",
       "resolved": null,
@@ -23057,7 +23647,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "@tanstack/react-query",
       "kind": "import",
       "resolved": null,
@@ -23065,7 +23655,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../lib/utils",
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
@@ -23073,7 +23663,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../lib/money",
       "kind": "import",
       "resolved": "src/lib/money/index.ts",
@@ -23081,7 +23671,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../lib/table/generatedItemChangeInfo",
       "kind": "import",
       "resolved": "src/lib/table/generatedItemChangeInfo.ts",
@@ -23089,7 +23679,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../lib/table/generatedItemTablePresets",
       "kind": "import",
       "resolved": "src/lib/table/generatedItemTablePresets.ts",
@@ -23097,7 +23687,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../hooks",
       "kind": "import",
       "resolved": "src/hooks/index.ts",
@@ -23105,7 +23695,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -23113,7 +23703,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../lib/api",
       "kind": "import",
       "resolved": "src/lib/api.ts",
@@ -23121,7 +23711,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../lib/export",
       "kind": "import",
       "resolved": "src/lib/export/index.ts",
@@ -23129,7 +23719,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/ItemStatusChip",
       "kind": "import",
       "resolved": "src/components/shared/table/ItemStatusChip.tsx",
@@ -23137,7 +23727,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/TotalsBar",
       "kind": "import",
       "resolved": "src/components/shared/table/TotalsBar.tsx",
@@ -23145,7 +23735,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../primitives/Button",
       "kind": "import",
       "resolved": "src/components/primitives/Button.tsx",
@@ -23153,7 +23743,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../primitives/InlineTextEdit",
       "kind": "import",
       "resolved": "src/components/primitives/InlineTextEdit.tsx",
@@ -23161,7 +23751,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../primitives/Modal",
       "kind": "import",
       "resolved": "src/components/primitives/Modal.tsx",
@@ -23169,7 +23759,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "./AddItemDrawer",
       "kind": "import",
       "resolved": "src/components/ffe/items/AddItemDrawer.tsx",
@@ -23177,7 +23767,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/image/ImageFrame",
       "kind": "import",
       "resolved": "src/components/shared/image/ImageFrame.tsx",
@@ -23185,7 +23775,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../materials",
       "kind": "import",
       "resolved": "src/components/materials/index.ts",
@@ -23193,7 +23783,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/TableViewWrappers",
       "kind": "import",
       "resolved": "src/components/shared/table/TableViewWrappers.tsx",
@@ -23201,7 +23791,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/modals/AddGroupModal",
       "kind": "import",
       "resolved": "src/components/shared/modals/AddGroupModal.tsx",
@@ -23209,7 +23799,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "./FfeItemDetailPanel",
       "kind": "import",
       "resolved": "src/components/ffe/items/FfeItemDetailPanel.tsx",
@@ -23217,7 +23807,23 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "./DeleteRoomModal",
+      "kind": "import",
+      "resolved": "src/components/ffe/items/DeleteRoomModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "./SortableItemRow",
+      "kind": "import",
+      "resolved": "src/components/ffe/items/SortableItemRow.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/modals/AddColumnModal",
       "kind": "import",
       "resolved": "src/components/shared/modals/AddColumnModal.tsx",
@@ -23225,7 +23831,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/GeneratedItemActionControls",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemActionControls.tsx",
@@ -23233,7 +23839,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/CustomColumnHeader",
       "kind": "import",
       "resolved": "src/components/shared/table/CustomColumnHeader.tsx",
@@ -23241,15 +23847,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
-      "specifier": "../../shared/table/GeneratedItemDragHandle",
-      "kind": "import",
-      "resolved": "src/components/shared/table/GeneratedItemDragHandle.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/GeneratedItemEditableNumberCell",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
@@ -23257,7 +23855,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/GeneratedItemEditableTextCell",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
@@ -23265,7 +23863,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/GeneratedItemImageCell",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemImageCell.tsx",
@@ -23273,7 +23871,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/GeneratedItemMaterialsCell",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemMaterialsCell.tsx",
@@ -23281,7 +23879,15 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "../../shared/table/ColumnsPanel",
+      "kind": "import",
+      "resolved": "src/components/shared/table/ColumnsPanel.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/GeneratedItemSizeModal",
       "kind": "import",
       "resolved": "src/components/shared/table/GeneratedItemSizeModal.tsx",
@@ -23289,7 +23895,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/SortableColHeader",
       "kind": "import",
       "resolved": "src/components/shared/table/SortableColHeader.tsx",
@@ -23297,7 +23903,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/table/generatedItemStickyStyles",
       "kind": "import",
       "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
@@ -23305,7 +23911,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../shared/modals/ChangeConfirmModal",
       "kind": "import",
       "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
@@ -23313,7 +23919,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../proposal/revision",
       "kind": "import",
       "resolved": "src/components/proposal/revision/index.ts",
@@ -23321,7 +23927,7 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../types",
       "kind": "import-type",
       "resolved": "src/types/index.ts",
@@ -23329,7 +23935,23 @@
       "asset": false
     },
     {
-      "importer": "src/components/ffe/items/FfeTable.tsx",
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "../../../types",
+      "kind": "import-type",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "../../../types",
+      "kind": "import-type",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../types",
       "kind": "import-type",
       "resolved": "src/types/index.ts",
@@ -23397,6 +24019,102 @@
       "specifier": "../../shared/image/ImageOptionsMenu",
       "kind": "import",
       "resolved": "src/components/shared/image/ImageOptionsMenu.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/RoomHeader.tsx",
+      "specifier": "./FfeTableView",
+      "kind": "export",
+      "resolved": "src/components/ffe/items/FfeTableView.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/RoomItemsSection.tsx",
+      "specifier": "./FfeTableView",
+      "kind": "export",
+      "resolved": "src/components/ffe/items/FfeTableView.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "@dnd-kit/sortable",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@dnd-kit/sortable",
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "@dnd-kit/utilities",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@dnd-kit/utilities",
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "@tanstack/react-table",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@tanstack/react-table",
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "../../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "../../shared/table/GeneratedItemDragHandle",
+      "kind": "import",
+      "resolved": "src/components/shared/table/GeneratedItemDragHandle.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "../../shared/table/generatedItemStickyStyles",
+      "kind": "import",
+      "resolved": "src/components/shared/table/generatedItemStickyStyles.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "../../../hooks",
+      "kind": "import",
+      "resolved": "src/hooks/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/SortableItemRow.tsx",
+      "specifier": "../../../hooks",
+      "kind": "import",
+      "resolved": "src/hooks/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25530,6 +26248,14 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+      "specifier": "../../shared/table/ColumnsPanel",
+      "kind": "import",
+      "resolved": "src/components/shared/table/ColumnsPanel.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
       "specifier": "../../shared/table/TableViewWrappers",
       "kind": "import",
       "resolved": "src/components/shared/table/TableViewWrappers.tsx",
@@ -25733,6 +26459,14 @@
       "specifier": "../../materials",
       "kind": "dynamic-import",
       "resolved": "src/components/materials/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalEmptyState.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -26098,14 +26832,6 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalTable.tsx",
-      "specifier": "../../primitives",
-      "kind": "import",
-      "resolved": "src/components/primitives/index.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalTable.tsx",
       "specifier": "../../shared/table/TotalsBar",
       "kind": "import",
       "resolved": "src/components/shared/table/TotalsBar.tsx",
@@ -26173,6 +26899,14 @@
       "specifier": "./DeleteCategoryModal",
       "kind": "import",
       "resolved": "src/components/proposal/table/DeleteCategoryModal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "./ProposalEmptyState",
+      "kind": "import",
+      "resolved": "src/components/proposal/table/ProposalEmptyState.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -27185,6 +27919,70 @@
       "asset": false
     },
     {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "@dnd-kit/core",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@dnd-kit/core",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "@dnd-kit/sortable",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@dnd-kit/sortable",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "@dnd-kit/utilities",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@dnd-kit/utilities",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "../../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "../../../hooks",
+      "kind": "import",
+      "resolved": "src/hooks/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/ColumnsPanel.tsx",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/shared/table/CustomColumnHeader.tsx",
       "specifier": "react",
       "kind": "import",
@@ -27265,6 +28063,14 @@
       "asset": false
     },
     {
+      "importer": "src/components/shared/table/GeneratedItemEditableNumberCell.tsx",
+      "specifier": "./useDebouncedSave",
+      "kind": "import",
+      "resolved": "src/components/shared/table/useDebouncedSave.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/shared/table/GeneratedItemEditableTextCell.test.tsx",
       "specifier": "vitest",
       "kind": "import",
@@ -27309,6 +28115,14 @@
       "specifier": "./EditablePencilHint",
       "kind": "import",
       "resolved": "src/components/shared/table/EditablePencilHint.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/GeneratedItemEditableTextCell.tsx",
+      "specifier": "./useDebouncedSave",
+      "kind": "import",
+      "resolved": "src/components/shared/table/useDebouncedSave.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -27478,6 +28292,38 @@
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
       "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+      "specifier": "@testing-library/react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@testing-library/react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+      "specifier": "vitest",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "vitest",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
+      "specifier": "./useDebouncedSave",
+      "kind": "import",
+      "resolved": "src/components/shared/table/useDebouncedSave.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/table/useDebouncedSave.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
       "asset": false
     },
     {
@@ -28242,6 +29088,14 @@
     },
     {
       "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useRecentMaterials",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useRecentMaterials.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
       "specifier": "./useGeneratedItemColumns",
       "kind": "export",
       "resolved": "src/hooks/shared/useGeneratedItemColumns.ts",
@@ -28590,6 +29444,14 @@
       "kind": "import",
       "resolved": "src/types/index.ts",
       "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useRecentMaterials.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
       "asset": false
     },
     {
@@ -32640,11 +33502,11 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 91
+      "imports": 95
     },
     {
       "name": "vitest",
-      "imports": 54
+      "imports": 55
     },
     {
       "name": "@tanstack/react-query",
@@ -32652,7 +33514,7 @@
     },
     {
       "name": "@testing-library/react",
-      "imports": 25
+      "imports": 26
     },
     {
       "name": "react-router-dom",
@@ -32667,16 +33529,16 @@
       "imports": 14
     },
     {
+      "name": "react-dom",
+      "imports": 11
+    },
+    {
       "name": "@testing-library/user-event",
       "imports": 10
     },
     {
-      "name": "react-dom",
-      "imports": 10
-    },
-    {
       "name": "@dnd-kit/sortable",
-      "imports": 6
+      "imports": 8
     },
     {
       "name": "exceljs",
@@ -32691,6 +33553,10 @@
       "imports": 5
     },
     {
+      "name": "@dnd-kit/utilities",
+      "imports": 4
+    },
+    {
       "name": "pdfjs-dist",
       "imports": 4
     },
@@ -32699,7 +33565,7 @@
       "imports": 4
     },
     {
-      "name": "@dnd-kit/utilities",
+      "name": "@dnd-kit/core",
       "imports": 3
     },
     {
@@ -32711,7 +33577,7 @@
       "imports": 3
     },
     {
-      "name": "@dnd-kit/core",
+      "name": "@tanstack/react-table",
       "imports": 2
     },
     {
@@ -32740,10 +33606,6 @@
     },
     {
       "name": "@tanstack/react-query-devtools",
-      "imports": 1
-    },
-    {
-      "name": "@tanstack/react-table",
       "imports": 1
     },
     {
