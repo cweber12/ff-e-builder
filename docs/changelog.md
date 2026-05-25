@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ffe-table): split `FfeTable` into a thin entrypoint with extracted `FfeTableView`, `RoomHeader`, `RoomItemsSection`, `SortableItemRow`, and `DeleteRoomModal`; memoize sortable row rendering and isolate row item selectors
 - feat(proposal-table): add sticky-left editable ID badge chrome with calmer `py-3` row rhythm and hover-lift styling; remove `productTag` from proposal draggable/hideable column rotation while preserving export visibility
 - feat(table): add opt-in `affordance="hover"` underline cues to shared editable text controls and adopt them in Proposal and FF&E table rows
 - refactor(table): add shared `useGeneratedItemColumns` and `useActionsMenu` hooks; migrate Proposal and FF&E tables to use shared column and portaled-menu behavior
