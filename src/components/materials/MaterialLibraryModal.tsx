@@ -821,6 +821,8 @@ function MaterialPickerCard({
   );
 }
 
+const MATERIAL_BADGE_LIMIT = 4;
+
 export function MaterialBadges({
   materials,
   onOpen,
@@ -828,26 +830,47 @@ export function MaterialBadges({
   materials: Material[];
   onOpen: () => void;
 }) {
+  if (materials.length === 0) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        className="text-left text-xs text-neutral-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        aria-label="Edit item materials"
+      >
+        Add materials
+      </button>
+    );
+  }
+  const visible = materials.slice(0, MATERIAL_BADGE_LIMIT);
+  const overflow = materials.length - visible.length;
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="flex max-w-60 flex-wrap gap-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       aria-label="Edit item materials"
+      className="group relative inline-block text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
     >
-      {materials.length > 0 ? (
-        materials.map((material) => (
-          <span
-            key={material.id}
-            className="inline-flex max-w-full items-center gap-1 border border-black/10 bg-canvas-chrome px-2 py-0.5 text-xs font-medium text-neutral-800"
-          >
+      <span className="grid grid-cols-2 gap-0.5">
+        {visible.map((material) => (
+          <span key={material.id} title={material.name} className="block">
             <MaterialSwatchImage material={material} size="sm" />
-            <span className="truncate">{material.name}</span>
           </span>
-        ))
-      ) : (
-        <span className="text-neutral-400">Add materials</span>
+        ))}
+      </span>
+      {overflow > 0 && (
+        <span className="mt-0.5 block text-[10px] font-medium text-neutral-500">+{overflow}</span>
       )}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-0 top-full z-20 mt-1 hidden min-w-max max-w-[14rem] flex-col gap-0.5 rounded-md bg-neutral-900/95 px-2 py-1.5 text-[11px] leading-tight text-white shadow-lg ring-1 ring-black/10 group-hover:flex"
+      >
+        {materials.map((material) => (
+          <span key={material.id} className="truncate">
+            {material.name}
+          </span>
+        ))}
+      </span>
     </button>
   );
 }

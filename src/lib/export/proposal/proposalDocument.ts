@@ -60,11 +60,16 @@ export type RevAnnotation = {
   flagged: boolean;
 };
 
+export type ProposalSwatchAsset = {
+  name: string;
+  image: string;
+};
+
 export type ProposalAssetBundle = {
   projectImages: string[];
   renderingByItemId: Map<string, string>;
   planByItemId: Map<string, string>;
-  swatchesByItemId: Map<string, string[]>;
+  swatchesByItemId: Map<string, ProposalSwatchAsset[]>;
 };
 
 export type ProposalExportRow = {
@@ -72,11 +77,11 @@ export type ProposalExportRow = {
   values: Record<string, string>;
   rendering: string | null;
   planImage: string | null;
-  swatches: string[];
+  swatches: ProposalSwatchAsset[];
   /** Pre-cropped to exact PDF cell dimensions - populated by prepareProposalPdfImages */
   pdfRendering: string | null;
   pdfPlanImage: string | null;
-  pdfSwatches: string[];
+  pdfSwatches: ProposalSwatchAsset[];
   /** Per-cell revision annotations keyed by column key — original in black, revised in red below.
    *  Cost columns are excluded: their changes surface only in the Rev block columns. */
   revAnnotations: Record<string, RevAnnotation>;
@@ -201,7 +206,7 @@ export function buildProposalExportDocument(
         swatches: assets.swatchesByItemId.get(item.id) ?? [],
         pdfRendering: null,
         pdfPlanImage: null,
-        pdfSwatches: [] as string[],
+        pdfSwatches: [] as ProposalSwatchAsset[],
         revAnnotations,
         revCostFlagged: isFlagged,
         values: {

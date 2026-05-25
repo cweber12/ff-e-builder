@@ -166,10 +166,16 @@ export function ProposalTable({
     setCollapsed((current) => ({ ...current, [id]: !current[id] }));
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="h-9 border-b border-black/10 bg-canvas-chrome" />
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <ProposalChromeHeader
+        projectName={project?.name}
+        categoryCount={categoriesWithItems.length}
+        grandTotal={formatMoney(cents(grandTotal))}
+        isLoading={isLoading}
+      />
+
+      {isLoading ? (
         <div>
           {Array.from({ length: 5 }, (_, index) => (
             <div
@@ -184,118 +190,154 @@ export function ProposalTable({
             </div>
           ))}
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <TableViewStack>
+          {openRev && (
+            <RevisionBanner
+              revisionLabel={openRev.label}
+              flaggedCount={revisionCounts.flagged}
+              resolvedCount={revisionCounts.resolved}
+              onJumpToNextFlagged={jumpToNextFlagged}
+            />
+          )}
 
+          {categoriesWithItems.length === 0 ? (
+            <ProposalEmptyState
+              onImport={onImport}
+              onAddCategory={() => setAddCategoryOpen(true)}
+              onDuplicate={onDuplicate}
+            />
+          ) : null}
+
+          {categoriesWithItems.map((category) => (
+            <ProposalCategorySection
+              key={category.id}
+              projectId={projectId}
+              categoryId={category.id}
+              categoryName={category.name}
+              items={category.items}
+              otherCategories={otherCategoriesMap.get(category.id) ?? []}
+              subtotalCents={proposalCategorySubtotalCents(category.items)}
+              collapsed={collapsed[category.id] ?? false}
+              onToggle={() => toggleCollapsed(category.id)}
+              onCategoryNameSave={(name) =>
+                updateCategory.mutate({ id: category.id, patch: { name: name.trim() } })
+              }
+              onCategoryDelete={() => setCategoryToDelete(category)}
+              onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch, projectId })}
+              onItemClick={(item) => {
+                setSelection({ itemId: item.id, categoryId: category.id });
+              }}
+              visibleColOrder={visibleColOrder}
+              customColumnDefs={customColumnDefs}
+              onMoveColumn={(fromId, toId) => proposalColumns.columnConfig.moveColumn(fromId, toId)}
+              onHideColumn={(id) => proposalColumns.columnConfig.hideDefaultColumn(id)}
+              onRenameCustomColumn={async (defId, label) => {
+                await updateColumnDef.mutateAsync({ defId, patch: { label } });
+              }}
+              onDeleteCustomColumn={(defId) => deleteColumnDef.mutate(defId)}
+              hiddenDefaults={proposalColumns.hiddenDefaults}
+              onRestoreDefault={proposalColumns.columnConfig.restoreDefaultColumn}
+              onAddCustomColumn={async (label) => {
+                await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
+              }}
+              proposalStatus={project?.proposalStatus ?? 'in_progress'}
+              onPrefetchItems={() => prefetchProposalItems(category.id)}
+            />
+          ))}
+
+          <TotalsBar
+            itemCount={totalItemCount}
+            groupCount={categoriesWithItems.length}
+            groupLabel="categories"
+            grandTotal={formatMoney(cents(grandTotal))}
+          />
+
+          <AddGroupModal
+            groupLabel="Category"
+            open={addCategoryOpen}
+            onClose={() => setAddCategoryOpen(false)}
+            onSubmit={async (name) => {
+              await createCategory.mutateAsync({ name, sortOrder: categoriesWithItems.length });
+            }}
+          />
+
+          {selection && (
+            <ProposalItemDetailPanel
+              itemId={selection.itemId}
+              categoryId={selection.categoryId}
+              projectId={projectId}
+              onClose={() => setSelection(null)}
+              onSelectItemId={(nextItemId: string) =>
+                setSelection((current) =>
+                  current ? { categoryId: current.categoryId, itemId: nextItemId } : current,
+                )
+              }
+            />
+          )}
+
+          <DeleteCategoryModal
+            open={categoryToDelete !== null}
+            category={categoryToDelete}
+            allCategories={categoriesWithItems}
+            onClose={() => setCategoryToDelete(null)}
+            onConfirm={async (targetCategoryId) => {
+              if (!categoryToDelete) return;
+              if (categoryToDelete.items.length && targetCategoryId) {
+                await Promise.all(
+                  categoryToDelete.items.map((item) =>
+                    updateItem.mutateAsync({
+                      id: item.id,
+                      patch: { categoryId: targetCategoryId, version: item.version },
+                    }),
+                  ),
+                );
+              }
+              await deleteCategory.mutateAsync(categoryToDelete.id);
+              setCategoryToDelete(null);
+            }}
+          />
+        </TableViewStack>
+      )}
+    </div>
+  );
+}
+
+function ProposalChromeHeader({
+  projectName,
+  categoryCount,
+  grandTotal,
+  isLoading,
+}: {
+  projectName: string | undefined;
+  categoryCount: number;
+  grandTotal: string;
+  isLoading: boolean;
+}) {
   return (
-    <TableViewStack>
-      {openRev && (
-        <RevisionBanner
-          revisionLabel={openRev.label}
-          flaggedCount={revisionCounts.flagged}
-          resolvedCount={revisionCounts.resolved}
-          onJumpToNextFlagged={jumpToNextFlagged}
-        />
-      )}
-
-      {categoriesWithItems.length === 0 ? (
-        <ProposalEmptyState
-          onImport={onImport}
-          onAddCategory={() => setAddCategoryOpen(true)}
-          onDuplicate={onDuplicate}
-        />
-      ) : null}
-
-      {categoriesWithItems.map((category) => (
-        <ProposalCategorySection
-          key={category.id}
-          projectId={projectId}
-          categoryId={category.id}
-          categoryName={category.name}
-          items={category.items}
-          otherCategories={otherCategoriesMap.get(category.id) ?? []}
-          subtotalCents={proposalCategorySubtotalCents(category.items)}
-          collapsed={collapsed[category.id] ?? false}
-          onToggle={() => toggleCollapsed(category.id)}
-          onCategoryNameSave={(name) =>
-            updateCategory.mutate({ id: category.id, patch: { name: name.trim() } })
-          }
-          onCategoryDelete={() => setCategoryToDelete(category)}
-          onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch, projectId })}
-          onItemClick={(item) => {
-            setSelection({ itemId: item.id, categoryId: category.id });
-          }}
-          visibleColOrder={visibleColOrder}
-          customColumnDefs={customColumnDefs}
-          onMoveColumn={(fromId, toId) => proposalColumns.columnConfig.moveColumn(fromId, toId)}
-          onHideColumn={(id) => proposalColumns.columnConfig.hideDefaultColumn(id)}
-          onRenameCustomColumn={async (defId, label) => {
-            await updateColumnDef.mutateAsync({ defId, patch: { label } });
-          }}
-          onDeleteCustomColumn={(defId) => deleteColumnDef.mutate(defId)}
-          hiddenDefaults={proposalColumns.hiddenDefaults}
-          onRestoreDefault={proposalColumns.columnConfig.restoreDefaultColumn}
-          onAddCustomColumn={async (label) => {
-            await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
-          }}
-          proposalStatus={project?.proposalStatus ?? 'in_progress'}
-          onPrefetchItems={() => prefetchProposalItems(category.id)}
-        />
-      ))}
-
-      <TotalsBar
-        itemCount={totalItemCount}
-        groupCount={categoriesWithItems.length}
-        groupLabel="categories"
-        grandTotal={formatMoney(cents(grandTotal))}
-      />
-
-      <AddGroupModal
-        groupLabel="Category"
-        open={addCategoryOpen}
-        onClose={() => setAddCategoryOpen(false)}
-        onSubmit={async (name) => {
-          await createCategory.mutateAsync({ name, sortOrder: categoriesWithItems.length });
-        }}
-      />
-
-      {selection && (
-        <ProposalItemDetailPanel
-          itemId={selection.itemId}
-          categoryId={selection.categoryId}
-          projectId={projectId}
-          onClose={() => setSelection(null)}
-          onSelectItemId={(nextItemId: string) =>
-            setSelection((current) =>
-              current ? { categoryId: current.categoryId, itemId: nextItemId } : current,
-            )
-          }
-        />
-      )}
-
-      <DeleteCategoryModal
-        open={categoryToDelete !== null}
-        category={categoryToDelete}
-        allCategories={categoriesWithItems}
-        onClose={() => setCategoryToDelete(null)}
-        onConfirm={async (targetCategoryId) => {
-          if (!categoryToDelete) return;
-          if (categoryToDelete.items.length && targetCategoryId) {
-            await Promise.all(
-              categoryToDelete.items.map((item) =>
-                updateItem.mutateAsync({
-                  id: item.id,
-                  patch: { categoryId: targetCategoryId, version: item.version },
-                }),
-              ),
-            );
-          }
-          await deleteCategory.mutateAsync(categoryToDelete.id);
-          setCategoryToDelete(null);
-        }}
-      />
-    </TableViewStack>
+    <div className="flex h-10 shrink-0 items-center justify-between gap-4 border-b border-black/10 bg-canvas-chrome px-4">
+      <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
+        {projectName ?? 'Proposal'}
+      </span>
+      <div className="flex shrink-0 items-center gap-3">
+        {isLoading ? (
+          <>
+            <div className="h-3.5 w-20 animate-pulse rounded bg-neutral-100" />
+            <span aria-hidden className="h-3.5 w-px bg-black/10" />
+            <div className="h-3.5 w-16 animate-pulse rounded bg-neutral-100" />
+          </>
+        ) : (
+          <>
+            <span className="text-xs text-neutral-500">
+              <span className="tabular-nums font-medium text-neutral-700">{categoryCount}</span>{' '}
+              {categoryCount === 1 ? 'category' : 'categories'}
+            </span>
+            <span aria-hidden className="h-3.5 w-px bg-black/10" />
+            <span className="num text-sm font-semibold text-neutral-900">{grandTotal}</span>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

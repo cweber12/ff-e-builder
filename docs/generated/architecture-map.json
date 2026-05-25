@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-25T02:52:56.291Z",
+  "generatedAt": "2026-05-25T02:56:40.750Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 285,
-      "internalImports": 898,
-      "externalImports": 308,
+      "files": 286,
+      "internalImports": 900,
+      "externalImports": 309,
       "unresolvedImports": 2
     },
     {
@@ -210,7 +210,7 @@
       "area": "shared-ui",
       "files": 48,
       "importsIn": 183,
-      "importsOut": 126,
+      "importsOut": 127,
       "dependsOn": ["proposal", "finish-library", "shared-lib", "types", "unknown"],
       "importedBy": [
         "ffe",
@@ -224,9 +224,9 @@
     },
     {
       "area": "shared-lib",
-      "files": 50,
-      "importsIn": 317,
-      "importsOut": 131,
+      "files": 51,
+      "importsIn": 319,
+      "importsOut": 132,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -393,7 +393,7 @@
       "paths": [
         {
           "path": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
-          "files": 31
+          "files": 32
         },
         {
           "path": "src/lib/auth/**, src/lib/images/**, src/lib/import/**, src/lib/money/**, src/lib/pdf.ts, src/lib/query/**, src/lib/theme/**, src/lib/utils/**",
@@ -5171,6 +5171,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/shared/table/TableViewWrappers.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../../hooks/shared/useTableScrollRef",
+      "resolved": "src/hooks/shared/useTableScrollRef.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/primitives/StatusBadge.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../types",
@@ -7546,7 +7556,7 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "shared-lib",
-      "imports": 41,
+      "imports": 42,
       "reviewNote": "expected: shared UI/lib dependency",
       "examples": [
         {
@@ -8651,7 +8661,7 @@
       "path": "src/components",
       "files": 140,
       "importsIn": 297,
-      "importsOut": 657,
+      "importsOut": 658,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8681,9 +8691,9 @@
     },
     {
       "path": "src/hooks",
-      "files": 33,
-      "importsIn": 88,
-      "importsOut": 145,
+      "files": 34,
+      "importsIn": 90,
+      "importsOut": 147,
       "internalDependencies": ["src/lib", "src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -15737,6 +15747,14 @@
           "resolved": "src/lib/utils/index.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/shared/table/TableViewWrappers.tsx",
+          "specifier": "../../../hooks/shared/useTableScrollRef",
+          "kind": "import",
+          "resolved": "src/hooks/shared/useTableScrollRef.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -16803,6 +16821,14 @@
         },
         {
           "importer": "src/hooks/shared/index.ts",
+          "specifier": "./useTableScrollRef",
+          "kind": "export",
+          "resolved": "src/hooks/shared/useTableScrollRef.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/hooks/shared/index.ts",
           "specifier": "./useGeneratedItemColumns",
           "kind": "export",
           "resolved": "src/hooks/shared/useGeneratedItemColumns.ts",
@@ -17341,6 +17367,25 @@
       "imports": [
         {
           "importer": "src/hooks/shared/useTableDensity.ts",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/shared/useTableScrollRef.ts",
+      "project": "React client",
+      "module": "src/hooks",
+      "productArea": "shared-lib",
+      "ownershipConfidence": "medium",
+      "ownershipReason": "shared client API/export/hook path",
+      "ownerPath": "src/lib/api/**, src/lib/export/*, src/hooks/shared/**, src/hooks/*.ts",
+      "imports": [
+        {
+          "importer": "src/hooks/shared/useTableScrollRef.ts",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -28295,6 +28340,14 @@
       "asset": false
     },
     {
+      "importer": "src/components/shared/table/TableViewWrappers.tsx",
+      "specifier": "../../../hooks/shared/useTableScrollRef",
+      "kind": "import",
+      "resolved": "src/hooks/shared/useTableScrollRef.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/shared/table/useDebouncedSave.test.tsx",
       "specifier": "@testing-library/react",
       "kind": "import",
@@ -29096,6 +29149,14 @@
     },
     {
       "importer": "src/hooks/shared/index.ts",
+      "specifier": "./useTableScrollRef",
+      "kind": "export",
+      "resolved": "src/hooks/shared/useTableScrollRef.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/index.ts",
       "specifier": "./useGeneratedItemColumns",
       "kind": "export",
       "resolved": "src/hooks/shared/useGeneratedItemColumns.ts",
@@ -29480,6 +29541,14 @@
     },
     {
       "importer": "src/hooks/shared/useTableDensity.ts",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/hooks/shared/useTableScrollRef.ts",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -33502,7 +33571,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 95
+      "imports": 96
     },
     {
       "name": "vitest",

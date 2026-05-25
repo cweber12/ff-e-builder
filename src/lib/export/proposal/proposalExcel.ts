@@ -31,6 +31,7 @@ const PROPOSAL_SWATCH_SIZE_PX = 42;
 const PROPOSAL_SWATCH_GAP_PX = 5;
 const PROPOSAL_SWATCH_PADDING_PX = 7;
 const PROPOSAL_SWATCH_GRID_COLUMNS = 2;
+const PROPOSAL_SWATCH_LABEL_BAND_PX = 36;
 const TABLE_START_COLUMN = 2;
 const TABLE_START_ROW = 2;
 const SUMMARY_COLUMN_COUNT = 3;
@@ -115,7 +116,8 @@ function proposalExcelRowHeight(swatchCount: number) {
   const requiredPixels =
     PROPOSAL_SWATCH_PADDING_PX * 2 +
     gridRows * PROPOSAL_SWATCH_SIZE_PX +
-    (gridRows - 1) * PROPOSAL_SWATCH_GAP_PX;
+    (gridRows - 1) * PROPOSAL_SWATCH_GAP_PX +
+    PROPOSAL_SWATCH_LABEL_BAND_PX;
   return Math.max(PROPOSAL_EXCEL_ROW_HEIGHT, pixelsToExcelPoints(requiredPixels));
 }
 
@@ -663,13 +665,21 @@ export async function exportProposalExcel(
               return addExcelCoverImage(
                 workbook,
                 worksheet,
-                swatch,
+                swatch.image,
                 placement,
                 placement.widthPx,
                 placement.heightPx,
               );
             }),
           );
+          // Material name labels: bottom-aligned in the cell, below the swatch grid.
+          swatchCell.value = swatches.map((s) => cleanText(s.name)).join('\n');
+          swatchCell.font = { name: PROPOSAL_FONT, size: 8, color: { argb: 'FF4B5563' } };
+          swatchCell.alignment = {
+            vertical: 'bottom',
+            horizontal: 'center',
+            wrapText: true,
+          };
         }
       }
 

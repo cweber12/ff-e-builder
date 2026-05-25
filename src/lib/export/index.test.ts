@@ -302,7 +302,9 @@ describe('proposal export document preparation', () => {
       projectImages: ['data:image/png;base64,project'],
       renderingByItemId: new Map([[item.id, 'data:image/png;base64,rendering']]),
       planByItemId: new Map([[item.id, 'data:image/png;base64,plan']]),
-      swatchesByItemId: new Map([[item.id, ['data:image/png;base64,swatch']]]),
+      swatchesByItemId: new Map([
+        [item.id, [{ name: 'Walnut', image: 'data:image/png;base64,swatch' }]],
+      ]),
     });
 
     const document = buildProposalExportDocument(

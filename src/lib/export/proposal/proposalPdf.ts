@@ -25,6 +25,10 @@ type ProposalPdfOptions = {
 const PROPOSAL_PDF_ROW_HEIGHT = 34;
 const PROPOSAL_PDF_CELL_PADDING = 1.6;
 const PROPOSAL_SWATCH_LIMIT = 4;
+const PROPOSAL_PDF_SWATCH_GRID_COLUMNS = 2;
+const PROPOSAL_PDF_SWATCH_GAP_MM = 1;
+const PROPOSAL_PDF_SWATCH_LABEL_BAND_MM = 10;
+const PROPOSAL_PDF_SWATCH_LABEL_FONT_SIZE = 5.6;
 
 function drawPdfPageNumber(doc: jsPDF, pageNumber: number, totalPages: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -151,15 +155,26 @@ async function prepareProposalPdfImages(
           row.pdfPlanImage = await cropDataUrlToCover(row.planImage, w, cellHPx);
         }
         if (swatchCol && row.swatches.length > 0) {
-          const swW = Math.round(
-            (swatchCol.pdfWidth - PROPOSAL_PDF_CELL_PADDING * 2) * PROPOSAL_PDF_MM_TO_PX,
+          const cellFwMm = swatchCol.pdfWidth - PROPOSAL_PDF_CELL_PADDING * 2;
+          const labelBandMm = PROPOSAL_PDF_SWATCH_LABEL_BAND_MM;
+          const imageBandMm = Math.max(
+            5,
+            PROPOSAL_PDF_ROW_HEIGHT - PROPOSAL_PDF_CELL_PADDING * 2 - labelBandMm,
           );
-          const count = Math.min(row.swatches.length, PROPOSAL_SWATCH_LIMIT);
-          const swH = Math.round(cellHPx / count);
+          const visible = row.swatches.slice(0, PROPOSAL_SWATCH_LIMIT);
+          const gridRows = Math.ceil(visible.length / PROPOSAL_PDF_SWATCH_GRID_COLUMNS);
+          const tileWidthMm =
+            (cellFwMm - PROPOSAL_PDF_SWATCH_GAP_MM * (PROPOSAL_PDF_SWATCH_GRID_COLUMNS - 1)) /
+            PROPOSAL_PDF_SWATCH_GRID_COLUMNS;
+          const tileHeightMm =
+            (imageBandMm - PROPOSAL_PDF_SWATCH_GAP_MM * (gridRows - 1)) / Math.max(1, gridRows);
+          const swW = Math.max(1, Math.round(tileWidthMm * PROPOSAL_PDF_MM_TO_PX));
+          const swH = Math.max(1, Math.round(tileHeightMm * PROPOSAL_PDF_MM_TO_PX));
           row.pdfSwatches = await Promise.all(
-            row.swatches
-              .slice(0, PROPOSAL_SWATCH_LIMIT)
-              .map((s) => cropDataUrlToCover(s, swW, swH)),
+            visible.map(async (s) => ({
+              name: s.name,
+              image: await cropDataUrlToCover(s.image, swW, swH),
+            })),
           );
         }
       }),
@@ -317,13 +332,32 @@ function drawPdfProposalTable(
       if (column.key === 'swatch' && row.pdfSwatches.length > 0) {
         const fw = hook.cell.width - pad * 2;
         const fh = hook.cell.height - pad * 2;
-        const gap = pad;
-        const count = Math.min(row.pdfSwatches.length, PROPOSAL_SWATCH_LIMIT);
-        const swH = Math.max(5, (fh - gap * (count - 1)) / count);
+        const gap = PROPOSAL_PDF_SWATCH_GAP_MM;
+        const labelBand = Math.min(PROPOSAL_PDF_SWATCH_LABEL_BAND_MM, fh * 0.5);
+        const imageBand = Math.max(5, fh - labelBand);
+        const cols = PROPOSAL_PDF_SWATCH_GRID_COLUMNS;
+        const count = row.pdfSwatches.length;
+        const gridRows = Math.ceil(count / cols);
+        const tileW = (fw - gap * (cols - 1)) / cols;
+        const tileH = (imageBand - gap * (gridRows - 1)) / gridRows;
         row.pdfSwatches.forEach((swatch, i) => {
-          const sy = hook.cell.y + pad + i * (swH + gap);
-          drawPdfImageFrame(doc, hook.cell.x + pad, sy, fw, swH);
-          doc.addImage(swatch, 'PNG', hook.cell.x + pad, sy, fw, swH);
+          const col = i % cols;
+          const r = Math.floor(i / cols);
+          const sx = hook.cell.x + pad + col * (tileW + gap);
+          const sy = hook.cell.y + pad + r * (tileH + gap);
+          doc.addImage(swatch.image, 'PNG', sx, sy, tileW, tileH);
+        });
+        // Labels below the grid
+        const labelStartY = hook.cell.y + pad + imageBand + 1.2;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(PROPOSAL_PDF_SWATCH_LABEL_FONT_SIZE);
+        doc.setTextColor(60, 60, 60);
+        const labelMaxLines = Math.max(1, Math.floor(labelBand / 2));
+        const labelLines: string[] = row.pdfSwatches
+          .slice(0, labelMaxLines)
+          .map((s) => (doc.splitTextToSize(s.name, fw) as string[])[0] ?? s.name);
+        labelLines.forEach((line, i) => {
+          doc.text(line, hook.cell.x + pad, labelStartY + i * 1.9);
         });
       }
     },

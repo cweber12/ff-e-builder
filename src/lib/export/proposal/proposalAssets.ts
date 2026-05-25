@@ -1,7 +1,7 @@
 import { api } from '../../api';
 import type { ImageAsset, ProposalCategoryWithItems } from '../../../types';
 import { imageAssetToPngDataUrl } from '../imageHelpers';
-import type { ProposalAssetBundle } from './proposalDocument';
+import type { ProposalAssetBundle, ProposalSwatchAsset } from './proposalDocument';
 
 export async function buildProposalAssetBundle(
   projectId: string,
@@ -15,7 +15,7 @@ export async function buildProposalAssetBundle(
 
   const renderingByItemId = new Map<string, string>();
   const planByItemId = new Map<string, string>();
-  const swatchesByItemId = new Map<string, string[]>();
+  const swatchesByItemId = new Map<string, ProposalSwatchAsset[]>();
   const items = categories.flatMap((category) => category.items);
 
   await Promise.all(
@@ -36,25 +36,36 @@ export async function buildProposalAssetBundle(
         if (dataUrl) planByItemId.set(item.id, dataUrl);
       }
 
-      const materialIds = item.materials
-        .map((material) => material.id)
-        .filter((id, index, all) => Boolean(id) && all.indexOf(id) === index);
-      const exportMaterialIds =
-        swatchLimit === undefined ? materialIds : materialIds.slice(0, swatchLimit);
+      const uniqueMaterials = item.materials.filter(
+        (material, index, all) =>
+          Boolean(material.id) && all.findIndex((other) => other.id === material.id) === index,
+      );
+      const exportMaterials =
+        swatchLimit === undefined ? uniqueMaterials : uniqueMaterials.slice(0, swatchLimit);
 
       const materialImageSets = await Promise.all(
-        exportMaterialIds.map(async (materialId) =>
-          api.images.list({ entityType: 'material', entityId: materialId }),
+        exportMaterials.map(async (material) =>
+          api.images.list({ entityType: 'material', entityId: material.id }),
         ),
       );
-      const swatchImages = materialImageSets
-        .map((images) => images[0])
-        .filter((image): image is ImageAsset => Boolean(image));
+      const swatchPairs = exportMaterials
+        .map((material, index) => {
+          const image = materialImageSets[index]?.[0];
+          return image ? { material, image } : null;
+        })
+        .filter((pair): pair is { material: (typeof exportMaterials)[number]; image: ImageAsset } =>
+          Boolean(pair),
+        );
 
       const swatchData = await Promise.all(
-        swatchImages.map(async (image) => imageAssetToPngDataUrl(image)),
+        swatchPairs.map(async (pair) => {
+          const image = await imageAssetToPngDataUrl(pair.image);
+          return image ? { name: pair.material.name, image } : null;
+        }),
       );
-      const resolvedSwatches = swatchData.filter((value): value is string => Boolean(value));
+      const resolvedSwatches = swatchData.filter(
+        (value): value is ProposalSwatchAsset => value !== null,
+      );
       if (resolvedSwatches.length > 0) {
         swatchesByItemId.set(item.id, resolvedSwatches);
       }
