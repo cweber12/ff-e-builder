@@ -159,7 +159,7 @@ const ProposalRowContent = memo(
     onSwatchOpen: (itemId: string) => void;
     autoFocusItemName?: boolean;
     recentMaterials?: Material[] | undefined;
-    onQuickApply?: (itemId: string, materialId: string) => void;
+    onQuickApply?: ((itemId: string, materialId: string) => void) | undefined;
     dragRef: (node: HTMLElement | null) => void;
     dragTransform: string | undefined;
     dragTransition: string | null | undefined;
