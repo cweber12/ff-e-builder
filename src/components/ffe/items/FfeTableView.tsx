@@ -1055,20 +1055,24 @@ function RoomActionsMenu({
   room,
   rooms,
   project,
+  collapsed,
   columnDefs,
   hiddenDefaults,
   onDeleteRoom,
   onAddItem,
+  onExpand,
   onRestoreDefault,
   onOpenAddColumnModal,
 }: {
   room: RoomWithItems;
   rooms: RoomWithItems[];
   project?: Project;
+  collapsed: boolean;
   columnDefs: import('../../../types').CustomColumnDef[];
   hiddenDefaults: { id: string; label: string }[];
   onDeleteRoom: () => void;
   onAddItem: () => void;
+  onExpand: () => void;
   onRestoreDefault: (id: string) => void;
   onOpenAddColumnModal: () => void;
 }) {
@@ -1109,6 +1113,19 @@ function RoomActionsMenu({
             style={menuPosition}
             className="z-[100] min-w-48 menu-panel"
           >
+            {!collapsed && (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={menuItemClassName}
+                  onClick={() => runAction(onExpand)}
+                >
+                  Expand table view
+                </button>
+                <div className="my-1 h-px bg-neutral-100" />
+              </>
+            )}
             <button
               type="button"
               role="menuitem"
@@ -1276,7 +1293,7 @@ export function RoomHeader({
           aria-expanded={!collapsed}
           aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
           title={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
-          className="shrink-0 rounded px-1 text-xs text-brand-100 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+          className="shrink-0 rounded px-1 text-xs text-neutral-400 transition-colors hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
           <ChevronIcon direction={collapsed ? 'right' : 'down'} />
         </button>
@@ -1285,26 +1302,38 @@ export function RoomHeader({
           onSave={onSaveRoomName}
           aria-label="Location name"
           renderDisplay={(value) => (
-            <span className="truncate text-sm font-semibold tracking-tight text-white">
+            <span className="truncate text-sm font-semibold tracking-tight text-neutral-900">
               {value}
             </span>
           )}
           inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
         />
-        <span className="shrink-0 rounded-pill bg-white/15 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15">
+        <span className="shrink-0 rounded-pill bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-black/10">
           {itemCount} {itemCount === 1 ? 'item' : 'items'}
         </span>
         {openRevisionLabel && (
-          <span className="shrink-0 rounded-pill border border-warning-500/40 bg-warning-500/15 px-2 py-0.5 text-xs font-medium text-warning-50">
+          <span className="shrink-0 rounded-pill border border-warning-600/30 bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700">
             Revision {openRevisionLabel} open - resolve costs in Proposal
           </span>
         )}
       </div>
       <div className="sticky right-4 flex items-center gap-2">
         {!isMobile && !collapsed && <ColumnNavArrows />}
-        <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-white">
+        <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
           {formatMoney(cents(subtotal))}
         </span>
+        <button
+          type="button"
+          onClick={onAddItem}
+          title={`Add item to ${room.name}`}
+          aria-label={`Add item to ${room.name}`}
+          className="inline-flex shrink-0 items-center gap-1 rounded-pill border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          <span aria-hidden="true" className="text-sm leading-none">
+            +
+          </span>
+          Add item
+        </button>
         <ColumnsPanel
           title={room.name}
           visibleColumns={visibleColumns}
@@ -1316,32 +1345,22 @@ export function RoomHeader({
           onRenameCustomColumn={onRenameCustomColumn}
           onDeleteCustomColumn={onDeleteCustomColumn}
           onOpenAddColumnModal={onOpenAddColumnModal}
-          triggerClassName="text-brand-100 ring-white/15 border-white/15 bg-white/10 hover:bg-white/20"
         />
-        <div className="flex items-center gap-1 text-brand-100 [&_.icon-btn]:text-brand-100 [&_.icon-btn:hover]:bg-white/10 [&_.icon-btn:hover]:text-white">
+        <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <RoomActionsMenu
             room={room}
             rooms={rooms}
             {...(project !== undefined ? { project } : {})}
+            collapsed={collapsed}
             columnDefs={columnDefs}
             hiddenDefaults={hiddenDefaults}
             onDeleteRoom={onDeleteRoom}
             onAddItem={onAddItem}
+            onExpand={onExpand}
             onRestoreDefault={onRestoreDefault}
             onOpenAddColumnModal={onOpenAddColumnModal}
           />
-          {!isMobile && !collapsed && (
-            <button
-              type="button"
-              aria-label="Expand table view"
-              title="Expand table view"
-              onClick={onExpand}
-              className="icon-btn"
-            >
-              <ExpandIcon />
-            </button>
-          )}
-        </div>
+        </span>
       </div>
     </GroupedTableHeader>
   );

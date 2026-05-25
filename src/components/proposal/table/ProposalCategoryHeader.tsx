@@ -66,7 +66,7 @@ export function ProposalCategoryHeader({
           aria-expanded={!collapsed}
           aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
           title={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
-          className="shrink-0 rounded px-1 text-xs text-brand-100 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+          className="shrink-0 rounded px-1 text-xs text-neutral-400 transition-colors hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
           <ChevronIcon direction={collapsed ? 'right' : 'down'} />
         </button>
@@ -75,38 +75,38 @@ export function ProposalCategoryHeader({
           onSave={onCategoryNameSave}
           aria-label="Category name"
           renderDisplay={(value) => (
-            <span className="truncate text-sm font-semibold tracking-tight text-white">
+            <span className="truncate text-sm font-semibold tracking-tight text-neutral-900">
               {value}
             </span>
           )}
           inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
         />
-        <span className="shrink-0 rounded-pill bg-white/15 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15">
+        <span className="shrink-0 rounded-pill bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-black/10">
           {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </span>
+        {hasOpenRevision && openRevisionLabel && (
+          <span className="shrink-0 rounded-pill bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 ring-1 ring-inset ring-brand-200/50">
+            Revision {openRevisionLabel}
+          </span>
+        )}
+      </div>
+      <div className="sticky right-4 flex items-center gap-2">
+        {!collapsed && !isMobile && <ColumnNavArrows />}
+        <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
+          {formatMoney(cents(subtotalCents))}
         </span>
         <button
           type="button"
           onClick={onAddItem}
           title={`Add item to ${categoryName}`}
           aria-label={`Add item to ${categoryName}`}
-          className="shrink-0 inline-flex items-center gap-1 rounded-pill bg-white/10 px-2 py-0.5 text-xs font-medium text-brand-50 ring-1 ring-inset ring-white/15 transition-colors hover:bg-white/20 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+          className="inline-flex shrink-0 items-center gap-1 rounded-pill border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
           <span aria-hidden="true" className="text-sm leading-none">
             +
           </span>
           Add item
         </button>
-        {hasOpenRevision && openRevisionLabel && (
-          <span className="shrink-0 rounded-pill bg-brand-500/25 px-2 py-0.5 text-xs font-medium text-brand-100 ring-1 ring-inset ring-brand-300/50">
-            Revision {openRevisionLabel}
-          </span>
-        )}
-      </div>
-      <div className="sticky right-4 flex items-center gap-2 [&_.icon-btn]:text-brand-100 [&_.icon-btn:hover]:bg-white/10 [&_.icon-btn:hover]:text-white">
-        {!collapsed && !isMobile && <ColumnNavArrows />}
-        <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-white">
-          {formatMoney(cents(subtotalCents))}
-        </span>
         <ColumnsPanel
           title={categoryName}
           visibleColumns={visibleColumns}
@@ -118,27 +118,19 @@ export function ProposalCategoryHeader({
           onRenameCustomColumn={onRenameCustomColumn}
           onDeleteCustomColumn={onDeleteCustomColumn}
           onOpenAddColumnModal={onOpenAddColumnModal}
-          triggerClassName="text-brand-100 ring-white/15 border-white/15 bg-white/10 hover:bg-white/20"
         />
-        <CategoryActionsMenu
-          categoryName={categoryName}
-          hiddenDefaults={hiddenDefaults}
-          onCategoryDelete={onCategoryDelete}
-          onAddItem={onAddItem}
-          onRestoreDefault={onRestoreDefault}
-          onOpenAddColumnModal={onOpenAddColumnModal}
-        />
-        {!collapsed && (
-          <button
-            type="button"
-            aria-label="Expand table view"
-            title="Expand table view"
-            onClick={onExpand}
-            className="icon-btn"
-          >
-            <ExpandIcon />
-          </button>
-        )}
+        <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          <CategoryActionsMenu
+            categoryName={categoryName}
+            collapsed={collapsed}
+            hiddenDefaults={hiddenDefaults}
+            onCategoryDelete={onCategoryDelete}
+            onAddItem={onAddItem}
+            onExpand={onExpand}
+            onRestoreDefault={onRestoreDefault}
+            onOpenAddColumnModal={onOpenAddColumnModal}
+          />
+        </span>
       </div>
     </GroupedTableHeader>
   );
@@ -146,18 +138,22 @@ export function ProposalCategoryHeader({
 
 type CategoryActionsMenuProps = {
   categoryName: string;
+  collapsed: boolean;
   hiddenDefaults: { id: string; label: string }[];
   onCategoryDelete: () => void;
   onAddItem: () => void;
+  onExpand: () => void;
   onRestoreDefault: (id: string) => void;
   onOpenAddColumnModal: () => void;
 };
 
 function CategoryActionsMenu({
   categoryName,
+  collapsed,
   hiddenDefaults,
   onCategoryDelete,
   onAddItem,
+  onExpand,
   onRestoreDefault,
   onOpenAddColumnModal,
 }: CategoryActionsMenuProps) {
@@ -198,6 +194,19 @@ function CategoryActionsMenu({
             style={menuPosition}
             className="z-[100] min-w-52 menu-panel"
           >
+            {!collapsed && (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={menuItemClassName}
+                  onClick={() => runAction(onExpand)}
+                >
+                  Expand table view
+                </button>
+                <div className="my-1 h-px bg-neutral-100" />
+              </>
+            )}
             <button
               type="button"
               role="menuitem"
@@ -303,30 +312,6 @@ function MoreIcon() {
       <circle cx="5" cy="10" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="15" cy="10" r="1.5" />
-    </svg>
-  );
-}
-
-function ExpandIcon({ expanded }: { expanded?: boolean }) {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      {expanded ? (
-        <path
-          d="M7.5 4.5v4h-4m9 7v-4h4M7.5 8.5 3.5 4.5m9 7 4 4"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ) : (
-        <path
-          d="M8 4H4v4m8-4h4v4M8 16H4v-4m8 4h4v-4M4.5 4.5 8 8m7.5-3.5L12 8m-7.5 7.5L8 12m7.5 3.5L12 12"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
     </svg>
   );
 }

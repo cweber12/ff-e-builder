@@ -83,11 +83,7 @@ export function GroupedTableHeader({
   return (
     <div
       className={cn(
-        // Strong dark band — anchors each room/category section and
-        // contrasts sharply with the white card body below. Child controls
-        // inside the section use light-on-dark variants set by the
-        // surrounding callers.
-        'sticky top-0 z-40 flex h-11 min-w-full items-center justify-between gap-3 border-b border-brand-900/40 bg-brand-700 px-4 text-white shadow-[0_1px_0_rgb(255_255_255_/_0.06)_inset]',
+        'sticky top-0 z-40 flex h-11 min-w-full items-center justify-between gap-3 border-b border-black/10 bg-canvas-chrome px-4 group',
         className,
       )}
     >

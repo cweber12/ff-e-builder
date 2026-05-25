@@ -90,7 +90,7 @@ export function ColumnsPanel({
         title={`Open columns panel for ${title}`}
         onClick={actionsMenu.toggleMenu}
         className={cn(
-          'inline-flex items-center gap-1 rounded-pill border border-white/20 bg-white/10 px-2 py-1 text-xs font-medium text-brand-50 hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80',
+          'inline-flex items-center gap-1 rounded-pill border border-black/15 bg-canvas-shell px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
           triggerClassName,
         )}
       >
