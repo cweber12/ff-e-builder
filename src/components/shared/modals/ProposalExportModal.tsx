@@ -81,6 +81,7 @@ export function ProposalExportModal({
           userProfile,
           { mode: pdfMode },
           customColumnDefs,
+          visibleOrder,
         );
       } else if (format === 'excel') {
         await exportProposalExcel(
@@ -92,7 +93,7 @@ export function ProposalExportModal({
           visibleOrder,
         );
       } else {
-        exportProposalCsv(project, filtered, customColumnDefs);
+        exportProposalCsv(project, filtered, customColumnDefs, visibleOrder);
       }
       onClose();
     } finally {

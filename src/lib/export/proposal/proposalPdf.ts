@@ -370,6 +370,7 @@ export async function exportProposalPdf(
   userProfile?: UserProfile | null,
   options: ProposalPdfOptions = {},
   customColumnDefs: import('../../../types').CustomColumnDef[] = [],
+  columnOrder?: string[],
 ): Promise<void> {
   const mode = options.mode ?? 'continuous';
   const exportCategories = filteredProposalCategories(categories);
@@ -384,6 +385,8 @@ export async function exportProposalPdf(
     assets,
     userProfile,
     customColumnDefs,
+    undefined,
+    columnOrder,
   );
   const columns = exportDoc.columns;
 

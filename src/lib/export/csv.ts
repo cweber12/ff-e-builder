@@ -6,57 +6,85 @@ import type {
   ProposalItem,
   RoomWithItems,
 } from '../../types';
-import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffe/ffeRows';
+import { buildStatusBreakdown, sortedItems } from './ffe/ffeRows';
+import { buildFfeExportColumns } from './ffe/ffeColumns';
 import { csvCell, fmtMoney, safeName, triggerDownload } from './shared';
 
-const PROPOSAL_CSV_HEADERS = [
-  'Rendering',
-  'Product Tag',
-  'Plan',
-  'Drawings / Location',
-  'Product Description',
-  'Size',
-  'Swatch',
-  'CBM',
-  'Quantity',
-  'Unit',
-  'Unit Cost',
-  'Total Cost',
-];
+type ProposalCsvColumn = {
+  key: string;
+  label: string;
+  value: (item: ProposalItem) => string;
+};
 
-function proposalItemToRow(item: ProposalItem): string[] {
+function proposalDefaultCsvColumns(): ProposalCsvColumn[] {
   return [
-    '',
-    item.productTag,
-    item.plan,
-    [item.drawings, item.location].filter(Boolean).join(' / '),
-    item.description,
-    item.sizeLabel,
-    item.materials.map((m) => m.name).join('; '),
-    String(item.cbm),
-    String(item.quantity),
-    item.quantityUnit,
-    fmtMoney(item.unitCostCents),
-    fmtMoney(proposalLineTotalCents(item)),
+    { key: 'rendering', label: 'Rendering', value: () => '' },
+    { key: 'productTag', label: 'Product Tag', value: (i) => i.productTag },
+    { key: 'plan', label: 'Plan', value: (i) => i.plan },
+    {
+      key: 'drawingsLocation',
+      label: 'Drawings / Location',
+      value: (i) => [i.drawings, i.location].filter(Boolean).join(' / '),
+    },
+    { key: 'description', label: 'Product Description', value: (i) => i.description },
+    { key: 'notes', label: 'Notes', value: (i) => i.notes },
+    { key: 'size', label: 'Size', value: (i) => i.sizeLabel },
+    {
+      key: 'swatch',
+      label: 'Swatch',
+      value: (i) => i.materials.map((m) => m.name).join('; '),
+    },
+    { key: 'cbm', label: 'CBM', value: (i) => String(i.cbm) },
+    { key: 'quantity', label: 'Quantity', value: (i) => String(i.quantity) },
+    { key: 'unit', label: 'Unit', value: (i) => i.quantityUnit },
+    { key: 'unitCost', label: 'Unit Cost', value: (i) => fmtMoney(i.unitCostCents) },
+    { key: 'totalCost', label: 'Total Cost', value: (i) => fmtMoney(proposalLineTotalCents(i)) },
   ];
 }
 
-function buildCsvRows(
-  project: Project,
-  rooms: RoomWithItems[],
-  filterRoom?: RoomWithItems,
-  customCols: CustomColumnDef[] = [],
-): string[][] {
-  const targetRooms = filterRoom ? [filterRoom] : rooms;
-  const dataRows = targetRooms.flatMap((room) =>
-    sortedItems(room).map((item) => [
-      project.name,
-      room.name,
-      ...itemToRow(item),
-      ...customCols.map((def) => item.customData[def.id] ?? ''),
-    ]),
-  );
-  return [['Project', 'Room', ...TABLE_HEADERS, ...customCols.map((d) => d.label)], ...dataRows];
+function buildProposalCsvColumns(
+  customColumnDefs: CustomColumnDef[],
+  columnOrder: string[] | undefined,
+): ProposalCsvColumn[] {
+  const defaults = proposalDefaultCsvColumns();
+  const defaultsByKey = new Map(defaults.map((c) => [c.key, c]));
+  const customColumns: ProposalCsvColumn[] = customColumnDefs
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((def) => ({
+      key: def.id,
+      label: def.label,
+      value: (item: ProposalItem) => item.customData[def.id] ?? '',
+    }));
+  const customByKey = new Map(customColumns.map((c) => [c.key, c]));
+
+  if (!columnOrder || columnOrder.length === 0) {
+    return [...defaults, ...customColumns];
+  }
+
+  const seen = new Set<string>();
+  const ordered: ProposalCsvColumn[] = [];
+  for (const browserId of columnOrder) {
+    // Browser-side ids 'drawings' / 'location' are merged for export.
+    const key =
+      browserId === 'drawings' || browserId === 'location' ? 'drawingsLocation' : browserId;
+    if (key === 'quantity' || key === 'unitCost') continue; // appended at the end
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const def = defaultsByKey.get(key);
+    if (def) {
+      ordered.push(def);
+      continue;
+    }
+    const custom = customByKey.get(key);
+    if (custom) ordered.push(custom);
+  }
+  // Always append the cost block at the end of the standard block.
+  for (const key of ['quantity', 'unit', 'unitCost', 'totalCost'] as const) {
+    const def = defaultsByKey.get(key);
+    if (def && !seen.has(key)) ordered.push(def);
+  }
+  return ordered;
 }
 
 export function exportTableCsv(
@@ -64,13 +92,21 @@ export function exportTableCsv(
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
   customColumnDefs: CustomColumnDef[] = [],
+  visibleColumnOrder?: string[],
 ): void {
-  const allItems = (filterRoom ? [filterRoom] : rooms).flatMap((r) => sortedItems(r));
-  const activeCustomCols = customColumnDefs
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .filter((def) => allItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
-  const rows = buildCsvRows(project, rooms, filterRoom, activeCustomCols);
+  const targetRooms = filterRoom ? [filterRoom] : rooms;
+  const allItems = targetRooms.flatMap((r) => sortedItems(r));
+  const columns = buildFfeExportColumns(allItems, customColumnDefs, visibleColumnOrder).filter(
+    (column) => !column.isImage,
+  );
+  const dataRows = targetRooms.flatMap((room) =>
+    sortedItems(room).map((item) => [
+      project.name,
+      room.name,
+      ...columns.map((c) => c.value(item)),
+    ]),
+  );
+  const rows = [['Project', 'Room', ...columns.map((c) => c.label)], ...dataRows];
   const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const suffix = filterRoom ? `-${safeName(filterRoom.name)}` : '';
@@ -115,20 +151,16 @@ export function exportProposalCsv(
   project: Project,
   categories: ProposalCategoryWithItems[],
   customColumnDefs: CustomColumnDef[] = [],
+  columnOrder?: string[],
 ): void {
-  const allItems = categories.flatMap((c) => c.items);
-  const activeCustomCols = customColumnDefs
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .filter((def) => allItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
+  const columns = buildProposalCsvColumns(customColumnDefs, columnOrder);
   const rows = [
-    ['Project', 'Category', ...PROPOSAL_CSV_HEADERS, ...activeCustomCols.map((d) => d.label)],
+    ['Project', 'Category', ...columns.map((c) => c.label)],
     ...categories.flatMap((category) =>
       category.items.map((item) => [
         project.name,
         category.name,
-        ...proposalItemToRow(item),
-        ...activeCustomCols.map((def) => item.customData[def.id] ?? ''),
+        ...columns.map((c) => c.value(item)),
       ]),
     ),
   ];

@@ -15,7 +15,7 @@ export {
 } from './useProjects';
 export { useUserProfile, useUpdateUserProfile } from './useUserProfile';
 export { useCompany, useUpdateCompany } from './useCompany';
-export { useColumnConfig } from './useColumnConfig';
+export { useColumnConfig, readColumnConfigFromStorage } from './useColumnConfig';
 export type { ColumnConfig } from './useColumnConfig';
 export {
   useColumnDefs,

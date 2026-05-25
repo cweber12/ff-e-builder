@@ -43,6 +43,7 @@ import {
   useActionsMenu,
   useCreateItemColumnDef,
   useDeleteItemColumnDef,
+  readColumnConfigFromStorage,
   useColumnConfig,
   useGeneratedItemColumns,
   useIsMobileViewport,
@@ -1203,7 +1204,17 @@ function RoomActionsMenu({
                   type="button"
                   role="menuitem"
                   className={menuItemClassName}
-                  onClick={() => runAction(() => exportTableCsv(project, rooms, room, columnDefs))}
+                  onClick={() =>
+                    runAction(() =>
+                      exportTableCsv(
+                        project,
+                        rooms,
+                        room,
+                        columnDefs,
+                        readColumnConfigFromStorage(project.id, 'ffe')?.order,
+                      ),
+                    )
+                  }
                 >
                   Export CSV
                 </button>
@@ -1212,7 +1223,16 @@ function RoomActionsMenu({
                   role="menuitem"
                   className={menuItemClassName}
                   onClick={() =>
-                    runAction(() => void exportTableExcel(project, rooms, room, columnDefs))
+                    runAction(
+                      () =>
+                        void exportTableExcel(
+                          project,
+                          rooms,
+                          room,
+                          columnDefs,
+                          readColumnConfigFromStorage(project.id, 'ffe')?.order,
+                        ),
+                    )
                   }
                 >
                   Export Excel
@@ -1222,7 +1242,16 @@ function RoomActionsMenu({
                   role="menuitem"
                   className={menuItemClassName}
                   onClick={() =>
-                    runAction(() => void exportTablePdf(project, rooms, room, columnDefs))
+                    runAction(
+                      () =>
+                        void exportTablePdf(
+                          project,
+                          rooms,
+                          room,
+                          columnDefs,
+                          readColumnConfigFromStorage(project.id, 'ffe')?.order,
+                        ),
+                    )
                   }
                 >
                   Export PDF

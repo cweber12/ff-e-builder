@@ -38,6 +38,18 @@ function readConfig(projectId: string, tableKey: string): ColumnConfig | null {
   }
 }
 
+/**
+ * Read the persisted column config for a project/table from localStorage.
+ * Returns null when no config has been written yet. Useful for non-React
+ * call paths (e.g. export entry points outside the table component tree).
+ */
+export function readColumnConfigFromStorage(
+  projectId: string,
+  tableKey: string,
+): ColumnConfig | null {
+  return readConfig(projectId, tableKey);
+}
+
 function writeConfig(projectId: string, tableKey: string, config: ColumnConfig) {
   try {
     window.localStorage.setItem(storageKey(projectId, tableKey), JSON.stringify(config));

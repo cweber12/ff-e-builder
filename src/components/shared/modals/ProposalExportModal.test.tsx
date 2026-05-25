@@ -97,6 +97,7 @@ describe('ProposalExportModal', () => {
       null,
       { mode: 'separated' },
       [],
+      [],
     );
   });
 
@@ -109,6 +110,7 @@ describe('ProposalExportModal', () => {
       categories,
       null,
       { mode: 'continuous' },
+      [],
       [],
     );
   });
@@ -123,6 +125,7 @@ describe('ProposalExportModal', () => {
       [categories[0], categories[2]],
       null,
       { mode: 'continuous' },
+      [],
       [],
     );
   });
@@ -141,7 +144,7 @@ describe('ProposalExportModal', () => {
     await user.click(screen.getByRole('radio', { name: 'CSV' }));
     await user.click(screen.getByLabelText('Kitchen'));
     await user.click(screen.getByRole('button', { name: 'Export' }));
-    expect(mockExportCsv).toHaveBeenCalledWith(project, [categories[0], categories[1]], []);
+    expect(mockExportCsv).toHaveBeenCalledWith(project, [categories[0], categories[1]], [], []);
   });
 
   it('calls onClose after a successful export', async () => {

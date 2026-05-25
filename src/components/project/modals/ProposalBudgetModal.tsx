@@ -2,6 +2,7 @@ import { Modal } from '../../primitives';
 import { ExportMenu } from '../../shared/ExportMenu';
 import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/money';
 import { exportProposalCsv, exportProposalExcel, exportProposalPdf } from '../../../lib/export';
+import { readColumnConfigFromStorage, useColumnDefs } from '../../../hooks';
 import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../../types';
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export function ProposalBudgetModal({ open, onClose, project, categories }: Props) {
+  const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
+  const columnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
   const actualCents = proposalProjectTotalCents(categories);
   const budgetCents =
     project.budgetMode === 'individual' ? (project.proposalBudgetCents ?? 0) : project.budgetCents;
@@ -108,12 +111,26 @@ export function ProposalBudgetModal({ open, onClose, project, categories }: Prop
           <ExportMenu
             label="Export"
             size="sm"
-            onCsv={() => exportProposalCsv(project, categories)}
+            onCsv={() => exportProposalCsv(project, categories, customColumnDefs, columnOrder())}
             onExcel={() => {
-              void exportProposalExcel(project, categories);
+              void exportProposalExcel(
+                project,
+                categories,
+                null,
+                customColumnDefs,
+                undefined,
+                columnOrder(),
+              );
             }}
             onPdf={() => {
-              void exportProposalPdf(project, categories);
+              void exportProposalPdf(
+                project,
+                categories,
+                null,
+                {},
+                customColumnDefs,
+                columnOrder(),
+              );
             }}
           />
         </div>

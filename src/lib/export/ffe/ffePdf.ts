@@ -5,7 +5,8 @@ import { BRAND_RGB } from '../../constants';
 import type { CustomColumnDef, Item, Project, RoomWithItems } from '../../../types';
 import { cropDataUrlToCover } from '../imageHelpers';
 import { buildFfeItemImages } from './ffeAssets';
-import { TABLE_HEADERS, buildStatusBreakdown, itemToRow, sortedItems } from './ffeRows';
+import { buildStatusBreakdown, sortedItems } from './ffeRows';
+import { buildFfeExportColumns } from './ffeColumns';
 import { fmtMoney, safeName } from '../shared';
 
 const BRAND = BRAND_RGB;
@@ -18,17 +19,17 @@ export async function exportTablePdf(
   rooms: RoomWithItems[],
   filterRoom?: RoomWithItems,
   customColumnDefs: CustomColumnDef[] = [],
+  visibleColumnOrder?: string[],
 ): Promise<void> {
   const targetRooms = filterRoom ? [filterRoom] : rooms;
   const allSortedItems = targetRooms.flatMap((r) => sortedItems(r));
   const imageMap = await buildFfeItemImages(targetRooms);
 
-  const activeCustomCols = customColumnDefs
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .filter((def) => allSortedItems.some((item) => (item.customData[def.id] ?? '').trim() !== ''));
-
-  const headers = ['Image', ...TABLE_HEADERS, ...activeCustomCols.map((c) => c.label)];
+  const columns = buildFfeExportColumns(allSortedItems, customColumnDefs, visibleColumnOrder);
+  const imageColIndex = columns.findIndex((c) => c.isImage);
+  const itemNameColIndex = columns.findIndex((c) => c.key === 'itemName');
+  const lineTotalColIndex = columns.findIndex((c) => c.key === 'lineTotal');
+  const headers = columns.map((c) => c.label);
 
   // Pre-crop images to PDF cell dimensions
   const cellWPx = Math.round((FFE_PDF_IMAGE_COL_WIDTH - 2) * FFE_PDF_MM_TO_PX);
@@ -71,47 +72,43 @@ export async function exportTablePdf(
     firstRoom = false;
 
     const items = sortedItems(room);
-    // row 0 = 'image' column (empty string) + rest of item data + custom col values
-    const rows = items.map((item) => [
-      '',
-      ...itemToRow(item),
-      ...activeCustomCols.map((def) => item.customData[def.id] ?? ''),
-    ]);
+    const rows = items.map((item) => columns.map((c) => (c.isImage ? '' : c.value(item))));
     const subtotal = roomSubtotalCents(room.items);
     const roomItemOffset = rowOffset;
     rowOffset += items.length;
 
+    // Subtotal row: name col gets label, lineTotal col gets the value.
+    const subtotalRow = columns.map((c, i) => {
+      if (i === itemNameColIndex) {
+        return { content: `${room.name} subtotal`, styles: { fontStyle: 'bold' as const } };
+      }
+      if (i === lineTotalColIndex) {
+        return {
+          content: fmtMoney(subtotal),
+          styles: {
+            fontStyle: 'bold' as const,
+            textColor: [...BRAND] as [number, number, number],
+          },
+        };
+      }
+      return '';
+    });
+
+    const columnStyles: Record<number, { cellWidth?: number }> = {};
+    if (imageColIndex >= 0) {
+      columnStyles[imageColIndex] = { cellWidth: FFE_PDF_IMAGE_COL_WIDTH };
+    }
+    if (itemNameColIndex >= 0) {
+      columnStyles[itemNameColIndex] = { cellWidth: 30 };
+    }
+
     autoTable(doc, {
       startY,
       head: [headers],
-      body: [
-        ...rows,
-        [
-          '',
-          '',
-          { content: room.name + ' subtotal', colSpan: 3, styles: { fontStyle: 'bold' as const } },
-          '',
-          '',
-          {
-            content: fmtMoney(subtotal),
-            styles: {
-              fontStyle: 'bold' as const,
-              textColor: [...BRAND] as [number, number, number],
-            },
-          },
-          '',
-          '',
-          '',
-          '',
-          ...activeCustomCols.map(() => ''),
-        ],
-      ],
+      body: [...rows, subtotalRow],
       headStyles: { fillColor: [...BRAND] as [number, number, number], fontSize: 7 },
       bodyStyles: { fontSize: 7, minCellHeight: FFE_PDF_IMAGE_COL_HEIGHT },
-      columnStyles: {
-        0: { cellWidth: FFE_PDF_IMAGE_COL_WIDTH },
-        2: { cellWidth: 30 }, // Item Name
-      },
+      columnStyles,
       didDrawPage: () => {
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
@@ -124,7 +121,8 @@ export async function exportTablePdf(
         );
       },
       didDrawCell: (hook) => {
-        if (hook.section !== 'body' || hook.column.index !== 0) return;
+        if (hook.section !== 'body' || hook.column.index !== imageColIndex) return;
+        if (imageColIndex < 0) return;
         if (hook.row.index >= items.length) return;
         const item = allItems[roomItemOffset + hook.row.index];
         if (!item) return;

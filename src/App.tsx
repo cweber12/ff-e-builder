@@ -36,6 +36,8 @@ import {
   exportProposalPdf,
 } from './lib/export';
 import {
+  readColumnConfigFromStorage,
+  useColumnDefs,
   useProjects,
   useUpdateProject,
   useDeleteProject,
@@ -333,6 +335,9 @@ function BudgetPageActions({
 }) {
   const [ffeOpen, setFfeOpen] = useState(false);
   const [proposalOpen, setProposalOpen] = useState(false);
+  const { data: proposalCustomColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
+
+  const proposalColumnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
 
   return (
     <div className="flex items-center gap-2">
@@ -355,15 +360,34 @@ function BudgetPageActions({
         size="sm"
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
-          exportProposalCsv(project, proposalCategoriesWithItems);
+          exportProposalCsv(
+            project,
+            proposalCategoriesWithItems,
+            proposalCustomColumnDefs,
+            proposalColumnOrder(),
+          );
         }}
         onExcel={() => {
           void exportSummaryExcel(project, roomsWithItems);
-          void exportProposalExcel(project, proposalCategoriesWithItems);
+          void exportProposalExcel(
+            project,
+            proposalCategoriesWithItems,
+            null,
+            proposalCustomColumnDefs,
+            undefined,
+            proposalColumnOrder(),
+          );
         }}
         onPdf={() => {
           exportSummaryPdf(project, roomsWithItems);
-          void exportProposalPdf(project, proposalCategoriesWithItems);
+          void exportProposalPdf(
+            project,
+            proposalCategoriesWithItems,
+            null,
+            {},
+            proposalCustomColumnDefs,
+            proposalColumnOrder(),
+          );
         }}
       />
       <FfeBudgetModal

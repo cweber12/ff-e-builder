@@ -13,7 +13,7 @@ import {
   exportTableExcel,
 } from '../../lib/export';
 import { useFfeItemSort, useUserProfile } from '../../hooks';
-import { useColumnDefs } from '../../hooks';
+import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
 import {
   useUpdateProject,
@@ -162,6 +162,8 @@ export function FfeActions({
 }: FfeActionsProps) {
   const hasItems = roomsWithItems.some((r) => r.items.length > 0);
   const { sortMode } = useFfeItemSort(project.id);
+  const { data: ffeCustomColumnDefs = [] } = useItemColumnDefs(project.id);
+  const ffeColumnOrder = () => readColumnConfigFromStorage(project.id, 'ffe')?.order;
 
   return (
     <div className="flex items-center gap-1">
@@ -204,15 +206,36 @@ export function FfeActions({
             : [
                 {
                   label: 'Export PDF',
-                  onSelect: () => void exportTablePdf(project, roomsWithItems),
+                  onSelect: () =>
+                    void exportTablePdf(
+                      project,
+                      roomsWithItems,
+                      undefined,
+                      ffeCustomColumnDefs,
+                      ffeColumnOrder(),
+                    ),
                 },
                 {
                   label: 'Export Excel',
-                  onSelect: () => void exportTableExcel(project, roomsWithItems),
+                  onSelect: () =>
+                    void exportTableExcel(
+                      project,
+                      roomsWithItems,
+                      undefined,
+                      ffeCustomColumnDefs,
+                      ffeColumnOrder(),
+                    ),
                 },
                 {
                   label: 'Export CSV',
-                  onSelect: () => exportTableCsv(project, roomsWithItems),
+                  onSelect: () =>
+                    exportTableCsv(
+                      project,
+                      roomsWithItems,
+                      undefined,
+                      ffeCustomColumnDefs,
+                      ffeColumnOrder(),
+                    ),
                 },
               ]
         }
