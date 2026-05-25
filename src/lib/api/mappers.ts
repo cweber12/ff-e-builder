@@ -91,6 +91,7 @@ export interface RawImageAsset {
   crop_y: number | null;
   crop_width: number | null;
   crop_height: number | null;
+  thumbnail_r2_key: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -323,6 +324,7 @@ export const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   cropY: r.crop_y ?? null,
   cropWidth: r.crop_width ?? null,
   cropHeight: r.crop_height ?? null,
+  thumbnailR2Key: r.thumbnail_r2_key ?? null,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

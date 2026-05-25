@@ -137,8 +137,8 @@ export function ImageFrame({
     }
 
     setImageLoading(true);
-    void api.images
-      .getContentBlob(primaryImage.id)
+    const fetchBlob = compact ? api.images.getThumbnailBlob : api.images.getContentBlob;
+    void fetchBlob(primaryImage.id)
       .then((blob) => {
         if (ignore) return;
         nextUrl = URL.createObjectURL(blob);
@@ -155,7 +155,7 @@ export function ImageFrame({
       ignore = true;
       if (nextUrl) URL.revokeObjectURL(nextUrl);
     };
-  }, [hasEnteredViewport, primaryImage]);
+  }, [hasEnteredViewport, primaryImage, compact]);
 
   const handleFile = (file: File | undefined) => {
     if (!file || !canUpload) return;

@@ -60,6 +60,11 @@ export const imagesApi = {
     return response.blob();
   },
 
+  getThumbnailBlob: async (imageId: string): Promise<Blob> => {
+    const response = await apiFetchResponse(`/api/v1/images/${imageId}/thumbnail`);
+    return response.blob();
+  },
+
   delete: (imageId: string): Promise<void> =>
     apiFetch<void>(`/api/v1/images/${imageId}`, { method: 'DELETE' }),
 

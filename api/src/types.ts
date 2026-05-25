@@ -287,6 +287,8 @@ export interface ImageAsset {
   crop_y: number | null;
   crop_width: number | null;
   crop_height: number | null;
+  thumbnail_r2_key: string | null;
+  thumbnail_byte_size: number | null;
   created_at: string;
   updated_at: string;
 }

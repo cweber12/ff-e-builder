@@ -29,6 +29,7 @@ export type ImageAsset = {
   cropY: number | null;
   cropWidth: number | null;
   cropHeight: number | null;
+  thumbnailR2Key: string | null;
   createdAt: string;
   updatedAt: string;
 };

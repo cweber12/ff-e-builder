@@ -16,6 +16,58 @@ const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
+const THUMBNAIL_SIZE = 240;
+const THUMBNAIL_ENTITY_TYPES = new Set<ImageEntityType>([
+  'item',
+  'item_plan',
+  'proposal_item',
+  'proposal_plan',
+]);
+
+function buildThumbR2Key(r2Key: string, imageId: string): string {
+  const lastSlash = r2Key.lastIndexOf('/');
+  return r2Key.slice(0, lastSlash + 1) + `${imageId}_thumb.webp`;
+}
+
+type WorkerImageBitmap = { width: number; height: number; close: () => void };
+type WorkerCanvasCtx = {
+  drawImage: (img: WorkerImageBitmap, dx: number, dy: number, dw: number, dh: number) => void;
+};
+type WorkerOffscreenCanvas = {
+  getContext: (type: '2d') => WorkerCanvasCtx | null;
+  convertToBlob: (opts: { type: string; quality: number }) => Promise<Blob>;
+};
+
+async function generateThumbnail(
+  imageBytes: ArrayBuffer,
+  contentType: string,
+): Promise<{ bytes: Uint8Array<ArrayBuffer>; byteSize: number } | null> {
+  if (contentType === 'image/gif') return null;
+  try {
+    const blob = new Blob([imageBytes], { type: contentType });
+    const bitmap = await (createImageBitmap as (b: Blob) => Promise<WorkerImageBitmap>)(blob);
+    const { width: origW, height: origH } = bitmap;
+    const scale = Math.max(THUMBNAIL_SIZE / origW, THUMBNAIL_SIZE / origH);
+    const scaledW = Math.round(origW * scale);
+    const scaledH = Math.round(origH * scale);
+    const offsetX = Math.round((scaledW - THUMBNAIL_SIZE) / 2);
+    const offsetY = Math.round((scaledH - THUMBNAIL_SIZE) / 2);
+    const canvas = new (OffscreenCanvas as unknown as new (
+      w: number,
+      h: number,
+    ) => WorkerOffscreenCanvas)(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, -offsetX, -offsetY, scaledW, scaledH);
+    bitmap.close();
+    const thumbBlob = await canvas.convertToBlob({ type: 'image/webp', quality: 0.85 });
+    const bytes = new Uint8Array(await thumbBlob.arrayBuffer());
+    return { bytes, byteSize: bytes.byteLength };
+  } catch {
+    return null;
+  }
+}
+
 type EntityContext = {
   projectId: string;
   roomId: string | null;
@@ -451,7 +503,9 @@ router.post('/', async (c) => {
   const ext = extensionForContentType(file.type);
   const r2Key = buildR2Key(uid, parsed.data.entity_type, context, imageId, ext);
 
-  await c.env.IMAGES_BUCKET.put(r2Key, file.stream(), {
+  const fileBuffer = await file.arrayBuffer();
+
+  await c.env.IMAGES_BUCKET.put(r2Key, fileBuffer, {
     httpMetadata: {
       contentType: file.type,
       cacheControl: 'private, max-age=3600',
@@ -465,6 +519,20 @@ router.post('/', async (c) => {
       proposalItemId: context.proposalItemId ?? '',
     },
   });
+
+  let thumbR2Key: string | null = null;
+  let thumbByteSize: number | null = null;
+  if (THUMBNAIL_ENTITY_TYPES.has(parsed.data.entity_type)) {
+    const thumb = await generateThumbnail(fileBuffer, file.type);
+    if (thumb) {
+      thumbR2Key = buildThumbR2Key(r2Key, imageId);
+      await c.env.IMAGES_BUCKET.put(thumbR2Key, thumb.bytes, {
+        httpMetadata: { contentType: 'image/webp', cacheControl: 'private, max-age=86400' },
+        customMetadata: { ownerUid: uid, imageId, variant: 'thumb_240' },
+      });
+      thumbByteSize = thumb.byteSize;
+    }
+  }
 
   const sql = getDb(c.env);
   let projectImageCount = 0;
@@ -550,7 +618,8 @@ router.post('/', async (c) => {
       const rows = await sql`
         INSERT INTO image_assets (
           id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
-          filename, content_type, byte_size, alt_text, is_primary
+          filename, content_type, byte_size, alt_text, is_primary,
+          thumbnail_r2_key, thumbnail_byte_size
         )
         VALUES (
           ${imageId},
@@ -566,7 +635,9 @@ router.post('/', async (c) => {
           ${file.type},
           ${file.size},
           ${parsed.data.alt_text},
-          ${isPrimary}
+          ${isPrimary},
+          ${thumbR2Key},
+          ${thumbByteSize}
         )
         RETURNING *
       `;
@@ -587,7 +658,8 @@ router.post('/', async (c) => {
       )
       INSERT INTO image_assets (
         id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
-        filename, content_type, byte_size, alt_text, is_primary
+        filename, content_type, byte_size, alt_text, is_primary,
+        thumbnail_r2_key, thumbnail_byte_size
       )
       VALUES (
         ${imageId},
@@ -603,13 +675,16 @@ router.post('/', async (c) => {
         ${file.type},
         ${file.size},
         ${parsed.data.alt_text},
-        ${isPrimary}
+        ${isPrimary},
+        ${thumbR2Key},
+        ${thumbByteSize}
       )
       RETURNING *
     `;
     return c.json({ image: imageRow(rows[0]) }, 201);
   } catch (err) {
     await c.env.IMAGES_BUCKET.delete(r2Key).catch(() => undefined);
+    if (thumbR2Key) await c.env.IMAGES_BUCKET.delete(thumbR2Key).catch(() => undefined);
     const validationError = imageInsertErrorMessage(parsed.data.entity_type, err);
     if (validationError) {
       const status =
@@ -710,6 +785,35 @@ router.patch('/:id/primary', async (c) => {
   return c.json({ image: imageRow(rows[0]) });
 });
 
+router.get('/:id/thumbnail', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+
+  let image: ImageAsset;
+  try {
+    image = await getOwnedImage(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const key = image.thumbnail_r2_key ?? image.r2_key;
+  const contentType = image.thumbnail_r2_key ? 'image/webp' : image.content_type;
+  const byteSize = image.thumbnail_r2_key
+    ? (image.thumbnail_byte_size ?? image.byte_size)
+    : image.byte_size;
+
+  const object = await c.env.IMAGES_BUCKET.get(key);
+  if (!object) return c.json({ error: 'Not found' }, 404);
+
+  const headers = new Headers();
+  headers.set('Content-Type', contentType);
+  headers.set('Cache-Control', 'private, max-age=86400');
+  headers.set('Content-Length', byteSize.toString());
+  headers.set('X-Content-Type-Options', 'nosniff');
+
+  return new Response(object.body, { headers });
+});
+
 router.get('/:id/content', async (c) => {
   const uid = c.get('uid');
   const id = c.req.param('id');
@@ -773,6 +877,9 @@ router.delete('/:id', async (c) => {
   }
 
   await c.env.IMAGES_BUCKET.delete(image.r2_key);
+  if (image.thumbnail_r2_key) {
+    await c.env.IMAGES_BUCKET.delete(image.thumbnail_r2_key).catch(() => undefined);
+  }
   return c.body(null, 204);
 });
 
