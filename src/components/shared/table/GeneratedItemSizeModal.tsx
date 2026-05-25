@@ -241,7 +241,7 @@ function SizePopover({ anchorRef, onClose, children }: SizePopoverProps) {
         width: POPOVER_WIDTH,
         maxHeight: POPOVER_MAX_HEIGHT,
       }}
-      className="z-[100] overflow-auto rounded-md border border-black/10 bg-surface p-4 shadow-xl"
+      className="z-[100] overflow-auto rounded-md border border-black/10 bg-surface p-5 shadow-xl"
     >
       {children}
     </div>,

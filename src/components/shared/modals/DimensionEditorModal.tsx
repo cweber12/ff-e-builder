@@ -90,41 +90,51 @@ export function DimensionEditorBody({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2 rounded-sm border border-black/10 bg-canvas-shell p-1">
-        {(['imperial', 'metric'] as const).map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            onClick={() =>
-              setDraft((current) => ({
-                ...current,
-                mode,
-                unit: mode === 'imperial' ? 'ft/in' : 'mm',
-              }))
-            }
-            className={`rounded px-3 py-2 text-sm font-medium ${
-              draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-600'
-            }`}
-          >
-            {mode === 'imperial' ? 'Imperial' : 'Metric'}
-          </button>
-        ))}
-      </div>
-
-      {draft.mode === 'metric' && (
-        <select
-          value={draft.unit}
-          onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value }))}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-          aria-label="Metric unit"
-        >
-          {metricUnits.map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2 rounded-sm border border-black/10 bg-canvas-shell p-1">
+          {(['imperial', 'metric'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() =>
+                setDraft((current) => ({
+                  ...current,
+                  mode,
+                  unit: mode === 'imperial' ? 'ft/in' : 'mm',
+                }))
+              }
+              className={`rounded px-3 py-2 text-sm font-medium ${
+                draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-600'
+              }`}
+            >
+              {mode === 'imperial' ? 'Imperial' : 'Metric'}
+            </button>
           ))}
-        </select>
-      )}
+        </div>
+
+        {draft.mode === 'imperial' ? (
+          <p className="px-1 text-xs text-neutral-500">
+            <span className="font-semibold text-neutral-700">Unit:</span> ft / in
+          </p>
+        ) : (
+          <label className="grid gap-1 text-xs font-semibold text-neutral-600">
+            Unit
+            <select
+              value={draft.unit}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, unit: event.target.value }))
+              }
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal text-neutral-700 focus:border-brand-500 focus:outline-none"
+            >
+              {metricUnits.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
 
       <div className="grid gap-3">
         {axes.map((axis) => (

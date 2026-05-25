@@ -5,6 +5,7 @@ import {
   cents,
   formatMoney,
   type CustomColumnDef,
+  type Material,
   type ProposalItem,
   type ProposalStatus,
 } from '../../../types';
@@ -62,6 +63,9 @@ type ProposalRowProps = {
   customColumnDefs: CustomColumnDef[];
   proposalStatus: ProposalStatus;
   onSwatchOpen: (itemId: string) => void;
+  autoFocusItemName?: boolean;
+  recentMaterials?: Material[];
+  onQuickApply?: (itemId: string, materialId: string) => void;
 };
 
 export function ProposalRow({
@@ -78,6 +82,9 @@ export function ProposalRow({
   customColumnDefs,
   proposalStatus,
   onSwatchOpen,
+  autoFocusItemName,
+  recentMaterials,
+  onQuickApply,
 }: ProposalRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -99,6 +106,9 @@ export function ProposalRow({
       customColumnDefs={customColumnDefs}
       proposalStatus={proposalStatus}
       onSwatchOpen={onSwatchOpen}
+      autoFocusItemName={autoFocusItemName}
+      recentMaterials={recentMaterials}
+      onQuickApply={onQuickApply}
       dragRef={setNodeRef}
       dragTransform={dragTransform}
       dragTransition={transition}
@@ -124,6 +134,9 @@ const ProposalRowContent = memo(
     customColumnDefs,
     proposalStatus,
     onSwatchOpen,
+    autoFocusItemName,
+    recentMaterials,
+    onQuickApply,
     dragRef,
     dragTransform,
     dragTransition,
@@ -144,6 +157,9 @@ const ProposalRowContent = memo(
     customColumnDefs: CustomColumnDef[];
     proposalStatus: ProposalStatus;
     onSwatchOpen: (itemId: string) => void;
+    autoFocusItemName?: boolean;
+    recentMaterials?: Material[];
+    onQuickApply?: (itemId: string, materialId: string) => void;
     dragRef: (node: HTMLElement | null) => void;
     dragTransform: string | undefined;
     dragTransition: string | null | undefined;
@@ -187,6 +203,7 @@ const ProposalRowContent = memo(
           indicator={dot('itemName')}
           inputClassName={editInputClassName}
           affordance="hover"
+          autoFocus={autoFocusItemName}
         />
       ),
       plan: (
@@ -272,6 +289,10 @@ const ProposalRowContent = memo(
           materials={item.materials}
           onOpen={() => onSwatchOpen(item.id)}
           tdClassName="py-3"
+          recentMaterials={recentMaterials}
+          onQuickApply={
+            onQuickApply ? (materialId) => onQuickApply(item.id, materialId) : undefined
+          }
         />
       ),
       cbm: (
@@ -457,6 +478,7 @@ const ProposalRowContent = memo(
     if (prev.visibleColOrder !== next.visibleColOrder) return false;
     if (prev.customColumnDefs !== next.customColumnDefs) return false;
     if (prev.otherCategories !== next.otherCategories) return false;
+    if (prev.recentMaterials !== next.recentMaterials) return false;
     return true;
   },
 );

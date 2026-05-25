@@ -31,10 +31,11 @@ type MaterialLibraryModalProps = {
   projectId: string;
   priorityMaterialIds?: string[] | undefined;
   onClose: () => void;
+  onMaterialAssigned?: (materialId: string) => void;
 } & (FfeContext | ProposalContext);
 
 export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
-  const { open, onClose } = props;
+  const { open, onClose, onMaterialAssigned, ...panelProps } = props;
   return (
     <Modal
       open={open}
@@ -42,7 +43,7 @@ export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
       title="Finish Library"
       className="!max-w-[min(96vw,96rem)] !w-[min(96vw,96rem)]"
     >
-      <MaterialLibraryPanel {...props} />
+      <MaterialLibraryPanel {...panelProps} onMaterialAssigned={onMaterialAssigned} />
     </Modal>
   );
 }
@@ -51,10 +52,12 @@ type MaterialLibraryPanelProps =
   | ({
       projectId: string;
       priorityMaterialIds?: string[] | undefined;
+      onMaterialAssigned?: (materialId: string) => void;
     } & FfeContext)
   | ({
       projectId: string;
       priorityMaterialIds?: string[] | undefined;
+      onMaterialAssigned?: (materialId: string) => void;
     } & ProposalContext);
 
 export type MaterialDraft = {
@@ -115,7 +118,7 @@ const emptyDraft: MaterialDraft = {
 };
 
 export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
-  const { projectId, priorityMaterialIds = [] } = props;
+  const { projectId, priorityMaterialIds = [], onMaterialAssigned } = props;
   const roomId = props.context === 'ffe' ? props.roomId : '';
   const categoryId = props.context === 'proposal' ? props.categoryId : '';
   const activeItem: Item | ProposalItem | undefined = props.item;
@@ -236,6 +239,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       });
       setAddedMaterialName(savedMaterial.name);
       setRemovedMaterialName(null);
+      onMaterialAssigned?.(savedMaterial.id);
     } else {
       savedMaterial = await createMaterial.mutateAsync(input);
     }
@@ -267,6 +271,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
         materialId: material.id,
       });
       setAddedMaterialName(assigned.name);
+      onMaterialAssigned?.(assigned.id);
     } finally {
       setPendingAssignmentId(null);
     }

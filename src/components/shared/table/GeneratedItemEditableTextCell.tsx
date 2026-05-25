@@ -16,6 +16,7 @@ type GeneratedItemEditableTextCellProps = {
   ariaLabel?: string;
   normalizeValue?: (value: string) => string;
   affordance?: EditableTextAffordance;
+  autoFocus?: boolean;
 };
 
 type GeneratedItemEditableTextControlProps = {
@@ -28,6 +29,7 @@ type GeneratedItemEditableTextControlProps = {
   displayClassName?: string | undefined;
   normalizeValue?: ((value: string) => string) | undefined;
   affordance?: EditableTextAffordance | undefined;
+  autoFocus?: boolean | undefined;
 };
 
 export function GeneratedItemEditableTextCell({
@@ -41,6 +43,7 @@ export function GeneratedItemEditableTextCell({
   ariaLabel,
   normalizeValue,
   affordance = 'none',
+  autoFocus,
 }: GeneratedItemEditableTextCellProps) {
   return (
     <td
@@ -57,6 +60,7 @@ export function GeneratedItemEditableTextCell({
         ariaLabel={ariaLabel}
         normalizeValue={normalizeValue}
         affordance={affordance}
+        autoFocus={autoFocus}
       />
       <EditablePencilHint />
     </td>
@@ -73,8 +77,9 @@ export function GeneratedItemEditableTextControl({
   displayClassName,
   normalizeValue = (nextValue) => nextValue,
   affordance = 'none',
+  autoFocus,
 }: GeneratedItemEditableTextControlProps) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(() => Boolean(autoFocus));
   const [draft, setDraft] = useState(value);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useState, type MouseEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -31,8 +31,11 @@ import {
   useCreateProposalItem,
   useDeleteProposalItem,
   useIsMobileViewport,
+  useItemMaterialActions,
+  useMaterials,
   useMoveProposalItem,
   useProposalRevisions,
+  useRecentMaterials,
   useReorderProposalItems,
   useRevisionSnapshots,
 } from '../../../hooks';
@@ -135,6 +138,23 @@ export function ProposalCategorySection({
   const isMobile = useIsMobileViewport();
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: snapshots = [] } = useRevisionSnapshots(projectId);
+
+  const materialActions = useItemMaterialActions({
+    kind: 'proposal',
+    itemGroupId: categoryId,
+    projectId,
+  });
+  const { data: allMaterials = [] } = useMaterials(projectId);
+  const { recentIds, push: pushRecentMaterial } = useRecentMaterials(projectId);
+  const recentMaterialsData = useMemo(
+    () =>
+      recentIds
+        .map((id) => allMaterials.find((m) => m.id === id))
+        .filter((m): m is NonNullable<typeof m> => m !== undefined),
+    [recentIds, allMaterials],
+  );
+
+  const [pendingFocusItemId, setPendingFocusItemId] = useState<string | null>(null);
 
   const snapshotsByRevThenItem = useMemo(() => {
     const map = new Map<string, Map<string, RevisionSnapshot>>();
@@ -300,12 +320,24 @@ export function ProposalCategorySection({
   );
 
   const handleAddItem = useCallback(() => {
-    createItem.mutate({
-      sortOrder: items.length,
-      productTag: nextProductTag,
-      itemName: '',
+    if (collapsed) onToggle();
+    createItem.mutate(
+      { sortOrder: items.length, productTag: nextProductTag, itemName: '' },
+      { onSuccess: (item) => setPendingFocusItemId(item.id) },
+    );
+  }, [collapsed, createItem, items.length, nextProductTag, onToggle]);
+
+  useEffect(() => {
+    if (!pendingFocusItemId || collapsed) return;
+    if (!sortedItems.some((item) => item.id === pendingFocusItemId)) return;
+    requestAnimationFrame(() => {
+      const row = document.querySelector<HTMLTableRowElement>(
+        `tr[data-item-id="${pendingFocusItemId}"]`,
+      );
+      row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
-  }, [createItem, items.length, nextProductTag]);
+    setPendingFocusItemId(null);
+  }, [sortedItems, pendingFocusItemId, collapsed]);
 
   const handleAddItemToFfe = useCallback(
     (item: ProposalItem) => {
@@ -540,6 +572,12 @@ export function ProposalCategorySection({
                       customColumnDefs={customColumnDefs}
                       proposalStatus={proposalStatus}
                       onSwatchOpen={setActiveSwatchItemId}
+                      autoFocusItemName={item.id === pendingFocusItemId}
+                      recentMaterials={recentMaterialsData}
+                      onQuickApply={(itemId, materialId) => {
+                        pushRecentMaterial(materialId);
+                        materialActions.assign.mutate({ itemId, materialId });
+                      }}
                     />
                   ))}
                 </SortableContext>
@@ -793,6 +831,12 @@ export function ProposalCategorySection({
                           customColumnDefs={customColumnDefs}
                           proposalStatus={proposalStatus}
                           onSwatchOpen={setActiveSwatchItemId}
+                          autoFocusItemName={item.id === pendingFocusItemId}
+                          recentMaterials={recentMaterialsData}
+                          onQuickApply={(itemId, materialId) => {
+                            pushRecentMaterial(materialId);
+                            materialActions.assign.mutate({ itemId, materialId });
+                          }}
                         />
                       ))}
                     </SortableContext>
@@ -833,6 +877,7 @@ export function ProposalCategorySection({
             categoryId={categoryId}
             item={activeSwatchItem}
             onClose={() => setActiveSwatchItemId(null)}
+            onMaterialAssigned={pushRecentMaterial}
           />
         )}
       </Suspense>
