@@ -8,10 +8,7 @@ type GeneratedItemMaterialsControlProps = {
   tdClassName?: string | undefined;
 };
 
-type GeneratedItemMaterialsCellProps = GeneratedItemMaterialsControlProps & {
-  recentMaterials?: Material[] | undefined;
-  onQuickApply?: ((materialId: string) => void) | undefined;
-};
+type GeneratedItemMaterialsCellProps = GeneratedItemMaterialsControlProps;
 
 export function GeneratedItemMaterialsControl({
   materials,
@@ -24,20 +21,13 @@ export function GeneratedItemMaterialsCell({
   materials,
   onOpen,
   tdClassName,
-  recentMaterials,
-  onQuickApply,
 }: GeneratedItemMaterialsCellProps) {
   return (
     <td
       className={cn('min-w-36 px-3 py-2', tdClassName)}
       onClick={(event) => event.stopPropagation()}
     >
-      <MaterialBadges
-        materials={materials}
-        onOpen={onOpen}
-        recentMaterials={recentMaterials}
-        onQuickApply={onQuickApply}
-      />
+      <MaterialBadges materials={materials} onOpen={onOpen} />
     </td>
   );
 }

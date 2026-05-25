@@ -41,8 +41,6 @@ import {
   useCreateProposalItem,
   useDeleteProposalItem,
   useIsMobileViewport,
-  useItemMaterialActions,
-  useMaterials,
   useMoveProposalItem,
   useProposalRevisions,
   useRecentMaterials,
@@ -149,20 +147,7 @@ export function ProposalCategorySection({
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: snapshots = [] } = useRevisionSnapshots(projectId);
 
-  const materialActions = useItemMaterialActions({
-    kind: 'proposal',
-    itemGroupId: categoryId,
-    projectId,
-  });
-  const { data: allMaterials = [] } = useMaterials(projectId);
   const { recentIds, push: pushRecentMaterial } = useRecentMaterials(projectId);
-  const recentMaterialsData = useMemo(
-    () =>
-      recentIds
-        .map((id) => allMaterials.find((m) => m.id === id))
-        .filter((m): m is NonNullable<typeof m> => m !== undefined),
-    [recentIds, allMaterials],
-  );
 
   const [pendingFocusItemId, setPendingFocusItemId] = useState<string | null>(null);
 
@@ -626,11 +611,6 @@ export function ProposalCategorySection({
                         proposalStatus={proposalStatus}
                         onSwatchOpen={setActiveSwatchItemId}
                         autoFocusItemName={item.id === pendingFocusItemId}
-                        recentMaterials={recentMaterialsData}
-                        onQuickApply={(itemId, materialId) => {
-                          pushRecentMaterial(materialId);
-                          materialActions.assign.mutate({ itemId, materialId });
-                        }}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
                         <tr aria-hidden="true" className="motion-reduce:hidden">
@@ -898,11 +878,6 @@ export function ProposalCategorySection({
                             proposalStatus={proposalStatus}
                             onSwatchOpen={setActiveSwatchItemId}
                             autoFocusItemName={item.id === pendingFocusItemId}
-                            recentMaterials={recentMaterialsData}
-                            onQuickApply={(itemId, materialId) => {
-                              pushRecentMaterial(materialId);
-                              materialActions.assign.mutate({ itemId, materialId });
-                            }}
                           />
                           {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
                             <tr aria-hidden="true" className="motion-reduce:hidden">
@@ -948,6 +923,7 @@ export function ProposalCategorySection({
             context="proposal"
             categoryId={categoryId}
             item={activeSwatchItem}
+            recentMaterialIds={recentIds}
             onClose={() => setActiveSwatchItemId(null)}
             onMaterialAssigned={pushRecentMaterial}
           />
