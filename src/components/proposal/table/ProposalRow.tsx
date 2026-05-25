@@ -46,6 +46,8 @@ import {
 } from './proposalTableConstants';
 import { ProposalItemActionsMenu } from './ProposalItemActionsMenu';
 
+const PROPOSAL_CELL_DEBOUNCE_MS = 400;
+
 type ProposalRowProps = {
   projectId: string;
   item: ProposalItem;
@@ -180,6 +182,7 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.itemName}
           onSave={(itemName) => onSave({ itemName })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="min-w-48 py-3"
           indicator={dot('itemName')}
           inputClassName={editInputClassName}
@@ -200,6 +203,7 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.drawings}
           onSave={(drawings) => onSave({ drawings })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="py-3"
           indicator={dot('drawings')}
           inputClassName={editInputClassName}
@@ -210,6 +214,7 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.location}
           onSave={(location) => onSave({ location })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="py-3"
           indicator={dot('location')}
           inputClassName={editInputClassName}
@@ -220,6 +225,7 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.description}
           onSave={(description) => onSave({ description })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="min-w-64 py-3"
           indicator={dot('description')}
           inputClassName={editInputClassName}
@@ -230,6 +236,7 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.notes}
           onSave={(notes) => onSave({ notes })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="min-w-48 py-3"
           indicator={dot('notes')}
           inputClassName={editInputClassName}
@@ -272,6 +279,7 @@ const ProposalRowContent = memo(
           value={item.cbm}
           step="0.001"
           onSave={(cbm) => onSave({ cbm })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="w-24"
           tdClassName="py-3"
           inputClassName={editInputClassName}
@@ -286,6 +294,7 @@ const ProposalRowContent = memo(
             onSave={(value) => {
               onSave({ customData: { ...item.customData, [def.id]: value } });
             }}
+            debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
             className="py-3"
             indicator={dot(def.id)}
             inputClassName={editInputClassName}
@@ -327,6 +336,7 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.productTag}
           onSave={(productTag) => onSave({ productTag })}
+          debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
           className="sticky left-8 z-20 w-36 min-w-36 bg-canvas-chrome py-3 group-hover:bg-canvas-shell/90"
           indicator={dot('productTag')}
           inputClassName={editInputClassName}
@@ -398,6 +408,7 @@ const ProposalRowContent = memo(
               quantityUnits={quantityUnits}
               onSaveQuantity={(quantity) => onSave({ quantity })}
               onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
+              debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
               indicator={dot('quantity')}
               tdClassName={cn(proposalStickyValueColumnClassNames.quantity.cell, 'py-3')}
               inputClassName={editInputClassName}
@@ -405,6 +416,7 @@ const ProposalRowContent = memo(
             <GeneratedItemEditableMoneyCell
               valueCents={item.unitCostCents}
               onSave={(unitCostCents) => onSave({ unitCostCents })}
+              debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
               indicator={dot('unitCostCents')}
               tdClassName={cn(proposalStickyValueColumnClassNames.unitCost.cell, 'py-3')}
               inputClassName={editInputClassName}

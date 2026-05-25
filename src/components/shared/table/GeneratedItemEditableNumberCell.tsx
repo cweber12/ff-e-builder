@@ -3,6 +3,7 @@ import { cn } from '../../../lib/utils';
 import { cents, dollarsToCents, formatMoney, parseUnitCostDollarsInput } from '../../../types';
 import { InlineNumberEdit } from '../../primitives/InlineNumberEdit';
 import { EditablePencilHint } from './EditablePencilHint';
+import { useDebouncedSave } from './useDebouncedSave';
 
 type GeneratedItemEditableNumberControlProps = {
   value: number;
@@ -48,6 +49,7 @@ export function GeneratedItemEditableNumberControl({
 type GeneratedItemEditableNumberCellProps = {
   value: number;
   onSave: (value: number) => Promise<void> | void;
+  debounceMs?: number;
   step: string;
   className?: string;
   inputClassName?: string;
@@ -58,6 +60,7 @@ type GeneratedItemEditableNumberCellProps = {
 export function GeneratedItemEditableNumberCell({
   value,
   onSave,
+  debounceMs = 0,
   step,
   className,
   inputClassName,
@@ -67,6 +70,7 @@ export function GeneratedItemEditableNumberCell({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
   const inputRef = useRef<HTMLInputElement>(null);
+  const debouncedSave = useDebouncedSave(onSave, debounceMs);
 
   useEffect(() => {
     if (!editing) setDraft(String(value));
@@ -79,12 +83,18 @@ export function GeneratedItemEditableNumberCell({
   const commit = async () => {
     const numberValue = Number(draft);
     if (Number.isFinite(numberValue) && numberValue >= 0 && numberValue !== value) {
-      await onSave(numberValue);
+      if (debounceMs > 0) {
+        debouncedSave.schedule(numberValue);
+        await debouncedSave.flush();
+      } else {
+        await debouncedSave.saveNow(numberValue);
+      }
     }
     setEditing(false);
   };
 
   const cancel = () => {
+    debouncedSave.cancel();
     setDraft(String(value));
     setEditing(false);
   };
@@ -126,7 +136,19 @@ export function GeneratedItemEditableNumberCell({
         min="0"
         step={step}
         value={draft}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+
+          if (debounceMs <= 0) return;
+
+          const numberValue = Number(nextDraft);
+          if (Number.isFinite(numberValue) && numberValue >= 0 && numberValue !== value) {
+            debouncedSave.schedule(numberValue);
+            return;
+          }
+          debouncedSave.cancel();
+        }}
         onBlur={() => void commit()}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
@@ -146,6 +168,7 @@ export function GeneratedItemEditableNumberCell({
 type GeneratedItemEditableMoneyControlProps = {
   valueCents: number;
   onSave: (valueCents: number) => Promise<void> | void;
+  debounceMs?: number;
   indicator?: ReactNode;
   inputClassName?: string | undefined;
   displayClassName?: string | undefined;
@@ -155,6 +178,7 @@ type GeneratedItemEditableMoneyControlProps = {
 export function GeneratedItemEditableMoneyControl({
   valueCents,
   onSave,
+  debounceMs = 0,
   indicator,
   inputClassName,
   displayClassName,
@@ -163,6 +187,7 @@ export function GeneratedItemEditableMoneyControl({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState((valueCents / 100).toString());
   const inputRef = useRef<HTMLInputElement>(null);
+  const debouncedSave = useDebouncedSave(onSave, debounceMs);
 
   useEffect(() => {
     if (!editing) setDraft((valueCents / 100).toString());
@@ -176,12 +201,20 @@ export function GeneratedItemEditableMoneyControl({
     const dollars = parseUnitCostDollarsInput(draft);
     if (dollars !== undefined) {
       const nextCents = dollarsToCents(dollars);
-      if (nextCents !== valueCents) await onSave(nextCents);
+      if (nextCents !== valueCents) {
+        if (debounceMs > 0) {
+          debouncedSave.schedule(nextCents);
+          await debouncedSave.flush();
+        } else {
+          await debouncedSave.saveNow(nextCents);
+        }
+      }
     }
     setEditing(false);
   };
 
   const cancel = () => {
+    debouncedSave.cancel();
     setDraft((valueCents / 100).toString());
     setEditing(false);
   };
@@ -224,7 +257,24 @@ export function GeneratedItemEditableMoneyControl({
         step="0.01"
         value={draft}
         aria-label={ariaLabel}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+
+          if (debounceMs <= 0) return;
+
+          const dollars = parseUnitCostDollarsInput(nextDraft);
+          if (dollars === undefined) {
+            debouncedSave.cancel();
+            return;
+          }
+          const nextCents = dollarsToCents(dollars);
+          if (nextCents === valueCents) {
+            debouncedSave.cancel();
+            return;
+          }
+          debouncedSave.schedule(nextCents);
+        }}
         onBlur={() => void commit()}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
@@ -244,6 +294,7 @@ export function GeneratedItemEditableMoneyControl({
 type GeneratedItemEditableMoneyCellProps = {
   valueCents: number;
   onSave: (valueCents: number) => Promise<void> | void;
+  debounceMs?: number;
   indicator?: ReactNode;
   tdClassName?: string;
   inputClassName?: string;
@@ -252,6 +303,7 @@ type GeneratedItemEditableMoneyCellProps = {
 export function GeneratedItemEditableMoneyCell({
   valueCents,
   onSave,
+  debounceMs = 0,
   indicator,
   tdClassName,
   inputClassName,
@@ -264,6 +316,7 @@ export function GeneratedItemEditableMoneyCell({
       <GeneratedItemEditableMoneyControl
         valueCents={valueCents}
         onSave={onSave}
+        debounceMs={debounceMs}
         indicator={indicator}
         inputClassName={inputClassName}
       />
@@ -278,6 +331,7 @@ type GeneratedItemEditableQuantityControlProps = {
   quantityUnits: readonly string[];
   onSaveQuantity: (value: number) => Promise<void> | void;
   onSaveUnit: (value: string) => Promise<void> | void;
+  debounceMs?: number;
   indicator?: ReactNode;
   inputClassName?: string | undefined;
   displayClassName?: string | undefined;
@@ -289,15 +343,25 @@ export function GeneratedItemEditableQuantityControl({
   quantityUnits,
   onSaveQuantity,
   onSaveUnit,
+  debounceMs = 0,
   indicator,
   inputClassName,
   displayClassName,
 }: GeneratedItemEditableQuantityControlProps) {
   const [editing, setEditing] = useState(false);
+  const debouncedQuantitySave = useDebouncedSave(onSaveQuantity, debounceMs);
 
   const saveQuantity = (rawValue: string) => {
     const value = Number(rawValue);
-    if (Number.isFinite(value) && value >= 0) void onSaveQuantity(value);
+    if (Number.isFinite(value) && value >= 0) {
+      if (debounceMs > 0) {
+        debouncedQuantitySave.schedule(value);
+      } else {
+        void debouncedQuantitySave.saveNow(value);
+      }
+      return;
+    }
+    debouncedQuantitySave.cancel();
   };
 
   if (!editing) {
@@ -331,6 +395,9 @@ export function GeneratedItemEditableQuantityControl({
       className="flex flex-col gap-1"
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
+          if (debounceMs > 0 && debouncedQuantitySave.hasPending()) {
+            void debouncedQuantitySave.flush();
+          }
           setEditing(false);
         }
       }}
@@ -367,6 +434,7 @@ type GeneratedItemEditableQuantityCellProps = {
   quantityUnits: readonly string[];
   onSaveQuantity: (value: number) => Promise<void> | void;
   onSaveUnit: (value: string) => Promise<void> | void;
+  debounceMs?: number;
   indicator?: ReactNode;
   tdClassName?: string;
   inputClassName?: string;
@@ -378,6 +446,7 @@ export function GeneratedItemEditableQuantityCell({
   quantityUnits,
   onSaveQuantity,
   onSaveUnit,
+  debounceMs = 0,
   indicator,
   tdClassName,
   inputClassName,
@@ -393,6 +462,7 @@ export function GeneratedItemEditableQuantityCell({
         quantityUnits={quantityUnits}
         onSaveQuantity={onSaveQuantity}
         onSaveUnit={onSaveUnit}
+        debounceMs={debounceMs}
         indicator={indicator}
         inputClassName={inputClassName}
       />

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
 import { EditablePencilHint } from './EditablePencilHint';
+import { useDebouncedSave } from './useDebouncedSave';
 
 type EditableTextAffordance = 'none' | 'hover';
 
 type GeneratedItemEditableTextCellProps = {
   value: string;
   onSave: (value: string) => Promise<void> | void;
+  debounceMs?: number;
   className?: string;
   indicator?: ReactNode;
   inputClassName?: string;
@@ -19,6 +21,7 @@ type GeneratedItemEditableTextCellProps = {
 type GeneratedItemEditableTextControlProps = {
   value: string;
   onSave: (value: string) => Promise<void> | void;
+  debounceMs?: number;
   indicator?: ReactNode;
   inputClassName?: string | undefined;
   ariaLabel?: string | undefined;
@@ -30,6 +33,7 @@ type GeneratedItemEditableTextControlProps = {
 export function GeneratedItemEditableTextCell({
   value,
   onSave,
+  debounceMs = 0,
   className,
   indicator,
   inputClassName,
@@ -46,6 +50,7 @@ export function GeneratedItemEditableTextCell({
       <GeneratedItemEditableTextControl
         value={value}
         onSave={onSave}
+        debounceMs={debounceMs}
         indicator={indicator}
         inputClassName={inputClassName}
         displayClassName={displayClassName}
@@ -61,6 +66,7 @@ export function GeneratedItemEditableTextCell({
 export function GeneratedItemEditableTextControl({
   value,
   onSave,
+  debounceMs = 0,
   indicator,
   inputClassName,
   ariaLabel,
@@ -73,6 +79,7 @@ export function GeneratedItemEditableTextControl({
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const debouncedSave = useDebouncedSave(onSave, debounceMs);
 
   useEffect(() => {
     if (!editing) setDraft(value);
@@ -92,13 +99,29 @@ export function GeneratedItemEditableTextControl({
   const commit = async () => {
     const nextValue = normalizeValue(draft);
     if (nextValue === value) {
+      debouncedSave.cancel();
+      setSaveState('idle');
       setEditing(false);
       return;
     }
 
     setSaveState('saving');
+    if (debounceMs > 0) {
+      debouncedSave.schedule(nextValue);
+      try {
+        await debouncedSave.flush();
+      } catch (error) {
+        setSaveState('error');
+        setErrorMsg(error instanceof Error ? error.message : 'Save failed');
+        return;
+      }
+      setSaveState('idle');
+      setEditing(false);
+      return;
+    }
+
     try {
-      await onSave(nextValue);
+      await debouncedSave.saveNow(nextValue);
       setSaveState('idle');
       setEditing(false);
     } catch (error) {
@@ -108,6 +131,7 @@ export function GeneratedItemEditableTextControl({
   };
 
   const cancel = () => {
+    debouncedSave.cancel();
     setDraft(value);
     setSaveState('idle');
     setErrorMsg('');
@@ -153,7 +177,23 @@ export function GeneratedItemEditableTextControl({
         type="text"
         value={draft}
         aria-label={ariaLabel}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+
+          if (debounceMs <= 0) return;
+
+          const nextValue = normalizeValue(nextDraft);
+          if (nextValue === value) {
+            debouncedSave.cancel();
+            setSaveState('idle');
+            return;
+          }
+
+          setSaveState('saving');
+          setErrorMsg('');
+          debouncedSave.schedule(nextValue);
+        }}
         onBlur={() => void commit()}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
