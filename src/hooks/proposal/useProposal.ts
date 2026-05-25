@@ -104,6 +104,7 @@ export function useCreateProposalCategory(projectId: string) {
       queryClient.setQueryData<ProposalCategory[]>(proposalKeys.categories(projectId), (old) =>
         appendUniqueListItem(old, category),
       );
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.withItems(projectId) });
     },
     onError: (err) => toast.error(`Category save failed: ${err.message}`),
   });
@@ -118,6 +119,7 @@ export function useUpdateProposalCategory(projectId: string) {
       queryClient.setQueryData<ProposalCategory[]>(proposalKeys.categories(projectId), (old) =>
         updateListItem(old, category.id, () => category),
       );
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.withItems(projectId) });
     },
     onError: (err) => toast.error(`Category save failed: ${err.message}`),
   });
@@ -131,6 +133,19 @@ export function useDeleteProposalCategory(projectId: string) {
       queryClient.setQueryData<ProposalCategory[]>(proposalKeys.categories(projectId), (old) =>
         removeListItem(old, id),
       );
+      queryClient.setQueryData<
+        { categories: ProposalCategory[]; items: Record<string, ProposalItem[]> } | undefined
+      >(proposalKeys.withItems(projectId), (old) => {
+        if (!old) return old;
+        const nextItems = { ...old.items };
+        delete nextItems[id];
+        return {
+          categories: old.categories.filter((category) => category.id !== id),
+          items: nextItems,
+        };
+      });
+      queryClient.removeQueries({ queryKey: proposalKeys.items(id) });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.withItems(projectId) });
     },
     onError: (err) => toast.error(`Category delete failed: ${err.message}`),
   });

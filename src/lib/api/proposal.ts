@@ -1,4 +1,4 @@
-import { apiFetch } from './transport';
+import { ApiError, apiFetch } from './transport';
 import {
   mapProposalCategory,
   mapProposalItem,
@@ -207,24 +207,30 @@ export const proposalApi = {
     }).then(() => undefined),
 
   itemChangelog: (itemId: string): Promise<ProposalItemChangelogEntry[]> =>
-    apiFetch<{ changelog: Record<string, unknown>[] }>(
-      `/api/v1/proposal/items/${itemId}/changelog`,
-    ).then((r) =>
-      r.changelog.map((row) => ({
-        id: row.id as string,
-        proposalItemId: row.proposal_item_id as string,
-        generatedItemId: (row.generated_item_id as string | null) ?? null,
-        columnKey: row.column_key as string,
-        previousValue: (row.previous_value as string | null) ?? '',
-        newValue: (row.new_value as string | null) ?? '',
-        notes: (row.notes as string | null) ?? null,
-        proposalStatus: row.proposal_status as ProposalStatus,
-        relatedChangeId: (row.related_change_id as string | null) ?? null,
-        revisionId: (row.revision_id as string | null) ?? null,
-        isPriceAffecting: Boolean(row.is_price_affecting),
-        changedAt: row.changed_at as string,
-      })),
-    ),
+    apiFetch<{ changelog: Record<string, unknown>[] }>(`/api/v1/proposal/items/${itemId}/changelog`)
+      .then((r) =>
+        r.changelog.map((row) => ({
+          id: row.id as string,
+          proposalItemId: row.proposal_item_id as string,
+          generatedItemId: (row.generated_item_id as string | null) ?? null,
+          columnKey: row.column_key as string,
+          previousValue: (row.previous_value as string | null) ?? '',
+          newValue: (row.new_value as string | null) ?? '',
+          notes: (row.notes as string | null) ?? null,
+          proposalStatus: row.proposal_status as ProposalStatus,
+          relatedChangeId: (row.related_change_id as string | null) ?? null,
+          revisionId: (row.revision_id as string | null) ?? null,
+          isPriceAffecting: Boolean(row.is_price_affecting),
+          changedAt: row.changed_at as string,
+        })),
+      )
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 404) {
+          // Item was deleted between render and changelog fetch; treat as empty history.
+          return [];
+        }
+        throw err;
+      }),
 
   revisions: (projectId: string): Promise<ProposalRevision[]> =>
     apiFetch<{ revisions: Record<string, unknown>[] }>(
