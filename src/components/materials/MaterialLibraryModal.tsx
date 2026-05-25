@@ -43,7 +43,10 @@ export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
       title="Finish Library"
       className="!max-w-[min(96vw,96rem)] !w-[min(96vw,96rem)]"
     >
-      <MaterialLibraryPanel {...panelProps} onMaterialAssigned={onMaterialAssigned} />
+      <MaterialLibraryPanel
+        {...panelProps}
+        {...(onMaterialAssigned !== undefined ? { onMaterialAssigned } : {})}
+      />
     </Modal>
   );
 }

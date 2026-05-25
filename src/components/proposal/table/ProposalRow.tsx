@@ -106,7 +106,7 @@ export function ProposalRow({
       customColumnDefs={customColumnDefs}
       proposalStatus={proposalStatus}
       onSwatchOpen={onSwatchOpen}
-      autoFocusItemName={autoFocusItemName}
+      autoFocusItemName={autoFocusItemName ?? false}
       recentMaterials={recentMaterials}
       onQuickApply={onQuickApply}
       dragRef={setNodeRef}
@@ -203,7 +203,7 @@ const ProposalRowContent = memo(
           indicator={dot('itemName')}
           inputClassName={editInputClassName}
           affordance="hover"
-          autoFocus={autoFocusItemName}
+          autoFocus={autoFocusItemName ?? false}
         />
       ),
       plan: (
