@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TotalsBar } from '../../shared/table/TotalsBar';
 import { TableViewStack } from '../../shared/table/TableViewWrappers';
 import {
@@ -24,6 +24,7 @@ import { AddGroupModal } from './AddGroupModal';
 import { DeleteCategoryModal } from './DeleteCategoryModal';
 import { ProposalEmptyState } from './ProposalEmptyState';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
+import { emptyProposalColumnIds } from '../../../lib/table/emptyColumns';
 
 type ProposalTableProps = {
   projectId: string;
@@ -78,6 +79,16 @@ export function ProposalTable({
     () => proposalColumns.visibleColumns,
     [proposalColumns.visibleColumns],
   );
+
+  const allProposalItems = useMemo(
+    () => categoriesWithItems.flatMap((category) => category.items),
+    [categoriesWithItems],
+  );
+  const applyFirstLoadAutoHide = proposalColumns.columnConfig.applyFirstLoadAutoHide;
+  useEffect(() => {
+    if (isLoading || allProposalItems.length === 0) return;
+    applyFirstLoadAutoHide(emptyProposalColumnIds(allProposalItems, customColumnDefs));
+  }, [isLoading, allProposalItems, customColumnDefs, applyFirstLoadAutoHide]);
 
   const [addCategoryOpenInternal, setAddCategoryOpenInternal] = useState(false);
   const isControlledAddCategory =

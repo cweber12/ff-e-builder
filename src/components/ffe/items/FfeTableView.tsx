@@ -27,6 +27,7 @@ import {
   type GeneratedItemChangeInfo,
 } from '../../../lib/table/generatedItemChangeInfo';
 import { FFE_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
+import { emptyFfeColumnIds } from '../../../lib/table/emptyColumns';
 import {
   useItemMaterialActions,
   useCreateItem,
@@ -42,6 +43,7 @@ import {
   useActionsMenu,
   useCreateItemColumnDef,
   useDeleteItemColumnDef,
+  useColumnConfig,
   useGeneratedItemColumns,
   useIsMobileViewport,
   useItemColumnDefs,
@@ -2142,6 +2144,21 @@ export function FfeTableView({
   );
   const grandTotal = projectTotalCents(sortedRooms);
   const totalItemCount = sortedRooms.reduce((sum, room) => sum + room.items.length, 0);
+
+  const { data: ffeColumnDefs = [] } = useItemColumnDefs(projectId);
+  const ffeColumnConfig = useColumnConfig(
+    projectId,
+    FFE_GENERATED_ITEM_TABLE_PRESET.tableKey,
+    DEFAULT_COLUMN_IDS,
+    ffeColumnDefs,
+    'qty',
+  );
+  const allFfeItems = useMemo(() => sortedRooms.flatMap((room) => room.items), [sortedRooms]);
+  const applyFfeAutoHide = ffeColumnConfig.applyFirstLoadAutoHide;
+  useEffect(() => {
+    if (isLoading || allFfeItems.length === 0) return;
+    applyFfeAutoHide(emptyFfeColumnIds(allFfeItems, ffeColumnDefs));
+  }, [isLoading, allFfeItems, ffeColumnDefs, applyFfeAutoHide]);
 
   if (isLoading) return <ItemsLoadingState />;
   if (error) return <ItemsErrorState onReload={onReload} />;

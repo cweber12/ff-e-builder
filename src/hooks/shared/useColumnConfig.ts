@@ -9,6 +9,8 @@ export type ColumnConfig = {
   hidden: string[];
   /** Signature of the built-in defaults used when this config was persisted. */
   defaultSignature?: string;
+  /** True once the first-load auto-hide of empty columns has been applied (one-shot). */
+  autoHiddenComplete?: boolean;
 };
 
 function storageKey(projectId: string, tableKey: string) {
@@ -72,6 +74,9 @@ function mergeSavedConfig(
   const customIds = customDefs.map((d) => d.id);
   const customIdSet = new Set(customIds);
   const hidden = saved.hidden.filter((id) => defaultIds.has(id));
+  // Pre-existing users (saved config from before the auto-hide feature) keep their current
+  // visibility; we treat them as already auto-hidden so we never retroactively hide columns.
+  const autoHiddenComplete = saved.autoHiddenComplete ?? true;
 
   if (saved.defaultSignature !== defaultSignature) {
     const savedCustomIds = saved.order.filter((id) => customIdSet.has(id));
@@ -87,6 +92,7 @@ function mergeSavedConfig(
       ),
       hidden,
       defaultSignature,
+      autoHiddenComplete,
     };
   }
 
@@ -97,6 +103,7 @@ function mergeSavedConfig(
     order: insertBeforeAnchor([...saved.order, ...newDefaults], newCustom, insertBeforeId),
     hidden,
     defaultSignature,
+    autoHiddenComplete,
   };
 }
 
@@ -130,6 +137,8 @@ export function useColumnConfig(
       return merged;
     }
     // First load: order = defaults with custom defs inserted before anchor.
+    // autoHiddenComplete starts false so the caller's first applyFirstLoadAutoHide
+    // call (once data has loaded) can hide initially-empty columns.
     const initial: ColumnConfig = {
       order: insertBeforeAnchor(
         [...defaultColumnIds],
@@ -138,6 +147,7 @@ export function useColumnConfig(
       ),
       hidden: [],
       defaultSignature,
+      autoHiddenComplete: false,
     };
     writeConfig(projectId, tableKey, initial);
     return initial;
@@ -257,6 +267,31 @@ export function useColumnConfig(
   );
 
   /**
+   * One-shot: hide the given column IDs the first time the table loads with
+   * known data. Idempotent — subsequent calls (including across sessions) are
+   * no-ops because `autoHiddenComplete` is persisted. Callers should pass the
+   * computed empty-column IDs only when data is actually loaded; before that,
+   * skip the call so a partial result isn't frozen.
+   */
+  const applyFirstLoadAutoHide = useCallback(
+    (emptyColumnIds: readonly string[]) => {
+      if (config.autoHiddenComplete) return;
+      const defaultIds = new Set(defaultColumnIds);
+      const toHide = emptyColumnIds.filter(
+        (id) => defaultIds.has(id) && !config.hidden.includes(id),
+      );
+      const next: ColumnConfig = {
+        order: config.order.filter((id) => !toHide.includes(id)),
+        hidden: [...config.hidden, ...toHide],
+        defaultSignature,
+        autoHiddenComplete: true,
+      };
+      persist(next);
+    },
+    [config, defaultColumnIds, defaultSignature, persist],
+  );
+
+  /**
    * Visible column IDs in user-defined order, filtered to only IDs that
    * are either a known default column or a known custom column def.
    * Unknown IDs (stale deleted defs, etc.) are silently dropped.
@@ -275,5 +310,6 @@ export function useColumnConfig(
     restoreDefaultColumn,
     addCustomColumn,
     removeCustomColumn,
+    applyFirstLoadAutoHide,
   };
 }
