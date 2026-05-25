@@ -1,7 +1,8 @@
 import { createPortal } from 'react-dom';
-import { cents, formatMoney } from '../../../types';
+import { cents, formatMoney, type CustomColumnDef } from '../../../types';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { cn } from '../../../lib/utils';
+import { ColumnsPanel } from '../../shared/table/ColumnsPanel';
 import { ColumnNavArrows, GroupedTableHeader } from '../../shared/table/TableViewWrappers';
 import { menuItemClassName } from './proposalTableConstants';
 import { useActionsMenu } from '../../../hooks';
@@ -14,13 +15,19 @@ type ProposalCategoryHeaderProps = {
   subtotalCents: number;
   hasOpenRevision: boolean;
   openRevisionLabel?: string | undefined;
+  visibleColumns: { id: string; label: string; isCustom?: boolean }[];
   hiddenDefaults: { id: string; label: string }[];
+  customColumnDefs: CustomColumnDef[];
   onToggle: () => void;
   onPrefetchItems: () => void;
   onCategoryNameSave: (name: string) => void;
   onCategoryDelete: () => void;
   onAddItem: () => void;
+  onMoveColumn: (fromId: string, toId: string) => void;
+  onHideColumn: (id: string) => void;
   onRestoreDefault: (id: string) => void;
+  onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
+  onDeleteCustomColumn: (defId: string) => void;
   onOpenAddColumnModal: () => void;
   onExpand: () => void;
 };
@@ -33,13 +40,19 @@ export function ProposalCategoryHeader({
   subtotalCents,
   hasOpenRevision,
   openRevisionLabel,
+  visibleColumns,
   hiddenDefaults,
+  customColumnDefs,
   onToggle,
   onPrefetchItems,
   onCategoryNameSave,
   onCategoryDelete,
   onAddItem,
+  onMoveColumn,
+  onHideColumn,
   onRestoreDefault,
+  onRenameCustomColumn,
+  onDeleteCustomColumn,
   onOpenAddColumnModal,
   onExpand,
 }: ProposalCategoryHeaderProps) {
@@ -94,6 +107,19 @@ export function ProposalCategoryHeader({
         <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-white">
           {formatMoney(cents(subtotalCents))}
         </span>
+        <ColumnsPanel
+          title={categoryName}
+          visibleColumns={visibleColumns}
+          hiddenDefaults={hiddenDefaults}
+          customColumns={customColumnDefs}
+          onMoveColumn={onMoveColumn}
+          onHideColumn={onHideColumn}
+          onRestoreDefault={onRestoreDefault}
+          onRenameCustomColumn={onRenameCustomColumn}
+          onDeleteCustomColumn={onDeleteCustomColumn}
+          onOpenAddColumnModal={onOpenAddColumnModal}
+          triggerClassName="text-brand-100 ring-white/15 border-white/15 bg-white/10 hover:bg-white/20"
+        />
         <CategoryActionsMenu
           categoryName={categoryName}
           hiddenDefaults={hiddenDefaults}

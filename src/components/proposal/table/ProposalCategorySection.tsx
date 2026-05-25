@@ -219,6 +219,21 @@ export function ProposalCategorySection({
     () => visibleColOrder.filter((id) => !STICKY_RIGHT_COLUMN_IDS.has(id)),
     [visibleColOrder],
   );
+  const visibleColumnsForPanel = useMemo<{ id: string; label: string; isCustom?: boolean }[]>(
+    () =>
+      draggableColOrder
+        .map((colId) => {
+          const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
+          if (meta) {
+            return { id: colId, label: meta.label, isCustom: false };
+          }
+          const customDef = customColumnDefs.find((definition) => definition.id === colId);
+          if (!customDef) return null;
+          return { id: colId, label: customDef.label, isCustom: true };
+        })
+        .filter((column) => column !== null),
+    [customColumnDefs, draggableColOrder],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -315,13 +330,19 @@ export function ProposalCategorySection({
         subtotalCents={subtotalCents}
         hasOpenRevision={hasOpenRevision}
         openRevisionLabel={openRev?.label}
+        visibleColumns={visibleColumnsForPanel}
         hiddenDefaults={hiddenDefaults}
+        customColumnDefs={customColumnDefs}
         onToggle={onToggle}
         onPrefetchItems={onPrefetchItems}
         onCategoryNameSave={onCategoryNameSave}
         onCategoryDelete={onCategoryDelete}
         onAddItem={handleAddItem}
+        onMoveColumn={onMoveColumn}
+        onHideColumn={onHideColumn}
         onRestoreDefault={onRestoreDefault}
+        onRenameCustomColumn={onRenameCustomColumn}
+        onDeleteCustomColumn={onDeleteCustomColumn}
         onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
         onExpand={() => setIsExpanded(true)}
       />

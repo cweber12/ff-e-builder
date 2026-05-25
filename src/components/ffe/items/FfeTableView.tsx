@@ -94,6 +94,7 @@ import { GeneratedItemEditableNumberControl } from '../../shared/table/Generated
 import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
 import { GeneratedItemImageControl } from '../../shared/table/GeneratedItemImageCell';
 import { GeneratedItemMaterialsControl } from '../../shared/table/GeneratedItemMaterialsCell';
+import { ColumnsPanel } from '../../shared/table/ColumnsPanel';
 import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
@@ -108,6 +109,7 @@ import { GeneratedItemProposalImpactIndicatorWrap as RevisionIndicatorWrap } fro
 
 const DEFAULT_COLUMN_IDS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnIds;
 const DEFAULT_COLUMN_META = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnMeta;
+const DEFAULT_COLUMN_LABELS = FFE_GENERATED_ITEM_TABLE_PRESET.defaultColumnLabels;
 
 function defaultColumnClassName(columnId: string) {
   return DEFAULT_COLUMN_META[columnId as keyof typeof DEFAULT_COLUMN_META]?.className;
@@ -1225,13 +1227,19 @@ export function RoomHeader({
   subtotal,
   openRevisionLabel,
   project,
+  visibleColumns,
+  customColumns,
   columnDefs,
   hiddenDefaults,
   onToggle,
   onSaveRoomName,
   onDeleteRoom,
   onAddItem,
+  onMoveColumn,
+  onHideColumn,
   onRestoreDefault,
+  onRenameCustomColumn,
+  onDeleteCustomColumn,
   onOpenAddColumnModal,
   onExpand,
 }: {
@@ -1243,13 +1251,19 @@ export function RoomHeader({
   subtotal: number;
   openRevisionLabel?: string;
   project?: Project;
+  visibleColumns: { id: string; label: string; isCustom?: boolean }[];
+  customColumns: import('../../../types').CustomColumnDef[];
   columnDefs: import('../../../types').CustomColumnDef[];
   hiddenDefaults: { id: string; label: string }[];
   onToggle: () => void;
   onSaveRoomName: (name: string) => Promise<void>;
   onDeleteRoom: () => void;
   onAddItem: () => void;
+  onMoveColumn: (fromId: string, toId: string) => void;
+  onHideColumn: (id: string) => void;
   onRestoreDefault: (id: string) => void;
+  onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
+  onDeleteCustomColumn: (defId: string) => void;
   onOpenAddColumnModal: () => void;
   onExpand: () => void;
 }) {
@@ -1291,6 +1305,19 @@ export function RoomHeader({
         <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-white">
           {formatMoney(cents(subtotal))}
         </span>
+        <ColumnsPanel
+          title={room.name}
+          visibleColumns={visibleColumns}
+          hiddenDefaults={hiddenDefaults}
+          customColumns={customColumns}
+          onMoveColumn={onMoveColumn}
+          onHideColumn={onHideColumn}
+          onRestoreDefault={onRestoreDefault}
+          onRenameCustomColumn={onRenameCustomColumn}
+          onDeleteCustomColumn={onDeleteCustomColumn}
+          onOpenAddColumnModal={onOpenAddColumnModal}
+          triggerClassName="text-brand-100 ring-white/15 border-white/15 bg-white/10 hover:bg-white/20"
+        />
         <div className="flex items-center gap-1 text-brand-100 [&_.icon-btn]:text-brand-100 [&_.icon-btn:hover]:bg-white/10 [&_.icon-btn:hover]:text-white">
           <RoomActionsMenu
             room={room}
@@ -1580,6 +1607,19 @@ export function RoomItemsSection({
   });
   const columns = generatedColumns.visibleColumns;
   const hiddenDefaultColumns = generatedColumns.hiddenDefaults;
+  const visibleColumnsForPanel = useMemo(
+    () =>
+      generatedColumns.draggableColumnIds.map((columnId) => {
+        const customDef = columnDefs.find((definition) => definition.id === columnId);
+        if (customDef) {
+          return { id: columnId, label: customDef.label, isCustom: true };
+        }
+        const label =
+          DEFAULT_COLUMN_LABELS[columnId as keyof typeof DEFAULT_COLUMN_LABELS] ?? columnId;
+        return { id: columnId, label, isCustom: false };
+      }),
+    [columnDefs, generatedColumns.draggableColumnIds],
+  );
   const table = useReactTable({
     data: sortedItems,
     columns,
@@ -1623,6 +1663,8 @@ export function RoomItemsSection({
         subtotal={subtotal}
         {...(openRevision ? { openRevisionLabel: openRevision.label } : {})}
         {...(project !== undefined ? { project } : {})}
+        visibleColumns={visibleColumnsForPanel}
+        customColumns={columnDefs}
         columnDefs={columnDefs}
         hiddenDefaults={hiddenDefaultColumns}
         onToggle={onToggle}
@@ -1631,7 +1673,11 @@ export function RoomItemsSection({
         }}
         onDeleteRoom={() => onDeleteRoom(room)}
         onAddItem={() => setAddDrawerOpen(true)}
+        onMoveColumn={generatedColumns.columnConfig.moveColumn}
+        onHideColumn={generatedColumns.columnConfig.hideDefaultColumn}
         onRestoreDefault={(id) => generatedColumns.columnConfig.restoreDefaultColumn(id)}
+        onRenameCustomColumn={handleRenameCustomDef}
+        onDeleteCustomColumn={handleDeleteCustomDef}
         onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
         onExpand={() => setIsExpanded(true)}
       />
