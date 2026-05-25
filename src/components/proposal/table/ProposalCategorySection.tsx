@@ -1,4 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
+import {
+  Fragment,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent,
+} from 'react';
 import {
   closestCenter,
   DndContext,
@@ -7,6 +16,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -269,15 +279,51 @@ export function ProposalCategorySection({
     [onMoveColumn],
   );
 
+  const [dragOverInfo, setDragOverInfo] = useState<{
+    overId: string;
+    insertBefore: boolean;
+  } | null>(null);
+
+  const handleRowDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) {
+        setDragOverInfo(null);
+        return;
+      }
+      const activeIndex = sortedItems.findIndex((item) => item.id === active.id);
+      const overIndex = sortedItems.findIndex((item) => item.id === over.id);
+      setDragOverInfo({ overId: String(over.id), insertBefore: activeIndex > overIndex });
+    },
+    [sortedItems],
+  );
+
+  const handleRowDragCancel = useCallback(() => setDragOverInfo(null), []);
+
   const handleRowDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
+      setDragOverInfo(null);
       if (!over || active.id === over.id) return;
       const oldIndex = sortedItems.findIndex((item) => item.id === active.id);
       const newIndex = sortedItems.findIndex((item) => item.id === over.id);
       if (oldIndex < 0 || newIndex < 0) return;
+      const previousOrder = sortedItems.map((item) => item.id);
       const reordered = arrayMove(sortedItems, oldIndex, newIndex);
-      reorderItems.mutate(reordered.map((item) => item.id));
+      reorderItems.mutate(
+        reordered.map((item) => item.id),
+        {
+          onSuccess: () => {
+            toast('Row moved', {
+              duration: 8000,
+              action: {
+                label: 'Undo',
+                onClick: () => reorderItems.mutate(previousOrder),
+              },
+            });
+          },
+        },
+      );
     },
     [sortedItems, reorderItems],
   );
@@ -543,42 +589,55 @@ export function ProposalCategorySection({
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
+                onDragOver={handleRowDragOver}
                 onDragEnd={handleRowDragEnd}
+                onDragCancel={handleRowDragCancel}
               >
                 <SortableContext
                   items={sortedItems.map((item) => item.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {sortedItems.map((item) => (
-                    <ProposalRow
-                      key={item.id}
-                      projectId={projectId}
-                      item={item}
-                      otherCategories={otherCategories}
-                      onSave={(patch) => handleItemSave(item, patch)}
-                      onDelete={() => deleteItem.mutate(item.id)}
-                      onDuplicate={() => createItem.mutate(duplicateItemPayload(item))}
-                      onAddToFfe={() => handleAddItemToFfe(item)}
-                      onMove={(toCategoryId) =>
-                        moveItem.mutate({
-                          id: item.id,
-                          fromCategoryId: categoryId,
-                          toCategoryId,
-                          version: item.version,
-                        })
-                      }
-                      onRowClick={() => onItemClick(item)}
-                      visibleColOrder={visibleColOrder}
-                      customColumnDefs={customColumnDefs}
-                      proposalStatus={proposalStatus}
-                      onSwatchOpen={setActiveSwatchItemId}
-                      autoFocusItemName={item.id === pendingFocusItemId}
-                      recentMaterials={recentMaterialsData}
-                      onQuickApply={(itemId, materialId) => {
-                        pushRecentMaterial(materialId);
-                        materialActions.assign.mutate({ itemId, materialId });
-                      }}
-                    />
+                    <Fragment key={item.id}>
+                      {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
+                        <tr aria-hidden="true" className="motion-reduce:hidden">
+                          <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
+                        </tr>
+                      )}
+                      <ProposalRow
+                        projectId={projectId}
+                        item={item}
+                        otherCategories={otherCategories}
+                        onSave={(patch) => handleItemSave(item, patch)}
+                        onDelete={() => deleteItem.mutate(item.id)}
+                        onDuplicate={() => createItem.mutate(duplicateItemPayload(item))}
+                        onAddToFfe={() => handleAddItemToFfe(item)}
+                        onMove={(toCategoryId) =>
+                          moveItem.mutate({
+                            id: item.id,
+                            fromCategoryId: categoryId,
+                            toCategoryId,
+                            version: item.version,
+                          })
+                        }
+                        onRowClick={() => onItemClick(item)}
+                        visibleColOrder={visibleColOrder}
+                        customColumnDefs={customColumnDefs}
+                        proposalStatus={proposalStatus}
+                        onSwatchOpen={setActiveSwatchItemId}
+                        autoFocusItemName={item.id === pendingFocusItemId}
+                        recentMaterials={recentMaterialsData}
+                        onQuickApply={(itemId, materialId) => {
+                          pushRecentMaterial(materialId);
+                          materialActions.assign.mutate({ itemId, materialId });
+                        }}
+                      />
+                      {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
+                        <tr aria-hidden="true" className="motion-reduce:hidden">
+                          <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
+                        </tr>
+                      )}
+                    </Fragment>
                   ))}
                 </SortableContext>
               </DndContext>
@@ -802,42 +861,55 @@ export function ProposalCategorySection({
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
+                    onDragOver={handleRowDragOver}
                     onDragEnd={handleRowDragEnd}
+                    onDragCancel={handleRowDragCancel}
                   >
                     <SortableContext
                       items={sortedItems.map((item) => item.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       {sortedItems.map((item) => (
-                        <ProposalRow
-                          key={item.id}
-                          projectId={projectId}
-                          item={item}
-                          otherCategories={otherCategories}
-                          onSave={(patch) => handleItemSave(item, patch)}
-                          onDelete={() => deleteItem.mutate(item.id)}
-                          onDuplicate={() => createItem.mutate(duplicateItemPayload(item))}
-                          onAddToFfe={() => handleAddItemToFfe(item)}
-                          onMove={(toCategoryId) =>
-                            moveItem.mutate({
-                              id: item.id,
-                              fromCategoryId: categoryId,
-                              toCategoryId,
-                              version: item.version,
-                            })
-                          }
-                          onRowClick={() => onItemClick(item)}
-                          visibleColOrder={visibleColOrder}
-                          customColumnDefs={customColumnDefs}
-                          proposalStatus={proposalStatus}
-                          onSwatchOpen={setActiveSwatchItemId}
-                          autoFocusItemName={item.id === pendingFocusItemId}
-                          recentMaterials={recentMaterialsData}
-                          onQuickApply={(itemId, materialId) => {
-                            pushRecentMaterial(materialId);
-                            materialActions.assign.mutate({ itemId, materialId });
-                          }}
-                        />
+                        <Fragment key={item.id}>
+                          {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
+                            <tr aria-hidden="true" className="motion-reduce:hidden">
+                              <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
+                            </tr>
+                          )}
+                          <ProposalRow
+                            projectId={projectId}
+                            item={item}
+                            otherCategories={otherCategories}
+                            onSave={(patch) => handleItemSave(item, patch)}
+                            onDelete={() => deleteItem.mutate(item.id)}
+                            onDuplicate={() => createItem.mutate(duplicateItemPayload(item))}
+                            onAddToFfe={() => handleAddItemToFfe(item)}
+                            onMove={(toCategoryId) =>
+                              moveItem.mutate({
+                                id: item.id,
+                                fromCategoryId: categoryId,
+                                toCategoryId,
+                                version: item.version,
+                              })
+                            }
+                            onRowClick={() => onItemClick(item)}
+                            visibleColOrder={visibleColOrder}
+                            customColumnDefs={customColumnDefs}
+                            proposalStatus={proposalStatus}
+                            onSwatchOpen={setActiveSwatchItemId}
+                            autoFocusItemName={item.id === pendingFocusItemId}
+                            recentMaterials={recentMaterialsData}
+                            onQuickApply={(itemId, materialId) => {
+                              pushRecentMaterial(materialId);
+                              materialActions.assign.mutate({ itemId, materialId });
+                            }}
+                          />
+                          {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
+                            <tr aria-hidden="true" className="motion-reduce:hidden">
+                              <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </SortableContext>
                   </DndContext>
