@@ -366,7 +366,7 @@ const ProposalRowContent = memo(
           value={item.productTag}
           onSave={(productTag) => onSave({ productTag })}
           debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
-          className="sticky left-8 z-20 w-36 min-w-36 bg-canvas-chrome py-3 group-hover:bg-canvas-shell/90"
+          className="sticky left-8 z-20 w-24 min-w-24 bg-canvas-chrome py-3 group-hover:bg-canvas-shell/90"
           indicator={dot('productTag')}
           inputClassName={editInputClassName}
           displayClassName="inline-flex w-auto max-w-full rounded-pill bg-brand-100 px-2.5 py-1 text-xs font-semibold tracking-wide text-brand-700 hover:bg-brand-100"
