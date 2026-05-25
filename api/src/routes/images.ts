@@ -30,11 +30,10 @@ function buildThumbR2Key(r2Key: string, imageId: string): string {
 }
 
 type WorkerImageBitmap = { width: number; height: number; close: () => void };
-type WorkerCanvasCtx = {
-  drawImage: (img: WorkerImageBitmap, dx: number, dy: number, dw: number, dh: number) => void;
-};
 type WorkerOffscreenCanvas = {
-  getContext: (type: '2d') => WorkerCanvasCtx | null;
+  getContext: (type: '2d') => {
+    drawImage: (img: WorkerImageBitmap, dx: number, dy: number, dw: number, dh: number) => void;
+  } | null;
   convertToBlob: (opts: { type: string; quality: number }) => Promise<Blob>;
 };
 
@@ -44,18 +43,19 @@ async function generateThumbnail(
 ): Promise<{ bytes: Uint8Array<ArrayBuffer>; byteSize: number } | null> {
   if (contentType === 'image/gif') return null;
   try {
+    const g = globalThis as unknown as {
+      createImageBitmap: (b: Blob) => Promise<WorkerImageBitmap>;
+      OffscreenCanvas: new (w: number, h: number) => WorkerOffscreenCanvas;
+    };
     const blob = new Blob([imageBytes], { type: contentType });
-    const bitmap = await (createImageBitmap as (b: Blob) => Promise<WorkerImageBitmap>)(blob);
+    const bitmap = await g.createImageBitmap(blob);
     const { width: origW, height: origH } = bitmap;
     const scale = Math.max(THUMBNAIL_SIZE / origW, THUMBNAIL_SIZE / origH);
     const scaledW = Math.round(origW * scale);
     const scaledH = Math.round(origH * scale);
     const offsetX = Math.round((scaledW - THUMBNAIL_SIZE) / 2);
     const offsetY = Math.round((scaledH - THUMBNAIL_SIZE) / 2);
-    const canvas = new (OffscreenCanvas as unknown as new (
-      w: number,
-      h: number,
-    ) => WorkerOffscreenCanvas)(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+    const canvas = new g.OffscreenCanvas(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     ctx.drawImage(bitmap, -offsetX, -offsetY, scaledW, scaledH);

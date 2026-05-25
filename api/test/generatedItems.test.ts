@@ -148,6 +148,7 @@ describe('Generated Item read model', () => {
       'category-1',
       {
         product_tag: 'F-101',
+        item_name: 'Lounge chair',
         plan: '',
         drawings: '',
         location: '',
