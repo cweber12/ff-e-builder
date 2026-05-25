@@ -42,6 +42,7 @@ const makeImage = (overrides: Partial<ImageAsset> = {}): ImageAsset => ({
   cropY: null,
   cropWidth: null,
   cropHeight: null,
+  thumbnailR2Key: null,
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',
   ...overrides,

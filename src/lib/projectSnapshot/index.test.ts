@@ -230,6 +230,7 @@ const projectImages: ImageAsset[] = [
     cropY: null,
     cropWidth: null,
     cropHeight: null,
+    thumbnailR2Key: null,
     createdAt: '',
     updatedAt: '',
   },
