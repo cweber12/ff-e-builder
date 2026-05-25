@@ -2,14 +2,18 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
 import { EditablePencilHint } from './EditablePencilHint';
 
+type EditableTextAffordance = 'none' | 'hover';
+
 type GeneratedItemEditableTextCellProps = {
   value: string;
   onSave: (value: string) => Promise<void> | void;
   className?: string;
   indicator?: ReactNode;
   inputClassName?: string;
+  displayClassName?: string;
   ariaLabel?: string;
   normalizeValue?: (value: string) => string;
+  affordance?: EditableTextAffordance;
 };
 
 type GeneratedItemEditableTextControlProps = {
@@ -20,6 +24,7 @@ type GeneratedItemEditableTextControlProps = {
   ariaLabel?: string | undefined;
   displayClassName?: string | undefined;
   normalizeValue?: ((value: string) => string) | undefined;
+  affordance?: EditableTextAffordance | undefined;
 };
 
 export function GeneratedItemEditableTextCell({
@@ -28,8 +33,10 @@ export function GeneratedItemEditableTextCell({
   className,
   indicator,
   inputClassName,
+  displayClassName,
   ariaLabel,
   normalizeValue,
+  affordance = 'none',
 }: GeneratedItemEditableTextCellProps) {
   return (
     <td
@@ -41,8 +48,10 @@ export function GeneratedItemEditableTextCell({
         onSave={onSave}
         indicator={indicator}
         inputClassName={inputClassName}
+        displayClassName={displayClassName}
         ariaLabel={ariaLabel}
         normalizeValue={normalizeValue}
+        affordance={affordance}
       />
       <EditablePencilHint />
     </td>
@@ -57,6 +66,7 @@ export function GeneratedItemEditableTextControl({
   ariaLabel,
   displayClassName,
   normalizeValue = (nextValue) => nextValue,
+  affordance = 'none',
 }: GeneratedItemEditableTextControlProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -125,6 +135,8 @@ export function GeneratedItemEditableTextControl({
             isEmpty
               ? 'border border-neutral-300 text-neutral-400 hover:border-brand-500'
               : 'text-neutral-700 hover:bg-brand-50',
+            affordance === 'hover' &&
+              'motion-reduce:transition-none motion-safe:transition-colors underline decoration-1 underline-offset-4 decoration-transparent group-hover:decoration-brand-200',
             displayClassName,
           )}
         >
@@ -171,3 +183,5 @@ export function GeneratedItemEditableTextControl({
     </div>
   );
 }
+
+export type { EditableTextAffordance };

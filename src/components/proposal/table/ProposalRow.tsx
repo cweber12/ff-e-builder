@@ -172,24 +172,18 @@ const ProposalRowContent = memo(
           kind="rendering"
           entityId={item.id}
           alt={`${item.productTag || 'Proposal'} rendering`}
+          tdClassName="py-3"
           onClick={stopProp}
-        />
-      ),
-      productTag: (
-        <GeneratedItemEditableTextCell
-          value={item.productTag}
-          onSave={(productTag) => onSave({ productTag })}
-          indicator={dot('productTag')}
-          inputClassName={editInputClassName}
         />
       ),
       itemName: (
         <GeneratedItemEditableTextCell
           value={item.itemName}
           onSave={(itemName) => onSave({ itemName })}
-          className="min-w-48"
+          className="min-w-48 py-3"
           indicator={dot('itemName')}
           inputClassName={editInputClassName}
+          affordance="hover"
         />
       ),
       plan: (
@@ -198,6 +192,7 @@ const ProposalRowContent = memo(
           kind="plan"
           entityId={item.id}
           alt={`${item.productTag || 'Proposal'} plan`}
+          tdClassName="py-3"
           onClick={stopProp}
         />
       ),
@@ -205,34 +200,40 @@ const ProposalRowContent = memo(
         <GeneratedItemEditableTextCell
           value={item.drawings}
           onSave={(drawings) => onSave({ drawings })}
+          className="py-3"
           indicator={dot('drawings')}
           inputClassName={editInputClassName}
+          affordance="hover"
         />
       ),
       location: (
         <GeneratedItemEditableTextCell
           value={item.location}
           onSave={(location) => onSave({ location })}
+          className="py-3"
           indicator={dot('location')}
           inputClassName={editInputClassName}
+          affordance="hover"
         />
       ),
       description: (
         <GeneratedItemEditableTextCell
           value={item.description}
           onSave={(description) => onSave({ description })}
-          className="min-w-64"
+          className="min-w-64 py-3"
           indicator={dot('description')}
           inputClassName={editInputClassName}
+          affordance="hover"
         />
       ),
       notes: (
         <GeneratedItemEditableTextCell
           value={item.notes}
           onSave={(notes) => onSave({ notes })}
-          className="min-w-48"
+          className="min-w-48 py-3"
           indicator={dot('notes')}
           inputClassName={editInputClassName}
+          affordance="hover"
         />
       ),
       size: (
@@ -256,12 +257,14 @@ const ProposalRowContent = memo(
               sizeLabel: label,
             })
           }
+          tdClassName="py-3"
         />
       ),
       swatch: (
         <GeneratedItemMaterialsCell
           materials={item.materials}
           onOpen={() => onSwatchOpen(item.id)}
+          tdClassName="py-3"
         />
       ),
       cbm: (
@@ -270,6 +273,7 @@ const ProposalRowContent = memo(
           step="0.001"
           onSave={(cbm) => onSave({ cbm })}
           className="w-24"
+          tdClassName="py-3"
           inputClassName={editInputClassName}
           indicator={dot('cbm')}
         />
@@ -282,8 +286,10 @@ const ProposalRowContent = memo(
             onSave={(value) => {
               onSave({ customData: { ...item.customData, [def.id]: value } });
             }}
+            className="py-3"
             indicator={dot(def.id)}
             inputClassName={editInputClassName}
+            affordance="hover"
           />,
         ]),
       ),
@@ -306,17 +312,27 @@ const ProposalRowContent = memo(
         }}
         className={cn(
           'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
+          'motion-reduce:transition-none motion-safe:transition-colors hover:bg-canvas-shell/70',
           'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
           isDragging && 'bg-brand-50 shadow-md opacity-80',
         )}
       >
-        <td className="w-8 min-w-8 px-1 py-2" onClick={stopProp}>
+        <td className="w-8 min-w-8 px-1 py-3" onClick={stopProp}>
           <GeneratedItemDragHandle
             ariaLabel={`Drag ${item.productTag || 'item'}`}
             {...dragAttributes}
             {...dragListeners}
           />
         </td>
+        <GeneratedItemEditableTextCell
+          value={item.productTag}
+          onSave={(productTag) => onSave({ productTag })}
+          className="sticky left-8 z-20 w-36 min-w-36 bg-canvas-chrome py-3 group-hover:bg-canvas-shell/90"
+          indicator={dot('productTag')}
+          inputClassName={editInputClassName}
+          displayClassName="inline-flex w-auto max-w-full rounded-pill bg-brand-100 px-2.5 py-1 text-xs font-semibold tracking-wide text-brand-700 hover:bg-brand-100"
+          affordance="hover"
+        />
         {visibleColOrder.map((colId) => (
           <Fragment key={colId}>{cellRenderMap[colId]}</Fragment>
         ))}
@@ -331,7 +347,7 @@ const ProposalRowContent = memo(
                 />
                 <td
                   className={cn(
-                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    'px-3 py-3 text-sm tabular-nums text-neutral-400',
                     baselineQtyColumnClassName,
                   )}
                 >
@@ -339,7 +355,7 @@ const ProposalRowContent = memo(
                 </td>
                 <td
                   className={cn(
-                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    'px-3 py-3 text-sm tabular-nums text-neutral-400',
                     baselineUnitCostColumnClassName,
                   )}
                 >
@@ -347,7 +363,7 @@ const ProposalRowContent = memo(
                 </td>
                 <td
                   className={cn(
-                    'px-3 py-2 text-sm tabular-nums text-neutral-400',
+                    'px-3 py-3 text-sm tabular-nums text-neutral-400',
                     baselineTotalColumnClassName,
                   )}
                 >
@@ -358,16 +374,19 @@ const ProposalRowContent = memo(
                   currentQuantity={item.quantity}
                   currentUnit={item.quantityUnit}
                   onSaveQuantity={(quantity) => onSave({ quantity })}
-                  tdClassName={stickyRevQtyCellClassName}
+                  tdClassName={cn(stickyRevQtyCellClassName, 'py-3')}
                 />
                 <RevisionCostCell
                   snapshot={snapshot}
                   projectId={projectId}
                   revisionId={openRev.id}
                   itemId={item.id}
-                  tdClassName={stickyRevUnitCostCellClassName}
+                  tdClassName={cn(stickyRevUnitCostCellClassName, 'py-3')}
                 />
-                <RevisionTotalCell snapshot={snapshot} tdClassName={stickyRevTotalCellClassName} />
+                <RevisionTotalCell
+                  snapshot={snapshot}
+                  tdClassName={cn(stickyRevTotalCellClassName, 'py-3')}
+                />
               </>
             );
           })()
@@ -380,19 +399,19 @@ const ProposalRowContent = memo(
               onSaveQuantity={(quantity) => onSave({ quantity })}
               onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
               indicator={dot('quantity')}
-              tdClassName={proposalStickyValueColumnClassNames.quantity.cell}
+              tdClassName={cn(proposalStickyValueColumnClassNames.quantity.cell, 'py-3')}
               inputClassName={editInputClassName}
             />
             <GeneratedItemEditableMoneyCell
               valueCents={item.unitCostCents}
               onSave={(unitCostCents) => onSave({ unitCostCents })}
               indicator={dot('unitCostCents')}
-              tdClassName={proposalStickyValueColumnClassNames.unitCost.cell}
+              tdClassName={cn(proposalStickyValueColumnClassNames.unitCost.cell, 'py-3')}
               inputClassName={editInputClassName}
             />
             <td
               className={cn(
-                'px-3 py-2 font-semibold text-neutral-900',
+                'px-3 py-3 font-semibold text-neutral-900',
                 proposalStickyEdgeColumnClassNames.totalCell,
               )}
             >
@@ -401,7 +420,7 @@ const ProposalRowContent = memo(
           </>
         )}
         <td
-          className={cn('px-1 py-2', proposalStickyEdgeColumnClassNames.actionsCell)}
+          className={cn('px-1 py-3', proposalStickyEdgeColumnClassNames.actionsCell)}
           onClick={stopProp}
         >
           <ProposalItemActionsMenu

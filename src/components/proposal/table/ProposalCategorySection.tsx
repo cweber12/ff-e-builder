@@ -342,6 +342,9 @@ export function ProposalCategorySection({
               >
                 <tr>
                   <th className="h-10 border-b border-black/10 w-8 min-w-8 px-1" />
+                  <th className="sticky left-8 z-40 h-10 w-36 min-w-36 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                    ID
+                  </th>
                   <SortableContext
                     items={draggableColOrder}
                     strategy={horizontalListSortingStrategy}
@@ -592,6 +595,9 @@ export function ProposalCategorySection({
                   >
                     <tr>
                       <th className="h-10 border-b border-black/10 w-8 min-w-8 px-1" />
+                      <th className="sticky left-8 z-40 h-10 w-36 min-w-36 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                        ID
+                      </th>
                       <SortableContext
                         items={draggableColOrder}
                         strategy={horizontalListSortingStrategy}

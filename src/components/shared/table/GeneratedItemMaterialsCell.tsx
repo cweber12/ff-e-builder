@@ -1,9 +1,11 @@
 import type { Material } from '../../../types';
+import { cn } from '../../../lib/utils';
 import { MaterialBadges } from '../../materials';
 
 type GeneratedItemMaterialsControlProps = {
   materials: Material[];
   onOpen: () => void;
+  tdClassName?: string | undefined;
 };
 
 export function GeneratedItemMaterialsControl({
@@ -16,9 +18,13 @@ export function GeneratedItemMaterialsControl({
 export function GeneratedItemMaterialsCell({
   materials,
   onOpen,
+  tdClassName,
 }: GeneratedItemMaterialsControlProps) {
   return (
-    <td className="min-w-36 px-3 py-2" onClick={(event) => event.stopPropagation()}>
+    <td
+      className={cn('min-w-36 px-3 py-2', tdClassName)}
+      onClick={(event) => event.stopPropagation()}
+    >
       <GeneratedItemMaterialsControl materials={materials} onOpen={onOpen} />
     </td>
   );

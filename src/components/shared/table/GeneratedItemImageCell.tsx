@@ -1,5 +1,6 @@
 import type { MouseEventHandler } from 'react';
 import type { ImageEntityType } from '../../../types';
+import { cn } from '../../../lib/utils';
 import { ImageFrame } from '../image/ImageFrame';
 
 type GeneratedItemImageKind = 'rendering' | 'plan';
@@ -52,15 +53,17 @@ export function GeneratedItemImageControl({
 
 type GeneratedItemImageCellProps = GeneratedItemImageControlProps & {
   onClick?: MouseEventHandler<HTMLTableCellElement>;
+  tdClassName?: string | undefined;
 };
 
 export function GeneratedItemImageCell({
   kind,
   onClick,
+  tdClassName,
   ...frameProps
 }: GeneratedItemImageCellProps) {
   return (
-    <td className={proposalCellClassNames[kind]} onClick={onClick}>
+    <td className={cn(proposalCellClassNames[kind], tdClassName)} onClick={onClick}>
       <GeneratedItemImageControl kind={kind} {...frameProps} />
     </td>
   );

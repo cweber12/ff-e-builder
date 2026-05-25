@@ -4,7 +4,7 @@ import type {
   ProposalCategoryWithItems,
   ProposalStatus,
 } from '../../types';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   exportTablePdf,
@@ -273,7 +273,7 @@ function FfeSortToggle({ projectId }: { projectId: string }) {
 // quantity and unitCost are sticky-right and not included here; they are always appended at export time.
 const PROPOSAL_DEFAULT_COLS = [
   'rendering',
-  'productTag',
+  'itemName',
   'plan',
   'drawings',
   'location',
@@ -312,6 +312,9 @@ export function ProposalActions({
     PROPOSAL_DEFAULT_COLS,
     customColumnDefs,
   );
+  // Product tag is now fixed chrome in the table (not draggable/hideable),
+  // but should still be available in exports.
+  const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
@@ -362,7 +365,7 @@ export function ProposalActions({
         userProfile={userProfile ?? null}
         customColumnDefs={customColumnDefs}
         revisionData={{ revisions, snapshots, changelog }}
-        visibleOrder={visibleOrder}
+        visibleOrder={exportVisibleOrder}
       />
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />

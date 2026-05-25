@@ -68,7 +68,7 @@ const FFE_COLUMN_LABELS: Record<string, string> = {
 
 const PROPOSAL_DEFAULT_COLUMN_IDS = [
   'rendering',
-  'productTag',
+  'itemName',
   'plan',
   'drawings',
   'location',
@@ -86,7 +86,7 @@ const PROPOSAL_HIDEABLE_IDS = new Set<string>([...PROPOSAL_DEFAULT_COLUMN_IDS]);
 
 const PROPOSAL_COLUMN_LABELS: Record<string, string> = {
   rendering: 'Rendering',
-  productTag: 'ID',
+  itemName: 'Name',
   plan: 'Plan',
   drawings: 'Drawings',
   location: 'Location',

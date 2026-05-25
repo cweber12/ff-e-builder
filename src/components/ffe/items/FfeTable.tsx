@@ -277,6 +277,7 @@ function EditableTextCell({
         value={current}
         ariaLabel={`${label} for ${item.itemName}`}
         displayClassName={displayClassName}
+        affordance="hover"
         normalizeValue={(nextValue) => nextValue.trim()}
         onSave={(nextValue) => {
           const patchValue = required ? nextValue : emptyToNull(nextValue);
@@ -1601,6 +1602,7 @@ function RoomItemsSection({
         <GeneratedItemEditableTextControl
           value={row.original.customData[def.id] ?? ''}
           ariaLabel={`${def.label} for ${row.original.itemName}`}
+          affordance="hover"
           normalizeValue={(value) => value.trim()}
           onSave={(value) => saveCustomCell(row.original, def.id, value)}
         />
