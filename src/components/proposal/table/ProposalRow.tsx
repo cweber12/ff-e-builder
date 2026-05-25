@@ -11,7 +11,7 @@ import {
 } from '../../../types';
 import { proposalLineTotalCents } from '../../../lib/money';
 import type { UpdateProposalItemInput } from '../../../lib/api';
-import { useRevisionInfoForItem } from '../../../hooks';
+import { useRevisionInfoForItem, useTableDensity, densityRowClass } from '../../../hooks';
 import { cn } from '../../../lib/utils';
 import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
 import {
@@ -168,6 +168,7 @@ const ProposalRowContent = memo(
     dragListeners: ReturnType<typeof useSortable>['listeners'];
   }) {
     const { openRev, revisions, snapshot, changelog } = useRevisionInfoForItem(projectId, item.id);
+    const { density } = useTableDensity();
 
     const style = { transform: dragTransform, transition: dragTransition ?? undefined };
     const lineTotal = proposalLineTotalCents(item);
@@ -347,6 +348,7 @@ const ProposalRowContent = memo(
         }}
         className={cn(
           'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
+          densityRowClass(density),
           'motion-reduce:transition-none motion-safe:transition-colors hover:bg-canvas-shell/70',
           'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
           isDragging && 'bg-brand-50 shadow-md opacity-80',
