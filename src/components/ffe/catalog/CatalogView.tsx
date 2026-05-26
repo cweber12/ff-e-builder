@@ -506,6 +506,7 @@ function CatalogActionsBar({
           ...editorState.layout,
           ...editorState.content,
         }}
+        typographyConfig={editorState.typography}
         watermarkConfig={editorState.watermark}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
@@ -648,6 +649,7 @@ function CatalogExportButton({
   rooms,
   currentItemId,
   layoutConfig,
+  typographyConfig,
   watermarkConfig,
   logoDataUrl,
   companyName,
@@ -657,6 +659,7 @@ function CatalogExportButton({
   rooms: RoomWithItems[];
   currentItemId: string | undefined;
   layoutConfig: CatalogLayoutConfig;
+  typographyConfig: CatalogTypographyConfig;
   watermarkConfig: WatermarkConfig;
   logoDataUrl: string | null;
   companyName: string | null;
@@ -691,6 +694,11 @@ function CatalogExportButton({
     showCostInfo: layoutConfig.showCostInfo,
     showSwatchLabels: layoutConfig.showSwatchLabels,
     showApproval: layoutConfig.showApproval,
+    showVerticalDivider: layoutConfig.showVerticalDivider,
+    showHorizontalDivider: layoutConfig.showHorizontalDivider,
+    titleColorToken: typographyConfig.titleColorToken,
+    bodyColorToken: typographyConfig.bodyColorToken,
+    metaColorToken: typographyConfig.metaColorToken,
     sortMode,
     watermark: watermarkOpts,
   };

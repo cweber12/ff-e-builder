@@ -45,7 +45,6 @@ const BRAND_500: RGB = [75, 127, 171];
 const BRAND_600: RGB = [58, 100, 138];
 const BRAND_700: RGB = [40, 71, 101];
 const BRAND_200: RGB = [158, 192, 220];
-const GRAY_800: RGB = [31, 41, 55];
 const GRAY_700: RGB = [55, 65, 81];
 const GRAY_600: RGB = [75, 85, 99];
 const GRAY_500: RGB = [107, 114, 128];
@@ -54,6 +53,14 @@ const GRAY_300: RGB = [209, 213, 219];
 const GRAY_200: RGB = [229, 231, 235];
 const GRAY_100: RGB = [243, 244, 246];
 const WHITE: RGB = [255, 255, 255];
+
+// ── Typography color tokens (match resolveCatalogColorToken in CatalogView.tsx) ─
+const INK_950: RGB = [10, 10, 10]; // #0a0a0a
+const INK_800: RGB = [38, 38, 38]; // #262626
+const SLATE_700: RGB = [55, 65, 81]; // #374151 (= GRAY_700)
+
+// ── Divider rule: rgb(0 0 0 / 0.12) composited on white ──────────────────────
+const DIVIDER_RULE: RGB = [224, 224, 224];
 
 type RGB = [number, number, number];
 
@@ -74,6 +81,18 @@ type CatalogItemAssets = {
 
 export type CatalogPdfImageAlignment = 'center' | 'top';
 export type CatalogPdfPlanImageSize = 'thumbnail' | 'expanded';
+export type CatalogPdfColorToken = 'ink-950' | 'ink-800' | 'slate-700';
+
+function resolveColorToken(token: CatalogPdfColorToken): RGB {
+  switch (token) {
+    case 'ink-950':
+      return INK_950;
+    case 'ink-800':
+      return INK_800;
+    case 'slate-700':
+      return SLATE_700;
+  }
+}
 
 type ContainedImageBox = {
   drawW: number;
@@ -118,6 +137,12 @@ export type CatalogPdfOptions = {
   mainImageAlignment?: CatalogPdfImageAlignment;
   /** Browser layout preference for the location plan image scale. */
   planImageSize?: CatalogPdfPlanImageSize;
+  /** Color token for heading text (e.g. "PRODUCT SPECIFICATIONS"). */
+  titleColorToken?: CatalogPdfColorToken;
+  /** Color token for primary body text (dimensions, description). */
+  bodyColorToken?: CatalogPdfColorToken;
+  /** Color token for secondary/meta text (notes, finish schedule labels). */
+  metaColorToken?: CatalogPdfColorToken;
   /**
    * Item ordering within each room.
    * - 'manual' (default): respects each item's `sortOrder`.
@@ -426,7 +451,7 @@ function drawHeader(
     cursorX += doc.getTextWidth(idTag.toUpperCase()) + 4;
   }
   applyFont(doc, font, 'normal', 13);
-  setText(doc, GRAY_800);
+  setText(doc, INK_950);
   const itemName = item.itemName.toUpperCase();
   const nameMaxW = rightX - cursorX - 70; // leave room for project text on right
   const nameLines = (doc.splitTextToSize(itemName, Math.max(40, nameMaxW)) as string[]).slice(0, 1);
@@ -484,10 +509,10 @@ function drawQtyBand(
 ) {
   if (!showCostInfo) {
     applyFont(doc, font, 'normal', 13);
-    setText(doc, GRAY_800);
+    setText(doc, INK_950);
     doc.text('QTY', x, y + 6.2);
     applyFont(doc, font, 'bold', 13);
-    setText(doc, GRAY_800);
+    setText(doc, INK_950);
     doc.text(String(item.qty), x + doc.getTextWidth('QTY') + 3, y + 6.2);
     return;
   }
@@ -533,23 +558,26 @@ function drawSpecColumn(
   width: number,
   maxBottomY: number,
   showSwatchLabels: boolean,
+  titleColor: RGB,
+  bodyColor: RGB,
+  metaColor: RGB,
 ) {
   let cursorY = y + 4;
 
-  // "PRODUCT SPECIFICATIONS" heading (neutral-700, 11pt, light tracking)
+  // "PRODUCT SPECIFICATIONS" heading
   applyFont(doc, font, 'bold', 9.5);
-  setText(doc, GRAY_700);
+  setText(doc, titleColor);
   doc.text('PRODUCT SPECIFICATIONS', x, cursorY);
   cursorY += 5;
 
-  // Dimensions (small neutral-700) — omitted when not set
+  // Dimensions — omitted when not set
   if (model.dimensions) {
     const dimResult = drawWrappedText(
       doc,
       font,
       'normal',
       9,
-      GRAY_700,
+      bodyColor,
       model.dimensions,
       x,
       cursorY,
@@ -561,14 +589,14 @@ function drawSpecColumn(
     cursorY += dimResult.height + 2;
   }
 
-  // Description (neutral-700, 9pt, up to 4 lines, italic-ish leading)
+  // Description (9pt, up to 4 lines)
   if (model.description) {
     const desc = drawWrappedText(
       doc,
       font,
       'normal',
       8.5,
-      GRAY_700,
+      bodyColor,
       model.description,
       x,
       cursorY,
@@ -578,7 +606,7 @@ function drawSpecColumn(
     cursorY += desc.height + 3;
   }
 
-  // Notes block — only render when present (per spec)
+  // Notes block — only render when present
   if (model.notes) {
     const notesAvailable = Math.max(0, maxBottomY - cursorY - 35); // reserve room for finish schedule
     const maxLines = Math.max(1, Math.floor(notesAvailable / lineHeightMm(8, 1.5)));
@@ -587,7 +615,7 @@ function drawSpecColumn(
       font,
       'normal',
       8,
-      GRAY_600,
+      metaColor,
       model.notes,
       x,
       cursorY,
@@ -605,10 +633,20 @@ function drawSpecColumn(
   const fsTop = Math.max(cursorY, maxBottomY - fsHeight);
 
   applyFont(doc, font, 'bold', 8.5);
-  setText(doc, GRAY_600);
+  setText(doc, titleColor);
   doc.text('FINISH SCHEDULE', x, fsTop);
 
-  drawMaterialsRow(doc, font, materials, materialImages, x, fsTop + 7, width, showSwatchLabels);
+  drawMaterialsRow(
+    doc,
+    font,
+    materials,
+    materialImages,
+    x,
+    fsTop + 7,
+    width,
+    showSwatchLabels,
+    metaColor,
+  );
 }
 
 function drawMaterialsRow(
@@ -620,6 +658,7 @@ function drawMaterialsRow(
   y: number,
   width: number,
   showSwatchLabels: boolean,
+  metaColor: RGB = SLATE_700,
 ) {
   // Caller is responsible for skipping the section when materials.length === 0.
   // We always render only real material cells in a 4-column grid so a single
@@ -658,7 +697,7 @@ function drawMaterialsRow(
     if (showSwatchLabels) {
       const idLabel = compactText(material.materialId) ?? 'ID';
       applyFont(doc, font, 'bold', 6.5);
-      setText(doc, GRAY_500);
+      setText(doc, metaColor);
       doc.text(idLabel.toUpperCase(), centerX, swatchY + swatchSize + 3.2, {
         align: 'center',
         maxWidth: cellW - 1,
@@ -668,7 +707,7 @@ function drawMaterialsRow(
       const nameRaw = compactText(material.name);
       const nameLabel = nameRaw ? nameRaw.split(/\s+/)[0]! : 'MATERIAL';
       applyFont(doc, font, 'bold', 6);
-      setText(doc, GRAY_500);
+      setText(doc, metaColor);
       doc.text(nameLabel.toUpperCase(), centerX, swatchY + swatchSize + 6.2, {
         align: 'center',
         maxWidth: cellW - 1,
@@ -925,6 +964,10 @@ function drawCatalogPage(
 ): void {
   const model = buildCatalogPdfPageModel(entry.item, assets.options);
 
+  const titleColor = resolveColorToken(options.titleColorToken);
+  const bodyColor = resolveColorToken(options.bodyColorToken);
+  const metaColor = resolveColorToken(options.metaColorToken);
+
   drawHeader(doc, font, project, entry, entry.item, options.watermark);
 
   // ── Main two-column section ─────────────────────────────────────────────────
@@ -960,10 +1003,27 @@ function drawCatalogPage(
     RIGHT_COL_W,
     mainBottomY,
     options.showSwatchLabels,
+    titleColor,
+    bodyColor,
+    metaColor,
   );
+
+  // ── Dividers ────────────────────────────────────────────────────────────────
+  doc.setLineWidth(0.2);
+  if (options.showVerticalDivider) {
+    const divX = PAGE_PADDING_X + LEFT_COL_W + MAIN_GAP / 2;
+    setStroke(doc, DIVIDER_RULE);
+    doc.line(divX, mainY, divX, mainBottomY);
+  }
 
   // ── Bottom row: options + location/plan ─────────────────────────────────────
   const bottomY = mainBottomY + SECTION_GAP;
+
+  if (options.showHorizontalDivider) {
+    setStroke(doc, DIVIDER_RULE);
+    doc.setLineWidth(0.2);
+    doc.line(PAGE_PADDING_X, bottomY, PAGE_PADDING_X + CONTENT_W, bottomY);
+  }
   drawOptionStrip(doc, font, assets.options, PAGE_PADDING_X, bottomY);
   drawLocationBlock(
     doc,
@@ -1006,6 +1066,9 @@ function resolveOptions(options: CatalogPdfOptions | undefined): Required<Catalo
     showHorizontalDivider: options?.showHorizontalDivider ?? false,
     mainImageAlignment: resolveCatalogPdfImageAlignment(options?.mainImageAlignment),
     planImageSize: options?.planImageSize ?? 'thumbnail',
+    titleColorToken: options?.titleColorToken ?? 'ink-950',
+    bodyColorToken: options?.bodyColorToken ?? 'ink-800',
+    metaColorToken: options?.metaColorToken ?? 'slate-700',
     sortMode: options?.sortMode ?? 'manual',
     watermark: options?.watermark ?? null,
   };
