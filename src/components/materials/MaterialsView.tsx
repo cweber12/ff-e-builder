@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import {
@@ -69,6 +70,9 @@ const FILTER_OPTIONS: Array<{ value: CategoryFilter; label: string }> = [
   { value: 'solid_color', label: 'Solid Color' },
   { value: 'uncategorized', label: 'Uncategorized' },
 ];
+
+export const MATERIALS_ACTIONS_SLOT_ID = 'materials-actions-slot';
+export const MATERIALS_FILTER_SLOT_ID = 'materials-filter-slot';
 
 export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewProps) {
   const queryClient = useQueryClient();
@@ -171,51 +175,20 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-neutral-200 pb-4">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
-            Finish library
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-            className="rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
-            aria-label="Filter by category"
-          >
-            {FILTER_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <div className="segmented">
-            <button
-              type="button"
-              aria-pressed={viewMode === 'grid'}
-              onClick={() => setViewMode('grid')}
-            >
-              Grid
-            </button>
-            <button
-              type="button"
-              aria-pressed={viewMode === 'table'}
-              onClick={() => setViewMode('table')}
-            >
-              Table
-            </button>
-          </div>
-          <ExportMenu
-            label={<ExportIcon />}
-            onCsv={() => void exportMaterialsExcel(project, filteredMaterials, 'csv')}
-            onExcel={() => void exportMaterialsExcel(project, filteredMaterials)}
-            onPdf={() => void exportMaterialsPdf(project, filteredMaterials)}
-            disabled={filteredMaterials.length === 0}
-            className="[&>button]:px-2"
-          />
-        </div>
-      </div>
+      <MaterialsToolbarLeft
+        viewMode={viewMode}
+        categoryFilter={categoryFilter}
+        onViewModeChange={setViewMode}
+        onCategoryFilterChange={setCategoryFilter}
+      />
+      <MaterialsToolbarActions
+        project={project}
+        filteredMaterials={filteredMaterials}
+        query={query}
+        showForm={showForm}
+        onQueryChange={setQuery}
+        onCreateMaterial={openCreateForm}
+      />
 
       <div className={`grid gap-6 ${showForm ? 'xl:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
         {showForm && (
@@ -231,29 +204,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         )}
 
         <section>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-            <div className="flex items-baseline gap-3">
-              <h3 className="eyebrow">Project library</h3>
-              <span className="num text-[11px] font-semibold text-neutral-500">
-                {filteredMaterials.length} {filteredMaterials.length === 1 ? 'item' : 'items'}
-              </span>
-            </div>
-            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search name or ID"
-                className="input-base sm:w-72"
-                aria-label="Search library by name or ID"
-              />
-              {!showForm && (
-                <Button type="button" size="sm" onClick={openCreateForm}>
-                  + New material
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="max-h-[48rem] overflow-auto py-5">
+          <div className="max-h-[48rem] overflow-auto py-2">
             {materials.isLoading ? (
               <p className="text-sm text-neutral-500">Loading materials…</p>
             ) : filteredMaterials.length === 0 ? (
@@ -282,6 +233,127 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         </section>
       </div>
     </div>
+  );
+}
+
+function MaterialsToolbarLeft({
+  viewMode,
+  categoryFilter,
+  onViewModeChange,
+  onCategoryFilterChange,
+}: {
+  viewMode: 'grid' | 'table';
+  categoryFilter: CategoryFilter;
+  onViewModeChange: (value: 'grid' | 'table') => void;
+  onCategoryFilterChange: (value: CategoryFilter) => void;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById(MATERIALS_FILTER_SLOT_ID);
+    setSlot(el);
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <>
+      <div className="segmented" role="tablist" aria-label="Materials view mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={viewMode === 'grid'}
+          data-active={viewMode === 'grid' || undefined}
+          onClick={() => onViewModeChange('grid')}
+        >
+          Grid
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={viewMode === 'table'}
+          data-active={viewMode === 'table' || undefined}
+          onClick={() => onViewModeChange('table')}
+        >
+          Table
+        </button>
+      </div>
+      <select
+        value={categoryFilter}
+        onChange={(e) => onCategoryFilterChange(e.target.value as CategoryFilter)}
+        className="input-compact h-8 min-w-[8.5rem] text-xs font-semibold uppercase tracking-[0.08em] text-neutral-700"
+        aria-label="Filter by category"
+      >
+        {FILTER_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </>,
+    slot,
+  );
+}
+
+function MaterialsToolbarActions({
+  project,
+  filteredMaterials,
+  query,
+  showForm,
+  onQueryChange,
+  onCreateMaterial,
+}: {
+  project: Project;
+  filteredMaterials: Material[];
+  query: string;
+  showForm: boolean;
+  onQueryChange: (value: string) => void;
+  onCreateMaterial: () => void;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById(MATERIALS_ACTIONS_SLOT_ID);
+    setSlot(el);
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-700">
+        <span className="num text-neutral-950">{filteredMaterials.length}</span>
+        <span className="text-neutral-500">
+          {filteredMaterials.length === 1 ? 'item' : 'items'}
+        </span>
+      </span>
+      <input
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
+        placeholder="Search name or ID"
+        className="input-base h-8 w-64 py-1.5"
+        aria-label="Search library by name or ID"
+      />
+      <ExportMenu
+        label={
+          <>
+            <ExportIcon />
+            <span className="btn-action__label">Export</span>
+          </>
+        }
+        onCsv={() => void exportMaterialsExcel(project, filteredMaterials, 'csv')}
+        onExcel={() => void exportMaterialsExcel(project, filteredMaterials)}
+        onPdf={() => void exportMaterialsPdf(project, filteredMaterials)}
+        disabled={filteredMaterials.length === 0}
+        buttonClassName="btn-action"
+      />
+      {!showForm && (
+        <Button type="button" variant="toolbarPrimary" onClick={onCreateMaterial}>
+          + New material
+        </Button>
+      )}
+    </div>,
+    slot,
   );
 }
 

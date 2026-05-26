@@ -1,7 +1,13 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '../../lib/utils';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'ghost'
+  | 'danger'
+  | 'toolbar'
+  | 'toolbarPrimary';
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-700',
@@ -10,6 +16,10 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost:
     'bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-brand-700 active:bg-neutral-100',
   danger: 'bg-danger-500 text-white shadow-sm hover:bg-danger-600 active:bg-danger-600',
+  toolbar:
+    'border border-neutral-200 bg-canvas-chrome text-neutral-700 text-[11px] font-semibold uppercase tracking-[0.10em] hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700',
+  toolbarPrimary:
+    'border border-brand-600 bg-brand-600 text-white text-[11px] font-semibold uppercase tracking-[0.10em] hover:border-brand-700 hover:bg-brand-700',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -31,6 +41,8 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const isToolbarVariant = variant === 'toolbar' || variant === 'toolbarPrimary';
+
   return (
     <button
       {...props}
@@ -41,7 +53,7 @@ export function Button({
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1',
         'disabled:pointer-events-none disabled:opacity-50',
         variantClasses[variant],
-        sizeClasses[size],
+        isToolbarVariant ? 'h-8 px-3' : sizeClasses[size],
         className,
       )}
     >

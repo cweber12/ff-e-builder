@@ -10,6 +10,7 @@ type ExportMenuProps = {
     onSelect: () => void;
   }>;
   className?: string;
+  buttonClassName?: string;
   size?: 'sm' | 'md';
   disabled?: boolean;
 };
@@ -21,6 +22,7 @@ export function ExportMenu({
   onPdf,
   pdfOptions,
   className = '',
+  buttonClassName,
   size = 'sm',
   disabled = false,
 }: ExportMenuProps) {
@@ -48,6 +50,8 @@ export function ExportMenu({
   const optionBtn =
     'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
+  const triggerButtonClass = buttonClassName ?? baseBtn;
+
   return (
     <div ref={ref} className={`relative inline-flex ${className}`}>
       <button
@@ -55,7 +59,7 @@ export function ExportMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={`${baseBtn} disabled:cursor-not-allowed disabled:opacity-50`}
+        className={`${triggerButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
         disabled={disabled}
       >
         {label}

@@ -17,7 +17,11 @@ import {
   CATALOG_PICKER_SLOT_ID,
 } from './components/ffe/catalog/CatalogView';
 import { FfeTable } from './components/ffe/items';
-import { MaterialsView } from './components/materials/MaterialsView';
+import {
+  MATERIALS_ACTIONS_SLOT_ID,
+  MATERIALS_FILTER_SLOT_ID,
+  MaterialsView,
+} from './components/materials/MaterialsView';
 import { BudgetView } from './components/project/BudgetView';
 import { DeleteProjectModal } from './components/project/modals/DeleteProjectModal';
 import { EditProjectModal } from './components/project/modals/EditProjectModal';
@@ -138,6 +142,7 @@ function ProjectLayout() {
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
   const isProposalRoute = !!id && location.pathname.includes(`/projects/${id}/proposal`);
   const isPlansRoute = !!id && location.pathname.includes(`/projects/${id}/plans`);
+  const isMaterialsRoute = !!id && location.pathname.includes(`/projects/${id}/materials`);
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
   const isTableRoute = (isFfeRoute && !isCatalogRoute) || isProposalRoute;
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
@@ -177,6 +182,8 @@ function ProjectLayout() {
           roomsWithItems={roomsWithItems}
           proposalCategoriesWithItems={proposalCategoriesWithItems}
         />
+      ) : isMaterialsRoute ? (
+        <div id={MATERIALS_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
       ) : isPlansRoute ? (
         <div id={PLANS_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
       ) : null
@@ -195,6 +202,8 @@ function ProjectLayout() {
         role="tablist"
         aria-label="Filter plans"
       />
+    ) : !isLoading && isMaterialsRoute ? (
+      <div id={MATERIALS_FILTER_SLOT_ID} className="ml-4 flex items-center gap-2" />
     ) : null;
 
   return (

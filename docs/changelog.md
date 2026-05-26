@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): move materials controls into the tab toolbar (left: view toggle plus filter, right: count/search/export/add) and remove in-page Finish library and Project library headers
 - feat(plans): center plans cards in-page and switch the list from grid columns to a responsive flex-wrap layout
 - feat(plans): move the Plans filter toggle into the header toolbar beside the Plans label and place Sort immediately left of Upload plan
 - feat(plans): move Plans badges and upload action into the project tab-toolbar action slot and remove the in-page Plan library hero copy
