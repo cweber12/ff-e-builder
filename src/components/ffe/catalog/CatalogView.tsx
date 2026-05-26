@@ -797,6 +797,18 @@ function CatalogEditorPanelButton({
     return () => document.removeEventListener('mousedown', handler);
   }, [isOpen, onEditorOpenChange]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
+      onEditorOpenChange(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isOpen, onEditorOpenChange]);
+
   return (
     <div ref={ref} className="relative inline-flex">
       <Button
@@ -856,7 +868,12 @@ function CatalogEditorPanel({
   };
 
   return (
-    <div role="dialog" aria-label="Catalog editor" className="catalog-layout-popover">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Catalog editor"
+      className="catalog-layout-popover"
+    >
       <div className="catalog-layout-popover-header">
         <div>
           <p className="catalog-layout-eyebrow">Catalog</p>

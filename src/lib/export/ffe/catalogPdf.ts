@@ -83,7 +83,7 @@ export type CatalogPdfImageAlignment = 'center' | 'top';
 export type CatalogPdfPlanImageSize = 'thumbnail' | 'expanded';
 export type CatalogPdfColorToken = 'ink-950' | 'ink-800' | 'slate-700';
 
-function resolveColorToken(token: CatalogPdfColorToken): RGB {
+export function resolveColorToken(token: CatalogPdfColorToken): RGB {
   switch (token) {
     case 'ink-950':
       return INK_950;

@@ -1,7 +1,8 @@
 ﻿import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { CatalogPage } from './CatalogView';
 import { catalogProjectFixture, catalogRoomsFixture } from '../../../data/catalogFixture';
 
@@ -104,5 +105,91 @@ describe('CatalogPage', () => {
     );
 
     expect(screen.getByText(item.itemName.toUpperCase())).toHaveStyle({ color: '#374151' });
+  });
+
+  it('activates text fields as editable buttons when editor is open', () => {
+    const room = catalogRoomsFixture[0]!;
+    const item = room.items[0]!;
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CatalogPage
+            project={catalogProjectFixture}
+            entry={{ room, item }}
+            pageNumber={1}
+            pageCount={3}
+            editorOpen={true}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: `Name for ${item.itemName}` })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: `Dimensions for ${item.itemName}` }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: `Description for ${item.itemName}` }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not render in-canvas layout micro-toggles regardless of editor state', () => {
+    const room = catalogRoomsFixture[0]!;
+    const item = room.items[0]!;
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CatalogPage
+            project={catalogProjectFixture}
+            entry={{ room, item }}
+            pageNumber={1}
+            pageCount={3}
+            editorOpen={true}
+            onLayoutChange={vi.fn()}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /center image alignment/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /top image alignment/i })).not.toBeInTheDocument();
+  });
+
+  it('enters inline text edit on click when editor is open', async () => {
+    const room = catalogRoomsFixture[0]!;
+    const item = room.items[0]!;
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const user = userEvent.setup();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CatalogPage
+            project={catalogProjectFixture}
+            entry={{ room, item }}
+            pageNumber={1}
+            pageCount={3}
+            editorOpen={true}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: `Dimensions for ${item.itemName}` }));
+    expect(
+      screen.getByRole('textbox', { name: `Dimensions for ${item.itemName}` }),
+    ).toBeInTheDocument();
   });
 });

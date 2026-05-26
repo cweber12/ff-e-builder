@@ -10,6 +10,8 @@ import {
   buildCatalogPdfPageModel,
   pickCatalogPdfOptionLayout,
   resolveCatalogPdfImageAlignment,
+  resolveColorToken,
+  type CatalogPdfColorToken,
 } from './ffe/catalogPdf';
 import {
   buildProposalExportDocument,
@@ -428,5 +430,27 @@ describe('catalog PDF page model', () => {
     expect(resolveCatalogPdfImageAlignment(undefined)).toBe('center');
     expect(resolveCatalogPdfImageAlignment(null)).toBe('center');
     expect(resolveCatalogPdfImageAlignment('top')).toBe('top');
+  });
+});
+
+// ─── catalog PDF color tokens (regression for #67 typography parity) ──────────
+describe('catalog PDF color token resolution', () => {
+  it('maps ink-950 to near-black matching the browser token', () => {
+    expect(resolveColorToken('ink-950')).toEqual([10, 10, 10]);
+  });
+
+  it('maps ink-800 to dark gray matching the browser token', () => {
+    expect(resolveColorToken('ink-800')).toEqual([38, 38, 38]);
+  });
+
+  it('maps slate-700 to the same value as the browser #374151', () => {
+    expect(resolveColorToken('slate-700')).toEqual([55, 65, 81]);
+  });
+
+  it('resolves all three tokens to distinct RGB values', () => {
+    const tokens: CatalogPdfColorToken[] = ['ink-950', 'ink-800', 'slate-700'];
+    const colors = tokens.map(resolveColorToken);
+    const serialised = colors.map((c) => c.join(','));
+    expect(new Set(serialised).size).toBe(3);
   });
 });

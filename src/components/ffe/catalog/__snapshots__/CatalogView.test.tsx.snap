@@ -3,7 +3,7 @@
 exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture item 1`] = `
 <article
   aria-label="Channel Lounge Chair catalog page"
-  class="catalog-page mx-auto bg-white text-neutral-950 shadow-xl"
+  class="catalog-page mx-auto bg-white text-neutral-950 shadow-xl catalog-page--edit-mode"
 >
   <header
     class="catalog-header"
@@ -224,6 +224,11 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               </svg>
             </span>
           </div>
+          <p
+            class="catalog-vendor-chip no-print"
+          >
+            Preview only — not saved to project
+          </p>
         </div>
         <div
           class="catalog-notes-block"
@@ -287,11 +292,9 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                 Ivory
               </span>
             </div>
-            <button
-              aria-label="Add finish swatch — click to open library or paste an image"
-              class="no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste"
-              title="Click to open library, or hover and press Ctrl+V to paste"
-              type="button"
+            <div
+              aria-hidden="true"
+              class="catalog-material-cell catalog-material-cell-empty"
             >
               <div
                 class="catalog-material-swatch catalog-material-swatch-placeholder"
@@ -311,12 +314,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               >
                 COLOR
               </span>
-            </button>
-            <button
-              aria-label="Add finish swatch — click to open library or paste an image"
-              class="no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste"
-              title="Click to open library, or hover and press Ctrl+V to paste"
-              type="button"
+            </div>
+            <div
+              aria-hidden="true"
+              class="catalog-material-cell catalog-material-cell-empty"
             >
               <div
                 class="catalog-material-swatch catalog-material-swatch-placeholder"
@@ -336,12 +337,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               >
                 COLOR
               </span>
-            </button>
-            <button
-              aria-label="Add finish swatch — click to open library or paste an image"
-              class="no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste"
-              title="Click to open library, or hover and press Ctrl+V to paste"
-              type="button"
+            </div>
+            <div
+              aria-hidden="true"
+              class="catalog-material-cell catalog-material-cell-empty"
             >
               <div
                 class="catalog-material-swatch catalog-material-swatch-placeholder"
@@ -361,7 +360,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               >
                 COLOR
               </span>
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -383,32 +382,8 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
           <div
             class="catalog-option-slot"
           >
-            <button
-              aria-label="Add option"
-              class="no-print catalog-upload-slot"
-              type="button"
-            >
-              <svg
-                aria-hidden="true"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  d="M8 3v10M3 8h10"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-width="1.8"
-                />
-              </svg>
-              <span>
-                Add option
-              </span>
-            </button>
-            <input
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              class="sr-only"
-              type="file"
+            <div
+              class="catalog-option-ghost"
             />
           </div>
           <div
