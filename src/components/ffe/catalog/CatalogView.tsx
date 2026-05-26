@@ -9,7 +9,6 @@ import {
   useDeleteImage,
   useFfeItemSort,
   useImages,
-  useItemMaterialActions,
   useUpdateImageCrop,
   useUpdateItem,
   useUploadImage,
@@ -309,6 +308,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       <CatalogActionsBar
         project={project}
         rooms={rooms}
+        currentEntry={entry}
         currentIndex={pageIndex}
         total={entries.length}
         currentItemId={entry?.item.id}
@@ -386,6 +386,7 @@ export const CATALOG_PICKER_SLOT_ID = 'ffe-catalog-picker-slot';
 function CatalogActionsBar({
   project,
   rooms,
+  currentEntry,
   currentIndex,
   total,
   currentItemId,
@@ -400,6 +401,7 @@ function CatalogActionsBar({
 }: {
   project: Project;
   rooms: RoomWithItems[];
+  currentEntry: CatalogEntry | undefined;
   currentIndex: number;
   total: number;
   currentItemId: string | undefined;
@@ -448,6 +450,8 @@ function CatalogActionsBar({
         sortMode={sortMode}
       />
       <CatalogEditorPanelButton
+        project={project}
+        currentEntry={currentEntry}
         editorState={editorState}
         onLayoutChange={onLayoutChange}
         watermarkConfig={watermarkConfig}
@@ -690,6 +694,8 @@ function CatalogExportButton({
 }
 
 function CatalogEditorPanelButton({
+  project,
+  currentEntry,
   editorState,
   onEditorOpenChange,
   onLayoutChange,
@@ -697,6 +703,8 @@ function CatalogEditorPanelButton({
   onWatermarkChange,
   logoDataUrl,
 }: {
+  project: Project;
+  currentEntry: CatalogEntry | undefined;
   editorState: CatalogEditorState;
   onEditorOpenChange: (open: boolean) => void;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
@@ -732,6 +740,8 @@ function CatalogEditorPanelButton({
       </Button>
       {isOpen && (
         <CatalogEditorPanel
+          project={project}
+          currentEntry={currentEntry}
           editorState={editorState}
           onLayoutChange={onLayoutChange}
           watermarkConfig={watermarkConfig}
@@ -745,6 +755,8 @@ function CatalogEditorPanelButton({
 }
 
 function CatalogEditorPanel({
+  project,
+  currentEntry,
   editorState,
   onLayoutChange,
   watermarkConfig,
@@ -752,6 +764,8 @@ function CatalogEditorPanel({
   logoDataUrl,
   onClose,
 }: {
+  project: Project;
+  currentEntry: CatalogEntry | undefined;
   editorState: CatalogEditorState;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
@@ -825,16 +839,7 @@ function CatalogEditorPanel({
         <p className="catalog-layout-note">
           Option image and swatch controls are being consolidated here.
         </p>
-        <div className="catalog-layout-group-body">
-          {editorState.media.optionSlots.map((slot) => (
-            <div key={slot.slot} className="catalog-layout-option-row">
-              <p className="catalog-layout-label">Option {slot.slot}</p>
-              <span className="catalog-layout-note">
-                {slot.status === 'filled' ? 'Filled' : 'Available'}
-              </span>
-            </div>
-          ))}
-        </div>
+        <CatalogEditorMediaManager project={project} currentEntry={currentEntry} />
       </LayoutGroup>
 
       <LayoutGroup label="Typography and Color">
@@ -977,6 +982,121 @@ function LayoutRow({ label, children }: { label: string; children: ReactNode }) 
     <div className="catalog-layout-option-row">
       <p className="catalog-layout-label">{label}</p>
       {children}
+    </div>
+  );
+}
+
+function CatalogEditorMediaManager({
+  project,
+  currentEntry,
+}: {
+  project: Project;
+  currentEntry: CatalogEntry | undefined;
+}) {
+  const currentItemId = currentEntry?.item.id ?? '';
+  const optionImagesQuery = useImages('item_option', currentItemId);
+  const optionImages = useMemo(
+    () =>
+      [...(optionImagesQuery.data ?? [])]
+        .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+        .slice(0, 2),
+    [optionImagesQuery.data],
+  );
+  const uploadOptionImage = useUploadImage('item_option', currentItemId);
+  const deleteOptionImage = useDeleteImage('item_option', currentItemId);
+  const [isLibraryOpen, setLibraryOpen] = useState(false);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const isMutating = uploadOptionImage.isPending || deleteOptionImage.isPending;
+
+  if (!currentEntry) {
+    return <p className="catalog-layout-note">Open a catalog page to edit option media.</p>;
+  }
+
+  const { item, room } = currentEntry;
+
+  const handleUploadToSlot = async (slotIndex: number, file: File) => {
+    if (isMutating) return;
+    const existing = optionImages[slotIndex] ?? null;
+    try {
+      if (existing) {
+        await deleteOptionImage.mutateAsync(existing.id);
+      }
+      await uploadOptionImage.mutateAsync({
+        file,
+        altText: `${item.itemName} option ${slotIndex + 1}`,
+      });
+      toast.success(`Updated option ${slotIndex + 1} image.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update option image.';
+      toast.error(message);
+    }
+  };
+
+  return (
+    <div className="catalog-layout-group-body">
+      {[0, 1].map((slotIndex) => {
+        const image = optionImages[slotIndex] ?? null;
+        const label = `Option ${slotIndex + 1}`;
+        return (
+          <div key={slotIndex} className="catalog-layout-option-row">
+            <p className="catalog-layout-label">{label}</p>
+            <div className="flex items-center gap-2">
+              <span className="catalog-layout-note">{image ? 'Filled' : 'Available'}</span>
+              <button
+                type="button"
+                className="catalog-layout-secondary"
+                disabled={isMutating}
+                onClick={() => inputRefs.current[slotIndex]?.click()}
+              >
+                {image ? 'Replace' : 'Add'}
+              </button>
+              {image ? (
+                <button
+                  type="button"
+                  className="catalog-layout-delete"
+                  disabled={isMutating}
+                  onClick={() => deleteOptionImage.mutate(image.id)}
+                >
+                  Remove
+                </button>
+              ) : null}
+              <input
+                ref={(node) => {
+                  inputRefs.current[slotIndex] = node;
+                }}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    void handleUploadToSlot(slotIndex, file);
+                  }
+                  event.currentTarget.value = '';
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+      <div className="catalog-layout-option-row">
+        <p className="catalog-layout-label">Finish schedule</p>
+        <button
+          type="button"
+          className="catalog-layout-secondary"
+          onClick={() => setLibraryOpen(true)}
+        >
+          Add swatch
+        </button>
+      </div>
+      <MaterialLibraryModal
+        open={isLibraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        projectId={project.id}
+        context="ffe"
+        item={item}
+        roomId={room.id}
+      />
     </div>
   );
 }
@@ -1137,103 +1257,6 @@ export function CatalogPage({
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
-  const materialActions = useItemMaterialActions({
-    kind: 'ffe',
-    itemGroupId: room.id,
-    projectId: project.id,
-  });
-  const uploadSwatchImage = useUploadImage();
-  const [isLibraryOpen, setLibraryOpen] = useState(false);
-
-  const isSwatchMutating = materialActions.createAndAssign.isPending || uploadSwatchImage.isPending;
-
-  // Refs read by the single document-level paste listener so it always
-  // sees the latest state without forcing re-registration on every render.
-  const itemRef = useRef(item);
-  const isLibraryOpenRef = useRef(isLibraryOpen);
-  const isMutatingRef = useRef(isSwatchMutating);
-  const armedSlotsRef = useRef(0);
-  const inFlightRef = useRef(false);
-  useEffect(() => {
-    itemRef.current = item;
-  }, [item]);
-  useEffect(() => {
-    isLibraryOpenRef.current = isLibraryOpen;
-  }, [isLibraryOpen]);
-  useEffect(() => {
-    isMutatingRef.current = isSwatchMutating;
-  }, [isSwatchMutating]);
-
-  const createAndAssignMutateAsync = materialActions.createAndAssign.mutateAsync;
-  const uploadSwatchImageMutateAsync = uploadSwatchImage.mutateAsync;
-
-  const handlePasteSwatchImage = useCallback(
-    async (file: File) => {
-      if (!editorOpen) return;
-      if (inFlightRef.current) return;
-      inFlightRef.current = true;
-      try {
-        const currentItem = itemRef.current;
-        const generatedName = `Swatch ${currentItem.materials.length + 1}`;
-        const material = await createAndAssignMutateAsync({
-          itemId: currentItem.id,
-          input: { name: generatedName },
-        });
-        await uploadSwatchImageMutateAsync({
-          entityType: 'material',
-          entityId: material.id,
-          file,
-          altText: material.name,
-        });
-        toast.success(`Added ${material.name} to the finish library.`);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to add swatch.';
-        toast.error(message);
-      } finally {
-        inFlightRef.current = false;
-      }
-    },
-    [createAndAssignMutateAsync, editorOpen, uploadSwatchImageMutateAsync],
-  );
-
-  // Single document-level paste listener for the entire catalog page.
-  // Per-slot listeners were unreliable: multiple instances accumulating
-  // their own listeners caused stale closures and duplicate handlers.
-  // This listener is the *only* paste handler the empty swatch slots use.
-  const handlePasteRef = useRef(handlePasteSwatchImage);
-  useEffect(() => {
-    handlePasteRef.current = handlePasteSwatchImage;
-  }, [handlePasteSwatchImage]);
-
-  useEffect(() => {
-    const handler = (event: ClipboardEvent) => {
-      if (!editorOpen) return;
-      if (isLibraryOpenRef.current) return;
-      if (armedSlotsRef.current <= 0) return;
-      if (isMutatingRef.current || inFlightRef.current) return;
-      const file = Array.from(event.clipboardData?.items ?? [])
-        .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
-        ?.getAsFile();
-      if (!file) return;
-      event.preventDefault();
-      void handlePasteRef.current(file);
-    };
-    document.addEventListener('paste', handler);
-    return () => document.removeEventListener('paste', handler);
-  }, [editorOpen]);
-
-  const armEmptySlot = useCallback(() => {
-    armedSlotsRef.current += 1;
-  }, []);
-  const disarmEmptySlot = useCallback(() => {
-    armedSlotsRef.current = Math.max(0, armedSlotsRef.current - 1);
-  }, []);
-  const openLibrary = useCallback(() => {
-    if (!editorOpen) return;
-    armedSlotsRef.current = 0;
-    setLibraryOpen(true);
-  }, [editorOpen]);
-
   const optionImagesQuery = useImages('item_option', item.id);
   const optionImages = useMemo(
     () =>
@@ -1242,10 +1265,6 @@ export function CatalogPage({
         .slice(0, 2),
     [optionImagesQuery.data],
   );
-  const upload = useUploadImage('item_option', item.id);
-  const deleteImage = useDeleteImage('item_option', item.id);
-  const optionCount = optionImages.length;
-  const isBusy = upload.isPending || deleteImage.isPending;
 
   const saveField = (field: EditableCatalogField, value: string, required = false) =>
     updateItem
@@ -1586,13 +1605,7 @@ export function CatalogPage({
                 {Array.from({
                   length: Math.max(0, 4 - Math.min(item.materials.length, 4)),
                 }).map((_, index) => (
-                  <EmptyMaterialSlot
-                    key={`empty-${index}`}
-                    disabled={!editorOpen || isSwatchMutating}
-                    onArm={armEmptySlot}
-                    onDisarm={disarmEmptySlot}
-                    onClick={openLibrary}
-                  />
+                  <EmptyMaterialPlaceholder key={`empty-${index}`} />
                 ))}
               </div>
             </div>
@@ -1606,18 +1619,9 @@ export function CatalogPage({
           )}
         >
           <CatalogOptionRenderings
-            editorOpen={editorOpen}
             itemId={item.id}
             optionImages={optionImages}
             itemName={item.itemName}
-            isBusy={!editorOpen || isBusy}
-            onUpload={(file, index) =>
-              upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
-            }
-            onDelete={(imageId) => deleteImage.mutate(imageId)}
-            onAdd={(file) =>
-              upload.mutate({ file, altText: `${item.itemName} option ${optionCount + 1}` })
-            }
           />
           <div className="catalog-location-block">
             <div className="catalog-location-content">
@@ -1673,14 +1677,6 @@ export function CatalogPage({
           </span>
         </span>
       </footer>
-      <MaterialLibraryModal
-        open={isLibraryOpen}
-        onClose={() => setLibraryOpen(false)}
-        projectId={project.id}
-        context="ffe"
-        item={item}
-        roomId={room.id}
-      />
     </article>
   );
 }
@@ -1751,36 +1747,21 @@ function useCatalogSessionPreference<T extends string>(
 }
 
 function CatalogOptionRenderings({
-  editorOpen,
   itemId,
   optionImages,
   itemName,
-  isBusy,
-  onUpload,
-  onDelete,
-  onAdd,
 }: {
-  editorOpen: boolean;
   itemId: string;
   optionImages: ImageAsset[];
   itemName: string;
-  isBusy: boolean;
-  onUpload: (file: File, index: number) => void;
-  onDelete: (imageId: string) => void;
-  onAdd: (file: File) => void;
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const slot0 = optionImages[0] ?? null;
   const slot1 = optionImages[1] ?? null;
 
   return (
     <div className="catalog-options-strip">
       <h2 className="catalog-spec-heading">OPTION RENDERINGS</h2>
-      {!editorOpen ? (
-        <p className="catalog-layout-note no-print mb-2">Open Editor to manage option images.</p>
-      ) : null}
       <div className="catalog-option-grid">
-        {/* Slot 0: card when filled, upload slot when empty */}
         <div className="catalog-option-slot">
           {slot0 ? (
             <>
@@ -1789,20 +1770,19 @@ function CatalogOptionRenderings({
                 itemId={itemId}
                 itemName={itemName}
                 index={0}
-                disabled={isBusy}
-                checked={selectedId === slot0.id}
-                onSelect={(id) => setSelectedId(id)}
-                onUpload={(file) => onUpload(file, 0)}
-                onDelete={onDelete}
+                disabled
+                checked={false}
+                onSelect={() => undefined}
+                onUpload={() => undefined}
+                onDelete={() => undefined}
               />
               <p className="catalog-option-label">Option 1</p>
             </>
           ) : (
-            <CatalogUploadSlot label="Add option" disabled={isBusy} onFile={onAdd} />
+            <div className="catalog-option-ghost" />
           )}
         </div>
 
-        {/* Slot 1: always in DOM — card, upload slot, or transparent ghost */}
         <div className="catalog-option-slot">
           {slot1 ? (
             <>
@@ -1811,16 +1791,14 @@ function CatalogOptionRenderings({
                 itemId={itemId}
                 itemName={itemName}
                 index={1}
-                disabled={isBusy}
-                checked={selectedId === slot1.id}
-                onSelect={(id) => setSelectedId(id)}
-                onUpload={(file) => onUpload(file, 1)}
-                onDelete={onDelete}
+                disabled
+                checked={false}
+                onSelect={() => undefined}
+                onUpload={() => undefined}
+                onDelete={() => undefined}
               />
               <p className="catalog-option-label">Option 2</p>
             </>
-          ) : slot0 ? (
-            <CatalogUploadSlot label="Add option 2" disabled={isBusy} onFile={onAdd} />
           ) : (
             <div className="catalog-option-ghost" />
           )}
@@ -1830,170 +1808,14 @@ function CatalogOptionRenderings({
   );
 }
 
-function CatalogUploadSlot({
-  label,
-  disabled,
-  onFile,
-  compact = false,
-}: {
-  label: string;
-  disabled?: boolean;
-  onFile: (file: File) => void;
-  compact?: boolean;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const pasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
-
-  useEffect(
-    () => () => {
-      const handler = pasteHandlerRef.current;
-      if (handler) document.removeEventListener('paste', handler);
-    },
-    [],
-  );
-
-  const enablePaste = () => {
-    if (disabled || pasteHandlerRef.current) return;
-    const handler = (event: ClipboardEvent) => {
-      const file = Array.from(event.clipboardData?.items ?? [])
-        .find((item) => item.kind === 'file' && item.type.startsWith('image/'))
-        ?.getAsFile();
-      if (!file) return;
-      event.preventDefault();
-      onFile(file);
-    };
-    pasteHandlerRef.current = handler;
-    document.addEventListener('paste', handler);
-  };
-
-  const disablePaste = () => {
-    const handler = pasteHandlerRef.current;
-    if (!handler) return;
-    document.removeEventListener('paste', handler);
-    pasteHandlerRef.current = null;
-  };
-
+function EmptyMaterialPlaceholder() {
   return (
-    <>
-      <button
-        type="button"
-        className={compact ? 'no-print catalog-add-option-btn' : 'no-print catalog-upload-slot'}
-        disabled={disabled}
-        onClick={() => inputRef.current?.click()}
-        onMouseEnter={enablePaste}
-        onMouseLeave={disablePaste}
-        aria-label={label}
-      >
-        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-4 w-4">
-          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-        <span>{label}</span>
-      </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        className="sr-only"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file && !disabled) onFile(file);
-          event.currentTarget.value = '';
-        }}
-      />
-    </>
-  );
-}
-
-function EmptyMaterialSlot({
-  disabled,
-  onArm,
-  onDisarm,
-  onClick,
-}: {
-  disabled: boolean;
-  onArm: () => void;
-  onDisarm: () => void;
-  onClick: () => void;
-}) {
-  const [isHovering, setHovering] = useState(false);
-  const isArmedRef = useRef(false);
-
-  const arm = () => {
-    if (disabled || isArmedRef.current) return;
-    isArmedRef.current = true;
-    onArm();
-  };
-  const disarm = () => {
-    if (!isArmedRef.current) return;
-    isArmedRef.current = false;
-    onDisarm();
-  };
-
-  useEffect(
-    () => () => {
-      // On unmount, make sure we release the page-level counter.
-      if (isArmedRef.current) {
-        isArmedRef.current = false;
-        onDisarm();
-      }
-    },
-    [onDisarm],
-  );
-
-  // If the slot becomes disabled while armed, drop the arm to prevent paste
-  // racing the in-flight mutation.
-  useEffect(() => {
-    if (disabled && isArmedRef.current) {
-      isArmedRef.current = false;
-      onDisarm();
-    }
-  }, [disabled, onDisarm]);
-
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      className={cn(
-        'no-print catalog-material-cell catalog-material-cell-empty catalog-material-slot-paste',
-        isHovering && !disabled && 'catalog-material-slot-paste--hover',
-        disabled && 'opacity-60 cursor-not-allowed',
-      )}
-      aria-label="Add finish swatch — click to open library or paste an image"
-      title={
-        disabled
-          ? 'Adding swatch…'
-          : isHovering
-            ? 'Click to open library, or press Ctrl+V to paste an image'
-            : 'Click to open library, or hover and press Ctrl+V to paste'
-      }
-      onClick={() => {
-        disarm();
-        onClick();
-      }}
-      onMouseEnter={() => {
-        setHovering(true);
-        arm();
-      }}
-      onMouseLeave={() => {
-        setHovering(false);
-        disarm();
-      }}
-      onFocus={() => {
-        setHovering(true);
-        arm();
-      }}
-      onBlur={() => {
-        setHovering(false);
-        disarm();
-      }}
-    >
+    <div className="catalog-material-cell catalog-material-cell-empty" aria-hidden="true">
       <div className="catalog-material-swatch catalog-material-swatch-placeholder" />
       <span className="catalog-material-id">ID</span>
       <span className="catalog-material-name">MATERIAL</span>
-      <span className="catalog-material-color">
-        {isHovering && !disabled ? 'PASTE (CTRL+V)' : 'COLOR'}
-      </span>
-    </button>
+      <span className="catalog-material-color">COLOR</span>
+    </div>
   );
 }
 

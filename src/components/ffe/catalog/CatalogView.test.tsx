@@ -52,6 +52,8 @@ describe('CatalogPage', () => {
     expect(screen.getByText(String(item.qty))).toBeInTheDocument();
     expect(screen.queryByText('PRICE PER ITEM')).not.toBeInTheDocument();
     expect(screen.queryByText('TOTAL')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /add option/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /add finish swatch/i })).not.toBeInTheDocument();
   });
 
   it('keeps text fields read-only when editor is closed', () => {
