@@ -234,15 +234,10 @@ function PlansActionsBar({
           ))}
         </select>
       </label>
-      <button
-        type="button"
-        className="btn-action btn-action--primary"
-        onClick={onUpload}
-        aria-haspopup="dialog"
-      >
+      <Button type="button" variant="toolbarPrimary" onClick={onUpload} aria-haspopup="dialog">
         <UploadIcon />
-        <span className="btn-action__label">Upload plan</span>
-      </button>
+        Upload plan
+      </Button>
     </div>,
     slot,
   );

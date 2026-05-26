@@ -1,9 +1,11 @@
 import {
   cloneElement,
+  forwardRef,
   isValidElement,
   type ButtonHTMLAttributes,
   type MouseEvent,
   type MouseEventHandler,
+  type Ref,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -43,16 +45,19 @@ const sizeClasses = {
   lg: 'h-11 px-6 text-base',
 };
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  asChild = false,
-  className,
-  children,
-  disabled,
-  onClick,
-  ...props
-}: ButtonProps) {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    variant = 'primary',
+    size = 'md',
+    asChild = false,
+    className,
+    children,
+    disabled,
+    onClick,
+    ...props
+  }: ButtonProps,
+  ref,
+) {
   const isToolbarVariant = variant === 'toolbar' || variant === 'toolbarPrimary';
   const classes = cn(
     'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
@@ -71,6 +76,7 @@ export function Button({
       onClick?: MouseEventHandler<HTMLElement>;
       tabIndex?: number;
       'aria-disabled'?: boolean;
+      ref?: Ref<HTMLElement>;
     }>;
     const childOnClick = child.props.onClick;
 
@@ -90,11 +96,11 @@ export function Button({
   }
 
   return (
-    <button {...props} disabled={disabled} onClick={onClick} className={classes}>
+    <button ref={ref} {...props} disabled={disabled} onClick={onClick} className={classes}>
       {children}
     </button>
   );
-}
+});
 
 type ButtonLinkProps = Omit<ButtonProps, 'asChild' | 'children' | 'type' | 'onClick'> &
   LinkProps & {

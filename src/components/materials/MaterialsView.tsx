@@ -343,20 +343,20 @@ function MaterialsToolbarActions({
         label={
           <>
             <ExportIcon />
-            <span className="btn-action__label">Export</span>
+            Export
           </>
         }
         onCsv={() => void exportMaterialsExcel(project, filteredMaterials, 'csv')}
         onExcel={() => void exportMaterialsExcel(project, filteredMaterials)}
         onPdf={() => void exportMaterialsPdf(project, filteredMaterials)}
         disabled={filteredMaterials.length === 0}
-        buttonClassName="btn-action"
+        buttonVariant="toolbar"
       />
       {!showForm && (
-        <button type="button" className="btn-action btn-action--primary" onClick={onCreateMaterial}>
+        <Button type="button" variant="toolbarPrimary" onClick={onCreateMaterial}>
           <PlusIcon />
-          <span className="btn-action__label">New material</span>
-        </button>
+          New material
+        </Button>
       )}
     </div>,
     slot,

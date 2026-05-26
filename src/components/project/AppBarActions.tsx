@@ -10,6 +10,7 @@ import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
 import { ExportMenu } from '../shared/ExportMenu';
+import { Button } from '../primitives';
 import {
   useUpdateProject,
   useProposalRevisions,
@@ -47,11 +48,7 @@ function PlusIcon() {
   );
 }
 
-// All toolbar actions use the shared .btn-action utility (uppercase eyebrow).
-// Variants:
-//   default          neutral outlined
-//   --primary        filled brand (Add Category / Add Room / etc.)
-//   --active         pressed/selected state for toggles
+// Toolbar actions use shared Button toolbar variants.
 
 // ---------------------------------------------------------------------------
 // FF&E action cluster
@@ -76,24 +73,24 @@ export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: Ffe
 
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={onAddRoom} className="btn-action btn-action--primary">
+      <Button type="button" variant="toolbarPrimary" onClick={onAddRoom}>
         <PlusIcon />
-        <span className="btn-action__label">Add room</span>
-      </button>
+        Add room
+      </Button>
 
       <FfeSortToggle projectId={project.id} />
 
-      <button type="button" onClick={onImport} className="btn-action" title="Import from Excel">
+      <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
         <UploadIcon />
-        <span className="btn-action__label">Import</span>
-      </button>
+        Import
+      </Button>
 
       <ExportMenu
         disabled={!hasItems}
         label={
           <>
             <DownloadIcon />
-            <span className="btn-action__label">Export</span>
+            Export
           </>
         }
         onPdf={() =>
@@ -117,7 +114,6 @@ export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: Ffe
         onCsv={() =>
           exportTableCsv(project, roomsWithItems, undefined, ffeCustomColumnDefs, ffeColumnOrder())
         }
-        buttonClassName="btn-action"
       />
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="ffe" />
@@ -220,26 +216,26 @@ export function ProposalActions({
 
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={onAddCategory} className="btn-action btn-action--primary">
+      <Button type="button" variant="toolbarPrimary" onClick={onAddCategory}>
         <PlusIcon />
-        <span className="btn-action__label">Add category</span>
-      </button>
+        Add category
+      </Button>
 
-      <button type="button" onClick={onImport} className="btn-action" title="Import from Excel">
+      <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
         <UploadIcon />
-        <span className="btn-action__label">Import</span>
-      </button>
+        Import
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="toolbar"
         disabled={!hasItems}
         onClick={() => setExportModalOpen(true)}
-        className="btn-action"
         title="Export"
       >
         <DownloadIcon />
-        <span className="btn-action__label">Export</span>
-      </button>
+        Export
+      </Button>
 
       <ProposalExportModal
         open={exportModalOpen}

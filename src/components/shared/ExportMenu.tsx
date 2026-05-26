@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
-import { DropdownMenu, MenuItem, MenuSub, MenuSubTrigger } from '../primitives';
+import { DropdownMenu, MenuItem, MenuSub, MenuSubTrigger, Button } from '../primitives';
+import type { ButtonVariant } from '../primitives';
 
 type ExportMenuProps = {
   label?: ReactNode;
@@ -12,6 +13,7 @@ type ExportMenuProps = {
   }>;
   className?: string;
   buttonClassName?: string;
+  buttonVariant?: ButtonVariant;
   size?: 'sm' | 'md';
   disabled?: boolean;
 };
@@ -24,12 +26,11 @@ export function ExportMenu({
   pdfOptions,
   className = '',
   buttonClassName,
+  buttonVariant = 'toolbar',
   size = 'sm',
   disabled = false,
 }: ExportMenuProps) {
-  const baseBtn = size === 'sm' ? 'btn-action' : 'btn-action';
-
-  const triggerButtonClass = buttonClassName ?? baseBtn;
+  const triggerSize = size === 'md' ? 'md' : 'sm';
 
   return (
     <DropdownMenu
@@ -37,20 +38,22 @@ export function ExportMenu({
       panelClassName="z-[120] min-w-40"
       positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
       renderTrigger={({ triggerRef, open, toggleMenu }) => (
-        <button
+        <Button
           ref={triggerRef}
           type="button"
+          variant={buttonVariant}
+          size={triggerSize}
           aria-haspopup="menu"
           aria-expanded={open}
           onClick={toggleMenu}
-          className={`${triggerButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+          className={buttonClassName}
           disabled={disabled}
         >
           {label}
           <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
             <path d="M3.5 5.5 7 9l3.5-3.5" />
           </svg>
-        </button>
+        </Button>
       )}
     >
       {({

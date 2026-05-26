@@ -4,6 +4,7 @@ import { useColumnConfig } from '../../hooks/shared';
 import { useTableDensity, type TableDensity } from '../../hooks/shared/useTableDensity';
 import { useColumnDefs } from '../../hooks';
 import { cn } from '../../lib/utils';
+import { Button } from '../primitives';
 
 // ---------------------------------------------------------------------------
 // Column metadata — parallel to the label maps inside each table component.
@@ -205,18 +206,19 @@ export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilit
 
   return (
     <>
-      <button
+      <Button
         ref={triggerRef}
         type="button"
+        variant="toolbar"
         title="Column visibility & density"
         aria-label="Column visibility & density"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={cn('btn-action', open && 'btn-action--active')}
+        className={cn(open && 'border-brand-500 bg-brand-50 text-brand-700')}
       >
         <ColumnsIcon />
-        <span className="btn-action__label">Columns</span>
-      </button>
+        Columns
+      </Button>
 
       {open &&
         triggerRect &&

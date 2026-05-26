@@ -34,6 +34,7 @@ import { ProjectImagesModal } from './components/project/modals/ProjectImagesMod
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
 import { FfeActions, ProposalActions } from './components/project/AppBarActions';
+import { Button } from './components/primitives';
 import { recordSession } from './lib/utils';
 import {
   exportSummaryCsv,
@@ -381,16 +382,16 @@ function BudgetPageActions({
 
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={() => setFfeOpen(true)} className="btn-action">
-        <span className="btn-action__label">FF&amp;E Budget</span>
-      </button>
-      <button type="button" onClick={() => setProposalOpen(true)} className="btn-action">
-        <span className="btn-action__label">Proposal Budget</span>
-      </button>
+      <Button type="button" variant="toolbar" onClick={() => setFfeOpen(true)}>
+        FF&amp;E Budget
+      </Button>
+      <Button type="button" variant="toolbar" onClick={() => setProposalOpen(true)}>
+        Proposal Budget
+      </Button>
       <ExportMenu
-        label={<span className="btn-action__label">Export</span>}
+        label="Export"
         size="sm"
-        buttonClassName="btn-action"
+        buttonVariant="toolbar"
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
           exportProposalCsv(

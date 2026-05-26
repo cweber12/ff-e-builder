@@ -370,25 +370,26 @@ function CatalogActionsBar({
 
   return createPortal(
     <div className="flex items-center gap-2">
-      <button
+      <Button
         type="button"
-        className={cn('btn-action', editMode && 'btn-action--active')}
+        variant="toolbar"
+        className={cn(editMode && 'border-brand-500 bg-brand-50 text-brand-700')}
         aria-label={editMode ? 'Exit edit mode' : 'Edit fields'}
         aria-pressed={editMode}
         onClick={onEditModeToggle}
       >
         <EditIcon />
-        <span className="btn-action__label">{editMode ? 'Editing' : 'Edit'}</span>
-      </button>
-      <button
+        {editMode ? 'Editing' : 'Edit'}
+      </Button>
+      <Button
         type="button"
-        className="btn-action"
+        variant="toolbar"
         aria-label="Print catalog"
         onClick={() => window.print()}
       >
         <PrintIcon />
-        <span className="btn-action__label">Print</span>
-      </button>
+        Print
+      </Button>
       <CatalogExportButton
         project={project}
         rooms={rooms}
@@ -481,15 +482,15 @@ function CatalogPagePicker({
         </p>
       ) : null}
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="button"
-          className="btn-action"
+          variant="toolbar"
           disabled={currentIndex === 0}
           aria-label="Previous catalog item"
           onClick={() => onPageChange(currentIndex - 1)}
         >
           <ChevronLeftIcon />
-        </button>
+        </Button>
         <label className="sr-only" htmlFor="catalog-jump">
           Jump to catalog item
         </label>
@@ -513,15 +514,15 @@ function CatalogPagePicker({
             </optgroup>
           ))}
         </select>
-        <button
+        <Button
           type="button"
-          className="btn-action"
+          variant="toolbar"
           disabled={currentIndex === total - 1}
           aria-label="Next catalog item"
           onClick={() => onPageChange(currentIndex + 1)}
         >
           <ChevronRightIcon />
-        </button>
+        </Button>
       </div>
     </nav>
   );
@@ -588,18 +589,18 @@ function CatalogExportButton({
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <Button
         type="button"
-        className="btn-action"
+        variant="toolbar"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Export catalog"
         onClick={() => setOpen((v) => !v)}
       >
         <DownloadIcon />
-        <span className="btn-action__label">Export</span>
+        Export
         <ChevronDownIcon />
-      </button>
+      </Button>
       {open && (
         <div
           role="menu"
@@ -667,17 +668,18 @@ function CatalogLayoutPanelButton({
 
   return (
     <div ref={ref} className="relative inline-flex">
-      <button
+      <Button
         type="button"
         aria-label="Page layout options"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        className={cn('btn-action', isOpen && 'btn-action--active')}
+        variant="toolbar"
+        className={cn(isOpen && 'border-brand-500 bg-brand-50 text-brand-700')}
         onClick={() => setIsOpen((v) => !v)}
       >
         <SlidersIcon />
-        <span className="btn-action__label">Layout</span>
-      </button>
+        Layout
+      </Button>
       {isOpen && (
         <CatalogLayoutPanel
           layoutConfig={layoutConfig}
