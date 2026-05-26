@@ -266,7 +266,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         onEditModeToggle={() => setEditMode((v) => !v)}
       />
 
-      <CatalogPagePicker
+      <CatalogToolbarPicker
         rooms={rooms}
         currentIndex={pageIndex}
         total={entries.length}
@@ -320,6 +320,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
  * the ProjectHeader tab row when on the catalog route.
  */
 export const CATALOG_ACTIONS_SLOT_ID = 'ffe-catalog-actions-slot';
+export const CATALOG_PICKER_SLOT_ID = 'ffe-catalog-picker-slot';
 
 /**
  * Portal of catalog actions into the project header. Renders Edit, Print,
@@ -417,9 +418,43 @@ function CatalogActionsBar({
   );
 }
 
+function CatalogToolbarPicker({
+  rooms,
+  currentIndex,
+  total,
+  currentEntry,
+  onPageChange,
+}: {
+  rooms: RoomWithItems[];
+  currentIndex: number;
+  total: number;
+  currentEntry: CatalogEntry | undefined;
+  onPageChange: (index: number) => void;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById(CATALOG_PICKER_SLOT_ID);
+    setSlot(el);
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <CatalogPagePicker
+      rooms={rooms}
+      currentIndex={currentIndex}
+      total={total}
+      currentEntry={currentEntry}
+      onPageChange={onPageChange}
+    />,
+    slot,
+  );
+}
+
 /**
- * Centered item picker — appears above the catalog page itself. Includes
- * the room label, previous/next arrows, and the jump dropdown.
+ * Centered item picker for the header toolbar. Includes the room label,
+ * previous/next arrows, and the jump dropdown.
  */
 function CatalogPagePicker({
   rooms,
@@ -437,16 +472,13 @@ function CatalogPagePicker({
   let itemIndex = 0;
 
   return (
-    <nav
-      aria-label="Catalog page picker"
-      className="no-print mx-auto mt-4 mb-6 flex max-w-5xl flex-col items-center gap-2 px-4"
-    >
-      {currentEntry?.room.name && (
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+    <nav aria-label="Catalog page picker" className="no-print flex items-center gap-3">
+      {currentEntry?.room.name ? (
+        <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500 lg:block">
           <span className="text-neutral-400">Room ·</span>{' '}
           <span className="text-neutral-800">{currentEntry.room.name}</span>
         </p>
-      )}
+      ) : null}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -464,7 +496,7 @@ function CatalogPagePicker({
           id="catalog-jump"
           value={currentIndex}
           onChange={(event) => onPageChange(Number(event.target.value))}
-          className="min-w-64 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-800 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="min-w-56 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-800 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         >
           {rooms.map((room) => (
             <optgroup key={room.id} label={room.name}>

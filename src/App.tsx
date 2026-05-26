@@ -11,7 +11,11 @@ import {
 } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthGate, SignInPage, UserMenu } from './components/shared/auth/AuthGate';
-import { CatalogView, CATALOG_ACTIONS_SLOT_ID } from './components/ffe/catalog/CatalogView';
+import {
+  CatalogView,
+  CATALOG_ACTIONS_SLOT_ID,
+  CATALOG_PICKER_SLOT_ID,
+} from './components/ffe/catalog/CatalogView';
 import { FfeTable } from './components/ffe/items';
 import { MaterialsView } from './components/materials/MaterialsView';
 import { BudgetView } from './components/project/BudgetView';
@@ -175,6 +179,11 @@ function ProjectLayout() {
       ) : null
     ) : null;
 
+  const headerToolbarCenter =
+    !isLoading && isCatalogRoute ? (
+      <div id={CATALOG_PICKER_SLOT_ID} className="flex items-center justify-center" />
+    ) : null;
+
   return (
     <main
       className={[
@@ -229,6 +238,7 @@ function ProjectLayout() {
               if (project) setPendingDelete(project);
             }}
             actions={headerActions}
+            toolbarCenter={headerToolbarCenter}
             userMenu={<UserMenu />}
           />
           {isLoading ? (

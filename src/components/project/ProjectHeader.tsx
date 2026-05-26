@@ -101,6 +101,8 @@ export interface ProjectHeaderProps {
   saveState?: SaveState;
   saveRelTime?: string | null;
   onSaveRetry?: (() => void) | null;
+  /** Optional centered content for the toolbar row (e.g., catalog page picker). */
+  toolbarCenter?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -118,6 +120,7 @@ export function ProjectHeader({
   saveState = 'idle',
   saveRelTime = null,
   onSaveRetry = null,
+  toolbarCenter,
 }: ProjectHeaderProps) {
   const location = useLocation();
 
@@ -168,7 +171,7 @@ export function ProjectHeader({
         <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
       </div>
 
-      <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
+      <div className="relative flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
           {activeTab?.label ?? 'Project'}
         </h2>
@@ -191,6 +194,12 @@ export function ProjectHeader({
             </Link>
           </div>
         )}
+
+        {toolbarCenter ? (
+          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="pointer-events-auto">{toolbarCenter}</div>
+          </div>
+        ) : null}
 
         {/* Right side */}
         <div className="ml-auto flex items-center gap-1">
