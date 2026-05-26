@@ -69,6 +69,14 @@ type CatalogLayoutConfig = {
 };
 
 type ExportSafeFontKey = 'source-sans-3';
+type CatalogColorToken = 'ink-950' | 'ink-800' | 'slate-700';
+
+type CatalogTypographyConfig = {
+  fontFamily: ExportSafeFontKey;
+  titleColorToken: CatalogColorToken;
+  bodyColorToken: CatalogColorToken;
+  metaColorToken: CatalogColorToken;
+};
 
 type CatalogEditorState = {
   editorOpen: boolean;
@@ -82,9 +90,9 @@ type CatalogEditorState = {
   };
   typography: {
     fontFamily: ExportSafeFontKey;
-    titleColorToken: string;
-    bodyColorToken: string;
-    metaColorToken: string;
+    titleColorToken: CatalogColorToken;
+    bodyColorToken: CatalogColorToken;
+    metaColorToken: CatalogColorToken;
   };
   layout: {
     mainImageAlignment: CatalogImageAlignment;
@@ -112,6 +120,23 @@ const DEFAULT_WATERMARK: WatermarkConfig = {
   opacity: 30,
   includeName: false,
 };
+
+const DEFAULT_TYPOGRAPHY_CONFIG: CatalogTypographyConfig = {
+  fontFamily: 'source-sans-3',
+  titleColorToken: 'ink-950',
+  bodyColorToken: 'ink-800',
+  metaColorToken: 'slate-700',
+};
+
+const EXPORT_SAFE_FONT_OPTIONS: Array<{ value: ExportSafeFontKey; label: string }> = [
+  { value: 'source-sans-3', label: 'Source Sans 3' },
+];
+
+const COLOR_TOKEN_OPTIONS: Array<{ value: CatalogColorToken; label: string }> = [
+  { value: 'ink-950', label: 'Ink 950' },
+  { value: 'ink-800', label: 'Ink 800' },
+  { value: 'slate-700', label: 'Slate 700' },
+];
 
 export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
@@ -149,6 +174,22 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       `ffe-catalog-h-divider:${project.id}`,
       'hidden',
     );
+  const [fontFamily, setFontFamily] = useCatalogSessionPreference<ExportSafeFontKey>(
+    `ffe-catalog-font-family:${project.id}`,
+    DEFAULT_TYPOGRAPHY_CONFIG.fontFamily,
+  );
+  const [titleColorToken, setTitleColorToken] = useCatalogSessionPreference<CatalogColorToken>(
+    `ffe-catalog-title-color-token:${project.id}`,
+    DEFAULT_TYPOGRAPHY_CONFIG.titleColorToken,
+  );
+  const [bodyColorToken, setBodyColorToken] = useCatalogSessionPreference<CatalogColorToken>(
+    `ffe-catalog-body-color-token:${project.id}`,
+    DEFAULT_TYPOGRAPHY_CONFIG.bodyColorToken,
+  );
+  const [metaColorToken, setMetaColorToken] = useCatalogSessionPreference<CatalogColorToken>(
+    `ffe-catalog-meta-color-token:${project.id}`,
+    DEFAULT_TYPOGRAPHY_CONFIG.metaColorToken,
+  );
   const layoutConfig = useMemo<CatalogLayoutConfig>(
     () => ({
       mainImageAlignment,
@@ -191,6 +232,24 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       setVerticalDividerDisplay,
       setHorizontalDividerDisplay,
     ],
+  );
+  const typographyConfig = useMemo<CatalogTypographyConfig>(
+    () => ({
+      fontFamily,
+      titleColorToken,
+      bodyColorToken,
+      metaColorToken,
+    }),
+    [fontFamily, titleColorToken, bodyColorToken, metaColorToken],
+  );
+  const handleTypographyChange = useCallback(
+    (update: Partial<CatalogTypographyConfig>) => {
+      if (update.fontFamily) setFontFamily(update.fontFamily);
+      if (update.titleColorToken) setTitleColorToken(update.titleColorToken);
+      if (update.bodyColorToken) setBodyColorToken(update.bodyColorToken);
+      if (update.metaColorToken) setMetaColorToken(update.metaColorToken);
+    },
+    [setBodyColorToken, setFontFamily, setMetaColorToken, setTitleColorToken],
   );
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
   const requestedPage = Number(searchParams.get('page') ?? '1');
@@ -260,10 +319,10 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         ],
       },
       typography: {
-        fontFamily: 'source-sans-3',
-        titleColorToken: 'catalog-title-default',
-        bodyColorToken: 'catalog-body-default',
-        metaColorToken: 'catalog-meta-default',
+        fontFamily: typographyConfig.fontFamily,
+        titleColorToken: typographyConfig.titleColorToken,
+        bodyColorToken: typographyConfig.bodyColorToken,
+        metaColorToken: typographyConfig.metaColorToken,
       },
       layout: {
         mainImageAlignment: layoutConfig.mainImageAlignment,
@@ -273,7 +332,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       },
       watermark: watermarkConfig,
     }),
-    [editorOpen, layoutConfig, watermarkConfig],
+    [editorOpen, layoutConfig, typographyConfig, watermarkConfig],
   );
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -320,6 +379,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         sortMode={sortMode}
         editorState={editorState}
         onEditorOpenChange={setEditorOpen}
+        onTypographyChange={handleTypographyChange}
       />
 
       <CatalogToolbarPicker
@@ -341,6 +401,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             pageNumber={pageIndex + 1}
             pageCount={entries.length}
             layoutConfig={layoutConfig}
+            typographyConfig={typographyConfig}
             onLayoutChange={handleLayoutChange}
             watermarkConfig={watermarkConfig}
             onWatermarkChange={updateWatermark}
@@ -360,6 +421,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             pageNumber={index + 1}
             pageCount={entries.length}
             layoutConfig={layoutConfig}
+            typographyConfig={typographyConfig}
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
@@ -398,6 +460,7 @@ function CatalogActionsBar({
   sortMode,
   editorState,
   onEditorOpenChange,
+  onTypographyChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
@@ -413,6 +476,7 @@ function CatalogActionsBar({
   sortMode: FfeItemSortMode;
   editorState: CatalogEditorState;
   onEditorOpenChange: (open: boolean) => void;
+  onTypographyChange: (update: Partial<CatalogTypographyConfig>) => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
 
@@ -458,6 +522,7 @@ function CatalogActionsBar({
         onWatermarkChange={onWatermarkChange}
         logoDataUrl={logoDataUrl}
         onEditorOpenChange={onEditorOpenChange}
+        onTypographyChange={onTypographyChange}
       />
       <span
         aria-hidden
@@ -698,6 +763,7 @@ function CatalogEditorPanelButton({
   currentEntry,
   editorState,
   onEditorOpenChange,
+  onTypographyChange,
   onLayoutChange,
   watermarkConfig,
   onWatermarkChange,
@@ -707,6 +773,7 @@ function CatalogEditorPanelButton({
   currentEntry: CatalogEntry | undefined;
   editorState: CatalogEditorState;
   onEditorOpenChange: (open: boolean) => void;
+  onTypographyChange: (update: Partial<CatalogTypographyConfig>) => void;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
@@ -743,6 +810,7 @@ function CatalogEditorPanelButton({
           project={project}
           currentEntry={currentEntry}
           editorState={editorState}
+          onTypographyChange={onTypographyChange}
           onLayoutChange={onLayoutChange}
           watermarkConfig={watermarkConfig}
           onWatermarkChange={onWatermarkChange}
@@ -758,6 +826,7 @@ function CatalogEditorPanel({
   project,
   currentEntry,
   editorState,
+  onTypographyChange,
   onLayoutChange,
   watermarkConfig,
   onWatermarkChange,
@@ -767,6 +836,7 @@ function CatalogEditorPanel({
   project: Project;
   currentEntry: CatalogEntry | undefined;
   editorState: CatalogEditorState;
+  onTypographyChange: (update: Partial<CatalogTypographyConfig>) => void;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
@@ -844,14 +914,76 @@ function CatalogEditorPanel({
 
       <LayoutGroup label="Typography and Color">
         <LayoutRow label="Font">
-          <span className="catalog-layout-note">
-            {editorState.typography.fontFamily === 'source-sans-3'
-              ? 'Source Sans 3 (export-safe)'
-              : 'Export-safe font'}
-          </span>
+          <select
+            aria-label="Catalog font family"
+            value={editorState.typography.fontFamily}
+            className="toolbar-select"
+            onChange={(event) =>
+              onTypographyChange({
+                fontFamily: event.target.value as ExportSafeFontKey,
+              })
+            }
+          >
+            {EXPORT_SAFE_FONT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} (export-safe)
+              </option>
+            ))}
+          </select>
         </LayoutRow>
-        <LayoutRow label="Color tokens">
-          <span className="catalog-layout-note">Title, body, and metadata tokens</span>
+        <LayoutRow label="Title and ID">
+          <select
+            aria-label="Title color token"
+            value={editorState.typography.titleColorToken}
+            className="toolbar-select"
+            onChange={(event) =>
+              onTypographyChange({
+                titleColorToken: event.target.value as CatalogColorToken,
+              })
+            }
+          >
+            {COLOR_TOKEN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} (export-safe)
+              </option>
+            ))}
+          </select>
+        </LayoutRow>
+        <LayoutRow label="Body text">
+          <select
+            aria-label="Body color token"
+            value={editorState.typography.bodyColorToken}
+            className="toolbar-select"
+            onChange={(event) =>
+              onTypographyChange({
+                bodyColorToken: event.target.value as CatalogColorToken,
+              })
+            }
+          >
+            {COLOR_TOKEN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} (export-safe)
+              </option>
+            ))}
+          </select>
+        </LayoutRow>
+        <LayoutRow label="Metadata">
+          <select
+            aria-label="Metadata color token"
+            value={editorState.typography.metaColorToken}
+            className="toolbar-select"
+            onChange={(event) =>
+              onTypographyChange({
+                metaColorToken: event.target.value as CatalogColorToken,
+              })
+            }
+          >
+            {COLOR_TOKEN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} (export-safe)
+              </option>
+            ))}
+          </select>
         </LayoutRow>
       </LayoutGroup>
 
@@ -1239,6 +1371,7 @@ export function CatalogPage({
   companyName,
   watermarkInteractive = true,
   layoutConfig: layoutConfigProp,
+  typographyConfig: typographyConfigProp,
   onLayoutChange,
   editorOpen = true,
 }: {
@@ -1252,6 +1385,7 @@ export function CatalogPage({
   companyName?: string | null;
   watermarkInteractive?: boolean;
   layoutConfig?: Partial<CatalogLayoutConfig>;
+  typographyConfig?: Partial<CatalogTypographyConfig>;
   onLayoutChange?: (update: Partial<CatalogLayoutConfig>) => void;
   editorOpen?: boolean;
 }) {
@@ -1296,6 +1430,26 @@ export function CatalogPage({
       />
     ) : null;
   const layout: CatalogLayoutConfig = { ...DEFAULT_LAYOUT_CONFIG, ...layoutConfigProp };
+  const typography: CatalogTypographyConfig = {
+    ...DEFAULT_TYPOGRAPHY_CONFIG,
+    ...typographyConfigProp,
+  };
+  const typographyFontFamily =
+    typography.fontFamily === DEFAULT_TYPOGRAPHY_CONFIG.fontFamily
+      ? undefined
+      : resolveCatalogFontFamily(typography.fontFamily);
+  const titleTextStyle =
+    typography.titleColorToken === DEFAULT_TYPOGRAPHY_CONFIG.titleColorToken
+      ? undefined
+      : { color: resolveCatalogColorToken(typography.titleColorToken) };
+  const bodyTextStyle =
+    typography.bodyColorToken === DEFAULT_TYPOGRAPHY_CONFIG.bodyColorToken
+      ? undefined
+      : { color: resolveCatalogColorToken(typography.bodyColorToken) };
+  const metaTextStyle =
+    typography.metaColorToken === DEFAULT_TYPOGRAPHY_CONFIG.metaColorToken
+      ? undefined
+      : { color: resolveCatalogColorToken(typography.metaColorToken) };
   const isTopAligned = layout.mainImageAlignment === 'top';
   const isExpandedPlanImage = layout.planImageSize === 'expanded';
   const lineTotalCents = item.unitCostCents * item.qty;
@@ -1306,6 +1460,7 @@ export function CatalogPage({
         'catalog-page mx-auto bg-white text-neutral-950 shadow-xl',
         editorOpen && 'catalog-page--edit-mode',
       )}
+      style={typographyFontFamily ? { fontFamily: typographyFontFamily } : undefined}
       aria-label={`${item.itemName} catalog page`}
     >
       <header className={cn('catalog-header', hasHeaderMark && 'relative')}>
@@ -1324,7 +1479,11 @@ export function CatalogPage({
         <div className="catalog-header-left">
           <div className="gap-2 flex items-center">
             <h1 className="catalog-header-title">
-              {item.itemIdTag ? <span className="catalog-header-id">{item.itemIdTag}</span> : null}
+              {item.itemIdTag ? (
+                <span className="catalog-header-id" style={titleTextStyle}>
+                  {item.itemIdTag}
+                </span>
+              ) : null}
             </h1>
             <InlineTextEdit
               value={item.itemName}
@@ -1334,18 +1493,23 @@ export function CatalogPage({
               inputClassName="w-full font-medium uppercase tracking-wide text-gray-800"
               onSave={(value) => saveField('itemName', value, true)}
               renderDisplay={(value) => (
-                <span className="catalog-header-name">{value.toUpperCase()}</span>
+                <span className="catalog-header-name" style={titleTextStyle}>
+                  {value.toUpperCase()}
+                </span>
               )}
             />
           </div>
         </div>
         <div className="catalog-header-right">
-          <p className="catalog-header-project">{project.name.toUpperCase()}</p>
+          <p className="catalog-header-project" style={metaTextStyle}>
+            {project.name.toUpperCase()}
+          </p>
           <p
             className={cn(
               'catalog-header-subtitle',
               !project.projectLocation && 'catalog-header-subtitle-empty',
             )}
+            style={metaTextStyle}
           >
             {project.projectLocation
               ? project.projectLocation.toUpperCase()
@@ -1374,23 +1538,34 @@ export function CatalogPage({
                 {layout.showCostInfo ? (
                   <>
                     <div className="catalog-qty-label-row">
-                      <span className="catalog-qty-label">PRODUCT QTY</span>
-                      <span className="catalog-qty-label">PRICE PER ITEM</span>
-                      <span className="catalog-qty-label">TOTAL</span>
+                      <span className="catalog-qty-label" style={metaTextStyle}>
+                        PRODUCT QTY
+                      </span>
+                      <span className="catalog-qty-label" style={metaTextStyle}>
+                        PRICE PER ITEM
+                      </span>
+                      <span className="catalog-qty-label" style={metaTextStyle}>
+                        TOTAL
+                      </span>
                     </div>
                     <div className="catalog-qty-value-row">
-                      <span className="catalog-qty-value">{item.qty}</span>
-                      <span className="catalog-qty-value">
+                      <span className="catalog-qty-value" style={bodyTextStyle}>
+                        {item.qty}
+                      </span>
+                      <span className="catalog-qty-value" style={bodyTextStyle}>
                         {item.unitCostCents > 0 ? formatMoney(cents(item.unitCostCents)) : '—'}
                       </span>
-                      <span className="catalog-qty-value">
+                      <span className="catalog-qty-value" style={bodyTextStyle}>
                         {lineTotalCents > 0 ? formatMoney(cents(lineTotalCents)) : '—'}
                       </span>
                     </div>
                   </>
                 ) : (
                   <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                    <span className="catalog-qty-inline-value catalog-qty-label-compact">
+                    <span
+                      className="catalog-qty-inline-value catalog-qty-label-compact"
+                      style={metaTextStyle}
+                    >
                       QTY
                       <span>{item.qty}</span>
                     </span>
@@ -1458,8 +1633,10 @@ export function CatalogPage({
             </div>
           </div>
 
-          <div className="catalog-main-right">
-            <h2 className="catalog-spec-heading">PRODUCT SPECIFICATIONS</h2>
+          <div className="catalog-main-right" style={bodyTextStyle}>
+            <h2 className="catalog-spec-heading" style={titleTextStyle}>
+              PRODUCT SPECIFICATIONS
+            </h2>
 
             <div className="catalog-spec-dim">
               <InlineTextEdit
@@ -1584,7 +1761,9 @@ export function CatalogPage({
               />
             </div>
             <div className={cn('justify-self-end', item.materials.length === 0 && 'no-print')}>
-              <h2 className="catalog-spec-heading catalog-sub-heading">FINISH SCHEDULE</h2>
+              <h2 className="catalog-spec-heading catalog-sub-heading" style={titleTextStyle}>
+                FINISH SCHEDULE
+              </h2>
               <div
                 className={cn(
                   'catalog-materials-row',
@@ -1625,9 +1804,13 @@ export function CatalogPage({
           />
           <div className="catalog-location-block">
             <div className="catalog-location-content">
-              <p className="catalog-location-label">
-                <span className="catalog-location-key">LOCATION:</span>{' '}
-                <span className="catalog-location-value">{room.name}</span>
+              <p className="catalog-location-label" style={metaTextStyle}>
+                <span className="catalog-location-key" style={metaTextStyle}>
+                  LOCATION:
+                </span>{' '}
+                <span className="catalog-location-value" style={metaTextStyle}>
+                  {room.name}
+                </span>
               </p>
               <div
                 className={cn(
@@ -1665,14 +1848,14 @@ export function CatalogPage({
         onToggle={() => onLayoutChange?.({ showApproval: !layout.showApproval })}
       />
 
-      <footer className="catalog-footer">
+      <footer className="catalog-footer" style={metaTextStyle}>
         <span>{watermarkConfig?.placementH === 'left' ? watermarkMark : null}</span>
         <span className="catalog-footer-center">
           {watermarkConfig?.placementH === 'center' ? watermarkMark : null}
         </span>
         <span className="catalog-footer-page">
           {watermarkConfig?.placementH === 'right' ? watermarkMark : null}
-          <span className="catalog-footer-page-num">
+          <span className="catalog-footer-page-num" style={metaTextStyle}>
             PAGE {pageNumber} of {pageCount}
           </span>
         </span>
@@ -1693,6 +1876,26 @@ function LinkIcon() {
       />
     </svg>
   );
+}
+
+function resolveCatalogFontFamily(font: ExportSafeFontKey): string {
+  if (font === 'source-sans-3') {
+    return "'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif";
+  }
+  return "'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif";
+}
+
+function resolveCatalogColorToken(token: CatalogColorToken): string {
+  switch (token) {
+    case 'ink-950':
+      return '#0a0a0a';
+    case 'ink-800':
+      return '#262626';
+    case 'slate-700':
+      return '#374151';
+    default:
+      return '#0a0a0a';
+  }
 }
 
 // Persistent localStorage-backed placeholder for the vendor / vendor link fields.

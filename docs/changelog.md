@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(catalog): add export-safe typography controls in the Catalog Editor with Source Sans 3 selection and zoned title/body/metadata color tokens reflected in preview
 - feat(catalog): move option image add/replace/remove and Add swatch actions into the Catalog Editor Media section, and remove in-canvas media add affordances
 - feat(catalog): replace the toolbar Layout action with an Editor panel shell, add unified editor state branches, and gate inline catalog text editing to editor-open mode
 - refactor(ui): retire legacy btn-action CSS utilities and migrate toolbar actions to Button toolbar variants across app bar, catalog, materials, plans, columns, budget, and export controls
