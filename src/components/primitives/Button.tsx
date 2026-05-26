@@ -90,8 +90,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         onClick?.(event as unknown as MouseEvent<HTMLButtonElement>);
         childOnClick?.(event);
       },
-      tabIndex: disabled ? -1 : child.props.tabIndex,
-      'aria-disabled': disabled || undefined,
+      ...(disabled
+        ? { tabIndex: -1 }
+        : child.props.tabIndex !== undefined
+          ? { tabIndex: child.props.tabIndex }
+          : {}),
+      ...(disabled ? { 'aria-disabled': true as const } : {}),
     });
   }
 
