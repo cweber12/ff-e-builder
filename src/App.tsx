@@ -198,7 +198,7 @@ function ProjectLayout() {
     !isLoading && isPlansRoute ? (
       <div
         id={PLANS_FILTER_SLOT_ID}
-        className="segmented ml-4"
+        className="toolbar-segmented ml-4"
         role="tablist"
         aria-label="Filter plans"
       />
@@ -381,23 +381,16 @@ function BudgetPageActions({
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => setFfeOpen(true)}
-        className="rounded-md border border-neutral-200 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
-      >
-        FF&amp;E Budget
+      <button type="button" onClick={() => setFfeOpen(true)} className="btn-action">
+        <span className="btn-action__label">FF&amp;E Budget</span>
       </button>
-      <button
-        type="button"
-        onClick={() => setProposalOpen(true)}
-        className="rounded-md border border-neutral-200 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
-      >
-        Proposal Budget
+      <button type="button" onClick={() => setProposalOpen(true)} className="btn-action">
+        <span className="btn-action__label">Proposal Budget</span>
       </button>
       <ExportMenu
-        label="Export"
+        label={<span className="btn-action__label">Export</span>}
         size="sm"
+        buttonClassName="btn-action"
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
           exportProposalCsv(

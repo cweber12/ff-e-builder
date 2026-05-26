@@ -263,7 +263,7 @@ function MaterialsToolbarLeft({
 
   return createPortal(
     <>
-      <div className="segmented" role="tablist" aria-label="Materials view mode">
+      <div className="toolbar-segmented" role="tablist" aria-label="Materials view mode">
         <button
           type="button"
           role="tab"
@@ -286,7 +286,7 @@ function MaterialsToolbarLeft({
       <select
         value={categoryFilter}
         onChange={(e) => onCategoryFilterChange(e.target.value as CategoryFilter)}
-        className="input-compact h-8 min-w-[8.5rem] text-xs font-semibold uppercase tracking-[0.08em] text-neutral-700"
+        className="toolbar-select"
         aria-label="Filter by category"
       >
         {FILTER_OPTIONS.map((opt) => (
@@ -326,7 +326,7 @@ function MaterialsToolbarActions({
 
   return createPortal(
     <div className="flex items-center gap-2">
-      <span className="inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-700">
+      <span className="toolbar-stat">
         <span className="num text-neutral-950">{filteredMaterials.length}</span>
         <span className="text-neutral-500">
           {filteredMaterials.length === 1 ? 'item' : 'items'}
@@ -336,7 +336,7 @@ function MaterialsToolbarActions({
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         placeholder="Search name or ID"
-        className="input-base h-8 w-64 py-1.5"
+        className="toolbar-input w-64"
         aria-label="Search library by name or ID"
       />
       <ExportMenu
@@ -353,12 +353,21 @@ function MaterialsToolbarActions({
         buttonClassName="btn-action"
       />
       {!showForm && (
-        <Button type="button" variant="toolbarPrimary" onClick={onCreateMaterial}>
-          + New material
-        </Button>
+        <button type="button" className="btn-action btn-action--primary" onClick={onCreateMaterial}>
+          <PlusIcon />
+          <span className="btn-action__label">New material</span>
+        </button>
       )}
     </div>,
     slot,
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
+      <path d="M7 2v10M2 7h10" />
+    </svg>
   );
 }
 
@@ -503,15 +512,8 @@ function materialMatchesQuery(material: Material, query: string) {
 
 function ExportIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className="h-4 w-4"
-      aria-label="Export"
-    >
-      <path d="M8.75 2.75a.75.75 0 0 0-1.5 0v5.69L5.03 6.22a.75.75 0 0 0-1.06 1.06l3.5 3.5a.75.75 0 0 0 1.06 0l3.5-3.5a.75.75 0 0 0-1.06-1.06L8.75 8.44V2.75Z" />
-      <path d="M3.5 9.75a.75.75 0 0 0-1.5 0v1.5A2.75 2.75 0 0 0 4.75 14h6.5A2.75 2.75 0 0 0 14 11.25v-1.5a.75.75 0 0 0-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5Z" />
+    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
+      <path d="M7 1v8M4 6l3 3 3-3M2 12h10" />
     </svg>
   );
 }

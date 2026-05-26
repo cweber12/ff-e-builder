@@ -387,6 +387,7 @@ function CatalogActionsBar({
         onClick={() => window.print()}
       >
         <PrintIcon />
+        <span className="btn-action__label">Print</span>
       </button>
       <CatalogExportButton
         project={project}
@@ -496,7 +497,7 @@ function CatalogPagePicker({
           id="catalog-jump"
           value={currentIndex}
           onChange={(event) => onPageChange(Number(event.target.value))}
-          className="min-w-56 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-800 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="toolbar-select min-w-56"
         >
           {rooms.map((room) => (
             <optgroup key={room.id} label={room.name}>
@@ -675,6 +676,7 @@ function CatalogLayoutPanelButton({
         onClick={() => setIsOpen((v) => !v)}
       >
         <SlidersIcon />
+        <span className="btn-action__label">Layout</span>
       </button>
       {isOpen && (
         <CatalogLayoutPanel
@@ -718,7 +720,7 @@ function CatalogLayoutPanel({
           aria-label="Close layout options"
           onClick={onClose}
         >
-          ×
+          <CloseIcon />
         </button>
       </div>
 
@@ -923,86 +925,52 @@ function SegmentedToggle<T extends string>({
 
 function ChevronLeftIcon() {
   return (
-    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-      <path
-        d="M10 3L5 8l5 5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 16 16" aria-hidden="true" className="toolbar-icon">
+      <path d="M10 3L5 8l5 5" />
     </svg>
   );
 }
 
 function ChevronRightIcon() {
   return (
-    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-      <path
-        d="M6 3l5 5-5 5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 16 16" aria-hidden="true" className="toolbar-icon">
+      <path d="M6 3l5 5-5 5" />
     </svg>
   );
 }
 
 function ChevronDownIcon() {
   return (
-    <svg viewBox="0 0 12 12" fill="none" aria-hidden="true" className="h-3 w-3">
-      <path
-        d="M2 4l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 12 12" aria-hidden="true" className="toolbar-icon">
+      <path d="M2 4l4 4 4-4" />
     </svg>
   );
 }
 
 function PrintIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <rect x="5" y="2" width="10" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
-      <path
-        d="M5 14H3a1 1 0 01-1-1V9a1 1 0 011-1h14a1 1 0 011 1v4a1 1 0 01-1 1h-2"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-      <rect x="5" y="12" width="10" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M7 16h6M7 14h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
+      <rect x="5" y="2" width="10" height="6" rx="0.5" />
+      <path d="M5 14H3a1 1 0 01-1-1V9a1 1 0 011-1h14a1 1 0 011 1v4a1 1 0 01-1 1h-2" />
+      <rect x="5" y="12" width="10" height="6" rx="0.5" />
+      <path d="M7 16h6M7 14h6" />
     </svg>
   );
 }
 
 function DownloadIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M10 3v10M6 9l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M4 16h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
+      <path d="M10 3v10M6 9l4 4 4-4" />
+      <path d="M4 16h12" />
     </svg>
   );
 }
 
 function SlidersIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M4 6h12M4 10h12M4 14h12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
+      <path d="M4 6h12M4 10h12M4 14h12" />
       <circle cx="8" cy="6" r="1.75" fill="currentColor" />
       <circle cx="12" cy="10" r="1.75" fill="currentColor" />
       <circle cx="8" cy="14" r="1.75" fill="currentColor" />
@@ -1012,14 +980,16 @@ function SlidersIcon() {
 
 function EditIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M13.5 3.5l3 3L5.5 17H3v-2.5L13.5 3.5z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
+      <path d="M13.5 3.5l3 3L5.5 17H3v-2.5L13.5 3.5z" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 12 12" aria-hidden="true" className="toolbar-icon">
+      <path d="M2 2l8 8M10 2 2 10" />
     </svg>
   );
 }

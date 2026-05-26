@@ -212,20 +212,20 @@ function PlansActionsBar({
 
   return createPortal(
     <div className="flex items-center gap-2">
-      <span className="inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-700">
+      <span className="toolbar-stat">
         <span className="num text-neutral-950">{planCount}</span>
         <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
       </span>
-      <span className="inline-flex items-center gap-2 rounded-sm border border-success-700/25 bg-success-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-success-700">
+      <span className="toolbar-stat toolbar-stat--success">
         <span className="num">{calibratedCount}</span>
         <span>calibrated</span>
       </span>
-      <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-500">
+      <label className="flex items-center gap-2 toolbar-label">
         <span>Sort</span>
         <select
           value={sort}
           onChange={(event) => onSortChange(event.target.value as SortId)}
-          className="input-compact font-medium normal-case tracking-normal text-neutral-900"
+          className="toolbar-select"
         >
           {SORTS.map((entry) => (
             <option key={entry.id} value={entry.id}>
@@ -240,10 +240,19 @@ function PlansActionsBar({
         onClick={onUpload}
         aria-haspopup="dialog"
       >
+        <UploadIcon />
         <span className="btn-action__label">Upload plan</span>
       </button>
     </div>,
     slot,
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
+      <path d="M7 1v8M4 4l3-3 3 3M2 11h10" />
+    </svg>
   );
 }
 

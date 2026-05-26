@@ -130,10 +130,10 @@ const DENSITY_OPTIONS: { value: TableDensity; label: string }[] = [
 
 function ColumnsIcon() {
   return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
-      <rect x="2" y="3" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="6.5" y="3" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="11" y="3" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+    <svg viewBox="0 0 16 16" fill="none" className="toolbar-icon" aria-hidden="true">
+      <rect x="2" y="3" width="3" height="10" rx="0.5" />
+      <rect x="6.5" y="3" width="3" height="10" rx="0.5" />
+      <rect x="11" y="3" width="3" height="10" rx="0.5" />
     </svg>
   );
 }
@@ -212,12 +212,10 @@ export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilit
         aria-label="Column visibility & density"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={cn(
-          'inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-colors',
-          open && 'bg-neutral-100 text-neutral-900',
-        )}
+        className={cn('btn-action', open && 'btn-action--active')}
       >
         <ColumnsIcon />
+        <span className="btn-action__label">Columns</span>
       </button>
 
       {open &&

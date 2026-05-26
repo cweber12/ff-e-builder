@@ -182,18 +182,18 @@ export function ProjectHeader({
         {toolbarLeft}
 
         {showViewToggle && (
-          <div className="segmented ml-4">
+          <div className="toolbar-segmented ml-4">
             <Link
               to={`/projects/${project.id}/ffe/catalog`}
               data-active={isCatalogRoute || undefined}
-              className="inline-flex h-7 items-center rounded-[4px] px-3 text-xs font-semibold uppercase tracking-[0.12em] text-neutral-600 transition-colors data-[active=true]:bg-brand-600 data-[active=true]:text-white hover:bg-neutral-100"
+              className="no-underline"
             >
               Catalog
             </Link>
             <Link
               to={`/projects/${project.id}/ffe/table`}
               data-active={!isCatalogRoute || undefined}
-              className="inline-flex h-7 items-center rounded-[4px] px-3 text-xs font-semibold uppercase tracking-[0.12em] text-neutral-600 transition-colors data-[active=true]:bg-brand-600 data-[active=true]:text-white hover:bg-neutral-100"
+              className="no-underline"
             >
               Table
             </Link>

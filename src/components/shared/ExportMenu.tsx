@@ -42,10 +42,7 @@ export function ExportMenu({
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const baseBtn =
-    size === 'sm'
-      ? 'rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-700 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500'
-      : 'rounded-md border border-brand-500 bg-white px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
+  const baseBtn = size === 'sm' ? 'btn-action' : 'btn-action';
 
   const optionBtn =
     'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
@@ -63,18 +60,8 @@ export function ExportMenu({
         disabled={disabled}
       >
         {label}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="ml-1 inline-block h-3 w-3 shrink-0"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-            clipRule="evenodd"
-          />
+        <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
+          <path d="M3.5 5.5 7 9l3.5-3.5" />
         </svg>
       </button>
 
@@ -170,42 +157,30 @@ export function ExportMenu({
 
 function CsvIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className="h-4 w-4 text-neutral-500"
-      aria-hidden="true"
-    >
-      <path d="M3 3.5A1.5 1.5 0 0 1 4.5 2h4.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12A1.5 1.5 0 0 1 13 5.622V12.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 12.5v-9Z" />
+    <svg viewBox="0 0 14 14" className="toolbar-icon text-neutral-500" aria-hidden="true">
+      <path d="M3 1.5h5l3 3v8H3z" />
+      <path d="M8 1.5v3h3" />
+      <path d="M4.5 9.5h5" />
     </svg>
   );
 }
 
 function ExcelIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className="h-4 w-4 text-success-500"
-      aria-hidden="true"
-    >
-      <path d="M3 3.5A1.5 1.5 0 0 1 4.5 2h4.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12A1.5 1.5 0 0 1 13 5.622V12.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 12.5v-9Zm4.75 5.5a.75.75 0 0 0-1.5 0v1.25H5a.75.75 0 0 0 0 1.5h1.25V13a.75.75 0 0 0 1.5 0v-1.25H9a.75.75 0 0 0 0-1.5H7.75V9Z" />
+    <svg viewBox="0 0 14 14" className="toolbar-icon text-success-700" aria-hidden="true">
+      <path d="M3 1.5h5l3 3v8H3z" />
+      <path d="M8 1.5v3h3" />
+      <path d="M4.5 9.5 7 12l2.5-2.5" />
     </svg>
   );
 }
 
 function PdfIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className="h-4 w-4 text-danger-500"
-      aria-hidden="true"
-    >
-      <path d="M3 3.5A1.5 1.5 0 0 1 4.5 2h4.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12A1.5 1.5 0 0 1 13 5.622V12.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 12.5v-9Zm4 4a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0V11h.5a1.5 1.5 0 0 0 0-3H7Z" />
+    <svg viewBox="0 0 14 14" className="toolbar-icon text-danger-600" aria-hidden="true">
+      <path d="M3 1.5h5l3 3v8H3z" />
+      <path d="M8 1.5v3h3" />
+      <path d="M4.5 9.5h3M4.5 11.5h2" />
     </svg>
   );
 }

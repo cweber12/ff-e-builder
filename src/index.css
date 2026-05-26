@@ -240,6 +240,77 @@
     @apply bg-neutral-100 text-neutral-900;
   }
 
+  /* Toolbar segmented toggle — no outer container border; each option is a
+     button-style pill matching the toolbar action vocabulary. */
+  .toolbar-segmented {
+    @apply inline-flex items-center gap-1;
+  }
+
+  .toolbar-segmented > button,
+  .toolbar-segmented > a {
+    @apply inline-flex h-8 items-center rounded-sm border border-neutral-200 bg-white px-3
+           text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-700
+           transition-colors duration-150;
+  }
+
+  .toolbar-segmented > button[aria-pressed='true'],
+  .toolbar-segmented > button[data-active='true'],
+  .toolbar-segmented > button[aria-checked='true'],
+  .toolbar-segmented > a[data-active='true'] {
+    @apply border-brand-500 bg-brand-50 text-brand-700;
+  }
+
+  .toolbar-segmented > button:hover,
+  .toolbar-segmented > a:hover {
+    @apply border-brand-400 bg-brand-50 text-brand-700;
+  }
+
+  .toolbar-segmented > button:focus-visible,
+  .toolbar-segmented > a:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--color-brand-500) / 0.3);
+  }
+
+  .toolbar-select {
+    @apply h-8 min-w-[8.5rem] rounded-sm border border-neutral-200 bg-white px-3
+           text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-700
+           transition-colors duration-150
+           hover:border-brand-400 hover:text-brand-700
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+
+  .toolbar-input {
+    @apply h-8 rounded-sm border border-neutral-200 bg-white px-3
+           text-[11px] font-medium tracking-[0.01em] text-neutral-900
+           placeholder:text-[11px] placeholder:font-semibold placeholder:uppercase
+           placeholder:tracking-[0.08em] placeholder:text-neutral-500
+           transition-colors duration-150
+           hover:border-brand-400
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+
+  .toolbar-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500;
+  }
+
+  .toolbar-stat {
+    @apply inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1
+           text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-700;
+  }
+
+  .toolbar-stat--success {
+    @apply border-success-700/25 bg-success-50 text-success-700;
+  }
+
+  .toolbar-icon {
+    @apply h-3.5 w-3.5 shrink-0;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
   /* Standard form input — apply on text, search, url, email inputs and
      anything else that should match the spec-document input vocabulary. */
   .input-base {
@@ -392,6 +463,10 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+  }
+
+  .btn-action .toolbar-icon {
+    margin-right: 1px;
   }
 
   /* ---- Nav room eyebrow ---- */
