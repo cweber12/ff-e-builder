@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): render shared export dropdowns in a high-z portal layer so they no longer appear under sticky table headers
 - refactor(ui): unify FF&E toolbar export to the shared ExportMenu used by MaterialsView so trigger and dropdown styles stay consistent
 - feat(ui): unify project tab-toolbar controls around shared catalog-style action buttons, borderless segmented toggles, and consistent icon treatment across FF&E, Proposal, Materials, Plans, Budget, and Catalog
 - feat(materials): render library cards in a 4-column grid on desktop and open add/edit material form in a popover modal instead of an inline side panel

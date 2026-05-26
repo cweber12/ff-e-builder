@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 type ExportMenuProps = {
   label?: ReactNode;
@@ -29,6 +30,7 @@ export function ExportMenu({
   const [open, setOpen] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -49,9 +51,12 @@ export function ExportMenu({
 
   const triggerButtonClass = buttonClassName ?? baseBtn;
 
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+
   return (
     <div ref={ref} className={`relative inline-flex ${className}`}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -65,92 +70,100 @@ export function ExportMenu({
         </svg>
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          className="absolute left-0 top-full z-40 mt-1 min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
-        >
-          {onCsv && (
-            <button
-              type="button"
-              role="menuitem"
-              className={optionBtn}
-              onClick={() => {
-                setOpen(false);
-                onCsv();
-              }}
-            >
-              <CsvIcon />
-              Export CSV
-            </button>
-          )}
-          {onExcel && (
-            <button
-              type="button"
-              role="menuitem"
-              className={optionBtn}
-              onClick={() => {
-                setOpen(false);
-                onExcel();
-              }}
-            >
-              <ExcelIcon />
-              Export Excel
-            </button>
-          )}
-          {pdfOptions?.length ? (
-            <div className="relative">
+      {open &&
+        triggerRect &&
+        createPortal(
+          <div
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: triggerRect.bottom + 4,
+              left: triggerRect.left,
+            }}
+            className="z-[120] min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+          >
+            {onCsv && (
               <button
                 type="button"
                 role="menuitem"
-                aria-haspopup="menu"
-                aria-expanded={pdfOpen}
                 className={optionBtn}
-                onClick={() => setPdfOpen((current) => !current)}
+                onClick={() => {
+                  setOpen(false);
+                  onCsv();
+                }}
+              >
+                <CsvIcon />
+                Export CSV
+              </button>
+            )}
+            {onExcel && (
+              <button
+                type="button"
+                role="menuitem"
+                className={optionBtn}
+                onClick={() => {
+                  setOpen(false);
+                  onExcel();
+                }}
+              >
+                <ExcelIcon />
+                Export Excel
+              </button>
+            )}
+            {pdfOptions?.length ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  role="menuitem"
+                  aria-haspopup="menu"
+                  aria-expanded={pdfOpen}
+                  className={optionBtn}
+                  onClick={() => setPdfOpen((current) => !current)}
+                >
+                  <PdfIcon />
+                  Export PDF
+                  <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
+                </button>
+                {pdfOpen && (
+                  <div
+                    role="menu"
+                    className="absolute left-full top-0 z-[121] ml-1 min-w-36 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+                  >
+                    {pdfOptions.map((option) => (
+                      <button
+                        key={option.label}
+                        type="button"
+                        role="menuitem"
+                        className={optionBtn}
+                        onClick={() => {
+                          setPdfOpen(false);
+                          setOpen(false);
+                          option.onSelect();
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                role="menuitem"
+                className={optionBtn}
+                onClick={() => {
+                  setOpen(false);
+                  onPdf();
+                }}
               >
                 <PdfIcon />
                 Export PDF
-                <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
               </button>
-              {pdfOpen && (
-                <div
-                  role="menu"
-                  className="absolute left-full top-0 z-50 ml-1 min-w-36 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
-                >
-                  {pdfOptions.map((option) => (
-                    <button
-                      key={option.label}
-                      type="button"
-                      role="menuitem"
-                      className={optionBtn}
-                      onClick={() => {
-                        setPdfOpen(false);
-                        setOpen(false);
-                        option.onSelect();
-                      }}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              className={optionBtn}
-              onClick={() => {
-                setOpen(false);
-                onPdf();
-              }}
-            >
-              <PdfIcon />
-              Export PDF
-            </button>
-          )}
-        </div>
-      )}
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
