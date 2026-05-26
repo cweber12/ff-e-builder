@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): move Plans badges and upload action into the project tab-toolbar action slot and remove the in-page Plan library hero copy
 - feat(catalog): move the catalog room label and page-jump picker into the centered project tab-toolbar slot above the catalog stage
 - feat(ui): split project tool chrome into a tabs row plus a dedicated toolbar row, hide the active tab from the tab strip, and surface it as the left toolbar header
 - feat(table): add opt-in debounced saves to shared editable Generated Item cells and enable `debounceMs={400}` for Proposal table edits with blur flush and final-value coalescing

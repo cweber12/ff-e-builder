@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
+import { PLANS_ACTIONS_SLOT_ID } from './PlansPage';
 
 vi.mock('../components/plans/list/PlanUploadModal', () => ({
   PlanUploadModal: vi.fn(({ open }: { open: boolean }) =>
@@ -71,18 +72,23 @@ vi.mock('../lib/api', () => ({
 }));
 
 describe('PlansPage', () => {
-  it('renders the plan library and opens the upload modal from the header CTA', () => {
+  it('renders plan cards and opens the upload modal from toolbar actions', () => {
+    const slot = document.createElement('div');
+    slot.id = PLANS_ACTIONS_SLOT_ID;
+    document.body.appendChild(slot);
+
     render(
       <MemoryRouter>
         <PlansPage project={project} />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Plan library' })).toBeInTheDocument();
     expect(screen.getByText('Level 1 Furniture Plan')).toBeInTheDocument();
     expect(screen.queryByTestId('plan-upload-modal')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Upload plan' }));
     expect(screen.getByTestId('plan-upload-modal')).toBeInTheDocument();
+
+    slot.remove();
   });
 });

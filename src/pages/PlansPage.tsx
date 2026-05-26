@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
 import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
 import { PlanUploadModal } from '../components/plans/list/PlanUploadModal';
@@ -10,6 +11,8 @@ import type { MeasuredPlan, Project } from '../types';
 type PlansPageProps = {
   project: Project;
 };
+
+export const PLANS_ACTIONS_SLOT_ID = 'plans-actions-slot';
 
 type FilterId = 'all' | 'calibrated' | 'uncalibrated';
 type SortId = 'added' | 'name' | 'measurements';
@@ -69,38 +72,14 @@ export function PlansPage({ project }: PlansPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 py-4">
-      <header className="pb-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
-              Plan library
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500">
-              Architectural sheets used for measurement. Each plan keeps its own scale context so
-              measurements stay tied to the correct source drawing.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-700">
-              <span className="num text-neutral-950">{planCount}</span>
-              <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-sm border border-success-700/25 bg-success-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-success-700">
-              <span className="num">{calibratedCount}</span>
-              <span>calibrated</span>
-            </span>
-            <button
-              type="button"
-              className="btn-action btn-action--primary"
-              onClick={() => setUploadOpen(true)}
-              aria-haspopup="dialog"
-            >
-              <span className="btn-action__label">Upload plan</span>
-            </button>
-          </div>
-        </div>
+      <PlansActionsBar
+        planCount={planCount}
+        calibratedCount={calibratedCount}
+        onUpload={() => setUploadOpen(true)}
+      />
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4">
+      <header className="pb-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-4">
           <div className="segmented" role="tablist" aria-label="Filter plans">
             {FILTERS.map((entry) => {
               const active = filter === entry.id;
@@ -199,6 +178,47 @@ function EmptyState({ title, description, actionLabel, onAction }: EmptyStatePro
         {actionLabel}
       </Button>
     </div>
+  );
+}
+
+function PlansActionsBar({
+  planCount,
+  calibratedCount,
+  onUpload,
+}: {
+  planCount: number;
+  calibratedCount: number;
+  onUpload: () => void;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById(PLANS_ACTIONS_SLOT_ID);
+    setSlot(el);
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-700">
+        <span className="num text-neutral-950">{planCount}</span>
+        <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
+      </span>
+      <span className="inline-flex items-center gap-2 rounded-sm border border-success-700/25 bg-success-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-success-700">
+        <span className="num">{calibratedCount}</span>
+        <span>calibrated</span>
+      </span>
+      <button
+        type="button"
+        className="btn-action btn-action--primary"
+        onClick={onUpload}
+        aria-haspopup="dialog"
+      >
+        <span className="btn-action__label">Upload plan</span>
+      </button>
+    </div>,
+    slot,
   );
 }
 

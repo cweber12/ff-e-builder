@@ -52,7 +52,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { CompanyProfilePage } from './pages/CompanyProfilePage';
 import { PlanCanvasPage } from './pages/PlanCanvasPage';
 import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
-import { PlansPage } from './pages/PlansPage';
+import { PlansPage, PLANS_ACTIONS_SLOT_ID } from './pages/PlansPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
@@ -137,6 +137,7 @@ function ProjectLayout() {
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
   const isProposalRoute = !!id && location.pathname.includes(`/projects/${id}/proposal`);
+  const isPlansRoute = !!id && location.pathname.includes(`/projects/${id}/plans`);
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
   const isTableRoute = (isFfeRoute && !isCatalogRoute) || isProposalRoute;
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
@@ -176,6 +177,8 @@ function ProjectLayout() {
           roomsWithItems={roomsWithItems}
           proposalCategoriesWithItems={proposalCategoriesWithItems}
         />
+      ) : isPlansRoute ? (
+        <div id={PLANS_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
       ) : null
     ) : null;
 
