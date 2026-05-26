@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ui): add shared MenuPanel and DropdownMenu primitives, then migrate Project, Export, FF&E, and Proposal action menus to unify menu styling and portal behavior
 - refactor(ui): migrate DashboardPage primary project-create CTAs to the shared Button primitive and remove inline button class styling
 - fix(ui): render shared export dropdowns in a high-z portal layer so they no longer appear under sticky table headers
 - refactor(ui): unify FF&E toolbar export to the shared ExportMenu used by MaterialsView so trigger and dropdown styles stay consistent

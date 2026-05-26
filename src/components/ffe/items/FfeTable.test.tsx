@@ -329,7 +329,8 @@ describe('FfeTable', () => {
     const user = userEvent.setup();
     renderTable();
 
-    await user.click(screen.getAllByRole('button', { name: 'Expand table view' })[0]!);
+    await user.click(screen.getByRole('button', { name: 'Open options for Living Room' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Expand table view' }));
 
     expect(screen.getByLabelText('Living Room expanded items table')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Minimize table view' }));

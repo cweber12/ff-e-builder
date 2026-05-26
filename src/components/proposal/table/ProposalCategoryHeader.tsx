@@ -1,11 +1,9 @@
-import { createPortal } from 'react-dom';
 import { cents, formatMoney, type CustomColumnDef } from '../../../types';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
+import { DropdownMenu, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from '../../primitives';
 import { cn } from '../../../lib/utils';
 import { ColumnsPanel } from '../../shared/table/ColumnsPanel';
 import { ColumnNavArrows, GroupedTableHeader } from '../../shared/table/TableViewWrappers';
-import { menuItemClassName } from './proposalTableConstants';
-import { useActionsMenu } from '../../../hooks';
 
 type ProposalCategoryHeaderProps = {
   categoryName: string;
@@ -157,129 +155,103 @@ function CategoryActionsMenu({
   onRestoreDefault,
   onOpenAddColumnModal,
 }: CategoryActionsMenuProps) {
-  const actionsMenu = useActionsMenu();
-
-  const runAction = (action: () => void) => {
-    actionsMenu.closeMenu();
-    action();
-  };
-
-  const menuPosition = actionsMenu.getPortalPosition(actionsMenu.triggerRef);
-  const submenuPosition = actionsMenu.getPortalPosition(actionsMenu.submenuTriggerRef, {
-    align: 'top',
-    edge: 'left',
-    offsetX: -4,
-  });
-
   return (
-    <div className="inline-flex">
-      <button
-        ref={actionsMenu.triggerRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={actionsMenu.open}
-        aria-label={`Open category actions for ${categoryName}`}
-        title={`Open category actions for ${categoryName}`}
-        className="icon-btn"
-        onClick={actionsMenu.toggleMenu}
-      >
-        <MoreIcon />
-      </button>
-      {actionsMenu.open &&
-        menuPosition &&
-        createPortal(
-          <div
-            ref={actionsMenu.panelRef}
-            role="menu"
-            style={menuPosition}
-            className="z-[100] min-w-52 menu-panel"
-          >
-            {!collapsed && (
-              <>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={menuItemClassName}
-                  onClick={() => runAction(onExpand)}
-                >
-                  Expand table view
-                </button>
-                <div className="my-1 h-px bg-neutral-100" />
-              </>
-            )}
-            <button
-              type="button"
-              role="menuitem"
-              className={menuItemClassName}
-              onClick={() => runAction(onAddItem)}
-            >
-              Add item
-            </button>
-            <div className="relative">
-              <button
-                ref={actionsMenu.submenuTriggerRef}
-                type="button"
-                role="menuitem"
-                aria-haspopup="menu"
-                aria-expanded={actionsMenu.submenuOpen}
-                className={menuItemClassName}
-                onClick={actionsMenu.toggleSubmenu}
+    <DropdownMenu
+      panelClassName="z-[100] min-w-52"
+      renderTrigger={({ triggerRef, open, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label={`Open category actions for ${categoryName}`}
+          title={`Open category actions for ${categoryName}`}
+          className="icon-btn"
+          onClick={toggleMenu}
+        >
+          <MoreIcon />
+        </button>
+      )}
+    >
+      {({
+        closeMenu,
+        submenuOpen,
+        toggleSubmenu,
+        submenuTriggerRef,
+        submenuPanelRef,
+        getSubmenuPosition,
+      }) => (
+        <>
+          {!collapsed && (
+            <>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  onExpand();
+                }}
               >
-                Restore or add columns
-                <ChevronIcon direction="right" />
-              </button>
-              {actionsMenu.submenuOpen &&
-                submenuPosition &&
-                createPortal(
-                  <div
-                    ref={actionsMenu.submenuPanelRef}
-                    role="menu"
-                    style={submenuPosition}
-                    className="z-[100] min-w-44 menu-panel"
-                  >
-                    {hiddenDefaults.map((col) => (
-                      <button
-                        key={col.id}
-                        type="button"
-                        role="menuitem"
-                        className={menuItemClassName}
-                        onClick={() => {
-                          actionsMenu.closeMenu();
-                          onRestoreDefault(col.id);
-                        }}
-                      >
-                        {col.label}
-                      </button>
-                    ))}
-                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-neutral-100" />}
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={menuItemClassName}
-                      onClick={() => {
-                        actionsMenu.closeMenu();
-                        onOpenAddColumnModal();
-                      }}
-                    >
-                      Add custom column...
-                    </button>
-                  </div>,
-                  document.body,
-                )}
-            </div>
-            <div className="my-1 h-px bg-neutral-100" />
-            <button
-              type="button"
-              role="menuitem"
-              className={cn(menuItemClassName, 'text-danger-600')}
-              onClick={() => runAction(onCategoryDelete)}
+                Expand table view
+              </MenuItem>
+              <MenuSeparator />
+            </>
+          )}
+          <MenuItem
+            onClick={() => {
+              closeMenu();
+              onAddItem();
+            }}
+          >
+            Add item
+          </MenuItem>
+          <MenuSubTrigger
+            ref={submenuTriggerRef}
+            aria-expanded={submenuOpen}
+            className="justify-between"
+            onClick={toggleSubmenu}
+          >
+            Restore or add columns
+            <ChevronIcon direction="right" />
+          </MenuSubTrigger>
+          <MenuSub
+            open={submenuOpen}
+            panelRef={submenuPanelRef}
+            position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: -4 })}
+            className="z-[100] min-w-44"
+          >
+            {hiddenDefaults.map((col) => (
+              <MenuItem
+                key={col.id}
+                onClick={() => {
+                  closeMenu();
+                  onRestoreDefault(col.id);
+                }}
+              >
+                {col.label}
+              </MenuItem>
+            ))}
+            {hiddenDefaults.length > 0 && <MenuSeparator />}
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onOpenAddColumnModal();
+              }}
             >
-              Delete category
-            </button>
-          </div>,
-          document.body,
-        )}
-    </div>
+              Add custom column...
+            </MenuItem>
+          </MenuSub>
+          <MenuSeparator />
+          <MenuItem
+            className={cn('text-danger-600 hover:bg-red-50 hover:text-danger-700')}
+            onClick={() => {
+              closeMenu();
+              onCategoryDelete();
+            }}
+          >
+            Delete category
+          </MenuItem>
+        </>
+      )}
+    </DropdownMenu>
   );
 }
 

@@ -40,9 +40,6 @@ const baselineUnitCostColumnClassName = 'w-24 min-w-[96px]';
 const baselineTotalColumnClassName = 'w-24 min-w-[96px]';
 const revisionNotesColumnClassName = 'min-w-[160px]';
 
-const menuItemClassName =
-  'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
-
 export {
   STICKY_RIGHT_COLUMN_IDS,
   PROPOSAL_HIDEABLE_IDS,
@@ -62,7 +59,6 @@ export {
   baselineUnitCostColumnClassName,
   baselineTotalColumnClassName,
   revisionNotesColumnClassName,
-  menuItemClassName,
 };
 
 export type { ProposalColumnId };

@@ -79,8 +79,8 @@ describe('ProjectHeader', () => {
     expect(
       screen.getByRole('button', { name: 'Open options for Living Room Reno' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Update project' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Project images' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete project' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Update project' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Project images' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Delete project' })).toBeInTheDocument();
   });
 });

@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { DropdownMenu, MenuItem } from '../primitives';
+import { cn } from '../../lib/utils';
 
 type ProjectOptionsMenuProps = {
   projectId?: string;
@@ -23,56 +25,68 @@ export function ProjectOptionsMenu({
   align = 'top',
   buttonClassName = 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-canvas-chrome text-neutral-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
 }: ProjectOptionsMenuProps) {
+  const panelClassName = cn(
+    'z-[80] min-w-44 text-sm',
+    align === 'top' && '-translate-y-[calc(100%+0.25rem)]',
+  );
+
   return (
-    <div className="relative z-[90]">
-      <button
-        type="button"
-        aria-label={`Open options for ${projectName}`}
-        aria-expanded={open}
-        onClick={onToggle}
-        className={buttonClassName}
-      >
-        <MoreIcon />
-      </button>
-      {open && (
-        <div
-          className={[
-            'absolute left-0 z-[80] min-w-44 menu-panel text-sm',
-            align === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
-          ].join(' ')}
+    <DropdownMenu
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen !== open) onToggle();
+      }}
+      wrapperClassName="relative z-[90] inline-flex"
+      panelClassName={panelClassName}
+      positionOptions={{ align: align === 'top' ? 'top' : 'bottom', edge: 'left', offsetY: 0 }}
+      renderTrigger={({ triggerRef, open: isOpen, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label={`Open options for ${projectName}`}
+          aria-expanded={isOpen}
+          onClick={toggleMenu}
+          className={buttonClassName}
         >
+          <MoreIcon />
+        </button>
+      )}
+    >
+      {({ closeMenu }) => (
+        <>
           {projectId ? (
-            <Link
-              to={`/projects/${projectId}/plans`}
-              className="flex w-full rounded px-2 py-1.5 text-left text-neutral-700 hover:bg-brand-50"
-            >
+            <Link to={`/projects/${projectId}/plans`} className="menu-item" onClick={closeMenu}>
               Plans
             </Link>
           ) : null}
-          <button
-            type="button"
-            className="flex w-full rounded px-2 py-1.5 text-left text-neutral-700 hover:bg-brand-50"
-            onClick={onEdit}
+          <MenuItem
+            onClick={() => {
+              closeMenu();
+              onEdit();
+            }}
           >
             Update project
-          </button>
-          <button
-            type="button"
-            className="flex w-full rounded px-2 py-1.5 text-left text-neutral-700 hover:bg-brand-50"
-            onClick={onImages}
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              closeMenu();
+              onImages();
+            }}
           >
             Project images
-          </button>
-          <button
-            type="button"
-            className="flex w-full rounded px-2 py-1.5 text-left text-danger-600 hover:bg-red-50"
-            onClick={onDelete}
+          </MenuItem>
+          <MenuItem
+            className="text-danger-600 hover:bg-red-50 hover:text-danger-700"
+            onClick={() => {
+              closeMenu();
+              onDelete();
+            }}
           >
             Delete project
-          </button>
-        </div>
+          </MenuItem>
+        </>
       )}
-    </div>
+    </DropdownMenu>
   );
 }
 

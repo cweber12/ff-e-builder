@@ -40,7 +40,6 @@ import {
   useReorderItems,
   useUpdateItem,
   useUpdateRoom,
-  useActionsMenu,
   useCreateItemColumnDef,
   useDeleteItemColumnDef,
   readColumnConfigFromStorage,
@@ -76,6 +75,7 @@ import { TotalsBar } from '../../shared/table/TotalsBar';
 import { Button } from '../../primitives/Button';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { Modal } from '../../primitives/Modal';
+import { DropdownMenu, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from '../../primitives';
 import { AddItemDrawer, type AddItemMaterialSelection } from './AddItemDrawer';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { MaterialLibraryModal } from '../../materials';
@@ -408,78 +408,65 @@ function EditableDimensionsCell({
 }
 
 function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }) {
-  const menu = useActionsMenu();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const targetRooms = actions.rooms.filter((room) => room.id !== item.roomId);
-  const menuPosition = menu.getPortalPosition(menu.triggerRef);
 
   return (
     <>
-      <span className="inline-flex items-center">
-        <GeneratedItemActionTrigger
-          ref={menu.triggerRef}
-          variant="inline"
-          aria-label={`Open item actions for ${item.itemName}`}
-          aria-expanded={menu.open}
-          title={`Open item actions for ${item.itemName}`}
-          onClick={menu.toggleMenu}
-        />
-        {menu.open &&
-          menuPosition &&
-          createPortal(
-            <div
-              ref={menu.panelRef}
-              role="menu"
-              style={menuPosition}
-              className="menu-panel z-[100] min-w-48"
+      <DropdownMenu
+        wrapperClassName="inline-flex items-center"
+        panelClassName="z-[100] min-w-48"
+        renderTrigger={({ triggerRef, open, toggleMenu }) => (
+          <GeneratedItemActionTrigger
+            ref={triggerRef}
+            variant="inline"
+            aria-label={`Open item actions for ${item.itemName}`}
+            aria-expanded={open}
+            title={`Open item actions for ${item.itemName}`}
+            onClick={toggleMenu}
+          />
+        )}
+      >
+        {({ closeMenu }) => (
+          <>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                void actions.onDuplicate(item);
+              }}
             >
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  menu.closeMenu();
-                  void actions.onDuplicate(item);
-                }}
-                className={menuItemClassName}
-              >
-                Duplicate
-              </button>
-              {targetRooms.length > 0 && (
-                <div className="border-t border-neutral-200 pt-1">
-                  <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                    Move to location
-                  </div>
-                  {targetRooms.map((room) => (
-                    <button
-                      key={room.id}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        menu.closeMenu();
-                        void actions.onMove(item, room.id);
-                      }}
-                      className={menuItemClassName}
-                    >
-                      {room.name}
-                    </button>
-                  ))}
+              Duplicate
+            </MenuItem>
+            {targetRooms.length > 0 && (
+              <div className="border-t border-neutral-200 pt-1">
+                <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  Move to location
                 </div>
-              )}
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  menu.closeMenu();
-                  setConfirmDelete(true);
-                }}
-                className={cn(menuItemClassName, 'text-danger-600')}
-              >
-                Remove from FF&amp;E
-              </button>
-            </div>,
-            document.body,
-          )}
-      </span>
+                {targetRooms.map((room) => (
+                  <MenuItem
+                    key={room.id}
+                    onClick={() => {
+                      closeMenu();
+                      void actions.onMove(item, room.id);
+                    }}
+                  >
+                    {room.name}
+                  </MenuItem>
+                ))}
+              </div>
+            )}
+            <MenuItem
+              className={cn('text-danger-600 hover:bg-red-50 hover:text-danger-700')}
+              onClick={() => {
+                closeMenu();
+                setConfirmDelete(true);
+              }}
+            >
+              Remove from FF&amp;E
+            </MenuItem>
+          </>
+        )}
+      </DropdownMenu>
       <Modal
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
@@ -510,9 +497,6 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
     </>
   );
 }
-
-// Backed by `.menu-item` in src/index.css.
-const menuItemClassName = 'menu-item';
 
 function ChevronIcon({ direction = 'down' }: { direction?: 'down' | 'left' | 'right' }) {
   return (
@@ -1087,190 +1071,150 @@ function RoomActionsMenu({
   onRestoreDefault: (id: string) => void;
   onOpenAddColumnModal: () => void;
 }) {
-  const actionsMenu = useActionsMenu();
-
-  const runAction = (action: () => void) => {
-    actionsMenu.closeMenu();
-    action();
-  };
-
-  const menuPosition = actionsMenu.getPortalPosition(actionsMenu.triggerRef);
-  const submenuPosition = actionsMenu.getPortalPosition(actionsMenu.submenuTriggerRef, {
-    align: 'top',
-    edge: 'left',
-    offsetX: -4,
-  });
-
   return (
-    <div className="inline-flex">
-      <button
-        ref={actionsMenu.triggerRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={actionsMenu.open}
-        aria-label={`Open options for ${room.name}`}
-        title={`Open options for ${room.name}`}
-        onClick={actionsMenu.toggleMenu}
-        className="icon-btn"
-      >
-        <MoreIcon />
-      </button>
-      {actionsMenu.open &&
-        menuPosition &&
-        createPortal(
-          <div
-            ref={actionsMenu.panelRef}
-            role="menu"
-            style={menuPosition}
-            className="z-[100] min-w-48 menu-panel"
-          >
-            {!collapsed && (
-              <>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={menuItemClassName}
-                  onClick={() => runAction(onExpand)}
-                >
-                  Expand table view
-                </button>
-                <div className="my-1 h-px bg-neutral-100" />
-              </>
-            )}
-            <button
-              type="button"
-              role="menuitem"
-              className={menuItemClassName}
-              onClick={() => runAction(onAddItem)}
-            >
-              Add item
-            </button>
-            <div className="relative">
-              <button
-                ref={actionsMenu.submenuTriggerRef}
-                type="button"
-                role="menuitem"
-                aria-haspopup="menu"
-                aria-expanded={actionsMenu.submenuOpen}
-                className={cn(menuItemClassName, 'justify-between')}
-                onClick={actionsMenu.toggleSubmenu}
+    <DropdownMenu
+      panelClassName="z-[100] min-w-48"
+      renderTrigger={({ triggerRef, open, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label={`Open options for ${room.name}`}
+          title={`Open options for ${room.name}`}
+          onClick={toggleMenu}
+          className="icon-btn"
+        >
+          <MoreIcon />
+        </button>
+      )}
+    >
+      {({
+        closeMenu,
+        submenuOpen,
+        toggleSubmenu,
+        submenuTriggerRef,
+        submenuPanelRef,
+        getSubmenuPosition,
+      }) => (
+        <>
+          {!collapsed && (
+            <>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  onExpand();
+                }}
               >
-                Add column
-                <ChevronIcon direction="right" />
-              </button>
-              {actionsMenu.submenuOpen &&
-                submenuPosition &&
-                createPortal(
-                  <div
-                    ref={actionsMenu.submenuPanelRef}
-                    role="menu"
-                    style={submenuPosition}
-                    className="z-50 min-w-44 menu-panel"
-                  >
-                    {hiddenDefaults.map((col) => (
-                      <button
-                        key={col.id}
-                        type="button"
-                        role="menuitem"
-                        className={menuItemClassName}
-                        onClick={() => {
-                          actionsMenu.closeMenu();
-                          onRestoreDefault(col.id);
-                        }}
-                      >
-                        {col.label}
-                      </button>
-                    ))}
-                    {hiddenDefaults.length > 0 && <div className="my-1 h-px bg-neutral-100" />}
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={menuItemClassName}
-                      onClick={() => {
-                        actionsMenu.closeMenu();
-                        onOpenAddColumnModal();
-                      }}
-                    >
-                      Add custom column...
-                    </button>
-                  </div>,
-                  document.body,
-                )}
-            </div>
-            <div className="my-1 h-px bg-neutral-100" />
-            {project && (
-              <>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={menuItemClassName}
-                  onClick={() =>
-                    runAction(() =>
-                      exportTableCsv(
-                        project,
-                        rooms,
-                        room,
-                        columnDefs,
-                        readColumnConfigFromStorage(project.id, 'ffe')?.order,
-                      ),
-                    )
-                  }
-                >
-                  Export CSV
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={menuItemClassName}
-                  onClick={() =>
-                    runAction(
-                      () =>
-                        void exportTableExcel(
-                          project,
-                          rooms,
-                          room,
-                          columnDefs,
-                          readColumnConfigFromStorage(project.id, 'ffe')?.order,
-                        ),
-                    )
-                  }
-                >
-                  Export Excel
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={menuItemClassName}
-                  onClick={() =>
-                    runAction(
-                      () =>
-                        void exportTablePdf(
-                          project,
-                          rooms,
-                          room,
-                          columnDefs,
-                          readColumnConfigFromStorage(project.id, 'ffe')?.order,
-                        ),
-                    )
-                  }
-                >
-                  Export PDF
-                </button>
-                <div className="my-1 h-px bg-neutral-100" />
-              </>
-            )}
-            <button
-              type="button"
-              role="menuitem"
-              className={cn(menuItemClassName, 'text-danger-600')}
-              onClick={() => runAction(onDeleteRoom)}
+                Expand table view
+              </MenuItem>
+              <MenuSeparator />
+            </>
+          )}
+          <MenuItem
+            onClick={() => {
+              closeMenu();
+              onAddItem();
+            }}
+          >
+            Add item
+          </MenuItem>
+          <MenuSubTrigger
+            ref={submenuTriggerRef}
+            aria-expanded={submenuOpen}
+            className="justify-between"
+            onClick={toggleSubmenu}
+          >
+            Add column
+            <ChevronIcon direction="right" />
+          </MenuSubTrigger>
+          <MenuSub
+            open={submenuOpen}
+            panelRef={submenuPanelRef}
+            position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: -4 })}
+            className="z-50 min-w-44"
+          >
+            {hiddenDefaults.map((col) => (
+              <MenuItem
+                key={col.id}
+                onClick={() => {
+                  closeMenu();
+                  onRestoreDefault(col.id);
+                }}
+              >
+                {col.label}
+              </MenuItem>
+            ))}
+            {hiddenDefaults.length > 0 && <MenuSeparator />}
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onOpenAddColumnModal();
+              }}
             >
-              Remove from FF&amp;E
-            </button>
-          </div>,
-          document.body,
-        )}
-    </div>
+              Add custom column...
+            </MenuItem>
+          </MenuSub>
+          <MenuSeparator />
+          {project && (
+            <>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  exportTableCsv(
+                    project,
+                    rooms,
+                    room,
+                    columnDefs,
+                    readColumnConfigFromStorage(project.id, 'ffe')?.order,
+                  );
+                }}
+              >
+                Export CSV
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  void exportTableExcel(
+                    project,
+                    rooms,
+                    room,
+                    columnDefs,
+                    readColumnConfigFromStorage(project.id, 'ffe')?.order,
+                  );
+                }}
+              >
+                Export Excel
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  void exportTablePdf(
+                    project,
+                    rooms,
+                    room,
+                    columnDefs,
+                    readColumnConfigFromStorage(project.id, 'ffe')?.order,
+                  );
+                }}
+              >
+                Export PDF
+              </MenuItem>
+              <MenuSeparator />
+            </>
+          )}
+          <MenuItem
+            className={cn('text-danger-600 hover:bg-red-50 hover:text-danger-700')}
+            onClick={() => {
+              closeMenu();
+              onDeleteRoom();
+            }}
+          >
+            Remove from FF&amp;E
+          </MenuItem>
+        </>
+      )}
+    </DropdownMenu>
   );
 }
 

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { type ReactNode } from 'react';
+import { DropdownMenu, MenuItem, MenuSub, MenuSubTrigger } from '../primitives';
 
 type ExportMenuProps = {
   label?: ReactNode;
@@ -27,144 +27,112 @@ export function ExportMenu({
   size = 'sm',
   disabled = false,
 }: ExportMenuProps) {
-  const [open, setOpen] = useState(false);
-  const [pdfOpen, setPdfOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-        setPdfOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
   const baseBtn = size === 'sm' ? 'btn-action' : 'btn-action';
-
-  const optionBtn =
-    'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
   const triggerButtonClass = buttonClassName ?? baseBtn;
 
-  const triggerRect = triggerRef.current?.getBoundingClientRect();
-
   return (
-    <div ref={ref} className={`relative inline-flex ${className}`}>
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className={`${triggerButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
-        disabled={disabled}
-      >
-        {label}
-        <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-          <path d="M3.5 5.5 7 9l3.5-3.5" />
-        </svg>
-      </button>
-
-      {open &&
-        triggerRect &&
-        createPortal(
-          <div
-            role="menu"
-            style={{
-              position: 'fixed',
-              top: triggerRect.bottom + 4,
-              left: triggerRect.left,
-            }}
-            className="z-[120] min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
-          >
-            {onCsv && (
-              <button
-                type="button"
-                role="menuitem"
-                className={optionBtn}
-                onClick={() => {
-                  setOpen(false);
-                  onCsv();
-                }}
-              >
-                <CsvIcon />
-                Export CSV
-              </button>
-            )}
-            {onExcel && (
-              <button
-                type="button"
-                role="menuitem"
-                className={optionBtn}
-                onClick={() => {
-                  setOpen(false);
-                  onExcel();
-                }}
-              >
-                <ExcelIcon />
-                Export Excel
-              </button>
-            )}
-            {pdfOptions?.length ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  role="menuitem"
-                  aria-haspopup="menu"
-                  aria-expanded={pdfOpen}
-                  className={optionBtn}
-                  onClick={() => setPdfOpen((current) => !current)}
-                >
-                  <PdfIcon />
-                  Export PDF
-                  <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
-                </button>
-                {pdfOpen && (
-                  <div
-                    role="menu"
-                    className="absolute left-full top-0 z-[121] ml-1 min-w-36 rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
-                  >
-                    {pdfOptions.map((option) => (
-                      <button
-                        key={option.label}
-                        type="button"
-                        role="menuitem"
-                        className={optionBtn}
-                        onClick={() => {
-                          setPdfOpen(false);
-                          setOpen(false);
-                          option.onSelect();
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                role="menuitem"
-                className={optionBtn}
-                onClick={() => {
-                  setOpen(false);
-                  onPdf();
-                }}
+    <DropdownMenu
+      wrapperClassName={`relative inline-flex ${className}`}
+      panelClassName="z-[120] min-w-40"
+      positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
+      renderTrigger={({ triggerRef, open, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          onClick={toggleMenu}
+          className={`${triggerButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+          disabled={disabled}
+        >
+          {label}
+          <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
+            <path d="M3.5 5.5 7 9l3.5-3.5" />
+          </svg>
+        </button>
+      )}
+    >
+      {({
+        closeMenu,
+        submenuOpen,
+        toggleSubmenu,
+        submenuTriggerRef,
+        submenuPanelRef,
+        getSubmenuPosition,
+      }) => (
+        <>
+          {onCsv && (
+            <MenuItem
+              className="gap-2 px-3 py-2"
+              onClick={() => {
+                closeMenu();
+                onCsv();
+              }}
+            >
+              <CsvIcon />
+              Export CSV
+            </MenuItem>
+          )}
+          {onExcel && (
+            <MenuItem
+              className="gap-2 px-3 py-2"
+              onClick={() => {
+                closeMenu();
+                onExcel();
+              }}
+            >
+              <ExcelIcon />
+              Export Excel
+            </MenuItem>
+          )}
+          {pdfOptions?.length ? (
+            <>
+              <MenuSubTrigger
+                ref={submenuTriggerRef}
+                aria-expanded={submenuOpen}
+                className="gap-2 px-3 py-2"
+                onClick={toggleSubmenu}
               >
                 <PdfIcon />
                 Export PDF
-              </button>
-            )}
-          </div>,
-          document.body,
-        )}
-    </div>
+                <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
+              </MenuSubTrigger>
+              <MenuSub
+                open={submenuOpen}
+                panelRef={submenuPanelRef}
+                position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: 0 })}
+                className="z-[121] min-w-36 translate-x-[calc(100%+0.25rem)]"
+              >
+                {pdfOptions.map((option) => (
+                  <MenuItem
+                    key={option.label}
+                    className="px-3 py-2"
+                    onClick={() => {
+                      closeMenu();
+                      option.onSelect();
+                    }}
+                  >
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </MenuSub>
+            </>
+          ) : (
+            <MenuItem
+              className="gap-2 px-3 py-2"
+              onClick={() => {
+                closeMenu();
+                onPdf();
+              }}
+            >
+              <PdfIcon />
+              Export PDF
+            </MenuItem>
+          )}
+        </>
+      )}
+    </DropdownMenu>
   );
 }
 

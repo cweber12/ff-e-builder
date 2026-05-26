@@ -1,10 +1,8 @@
-import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { GeneratedItemActionTrigger } from '../../shared/table/GeneratedItemActionControls';
 import { cn } from '../../../lib/utils';
 import { DeleteItemModal } from './DeleteItemModal';
-import { menuItemClassName } from './proposalTableConstants';
-import { useActionsMenu } from '../../../hooks';
+import { DropdownMenu, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from '../../primitives';
 
 type ProposalItemActionsMenuProps = {
   itemName: string;
@@ -25,116 +23,100 @@ export function ProposalItemActionsMenu({
   onMove,
   onDelete,
 }: ProposalItemActionsMenuProps) {
-  const actionsMenu = useActionsMenu();
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  const runAction = (action: () => void) => {
-    actionsMenu.closeMenu();
-    action();
-  };
-
-  const menuPosition = actionsMenu.getPortalPosition(actionsMenu.triggerRef);
-  const submenuPosition = actionsMenu.getPortalPosition(actionsMenu.submenuTriggerRef, {
-    align: 'top',
-    edge: 'left',
-    offsetX: -4,
-  });
 
   return (
     <div className="inline-flex">
-      <GeneratedItemActionTrigger
-        ref={actionsMenu.triggerRef}
-        aria-haspopup="menu"
-        aria-expanded={actionsMenu.open}
-        aria-label={`Open options for ${itemName}`}
-        title={`Open options for ${itemName}`}
-        onClick={actionsMenu.toggleMenu}
-      />
-      {actionsMenu.open &&
-        menuPosition &&
-        createPortal(
-          <div
-            ref={actionsMenu.panelRef}
-            role="menu"
-            style={menuPosition}
-            className="z-[100] min-w-48 menu-panel"
-          >
-            <button
-              type="button"
-              role="menuitem"
-              className={menuItemClassName}
-              onClick={() => runAction(onViewDetails)}
+      <DropdownMenu
+        panelClassName="z-[100] min-w-48"
+        renderTrigger={({ triggerRef, open, toggleMenu }) => (
+          <GeneratedItemActionTrigger
+            ref={triggerRef}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-label={`Open options for ${itemName}`}
+            title={`Open options for ${itemName}`}
+            onClick={toggleMenu}
+          />
+        )}
+      >
+        {({
+          closeMenu,
+          submenuOpen,
+          toggleSubmenu,
+          submenuTriggerRef,
+          submenuPanelRef,
+          getSubmenuPosition,
+        }) => (
+          <>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onViewDetails();
+              }}
             >
               View details
-            </button>
-            <div className="my-1 h-px bg-neutral-100" />
-            <button
-              type="button"
-              role="menuitem"
-              className={menuItemClassName}
-              onClick={() => runAction(onDuplicate)}
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onDuplicate();
+              }}
             >
               Duplicate
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              className={menuItemClassName}
-              onClick={() => runAction(onAddToFfe)}
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onAddToFfe();
+              }}
             >
               Add to FF&amp;E
-            </button>
+            </MenuItem>
             {otherCategories.length > 0 && (
-              <div className="relative">
-                <button
-                  ref={actionsMenu.submenuTriggerRef}
-                  type="button"
-                  role="menuitem"
-                  aria-haspopup="menu"
-                  aria-expanded={actionsMenu.submenuOpen}
-                  className={menuItemClassName}
-                  onClick={actionsMenu.toggleSubmenu}
+              <>
+                <MenuSubTrigger
+                  ref={submenuTriggerRef}
+                  aria-expanded={submenuOpen}
+                  onClick={toggleSubmenu}
                 >
                   Move to...
                   <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
-                </button>
-                {actionsMenu.submenuOpen &&
-                  submenuPosition &&
-                  createPortal(
-                    <div
-                      ref={actionsMenu.submenuPanelRef}
-                      role="menu"
-                      style={submenuPosition}
-                      className="z-[100] min-w-40 menu-panel"
+                </MenuSubTrigger>
+                <MenuSub
+                  open={submenuOpen}
+                  panelRef={submenuPanelRef}
+                  position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: -4 })}
+                  className="z-[100] min-w-40"
+                >
+                  {otherCategories.map((cat) => (
+                    <MenuItem
+                      key={cat.id}
+                      onClick={() => {
+                        closeMenu();
+                        onMove(cat.id);
+                      }}
                     >
-                      {otherCategories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          role="menuitem"
-                          className={menuItemClassName}
-                          onClick={() => runAction(() => onMove(cat.id))}
-                        >
-                          {cat.name}
-                        </button>
-                      ))}
-                    </div>,
-                    document.body,
-                  )}
-              </div>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </MenuSub>
+              </>
             )}
-            <div className="my-1 h-px bg-neutral-100" />
-            <button
-              type="button"
-              role="menuitem"
-              className={cn(menuItemClassName, 'text-danger-600')}
-              onClick={() => runAction(() => setDeleteOpen(true))}
+            <MenuSeparator />
+            <MenuItem
+              className={cn('text-danger-600 hover:bg-red-50 hover:text-danger-700')}
+              onClick={() => {
+                closeMenu();
+                setDeleteOpen(true);
+              }}
             >
               Delete item
-            </button>
-          </div>,
-          document.body,
+            </MenuItem>
+          </>
         )}
+      </DropdownMenu>
       <DeleteItemModal
         open={deleteOpen}
         itemName={itemName}
