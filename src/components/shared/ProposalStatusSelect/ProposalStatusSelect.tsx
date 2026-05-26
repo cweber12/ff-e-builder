@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { cn } from '../../../lib/utils';
 import type { ProposalStatus } from '../../../types';
 import { proposalStatuses } from '../../../types';
+import { SegmentedControl } from '../../primitives';
 import { PROPOSAL_STATUS_CONFIG } from './ProposalStatusDots';
 import { ProposalStatusConfirmModal } from './ProposalStatusConfirmModal';
 
@@ -55,9 +56,12 @@ export function ProposalStatusSelect({
 
   return (
     <>
-      <ol
-        role="list"
-        aria-label="Proposal status"
+      <SegmentedControl
+        ariaLabel="Proposal status"
+        value={status}
+        onChange={handleStageClick}
+        variant="toolbar"
+        tone="status"
         className={cn(
           'flex items-center gap-0',
           disabled && 'pointer-events-none opacity-60',
@@ -73,7 +77,7 @@ export function ProposalStatusSelect({
           const isFirst = index === 0;
 
           return (
-            <li key={stage} className="flex items-center">
+            <Fragment key={stage}>
               {!isFirst && (
                 <span
                   aria-hidden="true"
@@ -83,22 +87,42 @@ export function ProposalStatusSelect({
                   )}
                 />
               )}
-              <StageButton
-                stage={stage}
-                isCurrent={isCurrent}
-                isPast={isPast}
-                blocked={blocksHere}
-                tooltip={
+              <SegmentedControl.Option
+                value={stage}
+                title={
                   blocksHere
                     ? `Cannot advance: ${revisionGuard?.unresolvedCount ?? 0} flagged item${revisionGuard?.unresolvedCount === 1 ? '' : 's'} in revision ${revisionGuard?.openRevisionLabel ?? ''}.`
                     : STAGE_TOOLTIPS[stage]
                 }
-                onClick={() => handleStageClick(stage)}
-              />
-            </li>
+                aria-label={`${STAGE_LABEL[stage]} — ${
+                  blocksHere
+                    ? `Cannot advance: ${revisionGuard?.unresolvedCount ?? 0} flagged item${revisionGuard?.unresolvedCount === 1 ? '' : 's'} in revision ${revisionGuard?.openRevisionLabel ?? ''}.`
+                    : STAGE_TOOLTIPS[stage]
+                }`}
+                aria-current={isCurrent ? 'step' : undefined}
+                className={cn(
+                  'group inline-flex h-8 items-center gap-1.5 uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+                  isCurrent
+                    ? 'text-brand-700 hover:bg-brand-50'
+                    : isPast
+                      ? 'text-neutral-600 hover:bg-neutral-100'
+                      : blocksHere
+                        ? 'cursor-not-allowed text-amber-600 hover:bg-amber-50'
+                        : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600',
+                )}
+                onClick={(event) => {
+                  if (blocksHere) {
+                    event.preventDefault();
+                  }
+                }}
+              >
+                <StageMarker isCurrent={isCurrent} isPast={isPast} blocked={blocksHere} />
+                <span className="hidden md:inline">{STAGE_LABEL[stage]}</span>
+              </SegmentedControl.Option>
+            </Fragment>
           );
         })}
-      </ol>
+      </SegmentedControl>
 
       {pendingStatus && (
         <ProposalStatusConfirmModal
@@ -110,45 +134,6 @@ export function ProposalStatusSelect({
         />
       )}
     </>
-  );
-}
-
-function StageButton({
-  stage,
-  isCurrent,
-  isPast,
-  blocked,
-  tooltip,
-  onClick,
-}: {
-  stage: ProposalStatus;
-  isCurrent: boolean;
-  isPast: boolean;
-  blocked: boolean;
-  tooltip: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={tooltip}
-      aria-label={`${STAGE_LABEL[stage]} — ${tooltip}`}
-      aria-current={isCurrent ? 'step' : undefined}
-      className={cn(
-        'group inline-flex h-8 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium uppercase tracking-[0.08em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-        isCurrent
-          ? 'text-brand-700 hover:bg-brand-50'
-          : isPast
-            ? 'text-neutral-600 hover:bg-neutral-100'
-            : blocked
-              ? 'text-amber-600 hover:bg-amber-50 cursor-not-allowed'
-              : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600',
-      )}
-    >
-      <StageMarker isCurrent={isCurrent} isPast={isPast} blocked={blocked} />
-      <span className="hidden md:inline">{STAGE_LABEL[stage]}</span>
-    </button>
   );
 }
 

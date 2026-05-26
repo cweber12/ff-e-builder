@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Modal } from '../../primitives';
+import { Button, Modal, SegmentedControl } from '../../primitives';
 import type { SizeMode } from '../../../types';
 
 const fractions = ['', '1/8', '1/4', '3/8', '1/2', '5/8', '3/4', '7/8'] as const;
@@ -91,26 +91,21 @@ export function DimensionEditorBody({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-2 rounded-sm border border-neutral-200 bg-canvas-shell p-1">
-          {(['imperial', 'metric'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() =>
-                setDraft((current) => ({
-                  ...current,
-                  mode,
-                  unit: mode === 'imperial' ? 'ft/in' : 'mm',
-                }))
-              }
-              className={`rounded px-3 py-2 text-sm font-medium ${
-                draft.mode === mode ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-600'
-              }`}
-            >
-              {mode === 'imperial' ? 'Imperial' : 'Metric'}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          ariaLabel="Dimension unit mode"
+          value={draft.mode}
+          onChange={(mode) =>
+            setDraft((current) => ({
+              ...current,
+              mode,
+              unit: mode === 'imperial' ? 'ft/in' : 'mm',
+            }))
+          }
+          tone="quiet"
+        >
+          <SegmentedControl.Option value="imperial">Imperial</SegmentedControl.Option>
+          <SegmentedControl.Option value="metric">Metric</SegmentedControl.Option>
+        </SegmentedControl>
 
         {draft.mode === 'imperial' ? (
           <p className="px-1 text-xs text-neutral-500">

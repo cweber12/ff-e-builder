@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ui): add SegmentedControl primitive and migrate dimension, plan-rail, and proposal status toggles to shared segmented variants
 - refactor(ui): add a shared Badge primitive and migrate snapshot plus proposal inline pill or chip spans to centralized badge variants
 - refactor(ui): add shared MenuPanel and DropdownMenu primitives, then migrate Project, Export, FF&E, and Proposal action menus to unify menu styling and portal behavior
 - refactor(ui): migrate DashboardPage primary project-create CTAs to the shared Button primitive and remove inline button class styling

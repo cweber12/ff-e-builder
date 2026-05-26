@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SegmentedControl } from '../../primitives';
 import { PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './planToolDefinitions';
 import type { PlanToolId, RectangleModeId } from './types';
 
@@ -79,46 +80,29 @@ export function PlanToolRail({
                     </button>
 
                     {showRectangleModes ? (
-                      <div
-                        role="radiogroup"
-                        aria-label="Rectangle sub-mode"
-                        className="flex w-11 overflow-hidden rounded-md border border-neutral-300 bg-white shadow-sm"
+                      <SegmentedControl
+                        ariaLabel="Rectangle sub-mode"
+                        value={rectangleMode}
+                        onChange={(mode) => onRectangleModeChange(mode)}
+                        tone="rail"
                       >
-                        <button
-                          type="button"
-                          role="radio"
-                          aria-checked={rectangleMode === 'measure'}
+                        <SegmentedControl.Option
+                          value="measure"
                           aria-label="Measure mode"
                           title="Measure — capture dimensions"
-                          onClick={() => onRectangleModeChange('measure')}
-                          className={[
-                            'flex h-6 flex-1 items-center justify-center transition',
-                            rectangleMode === 'measure'
-                              ? 'bg-neutral-950 text-white'
-                              : 'text-neutral-500 hover:text-neutral-900',
-                          ].join(' ')}
                         >
                           <span className="sr-only">Measure</span>
                           <MeasureModeIcon />
-                        </button>
-                        <button
-                          type="button"
-                          role="radio"
-                          aria-checked={rectangleMode === 'highlight'}
+                        </SegmentedControl.Option>
+                        <SegmentedControl.Option
+                          value="highlight"
                           aria-label="Highlight mode"
                           title="Highlight — mark area on the saved plan image"
-                          onClick={() => onRectangleModeChange('highlight')}
-                          className={[
-                            'flex h-6 flex-1 items-center justify-center border-l border-neutral-300 transition',
-                            rectangleMode === 'highlight'
-                              ? 'bg-neutral-950 text-white'
-                              : 'text-neutral-500 hover:text-neutral-900',
-                          ].join(' ')}
                         >
                           <span className="sr-only">Highlight</span>
                           <HighlightModeIcon />
-                        </button>
-                      </div>
+                        </SegmentedControl.Option>
+                      </SegmentedControl>
                     ) : null}
                   </div>
                 );
