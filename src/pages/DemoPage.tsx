@@ -172,9 +172,7 @@ export function DemoPage() {
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Header */}
         <header>
-          <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
-            Sample Project
-          </p>
+          <p className="eyebrow text-brand-500">Sample Project</p>
           <h1 className="font-display mt-1 text-3xl font-semibold text-neutral-900">
             Interior Design Co. — Lobby Renovation
           </h1>
@@ -187,9 +185,7 @@ export function DemoPage() {
         {/* FF&E rooms */}
         {DEMO_ROOMS.map((room) => (
           <section key={room.name}>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-              {room.name}
-            </h2>
+            <h2 className="eyebrow mb-3 text-neutral-400">{room.name}</h2>
             <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
               <table className="w-full text-sm">
                 <thead>
@@ -247,9 +243,7 @@ export function DemoPage() {
 
         {/* Materials palette */}
         <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-            Materials
-          </h2>
+          <h2 className="eyebrow mb-3 text-neutral-400">Materials</h2>
           <div className="flex flex-wrap gap-3">
             {DEMO_MATERIALS.map((mat) => (
               <div key={mat.materialId} className="flex items-center gap-2">

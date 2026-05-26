@@ -19,9 +19,7 @@ export function TotalsBar({
       </span>
       <div className="ml-auto flex items-baseline gap-2.5">
         <span className="eyebrow">Grand total</span>
-        <span className="font-mono text-base font-semibold tabular-nums text-neutral-950">
-          {grandTotal}
-        </span>
+        <span className="num text-base font-semibold text-neutral-950">{grandTotal}</span>
       </div>
     </div>
   );

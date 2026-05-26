@@ -44,9 +44,7 @@ export function DashboardPage() {
       <div className="mx-auto max-w-4xl space-y-10">
         <header className="flex items-start justify-between gap-4 pb-6">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">
-              Dashboard
-            </p>
+            <p className="eyebrow text-brand-600">Dashboard</p>
             <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-neutral-950">
               {firstName ? `Welcome back, ${firstName}` : 'Welcome'}
             </h1>
@@ -155,9 +153,7 @@ export function DashboardPage() {
                   >
                     <div className="min-w-0 flex-1">
                       {project.clientName && (
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-600">
-                          {project.clientName}
-                        </p>
+                        <p className="eyebrow text-brand-600">{project.clientName}</p>
                       )}
                       <h3 className="mt-0.5 truncate font-display text-lg font-semibold leading-snug text-neutral-950">
                         {project.name}

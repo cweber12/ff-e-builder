@@ -27,7 +27,7 @@ export function BudgetSnapshotCard({
     <section className="py-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Budget</p>
+          <p className="eyebrow text-neutral-400">Budget</p>
           <p className="font-display mt-1 text-4xl font-semibold text-neutral-900">
             {formatMoney(cents(summary.combinedActualCents))}
           </p>
