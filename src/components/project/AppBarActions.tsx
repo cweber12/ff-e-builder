@@ -6,12 +6,7 @@ import type {
 } from '../../types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  exportTablePdf,
-  exportCatalogPdf,
-  exportTableCsv,
-  exportTableExcel,
-} from '../../lib/export';
+import { exportTablePdf, exportTableCsv, exportTableExcel } from '../../lib/export';
 import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
@@ -151,33 +146,29 @@ function ExportMenu({ disabled, items }: ExportMenuProps) {
 interface FfeActionsProps {
   project: Project;
   roomsWithItems: RoomWithItems[];
-  isCatalog: boolean;
+  /**
+   * Retained for backwards compatibility — callers should only render
+   * <FfeActions> on the table route. The catalog route uses a portal-based
+   * toolbar provided by CatalogView (see CATALOG_ACTIONS_SLOT_ID).
+   */
+  isCatalog?: boolean;
   onAddRoom: () => void;
   onImport: () => void;
 }
 
-export function FfeActions({
-  project,
-  roomsWithItems,
-  isCatalog,
-  onAddRoom,
-  onImport,
-}: FfeActionsProps) {
+export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: FfeActionsProps) {
   const hasItems = roomsWithItems.some((r) => r.items.length > 0);
-  const { sortMode } = useFfeItemSort(project.id);
   const { data: ffeCustomColumnDefs = [] } = useItemColumnDefs(project.id);
   const ffeColumnOrder = () => readColumnConfigFromStorage(project.id, 'ffe')?.order;
 
   return (
     <div className="flex items-center gap-2">
-      {!isCatalog && (
-        <button type="button" onClick={onAddRoom} className="btn-action btn-action--primary">
-          <PlusIcon />
-          <span className="btn-action__label">Add room</span>
-        </button>
-      )}
+      <button type="button" onClick={onAddRoom} className="btn-action btn-action--primary">
+        <PlusIcon />
+        <span className="btn-action__label">Add room</span>
+      </button>
 
-      {!isCatalog && <FfeSortToggle projectId={project.id} />}
+      <FfeSortToggle projectId={project.id} />
 
       <button type="button" onClick={onImport} className="btn-action" title="Import from Excel">
         <UploadIcon />
@@ -186,61 +177,44 @@ export function FfeActions({
 
       <ExportMenu
         disabled={!hasItems}
-        items={
-          isCatalog
-            ? [
-                {
-                  label: 'Export PDF',
-                  onSelect: () => void exportCatalogPdf(project, roomsWithItems, { sortMode }),
-                },
-                {
-                  label: 'Export PDF — swatches only',
-                  onSelect: () =>
-                    void exportCatalogPdf(project, roomsWithItems, {
-                      showSwatchLabels: false,
-                      sortMode,
-                    }),
-                },
-              ]
-            : [
-                {
-                  label: 'Export PDF',
-                  onSelect: () =>
-                    void exportTablePdf(
-                      project,
-                      roomsWithItems,
-                      undefined,
-                      ffeCustomColumnDefs,
-                      ffeColumnOrder(),
-                    ),
-                },
-                {
-                  label: 'Export Excel',
-                  onSelect: () =>
-                    void exportTableExcel(
-                      project,
-                      roomsWithItems,
-                      undefined,
-                      ffeCustomColumnDefs,
-                      ffeColumnOrder(),
-                    ),
-                },
-                {
-                  label: 'Export CSV',
-                  onSelect: () =>
-                    exportTableCsv(
-                      project,
-                      roomsWithItems,
-                      undefined,
-                      ffeCustomColumnDefs,
-                      ffeColumnOrder(),
-                    ),
-                },
-              ]
-        }
+        items={[
+          {
+            label: 'Export PDF',
+            onSelect: () =>
+              void exportTablePdf(
+                project,
+                roomsWithItems,
+                undefined,
+                ffeCustomColumnDefs,
+                ffeColumnOrder(),
+              ),
+          },
+          {
+            label: 'Export Excel',
+            onSelect: () =>
+              void exportTableExcel(
+                project,
+                roomsWithItems,
+                undefined,
+                ffeCustomColumnDefs,
+                ffeColumnOrder(),
+              ),
+          },
+          {
+            label: 'Export CSV',
+            onSelect: () =>
+              exportTableCsv(
+                project,
+                roomsWithItems,
+                undefined,
+                ffeCustomColumnDefs,
+                ffeColumnOrder(),
+              ),
+          },
+        ]}
       />
 
-      {!isCatalog && <ColumnVisibilityPopover projectId={project.id} tableKey="ffe" />}
+      <ColumnVisibilityPopover projectId={project.id} tableKey="ffe" />
     </div>
   );
 }

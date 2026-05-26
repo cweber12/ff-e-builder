@@ -11,7 +11,7 @@ import {
 } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthGate, SignInPage, UserMenu } from './components/shared/auth/AuthGate';
-import { CatalogView } from './components/ffe/catalog/CatalogView';
+import { CatalogView, CATALOG_ACTIONS_SLOT_ID } from './components/ffe/catalog/CatalogView';
 import { FfeTable } from './components/ffe/items';
 import { MaterialsView } from './components/materials/MaterialsView';
 import { BudgetView } from './components/project/BudgetView';
@@ -146,13 +146,19 @@ function ProjectLayout() {
   const headerActions =
     !isLoading && project ? (
       isFfeRoute ? (
-        <FfeActions
-          project={project}
-          roomsWithItems={roomsWithItems}
-          isCatalog={isCatalogRoute}
-          onAddRoom={() => setAddRoomOpen(true)}
-          onImport={() => setImportOpen(true)}
-        />
+        isCatalogRoute ? (
+          // CatalogView portals its own toolbar (Edit / Print / Export /
+          // Layout / page counter) into this slot.
+          <div id={CATALOG_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
+        ) : (
+          <FfeActions
+            project={project}
+            roomsWithItems={roomsWithItems}
+            isCatalog={isCatalogRoute}
+            onAddRoom={() => setAddRoomOpen(true)}
+            onImport={() => setImportOpen(true)}
+          />
+        )
       ) : isProposalRoute ? (
         <ProposalActions
           project={project}

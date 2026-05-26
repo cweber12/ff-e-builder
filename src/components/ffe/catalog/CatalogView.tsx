@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
@@ -248,14 +249,12 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
 
   return (
     <div className="min-h-screen bg-canvas-bg">
-      <CatalogNav
+      <CatalogActionsBar
         project={project}
         rooms={rooms}
         currentIndex={pageIndex}
         total={entries.length}
-        currentEntry={entry}
         currentItemId={entry?.item.id}
-        onPageChange={setPage}
         layoutConfig={layoutConfig}
         onLayoutChange={handleLayoutChange}
         watermarkConfig={watermarkConfig}
@@ -265,6 +264,14 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         sortMode={sortMode}
         editMode={editMode}
         onEditModeToggle={() => setEditMode((v) => !v)}
+      />
+
+      <CatalogPagePicker
+        rooms={rooms}
+        currentIndex={pageIndex}
+        total={entries.length}
+        currentEntry={entry}
+        onPageChange={setPage}
       />
 
       <div className="screen-only catalog-stage">
@@ -308,14 +315,22 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   );
 }
 
-function CatalogNav({
+/**
+ * Portal target ID used by App.tsx to host catalog-specific actions inside
+ * the ProjectHeader tab row when on the catalog route.
+ */
+export const CATALOG_ACTIONS_SLOT_ID = 'ffe-catalog-actions-slot';
+
+/**
+ * Portal of catalog actions into the project header. Renders Edit, Print,
+ * unified Export, Layout settings, and the page counter.
+ */
+function CatalogActionsBar({
   project,
   rooms,
   currentIndex,
   total,
-  currentEntry,
   currentItemId,
-  onPageChange,
   layoutConfig,
   onLayoutChange,
   watermarkConfig,
@@ -330,9 +345,7 @@ function CatalogNav({
   rooms: RoomWithItems[];
   currentIndex: number;
   total: number;
-  currentEntry: CatalogEntry | undefined;
   currentItemId: string | undefined;
-  onPageChange: (index: number) => void;
   layoutConfig: CatalogLayoutConfig;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
@@ -343,114 +356,139 @@ function CatalogNav({
   editMode: boolean;
   onEditModeToggle: () => void;
 }) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // Slot is mounted by App.tsx as the actions prop. Look it up after mount
+    // and re-check on each render in case it gets remounted.
+    const el = document.getElementById(CATALOG_ACTIONS_SLOT_ID);
+    setSlot(el);
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        className={cn('btn-action', editMode && 'btn-action--active')}
+        aria-label={editMode ? 'Exit edit mode' : 'Edit fields'}
+        aria-pressed={editMode}
+        onClick={onEditModeToggle}
+      >
+        <EditIcon />
+        <span className="btn-action__label">{editMode ? 'Editing' : 'Edit'}</span>
+      </button>
+      <button
+        type="button"
+        className="btn-action"
+        aria-label="Print catalog"
+        onClick={() => window.print()}
+      >
+        <PrintIcon />
+      </button>
+      <CatalogExportButton
+        project={project}
+        rooms={rooms}
+        currentItemId={currentItemId}
+        layoutConfig={layoutConfig}
+        watermarkConfig={watermarkConfig}
+        logoDataUrl={logoDataUrl}
+        companyName={companyName}
+        sortMode={sortMode}
+      />
+      <CatalogLayoutPanelButton
+        layoutConfig={layoutConfig}
+        onLayoutChange={onLayoutChange}
+        watermarkConfig={watermarkConfig}
+        onWatermarkChange={onWatermarkChange}
+        logoDataUrl={logoDataUrl}
+      />
+      <span
+        aria-hidden
+        className="ml-1 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500"
+      >
+        <span className="num text-neutral-950">{currentIndex + 1}</span>
+        <span className="text-neutral-300">/</span>
+        <span className="num">{total}</span>
+      </span>
+    </div>,
+    slot,
+  );
+}
+
+/**
+ * Centered item picker — appears above the catalog page itself. Includes
+ * the room label, previous/next arrows, and the jump dropdown.
+ */
+function CatalogPagePicker({
+  rooms,
+  currentIndex,
+  total,
+  currentEntry,
+  onPageChange,
+}: {
+  rooms: RoomWithItems[];
+  currentIndex: number;
+  total: number;
+  currentEntry: CatalogEntry | undefined;
+  onPageChange: (index: number) => void;
+}) {
   let itemIndex = 0;
 
   return (
-    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-neutral-200 bg-canvas-bg/95 px-4 py-3 backdrop-blur">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          {currentEntry?.room.name ? (
-            <div>
-              <p className="catalog-nav-room-eyebrow">Room</p>
-              <p className="catalog-nav-room-name">{currentEntry.room.name}</p>
-            </div>
-          ) : (
-            <span className="sr-only">{project.name}</span>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={currentIndex === 0}
-            aria-label="Previous catalog item"
-            onClick={() => onPageChange(currentIndex - 1)}
-          >
-            <ChevronLeftIcon />
-          </Button>
-          <label className="sr-only" htmlFor="catalog-jump">
-            Jump to catalog item
-          </label>
-          <select
-            id="catalog-jump"
-            value={currentIndex}
-            onChange={(event) => onPageChange(Number(event.target.value))}
-            className="min-w-56 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
-          >
-            {rooms.map((room) => (
-              <optgroup key={room.id} label={room.name}>
-                {room.items.map((item) => {
-                  const optionIndex = itemIndex;
-                  itemIndex += 1;
-                  return (
-                    <option key={item.id} value={optionIndex}>
-                      {item.itemName}
-                    </option>
-                  );
-                })}
-              </optgroup>
-            ))}
-          </select>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={currentIndex === total - 1}
-            aria-label="Next catalog item"
-            onClick={() => onPageChange(currentIndex + 1)}
-          >
-            <ChevronRightIcon />
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={cn('catalog-nav-icon-btn', editMode && 'catalog-nav-icon-btn--active')}
-            aria-label={editMode ? 'Exit edit mode' : 'Edit fields'}
-            aria-pressed={editMode}
-            onClick={onEditModeToggle}
-          >
-            <EditIcon />
-            <span className="catalog-nav-btn-label">{editMode ? 'Editing' : 'Edit'}</span>
-          </button>
-          <button
-            type="button"
-            className="catalog-nav-icon-btn"
-            aria-label="Print catalog"
-            onClick={() => window.print()}
-          >
-            <PrintIcon />
-          </button>
-          <CatalogExportButton
-            project={project}
-            rooms={rooms}
-            currentItemId={currentItemId}
-            layoutConfig={layoutConfig}
-            watermarkConfig={watermarkConfig}
-            logoDataUrl={logoDataUrl}
-            companyName={companyName}
-            sortMode={sortMode}
-          />
-          <CatalogLayoutPanelButton
-            layoutConfig={layoutConfig}
-            onLayoutChange={onLayoutChange}
-            watermarkConfig={watermarkConfig}
-            onWatermarkChange={onWatermarkChange}
-            logoDataUrl={logoDataUrl}
-          />
-          <div className="flex min-w-24 flex-col items-end gap-1.5">
-            <span className="num text-sm font-semibold text-neutral-950">
-              {currentIndex + 1} / {total}
-            </span>
-            <div className="h-1 w-24 overflow-hidden bg-canvas-shell">
-              <div
-                className="h-full bg-brand-600 transition-all"
-                style={{ width: `${total > 0 ? ((currentIndex + 1) / total) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-        </div>
+    <nav
+      aria-label="Catalog page picker"
+      className="no-print mx-auto mt-4 mb-6 flex max-w-5xl flex-col items-center gap-2 px-4"
+    >
+      {currentEntry?.room.name && (
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+          <span className="text-neutral-400">Room ·</span>{' '}
+          <span className="text-neutral-800">{currentEntry.room.name}</span>
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="btn-action"
+          disabled={currentIndex === 0}
+          aria-label="Previous catalog item"
+          onClick={() => onPageChange(currentIndex - 1)}
+        >
+          <ChevronLeftIcon />
+        </button>
+        <label className="sr-only" htmlFor="catalog-jump">
+          Jump to catalog item
+        </label>
+        <select
+          id="catalog-jump"
+          value={currentIndex}
+          onChange={(event) => onPageChange(Number(event.target.value))}
+          className="min-w-64 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-800 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        >
+          {rooms.map((room) => (
+            <optgroup key={room.id} label={room.name}>
+              {room.items.map((item) => {
+                const optionIndex = itemIndex;
+                itemIndex += 1;
+                return (
+                  <option key={item.id} value={optionIndex}>
+                    {item.itemName}
+                  </option>
+                );
+              })}
+            </optgroup>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="btn-action"
+          disabled={currentIndex === total - 1}
+          aria-label="Next catalog item"
+          onClick={() => onPageChange(currentIndex + 1)}
+        >
+          <ChevronRightIcon />
+        </button>
       </div>
     </nav>
   );
@@ -513,18 +551,20 @@ function CatalogExportButton({
     action();
   };
 
+  const swatchesOnlyOptions = { ...exportOptions, showSwatchLabels: false };
+
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
-        className="catalog-nav-icon-btn"
+        className="btn-action"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Export catalog"
         onClick={() => setOpen((v) => !v)}
       >
         <DownloadIcon />
-        <span className="catalog-nav-btn-label">Export</span>
+        <span className="btn-action__label">Export</span>
         <ChevronDownIcon />
       </button>
       {open && (
@@ -553,6 +593,14 @@ function CatalogExportButton({
               Export this page
             </button>
           ) : null}
+          <button
+            type="button"
+            role="menuitem"
+            className="menu-item catalog-actions-dropdown-item"
+            onClick={() => run(() => void exportCatalogPdf(project, rooms, swatchesOnlyOptions))}
+          >
+            Export all pages — swatches only
+          </button>
         </div>
       )}
     </div>
@@ -591,7 +639,7 @@ function CatalogLayoutPanelButton({
         aria-label="Page layout options"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        className={cn('catalog-nav-icon-btn', isOpen && 'catalog-nav-icon-btn--active')}
+        className={cn('btn-action', isOpen && 'btn-action--active')}
         onClick={() => setIsOpen((v) => !v)}
       >
         <SlidersIcon />
@@ -821,19 +869,22 @@ function SegmentedToggle<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="catalog-segmented-toggle">
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          role="radio"
-          aria-checked={value === option.value}
-          className={cn('catalog-segmented-option', value === option.value && 'is-active')}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </button>
-      ))}
+    <div role="radiogroup" aria-label={ariaLabel} className="segmented">
+      {options.map((option) => {
+        const active = value === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            data-active={active || undefined}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
