@@ -13,6 +13,7 @@ type PlansPageProps = {
 };
 
 export const PLANS_ACTIONS_SLOT_ID = 'plans-actions-slot';
+export const PLANS_FILTER_SLOT_ID = 'plans-filter-slot';
 
 type FilterId = 'all' | 'calibrated' | 'uncalibrated';
 type SortId = 'added' | 'name' | 'measurements';
@@ -71,48 +72,16 @@ export function PlansPage({ project }: PlansPageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 py-4">
+    <div className="mx-auto max-w-7xl py-4">
+      <PlansFilterBar filter={filter} onFilterChange={setFilter} />
+
       <PlansActionsBar
         planCount={planCount}
         calibratedCount={calibratedCount}
+        sort={sort}
+        onSortChange={setSort}
         onUpload={() => setUploadOpen(true)}
       />
-
-      <header className="pb-1">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-4">
-          <div className="segmented" role="tablist" aria-label="Filter plans">
-            {FILTERS.map((entry) => {
-              const active = filter === entry.id;
-              return (
-                <button
-                  key={entry.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  data-active={active || undefined}
-                  onClick={() => setFilter(entry.id)}
-                >
-                  {entry.label}
-                </button>
-              );
-            })}
-          </div>
-          <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-500">
-            <span>Sort</span>
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as SortId)}
-              className="input-compact font-medium normal-case tracking-normal text-neutral-900"
-            >
-              {SORTS.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </header>
 
       <PlanUploadModal
         open={uploadOpen}
@@ -161,6 +130,44 @@ export function PlansPage({ project }: PlansPageProps) {
   );
 }
 
+function PlansFilterBar({
+  filter,
+  onFilterChange,
+}: {
+  filter: FilterId;
+  onFilterChange: (value: FilterId) => void;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById(PLANS_FILTER_SLOT_ID);
+    setSlot(el);
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <>
+      {FILTERS.map((entry) => {
+        const active = filter === entry.id;
+        return (
+          <button
+            key={entry.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            data-active={active || undefined}
+            onClick={() => onFilterChange(entry.id)}
+          >
+            {entry.label}
+          </button>
+        );
+      })}
+    </>,
+    slot,
+  );
+}
+
 type EmptyStateProps = {
   title: string;
   description: string;
@@ -184,10 +191,14 @@ function EmptyState({ title, description, actionLabel, onAction }: EmptyStatePro
 function PlansActionsBar({
   planCount,
   calibratedCount,
+  sort,
+  onSortChange,
   onUpload,
 }: {
   planCount: number;
   calibratedCount: number;
+  sort: SortId;
+  onSortChange: (value: SortId) => void;
   onUpload: () => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
@@ -209,6 +220,20 @@ function PlansActionsBar({
         <span className="num">{calibratedCount}</span>
         <span>calibrated</span>
       </span>
+      <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-500">
+        <span>Sort</span>
+        <select
+          value={sort}
+          onChange={(event) => onSortChange(event.target.value as SortId)}
+          className="input-compact font-medium normal-case tracking-normal text-neutral-900"
+        >
+          {SORTS.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <button
         type="button"
         className="btn-action btn-action--primary"

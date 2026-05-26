@@ -101,6 +101,8 @@ export interface ProjectHeaderProps {
   saveState?: SaveState;
   saveRelTime?: string | null;
   onSaveRetry?: (() => void) | null;
+  /** Optional content rendered beside the left toolbar title. */
+  toolbarLeft?: ReactNode;
   /** Optional centered content for the toolbar row (e.g., catalog page picker). */
   toolbarCenter?: ReactNode;
 }
@@ -120,6 +122,7 @@ export function ProjectHeader({
   saveState = 'idle',
   saveRelTime = null,
   onSaveRetry = null,
+  toolbarLeft,
   toolbarCenter,
 }: ProjectHeaderProps) {
   const location = useLocation();
@@ -175,6 +178,8 @@ export function ProjectHeader({
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
           {activeTab?.label ?? 'Project'}
         </h2>
+
+        {toolbarLeft}
 
         {showViewToggle && (
           <div className="segmented ml-4">

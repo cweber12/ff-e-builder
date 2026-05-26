@@ -52,7 +52,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { CompanyProfilePage } from './pages/CompanyProfilePage';
 import { PlanCanvasPage } from './pages/PlanCanvasPage';
 import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
-import { PlansPage, PLANS_ACTIONS_SLOT_ID } from './pages/PlansPage';
+import { PlansPage, PLANS_ACTIONS_SLOT_ID, PLANS_FILTER_SLOT_ID } from './pages/PlansPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
@@ -187,6 +187,16 @@ function ProjectLayout() {
       <div id={CATALOG_PICKER_SLOT_ID} className="flex items-center justify-center" />
     ) : null;
 
+  const headerToolbarLeft =
+    !isLoading && isPlansRoute ? (
+      <div
+        id={PLANS_FILTER_SLOT_ID}
+        className="segmented ml-4"
+        role="tablist"
+        aria-label="Filter plans"
+      />
+    ) : null;
+
   return (
     <main
       className={[
@@ -241,6 +251,7 @@ function ProjectLayout() {
               if (project) setPendingDelete(project);
             }}
             actions={headerActions}
+            toolbarLeft={headerToolbarLeft}
             toolbarCenter={headerToolbarCenter}
             userMenu={<UserMenu />}
           />
