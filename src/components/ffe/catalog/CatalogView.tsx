@@ -404,7 +404,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             typographyConfig={typographyConfig}
             onLayoutChange={handleLayoutChange}
             watermarkConfig={watermarkConfig}
-            onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             editorOpen={editorOpen}
@@ -425,7 +424,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             watermarkConfig={watermarkConfig}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
-            watermarkInteractive={false}
             editorOpen={false}
           />
         ))}
@@ -1052,6 +1050,17 @@ function CatalogEditorPanel({
             <span className="catalog-switch-knob" />
           </button>
         </div>
+        <LayoutRow label="Company name">
+          <SegmentedToggle
+            ariaLabel="Include company name with watermark"
+            value={watermarkConfig.includeName ? 'shown' : 'hidden'}
+            options={[
+              { value: 'hidden', label: 'Logo only' },
+              { value: 'shown', label: 'With name' },
+            ]}
+            onChange={(value) => onWatermarkChange({ includeName: value === 'shown' })}
+          />
+        </LayoutRow>
         <LayoutRow label="Placement">
           <SegmentedToggle
             ariaLabel="Watermark placement"
@@ -1342,34 +1351,14 @@ function CameraIcon() {
   );
 }
 
-function AlignCenterIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-      <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5 8h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AlignTopIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-      <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5 5.5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function CatalogPage({
   project,
   entry,
   pageNumber,
   pageCount,
   watermarkConfig,
-  onWatermarkChange,
   logoDataUrl,
   companyName,
-  watermarkInteractive = true,
   layoutConfig: layoutConfigProp,
   typographyConfig: typographyConfigProp,
   onLayoutChange,
@@ -1380,10 +1369,8 @@ export function CatalogPage({
   pageNumber: number;
   pageCount: number;
   watermarkConfig?: WatermarkConfig;
-  onWatermarkChange?: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl?: string | null;
   companyName?: string | null;
-  watermarkInteractive?: boolean;
   layoutConfig?: Partial<CatalogLayoutConfig>;
   typographyConfig?: Partial<CatalogTypographyConfig>;
   onLayoutChange?: (update: Partial<CatalogLayoutConfig>) => void;
@@ -1425,8 +1412,6 @@ export function CatalogPage({
         logoDataUrl={logoDataUrl}
         companyName={watermarkConfig.includeName ? (companyName ?? null) : null}
         config={watermarkConfig}
-        onConfigChange={onWatermarkChange ?? (() => undefined)}
-        interactive={watermarkInteractive && editorOpen}
       />
     ) : null;
   const layout: CatalogLayoutConfig = { ...DEFAULT_LAYOUT_CONFIG, ...layoutConfigProp };
@@ -1602,34 +1587,6 @@ export function CatalogPage({
                   />
                 </div>
               </div>
-              {onLayoutChange && editorOpen && (
-                <div className="catalog-image-align-toggle no-print">
-                  <button
-                    type="button"
-                    className={cn(
-                      'catalog-align-btn',
-                      layout.mainImageAlignment === 'center' && 'is-active',
-                    )}
-                    aria-label="Center image alignment"
-                    aria-pressed={layout.mainImageAlignment === 'center'}
-                    onClick={() => onLayoutChange({ mainImageAlignment: 'center' })}
-                  >
-                    <AlignCenterIcon />
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(
-                      'catalog-align-btn',
-                      layout.mainImageAlignment === 'top' && 'is-active',
-                    )}
-                    aria-label="Top image alignment"
-                    aria-pressed={layout.mainImageAlignment === 'top'}
-                    onClick={() => onLayoutChange({ mainImageAlignment: 'top' })}
-                  >
-                    <AlignTopIcon />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
@@ -2343,202 +2300,28 @@ function WatermarkMark({
   logoDataUrl,
   companyName,
   config,
-  onConfigChange,
-  interactive = true,
 }: {
   logoDataUrl: string;
   companyName: string | null;
   config: WatermarkConfig;
-  onConfigChange: (update: Partial<WatermarkConfig>) => void;
-  interactive?: boolean;
 }) {
-  const [uiMode, setUiMode] = useState<'idle' | 'options' | 'editing'>('idle');
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (uiMode === 'idle') return;
-    const handler = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setUiMode('idle');
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [uiMode]);
-
-  const markContent = (
-    <div className="flex items-center gap-1 leading-none" style={{ opacity: config.opacity / 100 }}>
-      <img
-        src={logoDataUrl}
-        alt="Company mark"
-        className="h-5 w-auto max-w-[72px] object-contain"
-      />
-      {companyName && (
-        <span className="text-[8px] uppercase tracking-widest text-neutral-500 font-medium">
-          {companyName}
-        </span>
-      )}
-    </div>
-  );
-
-  if (!interactive) {
-    return <div className="flex items-center">{markContent}</div>;
-  }
-
   return (
-    <div ref={containerRef} className="relative inline-flex no-print">
-      <button
-        type="button"
-        className={cn(
-          'rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-          uiMode !== 'idle' && 'ring-2 ring-brand-400 ring-offset-1',
+    <div className="flex items-center">
+      <div
+        className="flex items-center gap-1 leading-none"
+        style={{ opacity: config.opacity / 100 }}
+      >
+        <img
+          src={logoDataUrl}
+          alt="Company mark"
+          className="h-5 w-auto max-w-[72px] object-contain"
+        />
+        {companyName && (
+          <span className="text-[8px] uppercase tracking-widest text-neutral-500 font-medium">
+            {companyName}
+          </span>
         )}
-        aria-label="Company watermark — click to edit"
-        onClick={() => setUiMode(uiMode === 'idle' ? 'options' : 'idle')}
-      >
-        {markContent}
-      </button>
-      {uiMode === 'options' && (
-        <div
-          role="menu"
-          className="absolute bottom-full left-0 z-50 mb-1 min-w-[7rem] rounded-lg border border-neutral-200 bg-canvas-chrome py-1 shadow-lg"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className="flex w-full items-center rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700"
-            onClick={() => setUiMode('editing')}
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className="flex w-full items-center rounded px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-            onClick={() => {
-              onConfigChange({ enabled: false });
-              setUiMode('idle');
-            }}
-          >
-            Delete
-          </button>
-        </div>
-      )}
-      {uiMode === 'editing' && (
-        <WatermarkEditorPopover
-          config={config}
-          onChange={onConfigChange}
-          onDelete={() => {
-            onConfigChange({ enabled: false });
-            setUiMode('idle');
-          }}
-          onClose={() => setUiMode('idle')}
-        />
-      )}
-    </div>
-  );
-}
-
-function WatermarkEditorPopover({
-  config,
-  onChange,
-  onDelete,
-  onClose,
-}: {
-  config: WatermarkConfig;
-  onChange: (update: Partial<WatermarkConfig>) => void;
-  onDelete: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-lg border border-neutral-200 bg-canvas-chrome p-3 shadow-xl">
-      <div className="mb-2.5 flex items-center justify-between">
-        <span className="eyebrow text-[10px]">Logo Mark</span>
-        <button
-          type="button"
-          aria-label="Close editor"
-          onClick={onClose}
-          className="text-neutral-400 hover:text-neutral-700"
-        >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            aria-hidden="true"
-            className="h-3 w-3"
-          >
-            <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
-          </svg>
-        </button>
       </div>
-      <label className="mb-2 flex cursor-pointer select-none items-center gap-2 text-xs text-neutral-600">
-        <input
-          type="checkbox"
-          checked={config.includeName}
-          onChange={(e) => onChange({ includeName: e.target.checked })}
-          className="h-3.5 w-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-        />
-        Include company name
-      </label>
-      <p className="mb-1 text-[9px] uppercase tracking-wide text-neutral-400">Position</p>
-      <div className="mb-2 flex gap-1">
-        {(['header', 'footer'] as const).map((v) => (
-          <button
-            key={v}
-            type="button"
-            className={cn(
-              'flex-1 rounded px-2 py-1 text-[11px] capitalize transition-colors',
-              config.placementV === v
-                ? 'bg-brand-600 text-white'
-                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-brand-50',
-            )}
-            onClick={() => onChange({ placementV: v })}
-          >
-            {v[0]!.toUpperCase() + v.slice(1)}
-          </button>
-        ))}
-      </div>
-      <div className="mb-2 flex gap-1">
-        {(['left', 'center', 'right'] as const).map((h) => (
-          <button
-            key={h}
-            type="button"
-            className={cn(
-              'flex-1 rounded px-2 py-1 text-[11px] capitalize transition-colors',
-              config.placementH === h
-                ? 'bg-brand-600 text-white'
-                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-brand-50',
-            )}
-            onClick={() => onChange({ placementH: h })}
-          >
-            {h[0]!.toUpperCase() + h.slice(1)}
-          </button>
-        ))}
-      </div>
-      <div className="mb-3">
-        <div className="mb-1 flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wide text-neutral-400">Opacity</span>
-          <span className="num text-[10px] text-neutral-600">{config.opacity}%</span>
-        </div>
-        <input
-          type="range"
-          min={5}
-          max={100}
-          step={5}
-          value={config.opacity}
-          onChange={(e) => onChange({ opacity: Number(e.target.value) })}
-          className="h-1.5 w-full cursor-pointer accent-brand-600"
-        />
-      </div>
-      <button
-        type="button"
-        className="w-full rounded border border-red-200 bg-red-50 px-3 py-1.5 text-[11px] text-red-600 transition-colors hover:bg-red-100"
-        onClick={onDelete}
-      >
-        Remove Watermark
-      </button>
     </div>
   );
 }

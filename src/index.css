@@ -1722,36 +1722,6 @@
     color: theme('colors.gray.400');
   }
 
-  .catalog-image-align-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    margin-top: 4px;
-  }
-
-  .catalog-align-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px 8px;
-    border-radius: 4px;
-    color: theme('colors.gray.400');
-    transition:
-      color 120ms ease,
-      background-color 120ms ease;
-  }
-
-  .catalog-align-btn:hover {
-    color: theme('colors.gray.700');
-    background: theme('colors.gray.100');
-  }
-
-  .catalog-align-btn.is-active {
-    color: theme('colors.brand.600');
-    background: rgb(var(--color-brand-50));
-  }
-
   .catalog-stage {
     perspective: 1800px;
     perspective-origin: 50% 48%;
