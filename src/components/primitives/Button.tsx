@@ -1,4 +1,13 @@
-import type { ButtonHTMLAttributes } from 'react';
+import {
+  cloneElement,
+  isValidElement,
+  type ButtonHTMLAttributes,
+  type MouseEvent,
+  type MouseEventHandler,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import { Link, type LinkProps } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 
 export type ButtonVariant =
@@ -25,6 +34,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: 'sm' | 'md' | 'lg';
+  asChild?: boolean;
 }
 
 const sizeClasses = {
@@ -36,28 +46,75 @@ const sizeClasses = {
 export function Button({
   variant = 'primary',
   size = 'md',
+  asChild = false,
   className,
   children,
   disabled,
+  onClick,
   ...props
 }: ButtonProps) {
   const isToolbarVariant = variant === 'toolbar' || variant === 'toolbarPrimary';
+  const classes = cn(
+    'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
+    'transition-colors duration-150',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1',
+    'disabled:pointer-events-none disabled:opacity-50',
+    variantClasses[variant],
+    isToolbarVariant ? 'h-8 px-3' : sizeClasses[size],
+    className,
+  );
+
+  if (asChild) {
+    if (!isValidElement(children)) return null;
+    const child = children as ReactElement<{
+      className?: string;
+      onClick?: MouseEventHandler<HTMLElement>;
+      tabIndex?: number;
+      'aria-disabled'?: boolean;
+    }>;
+    const childOnClick = child.props.onClick;
+
+    return cloneElement(child, {
+      className: cn(classes, disabled && 'pointer-events-none opacity-50', child.props.className),
+      onClick: (event) => {
+        if (disabled) {
+          event.preventDefault();
+          return;
+        }
+        onClick?.(event as unknown as MouseEvent<HTMLButtonElement>);
+        childOnClick?.(event);
+      },
+      tabIndex: disabled ? -1 : child.props.tabIndex,
+      'aria-disabled': disabled || undefined,
+    });
+  }
 
   return (
-    <button
-      {...props}
-      disabled={disabled}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
-        'transition-colors duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1',
-        'disabled:pointer-events-none disabled:opacity-50',
-        variantClasses[variant],
-        isToolbarVariant ? 'h-8 px-3' : sizeClasses[size],
-        className,
-      )}
-    >
+    <button {...props} disabled={disabled} onClick={onClick} className={classes}>
       {children}
     </button>
+  );
+}
+
+type ButtonLinkProps = Omit<ButtonProps, 'asChild' | 'children' | 'type' | 'onClick'> &
+  LinkProps & {
+    children: ReactNode;
+  };
+
+export function ButtonLink({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className,
+  disabled,
+  to,
+  ...linkProps
+}: ButtonLinkProps) {
+  return (
+    <Button asChild variant={variant} size={size} className={className} disabled={disabled}>
+      <Link to={to} {...linkProps}>
+        {children}
+      </Link>
+    </Button>
   );
 }

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Button } from './Button';
+import { MemoryRouter } from 'react-router-dom';
+import { Button, ButtonLink } from './Button';
 
 describe('Button', () => {
   it('renders children', () => {
@@ -44,5 +45,30 @@ describe('Button', () => {
     render(<Button variant="danger">Delete</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('bg-danger-500');
+  });
+
+  it('applies classes to child element when asChild is set', () => {
+    render(
+      <Button asChild variant="secondary">
+        <a href="/docs">Read docs</a>
+      </Button>,
+    );
+
+    const link = screen.getByRole('link', { name: 'Read docs' });
+    expect(link.className).toContain('border-neutral-200');
+  });
+
+  it('renders ButtonLink as a link with button styles', () => {
+    render(
+      <MemoryRouter>
+        <ButtonLink to="/company" variant="secondary">
+          Company
+        </ButtonLink>
+      </MemoryRouter>,
+    );
+
+    const link = screen.getByRole('link', { name: 'Company' });
+    expect(link.className).toContain('inline-flex');
+    expect(link).toHaveAttribute('href', '/company');
   });
 });

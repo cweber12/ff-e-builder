@@ -1,6 +1,6 @@
 export { Badge } from './Badge';
 export type { BadgeVariant, BadgeSize } from './Badge';
-export { Button } from './Button';
+export { Button, ButtonLink } from './Button';
 export type { ButtonVariant } from './Button';
 export { InlineTextEdit } from './InlineTextEdit';
 export { SegmentedControl } from './SegmentedControl';

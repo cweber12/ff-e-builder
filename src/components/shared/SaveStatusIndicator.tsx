@@ -1,4 +1,5 @@
 import type { SaveState } from '../../hooks/shared/useSaveStatus';
+import { Button } from '../primitives';
 
 interface SaveStatusIndicatorProps {
   state: SaveState;
@@ -18,13 +19,18 @@ export function SaveStatusIndicator({ state, relTime, errorAction }: SaveStatusI
       {state === 'saving' && 'saving…'}
       {state === 'saved' && `saved · ${relTime ?? 'just now'}`}
       {state === 'error' && errorAction && (
-        <button
-          type="button"
-          onClick={errorAction}
-          className="text-[11px] text-danger-600 hover:underline"
-        >
-          save failed · retry
-        </button>
+        <>
+          <span className="text-danger-600">save failed ·</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={errorAction}
+            className="h-auto px-1 text-[11px] text-danger-600 hover:bg-transparent hover:text-danger-600 hover:underline"
+          >
+            Retry
+          </Button>
+        </>
       )}
     </div>
   );

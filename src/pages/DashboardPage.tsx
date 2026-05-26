@@ -5,7 +5,7 @@ import { EditProjectModal } from '../components/project/modals/EditProjectModal'
 import { NewProjectModal } from '../components/project/modals/NewProjectModal';
 import { ProjectImagesModal } from '../components/project/modals/ProjectImagesModal';
 import { ProjectOptionsMenu } from '../components/project/ProjectOptionsMenu';
-import { Button } from '../components/primitives';
+import { Button, ButtonLink } from '../components/primitives';
 import { ImageFrame } from '../components/shared/image/ImageFrame';
 import { useProjects, useUpdateProject, useDeleteProject, useUserProfile } from '../hooks';
 import type { Project } from '../types';
@@ -64,16 +64,18 @@ export function DashboardPage() {
                   (p) => p.companyName?.trim() === companyName,
                 ).length;
                 return (
-                  <Link
+                  <ButtonLink
                     key={companyName}
                     to="/company"
-                    className="inline-flex items-center gap-2 border border-neutral-200 bg-canvas-chrome px-2.5 py-1 text-sm text-neutral-800 transition hover:border-brand-500/40 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                    variant="secondary"
+                    size="sm"
+                    className="h-auto gap-2 px-2.5 py-1 text-sm"
                   >
                     {companyName}
                     <span className="num border-l border-neutral-200 pl-2 text-xs font-semibold text-neutral-500">
                       {count}
                     </span>
-                  </Link>
+                  </ButtonLink>
                 );
               })}
             </div>

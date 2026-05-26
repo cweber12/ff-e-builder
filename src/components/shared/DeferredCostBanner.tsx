@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '../primitives';
 
 interface DeferredCostBannerProps {
   deferredCount: number;
@@ -17,13 +18,15 @@ export function DeferredCostBanner({ deferredCount, onReview }: DeferredCostBann
       </span>
       <div className="ml-auto flex items-center gap-3">
         {onReview && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onReview}
-            className="text-xs font-medium text-neutral-700 hover:underline"
+            className="h-auto px-0 text-xs font-medium hover:bg-transparent hover:underline"
           >
             Review
-          </button>
+          </Button>
         )}
         <button
           type="button"

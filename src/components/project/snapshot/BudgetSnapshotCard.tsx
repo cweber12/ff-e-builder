@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import {
   cents,
   formatMoney,
@@ -7,7 +6,7 @@ import {
   type RoomWithItems,
 } from '../../../types';
 import { buildBudgetSummary } from '../../../lib/projectSnapshot';
-import { Badge } from '../../primitives';
+import { Badge, ButtonLink } from '../../primitives';
 
 export function BudgetSnapshotCard({
   project,
@@ -72,13 +71,15 @@ export function BudgetSnapshotCard({
       )}
 
       <div className="mt-6">
-        <Link
+        <ButtonLink
           to={`/projects/${project.id}/budget`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-500 transition-colors hover:text-brand-700"
+          variant="ghost"
+          size="sm"
+          className="h-auto px-0 text-brand-500 hover:bg-transparent hover:text-brand-700"
         >
           View Budget
           <ArrowRightIcon />
-        </Link>
+        </ButtonLink>
       </div>
     </section>
   );
