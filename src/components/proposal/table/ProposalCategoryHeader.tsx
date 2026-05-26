@@ -1,5 +1,6 @@
 import { cents, formatMoney, type CustomColumnDef } from '../../../types';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
+import { Badge } from '../../primitives';
 import { DropdownMenu, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from '../../primitives';
 import { cn } from '../../../lib/utils';
 import { ColumnsPanel } from '../../shared/table/ColumnsPanel';
@@ -79,13 +80,13 @@ export function ProposalCategoryHeader({
           )}
           inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
         />
-        <span className="shrink-0 rounded-pill bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-black/10">
+        <Badge variant="neutral" size="md" className="shrink-0">
           {itemCount} {itemCount === 1 ? 'item' : 'items'}
-        </span>
+        </Badge>
         {hasOpenRevision && openRevisionLabel && (
-          <span className="shrink-0 rounded-pill bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 ring-1 ring-inset ring-brand-200/50">
+          <Badge variant="brand" size="md" className="shrink-0">
             Revision {openRevisionLabel}
-          </span>
+          </Badge>
         )}
       </div>
       <div className="sticky right-4 flex items-center gap-2">

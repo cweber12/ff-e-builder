@@ -25,7 +25,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from '../../primitives';
+import { Badge, Button } from '../../primitives';
 import { toast } from '../../primitives/toast-api';
 import {
   cents,
@@ -1047,16 +1047,16 @@ function MobileProposalCards({
 function RevisionCardBadge({ status }: { status: RevisionCostStatus }) {
   if (status === 'flagged') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-pill bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+      <Badge variant="warning" size="sm" uppercase>
         Flagged
-      </span>
+      </Badge>
     );
   }
   if (status === 'resolved') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-pill bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+      <Badge variant="success" size="sm" uppercase>
         Resolved
-      </span>
+      </Badge>
     );
   }
   return null;

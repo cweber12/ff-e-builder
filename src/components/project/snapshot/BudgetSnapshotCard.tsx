@@ -7,6 +7,7 @@ import {
   type RoomWithItems,
 } from '../../../types';
 import { buildBudgetSummary } from '../../../lib/projectSnapshot';
+import { Badge } from '../../primitives';
 
 export function BudgetSnapshotCard({
   project,
@@ -37,9 +38,9 @@ export function BudgetSnapshotCard({
           </p>
         </div>
         {isOverBudget && (
-          <span className="mt-1 rounded-full bg-danger-500/10 px-2.5 py-1 text-xs font-semibold text-danger-600">
+          <Badge variant="danger" className="mt-1 rounded-full px-2.5 py-1 text-xs font-semibold">
             Over Budget
-          </span>
+          </Badge>
         )}
       </div>
 

@@ -28,7 +28,7 @@ import {
 import { GeneratedItemSizeControl } from '../../shared/table/GeneratedItemSizeModal';
 import { GeneratedItemMaterialsControl } from '../../shared/table/GeneratedItemMaterialsCell';
 import { MaterialLibraryModal } from '../../materials';
-import { Button, Modal } from '../../primitives';
+import { Badge, Button, Modal } from '../../primitives';
 import { toast } from '../../primitives/toast-api';
 import type { UpdateProposalItemInput } from '../../../lib/api';
 
@@ -531,9 +531,13 @@ function ChangelogSection({
     <section className="mt-7 border-t border-neutral-200 pt-5">
       <div className="mb-3 flex items-baseline gap-2">
         <p className="eyebrow">Changes this revision</p>
-        <span className="rounded-pill bg-brand-500/15 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+        <Badge
+          variant="brand"
+          size="md"
+          className="bg-brand-500/15 text-[11px] ring-0 ring-transparent"
+        >
           Revision {revisionLabel}
-        </span>
+        </Badge>
       </div>
       {entries.length === 0 ? (
         <p className="text-sm text-neutral-500">
