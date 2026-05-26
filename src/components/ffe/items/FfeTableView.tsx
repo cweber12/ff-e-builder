@@ -445,7 +445,7 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
                 Duplicate
               </button>
               {targetRooms.length > 0 && (
-                <div className="border-t border-black/10 pt-1">
+                <div className="border-t border-neutral-200 pt-1">
                   <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
                     Move to location
                   </div>
@@ -863,13 +863,13 @@ function ItemsErrorState({ onReload }: { onReload?: (() => void) | undefined }) 
 function ItemsLoadingState() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="h-9 border-b border-black/10 bg-canvas-chrome" />
+      <div className="h-9 border-b border-neutral-200 bg-canvas-chrome" />
       <div>
         {Array.from({ length: 5 }, (_, index) => (
           <div
             key={index}
             data-testid="items-table-shimmer-row"
-            className="grid h-13 grid-cols-6 items-center gap-4 border-b border-black/10 px-4"
+            className="grid h-13 grid-cols-6 items-center gap-4 border-b border-neutral-200 px-4"
           >
             <div className="col-span-2 h-3 rounded bg-neutral-100" />
             <div className="h-3 rounded bg-neutral-100" />
@@ -914,7 +914,7 @@ function MobileItemCards({
 }) {
   if (items.length === 0) {
     return (
-      <div className="border-y border-dashed border-black/15 px-4 py-6 text-center text-sm text-neutral-500">
+      <div className="border-y border-dashed border-neutral-200 px-4 py-6 text-center text-sm text-neutral-500">
         Add first item -&gt;
       </div>
     );
@@ -925,7 +925,7 @@ function MobileItemCards({
       {items.map((item) => (
         <article
           key={item.id}
-          className="rounded-sm border border-black/10 bg-canvas-chrome p-4 shadow-sm"
+          className="rounded-sm border border-neutral-200 bg-canvas-chrome p-4 shadow-sm"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
@@ -1780,7 +1780,7 @@ export function RoomItemsSection({
         <div className="grid gap-3 p-3">
           <button
             type="button"
-            className="w-fit rounded-md border border-black/10 bg-canvas-chrome px-2 py-1 text-xs font-medium text-neutral-600 hover:border-brand-400 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="w-fit rounded-md border border-neutral-200 bg-canvas-chrome px-2 py-1 text-xs font-medium text-neutral-600 hover:border-brand-400 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             onClick={onToggleImage}
             aria-expanded={!imageCollapsed}
             title={imageCollapsed ? 'Show location image' : 'Hide location image'}
@@ -1807,7 +1807,7 @@ export function RoomItemsSection({
       {!collapsed && !isMobile && (
         <div className="relative flex items-stretch">
           <aside className="sticky left-0 top-11 z-30 flex shrink-0 self-start">
-            <div className="flex w-9 shrink-0 items-center justify-center border-r border-black/10 bg-canvas-chrome">
+            <div className="flex w-9 shrink-0 items-center justify-center border-r border-neutral-200 bg-canvas-chrome">
               <button
                 type="button"
                 className="icon-btn"
@@ -1820,7 +1820,7 @@ export function RoomItemsSection({
               </button>
             </div>
             {!imageCollapsed && (
-              <div className="h-72 w-72 shrink-0 border-r border-black/10 bg-canvas-chrome p-3 xl:w-80">
+              <div className="h-72 w-72 shrink-0 border-r border-neutral-200 bg-canvas-chrome p-3 xl:w-80">
                 <ImageFrame
                   entityType="room"
                   entityId={room.id}
@@ -1850,7 +1850,7 @@ export function RoomItemsSection({
                             return (
                               <th
                                 key={header.id}
-                                className="h-10 border-b border-black/10 w-10 min-w-10"
+                                className="h-10 border-b border-neutral-200 w-10 min-w-10"
                               />
                             );
                           }
@@ -1859,7 +1859,7 @@ export function RoomItemsSection({
                               <th
                                 key={header.id}
                                 className={cn(
-                                  'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                  'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                   ffeStickyEdgeColumnClassNames.totalHeader,
                                 )}
                               >
@@ -1872,7 +1872,7 @@ export function RoomItemsSection({
                               <th
                                 key={header.id}
                                 className={cn(
-                                  'h-10 border-b border-black/10',
+                                  'h-10 border-b border-neutral-200',
                                   ffeStickyEdgeColumnClassNames.actionsHeader,
                                 )}
                               />
@@ -1885,7 +1885,7 @@ export function RoomItemsSection({
                                 colId={colId}
                                 label={header.column.columnDef.header as string}
                                 className={cn(
-                                  'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                  'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                   defaultColumnClassName(colId),
                                 )}
                                 onHide={() =>
@@ -1898,7 +1898,7 @@ export function RoomItemsSection({
                             <SortableColHeader
                               key={header.id}
                               colId={colId}
-                              className="h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
+                              className="h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                             </SortableColHeader>
@@ -1943,8 +1943,8 @@ export function RoomItemsSection({
       )}
       {isExpanded && (
         <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
-          <div className="flex h-full flex-col overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-black/10 bg-canvas-chrome px-4 py-3">
+          <div className="flex h-full flex-col overflow-hidden rounded-sm border border-neutral-200 bg-canvas-chrome shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-canvas-chrome px-4 py-3">
               <div className="min-w-0">
                 <h2 className="truncate text-base font-semibold text-neutral-950">{room.name}</h2>
                 <p className="text-xs text-neutral-500">
@@ -1974,7 +1974,7 @@ export function RoomItemsSection({
               </div>
             </div>
             <div className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)] gap-0">
-              <aside className="border-r border-black/10 bg-canvas-shell p-4">
+              <aside className="border-r border-neutral-200 bg-canvas-shell p-4">
                 <ImageFrame
                   entityType="room"
                   entityId={room.id}
@@ -2006,7 +2006,7 @@ export function RoomItemsSection({
                                 return (
                                   <th
                                     key={header.id}
-                                    className="h-10 border-b border-black/10 w-10 min-w-10"
+                                    className="h-10 border-b border-neutral-200 w-10 min-w-10"
                                   />
                                 );
                               }
@@ -2015,7 +2015,7 @@ export function RoomItemsSection({
                                   <th
                                     key={header.id}
                                     className={cn(
-                                      'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                      'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                       ffeStickyEdgeColumnClassNames.totalExpandedHeader,
                                     )}
                                   >
@@ -2031,7 +2031,7 @@ export function RoomItemsSection({
                                   <th
                                     key={header.id}
                                     className={cn(
-                                      'h-10 border-b border-black/10',
+                                      'h-10 border-b border-neutral-200',
                                       ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
                                     )}
                                   />
@@ -2044,7 +2044,7 @@ export function RoomItemsSection({
                                     colId={colId}
                                     label={header.column.columnDef.header as string}
                                     className={cn(
-                                      'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                      'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                       defaultColumnClassName(colId),
                                     )}
                                     onHide={() =>
@@ -2057,7 +2057,7 @@ export function RoomItemsSection({
                                 <SortableColHeader
                                   key={header.id}
                                   colId={colId}
-                                  className="h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
+                                  className="h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
                                 >
                                   {flexRender(header.column.columnDef.header, header.getContext())}
                                 </SortableColHeader>

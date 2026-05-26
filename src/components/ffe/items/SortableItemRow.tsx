@@ -50,7 +50,7 @@ function SortableItemRowImpl({
       style={style}
       data-dragging={isDragging || undefined}
       className={cn(
-        'group border-b border-black/10',
+        'group border-b border-neutral-200',
         densityRowClass(density),
         isDragging && 'bg-brand-50 shadow-md',
       )}

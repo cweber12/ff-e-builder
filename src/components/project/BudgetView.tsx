@@ -60,7 +60,7 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
       {/* Combined total */}
       <section>
         <p className="eyebrow">Combined Budget</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-b border-black/10 pb-4">
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-b border-neutral-200 pb-4">
           <div>
             <h2 className="num font-display text-3xl font-semibold tracking-tight text-neutral-950">
               {formatMoney(cents(combinedActualCents))}
@@ -119,9 +119,9 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
         {/* FF&E rooms */}
         <div>
           <h3 className="eyebrow mb-3">FF&amp;E by room</h3>
-          <div className="bg-paper border-y border-black/10">
+          <div className="bg-paper border-y border-neutral-200">
             <table className="w-full text-sm">
-              <thead className="border-b border-black/10 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+              <thead className="border-b border-neutral-200 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
                 <tr>
                   <th className="px-4 py-3">Room</th>
                   <th className="px-4 py-3 text-right">Items</th>
@@ -165,9 +165,9 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
         {/* Proposal categories */}
         <div>
           <h3 className="eyebrow mb-3">Proposal by category</h3>
-          <div className="bg-paper border-y border-black/10">
+          <div className="bg-paper border-y border-neutral-200">
             <table className="w-full text-sm">
-              <thead className="border-b border-black/10 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+              <thead className="border-b border-neutral-200 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
                 <tr>
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3 text-right">Rows</th>

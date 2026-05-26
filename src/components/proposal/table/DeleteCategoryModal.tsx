@@ -45,7 +45,7 @@ export function DeleteCategoryModal({
               . Choose what to do with them before deleting.
             </p>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-black/10 p-3 transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/40">
+              <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-neutral-200 p-3 transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/40">
                 <input
                   type="radio"
                   name="delete-category-action"
@@ -57,7 +57,7 @@ export function DeleteCategoryModal({
                   Move items to another category
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-black/10 p-3 transition has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
+              <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-neutral-200 p-3 transition has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
                 <input
                   type="radio"
                   name="delete-category-action"

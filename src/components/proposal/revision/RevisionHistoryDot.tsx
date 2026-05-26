@@ -109,21 +109,21 @@ export function RevisionHistoryDot({
               top: triggerRect.bottom + 4,
               left: triggerRect.left,
             }}
-            className="z-[100] min-w-56 max-w-xs rounded-sm border border-black/10 bg-canvas-chrome shadow-lg"
+            className="z-[100] min-w-56 max-w-xs rounded-sm border border-neutral-200 bg-canvas-chrome shadow-lg"
           >
-            <div className="border-b border-black/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+            <div className="border-b border-neutral-200 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
               {title}
             </div>
             <ul className="max-h-56 overflow-y-auto">
               {groupedEntries.map((group) => (
                 <Fragment key={group.label}>
-                  <li className="sticky top-0 border-b border-black/10 bg-canvas-shell px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                  <li className="sticky top-0 border-b border-neutral-200 bg-canvas-shell px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
                     {group.label === 'General' ? 'General' : `Round ${group.label}`}
                   </li>
                   {group.entries.map((entry) => (
                     <li
                       key={entry.id}
-                      className="border-b border-black/5 px-3 py-2 text-xs last:border-b-0"
+                      className="border-b border-neutral-100 px-3 py-2 text-xs last:border-b-0"
                     >
                       <div className="flex items-center gap-1.5">
                         <span
@@ -151,7 +151,7 @@ export function RevisionHistoryDot({
                 </Fragment>
               ))}
             </ul>
-            {footer && <div className="border-t border-black/10 px-3 py-2">{footer}</div>}
+            {footer && <div className="border-t border-neutral-200 px-3 py-2">{footer}</div>}
           </div>,
           document.body,
         )}

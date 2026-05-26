@@ -4,14 +4,12 @@ import { cn } from '../../lib/utils';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-700 focus-visible:outline-brand-500',
+  primary: 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-700',
   secondary:
-    'bg-canvas-chrome border border-black/15 text-neutral-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-50 focus-visible:outline-brand-500',
+    'bg-white border border-neutral-200 text-neutral-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-50',
   ghost:
-    'bg-transparent text-neutral-700 hover:bg-canvas-shell hover:text-brand-700 active:bg-canvas-shell focus-visible:outline-brand-500',
-  danger:
-    'bg-danger-500 text-white shadow-sm hover:bg-danger-600 active:bg-danger-600 focus-visible:outline-danger-500',
+    'bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-brand-700 active:bg-neutral-100',
+  danger: 'bg-danger-500 text-white shadow-sm hover:bg-danger-600 active:bg-danger-600',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -20,9 +18,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const sizeClasses = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-6 py-3 text-base',
+  sm: 'h-8 px-3 text-sm',
+  md: 'h-9 px-4 text-sm',
+  lg: 'h-11 px-6 text-base',
 };
 
 export function Button({
@@ -38,9 +36,9 @@ export function Button({
       {...props}
       disabled={disabled}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-md font-medium',
+        'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
         'transition-colors duration-150',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1',
         'disabled:pointer-events-none disabled:opacity-50',
         variantClasses[variant],
         sizeClasses[size],

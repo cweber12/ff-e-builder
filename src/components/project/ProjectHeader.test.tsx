@@ -26,7 +26,7 @@ describe('ProjectHeader', () => {
   it('shows shimmer skeleton while project is undefined', () => {
     const { container } = renderWithRouter(<ProjectHeader project={undefined} />);
 
-    expect(container.querySelector('[class*="bg-canvas-shell"]')).toBeInTheDocument();
+    expect(container.querySelector('[class*="animate-pulse"]')).toBeInTheDocument();
     expect(screen.queryByText('Living Room Reno')).not.toBeInTheDocument();
   });
 

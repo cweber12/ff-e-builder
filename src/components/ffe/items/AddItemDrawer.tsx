@@ -271,12 +271,12 @@ export function AddItemDrawer({
                 return (
                   <span
                     key={`${selection.type}-${name}-${index}`}
-                    className="inline-flex items-center gap-1.5 border border-black/10 bg-canvas-chrome px-2 py-1 text-xs font-medium text-neutral-700"
+                    className="inline-flex items-center gap-1.5 border border-neutral-200 bg-canvas-chrome px-2 py-1 text-xs font-medium text-neutral-700"
                   >
                     {material ? (
                       <MaterialSwatchImage material={material} size="sm" />
                     ) : (
-                      <span className="h-6 w-6 rounded-full border border-black/15 bg-canvas-shell" />
+                      <span className="h-6 w-6 rounded-full border border-neutral-200 bg-canvas-shell" />
                     )}
                     <span>{name}</span>
                     {selection.type === 'new' && (
@@ -303,7 +303,7 @@ export function AddItemDrawer({
           <textarea {...register('notes')} rows={4} className={inputClassName} />
         </Field>
 
-        <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-black/10 bg-canvas-chrome/95 px-6 py-4 backdrop-blur">
+        <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-neutral-200 bg-canvas-chrome/95 px-6 py-4 backdrop-blur">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>

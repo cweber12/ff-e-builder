@@ -10,8 +10,8 @@ const statusConfig: Record<
   pending: {
     label: 'Pending',
     icon: 'clock',
-    bgClass: 'bg-amber-50',
-    textClass: 'text-amber-700',
+    bgClass: 'bg-warning-50',
+    textClass: 'text-warning-700',
   },
   approved: {
     label: 'Approved',
@@ -22,14 +22,14 @@ const statusConfig: Record<
   ordered: {
     label: 'Ordered',
     icon: 'truck',
-    bgClass: 'bg-blue-50',
-    textClass: 'text-blue-700',
+    bgClass: 'bg-brand-100',
+    textClass: 'text-brand-700',
   },
   received: {
     label: 'Received',
     icon: 'box',
-    bgClass: 'bg-emerald-50',
-    textClass: 'text-emerald-700',
+    bgClass: 'bg-success-50',
+    textClass: 'text-success-700',
   },
 };
 

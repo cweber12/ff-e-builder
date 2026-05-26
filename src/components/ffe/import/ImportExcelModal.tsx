@@ -242,7 +242,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => inputRef.current?.click()}
-            className="flex cursor-pointer flex-col items-center justify-center gap-3 border-y-2 border-dashed border-black/15 bg-canvas-shell px-6 py-10 text-center transition hover:border-brand-500 hover:bg-brand-50/50"
+            className="flex cursor-pointer flex-col items-center justify-center gap-3 border-y-2 border-dashed border-neutral-200 bg-canvas-shell px-6 py-10 text-center transition hover:border-brand-500 hover:bg-brand-50/50"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -281,7 +281,7 @@ export function ImportExcelModal({ open, projectId, rooms, onClose, onSuccess }:
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-3 gap-3 border border-black/10 bg-canvas-shell p-3 text-sm">
+          <div className="grid grid-cols-3 gap-3 border border-neutral-200 bg-canvas-shell p-3 text-sm">
             <div>
               <p className="text-xs uppercase tracking-wide text-neutral-500">Sheet</p>
               <p className="truncate font-medium">{parsed?.sheetName || parsed?.filename}</p>

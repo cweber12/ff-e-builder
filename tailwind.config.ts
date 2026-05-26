@@ -101,7 +101,10 @@ const config: Config = {
         'chip-pop': 'chip-pop 220ms cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       borderRadius: {
-        pill: '999px',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        pill: 'var(--radius-pill)',
+        flat: 'var(--radius-flat)',
       },
     },
   },

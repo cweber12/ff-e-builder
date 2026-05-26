@@ -861,7 +861,7 @@ export function PlanCanvasPage({
   return (
     <>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-canvas">
-        <header className="border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur md:px-5">
+        <header className="border-b border-neutral-200 bg-canvas-chrome/95 px-4 backdrop-blur md:px-5">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-3 border-b border-neutral-200/70 py-1.5">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
               <Link
@@ -1311,7 +1311,7 @@ function insertAfterColumn(order: string[], columnId: string, anchorId: string) 
 function PlanCanvasSkeleton() {
   return (
     <div className="grid h-full min-h-0 gap-0 bg-canvas-shell xl:grid-cols-[88px_minmax(0,1fr)_380px]">
-      <div className="overflow-hidden border-r border-black/5 bg-white/72 p-3">
+      <div className="overflow-hidden border-r border-neutral-100 bg-white/72 p-3">
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="h-14 w-14 animate-pulse rounded-2xl bg-white" />
@@ -1321,7 +1321,7 @@ function PlanCanvasSkeleton() {
       <div className="p-6">
         <div className="h-full min-h-[70vh] animate-pulse rounded-[28px] bg-white/70" />
       </div>
-      <div className="overflow-hidden border-l border-black/5 bg-white/72 p-4">
+      <div className="overflow-hidden border-l border-neutral-100 bg-white/72 p-4">
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="h-28 animate-pulse rounded-2xl bg-white" />

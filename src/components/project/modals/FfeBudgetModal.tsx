@@ -42,7 +42,7 @@ export function FfeBudgetModal({ open, onClose, project, roomsWithItems }: Props
       <div className="flex flex-col" style={{ maxHeight: 'calc(90vh - 9rem)' }}>
         <div className="flex-1 overflow-y-auto space-y-5 pb-4">
           {/* Budget vs actual */}
-          <section className="border border-black/10 bg-canvas-shell p-4">
+          <section className="border border-neutral-200 bg-canvas-shell p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-neutral-950">

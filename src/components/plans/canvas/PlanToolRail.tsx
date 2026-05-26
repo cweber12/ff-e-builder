@@ -19,7 +19,7 @@ export function PlanToolRail({
 }: PlanToolRailProps) {
   return (
     <aside
-      className="overflow-y-auto border-r border-black/10 bg-canvas-chrome/80 py-3 backdrop-blur"
+      className="overflow-y-auto border-r border-neutral-200 bg-canvas-chrome/80 py-3 backdrop-blur"
       aria-label="Plan tools"
     >
       {PLAN_TOOL_GROUPS.map((group, groupIndex) => {

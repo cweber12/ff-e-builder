@@ -47,7 +47,7 @@ export function GroupedTableSection({
   return (
     <section
       className={cn(
-        'relative w-fit min-w-full border border-black/10 bg-canvas-chrome shadow-sm',
+        'relative w-fit min-w-full border border-neutral-200 bg-canvas-chrome shadow-sm',
         className,
       )}
     >
@@ -72,7 +72,7 @@ export function GroupedTableHeader({
   return (
     <div
       className={cn(
-        'sticky top-0 z-40 flex h-11 min-w-full items-center justify-between gap-3 border-b border-black/10 bg-canvas-chrome px-4 group',
+        'sticky top-0 z-40 flex h-11 min-w-full items-center justify-between gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 group',
         className,
       )}
     >
@@ -179,7 +179,7 @@ export function ColumnNavArrows({
       role="group"
       aria-label="Scroll table columns"
       className={cn(
-        'inline-flex items-center overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-sm',
+        'inline-flex items-center overflow-hidden rounded-sm border border-neutral-200 bg-canvas-chrome shadow-sm',
         className,
       )}
     >

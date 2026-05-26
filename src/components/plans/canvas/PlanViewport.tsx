@@ -528,7 +528,7 @@ export function PlanViewport({
     <div className="h-full min-h-0">
       <div
         ref={containerRef}
-        className="relative h-full overflow-hidden bg-canvas"
+        className="paper-texture relative h-full overflow-hidden"
         style={{
           cursor: imageUrl
             ? activeTool === 'calibrate' ||
@@ -754,7 +754,7 @@ export function PlanViewport({
                 type="button"
                 title="Zoom in"
                 onClick={() => setZoom((current) => Math.min(5, current * 1.15))}
-                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-neutral-200 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
               >
                 <ViewControlIcon type="zoom-in" />
               </button>
@@ -770,7 +770,7 @@ export function PlanViewport({
                     return nextZoom;
                   });
                 }}
-                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-neutral-200 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
               >
                 <ViewControlIcon type="zoom-out" />
               </button>
@@ -778,7 +778,7 @@ export function PlanViewport({
                 type="button"
                 title="Rotate 90°"
                 onClick={rotateClockwise}
-                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+                className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-neutral-200 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
               >
                 <ViewControlIcon type="rotate" />
               </button>
@@ -787,7 +787,7 @@ export function PlanViewport({
                   type="button"
                   title="Reset view"
                   onClick={resetView}
-                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
+                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-xl border border-neutral-200 bg-white/90 text-neutral-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-brand-700"
                 >
                   <ViewControlIcon type="reset" />
                 </button>

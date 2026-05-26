@@ -64,8 +64,11 @@ function PlusIcon() {
   );
 }
 
-const ghostBtn =
-  'inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm text-neutral-700 hover:bg-neutral-100 transition-colors';
+// All toolbar actions use the shared .btn-action utility (uppercase eyebrow).
+// Variants:
+//   default          neutral outlined
+//   --primary        filled brand (Add Category / Add Room / etc.)
+//   --active         pressed/selected state for toggles
 
 // ---------------------------------------------------------------------------
 // Export dropdown
@@ -102,11 +105,11 @@ function ExportMenu({ disabled, items }: ExportMenuProps) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`${ghostBtn} disabled:cursor-not-allowed disabled:opacity-40`}
+        className="btn-action"
         title="Export"
       >
         <DownloadIcon />
-        <span className="hidden sm:inline">Export</span>
+        <span className="btn-action__label">Export</span>
       </button>
       {open &&
         triggerRect &&
@@ -166,23 +169,19 @@ export function FfeActions({
   const ffeColumnOrder = () => readColumnConfigFromStorage(project.id, 'ffe')?.order;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       {!isCatalog && (
-        <button
-          type="button"
-          onClick={onAddRoom}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md bg-brand-500 px-3 text-sm font-medium text-white hover:bg-brand-600 transition-colors"
-        >
+        <button type="button" onClick={onAddRoom} className="btn-action btn-action--primary">
           <PlusIcon />
-          Add Room
+          <span className="btn-action__label">Add room</span>
         </button>
       )}
 
       {!isCatalog && <FfeSortToggle projectId={project.id} />}
 
-      <button type="button" onClick={onImport} className={ghostBtn} title="Import from Excel">
+      <button type="button" onClick={onImport} className="btn-action" title="Import from Excel">
         <UploadIcon />
-        <span className="hidden sm:inline">Import</span>
+        <span className="btn-action__label">Import</span>
       </button>
 
       <ExportMenu
@@ -253,23 +252,14 @@ function FfeSortToggle({ projectId }: { projectId: string }) {
   const { sortMode, setSortMode } = useFfeItemSort(projectId);
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="Item sort order"
-      className="ml-1 inline-flex h-8 items-stretch border border-black/10 bg-canvas-chrome p-0.5"
-    >
+    <div role="radiogroup" aria-label="Item sort order" className="segmented">
       <button
         type="button"
         role="radio"
         aria-checked={sortMode === 'manual'}
+        data-active={sortMode === 'manual' || undefined}
         onClick={() => setSortMode('manual')}
         title="Custom drag-and-drop order"
-        className={[
-          'inline-flex items-center px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
-          sortMode === 'manual'
-            ? 'bg-brand-600 text-white'
-            : 'text-neutral-500 hover:text-brand-700',
-        ].join(' ')}
       >
         Custom
       </button>
@@ -277,14 +267,9 @@ function FfeSortToggle({ projectId }: { projectId: string }) {
         type="button"
         role="radio"
         aria-checked={sortMode === 'idTag'}
+        data-active={sortMode === 'idTag' || undefined}
         onClick={() => setSortMode('idTag')}
         title="Sort items alphanumerically by ID"
-        className={[
-          'inline-flex items-center px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
-          sortMode === 'idTag'
-            ? 'bg-brand-600 text-white'
-            : 'text-neutral-500 hover:text-brand-700',
-        ].join(' ')}
       >
         By ID
       </button>
@@ -354,30 +339,26 @@ export function ProposalActions({
   }
 
   return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={onAddCategory}
-        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-brand-500 px-3 text-sm font-medium text-white hover:bg-brand-600 transition-colors"
-      >
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={onAddCategory} className="btn-action btn-action--primary">
         <PlusIcon />
-        Add Category
+        <span className="btn-action__label">Add category</span>
       </button>
 
-      <button type="button" onClick={onImport} className={ghostBtn} title="Import from Excel">
+      <button type="button" onClick={onImport} className="btn-action" title="Import from Excel">
         <UploadIcon />
-        <span className="hidden sm:inline">Import</span>
+        <span className="btn-action__label">Import</span>
       </button>
 
       <button
         type="button"
         disabled={!hasItems}
         onClick={() => setExportModalOpen(true)}
-        className={`${ghostBtn} disabled:cursor-not-allowed disabled:opacity-40`}
+        className="btn-action"
         title="Export"
       >
         <DownloadIcon />
-        <span className="hidden sm:inline">Export</span>
+        <span className="btn-action__label">Export</span>
       </button>
 
       <ProposalExportModal
@@ -393,7 +374,7 @@ export function ProposalActions({
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />
 
-      <div className="ml-auto flex items-center border-l border-black/10 pl-2">
+      <div className="ml-auto flex items-center border-l border-neutral-200 pl-2">
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}

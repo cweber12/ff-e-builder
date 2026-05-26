@@ -171,18 +171,17 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-black/10 pb-4">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-neutral-200 pb-4">
         <div>
-          <p className="eyebrow">Finish Library</p>
-          <h2 className="mt-1 font-display text-xl font-semibold tracking-tight text-neutral-950">
-            {project.name}
-          </h2>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
+            Finish library
+          </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-            className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
+            className="rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
             aria-label="Filter by category"
           >
             {FILTER_OPTIONS.map((opt) => (
@@ -191,17 +190,17 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
               </option>
             ))}
           </select>
-          <div className="inline-flex border border-black/10 bg-canvas-chrome p-0.5">
+          <div className="segmented">
             <button
               type="button"
-              className={viewMode === 'grid' ? activeToggleClassName : toggleClassName}
+              aria-pressed={viewMode === 'grid'}
               onClick={() => setViewMode('grid')}
             >
               Grid
             </button>
             <button
               type="button"
-              className={viewMode === 'table' ? activeToggleClassName : toggleClassName}
+              aria-pressed={viewMode === 'table'}
               onClick={() => setViewMode('table')}
             >
               Table
@@ -232,7 +231,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         )}
 
         <section>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-3">
             <div className="flex items-baseline gap-3">
               <h3 className="eyebrow">Project library</h3>
               <span className="num text-[11px] font-semibold text-neutral-500">
@@ -258,7 +257,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
             {materials.isLoading ? (
               <p className="text-sm text-neutral-500">Loading materials…</p>
             ) : filteredMaterials.length === 0 ? (
-              <p className="border-y border-dashed border-black/15 px-4 py-10 text-center text-sm text-neutral-500">
+              <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
                 No materials match the current search.
               </p>
             ) : viewMode === 'grid' ? (
@@ -352,7 +351,7 @@ function MaterialsTable({
 }) {
   return (
     <table className="w-full min-w-[900px] border-collapse text-sm">
-      <thead className="sticky top-0 border-b border-black/10 bg-canvas-chrome text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
+      <thead className="sticky top-0 border-b border-neutral-200 bg-canvas-chrome text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
         <tr>
           <th className="px-3 py-3">Swatch</th>
           <th className="px-3 py-3">Material</th>
@@ -372,7 +371,7 @@ function MaterialsTable({
                   entityType="material"
                   entityId={material.id}
                   alt={`${material.name} swatch`}
-                  className="h-12 w-12 rounded-full border-black/10 shadow-none"
+                  className="h-12 w-12 rounded-full border-neutral-200 shadow-none"
                   imageClassName="object-cover"
                   placeholderClassName="bg-canvas-shell"
                   placeholderContent={
@@ -416,11 +415,6 @@ function MaterialsTable({
     </table>
   );
 }
-
-const toggleClassName =
-  'rounded-sm px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
-const activeToggleClassName =
-  'rounded-sm bg-brand-600 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
 
 function materialMatchesQuery(material: Material, query: string) {
   if (!query) return true;

@@ -196,7 +196,7 @@ export function PlanInspector({
   onCancelHighlight,
 }: PlanInspectorProps) {
   return (
-    <aside className="min-h-0 overflow-y-auto border-l border-black/10 bg-canvas-chrome/90 px-4 py-3 backdrop-blur">
+    <aside className="min-h-0 overflow-y-auto border-l border-neutral-200 bg-canvas-chrome/90 px-4 py-3 backdrop-blur">
       <div className="space-y-4">
         <div className="space-y-3 border-b border-neutral-200/70 pb-3">
           <StageStrip activeTool={activeTool} />

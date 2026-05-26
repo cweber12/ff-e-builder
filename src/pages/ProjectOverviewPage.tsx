@@ -77,7 +77,7 @@ function InfoField({
   numeric?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 border-l border-black/10 pl-3">
+    <div className="flex flex-col gap-1.5 border-l border-neutral-200 pl-3">
       <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
         {label}
       </dt>

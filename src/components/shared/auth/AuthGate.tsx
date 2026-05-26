@@ -75,7 +75,7 @@ export function SignInPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="border-y border-black/10 bg-canvas-chrome px-10 py-12 flex flex-col items-center gap-6 w-full max-w-sm shadow-sm">
+      <div className="border-y border-neutral-200 bg-canvas-chrome px-10 py-12 flex flex-col items-center gap-6 w-full max-w-sm shadow-sm">
         <div className="flex flex-col items-center gap-1.5">
           <p className="num text-[10px] font-semibold uppercase tracking-[0.24em] text-brand-700">
             Studio
@@ -156,7 +156,7 @@ export function SignInPage() {
           type="button"
           onClick={() => void handleGoogleSignIn()}
           disabled={isSubmitting}
-          className="w-full rounded-md border border-black/15 bg-canvas-chrome px-4 py-2 text-sm font-semibold text-neutral-800 transition-colors hover:border-brand-500 hover:bg-canvas-shell hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-md border border-neutral-200 bg-canvas-chrome px-4 py-2 text-sm font-semibold text-neutral-800 transition-colors hover:border-brand-500 hover:bg-canvas-shell hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Sign in with Google
         </button>
@@ -194,7 +194,29 @@ function getAuthErrorMessage(err: unknown): string {
   return 'Sign-in failed. Please try again.';
 }
 
-function UserMenu() {
+// Reusable studio identity mark. Used by the global TopBar (non-project
+// pages) and by ProjectHeader's merged top row.
+export function StudioMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link
+      to="/projects"
+      aria-label="Go to projects dashboard"
+      className="group inline-flex items-center gap-2 transition-colors"
+    >
+      <span
+        aria-hidden
+        className="inline-block h-4 w-4 rounded-[3px] bg-brand-600 transition-transform group-hover:scale-105"
+      />
+      {!compact && (
+        <span className="font-display text-[13px] font-semibold tracking-tight text-neutral-800 group-hover:text-brand-700">
+          Chill Design Studio
+        </span>
+      )}
+    </Link>
+  );
+}
+
+export function UserMenu() {
   const { user } = useAuthUser();
   const navigate = useNavigate();
   const { data: profile } = useUserProfile();
@@ -223,9 +245,9 @@ function UserMenu() {
         {open && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden="true" />
-            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-sm border border-black/10 bg-canvas-chrome py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-40 mt-1 min-w-44 rounded-sm border border-neutral-200 bg-canvas-chrome py-1 shadow-lg">
               {(profile?.name || user?.email) && (
-                <p className="truncate border-b border-black/10 px-3 py-1.5 text-xs text-neutral-500">
+                <p className="truncate border-b border-neutral-200 px-3 py-1.5 text-xs text-neutral-500">
                   {profile?.name || user?.email}
                 </p>
               )}
@@ -259,7 +281,7 @@ function UserMenu() {
               >
                 Projects
               </button>
-              <div className="my-1 border-t border-black/10" />
+              <div className="my-1 border-t border-neutral-200" />
               <button
                 type="button"
                 onClick={() => {
@@ -281,13 +303,8 @@ function UserMenu() {
 
 function TopBar() {
   return (
-    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur md:px-6">
-      <Link
-        to="/projects"
-        className="font-display text-sm font-semibold tracking-tight text-brand-700 hover:text-brand-800 transition-colors"
-      >
-        Chill Design Studio
-      </Link>
+    <header className="no-print sticky top-0 z-30 flex h-11 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
+      <StudioMark />
       <UserMenu />
     </header>
   );
@@ -298,10 +315,8 @@ function TopBar() {
 function DemoLayout() {
   return (
     <>
-      <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-black/10 bg-canvas-chrome/95 px-4 backdrop-blur md:px-6">
-        <span className="font-display text-sm font-semibold tracking-tight text-brand-700">
-          Chill Design Studio
-        </span>
+      <header className="no-print sticky top-0 z-30 flex h-11 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
+        <StudioMark />
         <button
           type="button"
           onClick={() => void signOut()}
@@ -323,13 +338,17 @@ function DemoLayout() {
 
 function AuthorizedGate({ children }: { children: ReactNode }) {
   const { data: profile, isLoading } = useUserProfile();
+  const location = useLocation();
+  // On project pages the merged ProjectHeader carries the studio mark and
+  // user menu, so the global TopBar would be redundant.
+  const isProjectRoute = /^\/projects\/[^/]+/.test(location.pathname);
 
   if (isLoading || !profile) return <FullScreenSpinner />;
   if (!profile.authorized) return <DemoLayout />;
 
   return (
     <>
-      <TopBar />
+      {!isProjectRoute && <TopBar />}
       {children}
     </>
   );

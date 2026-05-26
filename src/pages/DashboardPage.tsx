@@ -72,10 +72,10 @@ export function DashboardPage() {
                   <Link
                     key={companyName}
                     to="/company"
-                    className="inline-flex items-center gap-2 border border-black/10 bg-canvas-chrome px-2.5 py-1 text-sm text-neutral-800 transition hover:border-brand-500/40 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                    className="inline-flex items-center gap-2 border border-neutral-200 bg-canvas-chrome px-2.5 py-1 text-sm text-neutral-800 transition hover:border-brand-500/40 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                   >
                     {companyName}
-                    <span className="num border-l border-black/10 pl-2 text-xs font-semibold text-neutral-500">
+                    <span className="num border-l border-neutral-200 pl-2 text-xs font-semibold text-neutral-500">
                       {count}
                     </span>
                   </Link>
@@ -134,7 +134,7 @@ export function DashboardPage() {
                   key={project.id}
                   className={[
                     'project-row flex items-center gap-4 px-4 py-3',
-                    index > 0 ? 'border-t border-black/5' : '',
+                    index > 0 ? 'border-t border-neutral-100' : '',
                     openProjectMenuId === project.id ? 'bg-canvas-shell' : 'hover:bg-canvas-shell',
                   ].join(' ')}
                 >
@@ -265,7 +265,7 @@ function ProjectListSkeleton() {
           key={i}
           className={[
             'flex items-center gap-4 px-4 py-3',
-            i > 0 ? 'border-t border-black/5' : '',
+            i > 0 ? 'border-t border-neutral-100' : '',
           ].join(' ')}
         >
           <div className="h-16 w-24 flex-shrink-0 animate-pulse bg-canvas-shell" />
@@ -285,7 +285,7 @@ function ProjectListSkeleton() {
 
 function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="flex min-h-64 items-center justify-center border-y border-dashed border-black/15 px-6 py-16 text-center">
+    <div className="flex min-h-64 items-center justify-center border-y border-dashed border-neutral-200 px-6 py-16 text-center">
       <div className="flex max-w-sm flex-col items-center gap-5">
         <svg aria-hidden="true" viewBox="0 0 220 160" className="h-28 w-40 opacity-70">
           <rect

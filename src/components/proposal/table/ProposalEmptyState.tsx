@@ -13,7 +13,7 @@ export function ProposalEmptyState({
 }: ProposalEmptyStateProps) {
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-12">
-      <div className="flex w-full max-w-md flex-col items-center gap-5 rounded-lg border border-black/10 bg-canvas-chrome px-8 py-10 text-center shadow-sm">
+      <div className="flex w-full max-w-md flex-col items-center gap-5 rounded-lg border border-neutral-200 bg-canvas-chrome px-8 py-10 text-center shadow-sm">
         <div className="flex flex-col items-center gap-2">
           <h2 className="font-display text-2xl text-neutral-900">No categories yet</h2>
           <p className="text-sm text-neutral-600">

@@ -179,19 +179,12 @@ export function ProposalTable({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <ProposalChromeHeader
-        projectName={project?.name}
-        categoryCount={categoriesWithItems.length}
-        grandTotal={formatMoney(cents(grandTotal))}
-        isLoading={isLoading}
-      />
-
       {isLoading ? (
         <div>
           {Array.from({ length: 5 }, (_, index) => (
             <div
               key={index}
-              className="grid h-13 grid-cols-6 items-center gap-4 border-b border-black/10 px-4"
+              className="grid h-13 grid-cols-6 items-center gap-4 border-b border-neutral-200 px-4"
             >
               <div className="col-span-2 h-3 rounded bg-neutral-100" />
               <div className="h-3 rounded bg-neutral-100" />
@@ -310,44 +303,6 @@ export function ProposalTable({
           />
         </TableViewStack>
       )}
-    </div>
-  );
-}
-
-function ProposalChromeHeader({
-  projectName,
-  categoryCount,
-  grandTotal,
-  isLoading,
-}: {
-  projectName: string | undefined;
-  categoryCount: number;
-  grandTotal: string;
-  isLoading: boolean;
-}) {
-  return (
-    <div className="flex h-10 shrink-0 items-center justify-between gap-4 border-b border-black/10 bg-canvas-chrome px-4">
-      <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
-        {projectName ?? 'Proposal'}
-      </span>
-      <div className="flex shrink-0 items-center gap-3">
-        {isLoading ? (
-          <>
-            <div className="h-3.5 w-20 animate-pulse rounded bg-neutral-100" />
-            <span aria-hidden className="h-3.5 w-px bg-black/10" />
-            <div className="h-3.5 w-16 animate-pulse rounded bg-neutral-100" />
-          </>
-        ) : (
-          <>
-            <span className="text-xs text-neutral-500">
-              <span className="tabular-nums font-medium text-neutral-700">{categoryCount}</span>{' '}
-              {categoryCount === 1 ? 'category' : 'categories'}
-            </span>
-            <span aria-hidden className="h-3.5 w-px bg-black/10" />
-            <span className="num text-sm font-semibold text-neutral-900">{grandTotal}</span>
-          </>
-        )}
-      </div>
     </div>
   );
 }

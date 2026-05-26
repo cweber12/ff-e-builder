@@ -425,8 +425,8 @@ export function ProposalCategorySection({
                 onDragEnd={handleColumnDragEnd}
               >
                 <tr>
-                  <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-black/10 bg-canvas-chrome px-1" />
-                  <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                  <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-neutral-200 bg-canvas-chrome px-1" />
+                  <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
                     ID
                   </th>
                   <SortableContext
@@ -442,7 +442,7 @@ export function ProposalCategorySection({
                             colId={colId}
                             label={meta.label}
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                               meta.className,
                             )}
                             onHide={() => onHideColumn(colId)}
@@ -455,7 +455,7 @@ export function ProposalCategorySection({
                         <SortableColHeader
                           key={colId}
                           colId={colId}
-                          className="h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
+                          className="h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
                           onHide={() => onHideColumn(colId)}
                         >
                           <CustomColumnHeader
@@ -471,7 +471,7 @@ export function ProposalCategorySection({
                     <>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           revisionNotesColumnClassName,
                         )}
                       >
@@ -479,7 +479,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
                           'border-l border-l-neutral-300',
                           baselineQtyColumnClassName,
                         )}
@@ -489,7 +489,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
                           baselineUnitCostColumnClassName,
                         )}
                       >
@@ -498,7 +498,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
                           baselineTotalColumnClassName,
                         )}
                       >
@@ -507,7 +507,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                           stickyRevQtyHeaderClassName,
                         )}
                       >
@@ -516,7 +516,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                           stickyRevUnitCostHeaderClassName,
                         )}
                       >
@@ -525,7 +525,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                           stickyRevTotalHeaderClassName,
                         )}
                       >
@@ -537,7 +537,7 @@ export function ProposalCategorySection({
                     <>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           proposalStickyValueColumnClassNames.quantity.header,
                         )}
                       >
@@ -545,7 +545,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           proposalStickyValueColumnClassNames.unitCost.header,
                         )}
                       >
@@ -553,7 +553,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                           proposalStickyEdgeColumnClassNames.totalHeader,
                         )}
                       >
@@ -563,7 +563,7 @@ export function ProposalCategorySection({
                   )}
                   <th
                     className={cn(
-                      'h-10 border-b border-black/10',
+                      'h-10 border-b border-neutral-200',
                       proposalStickyEdgeColumnClassNames.actionsHeader,
                     )}
                   />
@@ -652,8 +652,8 @@ export function ProposalCategorySection({
 
       {isExpanded && (
         <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
-          <div className="flex h-full flex-col overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-black/10 bg-canvas-chrome px-4 py-3">
+          <div className="flex h-full flex-col overflow-hidden rounded-sm border border-neutral-200 bg-canvas-chrome shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-canvas-chrome px-4 py-3">
               <div className="min-w-0">
                 <h2 className="truncate text-base font-semibold text-neutral-950">
                   {categoryName}
@@ -692,8 +692,8 @@ export function ProposalCategorySection({
                     onDragEnd={handleColumnDragEnd}
                   >
                     <tr>
-                      <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-black/10 bg-canvas-chrome px-1" />
-                      <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                      <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-neutral-200 bg-canvas-chrome px-1" />
+                      <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
                         ID
                       </th>
                       <SortableContext
@@ -709,7 +709,7 @@ export function ProposalCategorySection({
                                 colId={colId}
                                 label={meta.label}
                                 className={cn(
-                                  'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                  'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
                                   meta.className,
                                 )}
                                 onHide={() => onHideColumn(colId)}
@@ -722,7 +722,7 @@ export function ProposalCategorySection({
                             <SortableColHeader
                               key={colId}
                               colId={colId}
-                              className="h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
+                              className="h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
                               onHide={() => onHideColumn(colId)}
                             >
                               <CustomColumnHeader
@@ -738,7 +738,7 @@ export function ProposalCategorySection({
                         <>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               revisionNotesColumnClassName,
                             )}
                           >
@@ -746,7 +746,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
                               'border-l border-l-neutral-300',
                               baselineQtyColumnClassName,
                             )}
@@ -756,7 +756,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
                               baselineUnitCostColumnClassName,
                             )}
                           >
@@ -765,7 +765,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
                               baselineTotalColumnClassName,
                             )}
                           >
@@ -774,7 +774,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                               stickyRevQtyExpandedHeaderClassName,
                             )}
                           >
@@ -783,7 +783,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                               stickyRevUnitCostExpandedHeaderClassName,
                             )}
                           >
@@ -792,7 +792,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
                               stickyRevTotalExpandedHeaderClassName,
                             )}
                           >
@@ -804,7 +804,7 @@ export function ProposalCategorySection({
                         <>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               proposalStickyValueColumnClassNames.quantity.expandedHeader,
                             )}
                           >
@@ -812,7 +812,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               proposalStickyValueColumnClassNames.unitCost.expandedHeader,
                             )}
                           >
@@ -820,7 +820,7 @@ export function ProposalCategorySection({
                           </th>
                           <th
                             className={cn(
-                              'h-10 border-b border-black/10 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
+                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
                               proposalStickyEdgeColumnClassNames.totalExpandedHeader,
                             )}
                           >
@@ -830,7 +830,7 @@ export function ProposalCategorySection({
                       )}
                       <th
                         className={cn(
-                          'h-10 border-b border-black/10',
+                          'h-10 border-b border-neutral-200',
                           proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
                         )}
                       />
@@ -982,7 +982,7 @@ function MobileProposalCards({
               event.preventDefault();
               onItemClick(item);
             }}
-            className="cursor-pointer rounded-sm border border-black/10 bg-canvas-chrome p-4 shadow-sm transition-colors hover:border-brand-300 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500"
+            className="cursor-pointer rounded-sm border border-neutral-200 bg-canvas-chrome p-4 shadow-sm transition-colors hover:border-brand-300 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">

@@ -259,7 +259,7 @@ function ProjectImageSlot({
           onMouseLeave={disablePasteTarget}
           onFocus={enablePasteTarget}
           onBlur={disablePasteTarget}
-          className="flex aspect-[4/3] items-center justify-center overflow-hidden border border-dashed border-black/20 bg-canvas-chrome text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
+          className="flex aspect-[4/3] items-center justify-center overflow-hidden border border-dashed border-neutral-300 bg-canvas-chrome text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500 transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
           aria-label={label}
           title={disabled ? label : `${label}. Click to upload or press Ctrl+V to paste`}
         >

@@ -2,7 +2,7 @@ import { cn } from '../../../lib/utils';
 import type { ProposalRevision } from '../../../types';
 
 const thBase =
-  'h-10 border-b border-black/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome whitespace-nowrap';
+  'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome whitespace-nowrap';
 
 export function RevisionColumnGroup({ revision }: { revision: ProposalRevision }) {
   const l = revision.label;

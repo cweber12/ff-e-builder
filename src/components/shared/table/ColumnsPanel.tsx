@@ -90,7 +90,7 @@ export function ColumnsPanel({
         title={`Open columns panel for ${title}`}
         onClick={actionsMenu.toggleMenu}
         className={cn(
-          'inline-flex items-center gap-1 rounded-pill border border-black/15 bg-canvas-shell px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+          'inline-flex items-center gap-1 rounded-pill border border-neutral-200 bg-canvas-shell px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
           triggerClassName,
         )}
       >
@@ -105,7 +105,7 @@ export function ColumnsPanel({
             role="dialog"
             aria-label={`${title} columns panel`}
             style={panelPosition}
-            className="z-[180] w-[22rem] rounded-sm border border-black/10 bg-canvas-chrome p-3 shadow-xl"
+            className="z-[180] w-[22rem] rounded-sm border border-neutral-200 bg-canvas-chrome p-3 shadow-xl"
           >
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
@@ -131,7 +131,7 @@ export function ColumnsPanel({
                 items={visibleColumns.map((column) => column.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="max-h-48 space-y-1 overflow-y-auto rounded border border-black/10 bg-white p-1">
+                <div className="max-h-48 space-y-1 overflow-y-auto rounded border border-neutral-200 bg-white p-1">
                   {visibleColumns.map((column) => (
                     <ColumnsPanelVisibleRow
                       key={column.id}
@@ -145,7 +145,7 @@ export function ColumnsPanel({
 
             <div className="mt-3">
               <p className="mb-1 text-[11px] text-neutral-500">Hidden defaults</p>
-              <div className="max-h-28 space-y-1 overflow-y-auto rounded border border-black/10 bg-white p-1">
+              <div className="max-h-28 space-y-1 overflow-y-auto rounded border border-neutral-200 bg-white p-1">
                 {hiddenDefaults.length === 0 ? (
                   <p className="px-2 py-1 text-xs text-neutral-400">No hidden default columns</p>
                 ) : (
@@ -173,12 +173,12 @@ export function ColumnsPanel({
                     actionsMenu.closeMenu();
                     onOpenAddColumnModal();
                   }}
-                  className="rounded border border-black/10 px-1.5 py-0.5 text-[11px] text-neutral-600 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                  className="rounded border border-neutral-200 px-1.5 py-0.5 text-[11px] text-neutral-600 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                 >
                   Add
                 </button>
               </div>
-              <div className="max-h-36 space-y-1 overflow-y-auto rounded border border-black/10 bg-white p-1">
+              <div className="max-h-36 space-y-1 overflow-y-auto rounded border border-neutral-200 bg-white p-1">
                 {customColumns.length === 0 ? (
                   <p className="px-2 py-1 text-xs text-neutral-400">No custom columns</p>
                 ) : (
@@ -208,7 +208,7 @@ function ColumnsPanelVisibleRow({ item, onHide }: { item: VisibleColumnItem; onH
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded border border-transparent px-1 py-1 hover:border-black/10 hover:bg-neutral-50"
+      className="flex items-center gap-2 rounded border border-transparent px-1 py-1 hover:border-neutral-200 hover:bg-neutral-50"
     >
       <button
         type="button"
@@ -291,7 +291,7 @@ function CustomColumnCrudRow({
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="rounded border border-black/10 px-1.5 py-0.5 text-[10px] text-neutral-600 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="rounded border border-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-600 hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label={`Rename custom column ${column.label}`}
       >
         Rename

@@ -21,7 +21,7 @@ export function ProjectOptionsMenu({
   onImages,
   onDelete,
   align = 'top',
-  buttonClassName = 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/10 bg-canvas-chrome text-neutral-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+  buttonClassName = 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-canvas-chrome text-neutral-500 shadow-sm transition hover:border-brand-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
 }: ProjectOptionsMenuProps) {
   return (
     <div className="relative z-[90]">

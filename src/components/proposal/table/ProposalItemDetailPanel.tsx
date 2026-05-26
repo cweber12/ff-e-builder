@@ -165,10 +165,10 @@ export function ProposalItemDetailPanel({
         'fixed z-50 flex flex-col overflow-hidden bg-canvas-chrome shadow-2xl',
         isMobile
           ? 'inset-0'
-          : 'inset-y-0 right-0 w-[clamp(420px,45vw,720px)] border-l border-black/10',
+          : 'inset-y-0 right-0 w-[clamp(420px,45vw,720px)] border-l border-neutral-200',
       )}
     >
-      <header className="flex flex-shrink-0 items-center gap-2 border-b border-black/10 px-5 py-3.5">
+      <header className="flex flex-shrink-0 items-center gap-2 border-b border-neutral-200 px-5 py-3.5">
         <div className="min-w-0 flex-1">
           <p className="eyebrow">{category.name}</p>
           <h2 className="mt-0.5 truncate font-display text-base font-semibold text-neutral-950">
@@ -198,7 +198,7 @@ export function ProposalItemDetailPanel({
       </header>
 
       <div className="flex flex-1 flex-col min-h-0 overflow-y-auto">
-        <div className="flex w-full gap-5 justify-center border-b border-black/10 bg-canvas-shell p-5">
+        <div className="flex w-full gap-5 justify-center border-b border-neutral-200 bg-canvas-shell p-5">
           <ImageSection label="Rendering" className="flex-1 min-w-0">
             <ImageFrame
               entityType="proposal_item"
@@ -309,9 +309,9 @@ export function ProposalItemDetailPanel({
             />
           </div>
 
-          <div className="mt-7 border-t border-black/10 pt-5">
+          <div className="mt-7 border-t border-neutral-200 pt-5">
             <dl className="grid grid-cols-3 gap-6">
-              <div className="border-l border-black/10 pl-3">
+              <div className="border-l border-neutral-200 pl-3">
                 <dt className="eyebrow">Quantity</dt>
                 <dd className="mt-1">
                   <GeneratedItemEditableQuantityControl
@@ -323,7 +323,7 @@ export function ProposalItemDetailPanel({
                   />
                 </dd>
               </div>
-              <div className="border-l border-black/10 pl-3">
+              <div className="border-l border-neutral-200 pl-3">
                 <dt className="eyebrow">Unit cost</dt>
                 <dd className="mt-1">
                   <GeneratedItemEditableMoneyControl
@@ -528,7 +528,7 @@ function ChangelogSection({
   projectId: string;
 }) {
   return (
-    <section className="mt-7 border-t border-black/10 pt-5">
+    <section className="mt-7 border-t border-neutral-200 pt-5">
       <div className="mb-3 flex items-baseline gap-2">
         <p className="eyebrow">Changes this revision</p>
         <span className="rounded-pill bg-brand-500/15 px-2 py-0.5 text-[11px] font-medium text-brand-700">
@@ -586,7 +586,7 @@ function ChangelogEntryRow({
   });
 
   return (
-    <li className="rounded-sm border border-black/10 bg-canvas-shell px-3 py-2 text-sm">
+    <li className="rounded-sm border border-neutral-200 bg-canvas-shell px-3 py-2 text-sm">
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-medium text-neutral-800">{entry.columnKey}</span>
         <span className="text-[11px] tabular-nums text-neutral-500">{when}</span>
@@ -613,7 +613,7 @@ function ChangelogEntryRow({
             }}
             placeholder="Add a note…"
             autoFocus
-            className="w-full rounded border border-black/15 bg-white px-2 py-1 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full rounded border border-neutral-200 bg-white px-2 py-1 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
           <div className="mt-1 flex gap-3">
             <button

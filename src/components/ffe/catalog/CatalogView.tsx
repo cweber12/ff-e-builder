@@ -230,7 +230,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   if (!entry) {
     return (
       <div className="min-h-screen bg-canvas-bg px-6 py-16">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 border-y border-dashed border-black/15 bg-canvas-chrome px-6 py-14 text-center">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 border-y border-dashed border-neutral-200 bg-canvas-chrome px-6 py-14 text-center">
           <p className="eyebrow">Catalog</p>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
             No catalog items yet
@@ -346,7 +346,7 @@ function CatalogNav({
   let itemIndex = 0;
 
   return (
-    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-black/10 bg-canvas-bg/95 px-4 py-3 backdrop-blur">
+    <nav className="no-print sticky top-0 z-20 mx-auto mb-6 max-w-5xl border-b border-neutral-200 bg-canvas-bg/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           {currentEntry?.room.name ? (
@@ -376,7 +376,7 @@ function CatalogNav({
             id="catalog-jump"
             value={currentIndex}
             onChange={(event) => onPageChange(Number(event.target.value))}
-            className="min-w-56 rounded-sm border border-black/15 bg-canvas-chrome px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
+            className="min-w-56 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
           >
             {rooms.map((room) => (
               <optgroup key={room.id} label={room.name}>
@@ -2213,7 +2213,7 @@ function WatermarkMark({
       {uiMode === 'options' && (
         <div
           role="menu"
-          className="absolute bottom-full left-0 z-50 mb-1 min-w-[7rem] rounded-lg border border-black/10 bg-canvas-chrome py-1 shadow-lg"
+          className="absolute bottom-full left-0 z-50 mb-1 min-w-[7rem] rounded-lg border border-neutral-200 bg-canvas-chrome py-1 shadow-lg"
         >
           <button
             type="button"
@@ -2263,7 +2263,7 @@ function WatermarkEditorPopover({
   onClose: () => void;
 }) {
   return (
-    <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-lg border border-black/10 bg-canvas-chrome p-3 shadow-xl">
+    <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-lg border border-neutral-200 bg-canvas-chrome p-3 shadow-xl">
       <div className="mb-2.5 flex items-center justify-between">
         <span className="eyebrow text-[10px]">Logo Mark</span>
         <button
@@ -2304,7 +2304,7 @@ function WatermarkEditorPopover({
               'flex-1 rounded px-2 py-1 text-[11px] capitalize transition-colors',
               config.placementV === v
                 ? 'bg-brand-600 text-white'
-                : 'border border-black/10 bg-white text-neutral-600 hover:bg-brand-50',
+                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-brand-50',
             )}
             onClick={() => onChange({ placementV: v })}
           >
@@ -2321,7 +2321,7 @@ function WatermarkEditorPopover({
               'flex-1 rounded px-2 py-1 text-[11px] capitalize transition-colors',
               config.placementH === h
                 ? 'bg-brand-600 text-white'
-                : 'border border-black/10 bg-white text-neutral-600 hover:bg-brand-50',
+                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-brand-50',
             )}
             onClick={() => onChange({ placementH: h })}
           >

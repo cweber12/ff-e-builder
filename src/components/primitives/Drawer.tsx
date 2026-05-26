@@ -95,13 +95,13 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'fixed inset-0 z-50 flex w-full flex-col bg-canvas-chrome shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md md:border-l md:border-black/10',
+          'fixed inset-0 z-50 flex w-full flex-col bg-white shadow-xl md:inset-y-0 md:left-auto md:right-0 md:max-w-md md:border-l md:border-neutral-200',
           'transition-transform duration-300 ease-in-out',
           'translate-x-0',
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-black/10 bg-canvas-shell px-6 py-3.5">
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-3.5">
           <h2
             id={titleId}
             className="font-display text-lg font-semibold tracking-tight text-neutral-950"

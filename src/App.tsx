@@ -10,7 +10,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AuthGate, SignInPage } from './components/shared/auth/AuthGate';
+import { AuthGate, SignInPage, UserMenu } from './components/shared/auth/AuthGate';
 import { CatalogView } from './components/ffe/catalog/CatalogView';
 import { FfeTable } from './components/ffe/items';
 import { MaterialsView } from './components/materials/MaterialsView';
@@ -223,6 +223,7 @@ function ProjectLayout() {
               if (project) setPendingDelete(project);
             }}
             actions={headerActions}
+            userMenu={<UserMenu />}
           />
           {isLoading ? (
             <div className="flex justify-center py-24">
@@ -344,14 +345,14 @@ function BudgetPageActions({
       <button
         type="button"
         onClick={() => setFfeOpen(true)}
-        className="rounded-md border border-black/10 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
+        className="rounded-md border border-neutral-200 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
       >
         FF&amp;E Budget
       </button>
       <button
         type="button"
         onClick={() => setProposalOpen(true)}
-        className="rounded-md border border-black/10 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
+        className="rounded-md border border-neutral-200 bg-canvas-chrome px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-brand-400 hover:bg-canvas-shell hover:text-brand-700"
       >
         Proposal Budget
       </button>
@@ -497,7 +498,7 @@ function useProjectContext() {
 function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 text-center">
-      <div className="border-y border-black/10 bg-canvas-chrome px-10 py-12 shadow-sm">
+      <div className="border-y border-neutral-200 bg-canvas-chrome px-10 py-12 shadow-sm">
         <p className="num text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
           404
         </p>

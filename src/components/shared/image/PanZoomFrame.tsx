@@ -106,7 +106,7 @@ export function PanZoomFrame({ entityType, entityId, alt }: Props) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-[117/75] overflow-hidden border border-black/10 bg-canvas-shell select-none"
+      className="relative w-full aspect-[117/75] overflow-hidden border border-neutral-200 bg-canvas-shell select-none"
       style={{ cursor: url ? (isZoomed ? 'grab' : 'zoom-in') : 'default' }}
       onPointerDown={url ? handlePointerDown : undefined}
       onPointerMove={url ? handlePointerMove : undefined}

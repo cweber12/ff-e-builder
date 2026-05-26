@@ -13,7 +13,7 @@ const PROPOSAL_COLUMN_META = PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnMeta;
 const quantityUnits = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 
 const editInputClassName =
-  'rounded-sm border border-black/15 bg-canvas-chrome px-2 py-1 text-sm text-neutral-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30';
+  'rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1 text-sm text-neutral-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30';
 
 const stickyRevQtyHeaderClassName =
   'sticky right-[232px] z-40 bg-canvas-chrome w-20 min-w-[80px] border-l-2 border-l-brand-400';

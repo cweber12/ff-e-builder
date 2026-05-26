@@ -72,8 +72,7 @@ export function PlansPage({ project }: PlansPageProps) {
       <header className="pb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="eyebrow">Plans</p>
-            <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-neutral-950">
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
               Plan library
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500">
@@ -81,33 +80,28 @@ export function PlansPage({ project }: PlansPageProps) {
               measurements stay tied to the correct source drawing.
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-2 border border-black/10 bg-canvas-chrome px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-700">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-sm border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-700">
               <span className="num text-neutral-950">{planCount}</span>
               <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
             </span>
-            <span className="inline-flex items-center gap-2 border border-success-700/25 bg-success-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-success-700">
+            <span className="inline-flex items-center gap-2 rounded-sm border border-success-700/25 bg-success-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-success-700">
               <span className="num">{calibratedCount}</span>
               <span>calibrated</span>
             </span>
-            <Button
+            <button
               type="button"
-              variant="primary"
-              size="sm"
+              className="btn-action btn-action--primary"
               onClick={() => setUploadOpen(true)}
               aria-haspopup="dialog"
             >
-              Upload plan
-            </Button>
+              <span className="btn-action__label">Upload plan</span>
+            </button>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-4">
-          <div
-            className="flex flex-wrap items-center gap-5"
-            role="tablist"
-            aria-label="Filter plans"
-          >
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4">
+          <div className="segmented" role="tablist" aria-label="Filter plans">
             {FILTERS.map((entry) => {
               const active = filter === entry.id;
               return (
@@ -116,20 +110,15 @@ export function PlansPage({ project }: PlansPageProps) {
                   type="button"
                   role="tab"
                   aria-selected={active}
+                  data-active={active || undefined}
                   onClick={() => setFilter(entry.id)}
-                  className={[
-                    'border-b-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] transition focus-visible:outline-none',
-                    active
-                      ? 'border-brand-600 text-neutral-900'
-                      : 'border-transparent text-neutral-400 hover:text-neutral-700',
-                  ].join(' ')}
                 >
                   {entry.label}
                 </button>
               );
             })}
           </div>
-          <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+          <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.10em] text-neutral-500">
             <span>Sort</span>
             <select
               value={sort}
@@ -202,7 +191,7 @@ type EmptyStateProps = {
 
 function EmptyState({ title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <div className="canvas-hatch flex flex-col items-center border-y border-dashed border-black/20 px-6 py-16 text-center">
+    <div className="canvas-hatch flex flex-col items-center border-y border-dashed border-neutral-300 px-6 py-16 text-center">
       <BlueprintIcon />
       <h2 className="mt-5 font-display text-lg font-semibold text-neutral-950">{title}</h2>
       <p className="mt-2 max-w-md text-sm leading-6 text-neutral-500">{description}</p>

@@ -70,27 +70,53 @@
   --color-warning-500: 217 119 6;
   --color-warning-700: 154 84 6;
 
-  /* Plan canvas — drafting board palette
-     Overlay tokens now read as architectural drawing ink:
+  /* Plan canvas — near-white paper palette
+     The whole app now sits on a paper-textured near-white surface; the plan
+     canvas inherits the same family with a slightly stronger grain so it
+     still reads as drafting paper rather than chrome.
        plan-line    → cool slate (saved length lines, the "ink" stroke)
        plan-measure → steel brand (in-progress drafts, dashed)
        plan-active  → deep brand (selected overlays, authoritative) */
-  --color-canvas-bg: 227 222 210;
-  --color-canvas-shell: 243 241 234;
-  --color-canvas-chrome: 251 250 246;
+  --color-canvas-bg: 249 250 252; /* #F9FAFC — page bg */
+  --color-canvas-shell: 244 246 250; /* #F4F6FA — hover / inset */
+  --color-canvas-chrome: 255 255 255; /* #FFFFFF — toolbars, headers */
   --color-plan-line: 41 53 69;
   --color-plan-measure: 31 88 145;
   --color-plan-active: 16 52 92;
 
-  /* Paper — a slightly warmer near-white for printed-artifact surfaces
-     (proposal totals, catalog pages) sitting on top of the warm app body. */
-  --color-paper: 248 245 238;
+  /* Paper — near-white printable artifact surface (proposal totals, catalog
+     pages). Now harmonized with the cool app body. */
+  --color-paper: 252 252 253; /* #FCFCFD */
 
-  /* Shadows — warm-tinted, lower opacity than Tailwind defaults */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+  /* Radius scale — soft modern.
+       sm  → 6px   (buttons, inputs, segmented controls)
+       md  → 10px  (cards, modals, drawers)
+       pill→ 9999px (badges, status chips)
+       flat→ 0     (full-bleed paper surfaces) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 9999px;
+  --radius-flat: 0px;
+
+  /* Spacing scale — formal vocabulary for paddings / gaps. Existing Tailwind
+     p-* / gap-* utilities still work; these are the canonical numeric
+     anchors that the design system documents and that future components
+     should reach for. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Shadows — cool-tinted, restrained. Pair with hairline borders rather
+     than carrying the elevation alone. */
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 0 0 1px rgb(15 23 42 / 0.04);
+  --shadow-md: 0 4px 8px -2px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+  --shadow-lg: 0 12px 24px -8px rgb(15 23 42 / 0.08), 0 4px 8px -4px rgb(15 23 42 / 0.04);
+  --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.04);
 
   /* Paper shadow — used for the plan-viewport image so it reads as a sheet
      laid on a drafting table. Layered, longer, with a soft cool tint. */
@@ -127,7 +153,20 @@
       sans-serif;
     font-feature-settings: 'ss01', 'ss02', 'cv11';
     letter-spacing: -0.005em;
-    background: rgb(var(--color-canvas-bg));
+    background-color: rgb(var(--color-canvas-bg));
+    /* Subtle paper grain — two offset dot layers so the page never reads as
+       flat white. Stronger grain available via .paper-texture for the plan
+       canvas. */
+    background-image:
+      radial-gradient(rgb(15 23 42 / 0.018) 1px, transparent 1px),
+      radial-gradient(rgb(15 23 42 / 0.012) 1px, transparent 1px);
+    background-size:
+      3px 3px,
+      7px 7px;
+    background-position:
+      0 0,
+      1px 2px;
+    background-attachment: fixed;
     color: rgb(var(--color-neutral-900));
   }
 
@@ -155,23 +194,69 @@
      Shared primitives extracted from repeated inline class strings.
      ────────────────────────────────────────────────────────────────────── */
 
+  /* Paper texture — stronger grain variant for the plan canvas / large
+     workspace surfaces. The body already carries a faint paper texture; this
+     reinforces it so the canvas reads as drafting paper. */
+  .paper-texture {
+    background-color: rgb(var(--color-canvas-bg));
+    background-image:
+      radial-gradient(rgb(15 23 42 / 0.028) 1px, transparent 1px),
+      radial-gradient(rgb(15 23 42 / 0.018) 1px, transparent 1px);
+    background-size:
+      3px 3px,
+      7px 7px;
+    background-position:
+      0 0,
+      1px 2px;
+  }
+
+  /* Card — canonical white panel surface with hairline border. Pair with
+     .card-section (default density) or .card-section-lg (feature density). */
+  .card {
+    @apply rounded-md border border-neutral-200 bg-white shadow-sm;
+  }
+  .card-section {
+    @apply p-5;
+  }
+  .card-section-lg {
+    @apply p-6 md:p-8;
+  }
+
+  /* Segmented control — used by view toggles, density toggles, anywhere a
+     mutually-exclusive small choice appears. Mark the active button with
+     either aria-pressed="true" or data-active="true". */
+  .segmented {
+    @apply inline-flex rounded-sm border border-neutral-200 bg-white p-0.5;
+  }
+  .segmented > button {
+    @apply inline-flex h-7 items-center rounded-[4px] px-3 text-xs font-semibold
+           text-neutral-600 transition-colors duration-150;
+  }
+  .segmented > button[aria-pressed='true'],
+  .segmented > button[data-active='true'] {
+    @apply bg-brand-600 text-white;
+  }
+  .segmented > button:not([aria-pressed='true']):not([data-active='true']):hover {
+    @apply bg-neutral-100 text-neutral-900;
+  }
+
   /* Standard form input — apply on text, search, url, email inputs and
      anything else that should match the spec-document input vocabulary. */
   .input-base {
-    @apply w-full rounded-md border border-neutral-300 bg-white px-3 py-2
+    @apply w-full rounded-sm border border-neutral-200 bg-white px-3 py-2
            text-sm font-medium text-neutral-950
            placeholder:font-normal placeholder:text-neutral-500
            shadow-[inset_0_1px_0_rgb(0_0_0_/_0.02)]
            transition-colors duration-150
            focus:border-brand-600 focus:outline-none
-           focus:ring-2 focus:ring-brand-500/25
+           focus:ring-2 focus:ring-brand-500/30
            disabled:bg-neutral-50 disabled:text-neutral-500;
   }
 
   /* Compact input — slightly tighter padding, for inline-cell editors and
      toolbars. */
   .input-compact {
-    @apply rounded-md border border-neutral-300 bg-white px-2 py-1
+    @apply rounded-sm border border-neutral-200 bg-white px-2 py-1
            text-sm text-neutral-950
            focus:border-brand-500 focus:outline-none
            focus:ring-1 focus:ring-brand-500/30;
@@ -179,27 +264,26 @@
 
   /* Square icon button — used in table toolbars, panel headers, etc. */
   .icon-btn {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-md
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-sm
            text-neutral-500
            transition-colors duration-150
            hover:bg-neutral-100 hover:text-brand-700
-           focus-visible:outline focus-visible:outline-2
-           focus-visible:outline-offset-1 focus-visible:outline-brand-500
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-brand-500/30 focus-visible:ring-offset-1
            disabled:pointer-events-none disabled:opacity-40;
   }
 
   /* Universal keyboard focus ring — apply to interactive elements that
      don't already use focus:border-brand-500. */
   .focus-ring {
-    @apply focus-visible:outline focus-visible:outline-2
-           focus-visible:outline-offset-2 focus-visible:outline-brand-500;
+    @apply focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-brand-500/30 focus-visible:ring-offset-1;
   }
 
   /* Floating menu / popover panel — used for context menus, column popovers,
-     status dropdowns. Slightly stronger border + tightened shadow so the
-     panel reads as a clearly separated surface. */
+     status dropdowns. */
   .menu-panel {
-    @apply rounded-sm border border-black/10 bg-canvas-chrome p-1 shadow-lg;
+    @apply rounded-md border border-neutral-200 bg-white p-1 shadow-lg;
   }
 
   .menu-item {
@@ -226,49 +310,87 @@
     font-weight: 650;
   }
 
-  /* ---- Nav icon buttons (print, export, sliders) ---- */
+  /* ──────────────────────────────────────────────────────────────────────
+     Action button — unified uppercase eyebrow vocabulary for every toolbar
+     / header action across the app (Import, Export, Add Category, Add Room,
+     Edit, etc.). Use .btn-action everywhere; the legacy .catalog-nav-icon-btn
+     alias is kept so existing catalog markup continues to resolve.
+     Variants:
+       .btn-action--primary  filled brand 600 for the principal action
+       .btn-action--active   pressed/selected state (for toggles)
+     ────────────────────────────────────────────────────────────────────── */
+  .btn-action,
   .catalog-nav-icon-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid rgb(0 0 0 / 0.1);
-    border-radius: 2px;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid rgb(var(--color-neutral-200));
+    border-radius: var(--radius-sm);
     background: rgb(var(--color-canvas-chrome));
-    color: theme('colors.neutral.600');
+    color: rgb(var(--color-neutral-700));
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
     transition:
       border-color 150ms ease,
       color 150ms ease,
       background-color 150ms ease;
   }
 
+  .btn-action:hover,
   .catalog-nav-icon-btn:hover {
-    border-color: theme('colors.brand.400');
-    color: theme('colors.brand.700');
-    background: theme('colors.brand.50');
+    border-color: rgb(var(--color-brand-400));
+    color: rgb(var(--color-brand-700));
+    background: rgb(var(--color-brand-50));
   }
 
+  .btn-action:focus-visible,
+  .catalog-nav-icon-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--color-brand-500) / 0.3);
+  }
+
+  .btn-action:disabled,
   .catalog-nav-icon-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
   }
 
+  .btn-action--active,
   .catalog-nav-icon-btn--active {
-    border-color: theme('colors.brand.500');
-    background: theme('colors.brand.50');
-    color: theme('colors.brand.700');
+    border-color: rgb(var(--color-brand-500));
+    background: rgb(var(--color-brand-50));
+    color: rgb(var(--color-brand-700));
   }
 
+  .btn-action--primary {
+    background: rgb(var(--color-brand-600));
+    border-color: rgb(var(--color-brand-600));
+    color: #fff;
+  }
+  .btn-action--primary:hover {
+    background: rgb(var(--color-brand-700));
+    border-color: rgb(var(--color-brand-700));
+    color: #fff;
+  }
+
+  .btn-action--danger {
+    color: rgb(var(--color-danger-600));
+  }
+  .btn-action--danger:hover {
+    border-color: rgb(var(--color-danger-500));
+    background: rgb(var(--color-danger-50));
+    color: rgb(var(--color-danger-600));
+  }
+
+  .btn-action__label,
   .catalog-nav-btn-label {
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
@@ -662,13 +784,13 @@
 
   .surface-paper {
     background-color: rgb(var(--color-canvas-chrome));
-    border-top: 1px solid rgb(0 0 0 / 0.1);
-    border-bottom: 1px solid rgb(0 0 0 / 0.1);
-    border-radius: 0;
+    border-top: 1px solid rgb(var(--color-neutral-200));
+    border-bottom: 1px solid rgb(var(--color-neutral-200));
+    border-radius: var(--radius-flat);
   }
 
   .section-rule {
-    border-top: 1px solid rgb(0 0 0 / 0.1);
+    border-top: 1px solid rgb(var(--color-neutral-200));
     margin-top: 1.5rem;
     padding-top: 1.5rem;
   }
@@ -712,7 +834,7 @@
 
   /* Metric card — larger hero key/value used for calibration state, etc. */
   .metric-card {
-    @apply flex flex-col gap-1 rounded-md border border-black/10 bg-canvas-chrome px-3 py-2.5;
+    @apply flex flex-col gap-1 rounded-md border border-neutral-200 bg-white px-3 py-2.5;
   }
 
   .metric-card__label {
@@ -800,8 +922,8 @@
   /* Inspector action bar — pinned to the bottom of the inspector when a
      measurement is selected and has an "apply to item" action. */
   .action-bar {
-    @apply sticky bottom-0 z-10 -mx-4 mt-4 border-t border-black/10
-           bg-canvas-chrome/95 px-4 py-3 backdrop-blur;
+    @apply sticky bottom-0 z-10 -mx-4 mt-4 border-t border-neutral-200
+           bg-white/95 px-4 py-3 backdrop-blur;
   }
 
   /* Paper frame — gutter + drop shadow used around the plan viewport
@@ -822,7 +944,7 @@
   /* Library tile — softer plan-card surface with a hover lift.
      Will replace the inline border/shadow stack on MeasuredPlanCard. */
   .tile-card {
-    @apply overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-sm;
+    @apply overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm;
     transition:
       transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
       box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),

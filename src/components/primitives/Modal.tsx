@@ -65,14 +65,14 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         }
       }}
       className={cn(
-        'rounded-sm border border-black/10 shadow-xl backdrop:bg-neutral-950/50 backdrop:backdrop-blur-sm',
-        'p-0 w-full max-w-lg bg-canvas-chrome',
+        'rounded-md border border-neutral-200 shadow-xl backdrop:bg-neutral-950/50 backdrop:backdrop-blur-sm',
+        'p-0 w-full max-w-lg bg-white',
         'open:animate-in open:fade-in-0 open:zoom-in-95',
         className,
       )}
     >
       <div className="flex flex-col">
-        <div className="flex items-center justify-between border-b border-black/10 bg-canvas-shell px-6 py-3.5">
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-3.5">
           <h2
             id={titleId}
             className="font-display text-lg font-semibold tracking-tight text-neutral-950"

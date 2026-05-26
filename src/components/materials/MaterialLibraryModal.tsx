@@ -344,8 +344,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
           />
         )}
 
-        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-black/10 bg-canvas-chrome">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 px-5 py-4">
+        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-neutral-200 bg-canvas-chrome">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-4">
             <div className="flex items-baseline gap-3">
               <h3 className="eyebrow">Project library</h3>
               <span className="num text-[11px] font-semibold text-neutral-500">
@@ -356,7 +356,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-                className="rounded-sm border border-black/10 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
+                className="rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
                 aria-label="Filter by category"
               >
                 {FILTER_OPTIONS.map((opt) => (
@@ -396,7 +396,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
                 ))}
               </div>
             ) : (
-              <p className="border-y border-dashed border-black/15 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
+              <p className="border-y border-dashed border-neutral-200 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
                 {searchQuery.trim()
                   ? 'No library items match the current search.'
                   : activeItem
@@ -423,7 +423,7 @@ function RecentMaterialsStrip({
   return (
     <section
       aria-label="Recently used materials"
-      className="border-y border-black/10 bg-canvas-chrome px-5 py-3"
+      className="border-y border-neutral-200 bg-canvas-chrome px-5 py-3"
     >
       <div className="flex items-center gap-3">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -438,7 +438,7 @@ function RecentMaterialsStrip({
               disabled={assigning === material.id}
               aria-label={`Apply ${material.name}`}
               title={`Apply ${material.name}`}
-              className="inline-flex max-w-[14rem] items-center gap-2 rounded-full border border-black/10 bg-surface px-2 py-1 text-xs font-medium text-neutral-700 shadow-sm transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-progress disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              className="inline-flex max-w-[14rem] items-center gap-2 rounded-full border border-neutral-200 bg-surface px-2 py-1 text-xs font-medium text-neutral-700 shadow-sm transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-progress disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
               <MaterialSwatchImage material={material} size="sm" />
               <span className="truncate">{material.name}</span>
@@ -513,7 +513,7 @@ function AssignedMaterialChip({
   onRemove: () => void;
 }) {
   return (
-    <span className="group inline-flex max-w-xs items-center gap-2 border border-black/10 bg-canvas-chrome py-1 pl-1 pr-1 shadow-sm transition hover:border-brand-400">
+    <span className="group inline-flex max-w-xs items-center gap-2 border border-neutral-200 bg-canvas-chrome py-1 pl-1 pr-1 shadow-sm transition hover:border-brand-400">
       <MaterialSwatchImage material={material} size="sm" />
       <span className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-sm font-semibold text-neutral-950">{material.name}</span>
@@ -610,7 +610,7 @@ export function MaterialForm({
   };
 
   return (
-    <section className="border-y border-black/10 bg-canvas-shell p-5">
+    <section className="border-y border-neutral-200 bg-canvas-shell p-5">
       <p className="eyebrow">{editing ? 'Edit Item' : 'Add To Library'}</p>
       <div className="mt-3 grid gap-3">
         <label className="grid gap-1 text-sm font-medium text-neutral-700">
@@ -698,7 +698,7 @@ export function MaterialForm({
         <div className="grid gap-2 text-sm font-medium text-neutral-700">
           <span>Swatch</span>
           <div className="grid gap-3">
-            <div className="flex h-20 w-20 shrink-0 overflow-hidden rounded-md border border-black/15 bg-canvas-chrome">
+            <div className="flex h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-canvas-chrome">
               {draft.swatchMode === 'image' ? (
                 previewUrl ? (
                   <img src={previewUrl} alt="" className="h-full w-full object-cover" />
@@ -725,7 +725,7 @@ export function MaterialForm({
               )}
             </div>
 
-            <div className="inline-flex self-start border border-black/10 bg-canvas-chrome p-0.5">
+            <div className="inline-flex self-start border border-neutral-200 bg-canvas-chrome p-0.5">
               <button
                 type="button"
                 className={draft.swatchMode === 'color' ? activeSwatchToggle : inactiveSwatchToggle}
@@ -748,7 +748,7 @@ export function MaterialForm({
                   type="color"
                   value={draft.swatchHex || '#D9D4C8'}
                   onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                  className="h-8 w-10 cursor-pointer rounded-sm border border-black/15 bg-canvas-chrome p-0.5"
+                  className="h-8 w-10 cursor-pointer rounded-sm border border-neutral-200 bg-canvas-chrome p-0.5"
                   aria-label="Swatch color"
                 />
                 <input
@@ -757,7 +757,7 @@ export function MaterialForm({
                   onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
                   placeholder="#D9D4C8"
                   maxLength={7}
-                  className="num w-24 rounded-sm border border-black/15 bg-canvas-chrome px-2 py-1.5 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
+                  className="num w-24 rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1.5 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
                   aria-label="Swatch hex value"
                 />
               </div>
@@ -935,7 +935,7 @@ export function MaterialBadges({
         onClick={onOpen}
         aria-label="Edit materials"
         title="Edit materials"
-        className="absolute -right-1 -top-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-black/10 bg-surface text-neutral-500 opacity-0 shadow-sm transition-opacity hover:bg-brand-50 hover:text-brand-700 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 group-hover:opacity-100"
+        className="absolute -right-1 -top-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-500 opacity-0 shadow-sm transition-opacity hover:bg-brand-50 hover:text-brand-700 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 group-hover:opacity-100"
       >
         <PencilEditIcon className="h-3.5 w-3.5" />
       </button>

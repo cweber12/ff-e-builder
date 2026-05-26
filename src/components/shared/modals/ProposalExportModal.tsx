@@ -114,7 +114,7 @@ export function ProposalExportModal({
           <div
             role="radiogroup"
             aria-label="Export format"
-            className="inline-flex h-8 items-stretch border border-black/10 bg-canvas-chrome p-0.5"
+            className="inline-flex h-8 items-stretch border border-neutral-200 bg-canvas-chrome p-0.5"
           >
             {(['pdf', 'excel', 'csv'] as ExportFormat[]).map((f) => (
               <button
@@ -197,7 +197,7 @@ export function ProposalExportModal({
               </button>
             </div>
           </div>
-          <div className="flex max-h-48 flex-col gap-1.5 overflow-y-auto rounded border border-black/10 bg-canvas-shell px-3 py-2">
+          <div className="flex max-h-48 flex-col gap-1.5 overflow-y-auto rounded border border-neutral-200 bg-canvas-shell px-3 py-2">
             {categoriesWithItems.map((cat) => (
               <label key={cat.id} className="flex cursor-pointer items-center gap-2.5">
                 <input
@@ -220,7 +220,7 @@ export function ProposalExportModal({
         </fieldset>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 border-t border-black/10 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-200 pt-4">
           <Button variant="secondary" size="sm" onClick={onClose} disabled={isExporting}>
             Cancel
           </Button>

@@ -28,10 +28,10 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 bg-neutral-950/45 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-sm border border-black/10 bg-canvas-chrome shadow-2xl"
+        className="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-sm border border-neutral-200 bg-canvas-chrome shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 border-b border-black/10 px-5 py-3.5">
+        <div className="flex items-center gap-3 border-b border-neutral-200 px-5 py-3.5">
           <div className="min-w-0 flex-1">
             {roomName && <p className="eyebrow">{roomName}</p>}
             <h2 className="mt-0.5 truncate font-display text-base font-semibold text-neutral-950">
@@ -50,7 +50,7 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
         </div>
 
         <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-          <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-black/10 bg-canvas-shell p-5">
+          <div className="flex w-full gap-5 justify-center overflow-y-auto border-b border-neutral-200 bg-canvas-shell p-5">
             <ImageSection label="Rendering">
               <ImageFrame
                 entityType="item"
@@ -89,11 +89,11 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                     {item.materials.map((m) => (
                       <span
                         key={m.id}
-                        className="inline-flex items-center gap-2 border border-black/10 bg-canvas-shell px-2.5 py-1 text-sm text-neutral-800"
+                        className="inline-flex items-center gap-2 border border-neutral-200 bg-canvas-shell px-2.5 py-1 text-sm text-neutral-800"
                       >
                         {m.swatchHex && (
                           <span
-                            className="h-3 w-3 flex-shrink-0 rounded-full border border-black/20"
+                            className="h-3 w-3 flex-shrink-0 rounded-full border border-neutral-300"
                             style={{ background: m.swatchHex }}
                           />
                         )}
@@ -104,13 +104,13 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                 </div>
               )}
 
-              <div className="border-t border-black/10 pt-5">
+              <div className="border-t border-neutral-200 pt-5">
                 <dl className="grid grid-cols-2 gap-6">
-                  <div className="border-l border-black/10 pl-3">
+                  <div className="border-l border-neutral-200 pl-3">
                     <dt className="eyebrow">Quantity</dt>
                     <dd className="num mt-1 text-sm font-medium text-neutral-950">{item.qty}</dd>
                   </div>
-                  <div className="border-l border-black/10 pl-3">
+                  <div className="border-l border-neutral-200 pl-3">
                     <dt className="eyebrow">Unit Cost</dt>
                     <dd className="num mt-1 text-sm font-medium text-neutral-950">
                       {formatMoney(cents(item.unitCostCents))}

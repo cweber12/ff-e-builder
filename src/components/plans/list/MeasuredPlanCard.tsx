@@ -119,7 +119,7 @@ export function MeasuredPlanCard({ plan, projectId, deleting, onDelete }: Measur
           >
             {calibrated ? 'Calibrated' : 'Needs calibration'}
           </span>
-          <span className="inline-flex items-center gap-1.5 border border-black/10 bg-canvas-shell px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-700">
+          <span className="inline-flex items-center gap-1.5 border border-neutral-200 bg-canvas-shell px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-700">
             <span className="num text-neutral-950">{plan.measurementCount}</span>
             <span className="text-neutral-500">
               {plan.measurementCount === 1 ? 'measurement' : 'measurements'}
@@ -128,7 +128,7 @@ export function MeasuredPlanCard({ plan, projectId, deleting, onDelete }: Measur
           <span className="sr-only">{measurementLabel}</span>
         </div>
 
-        <p className="border-t border-black/10 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+        <p className="border-t border-neutral-200 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
           Added{' '}
           <span className="num normal-case tracking-normal text-neutral-700">
             {formatDate(plan.createdAt)}

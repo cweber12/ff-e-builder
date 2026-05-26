@@ -332,7 +332,7 @@ const ProposalRowContent = memo(
           onRowClick();
         }}
         className={cn(
-          'group cursor-pointer border-b border-black/10 align-top last:border-b-0',
+          'group cursor-pointer border-b border-neutral-200 align-top last:border-b-0',
           densityRowClass(density),
           'motion-reduce:transition-none motion-safe:transition-colors hover:bg-canvas-shell/70',
           'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',

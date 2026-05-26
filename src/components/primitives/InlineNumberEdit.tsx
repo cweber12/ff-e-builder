@@ -183,7 +183,7 @@ export function InlineNumberEdit({
           'rounded-sm border px-2 py-0.5 text-inherit bg-canvas-chrome focus:outline-none focus:ring-1 focus:ring-brand-500/30 tabular-nums',
           saveState === 'saving' && 'border-l-2 border-brand-500 animate-pulse',
           (saveState === 'error' || validationError) && 'border-danger-500',
-          saveState === 'idle' && !validationError && 'border-black/15 focus:border-brand-500',
+          saveState === 'idle' && !validationError && 'border-neutral-200 focus:border-brand-500',
           inputClassName,
         )}
       />

@@ -23,7 +23,7 @@ export function ProposalSummaryView({ project, categories }: ProposalSummaryView
     <div className="space-y-10">
       <section>
         <p className="eyebrow">Proposal · Budget vs Actual</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-b border-black/10 pb-4">
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-b border-neutral-200 pb-4">
           <div>
             <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-950">
               {formatMoney(cents(actualCents))}
@@ -48,12 +48,12 @@ export function ProposalSummaryView({ project, categories }: ProposalSummaryView
         </div>
       </section>
 
-      <section className="bg-paper border-y border-black/10">
-        <div className="border-b border-black/10 px-5 py-3">
+      <section className="bg-paper border-y border-neutral-200">
+        <div className="border-b border-neutral-200 px-5 py-3">
           <h2 className="eyebrow">Categories</h2>
         </div>
         <table className="w-full text-sm">
-          <thead className="border-b border-black/10 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+          <thead className="border-b border-neutral-200 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
             <tr>
               <th className="px-5 py-3">Category</th>
               <th className="px-5 py-3 text-right">Rows</th>

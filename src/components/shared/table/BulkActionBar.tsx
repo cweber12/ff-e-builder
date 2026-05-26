@@ -100,7 +100,7 @@ export function BulkActionBar({
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="inline-flex h-8 items-center rounded-md border border-black/10 bg-canvas-chrome px-3 text-sm text-neutral-700 hover:bg-canvas-shell"
+                className="inline-flex h-8 items-center rounded-md border border-neutral-200 bg-canvas-chrome px-3 text-sm text-neutral-700 hover:bg-canvas-shell"
               >
                 Cancel
               </button>
