@@ -158,8 +158,8 @@ function ProjectLayout() {
     !isLoading && project ? (
       isFfeRoute ? (
         isCatalogRoute ? (
-          // CatalogView portals its own toolbar (Edit / Print / Export /
-          // Layout / page counter) into this slot.
+          // CatalogView portals its own toolbar (Print / Export / Editor /
+          // page counter) into this slot.
           <div id={CATALOG_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
         ) : (
           <FfeActions

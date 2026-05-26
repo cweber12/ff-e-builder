@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils';
 interface InlineTextEditProps {
   value: string;
   onSave: (value: string) => Promise<void> | void;
+  editable?: boolean;
   /** Rendered when not in edit mode */
   renderDisplay?: (value: string) => ReactNode;
   placeholder?: string;
@@ -19,6 +20,7 @@ type SaveState = 'idle' | 'saving' | 'error';
 export function InlineTextEdit({
   value,
   onSave,
+  editable = true,
   renderDisplay,
   placeholder = 'Click to edit',
   className,
@@ -39,6 +41,7 @@ export function InlineTextEdit({
   }, [value, editing]);
 
   const enterEdit = () => {
+    if (!editable) return;
     setDraft(value);
     setSaveState('idle');
     setErrorMsg('');
@@ -78,6 +81,14 @@ export function InlineTextEdit({
   }, [editing, multiline]);
 
   if (!editing) {
+    const displayNode = renderDisplay
+      ? renderDisplay(value)
+      : value || <span className="text-neutral-400">{placeholder}</span>;
+
+    if (!editable) {
+      return <div className={cn(className)}>{displayNode}</div>;
+    }
+
     return (
       <div
         role="button"
@@ -95,9 +106,7 @@ export function InlineTextEdit({
           className,
         )}
       >
-        {renderDisplay
-          ? renderDisplay(value)
-          : value || <span className="text-neutral-400">{placeholder}</span>}
+        {displayNode}
       </div>
     );
   }

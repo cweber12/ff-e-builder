@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(catalog): replace the toolbar Layout action with an Editor panel shell, add unified editor state branches, and gate inline catalog text editing to editor-open mode
 - refactor(ui): retire legacy btn-action CSS utilities and migrate toolbar actions to Button toolbar variants across app bar, catalog, materials, plans, columns, budget, and export controls
 - refactor(ui): add Button asChild plus ButtonLink support and migrate remaining snapshot, save-state, deferred-cost, and dashboard company button or link actions to the shared primitive
 - refactor(ui): normalize audited eyebrow and numeric labels to shared .eyebrow and .num utilities in dashboard, overview, demo, budget snapshot, and totals bar

@@ -53,4 +53,30 @@ describe('CatalogPage', () => {
     expect(screen.queryByText('PRICE PER ITEM')).not.toBeInTheDocument();
     expect(screen.queryByText('TOTAL')).not.toBeInTheDocument();
   });
+
+  it('keeps text fields read-only when editor is closed', () => {
+    const room = catalogRoomsFixture[0]!;
+    const item = room.items[0]!;
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CatalogPage
+            project={catalogProjectFixture}
+            entry={{ room, item }}
+            pageNumber={1}
+            pageCount={3}
+            editorOpen={false}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: `Name for ${item.itemName}` }),
+    ).not.toBeInTheDocument();
+  });
 });

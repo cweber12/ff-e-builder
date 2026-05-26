@@ -69,6 +69,33 @@ type CatalogLayoutConfig = {
   showHorizontalDivider: boolean;
 };
 
+type ExportSafeFontKey = 'source-sans-3';
+
+type CatalogEditorState = {
+  editorOpen: boolean;
+  content: {
+    showCostInfo: boolean;
+    showSwatchLabels: boolean;
+    showApproval: boolean;
+  };
+  media: {
+    optionSlots: Array<{ slot: 1 | 2; status: 'empty' | 'filled' }>;
+  };
+  typography: {
+    fontFamily: ExportSafeFontKey;
+    titleColorToken: string;
+    bodyColorToken: string;
+    metaColorToken: string;
+  };
+  layout: {
+    mainImageAlignment: CatalogImageAlignment;
+    planImageSize: CatalogPlanImageSize;
+    showVerticalDivider: boolean;
+    showHorizontalDivider: boolean;
+  };
+  watermark: WatermarkConfig;
+};
+
 const DEFAULT_LAYOUT_CONFIG: CatalogLayoutConfig = {
   mainImageAlignment: 'center',
   planImageSize: 'thumbnail',
@@ -171,7 +198,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
   const entry = entries[pageIndex];
   const [slideDirection, setSlideDirection] = useState<'next' | 'previous'>('next');
-  const [editMode, setEditMode] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   // ── Company watermark ──────────────────────────────────────────────────────
   const { data: company, isError: companyLoadError } = useCompany();
@@ -219,6 +246,36 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
     [],
   );
   const companyName = company?.name ?? null;
+  const editorState = useMemo<CatalogEditorState>(
+    () => ({
+      editorOpen,
+      content: {
+        showCostInfo: layoutConfig.showCostInfo,
+        showSwatchLabels: layoutConfig.showSwatchLabels,
+        showApproval: layoutConfig.showApproval,
+      },
+      media: {
+        optionSlots: [
+          { slot: 1, status: 'empty' },
+          { slot: 2, status: 'empty' },
+        ],
+      },
+      typography: {
+        fontFamily: 'source-sans-3',
+        titleColorToken: 'catalog-title-default',
+        bodyColorToken: 'catalog-body-default',
+        metaColorToken: 'catalog-meta-default',
+      },
+      layout: {
+        mainImageAlignment: layoutConfig.mainImageAlignment,
+        planImageSize: layoutConfig.planImageSize,
+        showVerticalDivider: layoutConfig.showVerticalDivider,
+        showHorizontalDivider: layoutConfig.showHorizontalDivider,
+      },
+      watermark: watermarkConfig,
+    }),
+    [editorOpen, layoutConfig, watermarkConfig],
+  );
   // ──────────────────────────────────────────────────────────────────────────
 
   const setPage = (nextIndex: number) => {
@@ -255,15 +312,14 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         currentIndex={pageIndex}
         total={entries.length}
         currentItemId={entry?.item.id}
-        layoutConfig={layoutConfig}
         onLayoutChange={handleLayoutChange}
         watermarkConfig={watermarkConfig}
         onWatermarkChange={updateWatermark}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
         sortMode={sortMode}
-        editMode={editMode}
-        onEditModeToggle={() => setEditMode((v) => !v)}
+        editorState={editorState}
+        onEditorOpenChange={setEditorOpen}
       />
 
       <CatalogToolbarPicker
@@ -290,7 +346,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             onWatermarkChange={updateWatermark}
             logoDataUrl={logoDataUrl}
             companyName={companyName}
-            editMode={editMode}
+            editorOpen={editorOpen}
           />
         </div>
       </div>
@@ -308,6 +364,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             logoDataUrl={logoDataUrl}
             companyName={companyName}
             watermarkInteractive={false}
+            editorOpen={false}
           />
         ))}
       </div>
@@ -323,8 +380,8 @@ export const CATALOG_ACTIONS_SLOT_ID = 'ffe-catalog-actions-slot';
 export const CATALOG_PICKER_SLOT_ID = 'ffe-catalog-picker-slot';
 
 /**
- * Portal of catalog actions into the project header. Renders Edit, Print,
- * unified Export, Layout settings, and the page counter.
+ * Portal of catalog actions into the project header. Renders Print, unified
+ * Export, the Catalog Editor, and the page counter.
  */
 function CatalogActionsBar({
   project,
@@ -332,30 +389,28 @@ function CatalogActionsBar({
   currentIndex,
   total,
   currentItemId,
-  layoutConfig,
   onLayoutChange,
   watermarkConfig,
   onWatermarkChange,
   logoDataUrl,
   companyName,
   sortMode,
-  editMode,
-  onEditModeToggle,
+  editorState,
+  onEditorOpenChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
   currentIndex: number;
   total: number;
   currentItemId: string | undefined;
-  layoutConfig: CatalogLayoutConfig;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl: string | null;
   companyName: string | null;
   sortMode: FfeItemSortMode;
-  editMode: boolean;
-  onEditModeToggle: () => void;
+  editorState: CatalogEditorState;
+  onEditorOpenChange: (open: boolean) => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
 
@@ -373,17 +428,6 @@ function CatalogActionsBar({
       <Button
         type="button"
         variant="toolbar"
-        className={cn(editMode && 'border-brand-500 bg-brand-50 text-brand-700')}
-        aria-label={editMode ? 'Exit edit mode' : 'Edit fields'}
-        aria-pressed={editMode}
-        onClick={onEditModeToggle}
-      >
-        <EditIcon />
-        {editMode ? 'Editing' : 'Edit'}
-      </Button>
-      <Button
-        type="button"
-        variant="toolbar"
         aria-label="Print catalog"
         onClick={() => window.print()}
       >
@@ -394,18 +438,22 @@ function CatalogActionsBar({
         project={project}
         rooms={rooms}
         currentItemId={currentItemId}
-        layoutConfig={layoutConfig}
-        watermarkConfig={watermarkConfig}
+        layoutConfig={{
+          ...editorState.layout,
+          ...editorState.content,
+        }}
+        watermarkConfig={editorState.watermark}
         logoDataUrl={logoDataUrl}
         companyName={companyName}
         sortMode={sortMode}
       />
-      <CatalogLayoutPanelButton
-        layoutConfig={layoutConfig}
+      <CatalogEditorPanelButton
+        editorState={editorState}
         onLayoutChange={onLayoutChange}
         watermarkConfig={watermarkConfig}
         onWatermarkChange={onWatermarkChange}
         logoDataUrl={logoDataUrl}
+        onEditorOpenChange={onEditorOpenChange}
       />
       <span
         aria-hidden
@@ -641,90 +689,166 @@ function CatalogExportButton({
   );
 }
 
-function CatalogLayoutPanelButton({
-  layoutConfig,
+function CatalogEditorPanelButton({
+  editorState,
+  onEditorOpenChange,
   onLayoutChange,
   watermarkConfig,
   onWatermarkChange,
   logoDataUrl,
 }: {
-  layoutConfig: CatalogLayoutConfig;
+  editorState: CatalogEditorState;
+  onEditorOpenChange: (open: boolean) => void;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl: string | null;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = editorState.editorOpen;
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setIsOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node)) onEditorOpenChange(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [isOpen]);
+  }, [isOpen, onEditorOpenChange]);
 
   return (
     <div ref={ref} className="relative inline-flex">
       <Button
         type="button"
-        aria-label="Page layout options"
+        aria-label={isOpen ? 'Close editor' : 'Open editor'}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         variant="toolbar"
         className={cn(isOpen && 'border-brand-500 bg-brand-50 text-brand-700')}
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => onEditorOpenChange(!isOpen)}
       >
         <SlidersIcon />
-        Layout
+        Editor
       </Button>
       {isOpen && (
-        <CatalogLayoutPanel
-          layoutConfig={layoutConfig}
+        <CatalogEditorPanel
+          editorState={editorState}
           onLayoutChange={onLayoutChange}
           watermarkConfig={watermarkConfig}
           onWatermarkChange={onWatermarkChange}
           logoDataUrl={logoDataUrl}
-          onClose={() => setIsOpen(false)}
+          onClose={() => onEditorOpenChange(false)}
         />
       )}
     </div>
   );
 }
 
-function CatalogLayoutPanel({
-  layoutConfig,
+function CatalogEditorPanel({
+  editorState,
   onLayoutChange,
   watermarkConfig,
   onWatermarkChange,
   logoDataUrl,
   onClose,
 }: {
-  layoutConfig: CatalogLayoutConfig;
+  editorState: CatalogEditorState;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl: string | null;
   onClose: () => void;
 }) {
+  const layoutConfig: CatalogLayoutConfig = {
+    ...DEFAULT_LAYOUT_CONFIG,
+    ...editorState.content,
+    ...editorState.layout,
+  };
+
   return (
-    <div role="dialog" aria-label="Catalog layout options" className="catalog-layout-popover">
+    <div role="dialog" aria-label="Catalog editor" className="catalog-layout-popover">
       <div className="catalog-layout-popover-header">
         <div>
           <p className="catalog-layout-eyebrow">Catalog</p>
-          <h2 className="catalog-layout-title">Page options</h2>
+          <h2 className="catalog-layout-title">Editor</h2>
         </div>
         <button
           type="button"
           className="catalog-layout-close"
-          aria-label="Close layout options"
+          aria-label="Close editor"
           onClick={onClose}
         >
           <CloseIcon />
         </button>
       </div>
+
+      <LayoutGroup label="Text">
+        <p className="catalog-layout-note">
+          Text fields on the page are editable only while the Editor is open.
+        </p>
+        <LayoutRow label="Cost display">
+          <SegmentedToggle
+            ariaLabel="Cost display"
+            value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
+            options={[
+              { value: 'qtyOnly', label: 'Qty only' },
+              { value: 'cost', label: 'Qty + cost' },
+            ]}
+            onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Finish labels">
+          <SegmentedToggle
+            ariaLabel="Finish label display"
+            value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
+            options={[
+              { value: 'labels', label: 'Labels' },
+              { value: 'swatches', label: 'Swatches only' },
+            ]}
+            onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
+          />
+        </LayoutRow>
+        <LayoutRow label="Client approval">
+          <SegmentedToggle
+            ariaLabel="Client approval section"
+            value={layoutConfig.showApproval ? 'shown' : 'hidden'}
+            options={[
+              { value: 'shown', label: 'Show' },
+              { value: 'hidden', label: 'Remove' },
+            ]}
+            onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
+          />
+        </LayoutRow>
+      </LayoutGroup>
+
+      <LayoutGroup label="Media">
+        <p className="catalog-layout-note">
+          Option image and swatch controls are being consolidated here.
+        </p>
+        <div className="catalog-layout-group-body">
+          {editorState.media.optionSlots.map((slot) => (
+            <div key={slot.slot} className="catalog-layout-option-row">
+              <p className="catalog-layout-label">Option {slot.slot}</p>
+              <span className="catalog-layout-note">
+                {slot.status === 'filled' ? 'Filled' : 'Available'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </LayoutGroup>
+
+      <LayoutGroup label="Typography and Color">
+        <LayoutRow label="Font">
+          <span className="catalog-layout-note">
+            {editorState.typography.fontFamily === 'source-sans-3'
+              ? 'Source Sans 3 (export-safe)'
+              : 'Export-safe font'}
+          </span>
+        </LayoutRow>
+        <LayoutRow label="Color tokens">
+          <span className="catalog-layout-note">Title, body, and metadata tokens</span>
+        </LayoutRow>
+      </LayoutGroup>
 
       <LayoutGroup label="Layout">
         <LayoutRow label="Main image">
@@ -769,42 +893,6 @@ function CatalogLayoutPanel({
               { value: 'shown', label: 'Show' },
             ]}
             onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
-          />
-        </LayoutRow>
-      </LayoutGroup>
-
-      <LayoutGroup label="Content">
-        <LayoutRow label="Cost display">
-          <SegmentedToggle
-            ariaLabel="Cost display"
-            value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
-            options={[
-              { value: 'qtyOnly', label: 'Qty only' },
-              { value: 'cost', label: 'Qty + cost' },
-            ]}
-            onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
-          />
-        </LayoutRow>
-        <LayoutRow label="Finish labels">
-          <SegmentedToggle
-            ariaLabel="Finish label display"
-            value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
-            options={[
-              { value: 'labels', label: 'Labels' },
-              { value: 'swatches', label: 'Swatches only' },
-            ]}
-            onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
-          />
-        </LayoutRow>
-        <LayoutRow label="Client approval">
-          <SegmentedToggle
-            ariaLabel="Client approval section"
-            value={layoutConfig.showApproval ? 'shown' : 'hidden'}
-            options={[
-              { value: 'shown', label: 'Show' },
-              { value: 'hidden', label: 'Remove' },
-            ]}
-            onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
           />
         </LayoutRow>
       </LayoutGroup>
@@ -980,14 +1068,6 @@ function SlidersIcon() {
   );
 }
 
-function EditIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
-      <path d="M13.5 3.5l3 3L5.5 17H3v-2.5L13.5 3.5z" />
-    </svg>
-  );
-}
-
 function CloseIcon() {
   return (
     <svg viewBox="0 0 12 12" aria-hidden="true" className="toolbar-icon">
@@ -1040,7 +1120,7 @@ export function CatalogPage({
   watermarkInteractive = true,
   layoutConfig: layoutConfigProp,
   onLayoutChange,
-  editMode = false,
+  editorOpen = true,
 }: {
   project: Project;
   entry: CatalogEntry;
@@ -1053,7 +1133,7 @@ export function CatalogPage({
   watermarkInteractive?: boolean;
   layoutConfig?: Partial<CatalogLayoutConfig>;
   onLayoutChange?: (update: Partial<CatalogLayoutConfig>) => void;
-  editMode?: boolean;
+  editorOpen?: boolean;
 }) {
   const { item, room } = entry;
   const updateItem = useUpdateItem(item.roomId);
@@ -1089,6 +1169,7 @@ export function CatalogPage({
 
   const handlePasteSwatchImage = useCallback(
     async (file: File) => {
+      if (!editorOpen) return;
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
@@ -1112,7 +1193,7 @@ export function CatalogPage({
         inFlightRef.current = false;
       }
     },
-    [createAndAssignMutateAsync, uploadSwatchImageMutateAsync],
+    [createAndAssignMutateAsync, editorOpen, uploadSwatchImageMutateAsync],
   );
 
   // Single document-level paste listener for the entire catalog page.
@@ -1126,6 +1207,7 @@ export function CatalogPage({
 
   useEffect(() => {
     const handler = (event: ClipboardEvent) => {
+      if (!editorOpen) return;
       if (isLibraryOpenRef.current) return;
       if (armedSlotsRef.current <= 0) return;
       if (isMutatingRef.current || inFlightRef.current) return;
@@ -1138,7 +1220,7 @@ export function CatalogPage({
     };
     document.addEventListener('paste', handler);
     return () => document.removeEventListener('paste', handler);
-  }, []);
+  }, [editorOpen]);
 
   const armEmptySlot = useCallback(() => {
     armedSlotsRef.current += 1;
@@ -1147,9 +1229,10 @@ export function CatalogPage({
     armedSlotsRef.current = Math.max(0, armedSlotsRef.current - 1);
   }, []);
   const openLibrary = useCallback(() => {
+    if (!editorOpen) return;
     armedSlotsRef.current = 0;
     setLibraryOpen(true);
-  }, []);
+  }, [editorOpen]);
 
   const optionImagesQuery = useImages('item_option', item.id);
   const optionImages = useMemo(
@@ -1190,7 +1273,7 @@ export function CatalogPage({
         companyName={watermarkConfig.includeName ? (companyName ?? null) : null}
         config={watermarkConfig}
         onConfigChange={onWatermarkChange ?? (() => undefined)}
-        interactive={watermarkInteractive}
+        interactive={watermarkInteractive && editorOpen}
       />
     ) : null;
   const layout: CatalogLayoutConfig = { ...DEFAULT_LAYOUT_CONFIG, ...layoutConfigProp };
@@ -1202,7 +1285,7 @@ export function CatalogPage({
     <article
       className={cn(
         'catalog-page mx-auto bg-white text-neutral-950 shadow-xl',
-        editMode && 'catalog-page--edit-mode',
+        editorOpen && 'catalog-page--edit-mode',
       )}
       aria-label={`${item.itemName} catalog page`}
     >
@@ -1226,6 +1309,7 @@ export function CatalogPage({
             </h1>
             <InlineTextEdit
               value={item.itemName}
+              editable={editorOpen}
               aria-label={`Name for ${item.itemName}`}
               className="min-w-0 inline-block text-[18px]"
               inputClassName="w-full font-medium uppercase tracking-wide text-gray-800"
@@ -1324,7 +1408,7 @@ export function CatalogPage({
                   />
                 </div>
               </div>
-              {onLayoutChange && (
+              {onLayoutChange && editorOpen && (
                 <div className="catalog-image-align-toggle no-print">
                   <button
                     type="button"
@@ -1361,6 +1445,7 @@ export function CatalogPage({
             <div className="catalog-spec-dim">
               <InlineTextEdit
                 value={item.dimensions ?? ''}
+                editable={editorOpen}
                 aria-label={`Dimensions for ${item.itemName}`}
                 inputClassName="w-full text-sm text-neutral-700"
                 onSave={(value) => saveField('dimensions', value)}
@@ -1379,6 +1464,7 @@ export function CatalogPage({
             <div className="catalog-spec-desc">
               <InlineTextEdit
                 value={item.description ?? ''}
+                editable={editorOpen}
                 aria-label={`Description for ${item.itemName}`}
                 className="block"
                 multiline
@@ -1401,6 +1487,7 @@ export function CatalogPage({
               <div className="catalog-vendor-line">
                 <InlineTextEdit
                   value={vendor}
+                  editable={editorOpen}
                   aria-label="Vendor"
                   className="min-w-0 flex-1"
                   inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
@@ -1419,6 +1506,7 @@ export function CatalogPage({
               <div className="catalog-vendor-line">
                 <InlineTextEdit
                   value={vendorUrl}
+                  editable={editorOpen}
                   aria-label="Vendor link"
                   className="min-w-0 flex-1"
                   inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
@@ -1452,7 +1540,7 @@ export function CatalogPage({
                   </span>
                 )}
               </div>
-              {editMode && (
+              {editorOpen && (
                 <p className="catalog-vendor-chip no-print">Preview only — not saved to project</p>
               )}
             </div>
@@ -1460,6 +1548,7 @@ export function CatalogPage({
             <div className="catalog-notes-block">
               <InlineTextEdit
                 value={item.notes ?? ''}
+                editable={editorOpen}
                 aria-label={`Notes for ${item.itemName}`}
                 className="block w-full"
                 multiline
@@ -1499,7 +1588,7 @@ export function CatalogPage({
                 }).map((_, index) => (
                   <EmptyMaterialSlot
                     key={`empty-${index}`}
-                    disabled={isSwatchMutating}
+                    disabled={!editorOpen || isSwatchMutating}
                     onArm={armEmptySlot}
                     onDisarm={disarmEmptySlot}
                     onClick={openLibrary}
@@ -1517,10 +1606,11 @@ export function CatalogPage({
           )}
         >
           <CatalogOptionRenderings
+            editorOpen={editorOpen}
             itemId={item.id}
             optionImages={optionImages}
             itemName={item.itemName}
-            isBusy={isBusy}
+            isBusy={!editorOpen || isBusy}
             onUpload={(file, index) =>
               upload.mutate({ file, altText: `${item.itemName} option ${index + 1}` })
             }
@@ -1566,6 +1656,7 @@ export function CatalogPage({
       </div>
 
       <CatalogApprovalSection
+        editorOpen={editorOpen}
         shown={layout.showApproval}
         onToggle={() => onLayoutChange?.({ showApproval: !layout.showApproval })}
       />
@@ -1660,6 +1751,7 @@ function useCatalogSessionPreference<T extends string>(
 }
 
 function CatalogOptionRenderings({
+  editorOpen,
   itemId,
   optionImages,
   itemName,
@@ -1668,6 +1760,7 @@ function CatalogOptionRenderings({
   onDelete,
   onAdd,
 }: {
+  editorOpen: boolean;
   itemId: string;
   optionImages: ImageAsset[];
   itemName: string;
@@ -1683,6 +1776,9 @@ function CatalogOptionRenderings({
   return (
     <div className="catalog-options-strip">
       <h2 className="catalog-spec-heading">OPTION RENDERINGS</h2>
+      {!editorOpen ? (
+        <p className="catalog-layout-note no-print mb-2">Open Editor to manage option images.</p>
+      ) : null}
       <div className="catalog-option-grid">
         {/* Slot 0: card when filled, upload slot when empty */}
         <div className="catalog-option-slot">
@@ -2012,6 +2108,7 @@ function CatalogOptionCard({
       <label className="catalog-option-check">
         <input
           type="checkbox"
+          disabled={disabled}
           checked={checked}
           onChange={() => {
             if (!checked) onSelect(image.id);
@@ -2103,8 +2200,17 @@ function CatalogOptionCard({
   );
 }
 
-function CatalogApprovalSection({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+function CatalogApprovalSection({
+  shown,
+  onToggle,
+  editorOpen,
+}: {
+  shown: boolean;
+  onToggle: () => void;
+  editorOpen: boolean;
+}) {
   if (!shown) {
+    if (!editorOpen) return null;
     return (
       <div className="no-print flex">
         <button type="button" className="catalog-add-approval-btn" onClick={onToggle}>
@@ -2126,21 +2232,23 @@ function CatalogApprovalSection({ shown, onToggle }: { shown: boolean; onToggle:
     <section className="catalog-approval-band">
       <div className="catalog-approval-header">
         <span className="catalog-section-label">CLIENT SIGN-OFF</span>
-        <button
-          type="button"
-          className="no-print catalog-approval-remove"
-          aria-label="Remove client approval section"
-          onClick={onToggle}
-        >
-          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
-            <path
-              d="M3 3l10 10M13 3L3 13"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
+        {editorOpen ? (
+          <button
+            type="button"
+            className="no-print catalog-approval-remove"
+            aria-label="Remove client approval section"
+            onClick={onToggle}
+          >
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3.5 w-3.5">
+              <path
+                d="M3 3l10 10M13 3L3 13"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        ) : null}
       </div>
       <div className="catalog-approval-row">
         <div className="catalog-approval-field catalog-signature-field">
