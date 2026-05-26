@@ -13,7 +13,7 @@ import {
 } from '../../hooks';
 import type { ImageAsset, Material, MaterialCategory, Project } from '../../types';
 import { imageKeys } from '../../lib/query';
-import { Button } from '../primitives';
+import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
@@ -190,8 +190,42 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         onCreateMaterial={openCreateForm}
       />
 
-      <div className={`grid gap-6 ${showForm ? 'xl:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
-        {showForm && (
+      <section>
+        <div className="max-h-[48rem] overflow-auto py-2">
+          {materials.isLoading ? (
+            <p className="text-sm text-neutral-500">Loading materials…</p>
+          ) : filteredMaterials.length === 0 ? (
+            <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
+              No materials match the current search.
+            </p>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {filteredMaterials.map((material) => (
+                <MaterialGridCard
+                  key={material.id}
+                  material={material}
+                  onEdit={() => startEdit(material)}
+                  onDelete={() => void deleteMaterial.mutateAsync(material.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <MaterialsTable
+              materials={filteredMaterials}
+              onEdit={startEdit}
+              onDelete={(material) => void deleteMaterial.mutateAsync(material.id)}
+            />
+          )}
+        </div>
+      </section>
+
+      <Modal
+        open={showForm}
+        onClose={resetDraft}
+        title={editingId ? 'Edit material' : 'Add material'}
+        className="!max-w-[min(96vw,42rem)]"
+      >
+        <div className="-mx-6 -my-5">
           <MaterialForm
             draft={draft}
             editing={Boolean(editingMaterial)}
@@ -201,37 +235,8 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
             onCancel={resetDraft}
             onSubmit={() => void saveDraft()}
           />
-        )}
-
-        <section>
-          <div className="max-h-[48rem] overflow-auto py-2">
-            {materials.isLoading ? (
-              <p className="text-sm text-neutral-500">Loading materials…</p>
-            ) : filteredMaterials.length === 0 ? (
-              <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
-                No materials match the current search.
-              </p>
-            ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-4">
-                {filteredMaterials.map((material) => (
-                  <MaterialGridCard
-                    key={material.id}
-                    material={material}
-                    onEdit={() => startEdit(material)}
-                    onDelete={() => void deleteMaterial.mutateAsync(material.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <MaterialsTable
-                materials={filteredMaterials}
-                onEdit={startEdit}
-                onDelete={(material) => void deleteMaterial.mutateAsync(material.id)}
-              />
-            )}
-          </div>
-        </section>
-      </div>
+        </div>
+      </Modal>
     </div>
   );
 }
