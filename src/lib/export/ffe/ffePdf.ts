@@ -78,7 +78,7 @@ export async function exportTablePdf(
     rowOffset += items.length;
 
     // Subtotal row: name col gets label, lineTotal col gets the value.
-    const subtotalRow = columns.map((c, i) => {
+    const subtotalRow = columns.map((_, i) => {
       if (i === itemNameColIndex) {
         return { content: `${room.name} subtotal`, styles: { fontStyle: 'bold' as const } };
       }

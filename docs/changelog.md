@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(ui): split project tool chrome into a tabs row plus a dedicated toolbar row, hide the active tab from the tab strip, and surface it as the left toolbar header
 - feat(table): add opt-in debounced saves to shared editable Generated Item cells and enable `debounceMs={400}` for Proposal table edits with blur flush and final-value coalescing
 - feat(columns): add shared section-header Columns panel (visible/hidden/custom with drag reorder and CRUD) for Proposal and FF&E, plus always-visible 6-dot drag affordance and focusable hide buttons on sortable headers
 - refactor(ffe-table): split `FfeTable` into a thin entrypoint with extracted `FfeTableView`, `RoomHeader`, `RoomItemsSection`, `SortableItemRow`, and `DeleteRoomModal`; memoize sortable row rendering and isolate row item selectors

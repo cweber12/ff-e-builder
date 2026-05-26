@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProjectHeader } from './ProjectHeader';
 import type { Project } from '../../types';
 import type { ReactElement } from 'react';
 
-const renderWithRouter = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
+const renderWithRouter = (ui: ReactElement, initialEntries: string[] = ['/']) =>
+  render(<MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>);
 
 const makeProject = (overrides?: Partial<Project>): Project => ({
   id: 'proj-1',
@@ -51,6 +52,16 @@ describe('ProjectHeader', () => {
     expect(screen.getByRole('link', { name: 'Plans' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Materials' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Budget' })).toBeInTheDocument();
+  });
+
+  it('hides the selected tab from navigation and shows it in the toolbar header', () => {
+    renderWithRouter(<ProjectHeader project={makeProject()} />, [
+      '/projects/proj-1/proposal/table',
+    ]);
+
+    const tabNav = screen.getByRole('navigation', { name: 'Project tools' });
+    expect(within(tabNav).queryByRole('link', { name: 'Proposal' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Proposal' })).toBeInTheDocument();
   });
 
   it('renders project options when handlers are provided', () => {

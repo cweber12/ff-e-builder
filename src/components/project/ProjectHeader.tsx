@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { Project } from '../../types';
 import { ProjectOptionsMenu } from './ProjectOptionsMenu';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
@@ -7,7 +7,7 @@ import { StudioMark } from '../shared/auth/AuthGate';
 import type { SaveState } from '../../hooks/shared/useSaveStatus';
 
 // ---------------------------------------------------------------------------
-// Skeleton (two-row height = 44px + 44px = 88px)
+// Skeleton (three-row height = 44px + 44px + 44px = 132px)
 // ---------------------------------------------------------------------------
 function SkeletonBar() {
   return (
@@ -23,6 +23,9 @@ function SkeletonBar() {
           <div key={i} className="h-3 animate-pulse bg-neutral-100" style={{ width: w }} />
         ))}
       </div>
+      <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
+        <div className="h-3 w-20 animate-pulse bg-neutral-100" />
+      </div>
     </div>
   );
 }
@@ -30,40 +33,51 @@ function SkeletonBar() {
 // ---------------------------------------------------------------------------
 // Tab configuration
 // ---------------------------------------------------------------------------
-const TABS = [
-  { label: 'FF&E', href: (id: string) => `/projects/${id}/ffe/table` },
-  { label: 'Proposal', href: (id: string) => `/projects/${id}/proposal/table` },
-  { label: 'Plans', href: (id: string) => `/projects/${id}/plans` },
-  { label: 'Materials', href: (id: string) => `/projects/${id}/materials` },
-  { label: 'Budget', href: (id: string) => `/projects/${id}/budget` },
+type HeaderTab = {
+  label: string;
+  href: (id: string) => string;
+  isActive: (id: string, pathname: string) => boolean;
+};
+
+const TABS: HeaderTab[] = [
+  {
+    label: 'FF&E',
+    href: (id: string) => `/projects/${id}/ffe/table`,
+    isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/ffe`),
+  },
+  {
+    label: 'Proposal',
+    href: (id: string) => `/projects/${id}/proposal/table`,
+    isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/proposal`),
+  },
+  {
+    label: 'Plans',
+    href: (id: string) => `/projects/${id}/plans`,
+    isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/plans`),
+  },
+  {
+    label: 'Materials',
+    href: (id: string) => `/projects/${id}/materials`,
+    isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/materials`),
+  },
+  {
+    label: 'Budget',
+    href: (id: string) => `/projects/${id}/budget`,
+    isActive: (id: string, pathname: string) => pathname.endsWith(`/projects/${id}/budget`),
+  },
 ];
 
-function TabNav({ projectId }: { projectId: string }) {
+function TabNav({ projectId, activeLabel }: { projectId: string; activeLabel?: string }) {
   return (
     <nav aria-label="Project tools" className="flex items-stretch">
-      {TABS.map(({ label, href }) => (
-        <NavLink
+      {TABS.filter(({ label }) => label !== activeLabel).map(({ label, href }) => (
+        <Link
           key={label}
           to={href(projectId)}
-          className={({ isActive }) =>
-            [
-              'relative inline-flex h-11 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors',
-              isActive ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900',
-            ].join(' ')
-          }
+          className="inline-flex h-11 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900"
         >
-          {({ isActive }) => (
-            <>
-              {label}
-              {isActive && (
-                <span
-                  className="absolute inset-x-3 -bottom-px h-[2px] bg-brand-600"
-                  aria-hidden="true"
-                />
-              )}
-            </>
-          )}
-        </NavLink>
+          {label}
+        </Link>
       ))}
     </nav>
   );
@@ -112,6 +126,7 @@ export function ProjectHeader({
   const isFfeRoute = location.pathname.includes(`/projects/${project.id}/ffe`);
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
   const showViewToggle = isFfeRoute;
+  const activeTab = TABS.find((tab) => tab.isActive(project.id, location.pathname));
 
   return (
     <header className="no-print relative z-10 shrink-0 overflow-visible">
@@ -150,10 +165,16 @@ export function ProjectHeader({
       </div>
 
       <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
-        <TabNav projectId={project.id} />
+        <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
+      </div>
+
+      <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
+          {activeTab?.label ?? 'Project'}
+        </h2>
 
         {showViewToggle && (
-          <div className="segmented ml-6">
+          <div className="segmented ml-4">
             <Link
               to={`/projects/${project.id}/ffe/catalog`}
               data-active={isCatalogRoute || undefined}
