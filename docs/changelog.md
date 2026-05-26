@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ui): migrate DashboardPage primary project-create CTAs to the shared Button primitive and remove inline button class styling
 - fix(ui): render shared export dropdowns in a high-z portal layer so they no longer appear under sticky table headers
 - refactor(ui): unify FF&E toolbar export to the shared ExportMenu used by MaterialsView so trigger and dropdown styles stay consistent
 - feat(ui): unify project tab-toolbar controls around shared catalog-style action buttons, borderless segmented toggles, and consistent icon treatment across FF&E, Proposal, Materials, Plans, Budget, and Catalog

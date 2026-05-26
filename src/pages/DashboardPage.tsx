@@ -5,6 +5,7 @@ import { EditProjectModal } from '../components/project/modals/EditProjectModal'
 import { NewProjectModal } from '../components/project/modals/NewProjectModal';
 import { ProjectImagesModal } from '../components/project/modals/ProjectImagesModal';
 import { ProjectOptionsMenu } from '../components/project/ProjectOptionsMenu';
+import { Button } from '../components/primitives';
 import { ImageFrame } from '../components/shared/image/ImageFrame';
 import { useProjects, useUpdateProject, useDeleteProject, useUserProfile } from '../hooks';
 import type { Project } from '../types';
@@ -50,14 +51,10 @@ export function DashboardPage() {
               {firstName ? `Welcome back, ${firstName}` : 'Welcome'}
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={() => setNewProjectOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-          >
+          <Button type="button" variant="primary" size="md" onClick={() => setNewProjectOpen(true)}>
             <PlusIcon />
             New Project
-          </button>
+          </Button>
         </header>
 
         <section className="section-rule">
@@ -316,14 +313,10 @@ function NoProjectsEmptyState({ onCreate }: { onCreate: () => void }) {
             Create your first project to start building FF&amp;E and proposal deliverables.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-        >
+        <Button type="button" variant="primary" size="md" onClick={onCreate}>
           <PlusIcon />
           Create your first project
-        </button>
+        </Button>
       </div>
     </div>
   );
