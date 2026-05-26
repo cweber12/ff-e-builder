@@ -4,12 +4,12 @@ import type {
   ProposalCategoryWithItems,
   ProposalStatus,
 } from '../../types';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState } from 'react';
 import { exportTablePdf, exportTableCsv, exportTableExcel } from '../../lib/export';
 import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
+import { ExportMenu } from '../shared/ExportMenu';
 import {
   useUpdateProject,
   useProposalRevisions,
@@ -54,81 +54,6 @@ function PlusIcon() {
 //   --active         pressed/selected state for toggles
 
 // ---------------------------------------------------------------------------
-// Export dropdown
-// ---------------------------------------------------------------------------
-interface ExportMenuProps {
-  disabled?: boolean;
-  items: { label: string; onSelect: () => void }[];
-}
-
-function ExportMenu({ disabled, items }: ExportMenuProps) {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      const inTrigger = triggerRef.current?.contains(e.target as Node) ?? false;
-      const inMenu = menuRef.current?.contains(e.target as Node) ?? false;
-      if (!inTrigger && !inMenu) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const triggerRect = triggerRef.current?.getBoundingClientRect();
-
-  return (
-    <div className="relative inline-flex">
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="btn-action"
-        title="Export"
-      >
-        <DownloadIcon />
-        <span className="btn-action__label">Export</span>
-      </button>
-      {open &&
-        triggerRect &&
-        createPortal(
-          <div
-            ref={menuRef}
-            role="menu"
-            style={{
-              position: 'fixed',
-              top: triggerRect.bottom + 4,
-              right: window.innerWidth - triggerRect.right,
-            }}
-            className="z-[100] min-w-40 rounded-md border border-neutral-200 bg-white p-1 shadow-md"
-          >
-            {items.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect();
-                }}
-                className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // FF&E action cluster
 // ---------------------------------------------------------------------------
 interface FfeActionsProps {
@@ -165,41 +90,34 @@ export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: Ffe
 
       <ExportMenu
         disabled={!hasItems}
-        items={[
-          {
-            label: 'Export PDF',
-            onSelect: () =>
-              void exportTablePdf(
-                project,
-                roomsWithItems,
-                undefined,
-                ffeCustomColumnDefs,
-                ffeColumnOrder(),
-              ),
-          },
-          {
-            label: 'Export Excel',
-            onSelect: () =>
-              void exportTableExcel(
-                project,
-                roomsWithItems,
-                undefined,
-                ffeCustomColumnDefs,
-                ffeColumnOrder(),
-              ),
-          },
-          {
-            label: 'Export CSV',
-            onSelect: () =>
-              exportTableCsv(
-                project,
-                roomsWithItems,
-                undefined,
-                ffeCustomColumnDefs,
-                ffeColumnOrder(),
-              ),
-          },
-        ]}
+        label={
+          <>
+            <DownloadIcon />
+            <span className="btn-action__label">Export</span>
+          </>
+        }
+        onPdf={() =>
+          void exportTablePdf(
+            project,
+            roomsWithItems,
+            undefined,
+            ffeCustomColumnDefs,
+            ffeColumnOrder(),
+          )
+        }
+        onExcel={() =>
+          void exportTableExcel(
+            project,
+            roomsWithItems,
+            undefined,
+            ffeCustomColumnDefs,
+            ffeColumnOrder(),
+          )
+        }
+        onCsv={() =>
+          exportTableCsv(project, roomsWithItems, undefined, ffeCustomColumnDefs, ffeColumnOrder())
+        }
+        buttonClassName="btn-action"
       />
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="ffe" />
