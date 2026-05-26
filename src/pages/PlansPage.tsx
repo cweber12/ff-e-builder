@@ -94,11 +94,11 @@ export function PlansPage({ project }: PlansPageProps) {
         {isLoading ? (
           <PlanGridSkeleton />
         ) : visiblePlans.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="flex flex-wrap justify-center gap-4">
             {visiblePlans.map((plan, index) => (
               <div
                 key={plan.id}
-                className="animate-fade-up"
+                className="animate-fade-up w-full md:w-[calc(50%-0.5rem)] xl:w-[calc(33.333%-0.75rem)] 2xl:w-[calc(25%-0.75rem)]"
                 style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }}
               >
                 <MeasuredPlanCard

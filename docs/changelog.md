@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): center plans cards in-page and switch the list from grid columns to a responsive flex-wrap layout
 - feat(plans): move the Plans filter toggle into the header toolbar beside the Plans label and place Sort immediately left of Upload plan
 - feat(plans): move Plans badges and upload action into the project tab-toolbar action slot and remove the in-page Plan library hero copy
 - feat(catalog): move the catalog room label and page-jump picker into the centered project tab-toolbar slot above the catalog stage
