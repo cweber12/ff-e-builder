@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Download, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import {
@@ -342,7 +343,7 @@ function MaterialsToolbarActions({
       <ExportMenu
         label={
           <>
-            <ExportIcon />
+            <Download className="toolbar-icon" aria-hidden="true" />
             Export
           </>
         }
@@ -354,20 +355,12 @@ function MaterialsToolbarActions({
       />
       {!showForm && (
         <Button type="button" variant="toolbarPrimary" onClick={onCreateMaterial}>
-          <PlusIcon />
+          <Plus className="toolbar-icon" aria-hidden="true" />
           New material
         </Button>
       )}
     </div>,
     slot,
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-      <path d="M7 2v10M2 7h10" />
-    </svg>
   );
 }
 
@@ -508,12 +501,4 @@ function materialMatchesQuery(material: Material, query: string) {
     .join(' ')
     .toLowerCase()
     .includes(query);
-}
-
-function ExportIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-      <path d="M7 1v8M4 6l3 3 3-3M2 12h10" />
-    </svg>
-  );
 }

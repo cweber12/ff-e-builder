@@ -5,6 +5,7 @@ import type {
   ProposalStatus,
 } from '../../types';
 import { useMemo, useState } from 'react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { exportTablePdf, exportTableCsv, exportTableExcel } from '../../lib/export';
 import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
@@ -20,33 +21,6 @@ import {
 import { useColumnConfig } from '../../hooks/shared';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
 import { ProposalExportModal } from '../shared/modals/ProposalExportModal';
-
-// ---------------------------------------------------------------------------
-// Shared icon buttons
-// ---------------------------------------------------------------------------
-function UploadIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-      <path d="M7 1v8M4 4l3-3 3 3M2 11h10" />
-    </svg>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-      <path d="M7 1v8M4 10l3 3 3-3M2 13h10" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-      <path d="M7 2v10M2 7h10" />
-    </svg>
-  );
-}
 
 // Toolbar actions use shared Button toolbar variants.
 
@@ -74,14 +48,14 @@ export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: Ffe
   return (
     <div className="flex items-center gap-2">
       <Button type="button" variant="toolbarPrimary" onClick={onAddRoom}>
-        <PlusIcon />
+        <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
       </Button>
 
       <FfeSortToggle projectId={project.id} />
 
       <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
-        <UploadIcon />
+        <Upload className="toolbar-icon" aria-hidden="true" />
         Import
       </Button>
 
@@ -89,7 +63,7 @@ export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: Ffe
         disabled={!hasItems}
         label={
           <>
-            <DownloadIcon />
+            <Download className="toolbar-icon" aria-hidden="true" />
             Export
           </>
         }
@@ -217,12 +191,12 @@ export function ProposalActions({
   return (
     <div className="flex items-center gap-2">
       <Button type="button" variant="toolbarPrimary" onClick={onAddCategory}>
-        <PlusIcon />
+        <Plus className="toolbar-icon" aria-hidden="true" />
         Add category
       </Button>
 
       <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
-        <UploadIcon />
+        <Upload className="toolbar-icon" aria-hidden="true" />
         Import
       </Button>
 
@@ -233,7 +207,7 @@ export function ProposalActions({
         onClick={() => setExportModalOpen(true)}
         title="Export"
       >
-        <DownloadIcon />
+        <Download className="toolbar-icon" aria-hidden="true" />
         Export
       </Button>
 

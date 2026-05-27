@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import { ChevronDown, FileSpreadsheet, FileText } from 'lucide-react';
 import { DropdownMenu, MenuItem, MenuSub, MenuSubTrigger, Button } from '../primitives';
 import type { ButtonVariant } from '../primitives';
 
@@ -50,9 +51,7 @@ export function ExportMenu({
           disabled={disabled}
         >
           {label}
-          <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-            <path d="M3.5 5.5 7 9l3.5-3.5" />
-          </svg>
+          <ChevronDown className="toolbar-icon" aria-hidden="true" />
         </Button>
       )}
     >
@@ -140,31 +139,13 @@ export function ExportMenu({
 }
 
 function CsvIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon text-neutral-500" aria-hidden="true">
-      <path d="M3 1.5h5l3 3v8H3z" />
-      <path d="M8 1.5v3h3" />
-      <path d="M4.5 9.5h5" />
-    </svg>
-  );
+  return <FileText className="toolbar-icon text-neutral-500" aria-hidden="true" />;
 }
 
 function ExcelIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon text-success-700" aria-hidden="true">
-      <path d="M3 1.5h5l3 3v8H3z" />
-      <path d="M8 1.5v3h3" />
-      <path d="M4.5 9.5 7 12l2.5-2.5" />
-    </svg>
-  );
+  return <FileSpreadsheet className="toolbar-icon text-success-700" aria-hidden="true" />;
 }
 
 function PdfIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon text-danger-600" aria-hidden="true">
-      <path d="M3 1.5h5l3 3v8H3z" />
-      <path d="M8 1.5v3h3" />
-      <path d="M4.5 9.5h3M4.5 11.5h2" />
-    </svg>
-  );
+  return <FileText className="toolbar-icon text-danger-600" aria-hidden="true" />;
 }

@@ -1,4 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Printer,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { SlotPortal } from '../../shared/SlotPortal';
 import { cn } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -375,7 +383,7 @@ function CatalogActionsBar({
           aria-label="Print catalog"
           onClick={() => window.print()}
         >
-          <PrintIcon />
+          <Printer className="toolbar-icon" aria-hidden="true" />
           Print
         </Button>
         <CatalogExportButton
@@ -474,7 +482,7 @@ function CatalogPagePicker({
           aria-label="Previous catalog item"
           onClick={() => onPageChange(currentIndex - 1)}
         >
-          <ChevronLeftIcon />
+          <ChevronLeft className="toolbar-icon" aria-hidden="true" />
         </Button>
         <label className="sr-only" htmlFor="catalog-jump">
           Jump to catalog item
@@ -506,7 +514,7 @@ function CatalogPagePicker({
           aria-label="Next catalog item"
           onClick={() => onPageChange(currentIndex + 1)}
         >
-          <ChevronRightIcon />
+          <ChevronRight className="toolbar-icon" aria-hidden="true" />
         </Button>
       </div>
     </nav>
@@ -589,9 +597,9 @@ function CatalogExportButton({
         aria-label="Export catalog"
         onClick={() => setOpen((v) => !v)}
       >
-        <DownloadIcon />
+        <Download className="toolbar-icon" aria-hidden="true" />
         Export
-        <ChevronDownIcon />
+        <ChevronDown className="toolbar-icon" aria-hidden="true" />
       </Button>
       {open && (
         <div
@@ -689,7 +697,7 @@ function CatalogEditorPanelButton({
         className={cn(isOpen && 'border-brand-500 bg-brand-50 text-brand-700')}
         onClick={() => onEditorOpenChange(!isOpen)}
       >
-        <SlidersIcon />
+        <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
         Editor
       </Button>
       {isOpen && (
@@ -706,61 +714,6 @@ function CatalogEditorPanelButton({
         />
       )}
     </div>
-  );
-}
-
-function ChevronLeftIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className="toolbar-icon">
-      <path d="M10 3L5 8l5 5" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className="toolbar-icon">
-      <path d="M6 3l5 5-5 5" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg viewBox="0 0 12 12" aria-hidden="true" className="toolbar-icon">
-      <path d="M2 4l4 4 4-4" />
-    </svg>
-  );
-}
-
-function PrintIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
-      <rect x="5" y="2" width="10" height="6" rx="0.5" />
-      <path d="M5 14H3a1 1 0 01-1-1V9a1 1 0 011-1h14a1 1 0 011 1v4a1 1 0 01-1 1h-2" />
-      <rect x="5" y="12" width="10" height="6" rx="0.5" />
-      <path d="M7 16h6M7 14h6" />
-    </svg>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
-      <path d="M10 3v10M6 9l4 4 4-4" />
-      <path d="M4 16h12" />
-    </svg>
-  );
-}
-
-function SlidersIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="toolbar-icon">
-      <path d="M4 6h12M4 10h12M4 14h12" />
-      <circle cx="8" cy="6" r="1.75" fill="currentColor" />
-      <circle cx="12" cy="10" r="1.75" fill="currentColor" />
-      <circle cx="8" cy="14" r="1.75" fill="currentColor" />
-    </svg>
   );
 }
 
