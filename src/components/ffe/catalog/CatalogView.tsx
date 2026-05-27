@@ -84,11 +84,7 @@ type CatalogTypographyConfig = {
 
 type CatalogEditorState = {
   editorOpen: boolean;
-  content: {
-    showCostInfo: boolean;
-    showSwatchLabels: boolean;
-    showApproval: boolean;
-  };
+  layoutConfig: CatalogLayoutConfig;
   media: {
     optionSlots: Array<{ slot: 1 | 2; status: 'empty' | 'filled' }>;
   };
@@ -97,12 +93,6 @@ type CatalogEditorState = {
     titleColorToken: CatalogColorToken;
     bodyColorToken: CatalogColorToken;
     metaColorToken: CatalogColorToken;
-  };
-  layout: {
-    mainImageAlignment: CatalogImageAlignment;
-    planImageSize: CatalogPlanImageSize;
-    showVerticalDivider: boolean;
-    showHorizontalDivider: boolean;
   };
   watermark: WatermarkConfig;
 };
@@ -303,11 +293,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const editorState = useMemo<CatalogEditorState>(
     () => ({
       editorOpen,
-      content: {
-        showCostInfo: layoutConfig.showCostInfo,
-        showSwatchLabels: layoutConfig.showSwatchLabels,
-        showApproval: layoutConfig.showApproval,
-      },
+      layoutConfig,
       media: {
         optionSlots: [
           { slot: 1, status: 'empty' },
@@ -319,12 +305,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         titleColorToken: typographyConfig.titleColorToken,
         bodyColorToken: typographyConfig.bodyColorToken,
         metaColorToken: typographyConfig.metaColorToken,
-      },
-      layout: {
-        mainImageAlignment: layoutConfig.mainImageAlignment,
-        planImageSize: layoutConfig.planImageSize,
-        showVerticalDivider: layoutConfig.showVerticalDivider,
-        showHorizontalDivider: layoutConfig.showHorizontalDivider,
       },
       watermark: watermarkConfig,
     }),
@@ -498,10 +478,7 @@ function CatalogActionsBar({
         project={project}
         rooms={rooms}
         currentItemId={currentItemId}
-        layoutConfig={{
-          ...editorState.layout,
-          ...editorState.content,
-        }}
+        layoutConfig={editorState.layoutConfig}
         typographyConfig={editorState.typography}
         watermarkConfig={editorState.watermark}
         logoDataUrl={logoDataUrl}
@@ -857,11 +834,7 @@ function CatalogEditorPanel({
   logoDataUrl: string | null;
   onClose: () => void;
 }) {
-  const layoutConfig: CatalogLayoutConfig = {
-    ...DEFAULT_LAYOUT_CONFIG,
-    ...editorState.content,
-    ...editorState.layout,
-  };
+  const layoutConfig = editorState.layoutConfig;
 
   return (
     <div
