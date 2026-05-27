@@ -334,13 +334,13 @@ const ProposalRowContent = memo(
         className={cn(
           'group cursor-pointer border-b border-neutral-200 align-top last:border-b-0',
           densityRowClass(density),
-          'motion-reduce:transition-none motion-safe:transition-colors hover:bg-canvas-shell/70',
+          'motion-reduce:transition-none motion-safe:transition-colors hover:bg-canvas-shell',
           'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
           isDragging && 'bg-brand-50 shadow-md opacity-80',
         )}
       >
         <td
-          className="sticky left-0 z-20 w-8 min-w-8 bg-canvas-chrome px-1 py-3 group-hover:bg-canvas-shell/90"
+          className="sticky left-0 z-20 w-8 min-w-8 bg-canvas-chrome px-1 py-3 group-hover:bg-canvas-shell"
           onClick={stopProp}
         >
           <GeneratedItemDragHandle
@@ -353,7 +353,7 @@ const ProposalRowContent = memo(
           value={item.productTag}
           onSave={(productTag) => onSave({ productTag })}
           debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
-          className="sticky left-8 z-20 w-24 min-w-24 bg-canvas-chrome py-3 group-hover:bg-canvas-shell/90"
+          className="sticky left-8 z-20 w-24 min-w-24 bg-canvas-chrome py-3 group-hover:bg-canvas-shell"
           indicator={dot('productTag')}
           inputClassName={editInputClassName}
           displayClassName="inline-flex w-auto max-w-full rounded-pill bg-brand-100 px-2.5 py-1 text-xs font-semibold tracking-wide text-brand-700 hover:bg-brand-100"

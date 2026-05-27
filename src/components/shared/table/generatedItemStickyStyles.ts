@@ -52,12 +52,12 @@ export const ffeStickyEdgeColumnClassNames = createStickyEdgeColumnClassNames({
   total: {
     rightClassName: 'right-10',
     widthClassName: 'w-[120px] min-w-[120px]',
-    hoverClassName: 'group-hover:bg-neutral-50/60',
+    hoverClassName: 'group-hover:bg-neutral-50',
   },
   actions: {
     rightClassName: 'right-0',
     widthClassName: 'w-10 min-w-10',
-    hoverClassName: 'group-hover:bg-neutral-50/60',
+    hoverClassName: 'group-hover:bg-neutral-50',
   },
 });
 
