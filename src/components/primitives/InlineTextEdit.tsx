@@ -5,6 +5,8 @@ interface InlineTextEditProps {
   value: string;
   onSave: (value: string) => Promise<void> | void;
   editable?: boolean;
+  /** When true, always renders as an input/textarea without requiring a click */
+  forceEdit?: boolean;
   /** Rendered when not in edit mode */
   renderDisplay?: (value: string) => ReactNode;
   placeholder?: string;
@@ -21,6 +23,7 @@ export function InlineTextEdit({
   value,
   onSave,
   editable = true,
+  forceEdit = false,
   renderDisplay,
   placeholder = 'Click to edit',
   className,
@@ -30,6 +33,7 @@ export function InlineTextEdit({
   'aria-label': ariaLabel,
 }: InlineTextEditProps) {
   const [editing, setEditing] = useState(false);
+  const isEditing = editing || (forceEdit && editable);
   const [draft, setDraft] = useState(value);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -37,8 +41,8 @@ export function InlineTextEdit({
 
   // Keep draft in sync when external value changes while not editing
   useEffect(() => {
-    if (!editing) setDraft(value);
-  }, [value, editing]);
+    if (!isEditing) setDraft(value);
+  }, [value, isEditing]);
 
   const enterEdit = () => {
     if (!editable) return;
@@ -70,17 +74,17 @@ export function InlineTextEdit({
     setDraft(value);
     setSaveState('idle');
     setErrorMsg('');
-    setEditing(false);
+    if (!forceEdit) setEditing(false);
   };
 
   useEffect(() => {
-    if (editing) {
+    if (isEditing) {
       inputRef.current?.focus();
       if (!multiline) inputRef.current?.select();
     }
-  }, [editing, multiline]);
+  }, [isEditing, multiline]);
 
-  if (!editing) {
+  if (!isEditing) {
     const displayNode = renderDisplay
       ? renderDisplay(value)
       : value || <span className="text-neutral-400">{placeholder}</span>;

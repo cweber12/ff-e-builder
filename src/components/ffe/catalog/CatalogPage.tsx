@@ -244,6 +244,7 @@ export function CatalogPage({
             <InlineTextEdit
               value={item.itemName}
               editable={editorOpen}
+              forceEdit={editorOpen}
               aria-label={`Name for ${item.itemName}`}
               className="min-w-0 inline-block text-[18px]"
               inputClassName="w-full font-medium uppercase tracking-wide text-gray-800"
@@ -370,6 +371,7 @@ export function CatalogPage({
               <InlineTextEdit
                 value={item.dimensions ?? ''}
                 editable={editorOpen}
+                forceEdit={editorOpen}
                 aria-label={`Dimensions for ${item.itemName}`}
                 inputClassName="w-full text-sm text-neutral-700"
                 onSave={(value) => saveField('dimensions', value)}
@@ -389,6 +391,7 @@ export function CatalogPage({
               <InlineTextEdit
                 value={item.description ?? ''}
                 editable={editorOpen}
+                forceEdit={editorOpen}
                 aria-label={`Description for ${item.itemName}`}
                 className="block"
                 multiline
@@ -413,6 +416,7 @@ export function CatalogPage({
                   <InlineTextEdit
                     value={vendor}
                     editable={editorOpen}
+                    forceEdit={editorOpen}
                     aria-label="Vendor"
                     className="min-w-0 flex-1"
                     inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
@@ -432,6 +436,7 @@ export function CatalogPage({
                   <InlineTextEdit
                     value={vendorUrl}
                     editable={editorOpen}
+                    forceEdit={editorOpen}
                     aria-label="Vendor link"
                     className="min-w-0 flex-1"
                     inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
@@ -477,6 +482,7 @@ export function CatalogPage({
               <InlineTextEdit
                 value={item.notes ?? ''}
                 editable={editorOpen}
+                forceEdit={editorOpen}
                 aria-label={`Notes for ${item.itemName}`}
                 className="block w-full"
                 multiline

@@ -675,7 +675,11 @@ function CatalogEditorPanelButton({
   useEffect(() => {
     if (!isOpen) return;
     const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) onEditorOpenChange(false);
+      const target = event.target as Node;
+      if (ref.current && !ref.current.contains(target)) {
+        const catalogStage = document.querySelector('.catalog-stage');
+        if (!catalogStage || !catalogStage.contains(target)) onEditorOpenChange(false);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
