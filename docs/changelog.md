@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs(agent): add planner agent and skill for grill-then-delegate planning sessions across Copilot and Claude Code
 - docs(agent): add specialized custom agents for UI shell, feature modules, API contracts, DB migrations, and cross-boundary integration verification
 - fix(catalog): keep catalog text fields as click-to-edit buttons in editor mode instead of forcing immediate textbox rendering
 - refactor(ui): replace shared app-bar, catalog, materials, and export inline SVG action icons with Lucide imports and standardize export triggers on a consistent Download affordance
