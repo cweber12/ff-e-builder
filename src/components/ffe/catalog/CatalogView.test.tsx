@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { CatalogPage } from './CatalogView';
+import { CatalogPage } from './CatalogPage';
 import { catalogProjectFixture, catalogRoomsFixture } from '../../../data/catalogFixture';
 
 describe('CatalogPage', () => {

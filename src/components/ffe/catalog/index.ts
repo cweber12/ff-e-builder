@@ -1,1 +1,2 @@
-export { CatalogView, CatalogPage } from './CatalogView';
+export { CatalogView } from './CatalogView';
+export { CatalogPage } from './CatalogPage';
