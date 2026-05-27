@@ -118,6 +118,16 @@ export function CatalogEditorPanel({
             <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
           </SegmentedControl>
         </LayoutRow>
+        <LayoutRow label="Vendor info">
+          <SegmentedControl
+            ariaLabel="Vendor info display"
+            value={layoutConfig.showVendor ? 'shown' : 'hidden'}
+            onChange={(value) => onLayoutChange({ showVendor: value === 'shown' })}
+          >
+            <SegmentedControl.Option value="hidden">Hidden</SegmentedControl.Option>
+            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+          </SegmentedControl>
+        </LayoutRow>
       </LayoutGroup>
 
       <LayoutGroup label="Media">

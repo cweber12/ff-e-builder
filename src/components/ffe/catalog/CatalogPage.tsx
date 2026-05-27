@@ -53,6 +53,7 @@ export type CatalogLayoutConfig = {
   showApproval: boolean;
   showVerticalDivider: boolean;
   showHorizontalDivider: boolean;
+  showVendor: boolean;
 };
 
 export type ExportSafeFontKey = 'source-sans-3';
@@ -72,6 +73,7 @@ const DEFAULT_LAYOUT_CONFIG: CatalogLayoutConfig = {
   showApproval: true,
   showVerticalDivider: false,
   showHorizontalDivider: false,
+  showVendor: false,
 };
 
 export const DEFAULT_TYPOGRAPHY_CONFIG: CatalogTypographyConfig = {
@@ -405,67 +407,71 @@ export function CatalogPage({
               />
             </div>
 
-            <div className="catalog-vendor-block">
-              <div className="catalog-vendor-line">
-                <InlineTextEdit
-                  value={vendor}
-                  editable={editorOpen}
-                  aria-label="Vendor"
-                  className="min-w-0 flex-1"
-                  inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
-                  onSave={(value) => setVendor(value.trim())}
-                  renderDisplay={(value) =>
-                    value.trim() ? (
-                      <span className="catalog-vendor-text">{value}</span>
-                    ) : (
-                      <span className="catalog-vendor-text catalog-placeholder-text">
-                        VENDOR IF ANY
-                      </span>
-                    )
-                  }
-                />
-              </div>
-              <div className="catalog-vendor-line">
-                <InlineTextEdit
-                  value={vendorUrl}
-                  editable={editorOpen}
-                  aria-label="Vendor link"
-                  className="min-w-0 flex-1"
-                  inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
-                  onSave={(value) => setVendorUrl(value.trim())}
-                  renderDisplay={(value) =>
-                    value.trim() ? (
-                      <span className="catalog-vendor-text">{value}</span>
-                    ) : (
-                      <span className="catalog-vendor-text catalog-placeholder-text">
-                        LINK IF ANY
-                      </span>
-                    )
-                  }
-                />
-                {vendorUrl.trim() ? (
-                  <a
-                    href={vendorUrl.trim()}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="catalog-vendor-link"
-                    aria-label="Open vendor link"
-                  >
-                    <LinkIcon />
-                  </a>
-                ) : (
-                  <span
-                    className="catalog-vendor-link catalog-vendor-link-empty"
-                    aria-hidden="true"
-                  >
-                    <LinkIcon />
-                  </span>
+            {layout.showVendor && (
+              <div className="catalog-vendor-block">
+                <div className="catalog-vendor-line">
+                  <InlineTextEdit
+                    value={vendor}
+                    editable={editorOpen}
+                    aria-label="Vendor"
+                    className="min-w-0 flex-1"
+                    inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
+                    onSave={(value) => setVendor(value.trim())}
+                    renderDisplay={(value) =>
+                      value.trim() ? (
+                        <span className="catalog-vendor-text">{value}</span>
+                      ) : (
+                        <span className="catalog-vendor-text catalog-placeholder-text">
+                          VENDOR IF ANY
+                        </span>
+                      )
+                    }
+                  />
+                </div>
+                <div className="catalog-vendor-line">
+                  <InlineTextEdit
+                    value={vendorUrl}
+                    editable={editorOpen}
+                    aria-label="Vendor link"
+                    className="min-w-0 flex-1"
+                    inputClassName="w-full text-sm uppercase tracking-wide text-neutral-500"
+                    onSave={(value) => setVendorUrl(value.trim())}
+                    renderDisplay={(value) =>
+                      value.trim() ? (
+                        <span className="catalog-vendor-text">{value}</span>
+                      ) : (
+                        <span className="catalog-vendor-text catalog-placeholder-text">
+                          LINK IF ANY
+                        </span>
+                      )
+                    }
+                  />
+                  {vendorUrl.trim() ? (
+                    <a
+                      href={vendorUrl.trim()}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="catalog-vendor-link"
+                      aria-label="Open vendor link"
+                    >
+                      <LinkIcon />
+                    </a>
+                  ) : (
+                    <span
+                      className="catalog-vendor-link catalog-vendor-link-empty"
+                      aria-hidden="true"
+                    >
+                      <LinkIcon />
+                    </span>
+                  )}
+                </div>
+                {editorOpen && (
+                  <p className="catalog-vendor-chip no-print">
+                    Preview only — not saved to project
+                  </p>
                 )}
               </div>
-              {editorOpen && (
-                <p className="catalog-vendor-chip no-print">Preview only — not saved to project</p>
-              )}
-            </div>
+            )}
 
             <div className="catalog-notes-block">
               <InlineTextEdit

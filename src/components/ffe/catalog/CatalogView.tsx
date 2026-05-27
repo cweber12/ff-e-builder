@@ -15,6 +15,7 @@ import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
   useCompany,
   useCatalogPreference,
+  useCatalogSessionPreference,
   useFfeItemSort,
   useImages,
   type FfeItemSortMode,
@@ -82,6 +83,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
     useCatalogPreference<CatalogToggleValue>(`ffe-catalog-v-divider:${project.id}`, 'hidden');
   const [horizontalDividerDisplay, setHorizontalDividerDisplay] =
     useCatalogPreference<CatalogToggleValue>(`ffe-catalog-h-divider:${project.id}`, 'hidden');
+  const [vendorDisplay, setVendorDisplay] =
+    useCatalogSessionPreference<CatalogToggleValue>('hidden');
   const [fontFamily, setFontFamily] = useCatalogPreference<ExportSafeFontKey>(
     `ffe-catalog-font-family:${project.id}`,
     DEFAULT_TYPOGRAPHY_CONFIG.fontFamily,
@@ -107,6 +110,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       showApproval: approvalDisplay === 'shown',
       showVerticalDivider: verticalDividerDisplay === 'shown',
       showHorizontalDivider: horizontalDividerDisplay === 'shown',
+      showVendor: vendorDisplay === 'shown',
     }),
     [
       mainImageAlignment,
@@ -116,6 +120,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       approvalDisplay,
       verticalDividerDisplay,
       horizontalDividerDisplay,
+      vendorDisplay,
     ],
   );
   const handleLayoutChange = useCallback(
@@ -130,6 +135,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         setVerticalDividerDisplay(update.showVerticalDivider ? 'shown' : 'hidden');
       if ('showHorizontalDivider' in update)
         setHorizontalDividerDisplay(update.showHorizontalDivider ? 'shown' : 'hidden');
+      if ('showVendor' in update) setVendorDisplay(update.showVendor ? 'shown' : 'hidden');
     },
     [
       setMainImageAlignment,
@@ -139,6 +145,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       setApprovalDisplay,
       setVerticalDividerDisplay,
       setHorizontalDividerDisplay,
+      setVendorDisplay,
     ],
   );
   const typographyConfig = useMemo<CatalogTypographyConfig>(
