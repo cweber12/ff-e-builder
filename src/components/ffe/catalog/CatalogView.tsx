@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { SlotPortal } from '../../shared/SlotPortal';
 import { cn, emptyToNull } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cents, formatMoney, type Item, type Project } from '../../../types';
@@ -452,60 +452,50 @@ function CatalogActionsBar({
   onEditorOpenChange: (open: boolean) => void;
   onTypographyChange: (update: Partial<CatalogTypographyConfig>) => void;
 }) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    // Slot is mounted by App.tsx as the actions prop. Look it up after mount
-    // and re-check on each render in case it gets remounted.
-    const el = document.getElementById(CATALOG_ACTIONS_SLOT_ID);
-    setSlot(el);
-  }, []);
-
-  if (!slot) return null;
-
-  return createPortal(
-    <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        variant="toolbar"
-        aria-label="Print catalog"
-        onClick={() => window.print()}
-      >
-        <PrintIcon />
-        Print
-      </Button>
-      <CatalogExportButton
-        project={project}
-        rooms={rooms}
-        currentItemId={currentItemId}
-        layoutConfig={editorState.layoutConfig}
-        typographyConfig={editorState.typography}
-        watermarkConfig={editorState.watermark}
-        logoDataUrl={logoDataUrl}
-        companyName={companyName}
-        sortMode={sortMode}
-      />
-      <CatalogEditorPanelButton
-        project={project}
-        currentEntry={currentEntry}
-        editorState={editorState}
-        onLayoutChange={onLayoutChange}
-        watermarkConfig={watermarkConfig}
-        onWatermarkChange={onWatermarkChange}
-        logoDataUrl={logoDataUrl}
-        onEditorOpenChange={onEditorOpenChange}
-        onTypographyChange={onTypographyChange}
-      />
-      <span
-        aria-hidden
-        className="ml-1 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500"
-      >
-        <span className="num text-neutral-950">{currentIndex + 1}</span>
-        <span className="text-neutral-300">/</span>
-        <span className="num">{total}</span>
-      </span>
-    </div>,
-    slot,
+  return (
+    <SlotPortal slotId={CATALOG_ACTIONS_SLOT_ID}>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="toolbar"
+          aria-label="Print catalog"
+          onClick={() => window.print()}
+        >
+          <PrintIcon />
+          Print
+        </Button>
+        <CatalogExportButton
+          project={project}
+          rooms={rooms}
+          currentItemId={currentItemId}
+          layoutConfig={editorState.layoutConfig}
+          typographyConfig={editorState.typography}
+          watermarkConfig={editorState.watermark}
+          logoDataUrl={logoDataUrl}
+          companyName={companyName}
+          sortMode={sortMode}
+        />
+        <CatalogEditorPanelButton
+          project={project}
+          currentEntry={currentEntry}
+          editorState={editorState}
+          onLayoutChange={onLayoutChange}
+          watermarkConfig={watermarkConfig}
+          onWatermarkChange={onWatermarkChange}
+          logoDataUrl={logoDataUrl}
+          onEditorOpenChange={onEditorOpenChange}
+          onTypographyChange={onTypographyChange}
+        />
+        <span
+          aria-hidden
+          className="ml-1 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500"
+        >
+          <span className="num text-neutral-950">{currentIndex + 1}</span>
+          <span className="text-neutral-300">/</span>
+          <span className="num">{total}</span>
+        </span>
+      </div>
+    </SlotPortal>
   );
 }
 
@@ -522,24 +512,16 @@ function CatalogToolbarPicker({
   currentEntry: CatalogEntry | undefined;
   onPageChange: (index: number) => void;
 }) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const el = document.getElementById(CATALOG_PICKER_SLOT_ID);
-    setSlot(el);
-  }, []);
-
-  if (!slot) return null;
-
-  return createPortal(
-    <CatalogPagePicker
-      rooms={rooms}
-      currentIndex={currentIndex}
-      total={total}
-      currentEntry={currentEntry}
-      onPageChange={onPageChange}
-    />,
-    slot,
+  return (
+    <SlotPortal slotId={CATALOG_PICKER_SLOT_ID}>
+      <CatalogPagePicker
+        rooms={rooms}
+        currentIndex={currentIndex}
+        total={total}
+        currentEntry={currentEntry}
+        onPageChange={onPageChange}
+      />
+    </SlotPortal>
   );
 }
 
