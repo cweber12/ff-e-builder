@@ -17,7 +17,7 @@ import {
 } from '../../../hooks';
 import { toast } from 'sonner';
 import type { RoomWithItems } from '../../../types';
-import { Button } from '../../primitives';
+import { Button, SegmentedControl } from '../../primitives';
 import { InlineTextEdit } from '../../primitives/InlineTextEdit';
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { ImageOptionsMenu } from '../../shared/image/ImageOptionsMenu';
@@ -890,37 +890,34 @@ function CatalogEditorPanel({
           Text fields on the page are editable only while the Editor is open.
         </p>
         <LayoutRow label="Cost display">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Cost display"
             value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
-            options={[
-              { value: 'qtyOnly', label: 'Qty only' },
-              { value: 'cost', label: 'Qty + cost' },
-            ]}
             onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
-          />
+          >
+            <SegmentedControl.Option value="qtyOnly">Qty only</SegmentedControl.Option>
+            <SegmentedControl.Option value="cost">Qty + cost</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <LayoutRow label="Finish labels">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Finish label display"
             value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
-            options={[
-              { value: 'labels', label: 'Labels' },
-              { value: 'swatches', label: 'Swatches only' },
-            ]}
             onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
-          />
+          >
+            <SegmentedControl.Option value="labels">Labels</SegmentedControl.Option>
+            <SegmentedControl.Option value="swatches">Swatches only</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <LayoutRow label="Client approval">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Client approval section"
             value={layoutConfig.showApproval ? 'shown' : 'hidden'}
-            options={[
-              { value: 'shown', label: 'Show' },
-              { value: 'hidden', label: 'Remove' },
-            ]}
             onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
-          />
+          >
+            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+            <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
       </LayoutGroup>
 
@@ -1008,48 +1005,44 @@ function CatalogEditorPanel({
 
       <LayoutGroup label="Layout">
         <LayoutRow label="Main image">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Main image alignment"
             value={layoutConfig.mainImageAlignment}
-            options={[
-              { value: 'center', label: 'Center' },
-              { value: 'top', label: 'Top' },
-            ]}
             onChange={(value) => onLayoutChange({ mainImageAlignment: value })}
-          />
+          >
+            <SegmentedControl.Option value="center">Center</SegmentedControl.Option>
+            <SegmentedControl.Option value="top">Top</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <LayoutRow label="Vertical divider">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Vertical divider between image and specs"
             value={layoutConfig.showVerticalDivider ? 'shown' : 'hidden'}
-            options={[
-              { value: 'hidden', label: 'None' },
-              { value: 'shown', label: 'Show' },
-            ]}
             onChange={(value) => onLayoutChange({ showVerticalDivider: value === 'shown' })}
-          />
+          >
+            <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
+            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <LayoutRow label="Plan image">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Plan image size"
             value={layoutConfig.planImageSize}
-            options={[
-              { value: 'thumbnail', label: 'Thumb' },
-              { value: 'expanded', label: 'Expanded' },
-            ]}
             onChange={(value) => onLayoutChange({ planImageSize: value })}
-          />
+          >
+            <SegmentedControl.Option value="thumbnail">Thumb</SegmentedControl.Option>
+            <SegmentedControl.Option value="expanded">Expanded</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <LayoutRow label="Section divider">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Horizontal divider between main and bottom sections"
             value={layoutConfig.showHorizontalDivider ? 'shown' : 'hidden'}
-            options={[
-              { value: 'hidden', label: 'None' },
-              { value: 'shown', label: 'Show' },
-            ]}
             onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
-          />
+          >
+            <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
+            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
       </LayoutGroup>
 
@@ -1072,26 +1065,19 @@ function CatalogEditorPanel({
           </button>
         </div>
         <LayoutRow label="Company name">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Include company name with watermark"
             value={watermarkConfig.includeName ? 'shown' : 'hidden'}
-            options={[
-              { value: 'hidden', label: 'Logo only' },
-              { value: 'shown', label: 'With name' },
-            ]}
             onChange={(value) => onWatermarkChange({ includeName: value === 'shown' })}
-          />
+          >
+            <SegmentedControl.Option value="hidden">Logo only</SegmentedControl.Option>
+            <SegmentedControl.Option value="shown">With name</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <LayoutRow label="Placement">
-          <SegmentedToggle
+          <SegmentedControl
             ariaLabel="Watermark placement"
             value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
-            options={[
-              { value: 'footer-left', label: 'Left' },
-              { value: 'footer-center', label: 'Center' },
-              { value: 'footer-right', label: 'Right' },
-              { value: 'header-left', label: 'Header' },
-            ]}
             onChange={(value) => {
               const [placementV, placementH] = value.split('-') as [
                 WatermarkConfig['placementV'],
@@ -1099,7 +1085,12 @@ function CatalogEditorPanel({
               ];
               onWatermarkChange({ placementV, placementH, enabled: true });
             }}
-          />
+          >
+            <SegmentedControl.Option value="footer-left">Left</SegmentedControl.Option>
+            <SegmentedControl.Option value="footer-center">Center</SegmentedControl.Option>
+            <SegmentedControl.Option value="footer-right">Right</SegmentedControl.Option>
+            <SegmentedControl.Option value="header-left">Header</SegmentedControl.Option>
+          </SegmentedControl>
         </LayoutRow>
         <div className="catalog-opacity-row">
           <div className="catalog-opacity-header">
@@ -1259,38 +1250,6 @@ function CatalogEditorMediaManager({
         item={item}
         roomId={room.id}
       />
-    </div>
-  );
-}
-
-function SegmentedToggle<T extends string>({
-  ariaLabel,
-  value,
-  options,
-  onChange,
-}: {
-  ariaLabel: string;
-  value: T;
-  options: Array<{ value: T; label: string }>;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div role="radiogroup" aria-label={ariaLabel} className="segmented">
-      {options.map((option) => {
-        const active = value === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            data-active={active || undefined}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        );
-      })}
     </div>
   );
 }
