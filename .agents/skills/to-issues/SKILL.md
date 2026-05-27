@@ -37,8 +37,21 @@ Present the proposed breakdown as a numbered list. For each slice, show:
 
 - **Title**: short descriptive name
 - **Type**: HITL / AFK
+- **Agent**: which specialist agent should implement it (see routing table below)
 - **Blocked by**: which other slices (if any) must complete first
 - **User stories covered**: which user stories this addresses (if the source material has them)
+
+#### Agent routing table
+
+| Boundary touched                                                           | Agent                |
+| -------------------------------------------------------------------------- | -------------------- |
+| Global styling, layout, primitives only                                    | `UI Shell`           |
+| Single feature area (FF&E, Proposal, Materials, Plans) — no API/DB changes | `Feature Module`     |
+| API route, validation, auth, client mapper                                 | `API Contract`       |
+| Migration, schema, integrity constraints                                   | `DB Migration`       |
+| Spans UI + API + DB, or needs integration consistency check                | `Integration Verify` |
+
+A slice that touches only one boundary gets the single matching agent. A slice that crosses multiple boundaries should be split further, or assigned `Integration Verify` if splitting is not practical.
 
 Ask the user:
 
@@ -63,6 +76,16 @@ A reference to the parent issue on the issue tracker (if the source was an exist
 ## What to build
 
 A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
+
+## Agent
+
+<!-- Which specialist agent should implement this slice. Pick one: -->
+
+- [ ] Feature Module
+- [ ] UI Shell
+- [ ] API Contract
+- [ ] DB Migration
+- [ ] Integration Verify
 
 ## Acceptance criteria
 
