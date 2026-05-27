@@ -4,6 +4,13 @@ import type { ImageAsset, Item, Material, Project, RoomWithItems } from '../../.
 import { imageAssetToPngDataUrl } from '../imageHelpers';
 import { fmtMoney, safeName } from '../shared';
 import { registerCatalogFonts } from './catalogFonts';
+import {
+  resolveColorToken,
+  type RGB,
+  type CatalogColorToken,
+  type CatalogImageAlignment,
+  type CatalogPlanImageSize,
+} from './catalogTokens';
 
 // ── Page geometry (Letter, millimetres) ───────────────────────────────────────
 const PAGE_W = 215.9;
@@ -41,6 +48,7 @@ const MAX_OPTION_IMAGES = 2;
 const MAX_MATERIALS = 4;
 
 // ── Palette (matches src/index.css brand + gray tokens) ───────────────────────
+const INK_950: RGB = [10, 10, 10]; // #0a0a0a
 const BRAND_500: RGB = [75, 127, 171];
 const BRAND_600: RGB = [58, 100, 138];
 const BRAND_700: RGB = [40, 71, 101];
@@ -54,15 +62,8 @@ const GRAY_200: RGB = [229, 231, 235];
 const GRAY_100: RGB = [243, 244, 246];
 const WHITE: RGB = [255, 255, 255];
 
-// ── Typography color tokens (match resolveCatalogColorToken in CatalogView.tsx) ─
-const INK_950: RGB = [10, 10, 10]; // #0a0a0a
-const INK_800: RGB = [38, 38, 38]; // #262626
-const SLATE_700: RGB = [55, 65, 81]; // #374151 (= GRAY_700)
-
 // ── Divider rule: rgb(0 0 0 / 0.12) composited on white ──────────────────────
 const DIVIDER_RULE: RGB = [224, 224, 224];
-
-type RGB = [number, number, number];
 
 type CatalogItemEntry = { item: Item; roomName: string };
 
@@ -78,21 +79,6 @@ type CatalogItemAssets = {
   options: CatalogOptionAsset[];
   materialImages: Map<string, string | null>;
 };
-
-export type CatalogPdfImageAlignment = 'center' | 'top';
-export type CatalogPdfPlanImageSize = 'thumbnail' | 'expanded';
-export type CatalogPdfColorToken = 'ink-950' | 'ink-800' | 'slate-700';
-
-export function resolveColorToken(token: CatalogPdfColorToken): RGB {
-  switch (token) {
-    case 'ink-950':
-      return INK_950;
-    case 'ink-800':
-      return INK_800;
-    case 'slate-700':
-      return SLATE_700;
-  }
-}
 
 type ContainedImageBox = {
   drawW: number;
@@ -134,15 +120,15 @@ export type CatalogPdfOptions = {
   /** When true, a horizontal rule separates the main content section from the bottom options/location row. */
   showHorizontalDivider?: boolean;
   /** Vertical alignment for the main rendering image inside its square frame. */
-  mainImageAlignment?: CatalogPdfImageAlignment;
+  mainImageAlignment?: CatalogImageAlignment;
   /** Browser layout preference for the location plan image scale. */
-  planImageSize?: CatalogPdfPlanImageSize;
+  planImageSize?: CatalogPlanImageSize;
   /** Color token for heading text (e.g. "PRODUCT SPECIFICATIONS"). */
-  titleColorToken?: CatalogPdfColorToken;
+  titleColorToken?: CatalogColorToken;
   /** Color token for primary body text (dimensions, description). */
-  bodyColorToken?: CatalogPdfColorToken;
+  bodyColorToken?: CatalogColorToken;
   /** Color token for secondary/meta text (notes, finish schedule labels). */
-  metaColorToken?: CatalogPdfColorToken;
+  metaColorToken?: CatalogColorToken;
   /**
    * Item ordering within each room.
    * - 'manual' (default): respects each item's `sortOrder`.
@@ -191,8 +177,8 @@ export function pickCatalogPdfOptionLayout(
 }
 
 export function resolveCatalogPdfImageAlignment(
-  alignment: CatalogPdfImageAlignment | null | undefined,
-): CatalogPdfImageAlignment {
+  alignment: CatalogImageAlignment | null | undefined,
+): CatalogImageAlignment {
   return alignment === 'top' ? 'top' : 'center';
 }
 
@@ -324,7 +310,7 @@ function addContainedImage(
   width: number,
   height: number,
   padding = 0,
-  verticalAlign: CatalogPdfImageAlignment = 'center',
+  verticalAlign: CatalogImageAlignment = 'center',
 ) {
   const props = doc.getImageProperties(dataUrl);
   const innerW = Math.max(1, width - padding * 2);
@@ -658,7 +644,7 @@ function drawMaterialsRow(
   y: number,
   width: number,
   showSwatchLabels: boolean,
-  metaColor: RGB = SLATE_700,
+  metaColor: RGB = GRAY_700,
 ) {
   // Caller is responsible for skipping the section when materials.length === 0.
   // We always render only real material cells in a 4-column grid so a single
@@ -778,7 +764,7 @@ function drawLocationBlock(
   plan: string | null,
   x: number,
   y: number,
-  planImageSize: CatalogPdfPlanImageSize,
+  planImageSize: CatalogPlanImageSize,
 ) {
   // "LOCATION: <room>"
   applyFont(doc, font, 'bold', 8);

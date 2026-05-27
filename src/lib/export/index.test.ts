@@ -10,9 +10,8 @@ import {
   buildCatalogPdfPageModel,
   pickCatalogPdfOptionLayout,
   resolveCatalogPdfImageAlignment,
-  resolveColorToken,
-  type CatalogPdfColorToken,
 } from './ffe/catalogPdf';
+import { resolveColorToken, type CatalogColorToken } from './ffe/catalogTokens';
 import {
   buildProposalExportDocument,
   filteredProposalCategories,
@@ -448,7 +447,7 @@ describe('catalog PDF color token resolution', () => {
   });
 
   it('resolves all three tokens to distinct RGB values', () => {
-    const tokens: CatalogPdfColorToken[] = ['ink-950', 'ink-800', 'slate-700'];
+    const tokens: CatalogColorToken[] = ['ink-950', 'ink-800', 'slate-700'];
     const colors = tokens.map(resolveColorToken);
     const serialised = colors.map((c) => c.join(','));
     expect(new Set(serialised).size).toBe(3);

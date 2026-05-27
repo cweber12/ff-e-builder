@@ -25,6 +25,12 @@ import { MaterialLibraryModal, MaterialSwatchImage } from '../../materials';
 import { api } from '../../../lib/api';
 import { imageAssetToPngDataUrl } from '../../../lib/export/imageHelpers';
 import type { CropParams, ImageAsset } from '../../../types';
+import {
+  resolveCatalogColorToken,
+  type CatalogColorToken,
+  type CatalogImageAlignment,
+  type CatalogPlanImageSize,
+} from '../../../lib/export/ffe/catalogTokens';
 
 type CatalogEntry = {
   item: Item;
@@ -53,8 +59,6 @@ type WatermarkConfig = {
   includeName: boolean;
 };
 
-type CatalogImageAlignment = 'center' | 'top';
-type CatalogPlanImageSize = 'thumbnail' | 'expanded';
 type CatalogCostDisplay = 'qtyOnly' | 'cost';
 type CatalogToggleValue = 'shown' | 'hidden';
 
@@ -69,7 +73,6 @@ type CatalogLayoutConfig = {
 };
 
 type ExportSafeFontKey = 'source-sans-3';
-type CatalogColorToken = 'ink-950' | 'ink-800' | 'slate-700';
 
 type CatalogTypographyConfig = {
   fontFamily: ExportSafeFontKey;
@@ -1865,19 +1868,6 @@ function resolveCatalogFontFamily(font: ExportSafeFontKey): string {
     return "'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif";
   }
   return "'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif";
-}
-
-function resolveCatalogColorToken(token: CatalogColorToken): string {
-  switch (token) {
-    case 'ink-950':
-      return '#0a0a0a';
-    case 'ink-800':
-      return '#262626';
-    case 'slate-700':
-      return '#374151';
-    default:
-      return '#0a0a0a';
-  }
 }
 
 // Persistent localStorage-backed placeholder for the vendor / vendor link fields.
