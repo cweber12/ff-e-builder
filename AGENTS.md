@@ -6,13 +6,74 @@
 
 ---
 
+## Chat planning → CLI coding workflow
+
+Use chat for planning, product decisions, PRDs, issue breakdowns, and implementation handoffs. Use CLI agents for code edits, targeted verification, and commits.
+
+- `AGENTS.md` is the operational contract for coding agents: workflow rules, safety rules, repo conventions, verification, and commit behavior.
+- `CONTEXT.md` is the product/domain source of truth: user-facing terminology, business rules, relationships, and durable product decisions.
+- Do not put coding workflow rules in `CONTEXT.md`; move them here.
+- Do not put product/domain terminology only in `AGENTS.md`; move it to `CONTEXT.md`.
+- When chat produces a plan for CLI implementation, paste the final handoff into the CLI prompt or save it under `/docs/` if it should become durable project documentation.
+- CLI agents must treat the approved handoff as the implementation boundary. If code discovery shows the file list or scope is wrong, stop and ask before expanding the work.
+
+---
+
+## Planning Handoff Contract (Required)
+
+When a spec, planning, investigation, or implementation workflow is triggered, the agent must return a structured handoff before implementation begins.
+
+### Required handoff format
+
+1. **Task**
+   - One-sentence statement of the requested outcome.
+
+2. **Scope**
+   - Editable files as an explicit path list.
+   - Out-of-scope areas as explicit exclusions.
+
+3. **Behavior**
+   - Expected behavior.
+   - Actual/current behavior.
+   - Reproduction steps.
+   - Relevant error snippet, limited to a small excerpt.
+
+4. **Constraints**
+   - Keep changes minimal and reviewable.
+   - No broad refactors unless explicitly requested.
+   - No dependency, CI, or build changes without Ask First approval.
+
+5. **Proposed File List**
+   - Exact files to modify, with a one-line reason for each.
+
+6. **Verification Plan**
+   - Smallest targeted checks first.
+   - Full-suite verification only when required by risk or requested by the user.
+
+7. **Risks and Assumptions**
+   - Key assumptions requiring confirmation.
+   - Regressions to watch for.
+
+8. **Suggested Commit Message**
+   - Subject and body following the repo commit message policy.
+
+### Enforcement
+
+- The agent must not start implementation until this handoff is provided.
+- If the task is large, ambiguous, cross-cutting, changes public APIs, touches data migrations, changes dependencies, or affects CI/build configuration, human approval of the handoff is required before coding.
+- If the task is small and the user explicitly asks for direct implementation, the handoff can be concise, but it still must identify scope, files, verification, risks, and the commit message before code changes begin.
+- During implementation, stay within the approved file list and scope. If a new file or broader change becomes necessary, stop and ask for approval before continuing.
+- If the user provides a completed planning handoff from chat, do not re-plan from scratch. Validate it against the repo, call out any mismatch, and proceed only within the approved scope.
+
+---
+
 ## Operating rules
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
 - **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
 
-- **Confirm `pnpm typecheck && pnpm lint && pnpm test && pnpm build` pass before drafting the commit message.** Exception: if the user explicitly says they will run checks or tests manually, do not run those commands yourself. Finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop.
+- **Confirm verification before drafting the commit message.** For ad-hoc single changes (no approved multi-slice plan), run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. For approved planning handoffs, follow the handoff's Verification Plan and the MANDATORY sliced-work rule below: run the smallest targeted checks first, run the full suite only when required by risk or request, and if verification is assigned to the user, do not run those commands yourself; finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop.
 
 - **Commit automatically after every change.** Stage all changes and commit using conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 - **When staged, always include generated architecture map artifacts in the same commit.** If `docs/generated/architecture-map.json` and/or `docs/generated/architecture-map.md` are already staged or modified by checks, commit them together with related code changes (do not split into a separate commit).
@@ -80,23 +141,23 @@
 
 Pin these exact versions unless a version bump is explicitly requested.
 
-| Layer             | Technology                                  | Version        |
-| ----------------- | ------------------------------------------- | -------------- |
-| UI framework      | React                                       | 18.x           |
-| Build tool        | Vite                                        | 5.x            |
-| Language          | TypeScript                                  | 5.x            |
-| Package manager   | pnpm                                        | 9.x            |
-| Runtime (Node)    | Node.js                                     | 20 LTS         |
-| Auth              | Firebase Auth                               | 12.x           |
-| API runtime       | Cloudflare Workers                          | (wrangler 3.x) |
-| API framework     | Hono                                        | 4.x            |
-| Database          | Neon (serverless Postgres)                  | —              |
-| DB client         | @neondatabase/serverless (hand-written SQL) | —              |
-| Migration runner  | tsx + @neondatabase/serverless              | —              |
-| Styling           | Tailwind CSS                                | 3.x            |
-| Component library | shadcn/ui                                   | latest         |
-| Testing           | Vitest + Testing Library                    | 2.x            |
-| Linting           | ESLint + Prettier                           | —              |
+| Layer             | Technology                                  | Version                              |
+| ----------------- | ------------------------------------------- | ------------------------------------ |
+| UI framework      | React                                       | 18.x                                 |
+| Build tool        | Vite                                        | 5.x                                  |
+| Language          | TypeScript                                  | 5.x                                  |
+| Package manager   | pnpm                                        | 9.x                                  |
+| Runtime (Node)    | Node.js                                     | 20 LTS                               |
+| Auth              | Firebase Auth                               | 12.x                                 |
+| API runtime       | Cloudflare Workers                          | (wrangler 3.x)                       |
+| API framework     | Hono                                        | 4.x                                  |
+| Database          | Neon (serverless Postgres)                  | —                                    |
+| DB client         | @neondatabase/serverless (hand-written SQL) | —                                    |
+| Migration runner  | tsx + @neondatabase/serverless              | —                                    |
+| Styling           | Tailwind CSS                                | 3.x                                  |
+| Component library | shadcn/ui                                   | latest                               |
+| Testing           | Vitest + Testing Library                    | 2.x (Vitest), 16.x (Testing Library) |
+| Linting           | ESLint + Prettier                           | —                                    |
 
 > Verify exact versions against `package.json` and `api/package.json` — the table above reflects pinned majors, not patch-level pins.
 

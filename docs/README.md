@@ -19,6 +19,8 @@
 | [plans-context.md](plans-context.md)                           | Plans workspace implementation context; calibration, measurements, derived images        |
 | [design-system.md](design-system.md)                           | Design tokens, component conventions, Tailwind config                                    |
 | [accessibility.md](accessibility.md)                           | Accessibility guidelines and ARIA conventions                                            |
+| [agent-routing.md](agent-routing.md)                           | Agent ownership boundaries, routing defaults, context packs, and escalation triggers     |
+| [testing-matrix.md](testing-matrix.md)                         | Risk-based verification levels and change-type test expectations                         |
 | [contributing.md](contributing.md)                             | Branching, PR conventions, commit format, migrations, ADRs                               |
 | [agent-setup-handoff.md](agent-setup-handoff.md)               | Current agent setup handoff: architecture context, strengths, gaps, and improvement plan |
 | [runbook.md](runbook.md)                                       | Deployment, rollback, log access, secret rotation, DB migrations                         |
