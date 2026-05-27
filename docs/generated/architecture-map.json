@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-25T02:56:40.750Z",
+  "generatedAt": "2026-05-26T22:39:54.328Z",
   "generatedBy": "pnpm arch:scan",
   "source": "scripts/architecture-map.ts",
   "classifier": {
@@ -134,9 +134,9 @@
     {
       "name": "React client",
       "tsconfig": "tsconfig.app.json",
-      "files": 286,
-      "internalImports": 900,
-      "externalImports": 309,
+      "files": 292,
+      "internalImports": 937,
+      "externalImports": 317,
       "unresolvedImports": 2
     },
     {
@@ -159,16 +159,16 @@
   "productAreas": [
     {
       "area": "ffe",
-      "files": 31,
-      "importsIn": 44,
-      "importsOut": 151,
+      "files": 32,
+      "importsIn": 47,
+      "importsOut": 158,
       "dependsOn": ["proposal", "finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
     {
       "area": "proposal",
       "files": 36,
-      "importsIn": 55,
+      "importsIn": 53,
       "importsOut": 159,
       "dependsOn": ["finish-library", "shared-ui", "shared-lib", "types", "unknown"],
       "importedBy": ["ffe", "project-shell", "shared-ui", "shared-lib", "tests"]
@@ -176,8 +176,8 @@
     {
       "area": "plans",
       "files": 18,
-      "importsIn": 36,
-      "importsOut": 53,
+      "importsIn": 37,
+      "importsOut": 54,
       "dependsOn": ["shared-ui", "shared-lib", "types"],
       "importedBy": ["project-shell", "shared-lib", "tests"]
     },
@@ -193,7 +193,7 @@
       "area": "project-shell",
       "files": 24,
       "importsIn": 46,
-      "importsOut": 122,
+      "importsOut": 131,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -208,9 +208,9 @@
     },
     {
       "area": "shared-ui",
-      "files": 48,
-      "importsIn": 183,
-      "importsOut": 127,
+      "files": 52,
+      "importsIn": 208,
+      "importsOut": 144,
       "dependsOn": ["proposal", "finish-library", "shared-lib", "types", "unknown"],
       "importedBy": [
         "ffe",
@@ -225,8 +225,8 @@
     {
       "area": "shared-lib",
       "files": 51,
-      "importsIn": 319,
-      "importsOut": 132,
+      "importsIn": 325,
+      "importsOut": 133,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -258,7 +258,7 @@
     {
       "area": "types",
       "files": 11,
-      "importsIn": 177,
+      "importsIn": 179,
       "importsOut": 22,
       "dependsOn": [],
       "importedBy": [
@@ -277,7 +277,7 @@
       "area": "tests",
       "files": 54,
       "importsIn": 0,
-      "importsOut": 101,
+      "importsOut": 102,
       "dependsOn": [
         "ffe",
         "proposal",
@@ -302,9 +302,9 @@
     },
     {
       "area": "unknown",
-      "files": 10,
-      "importsIn": 22,
-      "importsOut": 16,
+      "files": 11,
+      "importsIn": 24,
+      "importsOut": 17,
       "dependsOn": ["shared-ui", "shared-lib", "types"],
       "importedBy": [
         "ffe",
@@ -323,7 +323,7 @@
       "paths": [
         {
           "path": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
-          "files": 28
+          "files": 29
         },
         {
           "path": "src/lib/items/**, src/lib/import/formats/ffe.ts",
@@ -384,7 +384,7 @@
       "paths": [
         {
           "path": "src/components/shared/**, src/components/primitives/**",
-          "files": 48
+          "files": 52
         }
       ]
     },
@@ -442,7 +442,7 @@
       "paths": [
         {
           "path": "src/lib",
-          "files": 5
+          "files": 6
         },
         {
           "path": "src/data/**",
@@ -911,6 +911,26 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/lib/export/ffe/ffeColumns.ts",
+      "importerArea": "ffe",
+      "specifier": "../../money",
+      "resolved": "src/lib/money/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/lib/export/ffe/ffeColumns.ts",
+      "importerArea": "ffe",
+      "specifier": "../shared",
+      "resolved": "src/lib/export/shared.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/lib/export/ffe/ffeExcel.ts",
       "importerArea": "ffe",
       "specifier": "../../money",
@@ -1215,6 +1235,16 @@
       "importerArea": "ffe",
       "specifier": "../../primitives/Modal",
       "resolved": "src/components/primitives/Modal.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -1651,6 +1681,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/lib/export/ffe/ffeColumns.ts",
+      "importerArea": "ffe",
+      "specifier": "../../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared types",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/lib/export/ffe/ffeExcel.ts",
       "importerArea": "ffe",
       "specifier": "../../../types",
@@ -1715,6 +1755,16 @@
       "importerArea": "ffe",
       "specifier": "../../../lib/table/generatedItemTablePresets",
       "resolved": "src/lib/table/generatedItemTablePresets.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "importerArea": "ffe",
+      "specifier": "../../../lib/table/emptyColumns",
+      "resolved": "src/lib/table/emptyColumns.ts",
       "resolvedArea": "unknown",
       "kind": "import",
       "reviewNote": "unknown: ownership unclear",
@@ -2111,6 +2161,16 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/plans/canvas/PlanToolRail.tsx",
+      "importerArea": "plans",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/plans/list/PlanUploadModal.tsx",
       "importerArea": "plans",
       "specifier": "../../primitives",
@@ -2471,10 +2531,30 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/project/modals/ProposalBudgetModal.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../../../hooks",
+      "resolved": "src/hooks/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/project/ProjectHeader.tsx",
       "importerArea": "project-shell",
       "specifier": "../../hooks/shared/useSaveStatus",
       "resolved": "src/hooks/shared/useSaveStatus.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared lib",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/project/ProjectOptionsMenu.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -2621,10 +2701,40 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/App.tsx",
+      "importerArea": "project-shell",
+      "specifier": "./components/primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/project/AppBarActions.tsx",
       "importerArea": "project-shell",
       "specifier": "../shared/ProposalStatusSelect",
       "resolved": "src/components/shared/ProposalStatusSelect/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/project/AppBarActions.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../shared/ExportMenu",
+      "resolved": "src/components/shared/ExportMenu.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/project/AppBarActions.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../primitives",
+      "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -2811,10 +2921,50 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/project/ProjectHeader.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../shared/auth/AuthGate",
+      "resolved": "src/components/shared/auth/AuthGate.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/project/ProjectOptionsMenu.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/main.tsx",
       "importerArea": "project-shell",
       "specifier": "./components/shared/RootErrorBoundary",
       "resolved": "src/components/shared/RootErrorBoundary.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/pages/DashboardPage.tsx",
+      "importerArea": "project-shell",
+      "specifier": "../components/primitives",
+      "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -3261,16 +3411,6 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
-      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-      "importerArea": "proposal",
-      "specifier": "../../../hooks",
-      "resolved": "src/hooks/index.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
       "importer": "src/components/proposal/table/ProposalCategorySection.tsx",
       "importerArea": "proposal",
       "specifier": "../../../hooks",
@@ -3315,16 +3455,6 @@
       "importerArea": "proposal",
       "specifier": "../../../lib/utils",
       "resolved": "src/lib/utils/index.ts",
-      "resolvedArea": "shared-lib",
-      "kind": "import",
-      "reviewNote": "expected: product uses shared lib",
-      "reviewSection": "Expected Shared Dependencies"
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-      "importerArea": "proposal",
-      "specifier": "../../../hooks",
-      "resolved": "src/hooks/index.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: product uses shared lib",
@@ -3683,6 +3813,26 @@
     {
       "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
       "importerArea": "proposal",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+      "importerArea": "proposal",
       "specifier": "../../shared/table/ColumnsPanel",
       "resolved": "src/components/shared/table/ColumnsPanel.tsx",
       "resolvedArea": "shared-ui",
@@ -3785,6 +3935,16 @@
       "importerArea": "proposal",
       "specifier": "../../shared/table/GeneratedItemActionControls",
       "resolved": "src/components/shared/table/GeneratedItemActionControls.tsx",
+      "resolvedArea": "shared-ui",
+      "kind": "import",
+      "reviewNote": "expected: product uses shared UI",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../primitives",
+      "resolved": "src/components/primitives/index.ts",
       "resolvedArea": "shared-ui",
       "kind": "import",
       "reviewNote": "expected: product uses shared UI",
@@ -4261,6 +4421,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "importerArea": "proposal",
+      "specifier": "../../../lib/table/emptyColumns",
+      "resolved": "src/lib/table/emptyColumns.ts",
+      "resolvedArea": "unknown",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/components/proposal/table/proposalTableConstants.ts",
       "importerArea": "proposal",
       "specifier": "../../../lib/table/generatedItemTablePresets",
@@ -4305,6 +4475,16 @@
       "importerArea": "shared-lib",
       "specifier": "./ffe/ffeRows",
       "resolved": "src/lib/export/ffe/ffeRows.ts",
+      "resolvedArea": "ffe",
+      "kind": "import",
+      "reviewNote": "review: shared core imports product-specific code",
+      "reviewSection": "Review Targets"
+    },
+    {
+      "importer": "src/lib/export/csv.ts",
+      "importerArea": "shared-lib",
+      "specifier": "./ffe/ffeColumns",
+      "resolved": "src/lib/export/ffe/ffeColumns.ts",
       "resolvedArea": "ffe",
       "kind": "import",
       "reviewNote": "review: shared core imports product-specific code",
@@ -4761,6 +4941,16 @@
       "reviewSection": "Review Targets"
     },
     {
+      "importer": "src/components/primitives/Badge.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/primitives/Button.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../lib/utils",
@@ -4775,6 +4965,16 @@
       "importerArea": "shared-ui",
       "specifier": "../../lib/utils",
       "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/primitives/DropdownMenu.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../hooks",
+      "resolved": "src/hooks/index.ts",
       "resolvedArea": "shared-lib",
       "kind": "import",
       "reviewNote": "expected: shared UI/lib dependency",
@@ -4801,7 +5001,27 @@
       "reviewSection": "Expected Shared Dependencies"
     },
     {
+      "importer": "src/components/primitives/MenuPanel.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
       "importer": "src/components/primitives/Modal.tsx",
+      "importerArea": "shared-ui",
+      "specifier": "../../lib/utils",
+      "resolved": "src/lib/utils/index.ts",
+      "resolvedArea": "shared-lib",
+      "kind": "import",
+      "reviewNote": "expected: shared UI/lib dependency",
+      "reviewSection": "Expected Shared Dependencies"
+    },
+    {
+      "importer": "src/components/primitives/SegmentedControl.tsx",
       "importerArea": "shared-ui",
       "specifier": "../../lib/utils",
       "resolved": "src/lib/utils/index.ts",
@@ -5681,6 +5901,16 @@
       "reviewSection": "Test Dependencies"
     },
     {
+      "importer": "src/pages/PlansPage.test.tsx",
+      "importerArea": "tests",
+      "specifier": "./PlansPage",
+      "resolved": "src/pages/PlansPage.tsx",
+      "resolvedArea": "plans",
+      "kind": "import",
+      "reviewNote": "expected: test coverage dependency",
+      "reviewSection": "Test Dependencies"
+    },
+    {
       "importer": "src/components/project/modals/ProjectImagesModal.test.tsx",
       "importerArea": "tests",
       "specifier": "./ProjectImagesModal",
@@ -6511,6 +6741,16 @@
       "reviewSection": "Unknown / Ambiguous Dependencies"
     },
     {
+      "importer": "src/lib/table/emptyColumns.ts",
+      "importerArea": "unknown",
+      "specifier": "../../types",
+      "resolved": "src/types/index.ts",
+      "resolvedArea": "types",
+      "kind": "import",
+      "reviewNote": "unknown: ownership unclear",
+      "reviewSection": "Unknown / Ambiguous Dependencies"
+    },
+    {
       "importer": "src/lib/table/generatedItemChangeInfo.ts",
       "importerArea": "unknown",
       "specifier": "../../types",
@@ -6603,7 +6843,7 @@
       "section": "Review Targets",
       "from": "shared-lib",
       "to": "ffe",
-      "imports": 1,
+      "imports": 2,
       "reviewNote": "review: shared core imports product-specific code",
       "examples": [
         {
@@ -6611,6 +6851,16 @@
           "importerArea": "shared-lib",
           "specifier": "./ffe/ffeRows",
           "resolved": "src/lib/export/ffe/ffeRows.ts",
+          "resolvedArea": "ffe",
+          "kind": "import",
+          "reviewNote": "review: shared core imports product-specific code",
+          "reviewSection": "Review Targets"
+        },
+        {
+          "importer": "src/lib/export/csv.ts",
+          "importerArea": "shared-lib",
+          "specifier": "./ffe/ffeColumns",
+          "resolved": "src/lib/export/ffe/ffeColumns.ts",
           "resolvedArea": "ffe",
           "kind": "import",
           "reviewNote": "review: shared core imports product-specific code",
@@ -6942,7 +7192,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-ui",
-      "imports": 39,
+      "imports": 40,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -6981,7 +7231,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "shared-lib",
-      "imports": 53,
+      "imports": 55,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -7020,7 +7270,7 @@
       "section": "Expected Shared Dependencies",
       "from": "ffe",
       "to": "types",
-      "imports": 28,
+      "imports": 29,
       "reviewNote": "expected: product uses shared types",
       "examples": [
         {
@@ -7088,7 +7338,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-ui",
-      "imports": 36,
+      "imports": 39,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -7127,7 +7377,7 @@
       "section": "Expected Shared Dependencies",
       "from": "proposal",
       "to": "shared-lib",
-      "imports": 49,
+      "imports": 47,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -7205,7 +7455,7 @@
       "section": "Expected Shared Dependencies",
       "from": "plans",
       "to": "shared-ui",
-      "imports": 4,
+      "imports": 5,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -7219,7 +7469,7 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/plans/list/PlanUploadModal.tsx",
+          "importer": "src/components/plans/canvas/PlanToolRail.tsx",
           "importerArea": "plans",
           "specifier": "../../primitives",
           "resolved": "src/components/primitives/index.ts",
@@ -7229,10 +7479,10 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/pages/PlanCanvasPage.tsx",
+          "importer": "src/components/plans/list/PlanUploadModal.tsx",
           "importerArea": "plans",
-          "specifier": "../components/shared/modals/ChangeConfirmModal",
-          "resolved": "src/components/shared/modals/ChangeConfirmModal.tsx",
+          "specifier": "../../primitives",
+          "resolved": "src/components/primitives/index.ts",
           "resolvedArea": "shared-ui",
           "kind": "import",
           "reviewNote": "expected: product uses shared UI",
@@ -7439,7 +7689,7 @@
       "section": "Expected Shared Dependencies",
       "from": "project-shell",
       "to": "shared-ui",
-      "imports": 24,
+      "imports": 31,
       "reviewNote": "expected: product uses shared UI",
       "examples": [
         {
@@ -7463,10 +7713,10 @@
           "reviewSection": "Expected Shared Dependencies"
         },
         {
-          "importer": "src/components/project/AppBarActions.tsx",
+          "importer": "src/App.tsx",
           "importerArea": "project-shell",
-          "specifier": "../shared/ProposalStatusSelect",
-          "resolved": "src/components/shared/ProposalStatusSelect/index.ts",
+          "specifier": "./components/primitives",
+          "resolved": "src/components/primitives/index.ts",
           "resolvedArea": "shared-ui",
           "kind": "import",
           "reviewNote": "expected: product uses shared UI",
@@ -7478,7 +7728,7 @@
       "section": "Expected Shared Dependencies",
       "from": "project-shell",
       "to": "shared-lib",
-      "imports": 29,
+      "imports": 31,
       "reviewNote": "expected: product uses shared lib",
       "examples": [
         {
@@ -7556,9 +7806,19 @@
       "section": "Expected Shared Dependencies",
       "from": "shared-ui",
       "to": "shared-lib",
-      "imports": 42,
+      "imports": 46,
       "reviewNote": "expected: shared UI/lib dependency",
       "examples": [
+        {
+          "importer": "src/components/primitives/Badge.tsx",
+          "importerArea": "shared-ui",
+          "specifier": "../../lib/utils",
+          "resolved": "src/lib/utils/index.ts",
+          "resolvedArea": "shared-lib",
+          "kind": "import",
+          "reviewNote": "expected: shared UI/lib dependency",
+          "reviewSection": "Expected Shared Dependencies"
+        },
         {
           "importer": "src/components/primitives/Button.tsx",
           "importerArea": "shared-ui",
@@ -7571,16 +7831,6 @@
         },
         {
           "importer": "src/components/primitives/Drawer.tsx",
-          "importerArea": "shared-ui",
-          "specifier": "../../lib/utils",
-          "resolved": "src/lib/utils/index.ts",
-          "resolvedArea": "shared-lib",
-          "kind": "import",
-          "reviewNote": "expected: shared UI/lib dependency",
-          "reviewSection": "Expected Shared Dependencies"
-        },
-        {
-          "importer": "src/components/primitives/InlineNumberEdit.tsx",
           "importerArea": "shared-ui",
           "specifier": "../../lib/utils",
           "resolved": "src/lib/utils/index.ts",
@@ -7673,7 +7923,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "ffe",
       "to": "unknown",
-      "imports": 3,
+      "imports": 4,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -7697,10 +7947,10 @@
           "reviewSection": "Unknown / Ambiguous Dependencies"
         },
         {
-          "importer": "src/lib/export/ffe/ffePdf.ts",
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "importerArea": "ffe",
-          "specifier": "../../constants",
-          "resolved": "src/lib/constants.ts",
+          "specifier": "../../../lib/table/emptyColumns",
+          "resolved": "src/lib/table/emptyColumns.ts",
           "resolvedArea": "unknown",
           "kind": "import",
           "reviewNote": "unknown: ownership unclear",
@@ -7712,7 +7962,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "proposal",
       "to": "unknown",
-      "imports": 6,
+      "imports": 7,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -7925,7 +8175,7 @@
       "section": "Unknown / Ambiguous Dependencies",
       "from": "unknown",
       "to": "types",
-      "imports": 5,
+      "imports": 6,
       "reviewNote": "unknown: ownership unclear",
       "examples": [
         {
@@ -7949,7 +8199,7 @@
           "reviewSection": "Unknown / Ambiguous Dependencies"
         },
         {
-          "importer": "src/lib/table/generatedItemChangeInfo.ts",
+          "importer": "src/lib/table/emptyColumns.ts",
           "importerArea": "unknown",
           "specifier": "../../types",
           "resolved": "src/types/index.ts",
@@ -8042,7 +8292,7 @@
       "section": "Test Dependencies",
       "from": "tests",
       "to": "plans",
-      "imports": 6,
+      "imports": 7,
       "reviewNote": "expected: test coverage dependency",
       "examples": [
         {
@@ -8424,6 +8674,25 @@
       "imports": []
     },
     {
+      "path": "src/lib/table/emptyColumns.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": [
+        {
+          "importer": "src/lib/table/emptyColumns.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/lib/table/generatedItemChangeFields.ts",
       "project": "React client",
       "module": "src/lib",
@@ -8653,15 +8922,15 @@
       "path": "src/App.tsx",
       "files": 1,
       "importsIn": 1,
-      "importsOut": 28,
+      "importsOut": 29,
       "internalDependencies": ["src/components", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": ["@tanstack/react-query", "react", "react-router-dom"]
     },
     {
       "path": "src/components",
-      "files": 140,
-      "importsIn": 297,
-      "importsOut": 658,
+      "files": 144,
+      "importsIn": 320,
+      "importsOut": 692,
       "internalDependencies": ["src/data", "src/hooks", "src/lib", "src/pages", "src/types"],
       "externalDependencies": [
         "@dnd-kit/core",
@@ -8706,9 +8975,9 @@
     },
     {
       "path": "src/lib",
-      "files": 83,
-      "importsIn": 320,
-      "importsOut": 261,
+      "files": 85,
+      "importsIn": 331,
+      "importsOut": 268,
       "internalDependencies": ["src/types"],
       "externalDependencies": [
         "@dnd-kit/sortable",
@@ -8741,13 +9010,14 @@
     {
       "path": "src/pages",
       "files": 11,
-      "importsIn": 10,
-      "importsOut": 75,
+      "importsIn": 11,
+      "importsOut": 78,
       "internalDependencies": ["src/components", "src/hooks", "src/lib", "src/types"],
       "externalDependencies": [
         "@tanstack/react-query",
         "@testing-library/react",
         "react",
+        "react-dom",
         "react-router-dom",
         "sonner",
         "vitest"
@@ -8764,7 +9034,7 @@
     {
       "path": "src/types",
       "files": 11,
-      "importsIn": 177,
+      "importsIn": 179,
       "importsOut": 24,
       "internalDependencies": [],
       "externalDependencies": ["zod"]
@@ -8950,6 +9220,14 @@
         },
         {
           "importer": "src/App.tsx",
+          "specifier": "./components/primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/App.tsx",
           "specifier": "./lib/utils",
           "kind": "import",
           "resolved": "src/lib/utils/index.ts",
@@ -9057,6 +9335,14 @@
         },
         {
           "importer": "src/components/ffe/catalog/CatalogView.test.tsx",
+          "specifier": "@testing-library/user-event",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "@testing-library/user-event",
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/catalog/CatalogView.test.tsx",
           "specifier": "vitest",
           "kind": "import",
           "resolved": null,
@@ -9096,6 +9382,14 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/catalog/CatalogView.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
           "asset": false
         },
         {
@@ -9759,6 +10053,14 @@
         },
         {
           "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "../../../lib/table/emptyColumns",
+          "kind": "import",
+          "resolved": "src/lib/table/emptyColumns.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
           "specifier": "../../../hooks",
           "kind": "import",
           "resolved": "src/hooks/index.ts",
@@ -9826,6 +10128,14 @@
           "specifier": "../../primitives/Modal",
           "kind": "import",
           "resolved": "src/components/primitives/Modal.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/ffe/items/FfeTableView.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -10488,6 +10798,14 @@
         },
         {
           "importer": "src/components/materials/MaterialsView.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/materials/MaterialsView.tsx",
           "specifier": "@tanstack/react-query",
           "kind": "import",
           "resolved": null,
@@ -10797,6 +11115,14 @@
         },
         {
           "importer": "src/components/plans/canvas/PlanToolRail.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/plans/canvas/PlanToolRail.tsx",
           "specifier": "./planToolDefinitions",
           "kind": "import",
           "resolved": "src/components/plans/canvas/planToolDefinitions.ts",
@@ -11039,6 +11365,33 @@
       ]
     },
     {
+      "path": "src/components/primitives/Badge.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/primitives/Badge.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/Badge.tsx",
+          "specifier": "../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/primitives/Button.test.tsx",
       "project": "React client",
       "module": "src/components",
@@ -11073,6 +11426,14 @@
         },
         {
           "importer": "src/components/primitives/Button.test.tsx",
+          "specifier": "react-router-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-router-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/Button.test.tsx",
           "specifier": "./Button",
           "kind": "import",
           "resolved": "src/components/primitives/Button.tsx",
@@ -11096,6 +11457,14 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/Button.tsx",
+          "specifier": "react-router-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-router-dom",
           "asset": false
         },
         {
@@ -11179,6 +11548,49 @@
       ]
     },
     {
+      "path": "src/components/primitives/DropdownMenu.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/primitives/DropdownMenu.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/DropdownMenu.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/DropdownMenu.tsx",
+          "specifier": "../../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/DropdownMenu.tsx",
+          "specifier": "./MenuPanel",
+          "kind": "import",
+          "resolved": "src/components/primitives/MenuPanel.tsx",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/primitives/index.ts",
       "project": "React client",
       "module": "src/components",
@@ -11187,6 +11599,22 @@
       "ownershipReason": "shared UI primitive/chrome path",
       "ownerPath": "src/components/shared/**, src/components/primitives/**",
       "imports": [
+        {
+          "importer": "src/components/primitives/index.ts",
+          "specifier": "./Badge",
+          "kind": "export",
+          "resolved": "src/components/primitives/Badge.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/index.ts",
+          "specifier": "./Badge",
+          "kind": "export",
+          "resolved": "src/components/primitives/Badge.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
         {
           "importer": "src/components/primitives/index.ts",
           "specifier": "./Button",
@@ -11208,6 +11636,22 @@
           "specifier": "./InlineTextEdit",
           "kind": "export",
           "resolved": "src/components/primitives/InlineTextEdit.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/index.ts",
+          "specifier": "./SegmentedControl",
+          "kind": "export",
+          "resolved": "src/components/primitives/SegmentedControl.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/index.ts",
+          "specifier": "./SegmentedControl",
+          "kind": "export",
+          "resolved": "src/components/primitives/SegmentedControl.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -11240,6 +11684,22 @@
           "specifier": "./Drawer",
           "kind": "export",
           "resolved": "src/components/primitives/Drawer.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/index.ts",
+          "specifier": "./DropdownMenu",
+          "kind": "export",
+          "resolved": "src/components/primitives/DropdownMenu.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/index.ts",
+          "specifier": "./MenuPanel",
+          "kind": "export",
+          "resolved": "src/components/primitives/MenuPanel.tsx",
           "externalPackage": null,
           "asset": false
         },
@@ -11402,6 +11862,41 @@
       ]
     },
     {
+      "path": "src/components/primitives/MenuPanel.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/primitives/MenuPanel.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/MenuPanel.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/MenuPanel.tsx",
+          "specifier": "../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/components/primitives/Modal.test.tsx",
       "project": "React client",
       "module": "src/components",
@@ -11463,6 +11958,33 @@
         },
         {
           "importer": "src/components/primitives/Modal.tsx",
+          "specifier": "../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
+      "path": "src/components/primitives/SegmentedControl.tsx",
+      "project": "React client",
+      "module": "src/components",
+      "productArea": "shared-ui",
+      "ownershipConfidence": "high",
+      "ownershipReason": "shared UI primitive/chrome path",
+      "ownerPath": "src/components/shared/**, src/components/primitives/**",
+      "imports": [
+        {
+          "importer": "src/components/primitives/SegmentedControl.tsx",
+          "specifier": "react",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/primitives/SegmentedControl.tsx",
           "specifier": "../../lib/utils",
           "kind": "import",
           "resolved": "src/lib/utils/index.ts",
@@ -11571,14 +12093,6 @@
         },
         {
           "importer": "src/components/project/AppBarActions.tsx",
-          "specifier": "react-dom",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react-dom",
-          "asset": false
-        },
-        {
-          "importer": "src/components/project/AppBarActions.tsx",
           "specifier": "../../lib/export",
           "kind": "import",
           "resolved": "src/lib/export/index.ts",
@@ -11606,6 +12120,22 @@
           "specifier": "../shared/ProposalStatusSelect",
           "kind": "import",
           "resolved": "src/components/shared/ProposalStatusSelect/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/AppBarActions.tsx",
+          "specifier": "../shared/ExportMenu",
+          "kind": "import",
+          "resolved": "src/components/shared/ExportMenu.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/AppBarActions.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -12150,6 +12680,14 @@
         },
         {
           "importer": "src/components/project/modals/ProposalBudgetModal.tsx",
+          "specifier": "../../../hooks",
+          "kind": "import",
+          "resolved": "src/hooks/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/modals/ProposalBudgetModal.tsx",
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -12268,6 +12806,14 @@
         },
         {
           "importer": "src/components/project/ProjectHeader.tsx",
+          "specifier": "../shared/auth/AuthGate",
+          "kind": "import",
+          "resolved": "src/components/shared/auth/AuthGate.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/ProjectHeader.tsx",
           "specifier": "../../hooks/shared/useSaveStatus",
           "kind": "import",
           "resolved": "src/hooks/shared/useSaveStatus.ts",
@@ -12291,6 +12837,22 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react-router-dom",
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/ProjectOptionsMenu.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/ProjectOptionsMenu.tsx",
+          "specifier": "../../lib/utils",
+          "kind": "import",
+          "resolved": "src/lib/utils/index.ts",
+          "externalPackage": null,
           "asset": false
         }
       ]
@@ -12349,14 +12911,6 @@
       "imports": [
         {
           "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
-          "specifier": "react-router-dom",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react-router-dom",
-          "asset": false
-        },
-        {
-          "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -12368,6 +12922,14 @@
           "specifier": "../../../lib/projectSnapshot",
           "kind": "import",
           "resolved": "src/lib/projectSnapshot/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13133,14 +13695,6 @@
       "imports": [
         {
           "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-          "specifier": "react-dom",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react-dom",
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
           "specifier": "../../../types",
           "kind": "import",
           "resolved": "src/types/index.ts",
@@ -13152,6 +13706,22 @@
           "specifier": "../../primitives/InlineTextEdit",
           "kind": "import",
           "resolved": "src/components/primitives/InlineTextEdit.tsx",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -13176,22 +13746,6 @@
           "specifier": "../../shared/table/TableViewWrappers",
           "kind": "import",
           "resolved": "src/components/shared/table/TableViewWrappers.tsx",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-          "specifier": "./proposalTableConstants",
-          "kind": "import",
-          "resolved": "src/components/proposal/table/proposalTableConstants.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-          "specifier": "../../../hooks",
-          "kind": "import",
-          "resolved": "src/hooks/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13422,14 +13976,6 @@
       "imports": [
         {
           "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-          "specifier": "react-dom",
-          "kind": "import",
-          "resolved": null,
-          "externalPackage": "react-dom",
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
           "specifier": "react",
           "kind": "import",
           "resolved": null,
@@ -13462,17 +14008,9 @@
         },
         {
           "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-          "specifier": "./proposalTableConstants",
+          "specifier": "../../primitives",
           "kind": "import",
-          "resolved": "src/components/proposal/table/proposalTableConstants.ts",
-          "externalPackage": null,
-          "asset": false
-        },
-        {
-          "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-          "specifier": "../../../hooks",
-          "kind": "import",
-          "resolved": "src/hooks/index.ts",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -13900,6 +14438,14 @@
           "resolved": "src/lib/table/generatedItemTablePresets.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/proposal/table/ProposalTable.tsx",
+          "specifier": "../../../lib/table/emptyColumns",
+          "kind": "import",
+          "resolved": "src/lib/table/emptyColumns.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -14104,6 +14650,14 @@
           "resolved": "src/lib/utils/index.ts",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -14122,6 +14676,14 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/DeferredCostBanner.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
           "asset": false
         }
       ]
@@ -14184,6 +14746,22 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/ExportMenu.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/ExportMenu.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
           "asset": false
         }
       ]
@@ -15106,6 +15684,14 @@
         },
         {
           "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
+          "specifier": "../../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
           "specifier": "./ProposalStatusDots",
           "kind": "import",
           "resolved": "src/components/shared/ProposalStatusSelect/ProposalStatusDots.tsx",
@@ -15171,6 +15757,14 @@
           "specifier": "../../hooks/shared/useSaveStatus",
           "kind": "import",
           "resolved": "src/hooks/shared/useSaveStatus.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/components/shared/SaveStatusIndicator.tsx",
+          "specifier": "../primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
           "externalPackage": null,
           "asset": false
         }
@@ -18520,6 +19114,14 @@
         },
         {
           "importer": "src/lib/export/csv.ts",
+          "specifier": "./ffe/ffeColumns",
+          "kind": "import",
+          "resolved": "src/lib/export/ffe/ffeColumns.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/csv.ts",
           "specifier": "./shared",
           "kind": "import",
           "resolved": "src/lib/export/shared.ts",
@@ -18668,6 +19270,41 @@
       ]
     },
     {
+      "path": "src/lib/export/ffe/ffeColumns.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "ffe",
+      "ownershipConfidence": "high",
+      "ownershipReason": "FF&E-owned feature path",
+      "ownerPath": "src/components/ffe/**, src/hooks/ffe/**, src/lib/export/ffe/**",
+      "imports": [
+        {
+          "importer": "src/lib/export/ffe/ffeColumns.ts",
+          "specifier": "../../money",
+          "kind": "import",
+          "resolved": "src/lib/money/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/ffe/ffeColumns.ts",
+          "specifier": "../../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/ffe/ffeColumns.ts",
+          "specifier": "../shared",
+          "kind": "import",
+          "resolved": "src/lib/export/shared.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/lib/export/ffe/ffeExcel.ts",
       "project": "React client",
       "module": "src/lib",
@@ -18721,6 +19358,14 @@
           "specifier": "./ffeRows",
           "kind": "import",
           "resolved": "src/lib/export/ffe/ffeRows.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/ffe/ffeExcel.ts",
+          "specifier": "./ffeColumns",
+          "kind": "import",
+          "resolved": "src/lib/export/ffe/ffeColumns.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -18820,6 +19465,14 @@
           "specifier": "./ffeRows",
           "kind": "import",
           "resolved": "src/lib/export/ffe/ffeRows.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/lib/export/ffe/ffePdf.ts",
+          "specifier": "./ffeColumns",
+          "kind": "import",
+          "resolved": "src/lib/export/ffe/ffeColumns.ts",
           "externalPackage": null,
           "asset": false
         },
@@ -20244,6 +20897,25 @@
       ]
     },
     {
+      "path": "src/lib/table/emptyColumns.ts",
+      "project": "React client",
+      "module": "src/lib",
+      "productArea": "unknown",
+      "ownershipConfidence": "low",
+      "ownershipReason": "no product-area path heuristic matched",
+      "ownerPath": "src/lib",
+      "imports": [
+        {
+          "importer": "src/lib/table/emptyColumns.ts",
+          "specifier": "../../types",
+          "kind": "import",
+          "resolved": "src/types/index.ts",
+          "externalPackage": null,
+          "asset": false
+        }
+      ]
+    },
+    {
       "path": "src/lib/table/generatedItemChangeFields.ts",
       "project": "React client",
       "module": "src/lib",
@@ -20720,6 +21392,14 @@
         },
         {
           "importer": "src/pages/DashboardPage.tsx",
+          "specifier": "../components/primitives",
+          "kind": "import",
+          "resolved": "src/components/primitives/index.ts",
+          "externalPackage": null,
+          "asset": false
+        },
+        {
+          "importer": "src/pages/DashboardPage.tsx",
           "specifier": "../components/shared/image/ImageFrame",
           "kind": "import",
           "resolved": "src/components/shared/image/ImageFrame.tsx",
@@ -21001,6 +21681,14 @@
           "resolved": "src/pages/PlansPage.tsx",
           "externalPackage": null,
           "asset": false
+        },
+        {
+          "importer": "src/pages/PlansPage.test.tsx",
+          "specifier": "./PlansPage",
+          "kind": "import",
+          "resolved": "src/pages/PlansPage.tsx",
+          "externalPackage": null,
+          "asset": false
         }
       ]
     },
@@ -21019,6 +21707,14 @@
           "kind": "import",
           "resolved": null,
           "externalPackage": "react",
+          "asset": false
+        },
+        {
+          "importer": "src/pages/PlansPage.tsx",
+          "specifier": "react-dom",
+          "kind": "import",
+          "resolved": null,
+          "externalPackage": "react-dom",
           "asset": false
         },
         {
@@ -23045,6 +23741,14 @@
     },
     {
       "importer": "src/App.tsx",
+      "specifier": "./components/primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/App.tsx",
       "specifier": "./lib/utils",
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
@@ -23141,6 +23845,14 @@
     },
     {
       "importer": "src/components/ffe/catalog/CatalogView.test.tsx",
+      "specifier": "@testing-library/user-event",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "@testing-library/user-event",
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/catalog/CatalogView.test.tsx",
       "specifier": "vitest",
       "kind": "import",
       "resolved": null,
@@ -23169,6 +23881,14 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/catalog/CatalogView.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
       "asset": false
     },
     {
@@ -23733,6 +24453,14 @@
     },
     {
       "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "../../../lib/table/emptyColumns",
+      "kind": "import",
+      "resolved": "src/lib/table/emptyColumns.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
       "specifier": "../../../hooks",
       "kind": "import",
       "resolved": "src/hooks/index.ts",
@@ -23800,6 +24528,14 @@
       "specifier": "../../primitives/Modal",
       "kind": "import",
       "resolved": "src/components/primitives/Modal.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/ffe/items/FfeTableView.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -24341,6 +25077,14 @@
     },
     {
       "importer": "src/components/materials/MaterialsView.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/materials/MaterialsView.tsx",
       "specifier": "@tanstack/react-query",
       "kind": "import",
       "resolved": null,
@@ -24573,6 +25317,14 @@
     },
     {
       "importer": "src/components/plans/canvas/PlanToolRail.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/plans/canvas/PlanToolRail.tsx",
       "specifier": "./planToolDefinitions",
       "kind": "import",
       "resolved": "src/components/plans/canvas/planToolDefinitions.ts",
@@ -24748,6 +25500,22 @@
       "asset": false
     },
     {
+      "importer": "src/components/primitives/Badge.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/Badge.tsx",
+      "specifier": "../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/primitives/Button.test.tsx",
       "specifier": "vitest",
       "kind": "import",
@@ -24773,6 +25541,14 @@
     },
     {
       "importer": "src/components/primitives/Button.test.tsx",
+      "specifier": "react-router-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-router-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/Button.test.tsx",
       "specifier": "./Button",
       "kind": "import",
       "resolved": "src/components/primitives/Button.tsx",
@@ -24785,6 +25561,14 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/Button.tsx",
+      "specifier": "react-router-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-router-dom",
       "asset": false
     },
     {
@@ -24844,6 +25628,54 @@
       "asset": false
     },
     {
+      "importer": "src/components/primitives/DropdownMenu.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/DropdownMenu.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/DropdownMenu.tsx",
+      "specifier": "../../hooks",
+      "kind": "import",
+      "resolved": "src/hooks/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/DropdownMenu.tsx",
+      "specifier": "./MenuPanel",
+      "kind": "import",
+      "resolved": "src/components/primitives/MenuPanel.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/index.ts",
+      "specifier": "./Badge",
+      "kind": "export",
+      "resolved": "src/components/primitives/Badge.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/index.ts",
+      "specifier": "./Badge",
+      "kind": "export",
+      "resolved": "src/components/primitives/Badge.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/primitives/index.ts",
       "specifier": "./Button",
       "kind": "export",
@@ -24864,6 +25696,22 @@
       "specifier": "./InlineTextEdit",
       "kind": "export",
       "resolved": "src/components/primitives/InlineTextEdit.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/index.ts",
+      "specifier": "./SegmentedControl",
+      "kind": "export",
+      "resolved": "src/components/primitives/SegmentedControl.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/index.ts",
+      "specifier": "./SegmentedControl",
+      "kind": "export",
+      "resolved": "src/components/primitives/SegmentedControl.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -24896,6 +25744,22 @@
       "specifier": "./Drawer",
       "kind": "export",
       "resolved": "src/components/primitives/Drawer.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/index.ts",
+      "specifier": "./DropdownMenu",
+      "kind": "export",
+      "resolved": "src/components/primitives/DropdownMenu.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/index.ts",
+      "specifier": "./MenuPanel",
+      "kind": "export",
+      "resolved": "src/components/primitives/MenuPanel.tsx",
       "externalPackage": null,
       "asset": false
     },
@@ -25012,6 +25876,30 @@
       "asset": false
     },
     {
+      "importer": "src/components/primitives/MenuPanel.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/MenuPanel.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/MenuPanel.tsx",
+      "specifier": "../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/primitives/Modal.test.tsx",
       "specifier": "vitest",
       "kind": "import",
@@ -25053,6 +25941,22 @@
     },
     {
       "importer": "src/components/primitives/Modal.tsx",
+      "specifier": "../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/SegmentedControl.tsx",
+      "specifier": "react",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/primitives/SegmentedControl.tsx",
       "specifier": "../../lib/utils",
       "kind": "import",
       "resolved": "src/lib/utils/index.ts",
@@ -25117,14 +26021,6 @@
     },
     {
       "importer": "src/components/project/AppBarActions.tsx",
-      "specifier": "react-dom",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react-dom",
-      "asset": false
-    },
-    {
-      "importer": "src/components/project/AppBarActions.tsx",
       "specifier": "../../lib/export",
       "kind": "import",
       "resolved": "src/lib/export/index.ts",
@@ -25152,6 +26048,22 @@
       "specifier": "../shared/ProposalStatusSelect",
       "kind": "import",
       "resolved": "src/components/shared/ProposalStatusSelect/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/AppBarActions.tsx",
+      "specifier": "../shared/ExportMenu",
+      "kind": "import",
+      "resolved": "src/components/shared/ExportMenu.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/AppBarActions.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -25597,6 +26509,14 @@
     },
     {
       "importer": "src/components/project/modals/ProposalBudgetModal.tsx",
+      "specifier": "../../../hooks",
+      "kind": "import",
+      "resolved": "src/hooks/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/modals/ProposalBudgetModal.tsx",
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -25693,6 +26613,14 @@
     },
     {
       "importer": "src/components/project/ProjectHeader.tsx",
+      "specifier": "../shared/auth/AuthGate",
+      "kind": "import",
+      "resolved": "src/components/shared/auth/AuthGate.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/ProjectHeader.tsx",
       "specifier": "../../hooks/shared/useSaveStatus",
       "kind": "import",
       "resolved": "src/hooks/shared/useSaveStatus.ts",
@@ -25705,6 +26633,22 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react-router-dom",
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/ProjectOptionsMenu.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/ProjectOptionsMenu.tsx",
+      "specifier": "../../lib/utils",
+      "kind": "import",
+      "resolved": "src/lib/utils/index.ts",
+      "externalPackage": null,
       "asset": false
     },
     {
@@ -25741,14 +26685,6 @@
     },
     {
       "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
-      "specifier": "react-router-dom",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react-router-dom",
-      "asset": false
-    },
-    {
-      "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -25760,6 +26696,14 @@
       "specifier": "../../../lib/projectSnapshot",
       "kind": "import",
       "resolved": "src/lib/projectSnapshot/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/project/snapshot/BudgetSnapshotCard.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -26261,14 +27205,6 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-      "specifier": "react-dom",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react-dom",
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
       "specifier": "../../../types",
       "kind": "import",
       "resolved": "src/types/index.ts",
@@ -26280,6 +27216,22 @@
       "specifier": "../../primitives/InlineTextEdit",
       "kind": "import",
       "resolved": "src/components/primitives/InlineTextEdit.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -26304,22 +27256,6 @@
       "specifier": "../../shared/table/TableViewWrappers",
       "kind": "import",
       "resolved": "src/components/shared/table/TableViewWrappers.tsx",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-      "specifier": "./proposalTableConstants",
-      "kind": "import",
-      "resolved": "src/components/proposal/table/proposalTableConstants.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalCategoryHeader.tsx",
-      "specifier": "../../../hooks",
-      "kind": "import",
-      "resolved": "src/hooks/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -26517,14 +27453,6 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-      "specifier": "react-dom",
-      "kind": "import",
-      "resolved": null,
-      "externalPackage": "react-dom",
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
@@ -26557,17 +27485,9 @@
     },
     {
       "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-      "specifier": "./proposalTableConstants",
+      "specifier": "../../primitives",
       "kind": "import",
-      "resolved": "src/components/proposal/table/proposalTableConstants.ts",
-      "externalPackage": null,
-      "asset": false
-    },
-    {
-      "importer": "src/components/proposal/table/ProposalItemActionsMenu.tsx",
-      "specifier": "../../../hooks",
-      "kind": "import",
-      "resolved": "src/hooks/index.ts",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -26964,6 +27884,14 @@
       "asset": false
     },
     {
+      "importer": "src/components/proposal/table/ProposalTable.tsx",
+      "specifier": "../../../lib/table/emptyColumns",
+      "kind": "import",
+      "resolved": "src/lib/table/emptyColumns.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/proposal/table/proposalTableConstants.ts",
       "specifier": "../../../lib/table/generatedItemTablePresets",
       "kind": "import",
@@ -27124,11 +28052,27 @@
       "asset": false
     },
     {
+      "importer": "src/components/shared/ColumnVisibilityPopover.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/components/shared/DeferredCostBanner.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/DeferredCostBanner.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
       "asset": false
     },
     {
@@ -27169,6 +28113,22 @@
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/ExportMenu.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/ExportMenu.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
       "asset": false
     },
     {
@@ -27893,6 +28853,14 @@
     },
     {
       "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
+      "specifier": "../../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/ProposalStatusSelect/ProposalStatusSelect.tsx",
       "specifier": "./ProposalStatusDots",
       "kind": "import",
       "resolved": "src/components/shared/ProposalStatusSelect/ProposalStatusDots.tsx",
@@ -27936,6 +28904,14 @@
       "specifier": "../../hooks/shared/useSaveStatus",
       "kind": "import",
       "resolved": "src/hooks/shared/useSaveStatus.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/components/shared/SaveStatusIndicator.tsx",
+      "specifier": "../primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -30365,6 +31341,14 @@
     },
     {
       "importer": "src/lib/export/csv.ts",
+      "specifier": "./ffe/ffeColumns",
+      "kind": "import",
+      "resolved": "src/lib/export/ffe/ffeColumns.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/csv.ts",
       "specifier": "./shared",
       "kind": "import",
       "resolved": "src/lib/export/shared.ts",
@@ -30468,6 +31452,30 @@
       "asset": false
     },
     {
+      "importer": "src/lib/export/ffe/ffeColumns.ts",
+      "specifier": "../../money",
+      "kind": "import",
+      "resolved": "src/lib/money/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/ffe/ffeColumns.ts",
+      "specifier": "../../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/ffe/ffeColumns.ts",
+      "specifier": "../shared",
+      "kind": "import",
+      "resolved": "src/lib/export/shared.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/lib/export/ffe/ffeExcel.ts",
       "specifier": "xlsx",
       "kind": "import",
@@ -30512,6 +31520,14 @@
       "specifier": "./ffeRows",
       "kind": "import",
       "resolved": "src/lib/export/ffe/ffeRows.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/ffe/ffeExcel.ts",
+      "specifier": "./ffeColumns",
+      "kind": "import",
+      "resolved": "src/lib/export/ffe/ffeColumns.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -30600,6 +31616,14 @@
       "specifier": "./ffeRows",
       "kind": "import",
       "resolved": "src/lib/export/ffe/ffeRows.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/lib/export/ffe/ffePdf.ts",
+      "specifier": "./ffeColumns",
+      "kind": "import",
+      "resolved": "src/lib/export/ffe/ffeColumns.ts",
       "externalPackage": null,
       "asset": false
     },
@@ -31596,6 +32620,14 @@
       "asset": false
     },
     {
+      "importer": "src/lib/table/emptyColumns.ts",
+      "specifier": "../../types",
+      "kind": "import",
+      "resolved": "src/types/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/lib/table/generatedItemChangeInfo.test.ts",
       "specifier": "vitest",
       "kind": "import",
@@ -31925,6 +32957,14 @@
     },
     {
       "importer": "src/pages/DashboardPage.tsx",
+      "specifier": "../components/primitives",
+      "kind": "import",
+      "resolved": "src/components/primitives/index.ts",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
+      "importer": "src/pages/DashboardPage.tsx",
       "specifier": "../components/shared/image/ImageFrame",
       "kind": "import",
       "resolved": "src/components/shared/image/ImageFrame.tsx",
@@ -32164,11 +33204,27 @@
       "asset": false
     },
     {
+      "importer": "src/pages/PlansPage.test.tsx",
+      "specifier": "./PlansPage",
+      "kind": "import",
+      "resolved": "src/pages/PlansPage.tsx",
+      "externalPackage": null,
+      "asset": false
+    },
+    {
       "importer": "src/pages/PlansPage.tsx",
       "specifier": "react",
       "kind": "import",
       "resolved": null,
       "externalPackage": "react",
+      "asset": false
+    },
+    {
+      "importer": "src/pages/PlansPage.tsx",
+      "specifier": "react-dom",
+      "kind": "import",
+      "resolved": null,
+      "externalPackage": "react-dom",
       "asset": false
     },
     {
@@ -33571,7 +34627,7 @@
   "topExternalPackages": [
     {
       "name": "react",
-      "imports": 96
+      "imports": 100
     },
     {
       "name": "vitest",
@@ -33587,7 +34643,7 @@
     },
     {
       "name": "react-router-dom",
-      "imports": 24
+      "imports": 25
     },
     {
       "name": "sonner",
@@ -33599,11 +34655,11 @@
     },
     {
       "name": "react-dom",
-      "imports": 11
+      "imports": 13
     },
     {
       "name": "@testing-library/user-event",
-      "imports": 10
+      "imports": 11
     },
     {
       "name": "@dnd-kit/sortable",

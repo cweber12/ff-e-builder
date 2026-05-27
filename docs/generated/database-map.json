@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-05-19T17:47:49.871Z",
+  "generatedAt": "2026-05-26T22:39:41.696Z",
   "generatedBy": "pnpm db:scan",
   "source": "scripts/database-map.ts",
   "migrations": [
@@ -324,9 +324,207 @@
         "proposal_items_category_sort_idx",
         "rooms_project_lower_name_idx"
       ]
+    },
+    {
+      "filename": "0034_companies.sql",
+      "summary": "Migration: 0034_companies",
+      "createsTables": ["companies"],
+      "altersTables": ["image_assets", "user_profiles"],
+      "createsIndexes": [
+        "companies_owner_uid_idx",
+        "image_assets_company_id_idx",
+        "image_assets_company_logo_idx"
+      ]
+    },
+    {
+      "filename": "0035_company_logo_entity_type.sql",
+      "summary": "Migration: 0035_company_logo_entity_type",
+      "createsTables": [],
+      "altersTables": ["image_assets"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0036_material_categories.sql",
+      "summary": "",
+      "createsTables": [],
+      "altersTables": ["materials"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0037_image_thumbnails.sql",
+      "summary": "Migration: 0037_image_thumbnails",
+      "createsTables": [],
+      "altersTables": ["image_assets"],
+      "createsIndexes": []
     }
   ],
   "tables": [
+    {
+      "name": "companies",
+      "introducedBy": "0034_companies.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "owner_uid": {
+          "name": "owner_uid",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": "user_profiles(owner_uid)",
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "color_primary": {
+          "name": "color_primary",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "color_secondary": {
+          "name": "color_secondary",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "color_accent": {
+          "name": "color_accent",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "mark_enabled": {
+          "name": "mark_enabled",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "mark_include_name": {
+          "name": "mark_include_name",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "mark_placement_h": {
+          "name": "mark_placement_h",
+          "type": "text",
+          "nullable": false,
+          "default": "'right'",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "mark_placement_v": {
+          "name": "mark_placement_v",
+          "type": "text",
+          "nullable": false,
+          "default": "'footer'",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "mark_opacity": {
+          "name": "mark_opacity",
+          "type": "integer",
+          "nullable": false,
+          "default": "30",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "companies_owner_uid_idx",
+          "table": "companies",
+          "unique": false,
+          "columns": ["owner_uid"],
+          "where": null,
+          "introducedBy": "0034_companies.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "companies",
+          "column": "owner_uid",
+          "references": "user_profiles(owner_uid)",
+          "introducedBy": "0034_companies.sql"
+        }
+      ],
+      "notes": []
+    },
     {
       "name": "image_assets",
       "introducedBy": "0002_image_assets.sql",
@@ -531,6 +729,36 @@
           "introducedBy": "0005_takeoff_tool.sql",
           "removedBy": null,
           "notes": ["Renamed from takeoff_item_id in 0012_proposal_rename.sql."]
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "companies(id)",
+          "introducedBy": "0034_companies.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "thumbnail_r2_key": {
+          "name": "thumbnail_r2_key",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0037_image_thumbnails.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "thumbnail_byte_size": {
+          "name": "thumbnail_byte_size",
+          "type": "integer",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0037_image_thumbnails.sql",
+          "removedBy": null,
+          "notes": []
         }
       },
       "indexes": [
@@ -661,6 +889,22 @@
           "columns": ["item_id", "entity_type"],
           "where": "is_primary AND entity_type = 'item_plan'",
           "introducedBy": "0017_ffe_item_plan.sql"
+        },
+        {
+          "name": "image_assets_company_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["company_id"],
+          "where": "company_id IS NOT NULL",
+          "introducedBy": "0034_companies.sql"
+        },
+        {
+          "name": "image_assets_company_logo_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["company_id"],
+          "where": "company_id IS NOT NULL AND entity_type = 'company_logo'",
+          "introducedBy": "0034_companies.sql"
         }
       ],
       "foreignKeys": [
@@ -693,6 +937,12 @@
           "column": "takeoff_item_id",
           "references": "proposal_items(id)",
           "introducedBy": "0005_takeoff_tool.sql"
+        },
+        {
+          "table": "image_assets",
+          "column": "company_id",
+          "references": "companies(id)",
+          "introducedBy": "0034_companies.sql"
         }
       ],
       "notes": []
@@ -1625,6 +1875,26 @@
           "default": "''",
           "references": null,
           "introducedBy": "0032_materials_manufacturer_source_url.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "category": {
+          "name": "category",
+          "type": "TEXT",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0036_material_categories.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sub_category": {
+          "name": "sub_category",
+          "type": "TEXT",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0036_material_categories.sql",
           "removedBy": null,
           "notes": []
         }
@@ -3511,7 +3781,7 @@
           "default": "''",
           "references": null,
           "introducedBy": "0005_takeoff_tool.sql",
-          "removedBy": null,
+          "removedBy": "0034_companies.sql",
           "notes": []
         },
         "created_at": {
@@ -3541,6 +3811,30 @@
     }
   ],
   "indexes": [
+    {
+      "name": "companies_owner_uid_idx",
+      "table": "companies",
+      "unique": false,
+      "columns": ["owner_uid"],
+      "where": null,
+      "introducedBy": "0034_companies.sql"
+    },
+    {
+      "name": "image_assets_company_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["company_id"],
+      "where": "company_id IS NOT NULL",
+      "introducedBy": "0034_companies.sql"
+    },
+    {
+      "name": "image_assets_company_logo_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["company_id"],
+      "where": "company_id IS NOT NULL AND entity_type = 'company_logo'",
+      "introducedBy": "0034_companies.sql"
+    },
     {
       "name": "image_assets_entity_lookup_idx",
       "table": "image_assets",
