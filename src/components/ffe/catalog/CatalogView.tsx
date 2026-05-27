@@ -6,6 +6,7 @@ import { cents, formatMoney, type Item, type Project } from '../../../types';
 import { exportCatalogPdf, exportCatalogItemPdf } from '../../../lib/export';
 import {
   useCompany,
+  useCatalogPreference,
   useDeleteImage,
   useFfeItemSort,
   useImages,
@@ -145,51 +146,43 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sortMode } = useFfeItemSort(project.id);
-  const [mainImageAlignment, setMainImageAlignment] =
-    useCatalogSessionPreference<CatalogImageAlignment>(
-      `ffe-catalog-main-image-alignment:${project.id}`,
-      'center',
-    );
-  const [planImageSize, setPlanImageSize] = useCatalogSessionPreference<CatalogPlanImageSize>(
+  const [mainImageAlignment, setMainImageAlignment] = useCatalogPreference<CatalogImageAlignment>(
+    `ffe-catalog-main-image-alignment:${project.id}`,
+    'center',
+  );
+  const [planImageSize, setPlanImageSize] = useCatalogPreference<CatalogPlanImageSize>(
     `ffe-catalog-plan-image-size:${project.id}`,
     'thumbnail',
   );
-  const [costDisplay, setCostDisplay] = useCatalogSessionPreference<CatalogCostDisplay>(
+  const [costDisplay, setCostDisplay] = useCatalogPreference<CatalogCostDisplay>(
     `ffe-catalog-cost-display:${project.id}`,
     'qtyOnly',
   );
-  const [swatchLabelDisplay, setSwatchLabelDisplay] =
-    useCatalogSessionPreference<CatalogToggleValue>(
-      `ffe-catalog-swatch-labels:${project.id}`,
-      'shown',
-    );
-  const [approvalDisplay, setApprovalDisplay] = useCatalogSessionPreference<CatalogToggleValue>(
+  const [swatchLabelDisplay, setSwatchLabelDisplay] = useCatalogPreference<CatalogToggleValue>(
+    `ffe-catalog-swatch-labels:${project.id}`,
+    'shown',
+  );
+  const [approvalDisplay, setApprovalDisplay] = useCatalogPreference<CatalogToggleValue>(
     `ffe-catalog-approval:${project.id}`,
     'shown',
   );
   const [verticalDividerDisplay, setVerticalDividerDisplay] =
-    useCatalogSessionPreference<CatalogToggleValue>(
-      `ffe-catalog-v-divider:${project.id}`,
-      'hidden',
-    );
+    useCatalogPreference<CatalogToggleValue>(`ffe-catalog-v-divider:${project.id}`, 'hidden');
   const [horizontalDividerDisplay, setHorizontalDividerDisplay] =
-    useCatalogSessionPreference<CatalogToggleValue>(
-      `ffe-catalog-h-divider:${project.id}`,
-      'hidden',
-    );
-  const [fontFamily, setFontFamily] = useCatalogSessionPreference<ExportSafeFontKey>(
+    useCatalogPreference<CatalogToggleValue>(`ffe-catalog-h-divider:${project.id}`, 'hidden');
+  const [fontFamily, setFontFamily] = useCatalogPreference<ExportSafeFontKey>(
     `ffe-catalog-font-family:${project.id}`,
     DEFAULT_TYPOGRAPHY_CONFIG.fontFamily,
   );
-  const [titleColorToken, setTitleColorToken] = useCatalogSessionPreference<CatalogColorToken>(
+  const [titleColorToken, setTitleColorToken] = useCatalogPreference<CatalogColorToken>(
     `ffe-catalog-title-color-token:${project.id}`,
     DEFAULT_TYPOGRAPHY_CONFIG.titleColorToken,
   );
-  const [bodyColorToken, setBodyColorToken] = useCatalogSessionPreference<CatalogColorToken>(
+  const [bodyColorToken, setBodyColorToken] = useCatalogPreference<CatalogColorToken>(
     `ffe-catalog-body-color-token:${project.id}`,
     DEFAULT_TYPOGRAPHY_CONFIG.bodyColorToken,
   );
-  const [metaColorToken, setMetaColorToken] = useCatalogSessionPreference<CatalogColorToken>(
+  const [metaColorToken, setMetaColorToken] = useCatalogPreference<CatalogColorToken>(
     `ffe-catalog-meta-color-token:${project.id}`,
     DEFAULT_TYPOGRAPHY_CONFIG.metaColorToken,
   );
@@ -1890,34 +1883,6 @@ function useCatalogPlaceholder(key: string): [string, (value: string) => void] {
       /* storage unavailable — silently ignore */
     }
   }, [key, value]);
-  return [value, setValue];
-}
-
-function useCatalogSessionPreference<T extends string>(
-  key: string,
-  defaultValue: T,
-): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(defaultValue);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      window.sessionStorage.setItem(key, defaultValue);
-    } catch {
-      /* storage unavailable — silently ignore */
-    }
-    setValue(defaultValue);
-  }, [defaultValue, key]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      window.sessionStorage.setItem(key, value);
-    } catch {
-      /* storage unavailable — silently ignore */
-    }
-  }, [key, value]);
-
   return [value, setValue];
 }
 

@@ -15,3 +15,4 @@ export {
   useDeleteItemColumnDef,
 } from './useItemColumnDefs';
 export { useFfeItemSort, type FfeItemSortMode } from './useFfeItemSort';
+export { useCatalogPreference } from './useCatalogPreference';
