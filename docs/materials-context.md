@@ -1,7 +1,13 @@
-# Materials
+# Materials Context
 
 FF&E Builder stores reusable materials per project. A material can be assigned to
 multiple items, and each item can have multiple materials.
+
+## Scope and maintenance
+
+- This is a deep context doc for the Finish Library/Materials subsystem.
+- Update it when Materials behavior or interface contracts change.
+- Skip updates for refactors that do not change behavior/contracts.
 
 ## Data Model
 

@@ -218,3 +218,7 @@ Every feature is done when **all** of the following are true:
 - Read it when a task touches plans routes, canvas workflows, plans API/types, or plans-specific UI behavior.
 - Do not read it for unrelated Proposal/FF&E/general tasks.
 - Update it only when Plans behavior or interface contracts change; skip updates for refactors that do not change behavior/contracts.
+- `docs/materials-context.md` is a deep reference for the Finish Library/Materials subsystem only.
+- Read it when a task touches materials flows, materials API/types, assignment/removal rules, or materials export behavior.
+- Do not read it for unrelated Plans/Proposal/FF&E tasks that do not change materials behavior/contracts.
+- Update it only when Materials behavior or interface contracts change; skip updates for refactors that do not change behavior/contracts.

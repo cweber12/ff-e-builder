@@ -14,7 +14,7 @@
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | [money.md](money.md)                                           | Integer-minor-units convention; which fields are cents; display helpers                  |
 | [images.md](images.md)                                         | Image entity model, upload flow, R2 storage, and crop docs                               |
-| [materials.md](materials.md)                                   | Finish Library and material entity docs                                                  |
+| [materials-context.md](materials-context.md)                   | Finish Library and material subsystem context                                            |
 | [generated-item-table-state.md](generated-item-table-state.md) | Current FF&E/Proposal Generated Item table state and future implementation plan          |
 | [plans-context.md](plans-context.md)                           | Plans workspace implementation context; calibration, measurements, derived images        |
 | [design-system.md](design-system.md)                           | Design tokens, component conventions, Tailwind config                                    |
