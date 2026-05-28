@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): add a 3-step Project Materials Excel import modal with finish resolution by name then code, non-blocking unresolved-finish warnings, and tab-aware MaterialsView options wiring
 - feat(materials): add a 3-step Finishes Excel import modal in MaterialsView (upload, confirm, import) with swatch image uploads, progress tracking, and per-row warning summaries
 - feat(imports): add finishes/materials spreadsheet parser APIs with synonym-based auto-mapping and header-warning handling for low-signal files
 - feat(materials): move Materials toolbar view toggle into an Options dropdown shell and switch tab toggles to the shared SegmentedControl primitive
