@@ -3,9 +3,18 @@ import { cn } from '../../../lib/utils';
 import { type Project } from '../../../types';
 import { useDeleteImage, useImages, useUploadImage } from '../../../hooks';
 import { toast } from 'sonner';
-import { CompactRowGrid, GridCell, LayoutSection, SegmentedControl } from '../../primitives';
+import {
+  ColorChipGroup,
+  CompactRowGrid,
+  GridCell,
+  LayoutSection,
+  SegmentedControl,
+} from '../../primitives';
 import { MaterialLibraryModal } from '../../materials';
-import { type CatalogColorToken } from '../../../lib/export/ffe/catalogTokens';
+import {
+  resolveCatalogColorToken,
+  type CatalogColorToken,
+} from '../../../lib/export/ffe/catalogTokens';
 import {
   type CatalogEntry,
   type WatermarkConfig,
@@ -33,10 +42,10 @@ const EXPORT_SAFE_FONT_OPTIONS: Array<{ value: ExportSafeFontKey; label: string 
   { value: 'source-sans-3', label: 'Source Sans 3' },
 ];
 
-const COLOR_TOKEN_OPTIONS: Array<{ value: CatalogColorToken; label: string }> = [
-  { value: 'ink-950', label: 'Ink 950' },
-  { value: 'ink-800', label: 'Ink 800' },
-  { value: 'slate-700', label: 'Slate 700' },
+const COLOR_TOKEN_OPTIONS: Array<{ token: CatalogColorToken; hex: string }> = [
+  { token: 'ink-950', hex: resolveCatalogColorToken('ink-950') },
+  { token: 'ink-800', hex: resolveCatalogColorToken('ink-800') },
+  { token: 'slate-700', hex: resolveCatalogColorToken('slate-700') },
 ];
 
 export function CatalogEditorPanel({
@@ -163,58 +172,28 @@ export function CatalogEditorPanel({
           </select>
         </LayoutRow>
         <LayoutRow label="Title and ID">
-          <select
-            aria-label="Title color token"
+          <ColorChipGroup
             value={editorState.typography.titleColorToken}
-            className="toolbar-select"
-            onChange={(event) =>
-              onTypographyChange({
-                titleColorToken: event.target.value as CatalogColorToken,
-              })
-            }
-          >
-            {COLOR_TOKEN_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} (export-safe)
-              </option>
-            ))}
-          </select>
+            options={COLOR_TOKEN_OPTIONS}
+            ariaLabel="Title color token"
+            onChange={(token) => onTypographyChange({ titleColorToken: token })}
+          />
         </LayoutRow>
         <LayoutRow label="Body text">
-          <select
-            aria-label="Body color token"
+          <ColorChipGroup
             value={editorState.typography.bodyColorToken}
-            className="toolbar-select"
-            onChange={(event) =>
-              onTypographyChange({
-                bodyColorToken: event.target.value as CatalogColorToken,
-              })
-            }
-          >
-            {COLOR_TOKEN_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} (export-safe)
-              </option>
-            ))}
-          </select>
+            options={COLOR_TOKEN_OPTIONS}
+            ariaLabel="Body color token"
+            onChange={(token) => onTypographyChange({ bodyColorToken: token })}
+          />
         </LayoutRow>
         <LayoutRow label="Metadata">
-          <select
-            aria-label="Metadata color token"
+          <ColorChipGroup
             value={editorState.typography.metaColorToken}
-            className="toolbar-select"
-            onChange={(event) =>
-              onTypographyChange({
-                metaColorToken: event.target.value as CatalogColorToken,
-              })
-            }
-          >
-            {COLOR_TOKEN_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} (export-safe)
-              </option>
-            ))}
-          </select>
+            options={COLOR_TOKEN_OPTIONS}
+            ariaLabel="Metadata color token"
+            onChange={(token) => onTypographyChange({ metaColorToken: token })}
+          />
         </LayoutRow>
       </LayoutSection>
 
