@@ -73,13 +73,22 @@ describe('LayoutSection', () => {
     expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('renders header trailing slot content', () => {
+  it('defaultOpen prop is respected for initial state', () => {
+    render(
+      <LayoutSection id="text" label="Text" defaultOpen={true}>
+        <p>Section body</p>
+      </LayoutSection>,
+    );
+    expect(screen.getByRole('button', { name: 'Text' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('renders header trailing content', () => {
     render(
       <LayoutSection
         id="mark"
         label="Document Mark"
         defaultOpen={false}
-        headerTrailingSlot={<button type="button">Trailing action</button>}
+        headerTrailing={<button type="button">Trailing action</button>}
       >
         <p>Section body</p>
       </LayoutSection>,
@@ -95,7 +104,7 @@ describe('LayoutSection', () => {
         id="mark"
         label="Document Mark"
         defaultOpen={false}
-        headerTrailingSlot={<button type="button">Trailing action</button>}
+        headerTrailing={<button type="button">Trailing action</button>}
       >
         <p>Section body</p>
       </LayoutSection>,
@@ -105,6 +114,29 @@ describe('LayoutSection', () => {
     expect(header).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(screen.getByRole('button', { name: 'Trailing action' }));
+    expect(header).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('controlled open prop overrides internal state', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <LayoutSection id="text" label="Text" defaultOpen={false} open={true} onToggle={() => {}}>
+        <p>Section body</p>
+      </LayoutSection>,
+    );
+
+    const header = screen.getByRole('button', { name: 'Text' });
+    expect(header).toHaveAttribute('aria-expanded', 'true');
+
+    rerender(
+      <LayoutSection id="text" label="Text" defaultOpen={false} open={false} onToggle={() => {}}>
+        <p>Section body</p>
+      </LayoutSection>,
+    );
+    expect(header).toHaveAttribute('aria-expanded', 'false');
+
+    // Clicking does not change state without external update
+    await user.click(header);
     expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 });

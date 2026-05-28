@@ -5,26 +5,43 @@ interface LayoutSectionProps {
   id: string;
   label: string;
   defaultOpen: boolean;
-  headerTrailingSlot?: ReactNode;
+  /** Optional content rendered in the header row, to the right of the label. Clicks inside do not toggle the section. */
+  headerTrailing?: ReactNode;
   children: ReactNode;
+  /** Controlled open state. When provided, overrides internal state. */
+  open?: boolean;
+  /** Called when the header is toggled. Required when `open` is provided. */
+  onToggle?: () => void;
 }
 
 export function LayoutSection({
   id,
   label,
   defaultOpen,
-  headerTrailingSlot,
+  headerTrailing,
   children,
+  open: controlledOpen,
+  onToggle,
 }: LayoutSectionProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
 
   const toggleOpen = () => {
-    setIsOpen((current) => !current);
+    if (onToggle) {
+      onToggle();
+    } else {
+      setInternalOpen((current) => !current);
+    }
   };
 
   return (
     <section className="catalog-layout-group" data-state={isOpen ? 'open' : 'closed'}>
-      <div className="flex items-start justify-between gap-3">
+      <div
+        className={cn(
+          'flex items-start justify-between gap-3 pb-2',
+          isOpen ? 'border-b border-black/8' : '',
+        )}
+      >
         <button
           type="button"
           aria-expanded={isOpen}
@@ -38,15 +55,15 @@ export function LayoutSection({
             }
           }}
         >
-          <span className="catalog-layout-group-label text-brand-600">{label}</span>
+          <span className="catalog-layout-group-label">{label}</span>
         </button>
-        {headerTrailingSlot ? (
+        {headerTrailing ? (
           <div
             className="shrink-0"
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            {headerTrailingSlot}
+            {headerTrailing}
           </div>
         ) : null}
       </div>
@@ -61,7 +78,7 @@ export function LayoutSection({
         <div
           className={cn(
             'catalog-layout-group-body mt-1.5',
-            isOpen ? 'border-l-2 border-brand-600 pl-3' : '',
+            isOpen ? 'border-l-2 border-brand-500 pl-3' : '',
           )}
         >
           {children}
