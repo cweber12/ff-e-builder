@@ -1139,9 +1139,11 @@
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: var(--catalog-col-gap);
-    align-items: stretch;
-    min-height: 0;
-    overflow: hidden;
+    align-items: start;
+    align-self: start;
+    height: fit-content;
+    min-height: fit-content;
+    overflow: visible;
     position: relative;
   }
 
