@@ -67,13 +67,25 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 
 ---
 
+## Issue Implementation Workflow
+
+When implementing GitHub issues:
+
+1. Fetch the issue (`gh issue view <number>`).
+2. Implement the change within the approved scope.
+3. Run typecheck and tests (or defer to user per sliced-work rule).
+4. Commit — one issue per commit where possible.
+5. **Split overlapping issues into separate isolated commits.** Use a backup/reset/apply strategy: implement one issue, commit, then layer the next on top. Do not bundle unrelated issue changes into a single commit.
+
+---
+
 ## Operating rules
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
 - **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
 
-- **Confirm verification before drafting the commit message.** For ad-hoc single changes (no approved multi-slice plan), run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. For approved planning handoffs, follow the handoff's Verification Plan and the MANDATORY sliced-work rule below: run the smallest targeted checks first, run the full suite only when required by risk or request, and if verification is assigned to the user, do not run those commands yourself; finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop.
+- **Confirm verification before drafting the commit message.** For ad-hoc single changes (no approved multi-slice plan), run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. For approved planning handoffs, follow the handoff's Verification Plan and the MANDATORY sliced-work rule below: run the smallest targeted checks first, run the full suite only when required by risk or request, and if verification is assigned to the user, do not run those commands yourself; finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop. **Never commit code that fails typecheck or tests**, regardless of workflow.
 
 - **Commit automatically after every change.** Stage all changes and commit using conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 - **When staged, always include generated architecture map artifacts in the same commit.** If `docs/generated/architecture-map.json` and/or `docs/generated/architecture-map.md` are already staged or modified by checks, commit them together with related code changes (do not split into a separate commit).
@@ -152,6 +164,10 @@ Use these command patterns for common tasks:
 - **Each component gets its own file.** Do not define a second exported component inside an existing component file (e.g. modals, sub-views). Extract it to `src/components/<ComponentName>.tsx`.
 - **Primitives live in `src/components/primitives/` and are barrel-exported from `src/components/primitives/index.ts`.** Generic, reusable UI atoms (Button, Modal, Drawer, etc.) go here; domain-aware components (ProjectHeader, FfeTable, etc.) go directly under `src/components/`.
 
+### Refactoring
+
+- **Verify symbol names before bulk renames.** When using `replace_all` or any bulk rename, confirm the new name is not a substring of other identifiers before applying. After any rename, run a build to confirm nothing broke.
+
 ### Constants
 
 - **Shared UI constants live in `src/lib/constants.ts`.** Values used across multiple files (e.g. `BRAND_RGB`) belong here, not hardcoded inline. Import from `'../lib/constants'` or `'./constants'` as appropriate.
@@ -160,6 +176,18 @@ Use these command patterns for common tasks:
 
 - **The API worker (`api/`) must never import from `src/`.** The `api/` and `src/` packages are independent — the Worker must be self-contained. If both packages need the same constant (e.g. `itemStatuses`), define it in each package separately and add a comment noting the intentional duplication.
 - **The React client (`src/`) must never import from `api/`.** All communication goes through the HTTP API at runtime.
+
+---
+
+## UI / Styling Conventions
+
+- **Tailwind class merging.** The base `Modal` and `cn()` utility may not resolve conflicting utility classes (e.g. two `max-w-*` values). Use tailwind-merge-aware patterns (`twMerge`, `clsx` + `tailwind-merge`) when overriding base styles, and verify the change has a visible effect after applying.
+
+---
+
+## Domain Notes
+
+- **Image columns store content in `imagesByColumn`, not `values`.** When writing data-import or empty-column filter logic, check `imagesByColumn` for image-type columns before treating them as empty — filtering on `values` alone will incorrectly null them out.
 
 ---
 

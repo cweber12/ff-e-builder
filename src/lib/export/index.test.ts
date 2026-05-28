@@ -137,12 +137,10 @@ const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem =
       projectId: 'p1',
       name: 'Walnut',
       materialId: 'MAT-001',
+      code: '',
+      finishId: null,
+      materialType: null,
       description: '',
-      swatchHex: '#5c3a21',
-      manufacturer: '',
-      sourceUrl: '',
-      category: null,
-      subCategory: '',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
     },
@@ -177,12 +175,10 @@ const makeMaterial = (overrides: Partial<Material> = {}): Material => ({
   projectId: 'p1',
   name: 'Walnut',
   materialId: 'MAT-001',
+  code: '',
+  finishId: null,
+  materialType: null,
   description: 'Wood finish',
-  swatchHex: '#5c3a21',
-  manufacturer: '',
-  sourceUrl: '',
-  category: null,
-  subCategory: '',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
   ...overrides,
@@ -363,8 +359,8 @@ describe('proposal export document preparation', () => {
 });
 
 describe('exportMaterialsExcel', () => {
-  it('exports material rows as CSV when requested', async () => {
-    await exportMaterialsExcel(makeProject(), [makeMaterial()], 'csv');
+  it('exports material rows as CSV when requested', () => {
+    exportMaterialsExcel(makeProject(), [makeMaterial()], 'csv');
 
     expect(downloadedFilename).toBe('test-project-materials.csv');
     expect(capturedBlobContent).toContain('Material ID');

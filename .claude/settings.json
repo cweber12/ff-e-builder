@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": ["mcp__GitKraken__issues_get_detail", "Bash(gh label list *)"]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"pnpm typecheck 1>&2 && echo 'typecheck: clean' >&2\""
+          }
+        ]
+      }
+    ]
+  }
+}

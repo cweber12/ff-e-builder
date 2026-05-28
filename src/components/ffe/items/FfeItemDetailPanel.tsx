@@ -91,10 +91,10 @@ export function FfeItemDetailPanel({ item, roomName, onClose }: Props) {
                         key={m.id}
                         className="inline-flex items-center gap-2 border border-neutral-200 bg-canvas-shell px-2.5 py-1 text-sm text-neutral-800"
                       >
-                        {m.swatchHex && (
+                        {m.finish?.swatchHex && (
                           <span
                             className="h-3 w-3 flex-shrink-0 rounded-full border border-neutral-300"
-                            style={{ background: m.swatchHex }}
+                            style={{ background: m.finish.swatchHex }}
                           />
                         )}
                         {m.name}

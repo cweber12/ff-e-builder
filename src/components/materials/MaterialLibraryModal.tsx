@@ -706,7 +706,7 @@ function MaterialPickerCard({
   onEdit,
 }: {
   material: Material;
-  finish?: Finish;
+  finish?: Finish | undefined;
   assigning: boolean;
   assignable: boolean;
   onSelect: () => void;
@@ -920,7 +920,7 @@ export function MaterialSwatchImage({
   className = '',
 }: {
   material: Material;
-  finish?: Finish;
+  finish?: Finish | undefined;
   size?: 'sm' | 'md' | 'lg';
   className?: string | undefined;
 }) {

@@ -161,7 +161,7 @@ export function buildCatalogPdfPageModel(
         compactText(material.name) !== null ||
         compactText(material.materialId) !== null ||
         compactText(material.description) !== null ||
-        compactText(material.swatchHex) !== null,
+        compactText(material.finish?.swatchHex ?? null) !== null,
     ),
   };
 }
@@ -674,7 +674,7 @@ function drawMaterialsRow(
       doc.circle(swatchCx, swatchCy, swatchSize / 2, 'S');
       doc.setLineWidth(0.2);
     } else {
-      const fill = hexToRgb(material.swatchHex ?? '#e8e8e8');
+      const fill = hexToRgb(material.finish?.swatchHex ?? '#e8e8e8');
       setFill(doc, fill);
       setStroke(doc, GRAY_200);
       doc.circle(swatchCx, swatchCy, swatchSize / 2, 'FD');

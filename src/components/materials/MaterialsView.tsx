@@ -631,7 +631,7 @@ function MaterialGridCard({
   onDelete,
 }: {
   material: Material;
-  finish?: Finish;
+  finish?: Finish | undefined;
   onEdit: () => void;
   onDelete: () => void;
 }) {

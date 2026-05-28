@@ -74,7 +74,6 @@ describe('materialsApi', () => {
       name: 'Oak',
       materialId: 'WD-02',
       description: 'White oak',
-      swatchHex: '#FFFFFF',
     });
 
     expect(fetch).toHaveBeenCalledWith(
