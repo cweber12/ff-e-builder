@@ -210,4 +210,4 @@ Every feature is done when **all** of the following are true:
 2. `AGENTS.md` — **this file** — operating rules for all agents
 3. `CONTEXT.md` — canonical product and domain terminology; read before touching any domain-facing code or docs
 4. `docs/architecture.md` — system design, diagrams, decision rationale
-5. `docs/changelog.md` — what has changed recently and what is in flight
+5. `docs/changelog.md` — read `Unreleased` and the last 1-3 relevant entries; use targeted search for subsystem-specific history
