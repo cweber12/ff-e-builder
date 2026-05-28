@@ -37,6 +37,7 @@ import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
 import { FinishForm } from './FinishForm';
+import { ImportFinishesExcelModal } from './ImportFinishesExcelModal';
 
 type MaterialsViewProps = {
   project: Project;
@@ -150,6 +151,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
   const [materialDraft, setMaterialDraft] = useState<MaterialDraft>(emptyMaterialDraft);
   const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
   const [showMaterialForm, setShowMaterialForm] = useState(false);
+  const [showImportFinishesModal, setShowImportFinishesModal] = useState(false);
 
   const editingFinishImages = useImages('finish', editingFinishId ?? '');
   const deleteFinishImage = useDeleteImage('finish', editingFinishId ?? '');
@@ -297,6 +299,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         activeTab={activeTab}
         viewMode={viewMode}
         categoryFilter={categoryFilter}
+        onImportFinishes={() => setShowImportFinishesModal(true)}
         onActiveTabChange={setActiveTab}
         onViewModeChange={setViewMode}
         onCategoryFilterChange={setCategoryFilter}
@@ -413,6 +416,15 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           />
         </div>
       </Modal>
+
+      <ImportFinishesExcelModal
+        open={showImportFinishesModal}
+        projectId={project.id}
+        onClose={() => setShowImportFinishesModal(false)}
+        onSuccess={() => {
+          void finishes.refetch();
+        }}
+      />
     </div>
   );
 }
@@ -421,6 +433,7 @@ function MaterialsToolbarLeft({
   activeTab,
   viewMode,
   categoryFilter,
+  onImportFinishes,
   onActiveTabChange,
   onViewModeChange,
   onCategoryFilterChange,
@@ -428,6 +441,7 @@ function MaterialsToolbarLeft({
   activeTab: LibraryTab;
   viewMode: 'grid' | 'table';
   categoryFilter: CategoryFilter;
+  onImportFinishes: () => void;
   onActiveTabChange: (value: LibraryTab) => void;
   onViewModeChange: (value: 'grid' | 'table') => void;
   onCategoryFilterChange: (value: CategoryFilter) => void;
@@ -462,7 +476,7 @@ function MaterialsToolbarLeft({
           </Button>
         )}
       >
-        {() => (
+        {({ closeMenu }) => (
           <>
             <div className="px-2.5 py-2">
               <p className="toolbar-label pb-1">View</p>
@@ -479,8 +493,17 @@ function MaterialsToolbarLeft({
             </div>
             <MenuSeparator />
             <MenuItem
-              disabled
-              className="cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400"
+              disabled={activeTab !== 'finishes'}
+              className={
+                activeTab !== 'finishes'
+                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                  : 'px-3 py-2'
+              }
+              onClick={() => {
+                if (activeTab !== 'finishes') return;
+                closeMenu();
+                onImportFinishes();
+              }}
             >
               Import from Excel
             </MenuItem>

@@ -26,7 +26,9 @@ multiple items, and each item can have multiple materials.
 - Open an item's material editor from the Materials cell in the table.
 - Use the Materials tab to view and manage all library entries for the project.
 - In the Materials toolbar, the left slot shows:
-  - an Options dropdown (with View toggle plus Import/Export/Delete All menu shell)
+  - an Options dropdown with View toggle plus:
+    - `Import from Excel` enabled on the Finishes tab (opens a 3-step modal)
+    - disabled `Export` and `Delete All` placeholders
   - a segmented tab switcher for Finish Library and Project Materials
   - category filter select (Finishes tab only)
 - Add materials while creating an item from the Add Item drawer. The drawer can
@@ -51,3 +53,10 @@ used it.
   to material ID, `Base Finish` to finish).
 - Files without a recognizable header row (fewer than three header labels)
   return a parse warning.
+- The Finishes import modal consumes the finish parser through a 3-step flow:
+  - upload (`.xlsx`, `.xls`, `.csv` only; unsupported file types are rejected)
+  - confirm (filename, row count, detected columns, recognized field mappings, parse warnings)
+  - import (row-by-row finish creation, optional swatch image upload, progress, and warning summary)
+- Import warning semantics:
+  - row-level finish create failures are non-fatal and reported in the summary
+  - swatch image upload failures are non-fatal and reported per row in the summary
