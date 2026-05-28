@@ -11,6 +11,7 @@ import {
 import {
   useCreateFinish,
   useCreateMaterial,
+  useActionsMenu,
   useDeleteFinish,
   useDeleteImage,
   useDeleteMaterial,
@@ -34,9 +35,8 @@ import {
   Button,
   DropdownMenu,
   MenuItem,
+  MenuPanel,
   MenuSeparator,
-  MenuSub,
-  MenuSubTrigger,
   Modal,
   SegmentedControl,
 } from '../primitives';
@@ -591,6 +591,10 @@ function MaterialsToolbarLeft({
   onCategoryFilterChange: (value: CategoryFilter) => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const exportMenu = useActionsMenu();
+  const [optionsTriggerElement, setOptionsTriggerElement] = useState<HTMLButtonElement | null>(
+    null,
+  );
 
   useEffect(() => {
     const el = document.getElementById(MATERIALS_FILTER_SLOT_ID);
@@ -598,6 +602,12 @@ function MaterialsToolbarLeft({
   }, []);
 
   if (!slot) return null;
+
+  const exportMenuPosition = exportMenu.getPortalPosition(exportMenu.triggerRef, {
+    align: 'bottom',
+    edge: 'left',
+    offsetY: 4,
+  });
 
   return createPortal(
     <>
@@ -612,7 +622,11 @@ function MaterialsToolbarLeft({
             variant="toolbar"
             aria-haspopup="menu"
             aria-expanded={open}
-            onClick={toggleMenu}
+            onClick={(event) => {
+              setOptionsTriggerElement(event.currentTarget);
+              if (exportMenu.open) exportMenu.closeMenu();
+              toggleMenu();
+            }}
           >
             <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
             Options
@@ -620,14 +634,7 @@ function MaterialsToolbarLeft({
           </Button>
         )}
       >
-        {({
-          closeMenu,
-          submenuOpen,
-          toggleSubmenu,
-          submenuTriggerRef,
-          submenuPanelRef,
-          getSubmenuPosition,
-        }) => (
+        {({ closeMenu }) => (
           <>
             <div className="px-2.5 py-2">
               <p className="toolbar-label pb-1">View</p>
@@ -652,54 +659,23 @@ function MaterialsToolbarLeft({
             >
               Import from Excel
             </MenuItem>
-            <MenuSubTrigger
-              ref={submenuTriggerRef}
-              aria-expanded={submenuOpen}
-              onClick={toggleSubmenu}
-              disabled={activeCount === 0}
+            <MenuItem
               className={
                 activeCount === 0
                   ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
                   : 'px-3 py-2'
               }
+              disabled={activeCount === 0}
+              aria-haspopup="menu"
+              onClick={() => {
+                closeMenu();
+                if (activeCount === 0 || !optionsTriggerElement) return;
+                exportMenu.triggerRef.current = optionsTriggerElement;
+                exportMenu.openMenu();
+              }}
             >
               Export
-              <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
-            </MenuSubTrigger>
-            <MenuSub
-              open={submenuOpen}
-              panelRef={submenuPanelRef}
-              position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: 0 })}
-              className="z-[121] min-w-36 translate-x-[calc(100%+0.25rem)]"
-            >
-              <MenuItem
-                className="px-3 py-2"
-                onClick={() => {
-                  closeMenu();
-                  onExport(activeTab, 'csv');
-                }}
-              >
-                Export CSV
-              </MenuItem>
-              <MenuItem
-                className="px-3 py-2"
-                onClick={() => {
-                  closeMenu();
-                  onExport(activeTab, 'xlsx');
-                }}
-              >
-                Export Excel
-              </MenuItem>
-              <MenuItem
-                className="px-3 py-2"
-                onClick={() => {
-                  closeMenu();
-                  onExport(activeTab, 'pdf');
-                }}
-              >
-                Export PDF
-              </MenuItem>
-            </MenuSub>
+            </MenuItem>
             <MenuItem
               disabled={activeCount === 0}
               className={
@@ -740,6 +716,62 @@ function MaterialsToolbarLeft({
           ))}
         </select>
       )}
+      {exportMenu.open &&
+        exportMenuPosition &&
+        createPortal(
+          <MenuPanel
+            ref={exportMenu.panelRef}
+            position={exportMenuPosition}
+            className="z-[121] min-w-36"
+          >
+            <MenuItem
+              className={
+                activeCount === 0
+                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                  : 'px-3 py-2'
+              }
+              disabled={activeCount === 0}
+              onClick={() => {
+                if (activeCount === 0) return;
+                exportMenu.closeMenu();
+                onExport(activeTab, 'csv');
+              }}
+            >
+              Export CSV
+            </MenuItem>
+            <MenuItem
+              className={
+                activeCount === 0
+                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                  : 'px-3 py-2'
+              }
+              disabled={activeCount === 0}
+              onClick={() => {
+                if (activeCount === 0) return;
+                exportMenu.closeMenu();
+                onExport(activeTab, 'xlsx');
+              }}
+            >
+              Export Excel
+            </MenuItem>
+            <MenuItem
+              className={
+                activeCount === 0
+                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                  : 'px-3 py-2'
+              }
+              disabled={activeCount === 0}
+              onClick={() => {
+                if (activeCount === 0) return;
+                exportMenu.closeMenu();
+                onExport(activeTab, 'pdf');
+              }}
+            >
+              Export PDF
+            </MenuItem>
+          </MenuPanel>,
+          document.body,
+        )}
     </>,
     slot,
   );

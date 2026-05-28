@@ -147,7 +147,9 @@ describe('MaterialsView options actions', () => {
     renderView();
 
     await user.click(screen.getByRole('button', { name: /options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^export/i }));
+    expect(screen.queryByRole('menuitem', { name: /export csv/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('menuitem', { name: /^export$/i }));
+    expect(await screen.findByRole('menuitem', { name: /export csv/i })).toBeInTheDocument();
     await user.click(screen.getByRole('menuitem', { name: /export csv/i }));
 
     expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
@@ -157,15 +159,38 @@ describe('MaterialsView options actions', () => {
     );
     expect(mockState.exportMaterialsExcel).not.toHaveBeenCalled();
 
+    await user.click(screen.getByRole('button', { name: /options/i }));
+    await user.click(screen.getByRole('radio', { name: /table/i }));
+    await user.click(screen.getByRole('menuitem', { name: /^export$/i }));
+    await user.click(screen.getByRole('menuitem', { name: /export excel/i }));
+    expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.arrayContaining(mockState.finishes),
+    );
+
     await user.click(screen.getByRole('radio', { name: /project materials/i }));
     await user.click(screen.getByRole('button', { name: /options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^export/i }));
+    await user.click(screen.getByRole('menuitem', { name: /^export$/i }));
     await user.click(screen.getByRole('menuitem', { name: /export pdf/i }));
 
     expect(mockState.exportMaterialsPdf).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'project-1' }),
       mockState.materials,
     );
+  });
+
+  it('disables export when the active filtered list is empty', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.type(screen.getByRole('textbox', { name: /search finishes/i }), 'no-match-term');
+    await user.click(screen.getByRole('button', { name: /options/i }));
+    expect(screen.getByRole('menuitem', { name: /^export$/i })).toBeDisabled();
+    expect(screen.queryByRole('menuitem', { name: /export csv/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: /project materials/i }));
+    await user.click(screen.getByRole('button', { name: /options/i }));
+    expect(screen.getByRole('menuitem', { name: /^export$/i })).toBeDisabled();
   });
 
   it('runs delete-all through per-item delete hooks for each tab', async () => {

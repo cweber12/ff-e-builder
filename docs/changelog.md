@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(materials): wire Options -> Export to open an anchored format popover, keep exports available in Grid/Table modes, and disable export when the active filtered tab list is empty
 - fix(migrations): make finish-library split migration update image_assets constraints before converting material image rows to finish entities
 - fix(materials): complete issue #92 options workflows by enabling tab-aware export and delete-all actions, correcting finishes export routing, and adding dedicated finishes CSV/Excel/PDF exporters
 - feat(materials): add a 3-step Project Materials Excel import modal with finish resolution by name then code, non-blocking unresolved-finish warnings, and tab-aware MaterialsView options wiring
