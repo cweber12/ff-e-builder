@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(catalog): keep catalog main and bottom rows stacked with consistent spacing by removing forced vertical spread in the content block grid
 - fix(catalog): make the catalog main two-column section fit content height instead of stretching to a fixed-height slot
 - fix(catalog): change qty-only catalog callout copy to QUANTITY: N and align its typography with PRODUCT SPECIFICATIONS
 - feat(catalog): add compact two-column Text and Layout control grids in Catalog Editor with stacked labels and narrow-popover single-column fallback

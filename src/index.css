@@ -1126,9 +1126,9 @@
   /* ---------- Main two-column layout ---------- */
   .catalog-content-block {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 196px;
+    grid-template-rows: auto 196px;
+    align-content: start;
     gap: 20px;
-    height: 100%;
     min-height: 0;
     margin-top: -12px;
     overflow: hidden;
