@@ -104,6 +104,29 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 
 - **Deploy the API worker with `pnpm --filter ffe-api deploy`.** Do not use raw `wrangler deploy`.
 
+### Execution fallback for sandboxed CLI agents
+
+- **Primary mode:** run normal repo commands in the default sandbox first.
+- **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312`), retry once using an approved escalated execution path.
+- **Retry rule:** keep the same command and intent on retry; do not broaden scope during fallback.
+- **Safety boundary:** escalation is for reliability, not privilege expansion. Do not escalate destructive commands (`rm -rf`, `git reset --hard`, force-push, DB drops) without explicit same-message user confirmation.
+
+Use these command patterns for common tasks:
+
+- **Fast search/discovery**
+  - `rg --files`
+  - `rg -n "<pattern>" src docs`
+- **Targeted verification**
+  - `pnpm exec vitest run <path-to-test>`
+  - `pnpm exec eslint <path-to-file>`
+- **Full verification**
+  - `pnpm typecheck && pnpm lint && pnpm test && pnpm build`
+- **Issue triage operations (GitHub)**
+  - `gh issue view <number> --json number,title,body,labels,state,author,createdAt,updatedAt,url`
+  - `gh issue view <number> --comments`
+  - `gh issue edit <number> --add-label <label> --remove-label <label>`
+  - `gh issue comment <number> --body-file <file>`
+
 ---
 
 ## Code organisation rules
