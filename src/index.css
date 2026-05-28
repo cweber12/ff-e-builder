@@ -546,6 +546,19 @@
     gap: 12px;
   }
 
+  .catalog-layout-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+    row-gap: 12px;
+  }
+
+  @media (max-width: 420px) {
+    .catalog-layout-compact-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   /* ---- Redesigned layout panel groups ---- */
   .catalog-layout-group {
     padding: 14px 0;
@@ -576,6 +589,19 @@
     align-items: center;
     gap: 12px;
     padding: 5px 0;
+  }
+
+  .catalog-layout-option-row--stacked {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .catalog-layout-option-row--stacked .segmented {
+    width: fit-content;
+    max-width: 100%;
   }
 
   .catalog-layout-watermark-row {
