@@ -127,26 +127,24 @@ export function CatalogEditorPanel({
                 Text fields on the page are editable only while the Editor is open.
               </p>
               <CompactRowGrid>
-                <GridCell label="Cost display">
+                <GridCell label="Cost info">
                   <SegmentedControl
-                    ariaLabel="Cost display"
+                    ariaLabel="Cost info display"
                     value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
                     onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
                   >
-                    <SegmentedControl.Option value="qtyOnly">Qty only</SegmentedControl.Option>
-                    <SegmentedControl.Option value="cost">Qty + cost</SegmentedControl.Option>
+                    <SegmentedControl.Option value="cost">Show</SegmentedControl.Option>
+                    <SegmentedControl.Option value="qtyOnly">Hide</SegmentedControl.Option>
                   </SegmentedControl>
                 </GridCell>
-                <GridCell label="Finish labels">
+                <GridCell label="Finish info">
                   <SegmentedControl
-                    ariaLabel="Finish label display"
+                    ariaLabel="Finish info display"
                     value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
                     onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
                   >
-                    <SegmentedControl.Option value="labels">Labels</SegmentedControl.Option>
-                    <SegmentedControl.Option value="swatches">
-                      Swatches only
-                    </SegmentedControl.Option>
+                    <SegmentedControl.Option value="labels">Show</SegmentedControl.Option>
+                    <SegmentedControl.Option value="swatches">Hide</SegmentedControl.Option>
                   </SegmentedControl>
                 </GridCell>
                 <GridCell label="Client approval">
@@ -156,7 +154,7 @@ export function CatalogEditorPanel({
                     onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
                   >
                     <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-                    <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
+                    <SegmentedControl.Option value="hidden">Hide</SegmentedControl.Option>
                   </SegmentedControl>
                 </GridCell>
                 <GridCell label="Vendor info">
@@ -165,8 +163,8 @@ export function CatalogEditorPanel({
                     value={layoutConfig.showVendor ? 'shown' : 'hidden'}
                     onChange={(value) => onLayoutChange({ showVendor: value === 'shown' })}
                   >
-                    <SegmentedControl.Option value="hidden">Hidden</SegmentedControl.Option>
                     <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+                    <SegmentedControl.Option value="hidden">Hide</SegmentedControl.Option>
                   </SegmentedControl>
                 </GridCell>
               </CompactRowGrid>
