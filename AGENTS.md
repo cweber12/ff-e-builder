@@ -110,6 +110,9 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 - **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312`), retry once using an approved escalated execution path.
 - **Retry rule:** keep the same command and intent on retry; do not broaden scope during fallback.
 - **Safety boundary:** escalation is for reliability, not privilege expansion. Do not escalate destructive commands (`rm -rf`, `git reset --hard`, force-push, DB drops) without explicit same-message user confirmation.
+- **Reference-first rule:** before composing new command variants, check `/docs/cli-command-reference.md` for an existing template and use it when applicable.
+- **Learning loop rule:** when a reusable command format succeeds after experimentation, add or update its template in `/docs/cli-command-reference.md` (template only; never task-specific arguments, secrets, tokens, IDs, or user data).
+- **Quality gate for updates:** only record command formats that are likely to recur; if a similar template already exists, update that entry instead of creating a near-duplicate.
 
 Use these command patterns for common tasks:
 
