@@ -42,10 +42,10 @@ const EXPORT_SAFE_FONT_OPTIONS: Array<{ value: ExportSafeFontKey; label: string 
   { value: 'source-sans-3', label: 'Source Sans 3' },
 ];
 
-const COLOR_TOKEN_OPTIONS: Array<{ token: CatalogColorToken; hex: string }> = [
-  { token: 'ink-950', hex: resolveCatalogColorToken('ink-950') },
-  { token: 'ink-800', hex: resolveCatalogColorToken('ink-800') },
-  { token: 'slate-700', hex: resolveCatalogColorToken('slate-700') },
+const COLOR_TOKEN_OPTIONS: Array<{ token: CatalogColorToken; hex: string; label: string }> = [
+  { token: 'ink-950', hex: resolveCatalogColorToken('ink-950'), label: 'Ink 950' },
+  { token: 'ink-800', hex: resolveCatalogColorToken('ink-800'), label: 'Ink 800' },
+  { token: 'slate-700', hex: resolveCatalogColorToken('slate-700'), label: 'Slate 700' },
 ];
 
 export function CatalogEditorPanel({
@@ -70,6 +70,9 @@ export function CatalogEditorPanel({
   onClose: () => void;
 }) {
   const layoutConfig = editorState.layoutConfig;
+  const hasLogo = Boolean(logoDataUrl);
+  const isDocumentMarkEnabled = watermarkConfig.enabled;
+  const showDocumentMarkControls = hasLogo;
   const [openSection, setOpenSection] = useState<string>('catalog-text');
 
   const toggleSection = (id: string) => {
@@ -98,252 +101,259 @@ export function CatalogEditorPanel({
         </button>
       </div>
 
-      <LayoutSection
-        id="catalog-text"
-        label="Text"
-        defaultOpen={true}
-        open={openSection === 'catalog-text'}
-        onToggle={() => toggleSection('catalog-text')}
-      >
-        <p className="catalog-layout-note">
-          Text fields on the page are editable only while the Editor is open.
-        </p>
-        <CompactRowGrid>
-          <GridCell label="Cost display">
-            <SegmentedControl
-              ariaLabel="Cost display"
-              value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
-              onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
-            >
-              <SegmentedControl.Option value="qtyOnly">Qty only</SegmentedControl.Option>
-              <SegmentedControl.Option value="cost">Qty + cost</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-          <GridCell label="Finish labels">
-            <SegmentedControl
-              ariaLabel="Finish label display"
-              value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
-              onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
-            >
-              <SegmentedControl.Option value="labels">Labels</SegmentedControl.Option>
-              <SegmentedControl.Option value="swatches">Swatches only</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-          <GridCell label="Client approval">
-            <SegmentedControl
-              ariaLabel="Client approval section"
-              value={layoutConfig.showApproval ? 'shown' : 'hidden'}
-              onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
-            >
-              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-              <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-          <GridCell label="Vendor info">
-            <SegmentedControl
-              ariaLabel="Vendor info display"
-              value={layoutConfig.showVendor ? 'shown' : 'hidden'}
-              onChange={(value) => onLayoutChange({ showVendor: value === 'shown' })}
-            >
-              <SegmentedControl.Option value="hidden">Hidden</SegmentedControl.Option>
-              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-        </CompactRowGrid>
-      </LayoutSection>
-
-      <LayoutSection
-        id="catalog-media"
-        label="Media"
-        defaultOpen={false}
-        open={openSection === 'catalog-media'}
-        onToggle={() => toggleSection('catalog-media')}
-      >
-        <p className="catalog-layout-note">
-          Option image and swatch controls are being consolidated here.
-        </p>
-        <CatalogEditorMediaManager project={project} currentEntry={currentEntry} />
-      </LayoutSection>
-
-      <LayoutSection
-        id="catalog-typography-and-color"
-        label="Typography and Color"
-        defaultOpen={false}
-        open={openSection === 'catalog-typography-and-color'}
-        onToggle={() => toggleSection('catalog-typography-and-color')}
-      >
-        <LayoutRow label="Font">
-          <select
-            aria-label="Catalog font family"
-            value={editorState.typography.fontFamily}
-            className="toolbar-select"
-            onChange={(event) =>
-              onTypographyChange({
-                fontFamily: event.target.value as ExportSafeFontKey,
-              })
-            }
-          >
-            {EXPORT_SAFE_FONT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} (export-safe)
-              </option>
-            ))}
-          </select>
-        </LayoutRow>
-        <LayoutRow label="Title and ID">
-          <ColorChipGroup
-            value={editorState.typography.titleColorToken}
-            options={COLOR_TOKEN_OPTIONS}
-            ariaLabel="Title color token"
-            onChange={(token) => onTypographyChange({ titleColorToken: token })}
-          />
-        </LayoutRow>
-        <LayoutRow label="Body text">
-          <ColorChipGroup
-            value={editorState.typography.bodyColorToken}
-            options={COLOR_TOKEN_OPTIONS}
-            ariaLabel="Body color token"
-            onChange={(token) => onTypographyChange({ bodyColorToken: token })}
-          />
-        </LayoutRow>
-        <LayoutRow label="Metadata">
-          <ColorChipGroup
-            value={editorState.typography.metaColorToken}
-            options={COLOR_TOKEN_OPTIONS}
-            ariaLabel="Metadata color token"
-            onChange={(token) => onTypographyChange({ metaColorToken: token })}
-          />
-        </LayoutRow>
-      </LayoutSection>
-
-      <LayoutSection
-        id="catalog-layout"
-        label="Layout"
-        defaultOpen={false}
-        open={openSection === 'catalog-layout'}
-        onToggle={() => toggleSection('catalog-layout')}
-      >
-        <CompactRowGrid>
-          <GridCell label="Main image">
-            <SegmentedControl
-              ariaLabel="Main image alignment"
-              value={layoutConfig.mainImageAlignment}
-              onChange={(value) => onLayoutChange({ mainImageAlignment: value })}
-            >
-              <SegmentedControl.Option value="center">Center</SegmentedControl.Option>
-              <SegmentedControl.Option value="top">Top</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-          <GridCell label="Vertical divider">
-            <SegmentedControl
-              ariaLabel="Vertical divider between image and specs"
-              value={layoutConfig.showVerticalDivider ? 'shown' : 'hidden'}
-              onChange={(value) => onLayoutChange({ showVerticalDivider: value === 'shown' })}
-            >
-              <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
-              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-          <GridCell label="Plan image">
-            <SegmentedControl
-              ariaLabel="Plan image size"
-              value={layoutConfig.planImageSize}
-              onChange={(value) => onLayoutChange({ planImageSize: value })}
-            >
-              <SegmentedControl.Option value="thumbnail">Thumb</SegmentedControl.Option>
-              <SegmentedControl.Option value="expanded">Expanded</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-          <GridCell label="Section divider">
-            <SegmentedControl
-              ariaLabel="Horizontal divider between main and bottom sections"
-              value={layoutConfig.showHorizontalDivider ? 'shown' : 'hidden'}
-              onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
-            >
-              <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
-              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-            </SegmentedControl>
-          </GridCell>
-        </CompactRowGrid>
-      </LayoutSection>
-
-      <LayoutSection
-        id="catalog-document-mark"
-        label="Document Mark"
-        defaultOpen={false}
-        open={openSection === 'catalog-document-mark'}
-        onToggle={() => toggleSection('catalog-document-mark')}
-      >
-        <div className="catalog-layout-watermark-row">
-          <div>
-            <p className="catalog-layout-label">Company mark</p>
-            <p className="catalog-layout-note">
-              {logoDataUrl ? 'Apply to all export pages.' : 'Upload a company logo to enable.'}
-            </p>
-          </div>
-          <button
-            type="button"
-            className={cn('catalog-switch', watermarkConfig.enabled && 'catalog-switch-active')}
-            disabled={!logoDataUrl}
-            aria-pressed={watermarkConfig.enabled}
-            onClick={() => onWatermarkChange({ enabled: !watermarkConfig.enabled })}
-          >
-            <span className="catalog-switch-knob" />
-          </button>
-        </div>
-        <LayoutRow label="Company name">
-          <SegmentedControl
-            ariaLabel="Include company name with watermark"
-            value={watermarkConfig.includeName ? 'shown' : 'hidden'}
-            onChange={(value) => onWatermarkChange({ includeName: value === 'shown' })}
-          >
-            <SegmentedControl.Option value="hidden">Logo only</SegmentedControl.Option>
-            <SegmentedControl.Option value="shown">With name</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Placement">
-          <SegmentedControl
-            ariaLabel="Watermark placement"
-            value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
-            onChange={(value) => {
-              const [placementV, placementH] = value.split('-') as [
-                WatermarkConfig['placementV'],
-                WatermarkConfig['placementH'],
-              ];
-              onWatermarkChange({ placementV, placementH, enabled: true });
-            }}
-          >
-            <SegmentedControl.Option value="footer-left">Left</SegmentedControl.Option>
-            <SegmentedControl.Option value="footer-center">Center</SegmentedControl.Option>
-            <SegmentedControl.Option value="footer-right">Right</SegmentedControl.Option>
-            <SegmentedControl.Option value="header-left">Header</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <div className="catalog-opacity-row">
-          <div className="catalog-opacity-header">
-            <p className="catalog-layout-label">Opacity</p>
-            <span className="catalog-opacity-value">{watermarkConfig.opacity}%</span>
-          </div>
-          <input
-            type="range"
-            min={5}
-            max={100}
-            step={5}
-            value={watermarkConfig.opacity}
-            disabled={!logoDataUrl || !watermarkConfig.enabled}
-            onChange={(event) => onWatermarkChange({ opacity: Number(event.target.value) })}
-            className="catalog-opacity-slider"
-          />
-        </div>
-        <button
-          type="button"
-          className="catalog-layout-delete"
-          disabled={!watermarkConfig.enabled}
-          onClick={() => onWatermarkChange({ enabled: false })}
+      <div className="catalog-layout-popover-body">
+        <LayoutSection
+          id="catalog-text"
+          label="Text"
+          defaultOpen={true}
+          open={openSection === 'catalog-text'}
+          onToggle={() => toggleSection('catalog-text')}
         >
-          Remove watermark
-        </button>
-      </LayoutSection>
+          <p className="catalog-layout-note">
+            Text fields on the page are editable only while the Editor is open.
+          </p>
+          <CompactRowGrid>
+            <GridCell label="Cost display">
+              <SegmentedControl
+                ariaLabel="Cost display"
+                value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
+                onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
+              >
+                <SegmentedControl.Option value="qtyOnly">Qty only</SegmentedControl.Option>
+                <SegmentedControl.Option value="cost">Qty + cost</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+            <GridCell label="Finish labels">
+              <SegmentedControl
+                ariaLabel="Finish label display"
+                value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
+                onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
+              >
+                <SegmentedControl.Option value="labels">Labels</SegmentedControl.Option>
+                <SegmentedControl.Option value="swatches">Swatches only</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+            <GridCell label="Client approval">
+              <SegmentedControl
+                ariaLabel="Client approval section"
+                value={layoutConfig.showApproval ? 'shown' : 'hidden'}
+                onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
+              >
+                <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+                <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+            <GridCell label="Vendor info">
+              <SegmentedControl
+                ariaLabel="Vendor info display"
+                value={layoutConfig.showVendor ? 'shown' : 'hidden'}
+                onChange={(value) => onLayoutChange({ showVendor: value === 'shown' })}
+              >
+                <SegmentedControl.Option value="hidden">Hidden</SegmentedControl.Option>
+                <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+          </CompactRowGrid>
+        </LayoutSection>
+
+        <LayoutSection
+          id="catalog-media"
+          label="Media"
+          defaultOpen={false}
+          open={openSection === 'catalog-media'}
+          onToggle={() => toggleSection('catalog-media')}
+        >
+          <p className="catalog-layout-note">
+            Option image and swatch controls are being consolidated here.
+          </p>
+          <CatalogEditorMediaManager project={project} currentEntry={currentEntry} />
+        </LayoutSection>
+
+        <LayoutSection
+          id="catalog-typography-and-color"
+          label="Typography and Color"
+          defaultOpen={false}
+          open={openSection === 'catalog-typography-and-color'}
+          onToggle={() => toggleSection('catalog-typography-and-color')}
+        >
+          {EXPORT_SAFE_FONT_OPTIONS.length > 1 ? (
+            <LayoutRow label="Font">
+              <select
+                aria-label="Catalog font family"
+                value={editorState.typography.fontFamily}
+                className="toolbar-select"
+                onChange={(event) =>
+                  onTypographyChange({
+                    fontFamily: event.target.value as ExportSafeFontKey,
+                  })
+                }
+              >
+                {EXPORT_SAFE_FONT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} (export-safe)
+                  </option>
+                ))}
+              </select>
+            </LayoutRow>
+          ) : null}
+          <LayoutRow label="Title and ID">
+            <ColorChipGroup
+              value={editorState.typography.titleColorToken}
+              options={COLOR_TOKEN_OPTIONS}
+              ariaLabel="Title color token"
+              onChange={(token) => onTypographyChange({ titleColorToken: token })}
+            />
+          </LayoutRow>
+          <LayoutRow label="Body text">
+            <ColorChipGroup
+              value={editorState.typography.bodyColorToken}
+              options={COLOR_TOKEN_OPTIONS}
+              ariaLabel="Body color token"
+              onChange={(token) => onTypographyChange({ bodyColorToken: token })}
+            />
+          </LayoutRow>
+          <LayoutRow label="Metadata">
+            <ColorChipGroup
+              value={editorState.typography.metaColorToken}
+              options={COLOR_TOKEN_OPTIONS}
+              ariaLabel="Metadata color token"
+              onChange={(token) => onTypographyChange({ metaColorToken: token })}
+            />
+          </LayoutRow>
+        </LayoutSection>
+
+        <LayoutSection
+          id="catalog-layout"
+          label="Layout"
+          defaultOpen={false}
+          open={openSection === 'catalog-layout'}
+          onToggle={() => toggleSection('catalog-layout')}
+        >
+          <CompactRowGrid>
+            <GridCell label="Main image">
+              <SegmentedControl
+                ariaLabel="Main image alignment"
+                value={layoutConfig.mainImageAlignment}
+                onChange={(value) => onLayoutChange({ mainImageAlignment: value })}
+              >
+                <SegmentedControl.Option value="center">Center</SegmentedControl.Option>
+                <SegmentedControl.Option value="top">Top</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+            <GridCell label="Vertical divider">
+              <SegmentedControl
+                ariaLabel="Vertical divider between image and specs"
+                value={layoutConfig.showVerticalDivider ? 'shown' : 'hidden'}
+                onChange={(value) => onLayoutChange({ showVerticalDivider: value === 'shown' })}
+              >
+                <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
+                <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+            <GridCell label="Plan image">
+              <SegmentedControl
+                ariaLabel="Plan image size"
+                value={layoutConfig.planImageSize}
+                onChange={(value) => onLayoutChange({ planImageSize: value })}
+              >
+                <SegmentedControl.Option value="thumbnail">Thumb</SegmentedControl.Option>
+                <SegmentedControl.Option value="expanded">Expanded</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+            <GridCell label="Section divider">
+              <SegmentedControl
+                ariaLabel="Horizontal divider between main and bottom sections"
+                value={layoutConfig.showHorizontalDivider ? 'shown' : 'hidden'}
+                onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
+              >
+                <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
+                <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+              </SegmentedControl>
+            </GridCell>
+          </CompactRowGrid>
+        </LayoutSection>
+
+        <LayoutSection
+          id="catalog-document-mark"
+          label="Document Mark"
+          defaultOpen={false}
+          open={openSection === 'catalog-document-mark'}
+          onToggle={() => toggleSection('catalog-document-mark')}
+          headerTrailing={
+            <button
+              type="button"
+              aria-label="Toggle Document Mark"
+              className={cn('catalog-switch', isDocumentMarkEnabled && 'catalog-switch-active')}
+              disabled={!hasLogo}
+              aria-pressed={isDocumentMarkEnabled}
+              onClick={() => onWatermarkChange({ enabled: !isDocumentMarkEnabled })}
+            >
+              <span className="catalog-switch-knob" />
+            </button>
+          }
+        >
+          {showDocumentMarkControls ? (
+            <div
+              className={cn(
+                'catalog-layout-group-body',
+                !isDocumentMarkEnabled && 'catalog-layout-disabled',
+              )}
+              aria-disabled={!isDocumentMarkEnabled}
+            >
+              <CompactRowGrid>
+                <GridCell label="Company name">
+                  <SegmentedControl
+                    ariaLabel="Include company name with document mark"
+                    value={watermarkConfig.includeName ? 'shown' : 'hidden'}
+                    disabled={!isDocumentMarkEnabled}
+                    onChange={(value) => onWatermarkChange({ includeName: value === 'shown' })}
+                  >
+                    <SegmentedControl.Option value="hidden">Logo only</SegmentedControl.Option>
+                    <SegmentedControl.Option value="shown">With name</SegmentedControl.Option>
+                  </SegmentedControl>
+                </GridCell>
+                <GridCell label="Placement">
+                  <SegmentedControl
+                    ariaLabel="Document Mark placement"
+                    value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
+                    disabled={!isDocumentMarkEnabled}
+                    onChange={(value) => {
+                      const [placementV, placementH] = value.split('-') as [
+                        WatermarkConfig['placementV'],
+                        WatermarkConfig['placementH'],
+                      ];
+                      onWatermarkChange({ placementV, placementH, enabled: true });
+                    }}
+                  >
+                    <SegmentedControl.Option value="footer-left">Left</SegmentedControl.Option>
+                    <SegmentedControl.Option value="footer-center">Center</SegmentedControl.Option>
+                    <SegmentedControl.Option value="footer-right">Right</SegmentedControl.Option>
+                    <SegmentedControl.Option value="header-left">Header</SegmentedControl.Option>
+                  </SegmentedControl>
+                </GridCell>
+              </CompactRowGrid>
+              <div className="catalog-opacity-row">
+                <div className="catalog-opacity-header">
+                  <p className="catalog-layout-label">Opacity</p>
+                  <span className="catalog-opacity-value">{watermarkConfig.opacity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={5}
+                  max={100}
+                  step={5}
+                  value={watermarkConfig.opacity}
+                  disabled={!isDocumentMarkEnabled}
+                  onChange={(event) => onWatermarkChange({ opacity: Number(event.target.value) })}
+                  className="catalog-opacity-slider"
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="catalog-layout-note">Upload a Company logo to enable.</p>
+          )}
+        </LayoutSection>
+      </div>
     </div>
   );
 }

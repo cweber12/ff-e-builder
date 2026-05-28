@@ -4,7 +4,7 @@ import { type CatalogColorToken } from '../../lib/export/ffe/catalogTokens';
 
 interface ColorChipGroupProps {
   value: CatalogColorToken;
-  options: Array<{ token: CatalogColorToken; hex: string }>;
+  options: Array<{ token: CatalogColorToken; hex: string; label: string }>;
   onChange: (token: CatalogColorToken) => void;
   ariaLabel: string;
 }
@@ -26,7 +26,8 @@ export function ColorChipGroup({ value, options, onChange, ariaLabel }: ColorChi
             type="button"
             role="radio"
             aria-checked={isSelected}
-            aria-label={option.token}
+            aria-label={option.label}
+            title={option.label}
             tabIndex={isSelected ? 0 : -1}
             className={cn(
               'h-5 w-5 rounded-full border border-black/15 ring-offset-1',
@@ -35,11 +36,16 @@ export function ColorChipGroup({ value, options, onChange, ariaLabel }: ColorChi
             style={{ backgroundColor: option.hex }}
             onClick={() => onChange(option.token)}
             onKeyDown={(event) => {
-              if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+              if (
+                event.key !== 'ArrowRight' &&
+                event.key !== 'ArrowLeft' &&
+                event.key !== 'ArrowDown' &&
+                event.key !== 'ArrowUp'
+              ) {
                 return;
               }
               event.preventDefault();
-              const direction = event.key === 'ArrowRight' ? 1 : -1;
+              const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
               const nextIndex = (index + direction + options.length) % options.length;
               const nextToken = options[nextIndex]?.token;
               if (nextToken) {
