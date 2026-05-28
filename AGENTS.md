@@ -72,11 +72,37 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 When implementing GitHub issues:
 
 1. Fetch the issue (`gh issue view <number>`).
-2. Implement the change within the approved scope.
-3. Run typecheck and tests (or defer to user per sliced-work rule).
-4. Commit — one issue per commit where possible.
-5. **Split overlapping issues into separate isolated commits.** Use a backup/reset/apply strategy: implement one issue, commit, then layer the next on top. Do not bundle unrelated issue changes into a single commit.
-6. **After committing, close the issue and leave a comment.** Run `gh issue close <number> --comment "Resolved in <commit-sha>: <one-sentence summary of what was done>."` Do not skip this step — every committed issue fix must be closed and commented in the same turn.
+2. Apply the **Pre-Implementation Issue Gate** (below). Do not implement while triage is unresolved.
+3. Implement the change within the approved scope.
+4. Apply the **Targeted Verification Gate** (below) unless an approved sliced-work plan delegates verification to the user.
+5. Commit — one issue per commit where possible.
+6. Apply the **Post-Implementation Completion Gate** (below).
+7. **Split overlapping issues into separate isolated commits.** Use a backup/reset/apply strategy: implement one issue, commit, then layer the next on top. Do not bundle unrelated issue changes into a single commit.
+
+### Pre-Implementation Issue Gate
+
+- For issue work, fetch issue metadata and discussion context before coding: state, labels, and comments.
+- If triage is unresolved (for example, still `needs-triage` or conflicting state labels), stop and resolve triage state first.
+- Moving an issue to `ready-for-agent` requires posting the required triage note/agent brief in the issue.
+- The agent must not implement while triage is unresolved.
+- Before handoff to a CLI coding agent, generate the exact CLI prompt and wait for explicit user confirmation to proceed.
+- This same gate applies to planning sessions that will lead to implementation handoff.
+
+### Targeted Verification Gate
+
+- Before completion, run targeted checks for the touched scope (for example, targeted Vitest plus targeted ESLint on changed files).
+- Run full-suite verification only when risk, scope, or explicit user request requires it.
+- Exception: if an approved sliced-work plan explicitly delegates verification to the user, do not run those checks; clearly mark verification as pending user execution.
+
+### Post-Implementation Completion Gate
+
+- After commit, post an issue completion comment that includes:
+  - concise implementation summary
+  - changed files list
+  - checks run (or explicit note that verification was user-delegated per sliced-work)
+  - commit hash
+- Then close the issue or move it to the repo-defined completed state in the same turn.
+- Do not end the issue workflow without both the completion comment and completion state update.
 
 ---
 
@@ -87,6 +113,9 @@ When implementing GitHub issues:
 - **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
 
 - **Confirm verification before drafting the commit message.** For ad-hoc single changes (no approved multi-slice plan), run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. For approved planning handoffs, follow the handoff's Verification Plan and the MANDATORY sliced-work rule below: run the smallest targeted checks first, run the full suite only when required by risk or request, and if verification is assigned to the user, do not run those commands yourself; finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop. **Never commit code that fails typecheck or tests**, regardless of workflow.
+- **Confirm verification before drafting the commit message.** For issue work and approved planning handoffs, run smallest-scope targeted checks first and run full-suite verification only when risk or explicit request requires it. For ad-hoc non-issue changes, run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. If verification is assigned to the user in an approved sliced-work plan, do not run those commands yourself; finish implementation, clearly state verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop. **Never commit code that fails typecheck or tests**, regardless of workflow.
+
+- **Path Discovery Gate.** When path certainty is low, discover first using `rg --files` and `rg -n` before reading guessed paths. Do not burn cycles on avoidable bad-path reads.
 
 - **Commit automatically after every change.** Stage all changes and commit using conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 - **When staged, always include generated architecture map artifacts in the same commit.** If `docs/generated/architecture-map.json` and/or `docs/generated/architecture-map.md` are already staged or modified by checks, commit them together with related code changes (do not split into a separate commit).
@@ -121,6 +150,8 @@ When implementing GitHub issues:
 
 - **Primary mode:** run normal repo commands in the default sandbox first.
 - **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312`), retry once using an approved escalated execution path.
+- **Immediate escalation retry rule:** on that known launcher failure signature, escalate on the next attempt immediately for the same command intent.
+- **No repeated non-escalated retries:** do not repeat the same command intent multiple times in non-escalated mode after the known launcher failure is observed.
 - **Retry rule:** keep the same command and intent on retry; do not broaden scope during fallback.
 - **Safety boundary:** escalation is for reliability, not privilege expansion. Do not escalate destructive commands (`rm -rf`, `git reset --hard`, force-push, DB drops) without explicit same-message user confirmation.
 - **Reference-first rule:** before composing new command variants, check `/docs/reference/cli-command-reference.md` for an existing template and use it when applicable.

@@ -93,6 +93,42 @@ Use this exact structure for new entries.
 - Output expectation: comment URL returned
 - Last verified: 2026-05-28
 
+### Issue completion state check
+
+- Intent: fetch current issue state before completion operations
+- Shell/context: powershell, repo root with `gh` auth configured
+- Command template: `gh issue view <number> --json number,title,state,labels,url`
+- Escalation: if process launch fails with `CreateProcessAsUserW failed: 1312`, retry once immediately with escalation
+- Output expectation: single JSON object showing current state and labels
+- Last verified: 2026-05-28
+
+### Issue completion label/state update
+
+- Intent: move issue from triage/in-progress labels into completed state labels
+- Shell/context: powershell, repo root with `gh` auth configured
+- Command template: `gh issue edit <number> --add-label <completed-label> --remove-label <from-label>`
+- Escalation: if process launch fails with `CreateProcessAsUserW failed: 1312`, retry once immediately with escalation
+- Output expectation: issue updated with completion label/state mapping
+- Last verified: 2026-05-28
+
+### Issue completion comment post
+
+- Intent: publish structured completion note after commit
+- Shell/context: powershell, repo root with `gh` auth configured
+- Command template: `gh issue comment <number> --body-file <completion-comment-file>`
+- Escalation: if process launch fails with `CreateProcessAsUserW failed: 1312`, retry once immediately with escalation
+- Output expectation: comment URL returned
+- Last verified: 2026-05-28
+
+### Issue close
+
+- Intent: close issue after completion comment is posted
+- Shell/context: powershell, repo root with `gh` auth configured
+- Command template: `gh issue close <number>`
+- Escalation: if process launch fails with `CreateProcessAsUserW failed: 1312`, retry once immediately with escalation
+- Output expectation: issue state changes to closed/completed
+- Last verified: 2026-05-28
+
 ### Targeted test run
 
 - Intent: run narrow verification for a specific test file
@@ -119,3 +155,12 @@ Use this exact structure for new entries.
 - Escalation: retry with escalation when sandbox/network restrictions block dependency or process access
 - Output expectation: all steps exit 0
 - Last verified: 2026-05-28
+
+## Troubleshooting
+
+### Sandbox launcher failure pattern
+
+- Symptom: command fails before execution with `CreateProcessAsUserW failed: 1312`.
+- Action: retry once immediately with escalation for the same command intent.
+- Do not do: repeated non-escalated retries of the same command intent.
+- Keep scope fixed: do not broaden command scope while performing fallback.
