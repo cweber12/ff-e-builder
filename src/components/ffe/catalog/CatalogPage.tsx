@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { cn, emptyToNull } from '../../../lib/utils';
 import {
   cents,
@@ -529,14 +529,15 @@ export function CatalogPage({
             itemId={item.id}
             optionImages={optionImages}
             itemName={item.itemName}
+            {...(titleTextStyle ? { titleTextStyle } : {})}
           />
           <div className="catalog-location-block">
             <div className="catalog-location-content">
-              <p className="catalog-location-label" style={metaTextStyle}>
-                <span className="catalog-location-key" style={metaTextStyle}>
-                  LOCATION:
-                </span>{' '}
-                <span className="catalog-location-value" style={metaTextStyle}>
+              <h2 className="catalog-spec-heading" style={titleTextStyle}>
+                LOCATION
+              </h2>
+              <p className="catalog-location-label" style={bodyTextStyle}>
+                <span className="catalog-location-value" style={bodyTextStyle}>
                   {room.name}
                 </span>
               </p>
@@ -626,17 +627,24 @@ function CatalogOptionRenderings({
   itemId,
   optionImages,
   itemName,
+  titleTextStyle,
 }: {
   itemId: string;
   optionImages: ImageAsset[];
   itemName: string;
+  titleTextStyle?: CSSProperties;
 }) {
   const slot0 = optionImages[0] ?? null;
   const slot1 = optionImages[1] ?? null;
+  const hasOptions = Boolean(slot0 || slot1);
 
   return (
     <div className="catalog-options-strip">
-      <h2 className="catalog-spec-heading">OPTION RENDERINGS</h2>
+      {hasOptions ? (
+        <h2 className="catalog-spec-heading" style={titleTextStyle}>
+          OPTIONS
+        </h2>
+      ) : null}
       <div className="catalog-option-grid">
         <div className="catalog-option-slot">
           {slot0 ? (
