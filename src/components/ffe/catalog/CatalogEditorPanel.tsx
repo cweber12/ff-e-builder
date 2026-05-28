@@ -3,7 +3,7 @@ import { cn } from '../../../lib/utils';
 import { type Project } from '../../../types';
 import { useDeleteImage, useImages, useUploadImage } from '../../../hooks';
 import { toast } from 'sonner';
-import { LayoutSection, SegmentedControl } from '../../primitives';
+import { CompactRowGrid, GridCell, LayoutSection, SegmentedControl } from '../../primitives';
 import { MaterialLibraryModal } from '../../materials';
 import { type CatalogColorToken } from '../../../lib/export/ffe/catalogTokens';
 import {
@@ -88,46 +88,48 @@ export function CatalogEditorPanel({
         <p className="catalog-layout-note">
           Text fields on the page are editable only while the Editor is open.
         </p>
-        <LayoutRow label="Cost display">
-          <SegmentedControl
-            ariaLabel="Cost display"
-            value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
-            onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
-          >
-            <SegmentedControl.Option value="qtyOnly">Qty only</SegmentedControl.Option>
-            <SegmentedControl.Option value="cost">Qty + cost</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Finish labels">
-          <SegmentedControl
-            ariaLabel="Finish label display"
-            value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
-            onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
-          >
-            <SegmentedControl.Option value="labels">Labels</SegmentedControl.Option>
-            <SegmentedControl.Option value="swatches">Swatches only</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Client approval">
-          <SegmentedControl
-            ariaLabel="Client approval section"
-            value={layoutConfig.showApproval ? 'shown' : 'hidden'}
-            onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
-          >
-            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-            <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Vendor info">
-          <SegmentedControl
-            ariaLabel="Vendor info display"
-            value={layoutConfig.showVendor ? 'shown' : 'hidden'}
-            onChange={(value) => onLayoutChange({ showVendor: value === 'shown' })}
-          >
-            <SegmentedControl.Option value="hidden">Hidden</SegmentedControl.Option>
-            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
+        <CompactRowGrid>
+          <GridCell label="Cost display">
+            <SegmentedControl
+              ariaLabel="Cost display"
+              value={layoutConfig.showCostInfo ? 'cost' : 'qtyOnly'}
+              onChange={(value) => onLayoutChange({ showCostInfo: value === 'cost' })}
+            >
+              <SegmentedControl.Option value="qtyOnly">Qty only</SegmentedControl.Option>
+              <SegmentedControl.Option value="cost">Qty + cost</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+          <GridCell label="Finish labels">
+            <SegmentedControl
+              ariaLabel="Finish label display"
+              value={layoutConfig.showSwatchLabels ? 'labels' : 'swatches'}
+              onChange={(value) => onLayoutChange({ showSwatchLabels: value === 'labels' })}
+            >
+              <SegmentedControl.Option value="labels">Labels</SegmentedControl.Option>
+              <SegmentedControl.Option value="swatches">Swatches only</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+          <GridCell label="Client approval">
+            <SegmentedControl
+              ariaLabel="Client approval section"
+              value={layoutConfig.showApproval ? 'shown' : 'hidden'}
+              onChange={(value) => onLayoutChange({ showApproval: value === 'shown' })}
+            >
+              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+              <SegmentedControl.Option value="hidden">Remove</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+          <GridCell label="Vendor info">
+            <SegmentedControl
+              ariaLabel="Vendor info display"
+              value={layoutConfig.showVendor ? 'shown' : 'hidden'}
+              onChange={(value) => onLayoutChange({ showVendor: value === 'shown' })}
+            >
+              <SegmentedControl.Option value="hidden">Hidden</SegmentedControl.Option>
+              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+        </CompactRowGrid>
       </LayoutSection>
 
       <LayoutSection id="catalog-media" label="Media" defaultOpen={false}>
@@ -217,46 +219,48 @@ export function CatalogEditorPanel({
       </LayoutSection>
 
       <LayoutSection id="catalog-layout" label="Layout" defaultOpen={false}>
-        <LayoutRow label="Main image">
-          <SegmentedControl
-            ariaLabel="Main image alignment"
-            value={layoutConfig.mainImageAlignment}
-            onChange={(value) => onLayoutChange({ mainImageAlignment: value })}
-          >
-            <SegmentedControl.Option value="center">Center</SegmentedControl.Option>
-            <SegmentedControl.Option value="top">Top</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Vertical divider">
-          <SegmentedControl
-            ariaLabel="Vertical divider between image and specs"
-            value={layoutConfig.showVerticalDivider ? 'shown' : 'hidden'}
-            onChange={(value) => onLayoutChange({ showVerticalDivider: value === 'shown' })}
-          >
-            <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
-            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Plan image">
-          <SegmentedControl
-            ariaLabel="Plan image size"
-            value={layoutConfig.planImageSize}
-            onChange={(value) => onLayoutChange({ planImageSize: value })}
-          >
-            <SegmentedControl.Option value="thumbnail">Thumb</SegmentedControl.Option>
-            <SegmentedControl.Option value="expanded">Expanded</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
-        <LayoutRow label="Section divider">
-          <SegmentedControl
-            ariaLabel="Horizontal divider between main and bottom sections"
-            value={layoutConfig.showHorizontalDivider ? 'shown' : 'hidden'}
-            onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
-          >
-            <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
-            <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
-          </SegmentedControl>
-        </LayoutRow>
+        <CompactRowGrid>
+          <GridCell label="Main image">
+            <SegmentedControl
+              ariaLabel="Main image alignment"
+              value={layoutConfig.mainImageAlignment}
+              onChange={(value) => onLayoutChange({ mainImageAlignment: value })}
+            >
+              <SegmentedControl.Option value="center">Center</SegmentedControl.Option>
+              <SegmentedControl.Option value="top">Top</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+          <GridCell label="Vertical divider">
+            <SegmentedControl
+              ariaLabel="Vertical divider between image and specs"
+              value={layoutConfig.showVerticalDivider ? 'shown' : 'hidden'}
+              onChange={(value) => onLayoutChange({ showVerticalDivider: value === 'shown' })}
+            >
+              <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
+              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+          <GridCell label="Plan image">
+            <SegmentedControl
+              ariaLabel="Plan image size"
+              value={layoutConfig.planImageSize}
+              onChange={(value) => onLayoutChange({ planImageSize: value })}
+            >
+              <SegmentedControl.Option value="thumbnail">Thumb</SegmentedControl.Option>
+              <SegmentedControl.Option value="expanded">Expanded</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+          <GridCell label="Section divider">
+            <SegmentedControl
+              ariaLabel="Horizontal divider between main and bottom sections"
+              value={layoutConfig.showHorizontalDivider ? 'shown' : 'hidden'}
+              onChange={(value) => onLayoutChange({ showHorizontalDivider: value === 'shown' })}
+            >
+              <SegmentedControl.Option value="hidden">None</SegmentedControl.Option>
+              <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
+            </SegmentedControl>
+          </GridCell>
+        </CompactRowGrid>
       </LayoutSection>
 
       <LayoutSection id="catalog-document-mark" label="Document Mark" defaultOpen={false}>
