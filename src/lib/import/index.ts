@@ -40,3 +40,25 @@ export type {
   ProposalImportSection,
   ProposalParsedRow,
 } from './formats/proposal';
+
+export {
+  FINISH_IMPORT_EMPTY_MAP,
+  MATERIAL_IMPORT_EMPTY_MAP,
+  autoMapFinishColumns,
+  autoMapMaterialColumns,
+  parseFinishSpreadsheet,
+  parseMaterialSpreadsheet,
+} from './formats/materials';
+export type {
+  FinishImportColumn,
+  FinishImportColumnMap,
+  FinishImportField,
+  FinishImportImage,
+  FinishParsedRow,
+  MaterialImportColumn,
+  MaterialImportColumnMap,
+  MaterialImportField,
+  MaterialParsedRow,
+  ParsedFinishSpreadsheet,
+  ParsedMaterialSpreadsheet,
+} from './formats/materials';

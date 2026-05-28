@@ -40,3 +40,14 @@ multiple items, and each item can have multiple materials.
 
 Deleting a material removes it from the project library and from any items that
 used it.
+
+## Import parser surface
+
+- The import library exposes finish/material parser helpers for upcoming Materials
+  import UI wiring:
+  - `parseFinishSpreadsheet(file)` and `autoMapFinishColumns(columns)`
+  - `parseMaterialSpreadsheet(file)` and `autoMapMaterialColumns(columns)`
+- Auto-mapping uses synonym groups (for example, `Mfr` to manufacturer, `Part #`
+  to material ID, `Base Finish` to finish).
+- Files without a recognizable header row (fewer than three header labels)
+  return a parse warning.
