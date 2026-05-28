@@ -19,3 +19,4 @@ export { DropdownMenu } from './DropdownMenu';
 export { MenuPanel, MenuItem, MenuSeparator, MenuSubTrigger, MenuSub } from './MenuPanel';
 export { ToastProvider } from './Toast';
 export { toast } from './toast-api';
+export { LayoutSection } from './LayoutSection';

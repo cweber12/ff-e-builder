@@ -3,7 +3,7 @@ import { cn } from '../../../lib/utils';
 import { type Project } from '../../../types';
 import { useDeleteImage, useImages, useUploadImage } from '../../../hooks';
 import { toast } from 'sonner';
-import { SegmentedControl } from '../../primitives';
+import { LayoutSection, SegmentedControl } from '../../primitives';
 import { MaterialLibraryModal } from '../../materials';
 import { type CatalogColorToken } from '../../../lib/export/ffe/catalogTokens';
 import {
@@ -84,7 +84,7 @@ export function CatalogEditorPanel({
         </button>
       </div>
 
-      <LayoutGroup label="Text">
+      <LayoutSection id="catalog-text" label="Text" defaultOpen={true}>
         <p className="catalog-layout-note">
           Text fields on the page are editable only while the Editor is open.
         </p>
@@ -128,16 +128,20 @@ export function CatalogEditorPanel({
             <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
           </SegmentedControl>
         </LayoutRow>
-      </LayoutGroup>
+      </LayoutSection>
 
-      <LayoutGroup label="Media">
+      <LayoutSection id="catalog-media" label="Media" defaultOpen={false}>
         <p className="catalog-layout-note">
           Option image and swatch controls are being consolidated here.
         </p>
         <CatalogEditorMediaManager project={project} currentEntry={currentEntry} />
-      </LayoutGroup>
+      </LayoutSection>
 
-      <LayoutGroup label="Typography and Color">
+      <LayoutSection
+        id="catalog-typography-and-color"
+        label="Typography and Color"
+        defaultOpen={false}
+      >
         <LayoutRow label="Font">
           <select
             aria-label="Catalog font family"
@@ -210,9 +214,9 @@ export function CatalogEditorPanel({
             ))}
           </select>
         </LayoutRow>
-      </LayoutGroup>
+      </LayoutSection>
 
-      <LayoutGroup label="Layout">
+      <LayoutSection id="catalog-layout" label="Layout" defaultOpen={false}>
         <LayoutRow label="Main image">
           <SegmentedControl
             ariaLabel="Main image alignment"
@@ -253,9 +257,9 @@ export function CatalogEditorPanel({
             <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
           </SegmentedControl>
         </LayoutRow>
-      </LayoutGroup>
+      </LayoutSection>
 
-      <LayoutGroup label="Watermark">
+      <LayoutSection id="catalog-document-mark" label="Document Mark" defaultOpen={false}>
         <div className="catalog-layout-watermark-row">
           <div>
             <p className="catalog-layout-label">Company mark</p>
@@ -325,16 +329,7 @@ export function CatalogEditorPanel({
         >
           Remove watermark
         </button>
-      </LayoutGroup>
-    </div>
-  );
-}
-
-function LayoutGroup({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="catalog-layout-group">
-      <p className="catalog-layout-group-label">{label}</p>
-      <div className="catalog-layout-group-body">{children}</div>
+      </LayoutSection>
     </div>
   );
 }
