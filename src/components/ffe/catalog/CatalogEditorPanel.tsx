@@ -70,6 +70,11 @@ export function CatalogEditorPanel({
   onClose: () => void;
 }) {
   const layoutConfig = editorState.layoutConfig;
+  const [openSection, setOpenSection] = useState<string>('catalog-text');
+
+  const toggleSection = (id: string) => {
+    setOpenSection((current) => (current === id ? '' : id));
+  };
 
   return (
     <div
@@ -93,7 +98,13 @@ export function CatalogEditorPanel({
         </button>
       </div>
 
-      <LayoutSection id="catalog-text" label="Text" defaultOpen={true}>
+      <LayoutSection
+        id="catalog-text"
+        label="Text"
+        defaultOpen={true}
+        open={openSection === 'catalog-text'}
+        onToggle={() => toggleSection('catalog-text')}
+      >
         <p className="catalog-layout-note">
           Text fields on the page are editable only while the Editor is open.
         </p>
@@ -141,7 +152,13 @@ export function CatalogEditorPanel({
         </CompactRowGrid>
       </LayoutSection>
 
-      <LayoutSection id="catalog-media" label="Media" defaultOpen={false}>
+      <LayoutSection
+        id="catalog-media"
+        label="Media"
+        defaultOpen={false}
+        open={openSection === 'catalog-media'}
+        onToggle={() => toggleSection('catalog-media')}
+      >
         <p className="catalog-layout-note">
           Option image and swatch controls are being consolidated here.
         </p>
@@ -152,6 +169,8 @@ export function CatalogEditorPanel({
         id="catalog-typography-and-color"
         label="Typography and Color"
         defaultOpen={false}
+        open={openSection === 'catalog-typography-and-color'}
+        onToggle={() => toggleSection('catalog-typography-and-color')}
       >
         <LayoutRow label="Font">
           <select
@@ -197,7 +216,13 @@ export function CatalogEditorPanel({
         </LayoutRow>
       </LayoutSection>
 
-      <LayoutSection id="catalog-layout" label="Layout" defaultOpen={false}>
+      <LayoutSection
+        id="catalog-layout"
+        label="Layout"
+        defaultOpen={false}
+        open={openSection === 'catalog-layout'}
+        onToggle={() => toggleSection('catalog-layout')}
+      >
         <CompactRowGrid>
           <GridCell label="Main image">
             <SegmentedControl
@@ -242,7 +267,13 @@ export function CatalogEditorPanel({
         </CompactRowGrid>
       </LayoutSection>
 
-      <LayoutSection id="catalog-document-mark" label="Document Mark" defaultOpen={false}>
+      <LayoutSection
+        id="catalog-document-mark"
+        label="Document Mark"
+        defaultOpen={false}
+        open={openSection === 'catalog-document-mark'}
+        onToggle={() => toggleSection('catalog-document-mark')}
+      >
         <div className="catalog-layout-watermark-row">
           <div>
             <p className="catalog-layout-label">Company mark</p>

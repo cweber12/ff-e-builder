@@ -548,12 +548,10 @@
 
   /* ---- Redesigned layout panel groups ---- */
   .catalog-layout-group {
-    border-bottom: 1px solid rgb(0 0 0 / 0.08);
     padding: 14px 0;
   }
 
   .catalog-layout-group:last-of-type {
-    border-bottom: 0;
     padding-bottom: 0;
   }
 
