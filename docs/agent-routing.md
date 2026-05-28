@@ -69,8 +69,8 @@ Best when two or more boundaries are touched in one slice.
 
 - `AGENTS.md`
 - `CONTEXT.md`
-- `docs/design-system.md`
-- `docs/accessibility.md`
+- `docs/reference/design-system.md`
+- `docs/reference/accessibility.md`
 
 ### Feature Module
 
@@ -83,12 +83,12 @@ Best when two or more boundaries are touched in one slice.
 - `AGENTS.md`
 - `docs/architecture.md`
 - `api/src/`
-- `docs/runbook.md`
+- `docs/ops/runbook.md`
 
 ### Database
 
 - `AGENTS.md`
-- `docs/money.md`
+- `docs/reference/money.md`
 - `db/migrations/`
 - `scripts/migrate.ts`
 

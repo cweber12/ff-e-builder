@@ -14,7 +14,7 @@ Phase 4 introduces a set of UI primitives (`Button`, `InlineTextEdit`, `InlineNu
 We are **not adding Storybook in v1**. Instead:
 
 - Each primitive has its own `*.test.tsx` covering keyboard interactions, ARIA attributes, and edge cases via Vitest + Testing Library.
-- `/docs/design-system.md` is the written source of truth for visual rules, token values, and interaction patterns.
+- `/docs/reference/design-system.md` is the written source of truth for visual rules, token values, and interaction patterns.
 - Components are small and focused enough that visual review during development in the Vite dev server is sufficient.
 
 ## Rationale

@@ -84,7 +84,7 @@ Rendering and Plan Image reads use the Generated Item link as a shared image sea
 
 Revision history reads also expose canonical Generated Item ids. FF&E can show Proposal revision indicators and notes for linked Generated Items, while cost resolution remains in Proposal.
 
-The current implementation state and future cleanup plan for FF&E/Proposal table consolidation is recorded in [generated-item-table-state.md](generated-item-table-state.md).
+The current implementation state and future cleanup plan for FF&E/Proposal table consolidation is recorded in [context/generated-item-table-state.md](context/generated-item-table-state.md).
 
 ## 3. Frontend Routes
 
@@ -114,7 +114,7 @@ Legacy project routes continue to redirect to their current FF&E equivalents for
 - Client utility modules are grouped by concern under `src/lib/` subfolders such as `api/`, `auth/`, `export/`, `images/`, `import/`, `items/`, `money/`, `plans/`, `projectSnapshot/`, `query/`, `table/`, `theme/`, and `utils/`; only still-used root facades remain while callers migrate to canonical subfolder paths.
 - Route modules live under `api/src/routes/`: `projects`, `plans`, `rooms`, `items`, `materials`, `proposal`, `images`, and `users`.
 - Ownership is checked in the Worker with helper queries. Cross-user or missing resources return `404` to avoid leaking existence.
-- Money is stored and transported as integer cents. See [money.md](money.md).
+- Money is stored and transported as integer cents. See [reference/money.md](reference/money.md).
 - Image bytes live in the private R2 bucket `ffe-images`; image metadata lives in Neon `image_assets`.
 - Project-level Measured Plan source-image metadata lives in Neon `measured_plans`; the source image bytes also live in the private R2 bucket `ffe-images`. PDF uploads are stored as durable original PDFs plus one rendered selected page image per Measured Plan, so the existing calibration, measurement, crop, and item Plan Image workflow still operates on stable image-pixel geometry.
 - Per-plan calibration metadata lives in Neon `plan_calibrations`; calibration line coordinates are stored in raw image-pixel space and downstream crop rectangles are also stored in raw image-pixel space on the associated measurement.

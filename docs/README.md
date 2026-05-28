@@ -4,28 +4,48 @@
 
 | File                               | Description                                                                            |
 | ---------------------------------- | -------------------------------------------------------------------------------------- |
-| [../CONTEXT.md](../CONTEXT.md)     | Canonical product and domain terminology — read before touching any domain-facing code |
-| [architecture.md](architecture.md) | System context, component, sequence, and ER diagrams; decision log                     |
-| [changelog.md](changelog.md)       | Keep-a-Changelog format; one entry per change under Unreleased                         |
+| [../CONTEXT.md](../CONTEXT.md)     | Canonical product and domain terminology — read before touching domain-facing behavior |
+| [architecture.md](architecture.md) | System context, component boundaries, sequence and ER diagrams                         |
+| [changelog.md](changelog.md)       | Keep-a-Changelog history; start with `Unreleased`                                      |
 
-## Reference — load when relevant
+## Context docs (`docs/context/`)
 
-| File                                                           | Description                                                                              |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [money.md](money.md)                                           | Integer-minor-units convention; which fields are cents; display helpers                  |
-| [images.md](images.md)                                         | Image entity model, upload flow, R2 storage, and crop docs                               |
-| [materials-context.md](materials-context.md)                   | Finish Library and material subsystem context                                            |
-| [generated-item-table-state.md](generated-item-table-state.md) | Current FF&E/Proposal Generated Item table state and future implementation plan          |
-| [plans-context.md](plans-context.md)                           | Plans workspace implementation context; calibration, measurements, derived images        |
-| [design-system.md](design-system.md)                           | Design tokens, component conventions, Tailwind config                                    |
-| [accessibility.md](accessibility.md)                           | Accessibility guidelines and ARIA conventions                                            |
-| [agent-routing.md](agent-routing.md)                           | Agent ownership boundaries, routing defaults, context packs, and escalation triggers     |
-| [testing-matrix.md](testing-matrix.md)                         | Risk-based verification levels and change-type test expectations                         |
-| [contributing.md](contributing.md)                             | Branching, PR conventions, commit format, migrations, ADRs                               |
-| [agent-setup-handoff.md](agent-setup-handoff.md)               | Current agent setup handoff: architecture context, strengths, gaps, and improvement plan |
-| [runbook.md](runbook.md)                                       | Deployment, rollback, log access, secret rotation, DB migrations                         |
-| [troubleshooting.md](troubleshooting.md)                       | Debugging guide and runbook for common issues                                            |
-| [roadmap.md](roadmap.md)                                       | Feature roadmap — not needed for implementation work                                     |
-| [privacy.md](privacy.md)                                       | Privacy policy and data handling — not needed for implementation work                    |
-| [adr/](adr/)                                                   | Architecture Decision Records                                                            |
-| [generated/architecture-map.md](generated/architecture-map.md) | Generated import/module map; refresh with `pnpm arch:scan`                               |
+| File                                                                           | Description                                                                    |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| [context/plans-context.md](context/plans-context.md)                           | Plans workspace context: calibration, measurement, canvas flows, and contracts |
+| [context/materials-context.md](context/materials-context.md)                   | Finish Library/materials subsystem context and behavior                        |
+| [context/generated-item-table-state.md](context/generated-item-table-state.md) | FF&E/Proposal generated-item table state and consolidation plan                |
+
+## Reference docs (`docs/reference/`)
+
+| File                                                                     | Description                                                 |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| [reference/money.md](reference/money.md)                                 | Integer-minor-units conventions and money handling rules    |
+| [reference/images.md](reference/images.md)                               | Image entities, upload flows, R2 storage, and crop behavior |
+| [reference/design-system.md](reference/design-system.md)                 | Design tokens, UI conventions, and Tailwind patterns        |
+| [reference/accessibility.md](reference/accessibility.md)                 | Accessibility guidelines and ARIA conventions               |
+| [reference/privacy.md](reference/privacy.md)                             | Privacy and data-handling policy                            |
+| [reference/cli-command-reference.md](reference/cli-command-reference.md) | Reusable CLI command templates and update rules             |
+
+## Ops docs (`docs/ops/`)
+
+| File                                             | Description                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
+| [ops/runbook.md](ops/runbook.md)                 | Deployment, rollback, secrets, and operational procedures        |
+| [ops/troubleshooting.md](ops/troubleshooting.md) | Common debugging and incident diagnostics                        |
+| [ops/testing-matrix.md](ops/testing-matrix.md)   | Risk-based verification levels and change-type test expectations |
+
+## Process and architecture docs
+
+| File                                 | Description                                                    |
+| ------------------------------------ | -------------------------------------------------------------- |
+| [agent-routing.md](agent-routing.md) | Agent ownership boundaries, routing defaults, and escalation   |
+| [contributing.md](contributing.md)   | Branching, PR conventions, commit format, migrations, and ADRs |
+| [adr/](adr/)                         | Architecture Decision Records                                  |
+
+## Generated docs
+
+| File                                                           | Description                                                |
+| -------------------------------------------------------------- | ---------------------------------------------------------- |
+| [generated/architecture-map.md](generated/architecture-map.md) | Generated import/module map; refresh with `pnpm arch:scan` |
+| [generated/database-map.md](generated/database-map.md)         | Generated schema map; refresh with `pnpm db:map`           |

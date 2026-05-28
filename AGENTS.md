@@ -96,7 +96,7 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 
 - **Never read from `.env.local`.** Agents must treat `.env.local` as off-limits and use `.env.example`, committed docs, or user-provided values instead.
 
-- **Money is stored and computed as integer minor units (cents).** See [/docs/money.md](/docs/money.md).
+- **Money is stored and computed as integer minor units (cents).** See [/docs/reference/money.md](/docs/reference/money.md).
 
 - **Never call the Neon database directly from the client.** All DB access goes through the API worker. See [/docs/architecture.md](/docs/architecture.md).
 
@@ -110,8 +110,8 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 - **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312`), retry once using an approved escalated execution path.
 - **Retry rule:** keep the same command and intent on retry; do not broaden scope during fallback.
 - **Safety boundary:** escalation is for reliability, not privilege expansion. Do not escalate destructive commands (`rm -rf`, `git reset --hard`, force-push, DB drops) without explicit same-message user confirmation.
-- **Reference-first rule:** before composing new command variants, check `/docs/cli-command-reference.md` for an existing template and use it when applicable.
-- **Learning loop rule:** when a reusable command format succeeds after experimentation, add or update its template in `/docs/cli-command-reference.md` (template only; never task-specific arguments, secrets, tokens, IDs, or user data).
+- **Reference-first rule:** before composing new command variants, check `/docs/reference/cli-command-reference.md` for an existing template and use it when applicable.
+- **Learning loop rule:** when a reusable command format succeeds after experimentation, add or update its template in `/docs/reference/cli-command-reference.md` (template only; never task-specific arguments, secrets, tokens, IDs, or user data).
 - **Quality gate for updates:** only record command formats that are likely to recur; if a similar template already exists, update that entry instead of creating a near-duplicate.
 
 Use these command patterns for common tasks:
@@ -214,11 +214,11 @@ Every feature is done when **all** of the following are true:
 
 ## Scoped subsystem context docs
 
-- `docs/plans-context.md` is a deep reference for the Plans workspace only.
+- `docs/context/plans-context.md` is a deep reference for the Plans workspace only.
 - Read it when a task touches plans routes, canvas workflows, plans API/types, or plans-specific UI behavior.
 - Do not read it for unrelated Proposal/FF&E/general tasks.
 - Update it only when Plans behavior or interface contracts change; skip updates for refactors that do not change behavior/contracts.
-- `docs/materials-context.md` is a deep reference for the Finish Library/Materials subsystem only.
+- `docs/context/materials-context.md` is a deep reference for the Finish Library/Materials subsystem only.
 - Read it when a task touches materials flows, materials API/types, assignment/removal rules, or materials export behavior.
 - Do not read it for unrelated Plans/Proposal/FF&E tasks that do not change materials behavior/contracts.
 - Update it only when Materials behavior or interface contracts change; skip updates for refactors that do not change behavior/contracts.

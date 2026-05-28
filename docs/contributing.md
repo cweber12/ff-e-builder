@@ -46,7 +46,7 @@ feat(items): add unit_price_cents field to items table
 
 Designers need to record vendor pricing per item so the app can
 compute room and project totals. Stored as integer cents per
-/docs/money.md convention.
+/docs/reference/money.md convention.
 
 Closes #12
 ```

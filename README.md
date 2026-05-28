@@ -73,9 +73,9 @@ This command writes [docs/generated/database-map.md](docs/generated/database-map
 - **FF&E Table** (`/projects/:id/ffe/table`) -- FF&E items grouped by room with persisted collapse state, room subtotals, inline editing, structure mutations, dedicated Rendering and Plan columns, item descriptions, per-room and full-project export (CSV, Excel, PDF), and Excel import with a column-mapping wizard.
 - **FF&E Catalog** (`/projects/:id/ffe/catalog`) -- printable one-item-per-page FF&E catalog with click-to-edit item text, main Rendering plus up to three selectable option renderings, browser print, direct PDF export, per-item PDF export with editable customer-approval/signature fields, and an options menu with a polished layout popover for cost/quantity display, main-image alignment, plan-image size, swatch labels, watermark placement/opacity/removal, and client approval visibility across browser preview and PDF output.
 - **FF&E Summary** (`/projects/:id/ffe/summary`) -- room subtotals, budget progress, status counts, vendor totals, and CSV/Excel/PDF export.
-- **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/proposal/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/materials-context.md](docs/materials-context.md).
+- **Materials** (`/projects/:id/ffe/materials`, `/projects/:id/proposal/materials`) -- project-specific material libraries store an image swatch, ID, and description for use from either tool. See [docs/context/materials-context.md](docs/context/materials-context.md).
 - **Toolbar icon system** -- shared app-bar, catalog, materials, and export actions use imported Lucide icons for consistent affordances across tools.
-- **Images** -- project, room, FF&E item rendering, FF&E item plan, material, Proposal Rendering, Proposal Plan Image, Material Visual, and Measured Plan source images are stored privately behind the API Worker. Shared entity images use Neon `image_assets`; Measured Plan source-image metadata lives on `measured_plans`; image bytes live in the private Cloudflare R2 `ffe-images` bucket. See [docs/images.md](docs/images.md).
+- **Images** -- project, room, FF&E item rendering, FF&E item plan, material, Proposal Rendering, Proposal Plan Image, Material Visual, and Measured Plan source images are stored privately behind the API Worker. Shared entity images use Neon `image_assets`; Measured Plan source-image metadata lives on `measured_plans`; image bytes live in the private Cloudflare R2 `ffe-images` bucket. See [docs/reference/images.md](docs/reference/images.md).
 
 ## Frontend deploy notes
 
@@ -132,14 +132,14 @@ This command writes [docs/generated/database-map.md](docs/generated/database-map
 
 ## Where to go next
 
-| Audience             | Resource                                           |
-| -------------------- | -------------------------------------------------- |
-| AI agents & Codex    | [AGENTS.md](AGENTS.md)                             |
-| Domain language      | [CONTEXT.md](CONTEXT.md)                           |
-| Engineers onboarding | [docs/architecture.md](docs/architecture.md)       |
-| Ops / deployment     | [docs/runbook.md](docs/runbook.md)                 |
-| Accessibility        | [docs/accessibility.md](docs/accessibility.md)     |
-| Privacy              | [docs/privacy.md](docs/privacy.md)                 |
-| Troubleshooting      | [docs/troubleshooting.md](docs/troubleshooting.md) |
-| Changelog            | [docs/changelog.md](docs/changelog.md)             |
-| Contributing         | [docs/contributing.md](docs/contributing.md)       |
+| Audience             | Resource                                                           |
+| -------------------- | ------------------------------------------------------------------ |
+| AI agents & Codex    | [AGENTS.md](AGENTS.md)                                             |
+| Domain language      | [CONTEXT.md](CONTEXT.md)                                           |
+| Engineers onboarding | [docs/architecture.md](docs/architecture.md)                       |
+| Ops / deployment     | [docs/ops/runbook.md](docs/ops/runbook.md)                         |
+| Accessibility        | [docs/reference/accessibility.md](docs/reference/accessibility.md) |
+| Privacy              | [docs/reference/privacy.md](docs/reference/privacy.md)             |
+| Troubleshooting      | [docs/ops/troubleshooting.md](docs/ops/troubleshooting.md)         |
+| Changelog            | [docs/changelog.md](docs/changelog.md)                             |
+| Contributing         | [docs/contributing.md](docs/contributing.md)                       |
