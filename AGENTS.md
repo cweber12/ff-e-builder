@@ -76,6 +76,7 @@ When implementing GitHub issues:
 3. Run typecheck and tests (or defer to user per sliced-work rule).
 4. Commit — one issue per commit where possible.
 5. **Split overlapping issues into separate isolated commits.** Use a backup/reset/apply strategy: implement one issue, commit, then layer the next on top. Do not bundle unrelated issue changes into a single commit.
+6. **After committing, close the issue and leave a comment.** Run `gh issue close <number> --comment "Resolved in <commit-sha>: <one-sentence summary of what was done>."` Do not skip this step — every committed issue fix must be closed and commented in the same turn.
 
 ---
 
