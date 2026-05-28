@@ -7,6 +7,7 @@ export {
   roomKeys,
   itemKeys,
   imageKeys,
+  finishKeys,
   materialKeys,
   proposalKeys,
   columnDefKeys,

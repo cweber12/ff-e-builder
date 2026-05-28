@@ -142,6 +142,32 @@ export async function getOwnedMaterialContext(
   return { projectId: row.project_id, materialId: row.material_id };
 }
 
+export async function getOwnedFinishContext(
+  env: Env,
+  finishId: string,
+  uid: string,
+): Promise<{ projectId: string; finishId: string }> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT f.id AS finish_id, f.project_id
+    FROM finishes f
+    JOIN projects p ON f.project_id = p.id
+    WHERE f.id = ${finishId} AND p.owner_uid = ${uid}
+    LIMIT 1
+  `;
+  const row = rows[0] as { finish_id?: string; project_id?: string } | undefined;
+  if (!row?.finish_id || !row.project_id) throw new Error('not_found');
+  return { projectId: row.project_id, finishId: row.finish_id };
+}
+
+export async function assertFinishOwnership(
+  env: Env,
+  finishId: string,
+  uid: string,
+): Promise<void> {
+  await getOwnedFinishContext(env, finishId, uid);
+}
+
 export async function assertProposalCategoryOwnership(
   env: Env,
   categoryId: string,

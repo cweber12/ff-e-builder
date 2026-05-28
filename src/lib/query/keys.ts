@@ -39,6 +39,10 @@ export const imageKeys = {
     ['images', entityType, entityId] as const,
 };
 
+export const finishKeys = {
+  forProject: (projectId: string) => ['finishes', projectId] as const,
+};
+
 export const materialKeys = {
   forProject: (projectId: string) => ['materials', projectId] as const,
 };

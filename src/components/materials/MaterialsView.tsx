@@ -4,29 +4,41 @@ import { Download, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import {
+  useCreateFinish,
   useCreateMaterial,
+  useDeleteFinish,
   useDeleteImage,
   useDeleteMaterial,
+  useFinishes,
   useMaterials,
   useImages,
+  useUpdateFinish,
   useUpdateMaterial,
   useUploadImage,
 } from '../../hooks';
-import type { ImageAsset, Material, MaterialCategory, Project } from '../../types';
+import type {
+  Finish,
+  ImageAsset,
+  Material,
+  MaterialCategory,
+  MaterialType,
+  Project,
+} from '../../types';
 import { imageKeys } from '../../lib/query';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
+import { FinishForm } from './FinishForm';
 
 type MaterialsViewProps = {
   project: Project;
   tool?: 'ffe' | 'proposal';
 };
 
-export type MaterialDraft = {
+export type FinishDraft = {
   name: string;
-  materialId: string;
+  code: string;
   category: MaterialCategory | '';
   subCategory: string;
   description: string;
@@ -37,9 +49,18 @@ export type MaterialDraft = {
   swatchHex: string;
 };
 
-const emptyDraft: MaterialDraft = {
+export type MaterialDraft = {
+  name: string;
+  code: string;
+  finishId: string | null;
+  materialType: MaterialType | '';
+  materialId: string;
+  description: string;
+};
+
+const emptyFinishDraft: FinishDraft = {
   name: '',
-  materialId: '',
+  code: '',
   category: '',
   subCategory: '',
   description: '',
@@ -50,7 +71,17 @@ const emptyDraft: MaterialDraft = {
   swatchHex: '#D9D4C8',
 };
 
+const emptyMaterialDraft: MaterialDraft = {
+  name: '',
+  code: '',
+  finishId: null,
+  materialType: '',
+  materialId: '',
+  description: '',
+};
+
 type CategoryFilter = 'all' | MaterialCategory | 'uncategorized';
+type LibraryTab = 'finishes' | 'materials';
 
 const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   wood: 'Wood',
@@ -59,6 +90,19 @@ const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   glass: 'Glass',
   fabric: 'Fabric',
   solid_color: 'Solid Color',
+};
+
+const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
+  veneer: 'Veneer',
+  laminate: 'Laminate',
+  solid: 'Solid',
+  powder_coat: 'Powder Coat',
+  anodized: 'Anodized',
+  upholstery: 'Upholstery',
+  stone_slab: 'Stone Slab',
+  glass: 'Glass',
+  painted: 'Painted',
+  stained: 'Stained',
 };
 
 const FILTER_OPTIONS: Array<{ value: CategoryFilter; label: string }> = [
@@ -77,164 +121,288 @@ export const MATERIALS_FILTER_SLOT_ID = 'materials-filter-slot';
 
 export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewProps) {
   const queryClient = useQueryClient();
+  const finishes = useFinishes(project.id);
   const materials = useMaterials(project.id);
+  const createFinish = useCreateFinish(project.id);
+  const updateFinish = useUpdateFinish(project.id);
+  const deleteFinish = useDeleteFinish(project.id);
   const createMaterial = useCreateMaterial(project.id);
   const updateMaterial = useUpdateMaterial(project.id);
   const deleteMaterial = useDeleteMaterial(project.id);
   const uploadImage = useUploadImage();
+
+  const [activeTab, setActiveTab] = useState<LibraryTab>('finishes');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
-  const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
 
-  const editingMaterialImages = useImages('material', editingId ?? '');
-  const deleteImage = useDeleteImage('material', editingId ?? '');
+  const [finishDraft, setFinishDraft] = useState<FinishDraft>(emptyFinishDraft);
+  const [editingFinishId, setEditingFinishId] = useState<string | null>(null);
+  const [showFinishForm, setShowFinishForm] = useState(false);
 
-  const editingMaterial = materials.data?.find((material) => material.id === editingId);
+  const [materialDraft, setMaterialDraft] = useState<MaterialDraft>(emptyMaterialDraft);
+  const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
+  const [showMaterialForm, setShowMaterialForm] = useState(false);
+
+  const editingFinishImages = useImages('finish', editingFinishId ?? '');
+  const deleteFinishImage = useDeleteImage('finish', editingFinishId ?? '');
+
+  const editingFinish = finishes.data?.find((f) => f.id === editingFinishId);
+  const editingMaterial = materials.data?.find((m) => m.id === editingMaterialId);
+
+  const filteredFinishes = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return [...(finishes.data ?? [])]
+      .filter((finish) => {
+        if (categoryFilter === 'uncategorized') return finish.category === null;
+        if (categoryFilter !== 'all') return finish.category === categoryFilter;
+        return true;
+      })
+      .filter((finish) => finishMatchesQuery(finish, normalizedQuery))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [finishes.data, query, categoryFilter]);
 
   const filteredMaterials = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return [...(materials.data ?? [])]
-      .filter((material) => {
-        if (categoryFilter === 'uncategorized') return material.category === null;
-        if (categoryFilter !== 'all') return material.category === categoryFilter;
-        return true;
-      })
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [materials.data, query, categoryFilter]);
+  }, [materials.data, query]);
 
-  const resetDraft = () => {
-    setDraft(emptyDraft);
-    setEditingId(null);
-    setShowForm(false);
+  const resetFinishDraft = () => {
+    setFinishDraft(emptyFinishDraft);
+    setEditingFinishId(null);
+    setShowFinishForm(false);
   };
 
-  const startEdit = (material: Material) => {
+  const resetMaterialDraft = () => {
+    setMaterialDraft(emptyMaterialDraft);
+    setEditingMaterialId(null);
+    setShowMaterialForm(false);
+  };
+
+  const startEditFinish = (finish: Finish) => {
     const cachedImages = queryClient.getQueryData<ImageAsset[]>(
-      imageKeys.forEntity('material', material.id),
+      imageKeys.forEntity('finish', finish.id),
     );
-    setEditingId(material.id);
-    setDraft({
-      name: material.name,
-      materialId: material.materialId,
-      category: material.category ?? '',
-      subCategory: material.subCategory,
-      description: material.description,
-      manufacturer: material.manufacturer,
-      sourceUrl: material.sourceUrl,
+    setEditingFinishId(finish.id);
+    setFinishDraft({
+      name: finish.name,
+      code: finish.code,
+      category: finish.category ?? '',
+      subCategory: finish.subCategory,
+      description: finish.description,
+      manufacturer: finish.manufacturer,
+      sourceUrl: finish.sourceUrl,
       swatchMode: (cachedImages?.length ?? 0) > 0 ? 'image' : 'color',
       swatchFile: null,
-      swatchHex: material.swatchHex || '#D9D4C8',
+      swatchHex: finish.swatchHex || '#D9D4C8',
     });
-    setShowForm(true);
+    setShowFinishForm(true);
   };
 
-  const openCreateForm = () => {
-    setEditingId(null);
-    setDraft(emptyDraft);
-    setShowForm(true);
+  const startEditMaterial = (material: Material) => {
+    setEditingMaterialId(material.id);
+    setMaterialDraft({
+      name: material.name,
+      code: material.code,
+      finishId: material.finishId,
+      materialType: material.materialType ?? '',
+      materialId: material.materialId,
+      description: material.description,
+    });
+    setShowMaterialForm(true);
   };
 
-  const saveDraft = async () => {
+  const openCreateFinishForm = () => {
+    setEditingFinishId(null);
+    setFinishDraft(emptyFinishDraft);
+    setShowFinishForm(true);
+  };
+
+  const openCreateMaterialForm = () => {
+    setEditingMaterialId(null);
+    setMaterialDraft(emptyMaterialDraft);
+    setShowMaterialForm(true);
+  };
+
+  const saveFinishDraft = async () => {
     const input = {
-      name: draft.name.trim(),
-      materialId: draft.materialId.trim(),
-      category: draft.category || null,
-      subCategory: draft.subCategory.trim(),
-      description: draft.description.trim(),
-      swatchHex: draft.swatchHex || '#D9D4C8',
-      manufacturer: draft.manufacturer.trim(),
-      sourceUrl: draft.sourceUrl.trim(),
+      name: finishDraft.name.trim(),
+      code: finishDraft.code.trim(),
+      category: finishDraft.category || null,
+      subCategory: finishDraft.subCategory.trim(),
+      description: finishDraft.description.trim(),
+      swatchHex: finishDraft.swatchHex || '#D9D4C8',
+      manufacturer: finishDraft.manufacturer.trim(),
+      sourceUrl: finishDraft.sourceUrl.trim(),
     };
     if (!input.name) return;
 
-    let savedMaterial: Material;
-    if (editingId) {
-      savedMaterial = await updateMaterial.mutateAsync({ id: editingId, patch: input });
+    let savedFinish: Finish;
+    if (editingFinishId) {
+      savedFinish = await updateFinish.mutateAsync({ id: editingFinishId, patch: input });
     } else {
-      savedMaterial = await createMaterial.mutateAsync(input);
+      savedFinish = await createFinish.mutateAsync(input);
     }
 
-    if (draft.swatchMode === 'image' && draft.swatchFile) {
+    if (finishDraft.swatchMode === 'image' && finishDraft.swatchFile) {
       await uploadImage.mutateAsync({
-        entityType: 'material',
-        entityId: savedMaterial.id,
-        file: draft.swatchFile,
-        altText: savedMaterial.name,
+        entityType: 'finish',
+        entityId: savedFinish.id,
+        file: finishDraft.swatchFile,
+        altText: savedFinish.name,
       });
-    } else if (draft.swatchMode === 'color' && editingId) {
-      for (const img of editingMaterialImages.data ?? []) {
-        await deleteImage.mutateAsync(img.id);
+    } else if (finishDraft.swatchMode === 'color' && editingFinishId) {
+      for (const img of editingFinishImages.data ?? []) {
+        await deleteFinishImage.mutateAsync(img.id);
       }
     }
 
-    resetDraft();
+    resetFinishDraft();
   };
+
+  const saveMaterialDraft = async () => {
+    const input = {
+      name: materialDraft.name.trim(),
+      code: materialDraft.code.trim(),
+      finishId: materialDraft.finishId || null,
+      materialType: (materialDraft.materialType as MaterialType) || null,
+      materialId: materialDraft.materialId.trim(),
+      description: materialDraft.description.trim(),
+    };
+    if (!input.name) return;
+
+    if (editingMaterialId) {
+      await updateMaterial.mutateAsync({ id: editingMaterialId, patch: input });
+    } else {
+      await createMaterial.mutateAsync(input);
+    }
+
+    resetMaterialDraft();
+  };
+
+  const showForm = activeTab === 'finishes' ? showFinishForm : showMaterialForm;
 
   return (
     <div className="grid gap-6">
       <MaterialsToolbarLeft
+        activeTab={activeTab}
         viewMode={viewMode}
         categoryFilter={categoryFilter}
+        onActiveTabChange={setActiveTab}
         onViewModeChange={setViewMode}
         onCategoryFilterChange={setCategoryFilter}
       />
       <MaterialsToolbarActions
         project={project}
+        activeTab={activeTab}
+        filteredFinishes={filteredFinishes}
         filteredMaterials={filteredMaterials}
         query={query}
         showForm={showForm}
         onQueryChange={setQuery}
-        onCreateMaterial={openCreateForm}
+        onCreateFinish={openCreateFinishForm}
+        onCreateMaterial={openCreateMaterialForm}
       />
 
-      <section>
-        <div className="max-h-[48rem] overflow-auto py-2">
-          {materials.isLoading ? (
-            <p className="text-sm text-neutral-500">Loading materials…</p>
-          ) : filteredMaterials.length === 0 ? (
-            <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
-              No materials match the current search.
-            </p>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {filteredMaterials.map((material) => (
-                <MaterialGridCard
-                  key={material.id}
-                  material={material}
-                  onEdit={() => startEdit(material)}
-                  onDelete={() => void deleteMaterial.mutateAsync(material.id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <MaterialsTable
-              materials={filteredMaterials}
-              onEdit={startEdit}
-              onDelete={(material) => void deleteMaterial.mutateAsync(material.id)}
-            />
-          )}
-        </div>
-      </section>
+      {activeTab === 'finishes' ? (
+        <section>
+          <div className="max-h-[48rem] overflow-auto py-2">
+            {finishes.isLoading ? (
+              <p className="text-sm text-neutral-500">Loading finishes…</p>
+            ) : filteredFinishes.length === 0 ? (
+              <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
+                No finishes match the current search.
+              </p>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {filteredFinishes.map((finish) => (
+                  <FinishGridCard
+                    key={finish.id}
+                    finish={finish}
+                    onEdit={() => startEditFinish(finish)}
+                    onDelete={() => void deleteFinish.mutateAsync(finish.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <FinishesTable
+                finishes={filteredFinishes}
+                onEdit={startEditFinish}
+                onDelete={(finish) => void deleteFinish.mutateAsync(finish.id)}
+              />
+            )}
+          </div>
+        </section>
+      ) : (
+        <section>
+          <div className="max-h-[48rem] overflow-auto py-2">
+            {materials.isLoading ? (
+              <p className="text-sm text-neutral-500">Loading materials…</p>
+            ) : filteredMaterials.length === 0 ? (
+              <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
+                No materials match the current search.
+              </p>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {filteredMaterials.map((material) => (
+                  <MaterialGridCard
+                    key={material.id}
+                    material={material}
+                    finish={finishes.data?.find((f) => f.id === material.finishId)}
+                    onEdit={() => startEditMaterial(material)}
+                    onDelete={() => void deleteMaterial.mutateAsync(material.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <MaterialsTable
+                materials={filteredMaterials}
+                finishes={finishes.data ?? []}
+                onEdit={startEditMaterial}
+                onDelete={(material) => void deleteMaterial.mutateAsync(material.id)}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       <Modal
-        open={showForm}
-        onClose={resetDraft}
-        title={editingId ? 'Edit material' : 'Add material'}
+        open={showFinishForm}
+        onClose={resetFinishDraft}
+        title={editingFinishId ? 'Edit finish' : 'Add finish'}
+        className="!max-w-[min(96vw,42rem)]"
+      >
+        <div className="-mx-6 -my-5">
+          <FinishForm
+            draft={finishDraft}
+            editing={Boolean(editingFinish)}
+            editingFinishId={editingFinishId ?? undefined}
+            submitLabel={editingFinishId ? 'Save changes' : 'Add to library'}
+            onDraftChange={setFinishDraft}
+            onCancel={resetFinishDraft}
+            onSubmit={() => void saveFinishDraft()}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        open={showMaterialForm}
+        onClose={resetMaterialDraft}
+        title={editingMaterialId ? 'Edit material' : 'Add material'}
         className="!max-w-[min(96vw,42rem)]"
       >
         <div className="-mx-6 -my-5">
           <MaterialForm
-            draft={draft}
+            draft={materialDraft}
             editing={Boolean(editingMaterial)}
-            editingMaterialId={editingId ?? undefined}
-            submitLabel={editingId ? 'Save changes' : 'Add to library'}
-            onDraftChange={setDraft}
-            onCancel={resetDraft}
-            onSubmit={() => void saveDraft()}
+            editingMaterialId={editingMaterialId ?? undefined}
+            finishes={finishes.data ?? []}
+            submitLabel={editingMaterialId ? 'Save changes' : 'Add material'}
+            onDraftChange={setMaterialDraft}
+            onCancel={resetMaterialDraft}
+            onSubmit={() => void saveMaterialDraft()}
           />
         </div>
       </Modal>
@@ -243,13 +411,17 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
 }
 
 function MaterialsToolbarLeft({
+  activeTab,
   viewMode,
   categoryFilter,
+  onActiveTabChange,
   onViewModeChange,
   onCategoryFilterChange,
 }: {
+  activeTab: LibraryTab;
   viewMode: 'grid' | 'table';
   categoryFilter: CategoryFilter;
+  onActiveTabChange: (value: LibraryTab) => void;
   onViewModeChange: (value: 'grid' | 'table') => void;
   onCategoryFilterChange: (value: CategoryFilter) => void;
 }) {
@@ -264,6 +436,26 @@ function MaterialsToolbarLeft({
 
   return createPortal(
     <>
+      <div className="toolbar-segmented" role="tablist" aria-label="Library section">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'finishes'}
+          data-active={activeTab === 'finishes' || undefined}
+          onClick={() => onActiveTabChange('finishes')}
+        >
+          Finish Library
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'materials'}
+          data-active={activeTab === 'materials' || undefined}
+          onClick={() => onActiveTabChange('materials')}
+        >
+          Project Materials
+        </button>
+      </div>
       <div className="toolbar-segmented" role="tablist" aria-label="Materials view mode">
         <button
           type="button"
@@ -284,18 +476,20 @@ function MaterialsToolbarLeft({
           Table
         </button>
       </div>
-      <select
-        value={categoryFilter}
-        onChange={(e) => onCategoryFilterChange(e.target.value as CategoryFilter)}
-        className="toolbar-select"
-        aria-label="Filter by category"
-      >
-        {FILTER_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      {activeTab === 'finishes' && (
+        <select
+          value={categoryFilter}
+          onChange={(e) => onCategoryFilterChange(e.target.value as CategoryFilter)}
+          className="toolbar-select"
+          aria-label="Filter by category"
+        >
+          {FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      )}
     </>,
     slot,
   );
@@ -303,17 +497,23 @@ function MaterialsToolbarLeft({
 
 function MaterialsToolbarActions({
   project,
+  activeTab,
+  filteredFinishes,
   filteredMaterials,
   query,
   showForm,
   onQueryChange,
+  onCreateFinish,
   onCreateMaterial,
 }: {
   project: Project;
+  activeTab: LibraryTab;
+  filteredFinishes: Finish[];
   filteredMaterials: Material[];
   query: string;
   showForm: boolean;
   onQueryChange: (value: string) => void;
+  onCreateFinish: () => void;
   onCreateMaterial: () => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
@@ -325,38 +525,45 @@ function MaterialsToolbarActions({
 
   if (!slot) return null;
 
+  const count = activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length;
+  const itemLabel = count === 1 ? 'item' : 'items';
+
   return createPortal(
     <div className="flex items-center gap-2">
       <span className="toolbar-stat">
-        <span className="num text-neutral-950">{filteredMaterials.length}</span>
-        <span className="text-neutral-500">
-          {filteredMaterials.length === 1 ? 'item' : 'items'}
-        </span>
+        <span className="num text-neutral-950">{count}</span>
+        <span className="text-neutral-500">{itemLabel}</span>
       </span>
       <input
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
-        placeholder="Search name or ID"
+        placeholder={activeTab === 'finishes' ? 'Search finishes' : 'Search materials'}
         className="toolbar-input w-64"
-        aria-label="Search library by name or ID"
+        aria-label={activeTab === 'finishes' ? 'Search finishes' : 'Search project materials'}
       />
-      <ExportMenu
-        label={
-          <>
-            <Download className="toolbar-icon" aria-hidden="true" />
-            Export
-          </>
-        }
-        onCsv={() => void exportMaterialsExcel(project, filteredMaterials, 'csv')}
-        onExcel={() => void exportMaterialsExcel(project, filteredMaterials)}
-        onPdf={() => void exportMaterialsPdf(project, filteredMaterials)}
-        disabled={filteredMaterials.length === 0}
-        buttonVariant="toolbar"
-      />
+      {activeTab === 'finishes' && (
+        <ExportMenu
+          label={
+            <>
+              <Download className="toolbar-icon" aria-hidden="true" />
+              Export
+            </>
+          }
+          onCsv={() => exportMaterialsExcel(project, filteredMaterials, 'csv')}
+          onExcel={() => exportMaterialsExcel(project, filteredMaterials)}
+          onPdf={() => exportMaterialsPdf(project, filteredMaterials)}
+          disabled={filteredMaterials.length === 0}
+          buttonVariant="toolbar"
+        />
+      )}
       {!showForm && (
-        <Button type="button" variant="toolbarPrimary" onClick={onCreateMaterial}>
+        <Button
+          type="button"
+          variant="toolbarPrimary"
+          onClick={activeTab === 'finishes' ? onCreateFinish : onCreateMaterial}
+        >
           <Plus className="toolbar-icon" aria-hidden="true" />
-          New material
+          {activeTab === 'finishes' ? 'New finish' : 'New material'}
         </Button>
       )}
     </div>,
@@ -364,21 +571,21 @@ function MaterialsToolbarActions({
   );
 }
 
-function MaterialGridCard({
-  material,
+function FinishGridCard({
+  finish,
   onEdit,
   onDelete,
 }: {
-  material: Material;
+  finish: Finish;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   return (
     <article className="tile-card flex flex-col">
       <ImageFrame
-        entityType="material"
-        entityId={material.id}
-        alt={material.name}
+        entityType="finish"
+        entityId={finish.id}
+        alt={finish.name}
         className="h-24 w-full rounded-none border-0 shadow-none"
         imageClassName="object-cover"
         compact
@@ -386,25 +593,23 @@ function MaterialGridCard({
       <div className="flex flex-1 flex-col gap-2.5 p-3">
         <div className="min-w-0">
           <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
-            {material.materialId || 'No ID'}
+            {finish.code || 'No code'}
           </p>
           <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-neutral-950">
-            {material.name}
+            {finish.name}
           </h4>
-          {material.category && (
+          {finish.category && (
             <p className="mt-0.5 truncate text-[10px] text-neutral-500">
-              {CATEGORY_LABELS[material.category]}
-              {material.subCategory ? ` · ${material.subCategory}` : ''}
+              {CATEGORY_LABELS[finish.category]}
+              {finish.subCategory ? ` · ${finish.subCategory}` : ''}
             </p>
           )}
         </div>
-        {material.description && (
-          <p className="line-clamp-2 text-xs leading-snug text-neutral-600">
-            {material.description}
-          </p>
+        {finish.description && (
+          <p className="line-clamp-2 text-xs leading-snug text-neutral-600">{finish.description}</p>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <ProductLinkIcon url={material.sourceUrl} label={material.name} />
+          <ProductLinkIcon url={finish.sourceUrl} label={finish.name} />
           <div className="flex gap-1">
             <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
               Edit
@@ -419,22 +624,84 @@ function MaterialGridCard({
   );
 }
 
-function MaterialsTable({
-  materials,
+function MaterialGridCard({
+  material,
+  finish,
   onEdit,
   onDelete,
 }: {
-  materials: Material[];
-  onEdit: (material: Material) => void;
-  onDelete: (material: Material) => void;
+  material: Material;
+  finish?: Finish;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <article className="tile-card flex flex-col">
+      {finish ? (
+        <ImageFrame
+          entityType="finish"
+          entityId={finish.id}
+          alt={finish.name}
+          className="h-24 w-full rounded-none border-0 shadow-none"
+          imageClassName="object-cover"
+          compact
+        />
+      ) : (
+        <div className="h-24 w-full bg-canvas-shell" />
+      )}
+      <div className="flex flex-1 flex-col gap-2.5 p-3">
+        <div className="min-w-0">
+          <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
+            {material.code || 'No code'}
+          </p>
+          <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-neutral-950">
+            {material.name}
+          </h4>
+          {(finish || material.materialType) && (
+            <p className="mt-0.5 truncate text-[10px] text-neutral-500">
+              {[
+                finish?.name,
+                material.materialType ? MATERIAL_TYPE_LABELS[material.materialType] : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
+        </div>
+        {material.description && (
+          <p className="line-clamp-2 text-xs leading-snug text-neutral-600">
+            {material.description}
+          </p>
+        )}
+        <div className="mt-auto flex justify-end gap-1 pt-1">
+          <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
+            Edit
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
+            Delete
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FinishesTable({
+  finishes,
+  onEdit,
+  onDelete,
+}: {
+  finishes: Finish[];
+  onEdit: (finish: Finish) => void;
+  onDelete: (finish: Finish) => void;
 }) {
   return (
     <table className="w-full min-w-[900px] border-collapse text-sm">
       <thead className="sticky top-0 border-b border-neutral-200 bg-canvas-chrome text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
         <tr>
           <th className="px-3 py-3">Swatch</th>
-          <th className="px-3 py-3">Material</th>
-          <th className="px-3 py-3">ID</th>
+          <th className="px-3 py-3">Name</th>
+          <th className="px-3 py-3">Code</th>
           <th className="px-3 py-3">Category</th>
           <th className="px-3 py-3">Manufacturer</th>
           <th className="px-3 py-3">Description</th>
@@ -442,14 +709,14 @@ function MaterialsTable({
         </tr>
       </thead>
       <tbody className="divide-y divide-black/10">
-        {materials.map((material) => (
-          <tr key={material.id}>
+        {finishes.map((finish) => (
+          <tr key={finish.id}>
             <td className="px-3 py-3">
               <div className="flex items-center gap-2">
                 <ImageFrame
-                  entityType="material"
-                  entityId={material.id}
-                  alt={`${material.name} swatch`}
+                  entityType="finish"
+                  entityId={finish.id}
+                  alt={`${finish.name} swatch`}
                   className="h-12 w-12 rounded-full border-neutral-200 shadow-none"
                   imageClassName="object-cover"
                   placeholderClassName="bg-canvas-shell"
@@ -459,31 +726,31 @@ function MaterialsTable({
                   compact
                   disabled
                 />
-                <ProductLinkIcon url={material.sourceUrl} label={material.name} />
+                <ProductLinkIcon url={finish.sourceUrl} label={finish.name} />
               </div>
             </td>
-            <td className="px-3 py-3 font-medium text-neutral-950">{material.name}</td>
-            <td className="num px-3 py-3 text-neutral-700">{material.materialId || '—'}</td>
+            <td className="px-3 py-3 font-medium text-neutral-950">{finish.name}</td>
+            <td className="num px-3 py-3 text-neutral-700">{finish.code || '—'}</td>
             <td className="px-3 py-3 text-neutral-700">
-              {material.category ? (
+              {finish.category ? (
                 <span>
-                  {CATEGORY_LABELS[material.category]}
-                  {material.subCategory ? (
-                    <span className="ml-1 text-neutral-500">· {material.subCategory}</span>
+                  {CATEGORY_LABELS[finish.category]}
+                  {finish.subCategory ? (
+                    <span className="ml-1 text-neutral-500">· {finish.subCategory}</span>
                   ) : null}
                 </span>
               ) : (
                 '—'
               )}
             </td>
-            <td className="px-3 py-3 text-neutral-700">{material.manufacturer || '—'}</td>
-            <td className="max-w-sm px-3 py-3 text-neutral-600">{material.description || '—'}</td>
+            <td className="px-3 py-3 text-neutral-700">{finish.manufacturer || '—'}</td>
+            <td className="max-w-sm px-3 py-3 text-neutral-600">{finish.description || '—'}</td>
             <td className="px-3 py-3">
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => onEdit(material)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onEdit(finish)}>
                   Edit
                 </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(material)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(finish)}>
                   Delete
                 </Button>
               </div>
@@ -495,9 +762,96 @@ function MaterialsTable({
   );
 }
 
+function MaterialsTable({
+  materials,
+  finishes,
+  onEdit,
+  onDelete,
+}: {
+  materials: Material[];
+  finishes: Finish[];
+  onEdit: (material: Material) => void;
+  onDelete: (material: Material) => void;
+}) {
+  const finishById = useMemo(() => new Map(finishes.map((f) => [f.id, f])), [finishes]);
+
+  return (
+    <table className="w-full min-w-[900px] border-collapse text-sm">
+      <thead className="sticky top-0 border-b border-neutral-200 bg-canvas-chrome text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
+        <tr>
+          <th className="px-3 py-3">Swatch</th>
+          <th className="px-3 py-3">Name</th>
+          <th className="px-3 py-3">Code</th>
+          <th className="px-3 py-3">Finish</th>
+          <th className="px-3 py-3">Type</th>
+          <th className="px-3 py-3">Mfr. ID</th>
+          <th className="px-3 py-3">Description</th>
+          <th className="px-3 py-3" aria-label="Actions" />
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-black/10">
+        {materials.map((material) => {
+          const finish = material.finishId ? finishById.get(material.finishId) : undefined;
+          return (
+            <tr key={material.id}>
+              <td className="px-3 py-3">
+                {finish ? (
+                  <ImageFrame
+                    entityType="finish"
+                    entityId={finish.id}
+                    alt={`${material.name} swatch`}
+                    className="h-12 w-12 rounded-full border-neutral-200 shadow-none"
+                    imageClassName="object-cover"
+                    placeholderClassName="bg-canvas-shell"
+                    compact
+                    disabled
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-canvas-shell" />
+                )}
+              </td>
+              <td className="px-3 py-3 font-medium text-neutral-950">{material.name}</td>
+              <td className="num px-3 py-3 text-neutral-700">{material.code || '—'}</td>
+              <td className="px-3 py-3 text-neutral-700">{finish?.name ?? '—'}</td>
+              <td className="px-3 py-3 text-neutral-700">
+                {material.materialType ? MATERIAL_TYPE_LABELS[material.materialType] : '—'}
+              </td>
+              <td className="num px-3 py-3 text-neutral-700">{material.materialId || '—'}</td>
+              <td className="max-w-sm px-3 py-3 text-neutral-600">{material.description || '—'}</td>
+              <td className="px-3 py-3">
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => onEdit(material)}>
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(material)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+function finishMatchesQuery(finish: Finish, query: string) {
+  if (!query) return true;
+  return [finish.name, finish.code, finish.description, finish.manufacturer]
+    .join(' ')
+    .toLowerCase()
+    .includes(query);
+}
+
 function materialMatchesQuery(material: Material, query: string) {
   if (!query) return true;
-  return [material.name, material.materialId, material.description, material.manufacturer]
+  return [material.name, material.code, material.materialId, material.description]
     .join(' ')
     .toLowerCase()
     .includes(query);

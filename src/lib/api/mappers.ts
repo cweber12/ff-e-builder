@@ -1,5 +1,6 @@
 import type {
   CalibrationStatus,
+  Finish,
   ImageAsset,
   ImageEntityType,
   Item,
@@ -8,6 +9,7 @@ import type {
   LengthLine,
   Material,
   MaterialCategory,
+  MaterialType,
   Measurement,
   PlanCalibration,
   MeasuredPlan,
@@ -81,6 +83,7 @@ export interface RawImageAsset {
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
+  finish_id: string | null;
   proposal_item_id: string | null;
   filename: string;
   content_type: string;
@@ -143,17 +146,30 @@ export interface RawProposalItem {
   linked_ffe_item_id?: string | null;
 }
 
+export interface RawFinish {
+  id: string;
+  project_id: string;
+  code: string;
+  name: string;
+  category?: string | null;
+  sub_category?: string | null;
+  description: string;
+  manufacturer: string;
+  source_url: string;
+  swatch_hex: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RawMaterial {
   id: string;
   project_id: string;
+  code: string;
+  finish_id?: string | null;
+  material_type?: string | null;
   name: string;
   material_id: string;
   description: string;
-  swatch_hex: string;
-  manufacturer?: string;
-  source_url?: string;
-  category?: string | null;
-  sub_category?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -314,6 +330,7 @@ export const mapImageAsset = (r: RawImageAsset): ImageAsset => ({
   roomId: r.room_id,
   itemId: r.item_id,
   materialId: r.material_id ?? null,
+  finishId: r.finish_id ?? null,
   proposalItemId: r.proposal_item_id ?? null,
   filename: r.filename,
   contentType: r.content_type,
@@ -386,18 +403,47 @@ const validCategories = new Set<string>([
   'solid_color',
 ]);
 
-export const mapMaterial = (r: RawMaterial): Material => ({
+const validMaterialTypes = new Set<string>([
+  'veneer',
+  'laminate',
+  'solid',
+  'powder_coat',
+  'anodized',
+  'upholstery',
+  'stone_slab',
+  'glass',
+  'painted',
+  'stained',
+]);
+
+export const mapFinish = (r: RawFinish): Finish => ({
   id: r.id,
   projectId: r.project_id,
+  code: r.code,
   name: r.name,
-  materialId: r.material_id,
-  description: r.description,
-  swatchHex: r.swatch_hex,
-  manufacturer: r.manufacturer ?? '',
-  sourceUrl: r.source_url ?? '',
   category:
     r.category != null && validCategories.has(r.category) ? (r.category as MaterialCategory) : null,
   subCategory: r.sub_category ?? '',
+  description: r.description,
+  manufacturer: r.manufacturer,
+  sourceUrl: r.source_url,
+  swatchHex: r.swatch_hex,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export const mapMaterial = (r: RawMaterial): Material => ({
+  id: r.id,
+  projectId: r.project_id,
+  code: r.code,
+  finishId: r.finish_id ?? null,
+  materialType:
+    r.material_type != null && validMaterialTypes.has(r.material_type)
+      ? (r.material_type as MaterialType)
+      : null,
+  name: r.name,
+  materialId: r.material_id,
+  description: r.description,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

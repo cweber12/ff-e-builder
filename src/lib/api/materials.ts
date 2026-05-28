@@ -1,52 +1,34 @@
 import { apiFetch } from './transport';
 import { mapMaterial, type RawMaterial } from './mappers';
-import type { Material, MaterialCategory } from '../../types';
-
-const DEFAULT_SWATCH_HEX = '#D9D4C8';
+import type { Material, MaterialType } from '../../types';
 
 export type CreateMaterialInput = {
   name: string;
+  code?: string;
+  finishId?: string | null;
+  materialType?: MaterialType | null;
   materialId?: string;
   description?: string;
-  swatchHex?: string;
-  manufacturer?: string;
-  sourceUrl?: string;
-  category?: MaterialCategory | null;
-  subCategory?: string;
 };
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 
 const materialCreatePayload = (input: CreateMaterialInput) => ({
   name: input.name,
+  code: input.code ?? '',
+  finish_id: input.finishId ?? null,
+  material_type: input.materialType ?? null,
   material_id: input.materialId ?? '',
   description: input.description ?? '',
-  swatch_hex: input.swatchHex ?? DEFAULT_SWATCH_HEX,
-  manufacturer: input.manufacturer ?? '',
-  source_url: input.sourceUrl ?? '',
-  category: input.category ?? null,
-  sub_category: input.subCategory ?? '',
 });
 
 const materialUpdatePayload = (patch: UpdateMaterialInput) => ({
   name: patch.name,
+  code: patch.code,
+  finish_id: patch.finishId,
+  material_type: patch.materialType,
   material_id: patch.materialId,
   description: patch.description,
-  swatch_hex: patch.swatchHex,
-  manufacturer: patch.manufacturer,
-  source_url: patch.sourceUrl,
-  category: patch.category,
-  sub_category: patch.subCategory,
-});
-
-const assignedMaterialUpdatePayload = (patch: UpdateMaterialInput) => ({
-  name: patch.name,
-  material_id: patch.materialId,
-  description: patch.description,
-  manufacturer: patch.manufacturer,
-  source_url: patch.sourceUrl,
-  category: patch.category,
-  sub_category: patch.subCategory,
 });
 
 export const materialsApi = {
@@ -92,7 +74,7 @@ export const materialsApi = {
   ): Promise<Material> =>
     apiFetch<{ material: RawMaterial }>(`/api/v1/items/${itemId}/materials/${materialId}`, {
       method: 'PATCH',
-      body: JSON.stringify(assignedMaterialUpdatePayload(patch)),
+      body: JSON.stringify(materialUpdatePayload(patch)),
     }).then((r) => mapMaterial(r.material)),
 
   assignToProposalItem: (proposalItemId: string, materialId: string): Promise<Material> =>
@@ -124,7 +106,7 @@ export const materialsApi = {
       `/api/v1/proposal/items/${proposalItemId}/materials/${materialId}`,
       {
         method: 'PATCH',
-        body: JSON.stringify(assignedMaterialUpdatePayload(patch)),
+        body: JSON.stringify(materialUpdatePayload(patch)),
       },
     ).then((r) => mapMaterial(r.material)),
 };

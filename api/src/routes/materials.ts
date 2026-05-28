@@ -15,20 +15,19 @@ import {
   getOwnedMaterialContext,
 } from '../lib/ownership';
 import { getDb } from '../lib/db';
-import { deleteR2Keys } from '../lib/r2';
 import {
   countMaterialReferences,
   forkMaterial,
   generateImportMaterialId,
   generateImportName,
+  generateNextCode,
   selectMaterialById,
 } from './materialHelpers';
 
-const DEFAULT_SWATCH = '#D9D4C8';
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
 
 type AppContext = Context<{ Bindings: Env; Variables: HonoVariables }>;
-type MaterialRow = { id: string; swatch_hex: string };
+type MaterialRow = { id: string };
 
 async function mirrorItemMaterialToLinkedProposalItem(
   sql: ReturnType<typeof getDb>,
@@ -133,33 +132,28 @@ async function createProjectMaterial(c: AppContext) {
 
   const sql = getDb(c.env);
   const name = parsed.data.name.trim() || (await generateImportName(sql, projectId));
+  const code = parsed.data.code?.trim() || (await generateNextCode(sql, 'materials', projectId));
   const materialId =
-    parsed.data.material_id.trim() || (await generateImportMaterialId(sql, projectId));
+    (parsed.data.material_id ?? '').trim() || (await generateImportMaterialId(sql, projectId));
   const rows = await sql`
     INSERT INTO materials (
-      project_id, name, material_id, description, swatch_hex, manufacturer, source_url,
-      category, sub_category
+      project_id, name, code, finish_id, material_type, material_id, description
     )
     VALUES (
       ${projectId},
       ${name},
+      ${code},
+      ${parsed.data.finish_id ?? null},
+      ${parsed.data.material_type ?? null},
       ${materialId},
-      ${parsed.data.description},
-      ${parsed.data.swatch_hex ?? DEFAULT_SWATCH},
-      ${parsed.data.manufacturer},
-      ${parsed.data.source_url},
-      ${parsed.data.category ?? null},
-      ${parsed.data.sub_category ?? ''}
+      ${parsed.data.description}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
-      material_id  = COALESCE(NULLIF(EXCLUDED.material_id, ''),  materials.material_id),
-      description  = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
-      swatch_hex   = EXCLUDED.swatch_hex,
-      manufacturer = COALESCE(NULLIF(EXCLUDED.manufacturer, ''), materials.manufacturer),
-      source_url   = COALESCE(NULLIF(EXCLUDED.source_url, ''),   materials.source_url),
-      category     = EXCLUDED.category,
-      sub_category = EXCLUDED.sub_category
+      material_id   = COALESCE(NULLIF(EXCLUDED.material_id, ''),  materials.material_id),
+      description   = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
+      finish_id     = COALESCE(EXCLUDED.finish_id,                materials.finish_id),
+      material_type = COALESCE(EXCLUDED.material_type,            materials.material_type)
     RETURNING *
   `;
   const material = rows[0] as MaterialRow;
@@ -188,14 +182,12 @@ router.patch('/materials/:id', async (c) => {
   const rows = await sql`
     UPDATE materials
     SET
-      name         = COALESCE(${parsed.data.name ?? null},         name),
-      material_id  = COALESCE(${parsed.data.material_id ?? null},  material_id),
-      description  = COALESCE(${parsed.data.description ?? null},  description),
-      swatch_hex   = COALESCE(${parsed.data.swatch_hex ?? null},   swatch_hex),
-      manufacturer = COALESCE(${parsed.data.manufacturer ?? null}, manufacturer),
-      source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url),
-      category     = ${parsed.data.category ?? null},
-      sub_category = ${parsed.data.sub_category ?? ''}
+      name          = COALESCE(${parsed.data.name ?? null},          name),
+      code          = COALESCE(${parsed.data.code ?? null},          code),
+      finish_id     = COALESCE(${parsed.data.finish_id ?? null},     finish_id),
+      material_type = COALESCE(${parsed.data.material_type ?? null}, material_type),
+      material_id   = COALESCE(${parsed.data.material_id ?? null},   material_id),
+      description   = COALESCE(${parsed.data.description ?? null},   description)
     WHERE id = ${id}
     RETURNING *
   `;
@@ -214,11 +206,6 @@ router.delete('/materials/:id', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const imageRows = await sql`SELECT r2_key FROM image_assets WHERE material_id = ${id}`;
-  await deleteR2Keys(
-    c.env.IMAGES_BUCKET,
-    (imageRows as { r2_key: string }[]).map((r) => r.r2_key),
-  );
   await sql`DELETE FROM materials WHERE id = ${id}`;
   return c.body(null, 204);
 });
@@ -277,33 +264,28 @@ router.post('/items/:itemId/materials/new', async (c) => {
 
   const sql = getDb(c.env);
   const name = parsed.data.name.trim() || (await generateImportName(sql, itemContext.projectId));
+  const code =
+    parsed.data.code?.trim() || (await generateNextCode(sql, 'materials', itemContext.projectId));
   const materialId =
-    parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemContext.projectId));
+    (parsed.data.material_id ?? '').trim() ||
+    (await generateImportMaterialId(sql, itemContext.projectId));
   const materialRows = await sql`
-    INSERT INTO materials (
-      project_id, name, material_id, description, swatch_hex, manufacturer, source_url,
-      category, sub_category
-    )
+    INSERT INTO materials (project_id, name, code, finish_id, material_type, material_id, description)
     VALUES (
       ${itemContext.projectId},
       ${name},
+      ${code},
+      ${parsed.data.finish_id ?? null},
+      ${parsed.data.material_type ?? null},
       ${materialId},
-      ${parsed.data.description},
-      ${parsed.data.swatch_hex ?? DEFAULT_SWATCH},
-      ${parsed.data.manufacturer},
-      ${parsed.data.source_url},
-      ${parsed.data.category ?? null},
-      ${parsed.data.sub_category ?? ''}
+      ${parsed.data.description}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
-      material_id  = COALESCE(NULLIF(EXCLUDED.material_id, ''),  materials.material_id),
-      description  = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
-      swatch_hex   = EXCLUDED.swatch_hex,
-      manufacturer = COALESCE(NULLIF(EXCLUDED.manufacturer, ''), materials.manufacturer),
-      source_url   = COALESCE(NULLIF(EXCLUDED.source_url, ''),   materials.source_url),
-      category     = EXCLUDED.category,
-      sub_category = EXCLUDED.sub_category
+      material_id   = COALESCE(NULLIF(EXCLUDED.material_id, ''),  materials.material_id),
+      description   = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
+      finish_id     = COALESCE(EXCLUDED.finish_id,                materials.finish_id),
+      material_type = COALESCE(EXCLUDED.material_type,            materials.material_type)
     RETURNING *
   `;
   const material = materialRows[0] as { id: string };
@@ -375,14 +357,12 @@ router.patch('/items/:itemId/materials/:materialId', async (c) => {
   } else {
     await sql`
       UPDATE materials SET
-        name         = COALESCE(${parsed.data.name ?? null},         name),
-        material_id  = COALESCE(${parsed.data.material_id ?? null},  material_id),
-        description  = COALESCE(${parsed.data.description ?? null},  description),
-        swatch_hex   = COALESCE(${parsed.data.swatch_hex ?? null},   swatch_hex),
-        manufacturer = COALESCE(${parsed.data.manufacturer ?? null}, manufacturer),
-        source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url),
-        category     = ${parsed.data.category ?? null},
-        sub_category = ${parsed.data.sub_category ?? ''}
+        name          = COALESCE(${parsed.data.name ?? null},          name),
+        code          = COALESCE(${parsed.data.code ?? null},          code),
+        finish_id     = COALESCE(${parsed.data.finish_id ?? null},     finish_id),
+        material_type = COALESCE(${parsed.data.material_type ?? null}, material_type),
+        material_id   = COALESCE(${parsed.data.material_id ?? null},   material_id),
+        description   = COALESCE(${parsed.data.description ?? null},   description)
       WHERE id = ${materialId}
     `;
   }
@@ -419,14 +399,12 @@ router.patch('/proposal/items/:proposalItemId/materials/:materialId', async (c) 
   } else {
     await sql`
       UPDATE materials SET
-        name         = COALESCE(${parsed.data.name ?? null},         name),
-        material_id  = COALESCE(${parsed.data.material_id ?? null},  material_id),
-        description  = COALESCE(${parsed.data.description ?? null},  description),
-        swatch_hex   = COALESCE(${parsed.data.swatch_hex ?? null},   swatch_hex),
-        manufacturer = COALESCE(${parsed.data.manufacturer ?? null}, manufacturer),
-        source_url   = COALESCE(${parsed.data.source_url ?? null},   source_url),
-        category     = ${parsed.data.category ?? null},
-        sub_category = ${parsed.data.sub_category ?? ''}
+        name          = COALESCE(${parsed.data.name ?? null},          name),
+        code          = COALESCE(${parsed.data.code ?? null},          code),
+        finish_id     = COALESCE(${parsed.data.finish_id ?? null},     finish_id),
+        material_type = COALESCE(${parsed.data.material_type ?? null}, material_type),
+        material_id   = COALESCE(${parsed.data.material_id ?? null},   material_id),
+        description   = COALESCE(${parsed.data.description ?? null},   description)
       WHERE id = ${materialId}
     `;
   }

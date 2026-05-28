@@ -5,6 +5,7 @@ export type ImageEntityType =
   | 'item_plan'
   | 'item_option'
   | 'material'
+  | 'finish'
   | 'proposal_item'
   | 'proposal_swatch'
   | 'proposal_plan'
@@ -19,6 +20,7 @@ export type ImageAsset = {
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;
+  finishId: string | null;
   proposalItemId: string | null;
   filename: string;
   contentType: string;

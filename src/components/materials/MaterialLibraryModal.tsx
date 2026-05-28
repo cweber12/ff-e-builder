@@ -1,18 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState, type KeyboardEvent } from 'react';
 import {
   useCreateMaterial,
-  useDeleteImage,
-  useImages,
+  useFinishes,
   useItemMaterialActions,
   useMaterials,
   useUpdateMaterial,
-  useUploadImage,
 } from '../../hooks';
-import type { ImageAsset, Item, Material, MaterialCategory, ProposalItem } from '../../types';
+import type { Finish, Item, Material, MaterialType, ProposalItem } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
-import { imageKeys } from '../../lib/query';
 
 type FfeContext = {
   context: 'ffe';
@@ -46,7 +42,7 @@ export function MaterialLibraryModal(props: MaterialLibraryModalProps) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Finish Library"
+      title="Project Materials"
       className="!max-w-[min(96vw,96rem)] !w-[min(96vw,96rem)]"
     >
       <MaterialLibraryPanel
@@ -73,59 +69,46 @@ type MaterialLibraryPanelProps =
 
 export type MaterialDraft = {
   name: string;
+  code: string;
+  finishId: string | null;
+  materialType: MaterialType | '';
   materialId: string;
-  category: MaterialCategory | '';
-  subCategory: string;
   description: string;
-  manufacturer: string;
-  sourceUrl: string;
-  swatchMode: 'color' | 'image';
-  swatchFile: File | null;
-  swatchHex: string;
 };
 
-const CATEGORY_LABELS: Record<MaterialCategory, string> = {
-  wood: 'Wood',
-  metal: 'Metal',
-  stone: 'Stone',
+export const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
+  veneer: 'Veneer',
+  laminate: 'Laminate',
+  solid: 'Solid',
+  powder_coat: 'Powder Coat',
+  anodized: 'Anodized',
+  upholstery: 'Upholstery',
+  stone_slab: 'Stone Slab',
   glass: 'Glass',
-  fabric: 'Fabric',
-  solid_color: 'Solid Color',
+  painted: 'Painted',
+  stained: 'Stained',
 };
 
-const MATERIAL_CATEGORIES: MaterialCategory[] = [
-  'wood',
-  'metal',
-  'stone',
+const MATERIAL_TYPES: MaterialType[] = [
+  'veneer',
+  'laminate',
+  'solid',
+  'powder_coat',
+  'anodized',
+  'upholstery',
+  'stone_slab',
   'glass',
-  'fabric',
-  'solid_color',
-];
-
-type CategoryFilter = 'all' | MaterialCategory | 'uncategorized';
-
-const FILTER_OPTIONS: Array<{ value: CategoryFilter; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'wood', label: 'Wood' },
-  { value: 'metal', label: 'Metal' },
-  { value: 'stone', label: 'Stone' },
-  { value: 'glass', label: 'Glass' },
-  { value: 'fabric', label: 'Fabric' },
-  { value: 'solid_color', label: 'Solid Color' },
-  { value: 'uncategorized', label: 'Uncategorized' },
+  'painted',
+  'stained',
 ];
 
 const emptyDraft: MaterialDraft = {
   name: '',
+  code: '',
+  finishId: null,
+  materialType: '',
   materialId: '',
-  category: '',
-  subCategory: '',
   description: '',
-  manufacturer: '',
-  sourceUrl: '',
-  swatchMode: 'color',
-  swatchFile: null,
-  swatchHex: '#D9D4C8',
 };
 
 export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
@@ -134,7 +117,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const categoryId = props.context === 'proposal' ? props.categoryId : '';
   const activeItem: Item | ProposalItem | undefined = props.item;
 
-  const queryClient = useQueryClient();
+  const finishes = useFinishes(projectId);
   const materials = useMaterials(projectId);
   const createMaterial = useCreateMaterial(projectId);
   const updateMaterial = useUpdateMaterial(projectId);
@@ -143,20 +126,15 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       ? { kind: 'ffe', itemGroupId: roomId, projectId }
       : { kind: 'proposal', itemGroupId: categoryId, projectId },
   );
-  const uploadImage = useUploadImage();
 
   const [draft, setDraft] = useState<MaterialDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingAssigned, setEditingAssigned] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [pendingAssignmentId, setPendingAssignmentId] = useState<string | null>(null);
   const [addedMaterialName, setAddedMaterialName] = useState<string | null>(null);
   const [removedMaterialName, setRemovedMaterialName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-
-  const editingMaterialImages = useImages('material', editingId ?? '');
-  const deleteImage = useDeleteImage('material', editingId ?? '');
 
   const assignedIds = useMemo(
     () => new Set(activeItem?.materials.map((m) => m.id) ?? []),
@@ -181,18 +159,13 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
     const query = searchQuery.trim().toLowerCase();
     return [...(materials.data ?? [])]
       .filter((m) => !assignedIds.has(m.id) && m.id !== pendingAssignmentId)
-      .filter((m) => {
-        if (categoryFilter === 'uncategorized') return m.category === null;
-        if (categoryFilter !== 'all') return m.category === categoryFilter;
-        return true;
-      })
       .filter((m) => materialMatchesQuery(m, query))
       .sort((a, b) => {
         const prioritySort = Number(priorityIds.has(b.id)) - Number(priorityIds.has(a.id));
         if (prioritySort !== 0) return prioritySort;
         return a.name.localeCompare(b.name);
       });
-  }, [assignedIds, categoryFilter, materials.data, pendingAssignmentId, priorityIds, searchQuery]);
+  }, [assignedIds, materials.data, pendingAssignmentId, priorityIds, searchQuery]);
 
   const resetDraft = () => {
     setDraft(emptyDraft);
@@ -202,22 +175,15 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   };
 
   const startEdit = (material: Material, isAssigned = false) => {
-    const cachedImages = queryClient.getQueryData<ImageAsset[]>(
-      imageKeys.forEntity('material', material.id),
-    );
     setEditingId(material.id);
     setEditingAssigned(isAssigned);
     setDraft({
       name: material.name,
+      code: material.code,
+      finishId: material.finishId,
+      materialType: material.materialType ?? '',
       materialId: material.materialId,
-      category: material.category ?? '',
-      subCategory: material.subCategory,
       description: material.description,
-      manufacturer: material.manufacturer,
-      sourceUrl: material.sourceUrl,
-      swatchMode: (cachedImages?.length ?? 0) > 0 ? 'image' : 'color',
-      swatchFile: null,
-      swatchHex: material.swatchHex || '#D9D4C8',
     });
     setShowForm(true);
   };
@@ -232,13 +198,11 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
   const saveDraft = async () => {
     const input = {
       name: draft.name.trim(),
+      code: draft.code.trim(),
+      finishId: draft.finishId || null,
+      materialType: (draft.materialType as MaterialType) || null,
       materialId: draft.materialId.trim(),
-      category: draft.category || null,
-      subCategory: draft.subCategory.trim(),
       description: draft.description.trim(),
-      swatchHex: draft.swatchHex || '#D9D4C8',
-      manufacturer: draft.manufacturer.trim(),
-      sourceUrl: draft.sourceUrl.trim(),
     };
     if (!input.name) return;
     let savedMaterial: Material;
@@ -263,20 +227,8 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       savedMaterial = await createMaterial.mutateAsync(input);
     }
 
-    if (draft.swatchMode === 'image' && draft.swatchFile) {
-      await uploadImage.mutateAsync({
-        entityType: 'material',
-        entityId: savedMaterial.id,
-        file: draft.swatchFile,
-        altText: savedMaterial.name,
-      });
-    } else if (draft.swatchMode === 'color' && editingId) {
-      for (const img of editingMaterialImages.data ?? []) {
-        await deleteImage.mutateAsync(img.id);
-      }
-    }
-
     resetDraft();
+    return savedMaterial;
   };
 
   const assignExistingMaterial = async (material: Material) => {
@@ -326,6 +278,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
       {activeItem && recentUnassignedMaterials.length > 0 && (
         <RecentMaterialsStrip
           materials={recentUnassignedMaterials}
+          finishes={finishes.data ?? []}
           assigning={pendingAssignmentId}
           onApply={(m) => void assignExistingMaterial(m)}
         />
@@ -337,6 +290,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
             draft={draft}
             editing={Boolean(editingMaterial)}
             editingMaterialId={editingId ?? undefined}
+            finishes={finishes.data ?? []}
             submitLabel={submitLabel}
             onDraftChange={setDraft}
             onCancel={resetDraft}
@@ -347,30 +301,18 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
         <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-neutral-200 bg-canvas-chrome">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-4">
             <div className="flex items-baseline gap-3">
-              <h3 className="eyebrow">Project library</h3>
+              <h3 className="eyebrow">Project materials</h3>
               <span className="num text-[11px] font-semibold text-neutral-500">
                 {visibleMaterials.length} {visibleMaterials.length === 1 ? 'item' : 'items'}
               </span>
             </div>
             <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-                className="rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:border-brand-500 focus:outline-none"
-                aria-label="Filter by category"
-              >
-                {FILTER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or ID…"
+                placeholder="Search by name or code…"
                 className="input-base sm:w-64"
-                aria-label="Search project library"
+                aria-label="Search project materials"
               />
               {!showForm && (
                 <Button type="button" size="sm" onClick={openCreateForm}>
@@ -388,6 +330,7 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
                   <MaterialPickerCard
                     key={material.id}
                     material={material}
+                    finish={finishes.data?.find((f) => f.id === material.finishId)}
                     assigning={pendingAssignmentId === material.id}
                     assignable={Boolean(activeItem)}
                     onSelect={() => void assignExistingMaterial(material)}
@@ -413,13 +356,16 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
 
 function RecentMaterialsStrip({
   materials,
+  finishes,
   assigning,
   onApply,
 }: {
   materials: Material[];
+  finishes: Finish[];
   assigning: string | null;
   onApply: (material: Material) => void;
 }) {
+  const finishById = useMemo(() => new Map(finishes.map((f) => [f.id, f])), [finishes]);
   return (
     <section
       aria-label="Recently used materials"
@@ -440,7 +386,11 @@ function RecentMaterialsStrip({
               title={`Apply ${material.name}`}
               className="inline-flex max-w-[14rem] items-center gap-2 rounded-full border border-neutral-200 bg-surface px-2 py-1 text-xs font-medium text-neutral-700 shadow-sm transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-progress disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
-              <MaterialSwatchImage material={material} size="sm" />
+              <MaterialSwatchImage
+                material={material}
+                finish={material.finishId ? finishById.get(material.finishId) : undefined}
+                size="sm"
+              />
               <span className="truncate">{material.name}</span>
             </button>
           ))}
@@ -517,9 +467,9 @@ function AssignedMaterialChip({
       <MaterialSwatchImage material={material} size="sm" />
       <span className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-sm font-semibold text-neutral-950">{material.name}</span>
-        {material.materialId && (
+        {material.code && (
           <span className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
-            {material.materialId}
+            {material.code}
           </span>
         )}
       </span>
@@ -549,7 +499,7 @@ function AssignedMaterialChip({
 export function MaterialForm({
   draft,
   editing,
-  editingMaterialId,
+  finishes,
   submitLabel,
   onDraftChange,
   onCancel,
@@ -558,108 +508,166 @@ export function MaterialForm({
   draft: MaterialDraft;
   editing: boolean;
   editingMaterialId?: string | undefined;
+  finishes: Finish[];
   submitLabel: string;
   onDraftChange: (updater: (current: MaterialDraft) => MaterialDraft) => void;
   onCancel?: (() => void) | undefined;
   onSubmit: () => void;
 }) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [pasteFlash, setPasteFlash] = useState(false);
+  const [finishSearch, setFinishSearch] = useState('');
 
-  useEffect(() => {
-    if (!draft.swatchFile) {
-      setPreviewUrl(null);
-      return undefined;
-    }
-    const url = URL.createObjectURL(draft.swatchFile);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [draft.swatchFile]);
+  const selectedFinish = finishes.find((f) => f.id === draft.finishId);
 
-  const onDraftChangeRef = useRef(onDraftChange);
-  useEffect(() => {
-    onDraftChangeRef.current = onDraftChange;
-  }, [onDraftChange]);
+  const filteredFinishes = useMemo(() => {
+    const q = finishSearch.trim().toLowerCase();
+    if (!q) return finishes;
+    return finishes.filter(
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        f.code.toLowerCase().includes(q) ||
+        f.manufacturer.toLowerCase().includes(q),
+    );
+  }, [finishes, finishSearch]);
 
-  useEffect(() => {
-    const handler = (event: ClipboardEvent) => {
-      const file = Array.from(event.clipboardData?.items ?? [])
-        .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
-        ?.getAsFile();
-      if (!file) return;
-      event.preventDefault();
-      onDraftChangeRef.current((current: MaterialDraft) => ({
-        ...current,
-        swatchFile: file,
-        swatchMode: 'image',
-      }));
-      setPasteFlash(true);
-      window.setTimeout(() => setPasteFlash(false), 1500);
-    };
-    document.addEventListener('paste', handler);
-    return () => document.removeEventListener('paste', handler);
-  }, []);
-
-  const switchMode = (mode: 'color' | 'image') => {
+  const selectFinish = (finish: Finish | null) => {
     onDraftChange((c) => ({
       ...c,
-      swatchMode: mode,
-      swatchFile: mode === 'color' ? null : c.swatchFile,
+      finishId: finish?.id ?? null,
+      name: c.name || finish?.name || '',
     }));
-    if (mode === 'color') setPreviewUrl(null);
+    setFinishSearch('');
   };
 
   return (
     <section className="border-y border-neutral-200 bg-canvas-shell p-5">
-      <p className="eyebrow">{editing ? 'Edit Item' : 'Add To Library'}</p>
+      <p className="eyebrow">{editing ? 'Edit Material' : 'Add Material'}</p>
       <div className="mt-3 grid gap-3">
+        <div className="grid gap-1 text-sm font-medium text-neutral-700">
+          <span>Finish</span>
+          {selectedFinish ? (
+            <div className="flex items-center gap-2 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2">
+              <ImageFrame
+                entityType="finish"
+                entityId={selectedFinish.id}
+                alt={selectedFinish.name}
+                className="h-8 w-8 shrink-0 rounded-full border-0 shadow-none"
+                imageClassName="object-cover"
+                compact
+                disabled
+              />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold text-neutral-950">
+                  {selectedFinish.name}
+                </span>
+                {selectedFinish.code && (
+                  <span className="num text-[10px] text-neutral-500">{selectedFinish.code}</span>
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => selectFinish(null)}
+                className="shrink-0 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                Clear
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-1">
+              <input
+                value={finishSearch}
+                onChange={(e) => setFinishSearch(e.target.value)}
+                placeholder="Search finishes…"
+                className={inputClassName}
+              />
+              {(finishSearch.trim() || draft.finishId === null) && finishes.length > 0 && (
+                <div className="max-h-40 overflow-y-auto rounded-sm border border-neutral-200 bg-canvas-chrome">
+                  {filteredFinishes.length ? (
+                    filteredFinishes.slice(0, 20).map((finish) => (
+                      <button
+                        key={finish.id}
+                        type="button"
+                        onClick={() => selectFinish(finish)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                      >
+                        <ImageFrame
+                          entityType="finish"
+                          entityId={finish.id}
+                          alt={finish.name}
+                          className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
+                          imageClassName="object-cover"
+                          compact
+                          disabled
+                        />
+                        <span className="min-w-0 flex-1 truncate font-medium text-neutral-950">
+                          {finish.name}
+                        </span>
+                        {finish.code && (
+                          <span className="num shrink-0 text-[10px] text-neutral-500">
+                            {finish.code}
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-3 py-2 text-xs text-neutral-500">No finishes match.</p>
+                  )}
+                </div>
+              )}
+              {finishes.length === 0 && (
+                <p className="text-xs text-neutral-400">
+                  No finishes in library yet — add some in the Finish Library tab.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+          <div className="grid gap-1 text-sm font-medium text-neutral-700">
+            <label htmlFor="material-type">Type</label>
+            <select
+              id="material-type"
+              value={draft.materialType}
+              onChange={(e) =>
+                onDraftChange((c) => ({ ...c, materialType: e.target.value as MaterialType | '' }))
+              }
+              className={inputClassName}
+            >
+              <option value="">— Unspecified —</option>
+              {MATERIAL_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {MATERIAL_TYPE_LABELS[t]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <label className="grid gap-1 text-sm font-medium text-neutral-700">
+            Code
+            <input
+              value={draft.code}
+              onChange={(e) => onDraftChange((c) => ({ ...c, code: e.target.value }))}
+              placeholder="Auto-assigned if blank"
+              className={inputClassName}
+            />
+          </label>
+        </div>
+
         <label className="grid gap-1 text-sm font-medium text-neutral-700">
           Name
           <input
             value={draft.name}
             onChange={(e) => onDraftChange((c) => ({ ...c, name: e.target.value }))}
+            placeholder={selectedFinish?.name ?? ''}
             className={inputClassName}
           />
         </label>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-          <label className="grid gap-1 text-sm font-medium text-neutral-700">
-            ID
-            <input
-              value={draft.materialId}
-              onChange={(e) => onDraftChange((c) => ({ ...c, materialId: e.target.value }))}
-              className={inputClassName}
-            />
-          </label>
-          <div className="grid gap-1 text-sm font-medium text-neutral-700">
-            <label htmlFor="material-category">Category</label>
-            <select
-              id="material-category"
-              value={draft.category}
-              onChange={(e) =>
-                onDraftChange((c) => ({
-                  ...c,
-                  category: e.target.value as MaterialCategory | '',
-                }))
-              }
-              className={inputClassName}
-            >
-              <option value="">— None —</option>
-              {MATERIAL_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {CATEGORY_LABELS[cat]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
         <label className="grid gap-1 text-sm font-medium text-neutral-700">
-          Sub-category
+          Manufacturer Ref
           <input
-            value={draft.subCategory}
-            onChange={(e) => onDraftChange((c) => ({ ...c, subCategory: e.target.value }))}
-            placeholder="Optional — e.g. Walnut Veneer"
+            value={draft.materialId}
+            onChange={(e) => onDraftChange((c) => ({ ...c, materialId: e.target.value }))}
+            placeholder="Optional manufacturer / supplier ID"
             className={inputClassName}
           />
         </label>
@@ -674,123 +682,13 @@ export function MaterialForm({
           />
         </label>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-          <label className="grid gap-1 text-sm font-medium text-neutral-700">
-            Manufacturer
-            <input
-              value={draft.manufacturer}
-              onChange={(e) => onDraftChange((c) => ({ ...c, manufacturer: e.target.value }))}
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-neutral-700">
-            Source URL
-            <input
-              type="url"
-              value={draft.sourceUrl}
-              onChange={(e) => onDraftChange((c) => ({ ...c, sourceUrl: e.target.value }))}
-              placeholder="https://…"
-              className={inputClassName}
-            />
-          </label>
-        </div>
-
-        <div className="grid gap-2 text-sm font-medium text-neutral-700">
-          <span>Swatch</span>
-          <div className="grid gap-3">
-            <div className="flex h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-canvas-chrome">
-              {draft.swatchMode === 'image' ? (
-                previewUrl ? (
-                  <img src={previewUrl} alt="" className="h-full w-full object-cover" />
-                ) : editingMaterialId ? (
-                  <ImageFrame
-                    entityType="material"
-                    entityId={editingMaterialId}
-                    alt="Current swatch"
-                    className="h-full w-full border-0 shadow-none"
-                    imageClassName="object-cover"
-                    compact
-                    disabled
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-xs text-neutral-400">
-                    No image
-                  </span>
-                )
-              ) : (
-                <span
-                  className="h-full w-full"
-                  style={{ backgroundColor: draft.swatchHex || '#D9D4C8' }}
-                />
-              )}
-            </div>
-
-            <div className="inline-flex self-start border border-neutral-200 bg-canvas-chrome p-0.5">
-              <button
-                type="button"
-                className={draft.swatchMode === 'color' ? activeSwatchToggle : inactiveSwatchToggle}
-                onClick={() => switchMode('color')}
-              >
-                Color
-              </button>
-              <button
-                type="button"
-                className={draft.swatchMode === 'image' ? activeSwatchToggle : inactiveSwatchToggle}
-                onClick={() => switchMode('image')}
-              >
-                Image
-              </button>
-            </div>
-
-            {draft.swatchMode === 'color' ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={draft.swatchHex || '#D9D4C8'}
-                  onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                  className="h-8 w-10 cursor-pointer rounded-sm border border-neutral-200 bg-canvas-chrome p-0.5"
-                  aria-label="Swatch color"
-                />
-                <input
-                  type="text"
-                  value={draft.swatchHex || ''}
-                  onChange={(e) => onDraftChange((c) => ({ ...c, swatchHex: e.target.value }))}
-                  placeholder="#D9D4C8"
-                  maxLength={7}
-                  className="num w-24 rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1.5 text-xs font-normal text-neutral-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
-                  aria-label="Swatch hex value"
-                />
-              </div>
-            ) : (
-              <div className="grid gap-1.5">
-                <p className="text-xs font-normal text-neutral-500">
-                  {pasteFlash
-                    ? 'Pasted image attached.'
-                    : draft.swatchFile
-                      ? draft.swatchFile.name
-                      : 'Upload or paste an image (Ctrl+V).'}
-                </p>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={(e) =>
-                    onDraftChange((c) => ({ ...c, swatchFile: e.target.files?.[0] ?? null }))
-                  }
-                  className="input-base file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700"
-                  aria-label="Swatch image"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
         <div className="flex flex-wrap justify-end gap-2">
           {onCancel && (
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancel
             </Button>
           )}
-          <Button type="button" onClick={onSubmit} disabled={!draft.name.trim()}>
+          <Button type="button" onClick={onSubmit} disabled={!draft.name.trim() && !selectedFinish}>
             {submitLabel}
           </Button>
         </div>
@@ -801,12 +699,14 @@ export function MaterialForm({
 
 function MaterialPickerCard({
   material,
+  finish,
   assigning,
   assignable,
   onSelect,
   onEdit,
 }: {
   material: Material;
+  finish?: Finish;
   assigning: boolean;
   assignable: boolean;
   onSelect: () => void;
@@ -832,16 +732,19 @@ function MaterialPickerCard({
       }`}
     >
       <div className="relative">
-        <ImageFrame
-          entityType="material"
-          entityId={material.id}
-          alt={material.name}
-          className="h-24 w-full rounded-none border-0 shadow-none"
-          imageClassName="object-cover"
-          compact
-          placeholderContent={<span className="text-lg text-neutral-400">+</span>}
-          disabled
-        />
+        {finish ? (
+          <ImageFrame
+            entityType="finish"
+            entityId={finish.id}
+            alt={finish.name}
+            className="h-24 w-full rounded-none border-0 shadow-none"
+            imageClassName="object-cover"
+            compact
+            disabled
+          />
+        ) : (
+          <div className="h-24 w-full bg-canvas-shell" />
+        )}
         {assignable && (
           <div
             className="pointer-events-none absolute inset-0 flex items-center justify-center bg-brand-900/0 opacity-0 transition group-hover:bg-brand-900/40 group-hover:opacity-100 group-focus-visible:bg-brand-900/40 group-focus-visible:opacity-100"
@@ -855,15 +758,19 @@ function MaterialPickerCard({
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
         <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
-          {material.materialId || 'No ID'}
+          {material.code || 'No code'}
         </p>
         <h4 className="truncate text-sm font-semibold leading-tight text-neutral-950">
           {material.name}
         </h4>
-        {material.category && (
+        {(finish || material.materialType) && (
           <p className="truncate text-[10px] text-neutral-500">
-            {CATEGORY_LABELS[material.category]}
-            {material.subCategory ? ` · ${material.subCategory}` : ''}
+            {[
+              finish?.name,
+              material.materialType ? MATERIAL_TYPE_LABELS[material.materialType] : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </p>
         )}
         <div className="mt-auto flex items-center justify-end pt-1">
@@ -998,7 +905,7 @@ export function ProductLinkIcon({ url, label }: { url: string; label: string }) 
   return (
     <span
       aria-hidden="true"
-      title="No product link — add one in the material edit form"
+      title="No product link — add one in the finish edit form"
       className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-neutral-300"
     >
       <ChainLinkGlyph />
@@ -1008,10 +915,12 @@ export function ProductLinkIcon({ url, label }: { url: string; label: string }) 
 
 export function MaterialSwatchImage({
   material,
+  finish,
   size = 'md',
   className = '',
 }: {
   material: Material;
+  finish?: Finish;
   size?: 'sm' | 'md' | 'lg';
   className?: string | undefined;
 }) {
@@ -1021,24 +930,26 @@ export function MaterialSwatchImage({
       : size === 'lg'
         ? 'h-20 w-20 rounded-full'
         : 'h-10 w-10 rounded-full';
-  const hexPlaceholder = material.swatchHex ? (
-    <span
-      className="h-full w-full rounded-full"
-      style={{ backgroundColor: material.swatchHex }}
-      aria-hidden="true"
-    />
-  ) : (
-    <span className="text-[10px] font-semibold text-neutral-400">IMG</span>
-  );
+
+  const finishId = finish?.id ?? material.finishId ?? '';
+
+  if (!finishId) {
+    return (
+      <span
+        className={`${frameClassName} shrink-0 bg-canvas-shell ${className}`}
+        aria-hidden="true"
+      />
+    );
+  }
+
   return (
     <ImageFrame
-      entityType="material"
-      entityId={material.id}
+      entityType="finish"
+      entityId={finishId}
       alt={`${material.name} swatch`}
       className={`${frameClassName} shrink-0 border-0 shadow-none ${className}`}
       imageClassName="object-cover"
       placeholderClassName="bg-canvas-shell"
-      placeholderContent={hexPlaceholder}
       compact
       disabled
     />
@@ -1047,15 +958,10 @@ export function MaterialSwatchImage({
 
 function materialMatchesQuery(material: Material, query: string) {
   if (!query) return true;
-  return [material.name, material.materialId, material.description]
+  return [material.name, material.code, material.materialId, material.description]
     .join(' ')
     .toLowerCase()
     .includes(query);
 }
 
 const inputClassName = 'input-base';
-
-const activeSwatchToggle =
-  'rounded-sm bg-brand-600 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';
-const inactiveSwatchToggle =
-  'rounded-sm px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500';

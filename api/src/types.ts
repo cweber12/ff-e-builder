@@ -262,6 +262,7 @@ export type ImageEntityType =
   | 'item_plan'
   | 'item_option'
   | 'material'
+  | 'finish'
   | 'proposal_item'
   | 'proposal_swatch'
   | 'proposal_plan'
@@ -276,6 +277,7 @@ export interface ImageAsset {
   room_id: string | null;
   item_id: string | null;
   material_id: string | null;
+  finish_id: string | null;
   proposal_item_id: string | null;
   r2_key: string;
   filename: string;
@@ -379,16 +381,41 @@ export type UpdateItemColumnDefInput = z.infer<typeof UpdateItemColumnDefSchema>
 
 const SwatchHexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const materialCategories = ['wood', 'metal', 'stone', 'glass', 'fabric', 'solid_color'] as const;
+const materialTypes = [
+  'veneer',
+  'laminate',
+  'solid',
+  'powder_coat',
+  'anodized',
+  'upholstery',
+  'stone_slab',
+  'glass',
+  'painted',
+  'stained',
+] as const;
 
-export const CreateMaterialSchema = z.object({
+export const CreateFinishSchema = z.object({
   name: z.string().max(255).default(''),
-  material_id: z.string().max(100).default(''),
+  code: z.string().max(100).default(''),
   description: z.string().max(1000).default(''),
   swatch_hex: SwatchHexSchema.default('#D9D4C8'),
   manufacturer: z.string().max(255).default(''),
   source_url: z.string().max(2048).default(''),
   category: z.enum(materialCategories).nullable().optional(),
   sub_category: z.string().max(255).default(''),
+});
+export type CreateFinishInput = z.infer<typeof CreateFinishSchema>;
+
+export const UpdateFinishSchema = CreateFinishSchema.partial();
+export type UpdateFinishInput = z.infer<typeof UpdateFinishSchema>;
+
+export const CreateMaterialSchema = z.object({
+  name: z.string().max(255).default(''),
+  code: z.string().max(100).default(''),
+  finish_id: z.string().uuid().nullable().optional(),
+  material_type: z.enum(materialTypes).nullable().optional(),
+  material_id: z.string().max(100).default(''),
+  description: z.string().max(1000).default(''),
 });
 export type CreateMaterialInput = z.infer<typeof CreateMaterialSchema>;
 

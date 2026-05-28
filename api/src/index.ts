@@ -8,6 +8,7 @@ import { projectsRouter } from './routes/projects';
 import { roomsRouter } from './routes/rooms';
 import { itemsRouter } from './routes/items';
 import { imagesRouter } from './routes/images';
+import { finishesRouter } from './routes/finishes';
 import { materialsRouter } from './routes/materials';
 import { plansRouter } from './routes/plans';
 import { proposalRouter } from './routes/proposal';
@@ -41,17 +42,20 @@ app.use('/api/v1/rooms/*', requireAuthorized);
 app.use('/api/v1/items/*', requireAuthorized);
 app.use('/api/v1/images/*', requireAuthorized);
 app.use('/api/v1/materials/*', requireAuthorized);
+app.use('/api/v1/finishes/*', requireAuthorized);
 app.use('/api/v1/proposal/*', requireAuthorized);
 app.use('/api/v1/company/*', requireAuthorized);
 
 // ─── Routes ───────────────────────────────────────────────────────────────
 app.route('/api/v1/projects', projectsRouter);
 app.route('/api/v1/projects', plansRouter);
+app.route('/api/v1/projects', finishesRouter);
 app.route('/api/v1/projects', materialsRouter);
 app.route('/api/v1/projects', columnDefsRouter);
 app.route('/api/v1/rooms', roomsRouter);
 app.route('/api/v1/items', itemsRouter);
 app.route('/api/v1/images', imagesRouter);
+app.route('/api/v1', finishesRouter);
 app.route('/api/v1', materialsRouter);
 app.route('/api/v1', proposalRouter);
 app.route('/api/v1/users', usersRouter);

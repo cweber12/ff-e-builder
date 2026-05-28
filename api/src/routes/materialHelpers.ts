@@ -4,7 +4,7 @@ import { getDb } from '../lib/db';
 type Sql = ReturnType<typeof getDb>;
 
 /**
- * Returns the next monotonic material_id for import within a project.
+ * Returns the next monotonic material_id (manufacturer reference) for import within a project.
  * Reads the highest existing numeric material_id, adds 1.
  * Never backfills gaps — always max + 1.
  */
@@ -18,6 +18,38 @@ export async function generateImportMaterialId(sql: Sql, projectId: string): Pro
     WHERE project_id = ${projectId}
   `;
   const max = Number((rows[0] as { max_id?: number }).max_id ?? 0);
+  return String(max + 1);
+}
+
+/**
+ * Returns the next sequential code for a new material or finish within a project.
+ * Reads the highest existing numeric code in the given table, adds 1.
+ * Never backfills gaps — always max + 1.
+ */
+export async function generateNextCode(
+  sql: Sql,
+  table: 'materials' | 'finishes',
+  projectId: string,
+): Promise<string> {
+  const rows =
+    table === 'materials'
+      ? await sql`
+          SELECT COALESCE(
+            MAX(CAST(code AS int)) FILTER (WHERE code ~ '^[0-9]+$'),
+            0
+          ) AS max_code
+          FROM materials
+          WHERE project_id = ${projectId}
+        `
+      : await sql`
+          SELECT COALESCE(
+            MAX(CAST(code AS int)) FILTER (WHERE code ~ '^[0-9]+$'),
+            0
+          ) AS max_code
+          FROM finishes
+          WHERE project_id = ${projectId}
+        `;
+  const max = Number((rows[0] as { max_code?: number }).max_code ?? 0);
   return String(max + 1);
 }
 
@@ -45,6 +77,11 @@ export async function selectMaterialById(sql: Sql, materialId: string) {
   return rows[0];
 }
 
+export async function selectFinishById(sql: Sql, finishId: string) {
+  const rows = await sql`SELECT * FROM finishes WHERE id = ${finishId}`;
+  return rows[0];
+}
+
 export async function countMaterialReferences(sql: Sql, materialId: string): Promise<number> {
   const rows = await sql`
     SELECT (
@@ -55,36 +92,19 @@ export async function countMaterialReferences(sql: Sql, materialId: string): Pro
   return Number((rows[0] as { total?: number } | undefined)?.total ?? 0);
 }
 
-function extForContentType(ct: string): string {
-  switch (ct) {
-    case 'image/jpeg':
-      return 'jpg';
-    case 'image/png':
-      return 'png';
-    case 'image/webp':
-      return 'webp';
-    case 'image/gif':
-      return 'gif';
-    default:
-      return 'bin';
-  }
-}
-
 type ForkPatch = {
   name?: string | undefined;
+  code?: string | undefined;
+  finish_id?: string | null | undefined;
+  material_type?: string | null | undefined;
   material_id?: string | undefined;
   description?: string | undefined;
-  swatch_hex?: string | undefined;
-  manufacturer?: string | undefined;
-  source_url?: string | undefined;
-  category?: string | null | undefined;
-  sub_category?: string | undefined;
 };
 
 export async function forkMaterial(
   sql: Sql,
-  env: Env,
-  uid: string,
+  _env: Env,
+  _uid: string,
   materialId: string,
   patch: ForkPatch,
 ): Promise<string> {
@@ -93,85 +113,29 @@ export async function forkMaterial(
     id: string;
     project_id: string;
     name: string;
+    code: string;
+    finish_id: string | null;
+    material_type: string | null;
     material_id: string;
     description: string;
-    swatch_hex: string;
-    manufacturer: string;
-    source_url: string;
-    category: string | null;
-    sub_category: string;
   };
 
+  const newCode = await generateNextCode(sql, 'materials', cur.project_id);
   const newName = patch.name ?? cur.name;
   const newMatId = patch.material_id ?? cur.material_id;
   const newDesc = patch.description ?? cur.description;
-  const newHex = patch.swatch_hex ?? cur.swatch_hex;
-  const newManufacturer = patch.manufacturer ?? cur.manufacturer;
-  const newSourceUrl = patch.source_url ?? cur.source_url;
-  const newCategory = patch.category !== undefined ? patch.category : cur.category;
-  const newSubCategory = patch.sub_category ?? cur.sub_category;
+  const newFinishId = patch.finish_id !== undefined ? patch.finish_id : cur.finish_id;
+  const newMaterialType =
+    patch.material_type !== undefined ? patch.material_type : cur.material_type;
 
   const newRows = await sql`
-    INSERT INTO materials (
-      project_id, name, material_id, description, swatch_hex, manufacturer, source_url,
-      category, sub_category
-    )
+    INSERT INTO materials (project_id, name, code, finish_id, material_type, material_id, description)
     VALUES (
-      ${cur.project_id}, ${newName}, ${newMatId}, ${newDesc},
-      ${newHex}, ${newManufacturer}, ${newSourceUrl},
-      ${newCategory}, ${newSubCategory}
+      ${cur.project_id}, ${newName}, ${newCode}, ${newFinishId}, ${newMaterialType},
+      ${newMatId}, ${newDesc}
     )
     RETURNING *
   `;
   const newMat = newRows[0] as { id: string };
-
-  // Copy primary image via R2 streaming copy
-  const imgRows = await sql`
-    SELECT * FROM image_assets
-    WHERE  material_id = ${materialId} AND entity_type = 'material'
-    ORDER  BY is_primary DESC
-    LIMIT  1
-  `;
-  const img = imgRows[0] as
-    | {
-        r2_key: string;
-        content_type: string;
-        filename: string;
-        byte_size: number;
-        alt_text: string;
-      }
-    | undefined;
-
-  if (img) {
-    const obj = await env.IMAGES_BUCKET.get(img.r2_key);
-    if (obj) {
-      const newImgId = crypto.randomUUID();
-      const ext = extForContentType(img.content_type);
-      const newKey = `users/${uid}/projects/${cur.project_id}/materials/${newMat.id}/${newImgId}.${ext}`;
-      await env.IMAGES_BUCKET.put(newKey, obj.body, {
-        httpMetadata: { contentType: img.content_type, cacheControl: 'private, max-age=3600' },
-        customMetadata: {
-          ownerUid: uid,
-          projectId: cur.project_id,
-          entityType: 'material',
-          imageId: newImgId,
-          materialId: newMat.id,
-          proposalItemId: '',
-        },
-      });
-      await sql`
-        INSERT INTO image_assets (
-          id, entity_type, owner_uid, project_id,
-          room_id, item_id, material_id, proposal_item_id,
-          r2_key, filename, content_type, byte_size, alt_text, is_primary
-        ) VALUES (
-          ${newImgId}, 'material', ${uid}, ${cur.project_id},
-          null, null, ${newMat.id}, null,
-          ${newKey}, ${img.filename}, ${img.content_type}, ${img.byte_size}, ${img.alt_text}, true
-        )
-      `;
-    }
-  }
-
   return newMat.id;
 }

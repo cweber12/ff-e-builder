@@ -3,6 +3,7 @@ import type { Env, HonoVariables, ImageAsset, ImageEntityType } from '../types';
 import { ImageListQuerySchema, ImageUploadQuerySchema } from '../types';
 import { getDb } from '../lib/db';
 import {
+  getOwnedFinishContext,
   getOwnedItemContext,
   getOwnedMaterialContext,
   getOwnedProjectContext,
@@ -73,6 +74,7 @@ type EntityContext = {
   roomId: string | null;
   itemId: string | null;
   materialId: string | null;
+  finishId: string | null;
   proposalItemId: string | null;
 };
 
@@ -137,6 +139,7 @@ function imageInsertErrorMessage(entityType: ImageEntityType, err: unknown): str
   if (entityType === 'proposal_plan') return 'This row already has a plan image';
   if (entityType === 'room') return 'This room already has an image';
   if (entityType === 'material') return 'This material already has an image';
+  if (entityType === 'finish') return 'This finish already has an image';
   return 'An image already exists for this entity';
 }
 
@@ -213,6 +216,7 @@ async function getOwnedEntityContext(
       roomId: null,
       itemId: null,
       materialId: null,
+      finishId: null,
       proposalItemId: null,
     };
   }
@@ -224,6 +228,7 @@ async function getOwnedEntityContext(
       roomId: room.roomId,
       itemId: null,
       materialId: null,
+      finishId: null,
       proposalItemId: null,
     };
   }
@@ -235,6 +240,19 @@ async function getOwnedEntityContext(
       roomId: null,
       itemId: null,
       materialId: material.materialId,
+      finishId: null,
+      proposalItemId: null,
+    };
+  }
+
+  if (entityType === 'finish') {
+    const finish = await getOwnedFinishContext(env, entityId, uid);
+    return {
+      projectId: finish.projectId,
+      roomId: null,
+      itemId: null,
+      materialId: null,
+      finishId: finish.finishId,
       proposalItemId: null,
     };
   }
@@ -250,6 +268,7 @@ async function getOwnedEntityContext(
       roomId: null,
       itemId: null,
       materialId: null,
+      finishId: null,
       proposalItemId: proposalItem.proposalItemId,
     };
   }
@@ -261,6 +280,7 @@ async function getOwnedEntityContext(
       roomId: item.roomId,
       itemId: item.itemId,
       materialId: null,
+      finishId: null,
       proposalItemId: null,
     };
   }
@@ -271,6 +291,7 @@ async function getOwnedEntityContext(
     roomId: item.roomId,
     itemId: item.itemId,
     materialId: null,
+    finishId: null,
     proposalItemId: null,
   };
 }
@@ -286,6 +307,7 @@ function buildR2Key(
   if (entityType === 'project') return `${base}/project/${imageId}.${ext}`;
   if (entityType === 'room') return `${base}/rooms/${context.roomId}/${imageId}.${ext}`;
   if (entityType === 'material') return `${base}/materials/${context.materialId}/${imageId}.${ext}`;
+  if (entityType === 'finish') return `${base}/finishes/${context.finishId}/${imageId}.${ext}`;
   if (entityType === 'proposal_item') {
     return `${base}/proposal/items/${context.proposalItemId}/${imageId}.${ext}`;
   }
@@ -391,6 +413,7 @@ router.get('/', async (c) => {
       AND room_id IS NOT DISTINCT FROM ${context.roomId}
       AND item_id IS NOT DISTINCT FROM ${context.itemId}
       AND material_id IS NOT DISTINCT FROM ${context.materialId}
+      AND finish_id IS NOT DISTINCT FROM ${context.finishId}
       AND proposal_item_id IS NOT DISTINCT FROM ${context.proposalItemId}
     ORDER BY is_primary DESC, created_at DESC
   `;
@@ -516,6 +539,7 @@ router.post('/', async (c) => {
       entityType: parsed.data.entity_type,
       imageId,
       materialId: context.materialId ?? '',
+      finishId: context.finishId ?? '',
       proposalItemId: context.proposalItemId ?? '',
     },
   });
@@ -617,7 +641,7 @@ router.post('/', async (c) => {
     if (parsed.data.entity_type === 'project' || parsed.data.entity_type === 'item_option') {
       const rows = await sql`
         INSERT INTO image_assets (
-          id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
+          id, entity_type, owner_uid, project_id, room_id, item_id, material_id, finish_id, proposal_item_id, r2_key,
           filename, content_type, byte_size, alt_text, is_primary,
           thumbnail_r2_key, thumbnail_byte_size
         )
@@ -629,6 +653,7 @@ router.post('/', async (c) => {
           ${context.roomId},
           ${context.itemId},
           ${context.materialId},
+          ${context.finishId},
           ${context.proposalItemId},
           ${r2Key},
           ${cleanFilename(file.name)},
@@ -654,10 +679,11 @@ router.post('/', async (c) => {
           AND room_id IS NOT DISTINCT FROM ${context.roomId}
           AND item_id IS NOT DISTINCT FROM ${context.itemId}
           AND material_id IS NOT DISTINCT FROM ${context.materialId}
+          AND finish_id IS NOT DISTINCT FROM ${context.finishId}
           AND proposal_item_id IS NOT DISTINCT FROM ${context.proposalItemId}
       )
       INSERT INTO image_assets (
-        id, entity_type, owner_uid, project_id, room_id, item_id, material_id, proposal_item_id, r2_key,
+        id, entity_type, owner_uid, project_id, room_id, item_id, material_id, finish_id, proposal_item_id, r2_key,
         filename, content_type, byte_size, alt_text, is_primary,
         thumbnail_r2_key, thumbnail_byte_size
       )
@@ -669,6 +695,7 @@ router.post('/', async (c) => {
         ${context.roomId},
         ${context.itemId},
         ${context.materialId},
+        ${context.finishId},
         ${context.proposalItemId},
         ${r2Key},
         ${cleanFilename(file.name)},

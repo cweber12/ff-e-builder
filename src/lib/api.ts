@@ -1,5 +1,6 @@
 import { columnDefsApi } from './api/columnDefs';
 import { companyApi } from './api/company';
+import { finishesApi } from './api/finishes';
 import { imagesApi } from './api/images';
 import { itemsApi } from './api/items';
 import { materialsApi } from './api/materials';
@@ -13,6 +14,7 @@ import { usersApi } from './api/users';
 export { ApiError } from './api/transport';
 export type { ImageEntityRef, UploadImageInput } from './api/images';
 export type { CreateItemInput, UpdateItemInput } from './api/items';
+export type { CreateFinishInput, UpdateFinishInput } from './api/finishes';
 export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
 export type {
   CreateMeasuredPlanInput,
@@ -41,6 +43,7 @@ export const api = {
   rooms: roomsApi,
   items: itemsApi,
   images: imagesApi,
+  finishes: finishesApi,
   materials: materialsApi,
   plans: plansApi,
   columnDefs: columnDefsApi,
