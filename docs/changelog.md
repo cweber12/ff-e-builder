@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(catalog): replace Catalog Editor accordion groups with top tab navigation that shows one panel at a time without internal editor scrolling
 - feat(catalog): finalize Catalog Editor with keyboard-complete color swatch chips, header-level Document Mark toggle behavior, and brand-aligned sticky popover chrome
 - fix(catalog): keep catalog main and bottom rows stacked with consistent spacing by removing forced vertical spread in the content block grid
 - fix(catalog): make the catalog main two-column section fit content height instead of stretching to a fixed-height slot
