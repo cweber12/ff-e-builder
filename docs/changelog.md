@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(migrations): make finish-library split migration update image_assets constraints before converting material image rows to finish entities
+- fix(materials): complete issue #92 options workflows by enabling tab-aware export and delete-all actions, correcting finishes export routing, and adding dedicated finishes CSV/Excel/PDF exporters
 - feat(materials): add a 3-step Project Materials Excel import modal with finish resolution by name then code, non-blocking unresolved-finish warnings, and tab-aware MaterialsView options wiring
 - feat(materials): add a 3-step Finishes Excel import modal in MaterialsView (upload, confirm, import) with swatch image uploads, progress tracking, and per-row warning summaries
 - feat(imports): add finishes/materials spreadsheet parser APIs with synonym-based auto-mapping and header-warning handling for low-signal files

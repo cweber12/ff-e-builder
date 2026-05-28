@@ -4,6 +4,7 @@ import {
   exportTableCsv,
   exportSummaryCsv,
   exportProposalCsv,
+  exportFinishesExcel,
   exportMaterialsExcel,
 } from './index';
 import {
@@ -18,7 +19,13 @@ import {
   proposalSubtotalLabelColumnIndex,
   type ProposalAssetBundle,
 } from './proposal/proposalDocument';
-import type { Material, Project, ProposalCategoryWithItems, ProposalItem } from '../../types';
+import type {
+  Finish,
+  Material,
+  Project,
+  ProposalCategoryWithItems,
+  ProposalItem,
+} from '../../types';
 import type { RoomWithItems } from '../../types';
 import type { Item } from '../../types/item';
 
@@ -179,6 +186,22 @@ const makeMaterial = (overrides: Partial<Material> = {}): Material => ({
   finishId: null,
   materialType: null,
   description: 'Wood finish',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+  ...overrides,
+});
+
+const makeFinish = (overrides: Partial<Finish> = {}): Finish => ({
+  id: 'f1',
+  projectId: 'p1',
+  code: 'FIN-001',
+  name: 'Walnut',
+  category: 'wood',
+  subCategory: 'Rift sawn',
+  description: 'Warm walnut finish',
+  manufacturer: 'Acme',
+  sourceUrl: 'https://example.com/walnut',
+  swatchHex: '#7A4A2B',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
   ...overrides,
@@ -363,9 +386,26 @@ describe('exportMaterialsExcel', () => {
     exportMaterialsExcel(makeProject(), [makeMaterial()], 'csv');
 
     expect(downloadedFilename).toBe('test-project-materials.csv');
-    expect(capturedBlobContent).toContain('Material ID');
+    expect(capturedBlobContent).toContain('"Manufacturer Ref"');
     expect(capturedBlobContent).toContain('Walnut');
     expect(capturedBlobContent).toContain('MAT-001');
+  });
+});
+
+describe('exportFinishesExcel', () => {
+  it('exports finish rows as CSV with expected headers and mapped row values', () => {
+    exportFinishesExcel(makeProject(), [makeFinish()], 'csv');
+
+    expect(downloadedFilename).toBe('test-project-finishes.csv');
+    expect(capturedBlobContent).toContain(
+      '"Code","Name","Category","Sub-Category","Manufacturer","Source URL","Swatch Color","Description"',
+    );
+    expect(capturedBlobContent).toContain('FIN-001');
+    expect(capturedBlobContent).toContain('Walnut');
+    expect(capturedBlobContent).toContain('Wood');
+    expect(capturedBlobContent).toContain('Rift sawn');
+    expect(capturedBlobContent).toContain('https://example.com/walnut');
+    expect(capturedBlobContent).toContain('#7A4A2B');
   });
 });
 

@@ -5,5 +5,6 @@ export { exportSummaryPdf, exportTablePdf } from './ffe/ffePdf';
 export { exportProposalExcel } from './proposal/proposalExcel';
 export { exportProposalPdf } from './proposal/proposalPdf';
 export { exportMaterialsExcel, exportMaterialsPdf } from './materials';
+export { exportFinishesExcel, exportFinishesPdf } from './finishes';
 export { exportCatalogItemPdf, exportCatalogPdf } from './ffe/catalogPdf';
 export type { CatalogWatermarkPdfOptions } from './ffe/catalogPdf';

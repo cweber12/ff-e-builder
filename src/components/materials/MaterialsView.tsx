@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Download, Plus, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, Plus, SlidersHorizontal } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
+import {
+  exportFinishesExcel,
+  exportFinishesPdf,
+  exportMaterialsExcel,
+  exportMaterialsPdf,
+} from '../../lib/export';
 import {
   useCreateFinish,
   useCreateMaterial,
@@ -30,11 +35,12 @@ import {
   DropdownMenu,
   MenuItem,
   MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
   Modal,
   SegmentedControl,
 } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
-import { ExportMenu } from '../shared/ExportMenu';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
 import { FinishForm } from './FinishForm';
 import { ImportFinishesExcelModal } from './ImportFinishesExcelModal';
@@ -91,6 +97,7 @@ const emptyMaterialDraft: MaterialDraft = {
 
 type CategoryFilter = 'all' | MaterialCategory | 'uncategorized';
 type LibraryTab = 'finishes' | 'materials';
+type DeleteAllSelection = { tab: LibraryTab; ids: string[] } | null;
 
 const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   wood: 'Wood',
@@ -154,6 +161,8 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
   const [showMaterialForm, setShowMaterialForm] = useState(false);
   const [showImportFinishesModal, setShowImportFinishesModal] = useState(false);
   const [showImportMaterialsModal, setShowImportMaterialsModal] = useState(false);
+  const [deleteAllSelection, setDeleteAllSelection] = useState<DeleteAllSelection>(null);
+  const [isDeleteAllPending, setIsDeleteAllPending] = useState(false);
 
   const editingFinishImages = useImages('finish', editingFinishId ?? '');
   const deleteFinishImage = useDeleteImage('finish', editingFinishId ?? '');
@@ -294,6 +303,76 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
   };
 
   const showForm = activeTab === 'finishes' ? showFinishForm : showMaterialForm;
+  const deleteAllCount = deleteAllSelection?.ids.length ?? 0;
+  const deleteAllTab = deleteAllSelection?.tab ?? 'finishes';
+  const deleteAllLabel = deleteAllTab === 'finishes' ? 'finishes' : 'project materials';
+
+  const openDeleteAllModal = (tab: LibraryTab) => {
+    const ids =
+      tab === 'finishes'
+        ? filteredFinishes.map((finish) => finish.id)
+        : filteredMaterials.map((material) => material.id);
+    setDeleteAllSelection({ tab, ids });
+  };
+
+  const handleExport = (tab: LibraryTab, format: 'csv' | 'xlsx' | 'pdf') => {
+    if (tab === 'finishes') {
+      if (format === 'csv') {
+        exportFinishesExcel(project, filteredFinishes, 'csv');
+        return;
+      }
+      if (format === 'xlsx') {
+        exportFinishesExcel(project, filteredFinishes);
+        return;
+      }
+      exportFinishesPdf(project, filteredFinishes);
+      return;
+    }
+
+    if (format === 'csv') {
+      exportMaterialsExcel(project, filteredMaterials, 'csv');
+      return;
+    }
+    if (format === 'xlsx') {
+      exportMaterialsExcel(project, filteredMaterials);
+      return;
+    }
+    exportMaterialsPdf(project, filteredMaterials);
+  };
+
+  const deleteAllSelected = async () => {
+    if (!deleteAllSelection || deleteAllSelection.ids.length === 0 || isDeleteAllPending) return;
+
+    const ids = [...deleteAllSelection.ids];
+    const targetTab = deleteAllSelection.tab;
+    setIsDeleteAllPending(true);
+    let hadFailure = false;
+    try {
+      if (targetTab === 'finishes') {
+        for (const id of ids) {
+          try {
+            await deleteFinish.mutateAsync(id);
+          } catch {
+            hadFailure = true;
+          }
+        }
+        await finishes.refetch();
+      } else {
+        for (const id of ids) {
+          try {
+            await deleteMaterial.mutateAsync(id);
+          } catch {
+            hadFailure = true;
+          }
+        }
+        await materials.refetch();
+      }
+
+      if (!hadFailure) setDeleteAllSelection(null);
+    } finally {
+      setIsDeleteAllPending(false);
+    }
+  };
 
   return (
     <div className="grid gap-6">
@@ -301,6 +380,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         activeTab={activeTab}
         viewMode={viewMode}
         categoryFilter={categoryFilter}
+        activeCount={activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length}
         onImportFromExcel={(tab) => {
           if (tab === 'finishes') {
             setShowImportFinishesModal(true);
@@ -308,12 +388,13 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           }
           setShowImportMaterialsModal(true);
         }}
+        onExport={handleExport}
+        onDeleteAll={openDeleteAllModal}
         onActiveTabChange={setActiveTab}
         onViewModeChange={setViewMode}
         onCategoryFilterChange={setCategoryFilter}
       />
       <MaterialsToolbarActions
-        project={project}
         activeTab={activeTab}
         filteredFinishes={filteredFinishes}
         filteredMaterials={filteredMaterials}
@@ -424,6 +505,46 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           />
         </div>
       </Modal>
+      <Modal
+        open={Boolean(deleteAllSelection)}
+        onClose={() => {
+          if (isDeleteAllPending) return;
+          setDeleteAllSelection(null);
+        }}
+        title={deleteAllTab === 'finishes' ? 'Delete all finishes' : 'Delete all project materials'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-neutral-700">
+            {`This will permanently delete ${deleteAllCount} ${deleteAllLabel}.`}
+          </p>
+          {deleteAllTab === 'finishes' && (
+            <p className="text-sm text-danger-700">
+              Deleting finishes will not delete project materials, and finish relationships may need
+              relinking.
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteAllSelection(null)}
+              disabled={isDeleteAllPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => void deleteAllSelected()}
+              disabled={deleteAllCount === 0 || isDeleteAllPending}
+            >
+              {isDeleteAllPending
+                ? `Deleting ${deleteAllCount} ${deleteAllLabel}…`
+                : `Delete ${deleteAllCount} ${deleteAllLabel}`}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <ImportFinishesExcelModal
         open={showImportFinishesModal}
@@ -450,7 +571,10 @@ function MaterialsToolbarLeft({
   activeTab,
   viewMode,
   categoryFilter,
+  activeCount,
   onImportFromExcel,
+  onExport,
+  onDeleteAll,
   onActiveTabChange,
   onViewModeChange,
   onCategoryFilterChange,
@@ -458,7 +582,10 @@ function MaterialsToolbarLeft({
   activeTab: LibraryTab;
   viewMode: 'grid' | 'table';
   categoryFilter: CategoryFilter;
+  activeCount: number;
   onImportFromExcel: (tab: LibraryTab) => void;
+  onExport: (tab: LibraryTab, format: 'csv' | 'xlsx' | 'pdf') => void;
+  onDeleteAll: (tab: LibraryTab) => void;
   onActiveTabChange: (value: LibraryTab) => void;
   onViewModeChange: (value: 'grid' | 'table') => void;
   onCategoryFilterChange: (value: CategoryFilter) => void;
@@ -493,7 +620,14 @@ function MaterialsToolbarLeft({
           </Button>
         )}
       >
-        {({ closeMenu }) => (
+        {({
+          closeMenu,
+          submenuOpen,
+          toggleSubmenu,
+          submenuTriggerRef,
+          submenuPanelRef,
+          getSubmenuPosition,
+        }) => (
           <>
             <div className="px-2.5 py-2">
               <p className="toolbar-label pb-1">View</p>
@@ -518,15 +652,65 @@ function MaterialsToolbarLeft({
             >
               Import from Excel
             </MenuItem>
-            <MenuItem
-              disabled
-              className="cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400"
+            <MenuSubTrigger
+              ref={submenuTriggerRef}
+              aria-expanded={submenuOpen}
+              onClick={toggleSubmenu}
+              disabled={activeCount === 0}
+              className={
+                activeCount === 0
+                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                  : 'px-3 py-2'
+              }
             >
               Export
-            </MenuItem>
+              <span className="ml-auto text-xs text-neutral-400">{'>'}</span>
+            </MenuSubTrigger>
+            <MenuSub
+              open={submenuOpen}
+              panelRef={submenuPanelRef}
+              position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: 0 })}
+              className="z-[121] min-w-36 translate-x-[calc(100%+0.25rem)]"
+            >
+              <MenuItem
+                className="px-3 py-2"
+                onClick={() => {
+                  closeMenu();
+                  onExport(activeTab, 'csv');
+                }}
+              >
+                Export CSV
+              </MenuItem>
+              <MenuItem
+                className="px-3 py-2"
+                onClick={() => {
+                  closeMenu();
+                  onExport(activeTab, 'xlsx');
+                }}
+              >
+                Export Excel
+              </MenuItem>
+              <MenuItem
+                className="px-3 py-2"
+                onClick={() => {
+                  closeMenu();
+                  onExport(activeTab, 'pdf');
+                }}
+              >
+                Export PDF
+              </MenuItem>
+            </MenuSub>
             <MenuItem
-              disabled
-              className="cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400"
+              disabled={activeCount === 0}
+              className={
+                activeCount === 0
+                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                  : 'px-3 py-2 text-danger-600 hover:bg-danger-50 hover:text-danger-700'
+              }
+              onClick={() => {
+                closeMenu();
+                onDeleteAll(activeTab);
+              }}
             >
               Delete All
             </MenuItem>
@@ -562,7 +746,6 @@ function MaterialsToolbarLeft({
 }
 
 function MaterialsToolbarActions({
-  project,
   activeTab,
   filteredFinishes,
   filteredMaterials,
@@ -572,7 +755,6 @@ function MaterialsToolbarActions({
   onCreateFinish,
   onCreateMaterial,
 }: {
-  project: Project;
   activeTab: LibraryTab;
   filteredFinishes: Finish[];
   filteredMaterials: Material[];
@@ -607,21 +789,6 @@ function MaterialsToolbarActions({
         className="toolbar-input w-64"
         aria-label={activeTab === 'finishes' ? 'Search finishes' : 'Search project materials'}
       />
-      {activeTab === 'finishes' && (
-        <ExportMenu
-          label={
-            <>
-              <Download className="toolbar-icon" aria-hidden="true" />
-              Export
-            </>
-          }
-          onCsv={() => exportMaterialsExcel(project, filteredMaterials, 'csv')}
-          onExcel={() => exportMaterialsExcel(project, filteredMaterials)}
-          onPdf={() => exportMaterialsPdf(project, filteredMaterials)}
-          disabled={filteredMaterials.length === 0}
-          buttonVariant="toolbar"
-        />
-      )}
       {!showForm && (
         <Button
           type="button"

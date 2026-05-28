@@ -30,7 +30,13 @@ multiple items, and each item can have multiple materials.
     - `Import from Excel` opens a tab-specific 3-step modal:
       - Finish Library tab: finish import modal
       - Project Materials tab: materials import modal
-    - disabled `Export` and `Delete All` placeholders
+    - `Export` opens a tab-aware format menu (CSV, Excel, PDF) and exports the
+      current filtered rows in table format:
+      - Finish Library tab: filtered finishes
+      - Project Materials tab: filtered materials
+    - `Delete All` opens a destructive confirmation that includes an exact row
+      count for the active tab and deletes through existing per-item hooks
+      (no bulk endpoint)
   - a segmented tab switcher for Finish Library and Project Materials
   - category filter select (Finishes tab only)
 - Add materials while creating an item from the Add Item drawer. The drawer can
@@ -44,6 +50,9 @@ multiple items, and each item can have multiple materials.
 
 Deleting a material removes it from the project library and from any items that
 used it.
+
+Deleting all finishes does not delete project materials; existing material-finish
+relationships may need relinking.
 
 ## Import parser surface
 
