@@ -318,12 +318,8 @@ export function CatalogPage({
                   </>
                 ) : (
                   <div className="catalog-qty-label-row catalog-qty-label-row-compact">
-                    <span
-                      className="catalog-qty-inline-value catalog-qty-label-compact"
-                      style={metaTextStyle}
-                    >
-                      QTY
-                      <span>{item.qty}</span>
+                    <span className="catalog-spec-heading" style={titleTextStyle}>
+                      QUANTITY: {item.qty}
                     </span>
                   </div>
                 )}

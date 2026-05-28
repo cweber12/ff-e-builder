@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(catalog): change qty-only catalog callout copy to QUANTITY: N and align its typography with PRODUCT SPECIFICATIONS
 - feat(catalog): add compact two-column Text and Layout control grids in Catalog Editor with stacked labels and narrow-popover single-column fallback
 - docs(agent): add planner agent and skill for grill-then-delegate planning sessions across Copilot and Claude Code
 - docs(agent): add specialized custom agents for UI shell, feature modules, API contracts, DB migrations, and cross-boundary integration verification

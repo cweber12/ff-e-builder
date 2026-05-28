@@ -71,12 +71,9 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               class="catalog-qty-label-row catalog-qty-label-row-compact"
             >
               <span
-                class="catalog-qty-inline-value catalog-qty-label-compact"
+                class="catalog-spec-heading"
               >
-                QTY
-                <span>
-                  2
-                </span>
+                QUANTITY: 2
               </span>
             </div>
           </div>
