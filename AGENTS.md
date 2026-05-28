@@ -211,3 +211,10 @@ Every feature is done when **all** of the following are true:
 3. `CONTEXT.md` — canonical product and domain terminology; read before touching any domain-facing code or docs
 4. `docs/architecture.md` — system design, diagrams, decision rationale
 5. `docs/changelog.md` — read `Unreleased` and the last 1-3 relevant entries; use targeted search for subsystem-specific history
+
+## Scoped subsystem context docs
+
+- `docs/plans-context.md` is a deep reference for the Plans workspace only.
+- Read it when a task touches plans routes, canvas workflows, plans API/types, or plans-specific UI behavior.
+- Do not read it for unrelated Proposal/FF&E/general tasks.
+- Update it only when Plans behavior or interface contracts change; skip updates for refactors that do not change behavior/contracts.
