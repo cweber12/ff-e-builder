@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): move Materials toolbar view toggle into an Options dropdown shell and switch tab toggles to the shared SegmentedControl primitive
 - fix(catalog): rename OPTION RENDERINGS to OPTIONS, hide the options heading when no option images exist, and align LOCATION heading typography behavior with other section headings
 - feat(catalog): replace Catalog Editor accordion groups with top tab navigation that shows one panel at a time without internal editor scrolling
 - feat(catalog): finalize Catalog Editor with keyboard-complete color swatch chips, header-level Document Mark toggle behavior, and brand-aligned sticky popover chrome

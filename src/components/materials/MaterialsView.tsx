@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, Plus } from 'lucide-react';
+import { ChevronDown, Download, Plus, SlidersHorizontal } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { exportMaterialsExcel, exportMaterialsPdf } from '../../lib/export';
 import {
@@ -25,7 +25,14 @@ import type {
   Project,
 } from '../../types';
 import { imageKeys } from '../../lib/query';
-import { Button, Modal } from '../primitives';
+import {
+  Button,
+  DropdownMenu,
+  MenuItem,
+  MenuSeparator,
+  Modal,
+  SegmentedControl,
+} from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { ExportMenu } from '../shared/ExportMenu';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
@@ -436,46 +443,71 @@ function MaterialsToolbarLeft({
 
   return createPortal(
     <>
-      <div className="toolbar-segmented" role="tablist" aria-label="Library section">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'finishes'}
-          data-active={activeTab === 'finishes' || undefined}
-          onClick={() => onActiveTabChange('finishes')}
-        >
-          Finish Library
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'materials'}
-          data-active={activeTab === 'materials' || undefined}
-          onClick={() => onActiveTabChange('materials')}
-        >
-          Project Materials
-        </button>
-      </div>
-      <div className="toolbar-segmented" role="tablist" aria-label="Materials view mode">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={viewMode === 'grid'}
-          data-active={viewMode === 'grid' || undefined}
-          onClick={() => onViewModeChange('grid')}
-        >
-          Grid
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={viewMode === 'table'}
-          data-active={viewMode === 'table' || undefined}
-          onClick={() => onViewModeChange('table')}
-        >
-          Table
-        </button>
-      </div>
+      <DropdownMenu
+        wrapperClassName="relative inline-flex"
+        panelClassName="z-[120] min-w-52"
+        positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
+        renderTrigger={({ triggerRef, open, toggleMenu }) => (
+          <Button
+            ref={triggerRef}
+            type="button"
+            variant="toolbar"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            onClick={toggleMenu}
+          >
+            <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
+            Options
+            <ChevronDown className="toolbar-icon" aria-hidden="true" />
+          </Button>
+        )}
+      >
+        {() => (
+          <>
+            <div className="px-2.5 py-2">
+              <p className="toolbar-label pb-1">View</p>
+              <SegmentedControl
+                value={viewMode}
+                onChange={onViewModeChange}
+                ariaLabel="Materials view mode"
+                variant="toolbar"
+                className="w-full [&>button]:flex-1 [&>button]:justify-center"
+              >
+                <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
+                <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
+              </SegmentedControl>
+            </div>
+            <MenuSeparator />
+            <MenuItem
+              disabled
+              className="cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400"
+            >
+              Import from Excel
+            </MenuItem>
+            <MenuItem
+              disabled
+              className="cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400"
+            >
+              Export
+            </MenuItem>
+            <MenuItem
+              disabled
+              className="cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400"
+            >
+              Delete All
+            </MenuItem>
+          </>
+        )}
+      </DropdownMenu>
+      <SegmentedControl
+        value={activeTab}
+        onChange={onActiveTabChange}
+        ariaLabel="Library section"
+        variant="toolbar"
+      >
+        <SegmentedControl.Option value="finishes">Finish Library</SegmentedControl.Option>
+        <SegmentedControl.Option value="materials">Project Materials</SegmentedControl.Option>
+      </SegmentedControl>
       {activeTab === 'finishes' && (
         <select
           value={categoryFilter}

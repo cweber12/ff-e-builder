@@ -25,6 +25,10 @@ multiple items, and each item can have multiple materials.
 
 - Open an item's material editor from the Materials cell in the table.
 - Use the Materials tab to view and manage all library entries for the project.
+- In the Materials toolbar, the left slot shows:
+  - an Options dropdown (with View toggle plus Import/Export/Delete All menu shell)
+  - a segmented tab switcher for Finish Library and Project Materials
+  - category filter select (Finishes tab only)
 - Add materials while creating an item from the Add Item drawer. The drawer can
   select existing material names and can open the same material library form used
   by the table and Materials tab.
