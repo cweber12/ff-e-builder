@@ -25,11 +25,12 @@ vi.mock('../src/lib/ownership', () => ({
 import app from '../src/index';
 import { getDb } from '../src/lib/db';
 import { verifyFirebaseToken } from '../src/lib/firebase-auth';
-import { assertProposalCategoryOwnership } from '../src/lib/ownership';
+import { assertProposalCategoryOwnership, getOwnedProposalItemContext } from '../src/lib/ownership';
 
 const mockVerify = vi.mocked(verifyFirebaseToken);
 const mockGetDb = vi.mocked(getDb);
 const mockAssertProposalCategoryOwnership = vi.mocked(assertProposalCategoryOwnership);
+const mockGetOwnedProposalItemContext = vi.mocked(getOwnedProposalItemContext);
 
 const mockEnv = {
   FIREBASE_PROJECT_ID: 'test-project',
@@ -43,6 +44,10 @@ describe('Proposal routes', () => {
     vi.resetAllMocks();
     mockVerify.mockResolvedValue({ uid: 'user-123', email: null });
     mockAssertProposalCategoryOwnership.mockResolvedValue(undefined);
+    mockGetOwnedProposalItemContext.mockResolvedValue({
+      projectId: 'project-1',
+      proposalItemId: '00000000-0000-0000-0000-000000000111',
+    });
   });
 
   it('keeps category item reads compatible with current Proposal item writes', async () => {
@@ -98,5 +103,48 @@ describe('Proposal routes', () => {
     expect(
       statements.some((statement) => statement.includes('DELETE FROM proposal_categories')),
     ).toBe(true);
+  });
+
+  it('creates proposal materials with code and finish fields in create-and-assign route', async () => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ max_code: 8 }])
+      .mockResolvedValueOnce([{ id: 'material-1' }])
+      .mockResolvedValueOnce([{ next_sort: 0 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 'material-1', name: 'Imported 9' }]);
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      '/api/v1/proposal/items/00000000-0000-0000-0000-000000000111/materials/new',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer valid-token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Imported 9',
+          code: '',
+          finish_id: '00000000-0000-0000-0000-000000000222',
+          material_type: 'veneer',
+          material_id: 'MAT-009',
+          description: 'Auto-created from paste',
+        }),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(201);
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    const insertStatement = statements.find((statement) =>
+      statement.includes('INSERT INTO materials'),
+    );
+    expect(insertStatement).toContain('code');
+    expect(insertStatement).toContain('finish_id');
+    expect(insertStatement).toContain('material_type');
   });
 });

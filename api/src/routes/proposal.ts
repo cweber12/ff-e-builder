@@ -29,6 +29,7 @@ import {
 } from '../lib/ownership';
 import { findOpenRevision, openRevision } from '../lib/revisions';
 import {
+  generateNextCode,
   selectMaterialById,
   generateImportMaterialId,
   generateImportName,
@@ -670,22 +671,27 @@ router.post('/proposal/items/:id/materials/new', async (c) => {
 
   const sql = getDb(c.env);
   const name = parsed.data.name.trim() || (await generateImportName(sql, itemCtx.projectId));
+  const code =
+    parsed.data.code.trim() || (await generateNextCode(sql, 'materials', itemCtx.projectId));
   const materialId =
     parsed.data.material_id.trim() || (await generateImportMaterialId(sql, itemCtx.projectId));
   const matRows = await sql`
-    INSERT INTO materials (project_id, name, material_id, description, swatch_hex)
+    INSERT INTO materials (project_id, name, code, finish_id, material_type, material_id, description)
     VALUES (
       ${itemCtx.projectId},
       ${name},
+      ${code},
+      ${parsed.data.finish_id ?? null},
+      ${parsed.data.material_type ?? null},
       ${materialId},
-      ${parsed.data.description},
-      ${parsed.data.swatch_hex ?? '#D9D4C8'}
+      ${parsed.data.description}
     )
     ON CONFLICT (project_id, (lower(name)))
     DO UPDATE SET
-      material_id = COALESCE(NULLIF(EXCLUDED.material_id, ''), materials.material_id),
-      description = COALESCE(NULLIF(EXCLUDED.description, ''), materials.description),
-      swatch_hex  = EXCLUDED.swatch_hex
+      material_id   = COALESCE(NULLIF(EXCLUDED.material_id, ''),  materials.material_id),
+      description   = COALESCE(NULLIF(EXCLUDED.description, ''),  materials.description),
+      finish_id     = COALESCE(EXCLUDED.finish_id,                materials.finish_id),
+      material_type = COALESCE(EXCLUDED.material_type,            materials.material_type)
     RETURNING *
   `;
   const mat = matRows[0] as { id: string };

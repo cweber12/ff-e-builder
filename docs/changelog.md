@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(api): align Proposal create-and-assign material route with current materials schema by generating code and persisting finish/material-type fields
 - feat(materials): route swatch image paste in FF&E and Proposal materials cells (plus Catalog Editor Add swatch) through create+assign, attach-finish, and overwrite-or-discard branches with finish image uploads
 - refactor(proposal-table): isolate Proposal Category tracked-edit decision and confirmation payload flow behind a focused seam with dedicated tests for price-affecting change handling
 - refactor(proposal-table): organize proposal table files into category, row, detail, and dialogs subfolders while preserving behavior and imports
