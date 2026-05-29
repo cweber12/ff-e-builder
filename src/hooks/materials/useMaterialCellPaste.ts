@@ -1,5 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import type { Material } from '../../types';
+import { useQueryClient } from '@tanstack/react-query';
+import { nextDefaultFinishName } from '../../lib/api/finishes';
+import { nextDefaultMaterialName } from '../../lib/api/materials';
+import { finishKeys, materialKeys } from '../../lib/query';
+import type { Finish, Material } from '../../types';
 import { useCreateFinish } from '../finishes/useFinishes';
 import { useUploadImage } from '../shared/useImages';
 import { useItemMaterialActions, type MaterialContext } from './useMaterials';
@@ -27,6 +31,7 @@ function defaultConfirmOverwrite() {
 }
 
 export function useMaterialCellPaste(projectId: string, context: MaterialContext) {
+  const queryClient = useQueryClient();
   const createFinish = useCreateFinish(projectId);
   const materialActions = useItemMaterialActions(context);
   const uploadImage = useUploadImage();
@@ -45,13 +50,22 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
       setIsPasting(true);
 
       try {
+        const projectMaterials = queryClient.getQueryData<Material[]>(
+          materialKeys.forProject(projectId),
+        );
+        const projectFinishes = queryClient.getQueryData<Finish[]>(
+          finishKeys.forProject(projectId),
+        );
+        const generatedMaterialName = nextDefaultMaterialName(projectMaterials);
+        const generatedFinishName = nextDefaultFinishName(projectFinishes);
+
         const primaryMaterial = materials[0] ?? null;
         if (!primaryMaterial) {
-          const finish = await createFinish.mutateAsync({ name: '' });
+          const finish = await createFinish.mutateAsync({ name: generatedFinishName });
           const createdMaterial = await materialActions.createAndAssign.mutateAsync({
             itemId,
             input: {
-              name: '',
+              name: generatedMaterialName,
               materialId: '',
               finishId: finish.id,
             },
@@ -77,7 +91,7 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
         }
 
         if (!primaryMaterial.finishId) {
-          const finish = await createFinish.mutateAsync({ name: '' });
+          const finish = await createFinish.mutateAsync({ name: generatedFinishName });
           await materialActions.update.mutateAsync({
             itemId,
             materialId: primaryMaterial.id,
@@ -105,7 +119,7 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
         setIsPasting(false);
       }
     },
-    [createFinish, materialActions, uploadImage],
+    [createFinish, materialActions, projectId, queryClient, uploadImage],
   );
 
   return {

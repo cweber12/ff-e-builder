@@ -16,6 +16,29 @@ export type CreateFinishInput = {
 export type UpdateFinishInput = Partial<CreateFinishInput>;
 
 const DEFAULT_SWATCH_HEX = '#D9D4C8';
+const DEFAULT_FINISH_NAME_PREFIX = 'Finish';
+const DEFAULT_NAME_INDEX_PADDING = 3;
+
+function parseDefaultNameIndex(name: string, prefix: string): number | null {
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = name.match(new RegExp(`^${escapedPrefix}\\s+(\\d+)$`, 'i'));
+  if (!match) return null;
+  const parsed = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function formatDefaultFinishName(index: number) {
+  const suffix = String(index).padStart(DEFAULT_NAME_INDEX_PADDING, '0');
+  return `${DEFAULT_FINISH_NAME_PREFIX} ${suffix}`;
+}
+
+export function nextDefaultFinishName(finishes: readonly Pick<Finish, 'name'>[] | undefined) {
+  const maxExisting = (finishes ?? []).reduce((currentMax, finish) => {
+    const parsed = parseDefaultNameIndex(finish.name.trim(), DEFAULT_FINISH_NAME_PREFIX);
+    return parsed === null ? currentMax : Math.max(currentMax, parsed);
+  }, 0);
+  return formatDefaultFinishName(maxExisting + 1);
+}
 
 const finishCreatePayload = (input: CreateFinishInput) => ({
   name: input.name,
