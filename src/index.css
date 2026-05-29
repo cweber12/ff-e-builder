@@ -614,7 +614,7 @@
     font-family: 'Manrope Variable', 'DM Sans Variable', sans-serif;
     font-weight: 680;
     line-height: 1.1;
-    color: theme('colors.gray.950');
+    color: theme('colors.neutral.950');
   }
 
   .catalog-layout-close {
@@ -624,7 +624,7 @@
     align-items: center;
     justify-content: center;
     border: 1px solid rgb(0 0 0 / 0.1);
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
     transition:
       color 150ms ease,
       border-color 150ms ease,
@@ -743,14 +743,14 @@
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-layout-note {
     margin: 2px 0 0;
     font-size: 11px;
     line-height: 1.35;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-switch {
@@ -760,7 +760,7 @@
     height: 26px;
     border: 1px solid rgb(0 0 0 / 0.12);
     border-radius: 6px;
-    background: theme('colors.gray.200');
+    background: theme('colors.neutral.200');
     transition:
       background-color 150ms ease,
       border-color 150ms ease;
@@ -800,7 +800,7 @@
     justify-self: start;
     font-size: 12px;
     font-weight: 700;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
     text-decoration: underline;
     text-underline-offset: 3px;
   }
@@ -835,7 +835,7 @@
     font-variant-numeric: tabular-nums;
     font-size: 12px;
     font-weight: 700;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
   }
 
   .catalog-opacity-slider {
@@ -879,7 +879,7 @@
 
   .catalog-layout-secondary {
     border: 1px solid rgb(0 0 0 / 0.12);
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-layout-secondary:hover {
@@ -1237,7 +1237,7 @@
   .catalog-header-name {
     display: inline;
     font-weight: 500;
-    color: theme('colors.gray.800');
+    color: theme('colors.neutral.800');
     letter-spacing: 0.02em;
   }
 
@@ -1368,7 +1368,7 @@
   .catalog-qty-band {
     display: flex;
     flex-direction: column;
-    border: 1px solid theme('colors.gray.300');
+    border: 1px solid theme('colors.neutral.300');
     overflow: hidden;
   }
 
@@ -1381,7 +1381,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    background: theme('colors.gray.600');
+    background: theme('colors.neutral.600');
   }
 
   .catalog-qty-label-row-compact {
@@ -1417,7 +1417,7 @@
     font-weight: 500;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: theme('colors.gray.800');
+    color: theme('colors.neutral.800');
   }
 
   .catalog-qty-inline-value {
@@ -1425,7 +1425,7 @@
     font-weight: 700;
     letter-spacing: 0;
     font-variant-numeric: tabular-nums;
-    color: theme('colors.gray.950');
+    color: theme('colors.neutral.950');
   }
 
   .catalog-qty-rule {
@@ -1437,7 +1437,7 @@
   .catalog-qty-value {
     font-size: 13px;
     font-variant-numeric: tabular-nums;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
     text-align: center;
   }
 
@@ -1483,7 +1483,7 @@
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.01em;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-sub-heading {
@@ -1491,7 +1491,7 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     font-size: 12px;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
   }
 
   .catalog-spec-dim {
@@ -1500,14 +1500,14 @@
 
   .catalog-spec-dim-text {
     font-size: 13px;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-spec-desc-text {
     margin: 0;
     font-size: 13px;
     line-height: 1.45;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-vendor-block {
@@ -1527,7 +1527,7 @@
     font-size: 12px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-vendor-link {
@@ -1535,7 +1535,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-vendor-link:hover {
@@ -1543,7 +1543,7 @@
   }
 
   .catalog-vendor-link-empty {
-    color: theme('colors.gray.300');
+    color: theme('colors.neutral.300');
   }
 
   .catalog-vendor-chip {
@@ -1558,13 +1558,13 @@
   }
 
   .catalog-placeholder-text {
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
   }
 
   .catalog-section-subhead {
     margin: 10px 0 0;
     font-size: 13px;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-notes-block {
@@ -1575,7 +1575,7 @@
     margin: 0;
     font-size: 12px;
     line-height: 1.5;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
     white-space: pre-wrap;
   }
 
@@ -1612,7 +1612,7 @@
     text-align: center;
     min-width: 0;
     background: white;
-    border: 1px solid theme('colors.gray.200');
+    border: 1px solid theme('colors.neutral.200');
     border-radius: 6px;
     padding: 8px 6px 6px;
   }
@@ -1623,7 +1623,7 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-material-swatch {
@@ -1636,8 +1636,8 @@
     width: 56px;
     height: 56px;
     border-radius: 9999px;
-    background: theme('colors.gray.100');
-    border: 1px solid theme('colors.gray.200');
+    background: theme('colors.neutral.100');
+    border: 1px solid theme('colors.neutral.200');
   }
 
   .catalog-material-name,
@@ -1646,23 +1646,23 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
     line-height: 1.25;
   }
 
   .catalog-material-color {
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
   }
 
   .catalog-material-cell-empty {
-    background: theme('colors.gray.50');
-    border-color: theme('colors.gray.100');
+    background: theme('colors.neutral.50');
+    border-color: theme('colors.neutral.100');
   }
 
   .catalog-material-cell-empty .catalog-material-id,
   .catalog-material-cell-empty .catalog-material-name,
   .catalog-material-cell-empty .catalog-material-color {
-    color: theme('colors.gray.300');
+    color: theme('colors.neutral.300');
   }
 
   /* Paste-target swatch placeholders — used in the on-screen catalog only when
@@ -1716,7 +1716,7 @@
     margin: 0;
     font-size: 11px;
     font-weight: 600;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
   }
 
   .catalog-location-key {
@@ -1726,7 +1726,7 @@
 
   .catalog-location-value {
     text-transform: none;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
   }
 
   .catalog-location-sub {
@@ -1734,7 +1734,7 @@
     font-size: 9px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
   }
 
   .catalog-plan-frame {
@@ -1742,7 +1742,7 @@
     width: 100%;
     max-width: 180px;
     aspect-ratio: 4/3;
-    background: theme('colors.gray.100');
+    background: theme('colors.neutral.100');
     overflow: hidden;
   }
 
@@ -1764,7 +1764,7 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.04em;
@@ -1776,7 +1776,7 @@
   }
 
   .catalog-plan-placeholder--dashed {
-    border: 1.5px dashed theme('colors.gray.200');
+    border: 1.5px dashed theme('colors.neutral.200');
     border-radius: 2px;
   }
 
@@ -1803,7 +1803,7 @@
   }
 
   .catalog-item-id-empty {
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
   }
 
   .catalog-item-name {
@@ -1813,7 +1813,7 @@
     font-size: 30px;
     font-weight: 600;
     line-height: 1.05;
-    color: theme('colors.gray.950');
+    color: theme('colors.neutral.950');
   }
 
   .catalog-dimensions-row {
@@ -1824,7 +1824,7 @@
     display: inline-block;
     font-size: 14px;
     line-height: 1.4;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
   }
 
   .catalog-description-row {
@@ -1837,7 +1837,7 @@
     overflow: hidden;
     font-size: 14px;
     line-height: 1.55;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4;
   }
@@ -1884,7 +1884,7 @@
   }
 
   .catalog-placeholder--dashed {
-    border: 1.5px dashed theme('colors.gray.200');
+    border: 1.5px dashed theme('colors.neutral.200');
     border-radius: 4px;
   }
 
@@ -1893,7 +1893,7 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
   }
 
   .catalog-stage {
@@ -1950,7 +1950,7 @@
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-second-section {
@@ -1989,7 +1989,7 @@
     white-space: pre-wrap;
     font-size: 14px;
     line-height: 1.65;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
   }
 
   .catalog-cost-row {
@@ -1997,10 +1997,10 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 16px;
-    border-top: 1px solid theme('colors.gray.200');
+    border-top: 1px solid theme('colors.neutral.200');
     padding-top: 10px;
     font-size: 13px;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
   }
 
   .catalog-cost-row strong {
@@ -2048,7 +2048,7 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
     text-align: center;
   }
 
@@ -2060,7 +2060,7 @@
     min-height: 0;
     max-height: 168px;
     overflow: hidden;
-    background: theme('colors.gray.100');
+    background: theme('colors.neutral.100');
   }
 
   .catalog-option-card img {
@@ -2176,7 +2176,7 @@
     min-height: 0;
     align-items: center;
     justify-content: center;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -2202,7 +2202,7 @@
   }
 
   .catalog-materials-strip
-    .relative.overflow-hidden.rounded-md.border.border-gray-200.bg-surface-muted.shadow-sm {
+    .relative.overflow-hidden.rounded-md.border.border-neutral-200.bg-surface-muted.shadow-sm {
     width: var(--catalog-material-swatch-size);
     height: var(--catalog-material-swatch-size);
   }
@@ -2212,7 +2212,7 @@
     overflow: hidden;
     font-size: 10px;
     line-height: 1.3;
-    color: theme('colors.gray.600');
+    color: theme('colors.neutral.600');
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -2220,8 +2220,8 @@
   .catalog-approval-band {
     display: grid;
     gap: 12px;
-    border: 1px solid theme('colors.gray.200');
-    background: theme('colors.gray.50');
+    border: 1px solid theme('colors.neutral.200');
+    background: theme('colors.neutral.50');
     padding: 14px 18px;
   }
 
@@ -2240,7 +2240,7 @@
     border-radius: 4px;
     border: none;
     background: transparent;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
     cursor: pointer;
     transition:
       color 120ms ease,
@@ -2248,8 +2248,8 @@
   }
 
   .catalog-approval-remove:hover {
-    color: theme('colors.gray.700');
-    background: theme('colors.gray.200');
+    color: theme('colors.neutral.700');
+    background: theme('colors.neutral.200');
   }
 
   .catalog-approval-label {
@@ -2275,12 +2275,12 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-approval-line {
     height: 24px;
-    border-bottom: 1px solid theme('colors.gray.400');
+    border-bottom: 1px solid theme('colors.neutral.400');
   }
 
   .catalog-approval-date {
@@ -2303,7 +2303,7 @@
     gap: 9px;
     font-size: 11px;
     font-weight: 500;
-    color: theme('colors.gray.700');
+    color: theme('colors.neutral.700');
     cursor: default;
   }
 
@@ -2314,7 +2314,7 @@
     flex-shrink: 0;
     width: 14px;
     height: 14px;
-    border: 1.5px solid theme('colors.gray.500');
+    border: 1.5px solid theme('colors.neutral.500');
     border-radius: 3px;
     background: white;
     print-color-adjust: exact;
@@ -2343,7 +2343,7 @@
     align-items: end;
     padding-top: 8px;
     font-size: 10px;
-    color: theme('colors.gray.400');
+    color: theme('colors.neutral.400');
   }
 
   .catalog-footer-center {
@@ -2357,7 +2357,7 @@
     gap: 8px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    color: theme('colors.gray.500');
+    color: theme('colors.neutral.500');
   }
 
   .catalog-footer-page-num {
