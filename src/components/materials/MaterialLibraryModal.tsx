@@ -291,7 +291,15 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
         />
       )}
 
-      <div className={`grid min-w-0 gap-5 ${showForm ? 'lg:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
+      <div
+        className={`grid min-w-0 gap-5 ${
+          showForm
+            ? editingId
+              ? 'lg:grid-cols-[22rem_minmax(0,16rem)_minmax(0,1fr)]'
+              : 'lg:grid-cols-[22rem_minmax(0,1fr)]'
+            : ''
+        }`}
+      >
         {showForm && (
           <MaterialForm
             draft={draft}
@@ -302,6 +310,19 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
             onDraftChange={setDraft}
             onCancel={resetDraft}
             onSubmit={() => void saveDraft()}
+          />
+        )}
+
+        {showForm && editingId && (
+          <FinishLibraryPanel
+            finishes={finishes.data ?? []}
+            onFinishSelect={(finish) =>
+              setDraft((c) => ({
+                ...c,
+                finishId: finish.id === c.finishId ? c.finishId : finish.id,
+                name: c.name || finish.name,
+              }))
+            }
           />
         )}
 
@@ -404,6 +425,96 @@ function RecentMaterialsStrip({
         </div>
       </div>
     </section>
+  );
+}
+
+function FinishLibraryPanel({
+  finishes,
+  onFinishSelect,
+}: {
+  finishes: Finish[];
+  onFinishSelect: (finish: Finish) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return finishes;
+    return finishes.filter(
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        f.code.toLowerCase().includes(q) ||
+        f.manufacturer.toLowerCase().includes(q),
+    );
+  }, [finishes, search]);
+
+  return (
+    <section
+      aria-label="Finish library"
+      className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-neutral-200 bg-canvas-chrome"
+    >
+      <div className="flex items-center gap-2 border-b border-neutral-200 px-4 py-3">
+        <h3 className="eyebrow flex-1">Finishes</h3>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search…"
+          className="input-base text-xs"
+          aria-label="Search finish library"
+        />
+      </div>
+      <p className="border-b border-dashed border-neutral-200 px-4 py-2 text-[11px] text-neutral-400">
+        Drag or click a finish to preview
+      </p>
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        {finishes.length === 0 ? (
+          <p className="text-xs text-neutral-400">No finishes in library yet.</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-xs text-neutral-400">No finishes match.</p>
+        ) : (
+          <div className="grid gap-1.5">
+            {filtered.map((finish) => (
+              <DraggableFinishItem key={finish.id} finish={finish} onSelect={onFinishSelect} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function DraggableFinishItem({
+  finish,
+  onSelect,
+}: {
+  finish: Finish;
+  onSelect: (finish: Finish) => void;
+}) {
+  return (
+    <button
+      type="button"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', finish.id);
+        e.dataTransfer.effectAllowed = 'copy';
+      }}
+      onClick={() => onSelect(finish)}
+      aria-label={`Assign ${finish.name}`}
+      className="flex w-full cursor-grab items-center gap-2 rounded-sm border border-neutral-200 bg-surface px-2 py-1.5 text-left text-sm font-medium text-neutral-700 transition hover:border-brand-400 hover:bg-brand-50 active:cursor-grabbing focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+    >
+      <ImageFrame
+        entityType="finish"
+        entityId={finish.id}
+        alt={finish.name}
+        className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
+        imageClassName="object-cover"
+        compact
+        disabled
+      />
+      <span className="min-w-0 flex-1 truncate">{finish.name}</span>
+      {finish.code && (
+        <span className="num shrink-0 text-[10px] text-neutral-500">{finish.code}</span>
+      )}
+    </button>
   );
 }
 
@@ -522,6 +633,7 @@ export function MaterialForm({
   onSubmit: () => void;
 }) {
   const [finishSearch, setFinishSearch] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const selectedFinish = finishes.find((f) => f.id === draft.finishId);
 
@@ -551,82 +663,100 @@ export function MaterialForm({
       <div className="mt-3 grid gap-3">
         <div className="grid gap-1 text-sm font-medium text-neutral-700">
           <span>Finish</span>
-          {selectedFinish ? (
-            <div className="flex items-center gap-2 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2">
-              <ImageFrame
-                entityType="finish"
-                entityId={selectedFinish.id}
-                alt={selectedFinish.name}
-                className="h-8 w-8 shrink-0 rounded-full border-0 shadow-none"
-                imageClassName="object-cover"
-                compact
-                disabled
-              />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-semibold text-neutral-950">
-                  {selectedFinish.name}
-                </span>
-                {selectedFinish.code && (
-                  <span className="num text-[10px] text-neutral-500">{selectedFinish.code}</span>
-                )}
-              </span>
-              <button
-                type="button"
-                onClick={() => selectFinish(null)}
-                className="shrink-0 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                Clear
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-1">
-              <input
-                value={finishSearch}
-                onChange={(e) => setFinishSearch(e.target.value)}
-                placeholder="Search finishes…"
-                className={inputClassName}
-              />
-              {(finishSearch.trim() || draft.finishId === null) && finishes.length > 0 && (
-                <div className="max-h-40 overflow-y-auto rounded-sm border border-neutral-200 bg-canvas-chrome">
-                  {filteredFinishes.length ? (
-                    filteredFinishes.slice(0, 20).map((finish) => (
-                      <button
-                        key={finish.id}
-                        type="button"
-                        onClick={() => selectFinish(finish)}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                      >
-                        <ImageFrame
-                          entityType="finish"
-                          entityId={finish.id}
-                          alt={finish.name}
-                          className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
-                          imageClassName="object-cover"
-                          compact
-                          disabled
-                        />
-                        <span className="min-w-0 flex-1 truncate font-medium text-neutral-950">
-                          {finish.name}
-                        </span>
-                        {finish.code && (
-                          <span className="num shrink-0 text-[10px] text-neutral-500">
-                            {finish.code}
-                          </span>
-                        )}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="px-3 py-2 text-xs text-neutral-500">No finishes match.</p>
+          <div
+            aria-label="Finish drop zone"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragOver(false);
+              const finishId = e.dataTransfer.getData('text/plain');
+              if (!finishId || finishId === draft.finishId) return;
+              const finish = finishes.find((f) => f.id === finishId);
+              if (finish) selectFinish(finish);
+            }}
+            className={`rounded-sm transition-shadow ${isDragOver ? 'ring-2 ring-brand-500 ring-offset-1' : ''}`}
+          >
+            {selectedFinish ? (
+              <div className="flex items-center gap-2 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2">
+                <ImageFrame
+                  entityType="finish"
+                  entityId={selectedFinish.id}
+                  alt={selectedFinish.name}
+                  className="h-8 w-8 shrink-0 rounded-full border-0 shadow-none"
+                  imageClassName="object-cover"
+                  compact
+                  disabled
+                />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold text-neutral-950">
+                    {selectedFinish.name}
+                  </span>
+                  {selectedFinish.code && (
+                    <span className="num text-[10px] text-neutral-500">{selectedFinish.code}</span>
                   )}
-                </div>
-              )}
-              {finishes.length === 0 && (
-                <p className="text-xs text-neutral-400">
-                  No finishes in library yet — add some in the Finish Library tab.
-                </p>
-              )}
-            </div>
-          )}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => selectFinish(null)}
+                  className="shrink-0 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                >
+                  Clear
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-1">
+                <input
+                  value={finishSearch}
+                  onChange={(e) => setFinishSearch(e.target.value)}
+                  placeholder="Search finishes…"
+                  className={inputClassName}
+                />
+                {(finishSearch.trim() || draft.finishId === null) && finishes.length > 0 && (
+                  <div className="max-h-40 overflow-y-auto rounded-sm border border-neutral-200 bg-canvas-chrome">
+                    {filteredFinishes.length ? (
+                      filteredFinishes.slice(0, 20).map((finish) => (
+                        <button
+                          key={finish.id}
+                          type="button"
+                          onClick={() => selectFinish(finish)}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                        >
+                          <ImageFrame
+                            entityType="finish"
+                            entityId={finish.id}
+                            alt={finish.name}
+                            className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
+                            imageClassName="object-cover"
+                            compact
+                            disabled
+                          />
+                          <span className="min-w-0 flex-1 truncate font-medium text-neutral-950">
+                            {finish.name}
+                          </span>
+                          {finish.code && (
+                            <span className="num shrink-0 text-[10px] text-neutral-500">
+                              {finish.code}
+                            </span>
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="px-3 py-2 text-xs text-neutral-500">No finishes match.</p>
+                    )}
+                  </div>
+                )}
+                {finishes.length === 0 && (
+                  <p className="text-xs text-neutral-400">
+                    No finishes in library yet — add some in the Finish Library tab.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
