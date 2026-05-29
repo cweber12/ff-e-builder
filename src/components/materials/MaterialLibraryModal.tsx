@@ -1007,7 +1007,7 @@ export function MaterialBadges({
       onMouseLeave={disablePasteTarget}
       onFocus={enablePasteTarget}
       onBlur={disablePasteTarget}
-      className="group relative inline-block max-w-[13rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      className="group relative inline-block w-full max-w-[16rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
     >
       <div className="grid grid-cols-1 gap-y-1.5">

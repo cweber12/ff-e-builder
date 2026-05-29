@@ -1762,7 +1762,7 @@ export function RoomItemsSection({
           context="ffe"
           projectId={projectId}
           roomId={room.id}
-          item={materialItem}
+          item={room.items.find((item) => item.id === materialItem.id) ?? materialItem}
           priorityMaterialIds={roomMaterialIds}
           onClose={() => setMaterialItem(null)}
         />

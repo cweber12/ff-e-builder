@@ -137,8 +137,18 @@ export function ImageFrame({
     }
 
     setImageLoading(true);
-    const fetchBlob = compact ? api.images.getThumbnailBlob : api.images.getContentBlob;
-    void fetchBlob(primaryImage.id)
+    const fetchBlob = async () => {
+      if (!compact) return api.images.getContentBlob(primaryImage.id);
+      try {
+        return await api.images.getThumbnailBlob(primaryImage.id);
+      } catch {
+        // Some image entities may not have generated thumbnails yet.
+        // Fall back to full content so swatch circles still render.
+        return api.images.getContentBlob(primaryImage.id);
+      }
+    };
+
+    void fetchBlob()
       .then((blob) => {
         if (ignore) return;
         nextUrl = URL.createObjectURL(blob);

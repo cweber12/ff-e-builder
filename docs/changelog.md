@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(materials): fallback swatch circles to full image blobs when thumbnails are unavailable and pass freshest FF&E item data into MaterialLibraryModal to prevent inconsistent assigned-material loading
 - fix(materials): rename paste defaults to MAT NNN and FIN NNN, refresh swatch cell/image queries after upload, and remove swatch-label truncation under thumbnails
 - fix(materials): show two-line swatch cell labels with material name plus finish name under each thumbnail in FF&E and Proposal tables
 - fix(materials): scope swatch paste pending UI to the active FF&E or Proposal row so only the target cell shows Pasting swatch
