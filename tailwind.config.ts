@@ -65,7 +65,12 @@ const config: Config = {
       fontFamily: {
         sans: ['Manrope Variable', 'DM Sans Variable', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
+        // `display` stays sans (Manrope): it is applied across dense UI — panel
+        // titles, header project name, even tabular numbers — where a serif
+        // would be wrong. The serif lives in `serif` / the .page-title utility
+        // and is reserved for page-level heroes.
         display: ['Manrope Variable', 'DM Sans Variable', 'system-ui', 'sans-serif'],
+        serif: ['Fraunces Variable', 'Georgia', 'Cambria', 'Times New Roman', 'serif'],
       },
       boxShadow: {
         sm: 'var(--shadow-sm)',

@@ -1,6 +1,10 @@
 @import '@fontsource-variable/dm-sans';
 @import '@fontsource-variable/jetbrains-mono';
 @import '@fontsource-variable/manrope';
+/* Fraunces — restrained display serif for page-level heroes only (.page-title).
+   `full.css` carries the opsz/SOFT/WONK axes so we can pin a crisp, non-quirky
+   cut (SOFT 0, WONK 0) rather than the default fashion-contrast letterforms. */
+@import '@fontsource-variable/fraunces/full.css';
 
 @tailwind base;
 @tailwind components;
@@ -858,6 +862,25 @@
   .catalog-layout-secondary:hover {
     border-color: theme('colors.brand.300');
     color: theme('colors.brand.700');
+  }
+
+  /* Page title — the one place the Fraunces display serif appears. Reserved
+     for page-level heroes (Dashboard welcome, sign-in, company profile, error
+     pages). NOT for panel/modal titles, card numbers, or any dense UI — those
+     stay on Manrope via `font-display`.
+
+     Axes are pinned for a refined, credible cut: opsz 40 gives display-grade
+     contrast without the extreme thicks/thins of high opsz; SOFT 0 keeps
+     terminals crisp; WONK 0 removes the quirky alternates. Weight is left to
+     `font-semibold` so the variable `wght` axis still responds to utilities. */
+  .page-title {
+    font-family: 'Fraunces Variable', Georgia, Cambria, 'Times New Roman', serif;
+    font-variation-settings:
+      'opsz' 40,
+      'SOFT' 0,
+      'WONK' 0;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
   }
 
   /* Small uppercase metadata label — the "ID", "Manufacturer", "Status"

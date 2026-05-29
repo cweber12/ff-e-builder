@@ -245,7 +245,7 @@ export function CompanyProfilePage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">
               Settings
             </p>
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-neutral-950">
+            <h1 className="mt-2 page-title text-3xl font-semibold text-neutral-950">
               {company?.name || 'Company Profile'}
             </h1>
             {company && (

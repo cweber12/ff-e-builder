@@ -80,26 +80,35 @@ Use Tailwind's default shadow scale. Pattern:
 
 ### Font Families
 
-| Role            | Family                  | Source                                              |
-| --------------- | ----------------------- | --------------------------------------------------- |
-| UI (sans-serif) | DM Sans Variable        | `@fontsource-variable/dm-sans` (self-hosted)        |
-| Monospace       | JetBrains Mono Variable | `@fontsource-variable/jetbrains-mono` (self-hosted) |
+| Role                | Family                  | Source                                              |
+| ------------------- | ----------------------- | --------------------------------------------------- |
+| UI / body (sans)    | Manrope Variable        | `@fontsource-variable/manrope` (self-hosted)        |
+| Page heroes (serif) | Fraunces Variable       | `@fontsource-variable/fraunces` (self-hosted)       |
+| Monospace           | JetBrains Mono Variable | `@fontsource-variable/jetbrains-mono` (self-hosted) |
+
+DM Sans Variable is retained only as a sans fallback in the font stack; it is
+not used as a primary face.
 
 **Why self-hosted?** No Google CDN calls = no external network dependency (works behind firewalls), no privacy concern for GDPR, no FOUC risk in strict Content-Security-Policy environments.
 
-Both fonts are imported in `src/index.css`:
+Fonts are imported in `src/index.css`:
 
 ```css
-@import '@fontsource-variable/dm-sans';
+@import '@fontsource-variable/manrope';
 @import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/fraunces/full.css';
 ```
 
 ### Type Pairings
 
-- **Project/page headings** — DM Sans Variable, 700 weight, 24–30px
-- **Body / labels** — DM Sans Variable, 400–500 weight, 14–16px
-- **Currency values** — DM Sans Variable, 500 weight, tabular nums (`font-variant-numeric: tabular-nums`)
-- **IDs / model numbers** — JetBrains Mono Variable, 400 weight, 13px
+- **Page heroes** — Fraunces Variable via the `.page-title` utility (opsz 40,
+  SOFT 0, WONK 0 — a crisp, non-quirky cut), 600 weight, 24–32px. Reserved for
+  page-level h1s (Dashboard welcome, sign-in, company profile, error pages).
+  Never used for panel/modal titles, card numbers, or dense UI.
+- **Section / panel headings** — Manrope Variable (`font-display`), 600 weight, 16–20px
+- **Body / labels** — Manrope Variable, 400–600 weight, 13–14px
+- **Currency / measurements** — JetBrains Mono Variable, tabular nums (`font-variant-numeric: tabular-nums`)
+- **IDs / model numbers** — JetBrains Mono Variable, 400 weight, 11–13px
 
 ---
 

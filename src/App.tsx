@@ -535,9 +535,7 @@ function NotFound() {
         <p className="num text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
           404
         </p>
-        <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-neutral-950">
-          Page not found
-        </h1>
+        <h1 className="mt-3 page-title text-2xl font-semibold text-neutral-950">Page not found</h1>
         <Link
           to="/projects"
           className="mt-6 inline-flex rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"

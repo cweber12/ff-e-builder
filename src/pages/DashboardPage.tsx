@@ -45,7 +45,7 @@ export function DashboardPage() {
         <header className="flex items-start justify-between gap-4 pb-6">
           <div>
             <p className="eyebrow text-brand-600">Dashboard</p>
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-neutral-950">
+            <h1 className="mt-2 page-title text-3xl font-semibold text-neutral-950">
               {firstName ? `Welcome back, ${firstName}` : 'Welcome'}
             </h1>
           </div>

@@ -80,9 +80,7 @@ export function SignInPage() {
           <p className="num text-[10px] font-semibold uppercase tracking-[0.24em] text-brand-700">
             Studio
           </p>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-950">
-            Chill Design
-          </h1>
+          <h1 className="page-title text-2xl font-semibold text-neutral-950">Chill Design</h1>
         </div>
         <p className="text-sm text-neutral-500 text-center max-w-[28ch]">
           Sign in to manage your projects and specifications.

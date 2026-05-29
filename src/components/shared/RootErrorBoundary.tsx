@@ -37,7 +37,7 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
           <p className="num text-[11px] font-semibold uppercase tracking-[0.18em] text-danger-600">
             Error
           </p>
-          <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-neutral-950">
+          <h1 className="mt-3 page-title text-2xl font-semibold text-neutral-950">
             Something went wrong
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
