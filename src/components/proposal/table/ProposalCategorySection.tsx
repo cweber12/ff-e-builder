@@ -64,8 +64,11 @@ import {
 import { ImageFrame } from '../../shared/image/ImageFrame';
 import { ProposalRow } from './ProposalRow';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
-import { AddColumnModal } from './AddColumnModal';
-import { ChangeConfirmModal, type ChangeConfirmResult } from './ChangeConfirmModal';
+import { AddColumnModal } from '../../shared/modals/AddColumnModal';
+import {
+  ChangeConfirmModal,
+  type ChangeConfirmResult,
+} from '../../shared/modals/ChangeConfirmModal';
 import {
   baselineQtyColumnClassName,
   baselineTotalColumnClassName,

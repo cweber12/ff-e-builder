@@ -20,7 +20,7 @@ import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from
 import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/money';
 import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
 import { ProposalCategorySection } from './ProposalCategorySection';
-import { AddGroupModal } from './AddGroupModal';
+import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { DeleteCategoryModal } from './DeleteCategoryModal';
 import { ProposalEmptyState } from './ProposalEmptyState';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
