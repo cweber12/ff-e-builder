@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { nextDefaultFinishName } from '../../lib/api/finishes';
 import { nextDefaultMaterialName } from '../../lib/api/materials';
-import { finishKeys, materialKeys } from '../../lib/query';
+import { finishKeys, imageKeys, itemKeys, materialKeys, proposalKeys } from '../../lib/query';
 import type { Finish, Material } from '../../types';
 import { useCreateFinish } from '../finishes/useFinishes';
 import { useUploadImage } from '../shared/useImages';
@@ -37,6 +37,18 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
   const uploadImage = useUploadImage();
   const inFlightRef = useRef(false);
   const [isPasting, setIsPasting] = useState(false);
+
+  const refreshMaterialCell = useCallback(
+    (finishId: string) => {
+      const cellQueryKey =
+        context.kind === 'ffe'
+          ? itemKeys.forRoom(context.itemGroupId)
+          : proposalKeys.items(context.itemGroupId);
+      void queryClient.invalidateQueries({ queryKey: cellQueryKey });
+      void queryClient.invalidateQueries({ queryKey: imageKeys.forEntity('finish', finishId) });
+    },
+    [context.itemGroupId, context.kind, queryClient],
+  );
 
   const pasteIntoCell = useCallback(
     async ({
@@ -86,6 +98,7 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
             file,
             altText: 'Pasted finish swatch',
           });
+          refreshMaterialCell(finish.id);
 
           return 'created_material';
         }
@@ -103,6 +116,7 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
             file,
             altText: 'Pasted finish swatch',
           });
+          refreshMaterialCell(finish.id);
           return 'attached_finish';
         }
 
@@ -113,13 +127,14 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
           file,
           altText: `${primaryMaterial.name || 'Material'} swatch`,
         });
+        refreshMaterialCell(primaryMaterial.finishId);
         return 'overwritten';
       } finally {
         inFlightRef.current = false;
         setIsPasting(false);
       }
     },
-    [createFinish, materialActions, projectId, queryClient, uploadImage],
+    [createFinish, materialActions, projectId, queryClient, refreshMaterialCell, uploadImage],
   );
 
   return {

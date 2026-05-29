@@ -100,10 +100,10 @@ describe('useMaterialCellPaste', () => {
       expect(status).toBe('created_material');
     });
 
-    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'Finish 001' });
+    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'FIN 001' });
     expect(mockCreateAndAssignMutateAsync).toHaveBeenCalledWith({
       itemId: 'item-1',
-      input: { name: 'Material 001', materialId: '', finishId: 'finish-1' },
+      input: { name: 'MAT 001', materialId: '', finishId: 'finish-1' },
     });
     expect(mockUploadMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -136,7 +136,7 @@ describe('useMaterialCellPaste', () => {
       materialId: 'material-existing',
       patch: { finishId: 'finish-1' },
     });
-    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'Finish 001' });
+    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'FIN 001' });
     expect(mockUploadMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         entityType: 'finish',
@@ -201,10 +201,10 @@ describe('useMaterialCellPaste', () => {
       expect(status).toBe('created_material');
     });
 
-    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'Finish 008' });
+    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'FIN 008' });
     expect(mockCreateAndAssignMutateAsync).toHaveBeenCalledWith({
       itemId: 'item-1',
-      input: { name: 'Material 003', materialId: '', finishId: 'finish-1' },
+      input: { name: 'MAT 003', materialId: '', finishId: 'finish-1' },
     });
   });
 

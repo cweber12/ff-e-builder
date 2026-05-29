@@ -16,7 +16,8 @@ export type CreateFinishInput = {
 export type UpdateFinishInput = Partial<CreateFinishInput>;
 
 const DEFAULT_SWATCH_HEX = '#D9D4C8';
-const DEFAULT_FINISH_NAME_PREFIX = 'Finish';
+const DEFAULT_FINISH_NAME_PREFIX = 'FIN';
+const LEGACY_FINISH_NAME_PREFIX = 'Finish';
 const DEFAULT_NAME_INDEX_PADDING = 3;
 
 function parseDefaultNameIndex(name: string, prefix: string): number | null {
@@ -35,8 +36,13 @@ export function formatDefaultFinishName(index: number) {
 }
 
 export function nextDefaultFinishName(finishes: readonly Pick<Finish, 'name'>[] | undefined) {
+  const prefixes = [DEFAULT_FINISH_NAME_PREFIX, LEGACY_FINISH_NAME_PREFIX];
   const maxExisting = (finishes ?? []).reduce((currentMax, finish) => {
-    const parsed = parseDefaultNameIndex(finish.name.trim(), DEFAULT_FINISH_NAME_PREFIX);
+    const finishName = finish.name.trim();
+    const parsed = prefixes.reduce<number | null>((currentParsed, prefix) => {
+      if (currentParsed !== null) return currentParsed;
+      return parseDefaultNameIndex(finishName, prefix);
+    }, null);
     return parsed === null ? currentMax : Math.max(currentMax, parsed);
   }, 0);
   return formatDefaultFinishName(maxExisting + 1);

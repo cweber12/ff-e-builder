@@ -1007,10 +1007,10 @@ export function MaterialBadges({
       onMouseLeave={disablePasteTarget}
       onFocus={enablePasteTarget}
       onBlur={disablePasteTarget}
-      className="group relative inline-block max-w-[8.5rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      className="group relative inline-block max-w-[13rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
     >
-      <div className="grid grid-cols-2 gap-x-1.5 gap-y-1">
+      <div className="grid grid-cols-1 gap-y-1.5">
         {assigned.map((material) => {
           const finishName = getFinishName?.(material)?.trim() ?? '';
           return (
@@ -1019,14 +1019,14 @@ export function MaterialBadges({
               <div className="w-full text-center leading-tight">
                 <span
                   title={material.name}
-                  className="block w-full truncate text-[10px] text-neutral-700"
+                  className="block w-full whitespace-normal break-words text-[10px] text-neutral-700"
                 >
                   {material.name}
                 </span>
                 {finishName && (
                   <span
                     title={finishName}
-                    className="block w-full truncate text-[10px] text-neutral-500"
+                    className="block w-full whitespace-normal break-words text-[10px] text-neutral-500"
                   >
                     {finishName}
                   </span>

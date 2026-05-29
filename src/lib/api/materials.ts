@@ -13,7 +13,8 @@ export type CreateMaterialInput = {
 
 export type UpdateMaterialInput = Partial<CreateMaterialInput>;
 
-const DEFAULT_MATERIAL_NAME_PREFIX = 'Material';
+const DEFAULT_MATERIAL_NAME_PREFIX = 'MAT';
+const LEGACY_MATERIAL_NAME_PREFIX = 'Material';
 const DEFAULT_NAME_INDEX_PADDING = 3;
 
 function parseDefaultNameIndex(name: string, prefix: string): number | null {
@@ -32,8 +33,13 @@ export function formatDefaultMaterialName(index: number) {
 }
 
 export function nextDefaultMaterialName(materials: readonly Pick<Material, 'name'>[] | undefined) {
+  const prefixes = [DEFAULT_MATERIAL_NAME_PREFIX, LEGACY_MATERIAL_NAME_PREFIX];
   const maxExisting = (materials ?? []).reduce((currentMax, material) => {
-    const parsed = parseDefaultNameIndex(material.name.trim(), DEFAULT_MATERIAL_NAME_PREFIX);
+    const materialName = material.name.trim();
+    const parsed = prefixes.reduce<number | null>((currentParsed, prefix) => {
+      if (currentParsed !== null) return currentParsed;
+      return parseDefaultNameIndex(materialName, prefix);
+    }, null);
     return parsed === null ? currentMax : Math.max(currentMax, parsed);
   }, 0);
   return formatDefaultMaterialName(maxExisting + 1);
