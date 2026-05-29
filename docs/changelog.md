@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): reorganize measured-area inspector actions into clear Measured area, Apply measurement, and Plan image sections with updated button wording
 - feat(plans): add Add item from measurement quick-create panel that can create an Uncategorized proposal item, save the measurement, and publish the measured Plan Image in one flow
 - feat(plans): switch measured-area highlights to high-visibility yellow on canvas and exported Plan Images with a clean solid border
 - fix(ui): remove the project options button from the top-right project header and rely on project summary editing entry points

@@ -188,6 +188,8 @@ This links the rectangle to the item on the plan. The proposal item is **not upd
 4. `api.proposal.updateItem(targetItemId, { quantity, quantityUnit, version, changeLog })`
 5. `proposalKeys.items(containerId)` cache updated
 
+In rectangle mode, post-save measurement actions are grouped in this order: **Measured area** (selection/remove), **Apply measurement** (mode + apply), then **Plan image** (open crop editor). The labels use explicit verbs (for example, _Apply measurement to item_ and _Open crop editor_) to reduce ambiguity.
+
 **Note:** Application mode is transient UI state — it is not stored on the `Measurement` row.
 
 ---
