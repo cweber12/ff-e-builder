@@ -60,6 +60,7 @@ function SortableItemRowImpl({
           key={cell.id}
           className={cn(
             'px-3 py-3 text-neutral-700',
+            cell.column.id !== 'actions' && 'table-body-divider',
             defaultColumnClassName(cell.column.id),
             defaultColumnWraps(cell.column.id) ? 'whitespace-normal' : 'whitespace-nowrap',
             cell.column.id === 'plan' && 'overflow-hidden',

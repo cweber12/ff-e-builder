@@ -920,12 +920,22 @@
            text-neutral-600;
   }
 
-  /* Table head cell — used for sticky column headers in table views so
-     density and typography stay consistent. */
+  /* Table head cell — canonical column-header look shared by the FF&E and
+     Proposal tables. A tinted band (canvas-shell) lifts the header off the
+     white body data, a stronger bottom rule (neutral-300) anchors it, and a
+     hairline right divider (neutral-200/60) separates adjacent columns. */
   .table-head-cell {
-    @apply h-10 border-y border-neutral-300 bg-surface px-3
-           text-[10px] font-semibold uppercase tracking-[0.08em]
+    @apply h-10 bg-canvas-shell px-3
+           text-[10px] font-semibold uppercase tracking-[0.12em]
            text-neutral-600;
+    border-bottom: 1px solid rgb(var(--color-neutral-300));
+    border-right: 1px solid rgb(var(--color-neutral-200) / 0.6);
+  }
+
+  /* Hairline vertical rule between body cells so dense columns stay legible
+     when scanning across a row. Lighter than the header divider. */
+  .table-body-divider {
+    border-right: 1px solid rgb(var(--color-neutral-200) / 0.5);
   }
 
   /* Hairline border — used to separate dense rows without visual weight. */

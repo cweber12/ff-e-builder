@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TotalsBar } from '../../shared/table/TotalsBar';
 import { TableViewStack } from '../../shared/table/TableViewWrappers';
 import {
+  ALL_COLUMN_GROUP_ID,
   useColumnDefs,
   useCreateColumnDef,
   useCreateProposalCategory,
@@ -44,6 +45,7 @@ export function ProposalTable({
   onAddCategoryOpenChange,
 }: ProposalTableProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [activeColumnGroup, setActiveColumnGroup] = useState<string>(ALL_COLUMN_GROUP_ID);
   const collapsedCategoryIds = useMemo(
     () => new Set(Object.keys(collapsed).filter((id) => collapsed[id])),
     [collapsed],
@@ -73,6 +75,7 @@ export function ProposalTable({
     })),
     buildCustomColumn: (def) => def.id,
     nonDraggableIds: PROPOSAL_GENERATED_ITEM_TABLE_PRESET.fixedColumnIds,
+    activeGroupId: activeColumnGroup,
   });
 
   const visibleColOrder = useMemo(
@@ -247,6 +250,8 @@ export function ProposalTable({
               }}
               proposalStatus={project?.proposalStatus ?? 'in_progress'}
               onPrefetchItems={() => prefetchProposalItems(category.id)}
+              activeColumnGroup={activeColumnGroup}
+              onActiveColumnGroupChange={setActiveColumnGroup}
             />
           ))}
 

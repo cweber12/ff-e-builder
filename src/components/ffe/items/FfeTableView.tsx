@@ -47,6 +47,7 @@ import {
   readColumnConfigFromStorage,
   useColumnConfig,
   useGeneratedItemColumns,
+  ALL_COLUMN_GROUP_ID,
   useIsMobileViewport,
   useItemColumnDefs,
   useProposalRevisions,
@@ -101,6 +102,7 @@ import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedIt
 import { GeneratedItemImageControl } from '../../shared/table/GeneratedItemImageCell';
 import { GeneratedItemMaterialsControl } from '../../shared/table/GeneratedItemMaterialsCell';
 import { ColumnsPanel } from '../../shared/table/ColumnsPanel';
+import { ColumnGroupTabs } from '../../shared/table/ColumnGroupTabs';
 import {
   GeneratedItemSizeModal,
   GeneratedItemSizeTrigger,
@@ -1243,6 +1245,8 @@ export function RoomHeader({
   customColumns,
   columnDefs,
   hiddenDefaults,
+  activeColumnGroup,
+  onActiveColumnGroupChange,
   onToggle,
   onSaveRoomName,
   onDeleteRoom,
@@ -1267,6 +1271,8 @@ export function RoomHeader({
   customColumns: import('../../../types').CustomColumnDef[];
   columnDefs: import('../../../types').CustomColumnDef[];
   hiddenDefaults: { id: string; label: string }[];
+  activeColumnGroup: string;
+  onActiveColumnGroupChange: (groupId: string) => void;
   onToggle: () => void;
   onSaveRoomName: (name: string) => Promise<void>;
   onDeleteRoom: () => void;
@@ -1310,6 +1316,13 @@ export function RoomHeader({
           <span className="shrink-0 rounded-pill border border-warning-600/30 bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700">
             Revision {openRevisionLabel} open - resolve costs in Proposal
           </span>
+        )}
+        {!isMobile && !collapsed && (
+          <ColumnGroupTabs
+            groups={FFE_GENERATED_ITEM_TABLE_PRESET.columnGroups}
+            activeGroupId={activeColumnGroup}
+            onChange={onActiveColumnGroupChange}
+          />
         )}
       </div>
       <div className="sticky right-4 flex items-center gap-2">
@@ -1368,6 +1381,8 @@ export function RoomItemsSection({
   project,
   collapsed,
   imageCollapsed,
+  activeColumnGroup,
+  onActiveColumnGroupChange,
   onToggle,
   onToggleImage,
   onDeleteRoom,
@@ -1378,6 +1393,8 @@ export function RoomItemsSection({
   project?: Project;
   collapsed: boolean;
   imageCollapsed: boolean;
+  activeColumnGroup: string;
+  onActiveColumnGroupChange: (groupId: string) => void;
   onToggle: () => void;
   onToggleImage: () => void;
   onDeleteRoom: (room: RoomWithItems) => void;
@@ -1655,6 +1672,7 @@ export function RoomItemsSection({
     buildCustomColumn,
     insertBeforeId: 'qty',
     nonDraggableIds: ['drag', 'actions', 'lineTotal'],
+    activeGroupId: activeColumnGroup,
   });
   const columns = generatedColumns.visibleColumns;
   const hiddenDefaultColumns = generatedColumns.hiddenDefaults;
@@ -1718,6 +1736,8 @@ export function RoomItemsSection({
         customColumns={columnDefs}
         columnDefs={columnDefs}
         hiddenDefaults={hiddenDefaultColumns}
+        activeColumnGroup={activeColumnGroup}
+        onActiveColumnGroupChange={onActiveColumnGroupChange}
         onToggle={onToggle}
         onSaveRoomName={async (name) => {
           await updateRoom.mutateAsync({ id: room.id, patch: { name } });
@@ -1839,19 +1859,14 @@ export function RoomItemsSection({
                         {headerGroup.headers.map((header) => {
                           const colId = header.column.id;
                           if (colId === 'drag') {
-                            return (
-                              <th
-                                key={header.id}
-                                className="h-10 border-b border-neutral-200 w-10 min-w-10"
-                              />
-                            );
+                            return <th key={header.id} className="table-head-cell w-10 min-w-10" />;
                           }
                           if (colId === 'lineTotal') {
                             return (
                               <th
                                 key={header.id}
                                 className={cn(
-                                  'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                  'table-head-cell',
                                   ffeStickyEdgeColumnClassNames.totalHeader,
                                 )}
                               >
@@ -1864,7 +1879,7 @@ export function RoomItemsSection({
                               <th
                                 key={header.id}
                                 className={cn(
-                                  'h-10 border-b border-neutral-200',
+                                  'table-head-cell',
                                   ffeStickyEdgeColumnClassNames.actionsHeader,
                                 )}
                               />
@@ -1876,13 +1891,7 @@ export function RoomItemsSection({
                                 key={header.id}
                                 colId={colId}
                                 label={header.column.columnDef.header as string}
-                                className={cn(
-                                  'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
-                                  defaultColumnClassName(colId),
-                                )}
-                                onHide={() =>
-                                  generatedColumns.columnConfig.hideDefaultColumn(colId)
-                                }
+                                className={cn('table-head-cell', defaultColumnClassName(colId))}
                               />
                             );
                           }
@@ -1890,7 +1899,7 @@ export function RoomItemsSection({
                             <SortableColHeader
                               key={header.id}
                               colId={colId}
-                              className="h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
+                              className="table-head-cell min-w-36"
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                             </SortableColHeader>
@@ -1996,10 +2005,7 @@ export function RoomItemsSection({
                               const colId = header.column.id;
                               if (colId === 'drag') {
                                 return (
-                                  <th
-                                    key={header.id}
-                                    className="h-10 border-b border-neutral-200 w-10 min-w-10"
-                                  />
+                                  <th key={header.id} className="table-head-cell w-10 min-w-10" />
                                 );
                               }
                               if (colId === 'lineTotal') {
@@ -2007,7 +2013,7 @@ export function RoomItemsSection({
                                   <th
                                     key={header.id}
                                     className={cn(
-                                      'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
+                                      'table-head-cell',
                                       ffeStickyEdgeColumnClassNames.totalExpandedHeader,
                                     )}
                                   >
@@ -2023,7 +2029,7 @@ export function RoomItemsSection({
                                   <th
                                     key={header.id}
                                     className={cn(
-                                      'h-10 border-b border-neutral-200',
+                                      'table-head-cell',
                                       ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
                                     )}
                                   />
@@ -2035,13 +2041,7 @@ export function RoomItemsSection({
                                     key={header.id}
                                     colId={colId}
                                     label={header.column.columnDef.header as string}
-                                    className={cn(
-                                      'h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
-                                      defaultColumnClassName(colId),
-                                    )}
-                                    onHide={() =>
-                                      generatedColumns.columnConfig.hideDefaultColumn(colId)
-                                    }
+                                    className={cn('table-head-cell', defaultColumnClassName(colId))}
                                   />
                                 );
                               }
@@ -2049,7 +2049,7 @@ export function RoomItemsSection({
                                 <SortableColHeader
                                   key={header.id}
                                   colId={colId}
-                                  className="h-10 border-b border-neutral-200 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
+                                  className="table-head-cell min-w-36"
                                 >
                                   {flexRender(header.column.columnDef.header, header.getContext())}
                                 </SortableColHeader>
@@ -2151,6 +2151,9 @@ export function FfeTableView({
 }) {
   const { collapsed, toggle } = useCollapsedRooms(roomsWithItems);
   const { collapsed: imageCollapsed, toggle: toggleImage } = useCollapsedRoomImages(roomsWithItems);
+  // Shared across all locations so the chosen column group stays consistent
+  // while scrolling between rooms.
+  const [activeColumnGroup, setActiveColumnGroup] = useState<string>(ALL_COLUMN_GROUP_ID);
   const createRoom = useCreateRoom(projectId);
   const deleteRoom = useDeleteRoom(projectId);
   const [addRoomOpenInternal, setAddRoomOpenInternal] = useState(false);
@@ -2210,6 +2213,8 @@ export function FfeTableView({
           {...(project !== undefined ? { project } : {})}
           collapsed={collapsed[room.id] ?? false}
           imageCollapsed={imageCollapsed[room.id] ?? false}
+          activeColumnGroup={activeColumnGroup}
+          onActiveColumnGroupChange={setActiveColumnGroup}
           onToggle={() => toggle(room.id)}
           onToggleImage={() => toggleImage(room.id)}
           onDeleteRoom={setRoomToDelete}

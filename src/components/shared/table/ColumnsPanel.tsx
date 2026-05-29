@@ -226,11 +226,31 @@ function ColumnsPanelVisibleRow({ item, onHide }: { item: VisibleColumnItem; onH
         aria-label={`Hide ${item.label} column`}
         title={`Hide ${item.label} column`}
         onClick={onHide}
-        className="rounded p-0.5 text-neutral-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-[10px] font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        ×
+        <EyeOffIcon />
+        Hide
       </button>
     </div>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-3.5 w-3.5"
+    >
+      <path d="M2 10s3-6 8-6c1.4 0 2.7.4 3.8 1M18 10s-3 6-8 6c-1.4 0-2.7-.4-3.8-1" />
+      <path d="M7.8 7.8a3 3 0 0 0 4.4 4.4" />
+      <path d="M3 3l14 14" />
+    </svg>
   );
 }
 

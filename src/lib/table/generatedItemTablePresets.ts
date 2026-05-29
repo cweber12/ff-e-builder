@@ -14,6 +14,19 @@ type GeneratedItemColumnMeta = {
   wraps?: boolean;
 };
 
+/**
+ * A named set of column ids that display together. Used by the column-group
+ * "view" switcher so related fields (product info / specs / pricing) can be
+ * shown one bucket at a time instead of scrolling horizontally across every
+ * column. The "All" view is implicit (no group selected) — it is not listed
+ * here. Anchor columns (see `anchorColumnIds`) stay visible in every group.
+ */
+export type GeneratedItemColumnGroup = {
+  id: string;
+  label: string;
+  columnIds: readonly string[];
+};
+
 export const FFE_GENERATED_ITEM_TABLE_PRESET = {
   view: 'ffe',
   tableKey: 'ffe',
@@ -65,10 +78,27 @@ export const FFE_GENERATED_ITEM_TABLE_PRESET = {
     itemName: { className: 'w-48 min-w-48 max-w-48', wraps: true },
     description: { className: 'w-64 min-w-64 max-w-64', wraps: true },
   },
+  /** Identity + total columns that stay visible in every column group. */
+  anchorColumnIds: ['drag', 'itemIdTag', 'itemName', 'lineTotal', 'actions'],
+  columnGroups: [
+    {
+      id: 'product',
+      label: 'Product',
+      columnIds: ['itemIdTag', 'itemName', 'image', 'description', 'category'],
+    },
+    { id: 'specs', label: 'Specs', columnIds: ['plan', 'drawings', 'dimensions', 'materials'] },
+    {
+      id: 'pricing',
+      label: 'Pricing',
+      columnIds: ['qty', 'unitCostCents', 'lineTotal', 'status', 'leadTime', 'notes'],
+    },
+  ],
 } as const satisfies GeneratedItemTablePreset & {
   defaultColumnIds: readonly string[];
   defaultColumnLabels: Record<string, string>;
   defaultColumnMeta: Record<string, Omit<GeneratedItemColumnMeta, 'label'>>;
+  anchorColumnIds: readonly string[];
+  columnGroups: readonly GeneratedItemColumnGroup[];
 };
 
 export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
@@ -102,8 +132,25 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
     swatch: { label: 'Swatch', className: 'min-w-36' },
     cbm: { label: 'CBM', className: 'w-24 min-w-24' },
   },
+  /**
+   * Quantity / Unit cost / Total / actions render as fixed (always-visible)
+   * columns outside `visibleColOrder`, so the only identity anchor the group
+   * filter needs to preserve is the item name.
+   */
+  anchorColumnIds: ['itemName'],
+  columnGroups: [
+    {
+      id: 'product',
+      label: 'Product',
+      columnIds: ['itemName', 'rendering', 'description', 'location'],
+    },
+    { id: 'specs', label: 'Specs', columnIds: ['plan', 'drawings', 'size', 'swatch', 'cbm'] },
+    { id: 'pricing', label: 'Pricing', columnIds: ['notes'] },
+  ],
 } as const satisfies GeneratedItemTablePreset & {
   fixedColumnIds: readonly string[];
   hideableColumnIds: readonly string[];
   columnMeta: Record<string, GeneratedItemColumnMeta & { label: string }>;
+  anchorColumnIds: readonly string[];
+  columnGroups: readonly GeneratedItemColumnGroup[];
 };

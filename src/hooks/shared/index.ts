@@ -31,7 +31,7 @@ export type { SaveState } from './useSaveStatus';
 export { useTableDensity, densityRowClass } from './useTableDensity';
 export type { TableDensity } from './useTableDensity';
 export { useActionsMenu } from './useActionsMenu';
-export { useGeneratedItemColumns } from './useGeneratedItemColumns';
+export { useGeneratedItemColumns, ALL_COLUMN_GROUP_ID } from './useGeneratedItemColumns';
 export { useRecentMaterials } from './useRecentMaterials';
 export { useTableScrollRef, TableScrollContext, type TableScrollRef } from './useTableScrollRef';
 export type {

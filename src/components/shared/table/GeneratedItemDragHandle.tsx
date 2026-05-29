@@ -7,28 +7,19 @@ type GeneratedItemDragHandleProps = Omit<
   ariaLabel: string;
 };
 
+/**
+ * Row reorder activator. Drag is a secondary action, so there is no visible
+ * grip icon — the affordance is the grab cursor that appears over the leading
+ * cell. The button itself stays in the DOM (visually empty but focusable) so
+ * keyboard + screen-reader users can still reorder rows.
+ */
 export function GeneratedItemDragHandle({ ariaLabel, ...dragProps }: GeneratedItemDragHandleProps) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
-      className="cursor-grab rounded px-1 text-neutral-400 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-data-[dragging=true]:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      className="block h-6 w-full cursor-grab rounded active:cursor-grabbing focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       {...dragProps}
-    >
-      <GripIcon />
-    </button>
-  );
-}
-
-function GripIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-      <circle cx="7" cy="5" r="1.2" />
-      <circle cx="13" cy="5" r="1.2" />
-      <circle cx="7" cy="10" r="1.2" />
-      <circle cx="13" cy="10" r="1.2" />
-      <circle cx="7" cy="15" r="1.2" />
-      <circle cx="13" cy="15" r="1.2" />
-    </svg>
+    />
   );
 }

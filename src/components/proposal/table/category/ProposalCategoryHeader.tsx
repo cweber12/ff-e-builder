@@ -10,7 +10,9 @@ import {
 } from '../../../primitives';
 import { cn } from '../../../../lib/utils';
 import { ColumnsPanel } from '../../../shared/table/ColumnsPanel';
+import { ColumnGroupTabs } from '../../../shared/table/ColumnGroupTabs';
 import { ColumnNavArrows, GroupedTableHeader } from '../../../shared/table/TableViewWrappers';
+import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../../lib/table/generatedItemTablePresets';
 
 type ProposalCategoryHeaderProps = {
   categoryName: string;
@@ -23,6 +25,8 @@ type ProposalCategoryHeaderProps = {
   visibleColumns: { id: string; label: string; isCustom?: boolean }[];
   hiddenDefaults: { id: string; label: string }[];
   customColumnDefs: CustomColumnDef[];
+  activeColumnGroup: string;
+  onActiveColumnGroupChange: (groupId: string) => void;
   onToggle: () => void;
   onPrefetchItems: () => void;
   onCategoryNameSave: (name: string) => void;
@@ -48,6 +52,8 @@ export function ProposalCategoryHeader({
   visibleColumns,
   hiddenDefaults,
   customColumnDefs,
+  activeColumnGroup,
+  onActiveColumnGroupChange,
   onToggle,
   onPrefetchItems,
   onCategoryNameSave,
@@ -93,6 +99,13 @@ export function ProposalCategoryHeader({
           <Badge variant="brand" size="md" className="shrink-0">
             Revision {openRevisionLabel}
           </Badge>
+        )}
+        {!collapsed && !isMobile && (
+          <ColumnGroupTabs
+            groups={PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnGroups}
+            activeGroupId={activeColumnGroup}
+            onChange={onActiveColumnGroupChange}
+          />
         )}
       </div>
       <div className="sticky right-4 flex items-center gap-2">
