@@ -141,7 +141,7 @@ export function ProposalCategoryExpandedTable({
           >
             <thead className="sticky top-0 z-30 bg-canvas-chrome text-xs">
               <DndContext
-                sensors={sensors}
+                {...(sensors !== undefined ? { sensors } : {})}
                 collisionDetection={closestCenter}
                 onDragEnd={onColumnDragEnd}
               >
@@ -295,7 +295,7 @@ export function ProposalCategoryExpandedTable({
             </thead>
             <tbody>
               <DndContext
-                sensors={sensors}
+                {...(sensors !== undefined ? { sensors } : {})}
                 collisionDetection={closestCenter}
                 onDragOver={onRowDragOver}
                 onDragEnd={onRowDragEnd}

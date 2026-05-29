@@ -135,7 +135,17 @@ describe('proposalTrackedEditFlow', () => {
         patch: { customData: { vendor: 'Acme' } },
         proposalStatus: 'submitted',
         hasOpenRevision: true,
-        customColumnDefs: [{ id: 'vendor', label: 'Vendor', sortOrder: 0 }],
+        customColumnDefs: [
+          {
+            id: 'vendor',
+            label: 'Vendor',
+            sortOrder: 0,
+            projectId: 'project-1',
+            tableType: 'proposal' as const,
+            createdAt: '2024-01-01T00:00:00Z',
+            updatedAt: '2024-01-01T00:00:00Z',
+          },
+        ],
       });
 
       expect(decision).toEqual({
