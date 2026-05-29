@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(plans): correct quick-create measurement save payload shape so Add item from measurement persists measurement records reliably
 - feat(plans): reorganize measured-area inspector actions into clear Measured area, Apply measurement, and Plan image sections with updated button wording
 - feat(plans): add Add item from measurement quick-create panel that can create an Uncategorized proposal item, save the measurement, and publish the measured Plan Image in one flow
 - feat(plans): switch measured-area highlights to high-visibility yellow on canvas and exported Plan Images with a clean solid border

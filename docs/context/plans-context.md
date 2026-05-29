@@ -492,7 +492,7 @@ When `sourceType === 'image'`:
 
 All R2 assets are auth-gated:
 
-```
+```text
 apiFetchResponse(path)          // adds Authorization: Bearer <token>
   → Worker assertProjectOwnership
   → R2 stream

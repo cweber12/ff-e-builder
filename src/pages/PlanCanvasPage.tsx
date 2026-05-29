@@ -580,21 +580,19 @@ export function PlanCanvasPage({
         planNaturalSize,
       );
       const createdMeasurement = await createMeasurement.mutateAsync({
-        input: {
-          targetKind: 'proposal',
-          targetItemId: createdItem.id,
-          targetTagSnapshot: createdItem.productTag || autoTag,
-          rectX: normalizedMeasurementDraft.x,
-          rectY: normalizedMeasurementDraft.y,
-          rectWidth: normalizedMeasurementDraft.width,
-          rectHeight: normalizedMeasurementDraft.height,
-          horizontalSpanBase: draftMeasurementWidthBase,
-          verticalSpanBase: draftMeasurementHeightBase,
-          cropX: measurementCrop?.cropX ?? null,
-          cropY: measurementCrop?.cropY ?? null,
-          cropWidth: measurementCrop?.cropWidth ?? null,
-          cropHeight: measurementCrop?.cropHeight ?? null,
-        },
+        targetKind: 'proposal',
+        targetItemId: createdItem.id,
+        targetTagSnapshot: createdItem.productTag || autoTag,
+        rectX: normalizedMeasurementDraft.x,
+        rectY: normalizedMeasurementDraft.y,
+        rectWidth: normalizedMeasurementDraft.width,
+        rectHeight: normalizedMeasurementDraft.height,
+        horizontalSpanBase: draftMeasurementWidthBase,
+        verticalSpanBase: draftMeasurementHeightBase,
+        cropX: measurementCrop?.cropX ?? null,
+        cropY: measurementCrop?.cropY ?? null,
+        cropWidth: measurementCrop?.cropWidth ?? null,
+        cropHeight: measurementCrop?.cropHeight ?? null,
       });
 
       await savePlanImageForMeasurement(
