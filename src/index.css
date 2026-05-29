@@ -50,7 +50,7 @@
        • surface-raised  (#FFFFFF)         → elevated overlays
        • surface-inverse (#0E1622)         → reserved for inverted strips */
   --color-surface: 255 255 255;
-  --color-surface-muted: 227 233 241;
+  --color-surface-muted: 231 235 240;
   --color-surface-raised: 255 255 255;
   --color-surface-inverse: 14 22 34;
 
@@ -88,15 +88,41 @@
      pages). Now harmonized with the cool app body. */
   --color-paper: 252 252 253; /* #FCFCFD */
 
-  /* Radius scale — soft modern.
-       sm  → 6px   (buttons, inputs, segmented controls)
-       md  → 10px  (cards, modals, drawers)
+  /* Radius scale — architectural / spec-sheet. Tightened from the previous
+     soft values so cards and controls read as precisely drawn rather than
+     pill-soft. The product is a drafting tool; edges should feel measured.
+       sm  → 4px   (buttons, inputs, segmented controls)
+       md  → 6px   (cards, modals, drawers)
        pill→ 9999px (badges, status chips)
        flat→ 0     (full-bleed paper surfaces) */
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-pill: 9999px;
   --radius-flat: 0px;
+
+  /* Transition timings — canonical durations so motion stays consistent.
+     fast → hover/active state changes; base → most color/border transitions;
+     slow → entrance reveals, lifts, larger movements. */
+  --transition-fast: 100ms ease;
+  --transition-base: 150ms ease;
+  --transition-slow: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Type scale — canonical sizes documenting the roles already in use across
+     the app. Body anchors at 14px (the data-dense default); display steps up
+     for page authority. Components should reach for these rather than ad-hoc
+     arbitrary values.
+       display → page hero (Fraunces serif)
+       title   → page / section h1
+       section → card + panel headings
+       body    → default reading + controls
+       caption → secondary descriptive text
+       meta    → eyebrows, labels, table heads (usually uppercase) */
+  --text-display: 2rem; /* 32px */
+  --text-title: 1.5rem; /* 24px */
+  --text-section: 1.0625rem; /* 17px */
+  --text-body: 0.875rem; /* 14px */
+  --text-caption: 0.8125rem; /* 13px */
+  --text-meta: 0.6875rem; /* 11px */
 
   /* Spacing scale — formal vocabulary for paddings / gaps. Existing Tailwind
      p-* / gap-* utilities still work; these are the canonical numeric
