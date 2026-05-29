@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(proposal-table): isolate Proposal Category tracked-edit decision and confirmation payload flow behind a focused seam with dedicated tests for price-affecting change handling
 - refactor(proposal-table): organize proposal table files into category, row, detail, and dialogs subfolders while preserving behavior and imports
 - refactor(proposal-table): remove Proposal-local Add Column, Add Group, and Change Confirm pass-through modal shells and import shared modal seams directly
 - refactor(proposal-table): extract category mobile card and expanded table rendering into focused modules while preserving Proposal category behavior

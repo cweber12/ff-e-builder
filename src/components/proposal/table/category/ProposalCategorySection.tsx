@@ -36,10 +36,6 @@ import {
 } from '../../../../hooks';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
 import { cn } from '../../../../lib/utils';
-import {
-  proposalPatchToGeneratedItemChangeInfo,
-  type GeneratedItemChangeInfo,
-} from '../../../../lib/table/generatedItemChangeInfo';
 import { GroupedTableSection } from '../../../shared/table/TableViewWrappers';
 import { SortableColHeader } from '../../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
@@ -56,6 +52,11 @@ import {
   ChangeConfirmModal,
   type ChangeConfirmResult,
 } from '../../../shared/modals/ChangeConfirmModal';
+import {
+  buildProposalCategoryConfirmedSave,
+  prepareProposalCategoryItemSave,
+  type PendingProposalCategoryChange,
+} from './proposalTrackedEditFlow';
 import {
   baselineQtyColumnClassName,
   baselineTotalColumnClassName,
@@ -152,64 +153,34 @@ export function ProposalCategorySection({
   );
   const hasOpenRevision = openRev !== null;
 
-  type PendingChange = GeneratedItemChangeInfo & {
-    item: ProposalItem;
-    patch: Omit<UpdateProposalItemInput, 'version'>;
-  };
-
-  const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
+  const [pendingChange, setPendingChange] = useState<PendingProposalCategoryChange | null>(null);
   const [activeSwatchItemId, setActiveSwatchItemId] = useState<string | null>(null);
   const activeSwatchItem = items.find((item) => item.id === activeSwatchItemId) ?? null;
 
   function handleItemSave(item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) {
-    if (proposalStatus === 'in_progress' && !hasOpenRevision) {
-      onItemSave(item, { ...patch, version: item.version });
+    const decision = prepareProposalCategoryItemSave({
+      item,
+      patch,
+      proposalStatus,
+      hasOpenRevision,
+      customColumnDefs,
+    });
+
+    if (decision.kind === 'save') {
+      onItemSave(item, decision.patch);
       return;
     }
 
-    const changeInfo = proposalPatchToGeneratedItemChangeInfo(patch, item, customColumnDefs);
-    if (!changeInfo) {
-      onItemSave(item, { ...patch, version: item.version });
-      return;
-    }
-
-    if (!changeInfo.isPriceAffecting) {
-      onItemSave(item, {
-        ...patch,
-        version: item.version,
-        changeLog: {
-          columnKey: changeInfo.columnKey,
-          previousValue: changeInfo.previousValue,
-          newValue: changeInfo.newValue,
-          proposalStatus,
-          isPriceAffecting: false,
-        },
-      });
-      return;
-    }
-
-    setPendingChange({ ...changeInfo, item, patch });
+    setPendingChange(decision.pendingChange);
   }
 
   function handleConfirm(result: ChangeConfirmResult) {
     if (!pendingChange) return;
 
-    const { item, patch, columnKey, previousValue, newValue } = pendingChange;
-    const changeLog: NonNullable<UpdateProposalItemInput['changeLog']> = {
-      columnKey,
-      previousValue,
-      newValue,
-      proposalStatus,
-    };
-
-    if (result.notes) changeLog.notes = result.notes;
-    changeLog.isPriceAffecting = result.isPriceAffecting;
-
-    onItemSave(item, {
-      ...patch,
-      version: item.version,
-      changeLog,
-    });
+    onItemSave(
+      pendingChange.item,
+      buildProposalCategoryConfirmedSave({ pendingChange, result, proposalStatus }),
+    );
     setPendingChange(null);
   }
 
