@@ -216,6 +216,13 @@
   [data-tabular] {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Native checkboxes / radios adopt the brand color instead of the browser
+     default blue, so selection state matches the rest of the system. */
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: rgb(var(--color-brand-600));
+  }
 }
 
 @layer components {
@@ -340,8 +347,7 @@
 
   .toolbar-segmented > button:focus-visible,
   .toolbar-segmented > a:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px rgb(var(--color-brand-500) / 0.3);
+    @apply outline-none ring-2 ring-brand-500/30 ring-offset-1;
   }
 
   .toolbar-segmented.toolbar-segmented--status {
@@ -424,6 +430,23 @@
            focus:ring-1 focus:ring-brand-500/30;
   }
 
+  /* Standard select — matches .input-base but strips the native OS chevron and
+     paints a consistent one (neutral-500) so dropdowns look identical across
+     browsers. Extra right padding leaves room for the chevron. */
+  .select-base {
+    @apply w-full rounded-sm border border-neutral-200 bg-white py-2 pl-3 pr-9
+           text-sm font-medium text-neutral-950
+           transition-colors duration-150
+           hover:border-brand-400
+           focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30
+           disabled:bg-neutral-50 disabled:text-neutral-500;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'><path d='M4 6l4 4 4-4' stroke='%235C6A7C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.625rem center;
+    background-size: 1rem 1rem;
+  }
+
   /* Square icon button — used in table toolbars, panel headers, etc. */
   .icon-btn {
     @apply inline-flex h-8 w-8 items-center justify-center rounded-sm
@@ -453,8 +476,8 @@
            text-neutral-700
            transition-colors duration-100
            hover:bg-brand-50 hover:text-brand-700
-           focus-visible:outline focus-visible:outline-2
-           focus-visible:outline-brand-500;
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-inset focus-visible:ring-brand-500/40;
   }
 
   .catalog-actions-dropdown {

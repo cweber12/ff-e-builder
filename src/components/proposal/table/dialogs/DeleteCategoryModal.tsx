@@ -76,7 +76,7 @@ export function DeleteCategoryModal({
                 <select
                   value={targetCategoryId}
                   onChange={(event) => setTargetCategoryId(event.target.value)}
-                  className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-normal focus:border-brand-500 focus:outline-none"
+                  className="select-base font-normal"
                 >
                   <option value="">Choose a category</option>
                   {otherCategories.map((c) => (

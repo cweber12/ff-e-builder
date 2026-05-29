@@ -61,7 +61,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   const isToolbarVariant = variant === 'toolbar' || variant === 'toolbarPrimary';
   const classes = cn(
     'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
-    'transition-colors duration-150',
+    'transition duration-150 active:scale-[0.98]',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1',
     'disabled:pointer-events-none disabled:opacity-50',
     variantClasses[variant],
