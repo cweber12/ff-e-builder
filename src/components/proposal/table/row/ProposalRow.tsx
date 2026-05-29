@@ -62,6 +62,8 @@ type ProposalRowProps = {
   customColumnDefs: CustomColumnDef[];
   proposalStatus: ProposalStatus;
   onSwatchOpen: (itemId: string) => void;
+  onSwatchPaste?: ((item: ProposalItem, file: File) => Promise<void>) | undefined;
+  isSwatchPasting?: boolean | undefined;
   autoFocusItemName?: boolean;
 };
 
@@ -79,6 +81,8 @@ export function ProposalRow({
   customColumnDefs,
   proposalStatus,
   onSwatchOpen,
+  onSwatchPaste,
+  isSwatchPasting = false,
   autoFocusItemName,
 }: ProposalRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -101,6 +105,8 @@ export function ProposalRow({
       customColumnDefs={customColumnDefs}
       proposalStatus={proposalStatus}
       onSwatchOpen={onSwatchOpen}
+      onSwatchPaste={onSwatchPaste}
+      isSwatchPasting={isSwatchPasting}
       autoFocusItemName={autoFocusItemName ?? false}
       dragRef={setNodeRef}
       dragTransform={dragTransform}
@@ -127,6 +133,8 @@ const ProposalRowContent = memo(
     customColumnDefs,
     proposalStatus,
     onSwatchOpen,
+    onSwatchPaste,
+    isSwatchPasting,
     autoFocusItemName,
     dragRef,
     dragTransform,
@@ -148,6 +156,8 @@ const ProposalRowContent = memo(
     customColumnDefs: CustomColumnDef[];
     proposalStatus: ProposalStatus;
     onSwatchOpen: (itemId: string) => void;
+    onSwatchPaste?: ((item: ProposalItem, file: File) => Promise<void>) | undefined;
+    isSwatchPasting: boolean;
     autoFocusItemName?: boolean;
     dragRef: (node: HTMLElement | null) => void;
     dragTransform: string | undefined;
@@ -282,6 +292,8 @@ const ProposalRowContent = memo(
         <GeneratedItemMaterialsCell
           materials={item.materials}
           onOpen={() => onSwatchOpen(item.id)}
+          onPasteImage={onSwatchPaste ? (file) => onSwatchPaste(item, file) : undefined}
+          isPasting={isSwatchPasting}
           tdClassName="py-3"
         />
       ),

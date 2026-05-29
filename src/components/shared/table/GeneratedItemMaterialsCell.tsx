@@ -5,6 +5,8 @@ import { MaterialBadges } from '../../materials';
 type GeneratedItemMaterialsControlProps = {
   materials: Material[];
   onOpen: () => void;
+  onPasteImage?: ((file: File) => Promise<void> | void) | undefined;
+  isPasting?: boolean | undefined;
   tdClassName?: string | undefined;
 };
 
@@ -13,13 +15,24 @@ type GeneratedItemMaterialsCellProps = GeneratedItemMaterialsControlProps;
 export function GeneratedItemMaterialsControl({
   materials,
   onOpen,
+  onPasteImage,
+  isPasting,
 }: GeneratedItemMaterialsControlProps) {
-  return <MaterialBadges materials={materials} onOpen={onOpen} />;
+  return (
+    <MaterialBadges
+      materials={materials}
+      onOpen={onOpen}
+      onPasteImage={onPasteImage}
+      isPasting={isPasting}
+    />
+  );
 }
 
 export function GeneratedItemMaterialsCell({
   materials,
   onOpen,
+  onPasteImage,
+  isPasting,
   tdClassName,
 }: GeneratedItemMaterialsCellProps) {
   return (
@@ -27,7 +40,12 @@ export function GeneratedItemMaterialsCell({
       className={cn('min-w-36 px-3 py-2', tdClassName)}
       onClick={(event) => event.stopPropagation()}
     >
-      <MaterialBadges materials={materials} onOpen={onOpen} />
+      <MaterialBadges
+        materials={materials}
+        onOpen={onOpen}
+        onPasteImage={onPasteImage}
+        isPasting={isPasting}
+      />
     </td>
   );
 }

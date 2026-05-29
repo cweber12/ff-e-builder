@@ -28,6 +28,7 @@ import {
   useCreateProposalItem,
   useDeleteProposalItem,
   useIsMobileViewport,
+  useMaterialCellPaste,
   useMoveProposalItem,
   useProposalRevisions,
   useRecentMaterials,
@@ -135,6 +136,11 @@ export function ProposalCategorySection({
   const addItemToFfe = useAddProposalItemToFfe(projectId);
   const moveItem = useMoveProposalItem();
   const reorderItems = useReorderProposalItems(categoryId);
+  const materialCellPaste = useMaterialCellPaste(projectId, {
+    kind: 'proposal',
+    itemGroupId: categoryId,
+    projectId,
+  });
   const isMobile = useIsMobileViewport();
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: snapshots = [] } = useRevisionSnapshots(projectId);
@@ -160,6 +166,16 @@ export function ProposalCategorySection({
 
   const [pendingChange, setPendingChange] = useState<PendingProposalCategoryChange | null>(null);
   const [activeSwatchItemId, setActiveSwatchItemId] = useState<string | null>(null);
+  const handleSwatchPaste = useCallback(
+    async (item: ProposalItem, file: File) => {
+      await materialCellPaste.pasteIntoCell({
+        itemId: item.id,
+        materials: item.materials,
+        file,
+      });
+    },
+    [materialCellPaste],
+  );
   const activeSwatchItem = items.find((item) => item.id === activeSwatchItemId) ?? null;
 
   function handleItemSave(item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) {
@@ -563,6 +579,8 @@ export function ProposalCategorySection({
                         customColumnDefs={customColumnDefs}
                         proposalStatus={proposalStatus}
                         onSwatchOpen={setActiveSwatchItemId}
+                        onSwatchPaste={handleSwatchPaste}
+                        isSwatchPasting={materialCellPaste.isPasting}
                         autoFocusItemName={item.id === pendingFocusItemId}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
@@ -623,6 +641,8 @@ export function ProposalCategorySection({
         onItemMove={handleMoveItem}
         onItemClick={onItemClick}
         onSwatchOpen={setActiveSwatchItemId}
+        onSwatchPaste={handleSwatchPaste}
+        isSwatchPasting={materialCellPaste.isPasting}
         onColumnDragEnd={handleColumnDragEnd}
         onRowDragOver={handleRowDragOver}
         onRowDragEnd={handleRowDragEnd}

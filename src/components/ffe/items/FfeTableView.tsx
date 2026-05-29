@@ -30,6 +30,7 @@ import { FFE_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedIte
 import { emptyFfeColumnIds } from '../../../lib/table/emptyColumns';
 import {
   useItemMaterialActions,
+  useMaterialCellPaste,
   useCreateItem,
   useDeleteItem,
   useCreateRoom,
@@ -192,6 +193,8 @@ type TableActions = {
   onMove: (item: Item, toRoomId: string) => Promise<void>;
   onDelete: (item: Item) => Promise<void>;
   onEditMaterials: (item: Item) => void;
+  onPasteMaterialSwatch: (item: Item, file: File) => Promise<void>;
+  isMaterialPastePending: boolean;
 };
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
@@ -676,6 +679,8 @@ const createColumns = (
       <GeneratedItemMaterialsControl
         materials={row.original.materials}
         onOpen={() => actions.onEditMaterials(row.original)}
+        onPasteImage={(file) => actions.onPasteMaterialSwatch(row.original, file)}
+        isPasting={actions.isMaterialPastePending}
       />
     ),
   },
@@ -986,6 +991,8 @@ function MobileItemCards({
               <GeneratedItemMaterialsControl
                 materials={item.materials}
                 onOpen={() => actions.onEditMaterials(item)}
+                onPasteImage={(file) => actions.onPasteMaterialSwatch(item, file)}
+                isPasting={actions.isMaterialPastePending}
               />
             </MobileField>
             <MobileField label="Quantity">
@@ -1378,6 +1385,11 @@ export function RoomItemsSection({
   const reorderItems = useReorderItems(room.id);
   const projectMaterials = useMaterials(projectId);
   const materialActions = useItemMaterialActions({ kind: 'ffe', itemGroupId: room.id, projectId });
+  const materialCellPaste = useMaterialCellPaste(projectId, {
+    kind: 'ffe',
+    itemGroupId: room.id,
+    projectId,
+  });
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: changelogAll = [] } = useRevisionChangelog(projectId);
   const { data: columnDefs = [] } = useItemColumnDefs(projectId);
@@ -1503,8 +1515,16 @@ export function RoomItemsSection({
         await deleteItem.mutateAsync(item.id);
       },
       onEditMaterials: (item) => setMaterialItem(item),
+      onPasteMaterialSwatch: async (item, file) => {
+        await materialCellPaste.pasteIntoCell({
+          itemId: item.id,
+          materials: item.materials,
+          file,
+        });
+      },
+      isMaterialPastePending: materialCellPaste.isPasting,
     }),
-    [deleteItem, duplicateItem, moveItem, rooms],
+    [deleteItem, duplicateItem, materialCellPaste, moveItem, rooms],
   );
   const saveItemPatch = useCallback<SaveItemPatch>(
     async (item, patch) => {

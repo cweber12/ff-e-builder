@@ -6,3 +6,4 @@ export {
   useItemMaterialActions,
 } from './useMaterials';
 export type { MaterialContext } from './useMaterials';
+export { useMaterialCellPaste } from './useMaterialCellPaste';

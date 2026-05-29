@@ -1,7 +1,14 @@
-import { useState, useRef, useMemo, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+  type ReactNode,
+} from 'react';
 import { cn } from '../../../lib/utils';
 import { type Project } from '../../../types';
-import { useDeleteImage, useImages, useUploadImage } from '../../../hooks';
+import { useDeleteImage, useImages, useMaterialCellPaste, useUploadImage } from '../../../hooks';
 import { toast } from 'sonner';
 import { ColorChipGroup, CompactRowGrid, GridCell, SegmentedControl } from '../../primitives';
 import { MaterialLibraryModal } from '../../materials';
@@ -394,13 +401,14 @@ function CatalogEditorMediaManager({
   const deleteOptionImage = useDeleteImage('item_option', currentItemId);
   const [isLibraryOpen, setLibraryOpen] = useState(false);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const documentSwatchPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
+  const materialContextRoomId = currentEntry?.room.id ?? '';
+  const materialCellPaste = useMaterialCellPaste(project.id, {
+    kind: 'ffe',
+    itemGroupId: materialContextRoomId,
+    projectId: project.id,
+  });
   const isMutating = uploadOptionImage.isPending || deleteOptionImage.isPending;
-
-  if (!currentEntry) {
-    return <p className="catalog-layout-note">Open a catalog page to edit option media.</p>;
-  }
-
-  const { item, room } = currentEntry;
 
   const handleUploadToSlot = async (slotIndex: number, file: File) => {
     if (isMutating) return;
@@ -419,6 +427,52 @@ function CatalogEditorMediaManager({
       toast.error(message);
     }
   };
+
+  const handleSwatchPaste = (event: ClipboardEvent | ReactClipboardEvent) => {
+    if (materialCellPaste.isPasting) return;
+    const file = Array.from(event.clipboardData?.items ?? [])
+      .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
+      ?.getAsFile();
+    if (!file) return;
+    event.preventDefault();
+    void materialCellPaste
+      .pasteIntoCell({
+        itemId: item.id,
+        materials: item.materials,
+        file,
+      })
+      .then((status) => {
+        if (status !== 'discarded') toast.success('Swatch updated from paste.');
+      });
+  };
+
+  const enableSwatchPasteTarget = () => {
+    if (materialCellPaste.isPasting || documentSwatchPasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => handleSwatchPaste(event);
+    documentSwatchPasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disableSwatchPasteTarget = () => {
+    const handler = documentSwatchPasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    documentSwatchPasteHandlerRef.current = null;
+  };
+
+  useEffect(
+    () => () => {
+      const handler = documentSwatchPasteHandlerRef.current;
+      if (handler) document.removeEventListener('paste', handler);
+    },
+    [],
+  );
+
+  if (!currentEntry) {
+    return <p className="catalog-layout-note">Open a catalog page to edit option media.</p>;
+  }
+
+  const { item, room } = currentEntry;
 
   return (
     <div className="catalog-layout-group-body">
@@ -472,9 +526,16 @@ function CatalogEditorMediaManager({
         <button
           type="button"
           className="catalog-layout-secondary"
+          onPaste={handleSwatchPaste}
+          onMouseEnter={enableSwatchPasteTarget}
+          onMouseLeave={disableSwatchPasteTarget}
+          onFocus={enableSwatchPasteTarget}
+          onBlur={disableSwatchPasteTarget}
+          title="Add swatch or paste image (Ctrl+V)"
+          disabled={materialCellPaste.isPasting}
           onClick={() => setLibraryOpen(true)}
         >
-          Add swatch
+          {materialCellPaste.isPasting ? 'Pasting…' : 'Add swatch'}
         </button>
       </div>
       <MaterialLibraryModal

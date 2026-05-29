@@ -24,6 +24,15 @@ multiple items, and each item can have multiple materials.
 ## UI Flow
 
 - Open an item's material editor from the Materials cell in the table.
+- Paste an image directly into an FF&E or Proposal Materials cell to route by
+  current cell state:
+  - no material assigned: create a new finish, create+assign a material, and
+    upload the image to that finish
+  - material assigned without finish: create a new finish, attach it, and upload
+    the image
+  - material assigned with finish: prompt overwrite or discard before any upload
+- In FF&E Catalog Editor, the `Add swatch` control in Media supports the same
+  paste routing behavior for the active catalog item.
 - Use the Materials tab to view and manage all library entries for the project.
 - In the Materials toolbar, the left slot shows:
   - an Options dropdown with View toggle plus:

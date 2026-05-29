@@ -1,4 +1,11 @@
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+  type KeyboardEvent,
+} from 'react';
 import {
   useCreateMaterial,
   useFinishes,
@@ -796,29 +803,81 @@ const MATERIAL_BADGE_LIMIT = 4;
 export function MaterialBadges({
   materials,
   onOpen,
+  onPasteImage,
+  isPasting = false,
 }: {
   materials: Material[];
   onOpen: () => void;
+  onPasteImage?: ((file: File) => Promise<void> | void) | undefined;
+  isPasting?: boolean | undefined;
 }) {
   const assigned = materials.slice(0, MATERIAL_BADGE_LIMIT);
   const overflow = materials.length - assigned.length;
+  const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
+
+  const handlePaste = (event: ClipboardEvent | ReactClipboardEvent) => {
+    if (!onPasteImage || isPasting) return;
+    const pastedImage = Array.from(event.clipboardData?.items ?? [])
+      .find((entry) => entry.kind === 'file' && entry.type.startsWith('image/'))
+      ?.getAsFile();
+    if (!pastedImage) return;
+    event.preventDefault();
+    void onPasteImage(pastedImage);
+  };
+
+  const enablePasteTarget = () => {
+    if (!onPasteImage || isPasting || documentPasteHandlerRef.current) return;
+    const handler = (event: ClipboardEvent) => handlePaste(event);
+    documentPasteHandlerRef.current = handler;
+    document.addEventListener('paste', handler);
+  };
+
+  const disablePasteTarget = () => {
+    const handler = documentPasteHandlerRef.current;
+    if (!handler) return;
+    document.removeEventListener('paste', handler);
+    documentPasteHandlerRef.current = null;
+  };
+
+  useEffect(
+    () => () => {
+      const handler = documentPasteHandlerRef.current;
+      if (handler) document.removeEventListener('paste', handler);
+    },
+    [],
+  );
 
   if (assigned.length === 0) {
     return (
       <button
         type="button"
+        onPaste={handlePaste}
+        onMouseEnter={enablePasteTarget}
+        onMouseLeave={disablePasteTarget}
+        onFocus={enablePasteTarget}
+        onBlur={disablePasteTarget}
         onClick={onOpen}
         className="group inline-flex items-center gap-1 text-left text-xs text-neutral-400 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         aria-label="Edit item materials"
+        title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
       >
         <PencilEditIcon className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-        Add materials
+        {isPasting ? 'Pasting swatch…' : 'Add materials'}
       </button>
     );
   }
 
   return (
-    <div className="group relative inline-block max-w-[8.5rem] text-left">
+    <div
+      tabIndex={onPasteImage ? 0 : undefined}
+      onPaste={handlePaste}
+      onMouseEnter={enablePasteTarget}
+      onMouseLeave={disablePasteTarget}
+      onFocus={enablePasteTarget}
+      onBlur={disablePasteTarget}
+      className="group relative inline-block max-w-[8.5rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
+    >
       <div className="grid grid-cols-2 gap-x-1.5 gap-y-1">
         {assigned.map((material) => (
           <div key={material.id} className="flex flex-col items-center gap-0.5">
@@ -836,6 +895,9 @@ export function MaterialBadges({
         <span className="mt-0.5 block text-[10px] font-medium text-neutral-500">
           +{overflow} more
         </span>
+      )}
+      {isPasting && (
+        <span className="mt-0.5 block text-[10px] font-medium text-brand-700">Pasting swatch…</span>
       )}
       <button
         type="button"
