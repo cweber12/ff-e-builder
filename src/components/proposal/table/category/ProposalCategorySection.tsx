@@ -1,13 +1,4 @@
-import {
-  Fragment,
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type MouseEvent,
-} from 'react';
+import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -25,15 +16,11 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Badge, Button } from '../../../primitives';
 import { toast } from '../../../primitives/toast-api';
 import {
-  cents,
-  formatMoney,
   type CustomColumnDef,
   type ProposalItem,
   type ProposalStatus,
-  type RevisionCostStatus,
   type RevisionSnapshot,
 } from '../../../../types';
 import {
@@ -47,23 +34,23 @@ import {
   useReorderProposalItems,
   useRevisionSnapshots,
 } from '../../../../hooks';
-import { proposalLineTotalCents } from '../../../../lib/money';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
 import { cn } from '../../../../lib/utils';
 import {
   proposalPatchToGeneratedItemChangeInfo,
   type GeneratedItemChangeInfo,
 } from '../../../../lib/table/generatedItemChangeInfo';
-import { GroupedTableSection, MobileField } from '../../../shared/table/TableViewWrappers';
+import { GroupedTableSection } from '../../../shared/table/TableViewWrappers';
 import { SortableColHeader } from '../../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
 import {
   proposalStickyEdgeColumnClassNames,
   proposalStickyValueColumnClassNames,
 } from '../../../shared/table/generatedItemStickyStyles';
-import { ImageFrame } from '../../../shared/image/ImageFrame';
 import { ProposalRow } from '../row/ProposalRow';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
+import { ProposalCategoryMobileCards } from './ProposalCategoryMobileCards';
+import { ProposalCategoryExpandedTable } from './ProposalCategoryExpandedTable';
 import { AddColumnModal } from '../../../shared/modals/AddColumnModal';
 import {
   ChangeConfirmModal,
@@ -77,14 +64,10 @@ import {
   type ProposalColumnId,
   revisionNotesColumnClassName,
   STICKY_RIGHT_COLUMN_IDS,
-  stickyRevQtyExpandedHeaderClassName,
   stickyRevQtyHeaderClassName,
-  stickyRevTotalExpandedHeaderClassName,
   stickyRevTotalHeaderClassName,
-  stickyRevUnitCostExpandedHeaderClassName,
   stickyRevUnitCostHeaderClassName,
 } from '../proposalTableConstants';
-import { ProposalItemActionsMenu } from '../row/ProposalItemActionsMenu';
 
 const MaterialLibraryModal = lazy(() =>
   import('../../../materials').then((module) => ({ default: module.MaterialLibraryModal })),
@@ -386,6 +369,27 @@ export function ProposalCategorySection({
     [addItemToFfe],
   );
 
+  const handleDeleteItem = useCallback(
+    (item: ProposalItem) => deleteItem.mutate(item.id),
+    [deleteItem],
+  );
+
+  const handleDuplicateItem = useCallback(
+    (item: ProposalItem) => createItem.mutate(duplicateItemPayload(item)),
+    [createItem, duplicateItemPayload],
+  );
+
+  const handleMoveItem = useCallback(
+    (item: ProposalItem, toCategoryId: string) =>
+      moveItem.mutate({
+        id: item.id,
+        fromCategoryId: categoryId,
+        toCategoryId,
+        version: item.version,
+      }),
+    [moveItem, categoryId],
+  );
+
   return (
     <GroupedTableSection>
       <ProposalCategoryHeader
@@ -597,17 +601,10 @@ export function ProposalCategorySection({
                         item={item}
                         otherCategories={otherCategories}
                         onSave={(patch) => handleItemSave(item, patch)}
-                        onDelete={() => deleteItem.mutate(item.id)}
-                        onDuplicate={() => createItem.mutate(duplicateItemPayload(item))}
+                        onDelete={() => handleDeleteItem(item)}
+                        onDuplicate={() => handleDuplicateItem(item)}
                         onAddToFfe={() => handleAddItemToFfe(item)}
-                        onMove={(toCategoryId) =>
-                          moveItem.mutate({
-                            id: item.id,
-                            fromCategoryId: categoryId,
-                            toCategoryId,
-                            version: item.version,
-                          })
-                        }
+                        onMove={(toCategoryId) => handleMoveItem(item, toCategoryId)}
                         onRowClick={() => onItemClick(item)}
                         visibleColOrder={visibleColOrder}
                         customColumnDefs={customColumnDefs}
@@ -631,272 +628,53 @@ export function ProposalCategorySection({
 
       {!collapsed && isMobile && (
         <div className="p-3">
-          <MobileProposalCards
+          <ProposalCategoryMobileCards
             items={sortedItems}
             otherCategories={otherCategories}
             snapshotsByItem={
               openRev ? (snapshotsByRevThenItem.get(openRev.id) ?? new Map()) : new Map()
             }
-            onDelete={(item) => deleteItem.mutate(item.id)}
-            onDuplicate={(item) => createItem.mutate(duplicateItemPayload(item))}
+            onDelete={handleDeleteItem}
+            onDuplicate={handleDuplicateItem}
             onAddToFfe={(item) => handleAddItemToFfe(item)}
-            onMove={(item, toCategoryId) =>
-              moveItem.mutate({
-                id: item.id,
-                fromCategoryId: categoryId,
-                toCategoryId,
-                version: item.version,
-              })
-            }
+            onMove={handleMoveItem}
             onItemClick={onItemClick}
           />
         </div>
       )}
 
-      {isExpanded && (
-        <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
-          <div className="flex h-full flex-col overflow-hidden rounded-sm border border-neutral-200 bg-canvas-chrome shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-canvas-chrome px-4 py-3">
-              <div className="min-w-0">
-                <h2 className="truncate text-base font-semibold text-neutral-950">
-                  {categoryName}
-                </h2>
-                <p className="text-xs text-neutral-500">
-                  {itemCount} {itemCount === 1 ? 'item' : 'items'} -{' '}
-                  {formatMoney(cents(subtotalCents))}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label="Minimize table view"
-                title="Minimize table view"
-                onClick={() => setIsExpanded(false)}
-              >
-                Minimize
-              </Button>
-            </div>
-            <div
-              tabIndex={0}
-              aria-label={`${categoryName} expanded items table`}
-              className="min-w-0 overflow-auto flex-1"
-            >
-              <table
-                className={cn(
-                  hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
-                  'w-full border-collapse text-left text-sm',
-                )}
-              >
-                <thead className="sticky top-0 z-30 bg-canvas-chrome text-xs">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleColumnDragEnd}
-                  >
-                    <tr>
-                      <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-neutral-200 bg-canvas-chrome px-1" />
-                      <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
-                        ID
-                      </th>
-                      <SortableContext
-                        items={draggableColOrder}
-                        strategy={horizontalListSortingStrategy}
-                      >
-                        {draggableColOrder.map((colId) => {
-                          const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
-                          if (meta) {
-                            return (
-                              <SortableColHeader
-                                key={colId}
-                                colId={colId}
-                                label={meta.label}
-                                className={cn(
-                                  'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
-                                  meta.className,
-                                )}
-                                onHide={() => onHideColumn(colId)}
-                              />
-                            );
-                          }
-                          const customDef = customColumnDefs.find((def) => def.id === colId);
-                          if (!customDef) return null;
-                          return (
-                            <SortableColHeader
-                              key={colId}
-                              colId={colId}
-                              className="h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
-                              onHide={() => onHideColumn(colId)}
-                            >
-                              <CustomColumnHeader
-                                def={customDef}
-                                onDelete={() => onDeleteCustomColumn(customDef.id)}
-                                onRename={(label) => onRenameCustomColumn(customDef.id, label)}
-                              />
-                            </SortableColHeader>
-                          );
-                        })}
-                      </SortableContext>
-                      {hasOpenRevision ? (
-                        <>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              revisionNotesColumnClassName,
-                            )}
-                          >
-                            Notes
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
-                              'border-l border-l-neutral-300',
-                              baselineQtyColumnClassName,
-                            )}
-                          >
-                            <span className="block text-[10px] text-neutral-400">Before</span>
-                            Quantity
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
-                              baselineUnitCostColumnClassName,
-                            )}
-                          >
-                            <span className="block text-[10px] text-neutral-400">Before</span>
-                            Unit Cost
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
-                              baselineTotalColumnClassName,
-                            )}
-                          >
-                            <span className="block text-[10px] text-neutral-400">Before</span>
-                            Total
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
-                              stickyRevQtyExpandedHeaderClassName,
-                            )}
-                          >
-                            <span className="block text-[10px] text-brand-500">After</span>
-                            New Qty
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
-                              stickyRevUnitCostExpandedHeaderClassName,
-                            )}
-                          >
-                            <span className="block text-[10px] text-brand-500">After</span>
-                            New Cost
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
-                              stickyRevTotalExpandedHeaderClassName,
-                            )}
-                          >
-                            <span className="block text-[10px] text-brand-500">After</span>
-                            New Total
-                          </th>
-                        </>
-                      ) : (
-                        <>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              proposalStickyValueColumnClassNames.quantity.expandedHeader,
-                            )}
-                          >
-                            Quantity
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              proposalStickyValueColumnClassNames.unitCost.expandedHeader,
-                            )}
-                          >
-                            Unit Cost
-                          </th>
-                          <th
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                              proposalStickyEdgeColumnClassNames.totalExpandedHeader,
-                            )}
-                          >
-                            Total Cost
-                          </th>
-                        </>
-                      )}
-                      <th
-                        className={cn(
-                          'h-10 border-b border-neutral-200',
-                          proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
-                        )}
-                      />
-                    </tr>
-                  </DndContext>
-                </thead>
-                <tbody>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragOver={handleRowDragOver}
-                    onDragEnd={handleRowDragEnd}
-                    onDragCancel={handleRowDragCancel}
-                  >
-                    <SortableContext
-                      items={sortedItems.map((item) => item.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {sortedItems.map((item) => (
-                        <Fragment key={item.id}>
-                          {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
-                            <tr aria-hidden="true" className="motion-reduce:hidden">
-                              <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
-                            </tr>
-                          )}
-                          <ProposalRow
-                            projectId={projectId}
-                            item={item}
-                            otherCategories={otherCategories}
-                            onSave={(patch) => handleItemSave(item, patch)}
-                            onDelete={() => deleteItem.mutate(item.id)}
-                            onDuplicate={() => createItem.mutate(duplicateItemPayload(item))}
-                            onAddToFfe={() => handleAddItemToFfe(item)}
-                            onMove={(toCategoryId) =>
-                              moveItem.mutate({
-                                id: item.id,
-                                fromCategoryId: categoryId,
-                                toCategoryId,
-                                version: item.version,
-                              })
-                            }
-                            onRowClick={() => onItemClick(item)}
-                            visibleColOrder={visibleColOrder}
-                            customColumnDefs={customColumnDefs}
-                            proposalStatus={proposalStatus}
-                            onSwatchOpen={setActiveSwatchItemId}
-                            autoFocusItemName={item.id === pendingFocusItemId}
-                          />
-                          {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
-                            <tr aria-hidden="true" className="motion-reduce:hidden">
-                              <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
-                            </tr>
-                          )}
-                        </Fragment>
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProposalCategoryExpandedTable
+        open={isExpanded}
+        categoryName={categoryName}
+        itemCount={itemCount}
+        subtotalCents={subtotalCents}
+        projectId={projectId}
+        otherCategories={otherCategories}
+        hasOpenRevision={hasOpenRevision}
+        sensors={sensors}
+        draggableColOrder={draggableColOrder}
+        visibleColOrder={visibleColOrder}
+        customColumnDefs={customColumnDefs}
+        sortedItems={sortedItems}
+        dragOverInfo={dragOverInfo}
+        pendingFocusItemId={pendingFocusItemId}
+        proposalStatus={proposalStatus}
+        onClose={() => setIsExpanded(false)}
+        onHideColumn={onHideColumn}
+        onRenameCustomColumn={onRenameCustomColumn}
+        onDeleteCustomColumn={onDeleteCustomColumn}
+        onItemSave={handleItemSave}
+        onItemDelete={handleDeleteItem}
+        onItemDuplicate={handleDuplicateItem}
+        onItemAddToFfe={handleAddItemToFfe}
+        onItemMove={handleMoveItem}
+        onItemClick={onItemClick}
+        onSwatchOpen={setActiveSwatchItemId}
+        onColumnDragEnd={handleColumnDragEnd}
+        onRowDragOver={handleRowDragOver}
+        onRowDragEnd={handleRowDragEnd}
+        onRowDragCancel={handleRowDragCancel}
+      />
 
       <AddColumnModal
         open={addColumnModalOpen}
@@ -934,133 +712,4 @@ export function ProposalCategorySection({
       </Suspense>
     </GroupedTableSection>
   );
-}
-
-type MobileProposalCardsProps = {
-  items: ProposalItem[];
-  otherCategories: { id: string; name: string }[];
-  snapshotsByItem: Map<string, RevisionSnapshot>;
-  onDelete: (item: ProposalItem) => void;
-  onDuplicate: (item: ProposalItem) => void;
-  onAddToFfe: (item: ProposalItem) => void;
-  onMove: (item: ProposalItem, toCategoryId: string) => void;
-  onItemClick: (item: ProposalItem) => void;
-};
-
-function MobileProposalCards({
-  items,
-  otherCategories,
-  snapshotsByItem,
-  onDelete,
-  onDuplicate,
-  onAddToFfe,
-  onMove,
-  onItemClick,
-}: MobileProposalCardsProps) {
-  if (items.length === 0) {
-    return (
-      <div className="rounded-md border border-dashed border-neutral-300 px-4 py-6 text-center text-sm text-neutral-500">
-        Tap "+ Add item" above to add the first item.
-      </div>
-    );
-  }
-
-  const stopProp = (event: MouseEvent) => event.stopPropagation();
-
-  return (
-    <div className="grid gap-3">
-      {items.map((item) => {
-        const lineTotal = proposalLineTotalCents(item);
-        const snapshot = snapshotsByItem.get(item.id);
-        return (
-          <article
-            key={item.id}
-            role="button"
-            tabIndex={0}
-            aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
-            onClick={() => onItemClick(item)}
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter') return;
-              if (event.target !== event.currentTarget) return;
-              event.preventDefault();
-              onItemClick(item);
-            }}
-            className="cursor-pointer rounded-sm border border-neutral-200 bg-canvas-chrome p-4 shadow-sm transition-colors hover:border-brand-300 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <ImageFrame
-                  entityType="proposal_item"
-                  entityId={item.id}
-                  alt={item.productTag || 'item'}
-                  fallbackUrl={null}
-                  className="h-14 aspect-[117/75] shrink-0"
-                  compact
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-neutral-950">
-                    {item.itemName || item.productTag || item.description || 'Unnamed item'}
-                  </p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    {item.location && (
-                      <span className="truncate text-sm text-neutral-500">{item.location}</span>
-                    )}
-                    {snapshot && <RevisionCardBadge status={snapshot.costStatus} />}
-                  </div>
-                </div>
-              </div>
-              <div onClick={stopProp}>
-                <ProposalItemActionsMenu
-                  itemName={item.itemName || item.productTag || item.description || 'item'}
-                  otherCategories={otherCategories}
-                  onViewDetails={() => onItemClick(item)}
-                  onDuplicate={() => onDuplicate(item)}
-                  onAddToFfe={() => onAddToFfe(item)}
-                  onMove={(toCategoryId) => onMove(item, toCategoryId)}
-                  onDelete={() => onDelete(item)}
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <MobileField label="Quantity">
-                <span>
-                  {item.quantity} {item.quantityUnit}
-                </span>
-              </MobileField>
-              <MobileField label="Unit Cost">
-                <span>{formatMoney(cents(item.unitCostCents))}</span>
-              </MobileField>
-              <MobileField label="Total">
-                <span className="font-semibold tabular-nums">{formatMoney(cents(lineTotal))}</span>
-              </MobileField>
-              {item.sizeLabel && (
-                <MobileField label="Size">
-                  <span>{item.sizeLabel}</span>
-                </MobileField>
-              )}
-            </div>
-          </article>
-        );
-      })}
-    </div>
-  );
-}
-
-function RevisionCardBadge({ status }: { status: RevisionCostStatus }) {
-  if (status === 'flagged') {
-    return (
-      <Badge variant="warning" size="sm" uppercase>
-        Flagged
-      </Badge>
-    );
-  }
-  if (status === 'resolved') {
-    return (
-      <Badge variant="success" size="sm" uppercase>
-        Resolved
-      </Badge>
-    );
-  }
-  return null;
 }

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - refactor(proposal-table): organize proposal table files into category, row, detail, and dialogs subfolders while preserving behavior and imports
 - refactor(proposal-table): remove Proposal-local Add Column, Add Group, and Change Confirm pass-through modal shells and import shared modal seams directly
+- refactor(proposal-table): extract category mobile card and expanded table rendering into focused modules while preserving Proposal category behavior
 - fix(materials): wire Options -> Export to open an anchored format popover, keep exports available in Grid/Table modes, and disable export when the active filtered tab list is empty
 - fix(migrations): make finish-library split migration update image_assets constraints before converting material image rows to finish entities
 - fix(materials): complete issue #92 options workflows by enabling tab-aware export and delete-all actions, correcting finishes export routing, and adding dedicated finishes CSV/Excel/PDF exporters
