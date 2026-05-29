@@ -169,7 +169,7 @@ This links the rectangle to the item on the plan. The proposal item is **not upd
 4. `savePlanImageForMeasurement()` runs:
    - Downloads raw plan blob via `api.plans.downloadContent()`
    - `measurementCropToPixelCrop()` converts normalized fractions → pixel coords using `planNaturalSize`
-   - `createHighlightedPlanCrop()` draws crop region + semi-transparent blue measurement rect overlay → PNG blob
+   - `createHighlightedPlanCrop()` draws crop region + bright yellow measurement rect overlay (solid stroke, no dashed border) → PNG blob
    - Deletes existing `proposal_plan` image assets for the item
    - Uploads PNG via `api.images.upload({ entityType: 'proposal_plan', entityId: targetItemId })`
    - Calls `restorePlanColumn()` to ensure the plan image column is visible in the proposal table

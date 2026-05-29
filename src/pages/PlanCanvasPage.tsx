@@ -1198,10 +1198,10 @@ async function createHighlightedPlanCrop({
   const highlightY = measurementRect.y - cropY;
 
   context.save();
-  context.fillStyle = 'rgba(31, 88, 145, 0.10)';
-  context.strokeStyle = '#164575';
+  context.fillStyle = 'rgba(255, 212, 0, 0.2)';
+  context.strokeStyle = '#FFD400';
   context.lineWidth = Math.max(1.5, Math.min(cropWidth, cropHeight) * 0.008);
-  context.setLineDash([10, 8]);
+  context.setLineDash([]);
   context.fillRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
   context.strokeRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
   context.restore();
