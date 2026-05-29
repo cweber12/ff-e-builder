@@ -94,7 +94,7 @@ export function DashboardPage() {
             <h2 className="flex items-baseline gap-2">
               <span className="eyebrow">Projects</span>
               {projects?.length ? (
-                <span className="num text-[11px] font-semibold text-neutral-400">
+                <span className="num text-[11px] font-semibold text-neutral-500">
                   {projects.length}
                 </span>
               ) : null}
@@ -110,7 +110,7 @@ export function DashboardPage() {
                       'border-b-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] transition focus-visible:outline-none',
                       sort === option
                         ? 'border-brand-600 text-neutral-900'
-                        : 'border-transparent text-neutral-400 hover:text-neutral-700',
+                        : 'border-transparent text-neutral-500 hover:text-neutral-800',
                     ].join(' ')}
                   >
                     {option === 'updated' ? 'Recent' : option === 'name' ? 'Name' : 'Company'}
@@ -131,7 +131,7 @@ export function DashboardPage() {
                   key={project.id}
                   className={[
                     'project-row flex items-center gap-4 px-4 py-3',
-                    index > 0 ? 'border-t border-neutral-100' : '',
+                    index > 0 ? 'border-t border-neutral-200' : '',
                     openProjectMenuId === project.id ? 'bg-canvas-shell' : 'hover:bg-canvas-shell',
                   ].join(' ')}
                 >
@@ -260,7 +260,7 @@ function ProjectListSkeleton() {
           key={i}
           className={[
             'flex items-center gap-4 px-4 py-3',
-            i > 0 ? 'border-t border-neutral-100' : '',
+            i > 0 ? 'border-t border-neutral-200' : '',
           ].join(' ')}
         >
           <div className="h-16 w-24 flex-shrink-0 animate-pulse bg-canvas-shell" />
