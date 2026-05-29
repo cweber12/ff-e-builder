@@ -159,6 +159,8 @@ The worker stores both the PNG and original PDF in R2 and writes all PDF metadat
 4. Creates `Measurement` row with `rectX/Y/Width/Height` (pixels), `horizontalSpanBase` + `verticalSpanBase` (mm)
 5. **One measurement per item per plan** — if a prior measurement exists for the same `targetItemId`, it is deleted (and its images) before the new one is created
 
+If no target item exists yet, users can choose **Add item from measurement** in the Plans inspector. This opens a right-side create panel, auto-creates/reuses the `Uncategorized` Proposal Category, creates the item with optional field defaults, saves the Measurement, and immediately writes a Plan Image using the measured area.
+
 This links the rectangle to the item on the plan. The proposal item is **not updated yet**.
 
 #### Stage 2a — Crop plan image (optional)

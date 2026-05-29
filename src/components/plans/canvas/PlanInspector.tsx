@@ -100,6 +100,9 @@ export type PlanInspectorProps = {
   rectangleMode: RectangleModeId;
   onSetHighlight: () => void;
   canSetHighlight: boolean;
+  canOpenCreateItemPanel: boolean;
+  onOpenCreateItemPanel: () => void;
+  creatingItemFromMeasurement: boolean;
   onSaveHighlight: () => void;
   savingHighlight: boolean;
   canSaveHighlight: boolean;
@@ -188,6 +191,9 @@ export function PlanInspector({
   rectangleMode,
   onSetHighlight,
   canSetHighlight,
+  canOpenCreateItemPanel,
+  onOpenCreateItemPanel,
+  creatingItemFromMeasurement,
   onSaveHighlight,
   savingHighlight,
   canSaveHighlight,
@@ -554,6 +560,32 @@ export function PlanInspector({
                           ))}
                         </select>
                       </label>
+
+                      {rectangleMode === 'measure' ? (
+                        <div className="space-y-2 rounded-lg border border-neutral-200 bg-white/80 px-3 py-2">
+                          {measurementItems.length === 0 ? (
+                            <p className="text-xs text-neutral-600">
+                              No items yet. Create one now and include this measurement + plan
+                              image.
+                            </p>
+                          ) : (
+                            <p className="text-xs text-neutral-600">
+                              Need a new item instead? Create one directly from this measured area.
+                            </p>
+                          )}
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={onOpenCreateItemPanel}
+                            disabled={!canOpenCreateItemPanel || creatingItemFromMeasurement}
+                          >
+                            {creatingItemFromMeasurement
+                              ? 'Creating item...'
+                              : 'Add new item from measurement'}
+                          </Button>
+                        </div>
+                      ) : null}
 
                       <div className="flex flex-wrap gap-2">
                         {rectangleMode === 'highlight' ? (
