@@ -85,7 +85,7 @@ describe('ImportFinishesExcelModal', () => {
   });
 
   it('rejects unsupported file types with a clear error', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ applyAccept: false });
     const { container } = render(
       <ImportFinishesExcelModal open projectId="project-1" onClose={vi.fn()} onSuccess={vi.fn()} />,
     );

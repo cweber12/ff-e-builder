@@ -32,7 +32,7 @@ export function useActionsMenu() {
   const [open, setOpen] = useState(false);
   const [submenuOpen, setSubmenuOpen] = useState(false);
 
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const submenuTriggerRef = useRef<HTMLButtonElement>(null);
   const submenuPanelRef = useRef<HTMLDivElement>(null);

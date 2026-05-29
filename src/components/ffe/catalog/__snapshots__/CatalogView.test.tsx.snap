@@ -73,7 +73,8 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               <span
                 class="catalog-spec-heading"
               >
-                QUANTITY: 2
+                QUANTITY: 
+                2
               </span>
             </div>
           </div>
@@ -200,23 +201,10 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               <div
                 class="catalog-material-swatch"
               >
-                <div
-                  class="grid gap-1"
-                >
-                  <div
-                    class="relative overflow-hidden bg-white h-10 w-10 rounded-full shrink-0 border-0 shadow-none !h-[60px] !w-[60px]"
-                  >
-                    <div
-                      class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell bg-canvas-shell"
-                    >
-                      <span
-                        aria-hidden="true"
-                        class="h-full w-full rounded-full"
-                        style="background-color: rgb(232, 226, 214);"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <span
+                  aria-hidden="true"
+                  class="h-10 w-10 rounded-full shrink-0 bg-canvas-shell !h-[60px] !w-[60px]"
+                />
               </div>
               <span
                 class="catalog-material-id"
@@ -308,11 +296,6 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
       <div
         class="catalog-options-strip"
       >
-        <h2
-          class="catalog-spec-heading"
-        >
-          OPTION RENDERINGS
-        </h2>
         <div
           class="catalog-option-grid"
         >
@@ -338,15 +321,14 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         <div
           class="catalog-location-content"
         >
+          <h2
+            class="catalog-spec-heading"
+          >
+            LOCATION
+          </h2>
           <p
             class="catalog-location-label"
           >
-            <span
-              class="catalog-location-key"
-            >
-              LOCATION:
-            </span>
-             
             <span
               class="catalog-location-value"
             >

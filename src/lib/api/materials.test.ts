@@ -5,7 +5,7 @@ import { materialsApi } from './materials';
 setupApiTest();
 
 describe('materialsApi', () => {
-  it('creates project materials with default swatch metadata', async () => {
+  it('creates project materials with default metadata', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse(
         {
@@ -38,19 +38,18 @@ describe('materialsApi', () => {
     expect(typeof init?.body).toBe('string');
     expect(JSON.parse(init?.body as string)).toEqual({
       name: 'Walnut',
+      code: '',
+      finish_id: null,
+      material_type: null,
       material_id: 'WD-01',
       description: 'Natural walnut',
-      swatch_hex: '#D9D4C8',
-      manufacturer: '',
-      source_url: '',
-      category: null,
-      sub_category: '',
     });
     expect(material).toMatchObject({
       id: 'material-1',
       projectId: 'project-1',
+      finishId: null,
+      materialType: null,
       materialId: 'WD-01',
-      swatchHex: '#D9D4C8',
     });
   });
 

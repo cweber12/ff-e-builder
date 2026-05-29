@@ -493,23 +493,21 @@ describe('FfeTable', () => {
     renderTable();
 
     await user.click(screen.getAllByRole('button', { name: 'Edit item materials' })[0]!);
-    const dialog = screen.getByRole('dialog', { name: 'Finish Library' });
+    const dialog = screen.getByRole('dialog', { name: 'Project Materials' });
     await user.click(within(dialog).getByRole('button', { name: '+ New material' }));
     await user.type(within(dialog).getByLabelText('Name'), 'Ivory boucle');
-    await user.type(within(dialog).getByLabelText('ID'), 'FAB-001');
+    await user.type(within(dialog).getByLabelText('Manufacturer Ref'), 'FAB-001');
     await user.click(within(dialog).getByRole('button', { name: 'Add and assign' }));
 
     expect(mockCreateAndAssignMaterialMutateAsync).toHaveBeenCalledWith({
       itemId: 'item-1',
       input: {
         name: 'Ivory boucle',
+        code: '',
+        finishId: null,
+        materialType: null,
         materialId: 'FAB-001',
         description: '',
-        swatchHex: '#D9D4C8',
-        manufacturer: '',
-        sourceUrl: '',
-        category: null,
-        subCategory: '',
       },
     });
   });
@@ -546,7 +544,7 @@ describe('FfeTable', () => {
 
     await user.click(within(drawer).getByRole('button', { name: 'Add material' }));
 
-    expect(screen.getByRole('dialog', { name: 'Finish Library' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Project Materials' })).toBeInTheDocument();
   });
 
   it('keeps the drawer open and validates before adding an item', async () => {
