@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Finish, Material, Project } from '../../types';
@@ -232,5 +232,116 @@ describe('MaterialsView options actions', () => {
       expect(mockState.deleteMaterialMutateAsync).toHaveBeenCalledWith('material-1');
       expect(mockState.materialsRefetch).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('finish name collision prompt', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    document.body.innerHTML = '';
+    mockState.finishes = [makeFinish('finish-1', 'Walnut'), makeFinish('finish-2', 'Oak')];
+    mockState.materials = [];
+  });
+
+  async function openFinishForm() {
+    const user = userEvent.setup();
+    renderView();
+    await user.click(screen.getByRole('button', { name: /new finish/i }));
+    const formDialog = await screen.findByRole('dialog', { name: /add finish/i });
+    return { user, formDialog };
+  }
+
+  it('shows collision prompt when creating a finish with a duplicate name', async () => {
+    const { user, formDialog } = await openFinishForm();
+
+    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
+    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+
+    expect(
+      await screen.findByRole('dialog', { name: /finish name conflict/i }),
+    ).toBeInTheDocument();
+    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('detects collision case-insensitively', async () => {
+    const { user, formDialog } = await openFinishForm();
+
+    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'walnut');
+    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+
+    expect(
+      await screen.findByRole('dialog', { name: /finish name conflict/i }),
+    ).toBeInTheDocument();
+    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('closes form without creating finish when Use existing is clicked', async () => {
+    const { user, formDialog } = await openFinishForm();
+
+    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
+    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+
+    const collisionDialog = await screen.findByRole('dialog', { name: /finish name conflict/i });
+    await user.click(within(collisionDialog).getByRole('button', { name: /use existing/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /finish name conflict/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: /add finish/i })).not.toBeInTheDocument();
+    });
+    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
+    expect(mockState.uploadImageMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('closes form without creating or uploading when Overwrite swatch is clicked with no staged image', async () => {
+    const { user, formDialog } = await openFinishForm();
+
+    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
+    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+
+    const collisionDialog = await screen.findByRole('dialog', { name: /finish name conflict/i });
+    await user.click(within(collisionDialog).getByRole('button', { name: /overwrite swatch/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /finish name conflict/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: /add finish/i })).not.toBeInTheDocument();
+    });
+    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
+    expect(mockState.uploadImageMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('dismisses collision prompt and keeps form open on Cancel', async () => {
+    const { user, formDialog } = await openFinishForm();
+
+    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
+    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+
+    const collisionDialog = await screen.findByRole('dialog', { name: /finish name conflict/i });
+    await user.click(within(collisionDialog).getByRole('button', { name: /^cancel$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /finish name conflict/i }),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('dialog', { name: /add finish/i })).toBeInTheDocument();
+    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('creates finish normally when name has no collision', async () => {
+    const { user, formDialog } = await openFinishForm();
+
+    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Cherry');
+    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+
+    await waitFor(() => {
+      expect(mockState.createFinishMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Cherry' }),
+      );
+    });
+    expect(screen.queryByRole('dialog', { name: /finish name conflict/i })).not.toBeInTheDocument();
   });
 });

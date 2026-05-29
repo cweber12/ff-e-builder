@@ -21,6 +21,7 @@ import {
   useUpdateFinish,
   useUpdateMaterial,
   useUploadImage,
+  detectFinishCollision,
 } from '../../hooks';
 import type {
   Finish,
@@ -43,6 +44,7 @@ import {
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
 import { FinishForm } from './FinishForm';
+import { FinishCollisionPrompt } from './FinishCollisionPrompt';
 import { ImportFinishesExcelModal } from './ImportFinishesExcelModal';
 import { ImportMaterialsExcelModal } from './ImportMaterialsExcelModal';
 
@@ -159,6 +161,12 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
   const [materialDraft, setMaterialDraft] = useState<MaterialDraft>(emptyMaterialDraft);
   const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
   const [showMaterialForm, setShowMaterialForm] = useState(false);
+  const [collisionPrompt, setCollisionPrompt] = useState<{
+    existingFinish: Finish;
+    draftName: string;
+    swatchMode: 'color' | 'image';
+    swatchFile: File | null;
+  } | null>(null);
   const [showImportFinishesModal, setShowImportFinishesModal] = useState(false);
   const [showImportMaterialsModal, setShowImportMaterialsModal] = useState(false);
   const [deleteAllSelection, setDeleteAllSelection] = useState<DeleteAllSelection>(null);
@@ -259,6 +267,19 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
     };
     if (!input.name) return;
 
+    if (!editingFinishId) {
+      const collision = detectFinishCollision(input.name, finishes.data ?? []);
+      if (collision) {
+        setCollisionPrompt({
+          existingFinish: collision,
+          draftName: input.name,
+          swatchMode: finishDraft.swatchMode,
+          swatchFile: finishDraft.swatchFile,
+        });
+        return;
+      }
+    }
+
     let savedFinish: Finish;
     if (editingFinishId) {
       savedFinish = await updateFinish.mutateAsync({ id: editingFinishId, patch: input });
@@ -300,6 +321,21 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
     }
 
     resetMaterialDraft();
+  };
+
+  const handleCollisionDecision = async (decision: 'use-existing' | 'overwrite') => {
+    if (!collisionPrompt) return;
+    const { existingFinish, swatchMode, swatchFile } = collisionPrompt;
+    setCollisionPrompt(null);
+    if (decision === 'overwrite' && swatchMode === 'image' && swatchFile) {
+      await uploadImage.mutateAsync({
+        entityType: 'finish',
+        entityId: existingFinish.id,
+        file: swatchFile,
+        altText: existingFinish.name,
+      });
+    }
+    resetFinishDraft();
   };
 
   const showForm = activeTab === 'finishes' ? showFinishForm : showMaterialForm;
@@ -563,6 +599,15 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           void materials.refetch();
         }}
       />
+      {collisionPrompt && (
+        <FinishCollisionPrompt
+          existingFinish={collisionPrompt.existingFinish}
+          draftName={collisionPrompt.draftName}
+          onUseExisting={() => void handleCollisionDecision('use-existing')}
+          onOverwrite={() => void handleCollisionDecision('overwrite')}
+          onCancel={() => setCollisionPrompt(null)}
+        />
+      )}
     </div>
   );
 }
