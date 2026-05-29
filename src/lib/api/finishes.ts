@@ -23,7 +23,9 @@ function parseDefaultNameIndex(name: string, prefix: string): number | null {
   const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = name.match(new RegExp(`^${escapedPrefix}\\s+(\\d+)$`, 'i'));
   if (!match) return null;
-  const parsed = Number.parseInt(match[1], 10);
+  const capturedIndex = match[1];
+  if (capturedIndex === undefined) return null;
+  const parsed = Number.parseInt(capturedIndex, 10);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
