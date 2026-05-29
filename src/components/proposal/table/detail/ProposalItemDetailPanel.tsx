@@ -1,38 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { cn } from '../../../../lib/utils';
-import { api } from '../../../../lib/api';
 import {
   useAddProposalItemToFfe,
   useCreateProposalItem,
   useDeleteProposalItem,
-  useImages,
   useIsMobileViewport,
   useProposalRevisions,
   useRevisionChangelog,
   useProposalWithItems,
-  useUpdateChangelogEntryNotes,
   useUpdateProposalItem,
 } from '../../../../hooks';
-import { ImageFrame } from '../../../shared/image/ImageFrame';
-import { PanZoomFrame } from '../../../shared/image/PanZoomFrame';
-import { cents, formatMoney } from '../../../../types';
 import { proposalLineTotalCents } from '../../../../lib/money';
-import type { ImageAsset, ProposalItemChangelogEntry } from '../../../../types';
-import { GeneratedItemEditableTextControl } from '../../../shared/table/GeneratedItemEditableTextCell';
-import {
-  GeneratedItemEditableMoneyControl,
-  GeneratedItemEditableQuantityControl,
-} from '../../../shared/table/GeneratedItemEditableNumberCell';
-import { GeneratedItemSizeControl } from '../../../shared/table/GeneratedItemSizeModal';
-import { GeneratedItemMaterialsControl } from '../../../shared/table/GeneratedItemMaterialsCell';
+import type { ProposalItemChangelogEntry } from '../../../../types';
 import { MaterialLibraryModal } from '../../../materials';
-import { Badge, Button, Modal } from '../../../primitives';
+import { Button, Modal } from '../../../primitives';
 import { toast } from '../../../primitives/toast-api';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
-
-const PROPOSAL_QUANTITY_UNITS = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
+import { ProposalItemDetailMediaStrip } from './ProposalItemDetailMediaStrip';
+import { ProposalItemDetailForm } from './ProposalItemDetailForm';
+import { ProposalItemDetailChangelog } from './ProposalItemDetailChangelog';
 
 type Props = {
   itemId: string;
@@ -198,159 +186,18 @@ export function ProposalItemDetailPanel({
       </header>
 
       <div className="flex flex-1 flex-col min-h-0 overflow-y-auto">
-        <div className="flex w-full gap-5 justify-center border-b border-neutral-200 bg-canvas-shell p-5">
-          <ImageSection label="Rendering" className="flex-1 min-w-0">
-            <ImageFrame
-              entityType="proposal_item"
-              entityId={item.id}
-              alt={`${item.productTag || 'Proposal'} rendering`}
-              className="w-full aspect-[117/75] flex-shrink-0"
-              disabled
-            />
-          </ImageSection>
-
-          <ImageSection label="Plan" className="flex-1 min-w-0">
-            <PanZoomFrame
-              entityType="proposal_plan"
-              entityId={item.id}
-              alt={`${item.productTag || 'Proposal'} plan`}
-            />
-          </ImageSection>
-
-          <SwatchGallery itemId={item.id} />
-        </div>
+        <ProposalItemDetailMediaStrip itemId={item.id} itemProductTag={item.productTag} />
 
         <div className="flex-1 p-6">
-          <div className="grid grid-cols-2 gap-x-5 gap-y-5">
-            <FormField label="Product tag">
-              <GeneratedItemEditableTextControl
-                value={item.productTag}
-                onSave={(productTag) => save({ productTag })}
-                ariaLabel="Product tag"
-              />
-            </FormField>
-            <FormField label="Item name">
-              <GeneratedItemEditableTextControl
-                value={item.itemName}
-                onSave={(itemName) => save({ itemName })}
-                ariaLabel="Item name"
-              />
-            </FormField>
-            <FormField label="Location">
-              <GeneratedItemEditableTextControl
-                value={item.location}
-                onSave={(location) => save({ location })}
-                ariaLabel="Location"
-                multiline
-              />
-            </FormField>
-            <FormField label="Drawings">
-              <GeneratedItemEditableTextControl
-                value={item.drawings}
-                onSave={(drawings) => save({ drawings })}
-                ariaLabel="Drawings"
-                multiline
-              />
-            </FormField>
-            <FormField label="Plan reference">
-              <GeneratedItemEditableTextControl
-                value={item.plan}
-                onSave={(plan) => save({ plan })}
-                ariaLabel="Plan reference"
-                multiline
-              />
-            </FormField>
-            <FormField label="Size">
-              <GeneratedItemSizeControl
-                value={item.sizeLabel}
-                triggerVariant="inline"
-                initial={{
-                  mode: item.sizeMode,
-                  unit: item.sizeUnit,
-                  w: item.sizeW,
-                  d: item.sizeD,
-                  h: item.sizeH,
-                }}
-                onSave={({ label, mode, unit, w, d, h }) =>
-                  save({
-                    sizeMode: mode,
-                    sizeUnit: unit,
-                    sizeW: w,
-                    sizeD: d,
-                    sizeH: h,
-                    sizeLabel: label,
-                  })
-                }
-              />
-            </FormField>
-            <FormField label="Description" wide>
-              <GeneratedItemEditableTextControl
-                value={item.description}
-                onSave={(description) => save({ description })}
-                ariaLabel="Description"
-                multiline
-              />
-            </FormField>
-            <FormField label="Notes" wide>
-              <GeneratedItemEditableTextControl
-                value={item.notes}
-                onSave={(notes) => save({ notes })}
-                ariaLabel="Notes"
-                multiline
-              />
-            </FormField>
-          </div>
-
-          <div className="mt-6">
-            <p className="eyebrow mb-2">Materials</p>
-            <GeneratedItemMaterialsControl
-              materials={item.materials}
-              onOpen={() => setMaterialsOpen(true)}
-            />
-          </div>
-
-          <div className="mt-7 border-t border-neutral-200 pt-5">
-            <dl className="grid grid-cols-3 gap-6">
-              <div className="border-l border-neutral-200 pl-3">
-                <dt className="eyebrow">Quantity</dt>
-                <dd className="mt-1">
-                  <GeneratedItemEditableQuantityControl
-                    quantity={item.quantity}
-                    quantityUnit={item.quantityUnit}
-                    quantityUnits={PROPOSAL_QUANTITY_UNITS}
-                    onSaveQuantity={(quantity) => save({ quantity })}
-                    onSaveUnit={(quantityUnit) => save({ quantityUnit })}
-                  />
-                </dd>
-              </div>
-              <div className="border-l border-neutral-200 pl-3">
-                <dt className="eyebrow">Unit cost</dt>
-                <dd className="mt-1">
-                  <GeneratedItemEditableMoneyControl
-                    valueCents={item.unitCostCents}
-                    onSave={(unitCostCents) => save({ unitCostCents })}
-                    ariaLabel="Unit cost"
-                  />
-                </dd>
-              </div>
-              <div className="border-l border-brand-600/40 pl-3">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-                  Total
-                </dt>
-                <dd className="num mt-1 text-base font-semibold tracking-tight text-brand-700">
-                  {formatMoney(cents(lineTotal))}
-                </dd>
-              </div>
-            </dl>
-            {item.cbm > 0 && (
-              <p className="num mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                CBM <span className="text-neutral-950">{item.cbm}</span>
-              </p>
-            )}
-          </div>
+          <ProposalItemDetailForm
+            item={item}
+            lineTotalCents={lineTotal}
+            onSave={save}
+            onOpenMaterials={() => setMaterialsOpen(true)}
+          />
 
           {openRev && (
-            <ChangelogSection
+            <ProposalItemDetailChangelog
               revisionLabel={openRev.label}
               entries={itemChangelog}
               projectId={projectId}
@@ -518,147 +365,6 @@ function MoreIcon() {
   );
 }
 
-function ChangelogSection({
-  revisionLabel,
-  entries,
-  projectId,
-}: {
-  revisionLabel: string;
-  entries: ProposalItemChangelogEntry[];
-  projectId: string;
-}) {
-  return (
-    <section className="mt-7 border-t border-neutral-200 pt-5">
-      <div className="mb-3 flex items-baseline gap-2">
-        <p className="eyebrow">Changes this revision</p>
-        <Badge
-          variant="brand"
-          size="md"
-          className="bg-brand-500/15 text-[11px] ring-0 ring-transparent"
-        >
-          Revision {revisionLabel}
-        </Badge>
-      </div>
-      {entries.length === 0 ? (
-        <p className="text-sm text-neutral-500">
-          No tracked changes to this item in the current revision yet.
-        </p>
-      ) : (
-        <ol className="flex flex-col gap-2">
-          {entries.map((entry) => (
-            <ChangelogEntryRow key={entry.id} entry={entry} projectId={projectId} />
-          ))}
-        </ol>
-      )}
-    </section>
-  );
-}
-
-function ChangelogEntryRow({
-  entry,
-  projectId,
-}: {
-  entry: ProposalItemChangelogEntry;
-  projectId: string;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(entry.notes ?? '');
-  const updateNotes = useUpdateChangelogEntryNotes(projectId);
-
-  useEffect(() => {
-    if (!editing) setDraft(entry.notes ?? '');
-  }, [entry.notes, editing]);
-
-  async function handleSave() {
-    const trimmed = draft.trim();
-    await updateNotes.mutateAsync({ entryId: entry.id, notes: trimmed || null });
-    setEditing(false);
-  }
-
-  function handleCancel() {
-    setDraft(entry.notes ?? '');
-    setEditing(false);
-  }
-
-  const previous = entry.previousValue || '—';
-  const next = entry.newValue || '—';
-  const when = new Date(entry.changedAt).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-
-  return (
-    <li className="rounded-sm border border-neutral-200 bg-canvas-shell px-3 py-2 text-sm">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-medium text-neutral-800">{entry.columnKey}</span>
-        <span className="text-[11px] tabular-nums text-neutral-500">{when}</span>
-      </div>
-      <div className="mt-1 flex items-baseline gap-2 text-neutral-700">
-        <span className="text-neutral-500 line-through">{previous}</span>
-        <span aria-hidden="true">→</span>
-        <span className="font-medium">{next}</span>
-        {entry.isPriceAffecting && (
-          <span className="ml-auto rounded-pill bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
-            Price
-          </span>
-        )}
-      </div>
-      {editing ? (
-        <div className="mt-2">
-          <input
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void handleSave();
-              if (e.key === 'Escape') handleCancel();
-            }}
-            placeholder="Add a note…"
-            autoFocus
-            className="w-full rounded border border-neutral-200 bg-white px-2 py-1 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-          <div className="mt-1 flex gap-3">
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={updateNotes.isPending}
-              className="text-xs font-medium text-brand-600 hover:underline disabled:opacity-50"
-            >
-              {updateNotes.isPending ? 'Saving…' : 'Save'}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="text-xs text-neutral-500 hover:underline"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : entry.notes ? (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="group mt-1.5 block w-full text-left text-sm text-neutral-600 hover:text-neutral-800"
-        >
-          {entry.notes}
-          <span className="ml-1 hidden text-[11px] text-neutral-400 group-hover:inline">edit</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="mt-1.5 text-xs text-neutral-400 hover:text-brand-600 hover:underline"
-        >
-          + Add notes
-        </button>
-      )}
-    </li>
-  );
-}
-
 function PrevNextButtons({
   disabled,
   position,
@@ -695,83 +401,6 @@ function PrevNextButtons({
       </button>
     </div>
   );
-}
-
-function FormField({
-  label,
-  wide,
-  children,
-}: {
-  label: string;
-  wide?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div className={cn('flex flex-col gap-1.5', wide && 'col-span-2')}>
-      <p className="eyebrow">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function ImageSection({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <p className="eyebrow mb-2">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function SwatchGallery({ itemId }: { itemId: string }) {
-  const { data: swatches } = useImages('proposal_swatch', itemId);
-  if (!swatches?.length) return null;
-
-  return (
-    <ImageSection label="Swatches">
-      <div className="grid grid-cols-2 gap-2">
-        {swatches.map((swatch) => (
-          <BlobImage key={swatch.id} image={swatch} className="h-24 w-full object-cover" />
-        ))}
-      </div>
-    </ImageSection>
-  );
-}
-
-function BlobImage({ image, className }: { image: ImageAsset; className?: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-    let objectUrl: string | null = null;
-
-    void api.images
-      .getContentBlob(image.id)
-      .then((blob) => {
-        if (ignore) return;
-        objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
-      })
-      .catch(() => {});
-
-    return () => {
-      ignore = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [image.id]);
-
-  if (!url) {
-    return <div className={cn('animate-pulse bg-canvas-shell', className)} />;
-  }
-  return <img src={url} alt={image.altText} className={className} />;
 }
 
 function CloseIcon() {
