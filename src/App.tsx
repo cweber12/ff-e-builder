@@ -23,14 +23,11 @@ import {
   MaterialsView,
 } from './components/materials/MaterialsView';
 import { BudgetView } from './components/project/BudgetView';
-import { DeleteProjectModal } from './components/project/modals/DeleteProjectModal';
-import { EditProjectModal } from './components/project/modals/EditProjectModal';
 import { FfeBudgetModal } from './components/project/modals/FfeBudgetModal';
 import { ProposalBudgetModal } from './components/project/modals/ProposalBudgetModal';
 import { ImportExcelModal } from './components/ffe/import/ImportExcelModal';
 import { ImportProposalExcelModal } from './components/proposal/import/ImportProposalExcelModal';
 import { ProjectHeader } from './components/project/ProjectHeader';
-import { ProjectImagesModal } from './components/project/modals/ProjectImagesModal';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
 import { FfeActions, ProposalActions } from './components/project/AppBarActions';
@@ -48,8 +45,6 @@ import {
   readColumnConfigFromStorage,
   useColumnDefs,
   useProjects,
-  useUpdateProject,
-  useDeleteProject,
   useRoomsWithItems,
   useProposalWithItems,
 } from './hooks';
@@ -124,17 +119,11 @@ function ProjectLayout() {
   const queryClient = useQueryClient();
   const { data: projects, isLoading: projectsLoading } = useProjects();
   const project = projects?.find((p) => p.id === id);
-  const updateProject = useUpdateProject();
-  const deleteProject = useDeleteProject();
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
   const { categoriesWithItems: proposalCategoriesWithItems, isLoading: proposalLoading } =
     useProposalWithItems(id ?? '', new Set());
   const [importOpen, setImportOpen] = useState(false);
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
-  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
-  const [editProject, setEditProject] = useState<Project | null>(null);
-  const [imageProject, setImageProject] = useState<Project | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
   // Lifted modal state for table routes
   const [addRoomOpen, setAddRoomOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
@@ -246,20 +235,6 @@ function ProjectLayout() {
         <>
           <ProjectHeader
             project={project}
-            optionsOpen={headerMenuOpen}
-            onToggleOptions={() => setHeaderMenuOpen((open) => !open)}
-            onEditProject={() => {
-              setHeaderMenuOpen(false);
-              if (project) setEditProject(project);
-            }}
-            onProjectImages={() => {
-              setHeaderMenuOpen(false);
-              if (project) setImageProject(project);
-            }}
-            onDeleteProject={() => {
-              setHeaderMenuOpen(false);
-              if (project) setPendingDelete(project);
-            }}
             actions={headerActions}
             toolbarLeft={headerToolbarLeft}
             toolbarCenter={headerToolbarCenter}
@@ -331,29 +306,6 @@ function ProjectLayout() {
                     onSuccess={() => {
                       void queryClient.invalidateQueries();
                     }}
-                  />
-                  <EditProjectModal
-                    project={editProject}
-                    open={editProject !== null}
-                    isSaving={updateProject.isPending}
-                    onClose={() => setEditProject(null)}
-                    onSave={async (projectId, patch) => {
-                      await updateProject.mutateAsync({ id: projectId, patch });
-                      setEditProject(null);
-                    }}
-                  />
-                  <DeleteProjectModal
-                    project={pendingDelete}
-                    onClose={() => setPendingDelete(null)}
-                    onConfirm={(projectId) => {
-                      deleteProject.mutate(projectId);
-                      setPendingDelete(null);
-                    }}
-                  />
-                  <ProjectImagesModal
-                    project={imageProject}
-                    open={imageProject !== null}
-                    onClose={() => setImageProject(null)}
                   />
                 </>
               )}

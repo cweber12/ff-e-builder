@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { Project } from '../../types';
-import { ProjectOptionsMenu } from './ProjectOptionsMenu';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
 import { StudioMark } from '../shared/auth/AuthGate';
 import type { SaveState } from '../../hooks/shared/useSaveStatus';
@@ -93,11 +92,6 @@ function TabNav({ projectId, activeLabel }: { projectId: string; activeLabel?: s
 // ---------------------------------------------------------------------------
 export interface ProjectHeaderProps {
   project: Project | undefined;
-  optionsOpen?: boolean;
-  onToggleOptions?: () => void;
-  onEditProject?: () => void;
-  onProjectImages?: () => void;
-  onDeleteProject?: () => void;
   /** Rendered in the right side of the working bar (actions cluster). */
   actions?: ReactNode;
   /** Optional account/user menu, rendered on the far right of the top row.
@@ -117,11 +111,6 @@ export interface ProjectHeaderProps {
 // ---------------------------------------------------------------------------
 export function ProjectHeader({
   project,
-  optionsOpen = false,
-  onToggleOptions,
-  onEditProject,
-  onProjectImages,
-  onDeleteProject,
   actions,
   userMenu,
   saveState = 'idle',
@@ -157,22 +146,7 @@ export function ProjectHeader({
         >
           {project.name}
         </Link>
-        <div className="ml-auto flex items-center gap-2">
-          {onToggleOptions && onEditProject && onProjectImages && onDeleteProject && (
-            <ProjectOptionsMenu
-              projectId={project.id}
-              projectName={project.name}
-              open={optionsOpen}
-              align="bottom"
-              onToggle={onToggleOptions}
-              onEdit={onEditProject}
-              onImages={onProjectImages}
-              onDelete={onDeleteProject}
-              buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-sm text-neutral-500 transition hover:bg-neutral-100 hover:text-brand-700"
-            />
-          )}
-          {userMenu}
-        </div>
+        <div className="ml-auto flex items-center gap-2">{userMenu}</div>
       </div>
 
       <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">

@@ -54,33 +54,24 @@ describe('ProjectHeader', () => {
     expect(screen.getByRole('link', { name: 'Budget' })).toBeInTheDocument();
   });
 
-  it('hides the selected tab from navigation and shows it in the toolbar header', () => {
+  it('marks the selected tab as active and mirrors it in the toolbar header', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />, [
       '/projects/proj-1/proposal/table',
     ]);
 
     const tabNav = screen.getByRole('navigation', { name: 'Project tools' });
-    expect(within(tabNav).queryByRole('link', { name: 'Proposal' })).not.toBeInTheDocument();
+    expect(within(tabNav).getByRole('link', { name: 'Proposal' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(screen.getByRole('heading', { name: 'Proposal' })).toBeInTheDocument();
   });
 
-  it('renders project options when handlers are provided', () => {
-    renderWithRouter(
-      <ProjectHeader
-        project={makeProject()}
-        optionsOpen
-        onToggleOptions={() => undefined}
-        onEditProject={() => undefined}
-        onProjectImages={() => undefined}
-        onDeleteProject={() => undefined}
-      />,
-    );
+  it('does not render project options in the top-right cluster', () => {
+    renderWithRouter(<ProjectHeader project={makeProject()} />);
 
     expect(
-      screen.getByRole('button', { name: 'Open options for Living Room Reno' }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Update project' })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Project images' })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Delete project' })).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Open options for Living Room Reno' }),
+    ).not.toBeInTheDocument();
   });
 });
