@@ -69,6 +69,11 @@ import {
   stickyRevTotalHeaderClassName,
   stickyRevUnitCostHeaderClassName,
 } from '../proposalTableConstants';
+import {
+  buildProposalItemDuplicateInput,
+  proposalItemDisplayName,
+  proposalItemLocationName,
+} from '../proposalTableItemHelpers';
 
 const MaterialLibraryModal = lazy(() =>
   import('../../../materials').then((module) => ({ default: module.MaterialLibraryModal })),
@@ -284,29 +289,6 @@ export function ProposalCategorySection({
     return `${productTagPrefix}-${max + 1}`;
   }, [items, productTagPrefix]);
 
-  const duplicateItemPayload = useCallback(
-    (item: ProposalItem) => ({
-      productTag: item.productTag,
-      description: item.description,
-      plan: item.plan,
-      drawings: item.drawings,
-      location: item.location,
-      sizeLabel: item.sizeLabel,
-      sizeMode: item.sizeMode,
-      sizeUnit: item.sizeUnit,
-      sizeW: item.sizeW,
-      sizeD: item.sizeD,
-      sizeH: item.sizeH,
-      cbm: item.cbm,
-      quantity: item.quantity,
-      quantityUnit: item.quantityUnit,
-      unitCostCents: item.unitCostCents,
-      sortOrder: item.sortOrder + 0.5,
-      ...(Object.keys(item.customData).length > 0 && { customData: item.customData }),
-    }),
-    [],
-  );
-
   const handleAddItem = useCallback(() => {
     if (collapsed) onToggle();
     createItem.mutate(
@@ -329,8 +311,8 @@ export function ProposalCategorySection({
 
   const handleAddItemToFfe = useCallback(
     (item: ProposalItem) => {
-      const displayName = item.itemName || item.productTag || item.description || 'Item';
-      const locationName = item.location || 'Unassigned';
+      const displayName = proposalItemDisplayName(item);
+      const locationName = proposalItemLocationName(item);
       addItemToFfe.mutate(item.id, {
         onSuccess: () => {
           toast.success(`${displayName} added to FF&E location ${locationName}.`);
@@ -346,8 +328,8 @@ export function ProposalCategorySection({
   );
 
   const handleDuplicateItem = useCallback(
-    (item: ProposalItem) => createItem.mutate(duplicateItemPayload(item)),
-    [createItem, duplicateItemPayload],
+    (item: ProposalItem) => createItem.mutate(buildProposalItemDuplicateInput(item)),
+    [createItem],
   );
 
   const handleMoveItem = useCallback(

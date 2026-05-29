@@ -21,6 +21,11 @@ import type { UpdateProposalItemInput } from '../../../../lib/api';
 import { ProposalItemDetailMediaStrip } from './ProposalItemDetailMediaStrip';
 import { ProposalItemDetailForm } from './ProposalItemDetailForm';
 import { ProposalItemDetailChangelog } from './ProposalItemDetailChangelog';
+import {
+  buildProposalItemDuplicateInput,
+  proposalItemDisplayName,
+  proposalItemLocationName,
+} from '../proposalTableItemHelpers';
 
 type Props = {
   itemId: string;
@@ -94,30 +99,12 @@ export function ProposalItemDetailPanel({
   };
 
   const handleDuplicate = () => {
-    createItem.mutate({
-      productTag: item.productTag,
-      description: item.description,
-      plan: item.plan,
-      drawings: item.drawings,
-      location: item.location,
-      sizeLabel: item.sizeLabel,
-      sizeMode: item.sizeMode,
-      sizeUnit: item.sizeUnit,
-      sizeW: item.sizeW,
-      sizeD: item.sizeD,
-      sizeH: item.sizeH,
-      cbm: item.cbm,
-      quantity: item.quantity,
-      quantityUnit: item.quantityUnit,
-      unitCostCents: item.unitCostCents,
-      sortOrder: item.sortOrder + 0.5,
-      ...(Object.keys(item.customData).length > 0 && { customData: item.customData }),
-    });
+    createItem.mutate(buildProposalItemDuplicateInput(item));
   };
 
   const handleAddToFfe = () => {
-    const displayName = item.itemName || item.productTag || item.description || 'Item';
-    const locationName = item.location || 'Unassigned';
+    const displayName = proposalItemDisplayName(item);
+    const locationName = proposalItemLocationName(item);
     addToFfe.mutate(item.id, {
       onSuccess: () => {
         toast.success(`${displayName} added to FF&E location ${locationName}.`);
@@ -130,7 +117,7 @@ export function ProposalItemDetailPanel({
     onClose();
   };
 
-  const itemDisplayName = item.itemName || item.productTag || item.description || 'item';
+  const itemDisplayName = proposalItemDisplayName(item, 'item');
 
   const goPrev = () => {
     if (sortedItems.length < 2) return;

@@ -110,6 +110,49 @@ describe('proposalTrackedEditFlow', () => {
       expect(decision.pendingChange.isPriceAffecting).toBe(true);
       expect(decision.pendingChange.lockPriceAffecting).toBe(true);
     });
+
+    it('keeps revision confirmation behavior after in-progress even without open revision', () => {
+      const decision = prepareProposalCategoryItemSave({
+        item: baseItem,
+        patch: { quantity: 4 },
+        proposalStatus: 'submitted',
+        hasOpenRevision: false,
+        customColumnDefs: [],
+      });
+
+      expect(decision.kind).toBe('confirm');
+      if (decision.kind !== 'confirm') return;
+
+      expect(decision.pendingChange.columnKey).toBe('quantity');
+      expect(decision.pendingChange.previousValue).toBe('2 each');
+      expect(decision.pendingChange.newValue).toBe('4 each');
+      expect(decision.pendingChange.lockPriceAffecting).toBe(true);
+    });
+
+    it('logs custom column edits with the column id key', () => {
+      const decision = prepareProposalCategoryItemSave({
+        item: baseItem,
+        patch: { customData: { vendor: 'Acme' } },
+        proposalStatus: 'submitted',
+        hasOpenRevision: true,
+        customColumnDefs: [{ id: 'vendor', label: 'Vendor', sortOrder: 0 }],
+      });
+
+      expect(decision).toEqual({
+        kind: 'save',
+        patch: {
+          customData: { vendor: 'Acme' },
+          version: 3,
+          changeLog: {
+            columnKey: 'vendor',
+            previousValue: '',
+            newValue: 'Acme',
+            proposalStatus: 'submitted',
+            isPriceAffecting: false,
+          },
+        },
+      });
+    });
   });
 
   describe('buildProposalCategoryConfirmedSave', () => {

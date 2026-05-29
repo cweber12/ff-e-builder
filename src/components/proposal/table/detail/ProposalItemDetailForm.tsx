@@ -9,8 +9,7 @@ import {
 import { GeneratedItemSizeControl } from '../../../shared/table/GeneratedItemSizeModal';
 import { GeneratedItemMaterialsControl } from '../../../shared/table/GeneratedItemMaterialsCell';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
-
-const PROPOSAL_QUANTITY_UNITS = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
+import { quantityUnits } from '../proposalTableConstants';
 
 type ProposalItemDetailFormProps = {
   item: ProposalItem;
@@ -120,7 +119,7 @@ export function ProposalItemDetailForm({
               <GeneratedItemEditableQuantityControl
                 quantity={item.quantity}
                 quantityUnit={item.quantityUnit}
-                quantityUnits={PROPOSAL_QUANTITY_UNITS}
+                quantityUnits={quantityUnits}
                 onSaveQuantity={(quantity) => onSave({ quantity })}
                 onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
               />
