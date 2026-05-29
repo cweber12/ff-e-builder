@@ -57,13 +57,31 @@ When a spec, planning, investigation, or implementation workflow is triggered, t
 8. **Suggested Commit Message**
    - Subject and body following the repo commit message policy.
 
+### Ready-for-Agent Fast Path (Issue Implementation)
+
+Use this fast path instead of the full handoff only when **all** of the following are true:
+
+- Issue is labeled `ready-for-agent`
+- An Agent Brief is present in the issue comments or body
+- Scope is low-risk and implementation-only (no API/public-contract changes, DB migrations, dependency changes, or CI/build config changes)
+
+Fast-path output (required before coding) is a compact preflight with:
+
+1. **Task** (one sentence)
+2. **Scope** (explicit editable files + explicit out-of-scope)
+3. **Verification Plan** (targeted checks first)
+4. **Risks/Assumptions** (1-3 bullets)
+5. **Suggested Commit Message** (subject + why)
+
 ### Enforcement
 
-- The agent must not start implementation until this handoff is provided.
+- The agent must not start implementation until either the full handoff or fast-path preflight is provided.
 - If the task is large, ambiguous, cross-cutting, changes public APIs, touches data migrations, changes dependencies, or affects CI/build configuration, human approval of the handoff is required before coding.
-- If the task is small and the user explicitly asks for direct implementation, the handoff can be concise, but it still must identify scope, files, verification, risks, and the commit message before code changes begin.
+- If fast-path eligibility is not fully met, use the full handoff format above.
+- If the task is small and the user explicitly asks for direct implementation, the handoff/preflight can be concise, but it still must identify scope, files, verification, risks, and the commit message before code changes begin.
 - During implementation, stay within the approved file list and scope. If a new file or broader change becomes necessary, stop and ask for approval before continuing.
 - If the user provides a completed planning handoff from chat, do not re-plan from scratch. Validate it against the repo, call out any mismatch, and proceed only within the approved scope.
+- If the issue already includes a complete Agent Brief and meets fast-path eligibility, do not regenerate a second full planning handoff.
 
 ---
 
@@ -85,7 +103,8 @@ When implementing GitHub issues:
 - If triage is unresolved (for example, still `needs-triage` or conflicting state labels), stop and resolve triage state first.
 - Moving an issue to `ready-for-agent` requires posting the required triage note/agent brief in the issue.
 - The agent must not implement while triage is unresolved.
-- Before handoff to a CLI coding agent, generate the exact CLI prompt and wait for explicit user confirmation to proceed.
+- If acting as a planning/triage agent, generate the exact CLI handoff prompt and wait for explicit user confirmation before implementation begins.
+- If acting as the implementation agent on a `ready-for-agent` issue with an Agent Brief, run the **Ready-for-Agent Fast Path** preflight and proceed without regenerating a second full planning handoff.
 - This same gate applies to planning sessions that will lead to implementation handoff.
 
 ### Targeted Verification Gate
@@ -101,6 +120,11 @@ When implementing GitHub issues:
   - changed files list
   - checks run (or explicit note that verification was user-delegated per sliced-work)
   - commit hash
+- Use `/docs/reference/issue-completion-template.md` as the default structure for completion comments.
+- Completion close-checklist (required, same turn):
+  1. Post completion comment.
+  2. Confirm comment URL exists.
+  3. Close issue or move to repo-defined completed state.
 - Then close the issue or move it to the repo-defined completed state in the same turn.
 - Do not end the issue workflow without both the completion comment and completion state update.
 
@@ -110,12 +134,20 @@ When implementing GitHub issues:
 
 > These rules apply to every agent (Codex, Cursor, Claude, Copilot, etc.) working in this repo.
 
-- **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
+### Verification Policy (Single Source of Truth)
 
-- **Confirm verification before drafting the commit message.** For ad-hoc single changes (no approved multi-slice plan), run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. For approved planning handoffs, follow the handoff's Verification Plan and the MANDATORY sliced-work rule below: run the smallest targeted checks first, run the full suite only when required by risk or request, and if verification is assigned to the user, do not run those commands yourself; finish the implementation, clearly state that verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop. **Never commit code that fails typecheck or tests**, regardless of workflow.
-- **Confirm verification before drafting the commit message.** For issue work and approved planning handoffs, run smallest-scope targeted checks first and run full-suite verification only when risk or explicit request requires it. For ad-hoc non-issue changes, run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually. If verification is assigned to the user in an approved sliced-work plan, do not run those commands yourself; finish implementation, clearly state verification is waiting on the user's manual checks, output the conventional-commits message in a fenced code block, and stop. **Never commit code that fails typecheck or tests**, regardless of workflow.
+- **Issue work and approved planning handoffs:** run smallest-scope targeted checks first (for example targeted Vitest and targeted ESLint on changed files).
+- **Ad-hoc non-issue changes:** run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually.
+- **Run full-suite verification only when risk, scope, or explicit user request requires it.**
+- **Sliced-work exception:** if an approved sliced-work plan explicitly delegates verification to the user, do not run those commands; mark verification as pending user execution.
+- **Never commit code that fails typecheck or tests.**
+
+- **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
+- **Confirm verification before drafting the commit message.** Apply the **Verification Policy (Single Source of Truth)** above.
 
 - **Path Discovery Gate.** When path certainty is low, discover first using `rg --files` and `rg -n` before reading guessed paths. Do not burn cycles on avoidable bad-path reads.
+
+- **Dirty Tree Isolation Protocol.** If the worktree already has unrelated modified files, continue with issue/task implementation using explicit path-scoped staging for touched files only. Stop and ask for guidance only when pre-existing changes overlap files in your approved scope or create merge/behavior ambiguity.
 
 - **Commit automatically after every change.** Stage all changes and commit using conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 - **When staged, always include generated architecture map artifacts in the same commit.** If `docs/generated/architecture-map.json` and/or `docs/generated/architecture-map.md` are already staged or modified by checks, commit them together with related code changes (do not split into a separate commit).
@@ -150,6 +182,7 @@ When implementing GitHub issues:
 
 - **Primary mode:** run normal repo commands in the default sandbox first.
 - **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312`), retry once using an approved escalated execution path.
+- **Session fallback mode:** after the first confirmed `CreateProcessAsUserW failed: 1312` in a session, default subsequent command attempts to escalated execution for the same task category (discovery, verification, git metadata, or GitHub issue operations) to avoid repetitive retry churn.
 - **Immediate escalation retry rule:** on that known launcher failure signature, escalate on the next attempt immediately for the same command intent.
 - **No repeated non-escalated retries:** do not repeat the same command intent multiple times in non-escalated mode after the known launcher failure is observed.
 - **Retry rule:** keep the same command and intent on retry; do not broaden scope during fallback.
@@ -157,6 +190,7 @@ When implementing GitHub issues:
 - **Reference-first rule:** before composing new command variants, check `/docs/reference/cli-command-reference.md` for an existing template and use it when applicable.
 - **Learning loop rule:** when a reusable command format succeeds after experimentation, add or update its template in `/docs/reference/cli-command-reference.md` (template only; never task-specific arguments, secrets, tokens, IDs, or user data).
 - **Quality gate for updates:** only record command formats that are likely to recur; if a similar template already exists, update that entry instead of creating a near-duplicate.
+- **Safe recurring categories for session fallback mode:** `gh issue view/comment/close`, `rg --files`, `rg -n`, `Get-Content`, `pnpm exec vitest run <path>`, `pnpm exec eslint <path>`, `git status`, `git add <paths>`, `git commit`.
 
 Use these command patterns for common tasks:
 

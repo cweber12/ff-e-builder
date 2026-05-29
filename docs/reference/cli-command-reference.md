@@ -57,6 +57,42 @@ Use this exact structure for new entries.
 - Output expectation: `path:line:match`
 - Last verified: 2026-05-28
 
+### File read (partial)
+
+- Intent: read a bounded section of a file for targeted inspection
+- Shell/context: powershell, repo root
+- Command template: `Get-Content -Path <path> | Select-Object -First <n>`
+- Escalation: retry with escalation only if process creation/sandbox fails before execution
+- Output expectation: first `<n>` lines from target file
+- Last verified: 2026-05-29
+
+### Git status (short)
+
+- Intent: inspect working tree state quickly
+- Shell/context: powershell, repo root
+- Command template: `git status --short`
+- Escalation: retry with escalation only if process creation/sandbox fails before execution
+- Output expectation: concise modified/untracked file list
+- Last verified: 2026-05-29
+
+### Git path-scoped stage
+
+- Intent: stage only approved-scope files in a dirty worktree
+- Shell/context: powershell, repo root
+- Command template: `git add <path> [<path> ...]`
+- Escalation: retry with escalation only if process creation/sandbox fails before execution
+- Output expectation: selected files staged without broad staging
+- Last verified: 2026-05-29
+
+### Git commit (conventional)
+
+- Intent: commit scoped changes with conventional commit subject and why-body
+- Shell/context: powershell, repo root
+- Command template: `git commit -m "<type>(<scope>): <subject>" -m "<why>"`
+- Escalation: retry with escalation only if process creation/sandbox fails before execution
+- Output expectation: commit hash and file summary
+- Last verified: 2026-05-29
+
 ### GitHub issue summary
 
 - Intent: fetch issue metadata for triage
@@ -164,3 +200,15 @@ Use this exact structure for new entries.
 - Action: retry once immediately with escalation for the same command intent.
 - Do not do: repeated non-escalated retries of the same command intent.
 - Keep scope fixed: do not broaden command scope while performing fallback.
+
+### Session fallback mode after first `1312`
+
+- Trigger: first confirmed launcher failure with `CreateProcessAsUserW failed: 1312`.
+- Action: for the rest of the current task/session, default recurring command categories to escalated execution:
+  - `gh issue view/comment/close`
+  - `rg --files`, `rg -n`
+  - `Get-Content`
+  - `pnpm exec vitest run <path-to-test>`
+  - `pnpm exec eslint <path-to-file>`
+  - `git status`, `git add <paths>`, `git commit`
+- Guardrail: keep command intent and scope unchanged; escalation is reliability fallback, not privilege expansion.
