@@ -10,6 +10,7 @@ import {
   cents,
   formatMoney,
   type CustomColumnDef,
+  type Material,
   type ProposalItem,
   type ProposalStatus,
 } from '../../../../types';
@@ -65,6 +66,7 @@ type ProposalCategoryExpandedTableProps = {
   onSwatchOpen: (itemId: string | null) => void;
   onSwatchPaste: (item: ProposalItem, file: File) => Promise<void>;
   isSwatchPastingForItem: (itemId: string) => boolean;
+  getMaterialFinishName: (material: Material) => string | undefined;
   onColumnDragEnd: (event: DragEndEvent) => void;
   onRowDragOver: (event: DragOverEvent) => void;
   onRowDragEnd: (event: DragEndEvent) => void;
@@ -100,6 +102,7 @@ export function ProposalCategoryExpandedTable({
   onSwatchOpen,
   onSwatchPaste,
   isSwatchPastingForItem,
+  getMaterialFinishName,
   onColumnDragEnd,
   onRowDragOver,
   onRowDragEnd,
@@ -328,6 +331,7 @@ export function ProposalCategoryExpandedTable({
                         onSwatchOpen={onSwatchOpen}
                         onSwatchPaste={onSwatchPaste}
                         isSwatchPasting={isSwatchPastingForItem(item.id)}
+                        getMaterialFinishName={getMaterialFinishName}
                         autoFocusItemName={item.id === pendingFocusItemId}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (

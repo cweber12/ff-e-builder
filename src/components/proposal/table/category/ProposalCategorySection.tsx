@@ -27,6 +27,7 @@ import {
   useAddProposalItemToFfe,
   useCreateProposalItem,
   useDeleteProposalItem,
+  useFinishes,
   useIsMobileViewport,
   useMaterialCellPaste,
   useMoveProposalItem,
@@ -141,6 +142,7 @@ export function ProposalCategorySection({
     itemGroupId: categoryId,
     projectId,
   });
+  const finishes = useFinishes(projectId);
   const isMobile = useIsMobileViewport();
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: snapshots = [] } = useRevisionSnapshots(projectId);
@@ -148,6 +150,10 @@ export function ProposalCategorySection({
   const { recentIds, push: pushRecentMaterial } = useRecentMaterials(projectId);
 
   const [pendingFocusItemId, setPendingFocusItemId] = useState<string | null>(null);
+  const finishNameById = useMemo(
+    () => new Map((finishes.data ?? []).map((finish) => [finish.id, finish.name])),
+    [finishes.data],
+  );
 
   const snapshotsByRevThenItem = useMemo(() => {
     const map = new Map<string, Map<string, RevisionSnapshot>>();
@@ -590,6 +596,9 @@ export function ProposalCategorySection({
                         isSwatchPasting={
                           materialCellPaste.isPasting && activeSwatchPasteItemId === item.id
                         }
+                        getMaterialFinishName={(material) =>
+                          material.finishId ? finishNameById.get(material.finishId) : undefined
+                        }
                         autoFocusItemName={item.id === pendingFocusItemId}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
@@ -653,6 +662,9 @@ export function ProposalCategorySection({
         onSwatchPaste={handleSwatchPaste}
         isSwatchPastingForItem={(itemId) =>
           materialCellPaste.isPasting && activeSwatchPasteItemId === itemId
+        }
+        getMaterialFinishName={(material) =>
+          material.finishId ? finishNameById.get(material.finishId) : undefined
         }
         onColumnDragEnd={handleColumnDragEnd}
         onRowDragOver={handleRowDragOver}

@@ -935,11 +935,13 @@ export function MaterialBadges({
   onOpen,
   onPasteImage,
   isPasting = false,
+  getFinishName,
 }: {
   materials: Material[];
   onOpen: () => void;
   onPasteImage?: ((file: File) => Promise<void> | void) | undefined;
   isPasting?: boolean | undefined;
+  getFinishName?: ((material: Material) => string | undefined) | undefined;
 }) {
   const assigned = materials.slice(0, MATERIAL_BADGE_LIMIT);
   const overflow = materials.length - assigned.length;
@@ -1009,17 +1011,30 @@ export function MaterialBadges({
       title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
     >
       <div className="grid grid-cols-2 gap-x-1.5 gap-y-1">
-        {assigned.map((material) => (
-          <div key={material.id} className="flex flex-col items-center gap-0.5">
-            <MaterialSwatchImage material={material} size="sm" />
-            <span
-              title={material.name}
-              className="block w-full truncate text-center text-[10px] leading-tight text-neutral-700"
-            >
-              {material.name}
-            </span>
-          </div>
-        ))}
+        {assigned.map((material) => {
+          const finishName = getFinishName?.(material)?.trim() ?? '';
+          return (
+            <div key={material.id} className="flex flex-col items-center gap-0.5">
+              <MaterialSwatchImage material={material} size="sm" />
+              <div className="w-full text-center leading-tight">
+                <span
+                  title={material.name}
+                  className="block w-full truncate text-[10px] text-neutral-700"
+                >
+                  {material.name}
+                </span>
+                {finishName && (
+                  <span
+                    title={finishName}
+                    className="block w-full truncate text-[10px] text-neutral-500"
+                  >
+                    {finishName}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
       {overflow > 0 && (
         <span className="mt-0.5 block text-[10px] font-medium text-neutral-500">

@@ -31,6 +31,7 @@ import { emptyFfeColumnIds } from '../../../lib/table/emptyColumns';
 import {
   useItemMaterialActions,
   useMaterialCellPaste,
+  useFinishes,
   useCreateItem,
   useDeleteItem,
   useCreateRoom,
@@ -64,6 +65,7 @@ import {
   unitCostDollarsToCents,
   type Item,
   type ItemStatus,
+  type Material,
   type Project,
   type ProposalItemChangelogEntry,
   type ProposalRevision,
@@ -195,6 +197,7 @@ type TableActions = {
   onEditMaterials: (item: Item) => void;
   onPasteMaterialSwatch: (item: Item, file: File) => Promise<void>;
   isMaterialPastePending: (itemId: string) => boolean;
+  getMaterialFinishName: (material: Material) => string | undefined;
 };
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
@@ -681,6 +684,7 @@ const createColumns = (
         onOpen={() => actions.onEditMaterials(row.original)}
         onPasteImage={(file) => actions.onPasteMaterialSwatch(row.original, file)}
         isPasting={actions.isMaterialPastePending(row.original.id)}
+        getFinishName={actions.getMaterialFinishName}
       />
     ),
   },
@@ -993,6 +997,7 @@ function MobileItemCards({
                 onOpen={() => actions.onEditMaterials(item)}
                 onPasteImage={(file) => actions.onPasteMaterialSwatch(item, file)}
                 isPasting={actions.isMaterialPastePending(item.id)}
+                getFinishName={actions.getMaterialFinishName}
               />
             </MobileField>
             <MobileField label="Quantity">
@@ -1390,6 +1395,7 @@ export function RoomItemsSection({
     itemGroupId: room.id,
     projectId,
   });
+  const finishes = useFinishes(projectId);
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: changelogAll = [] } = useRevisionChangelog(projectId);
   const { data: columnDefs = [] } = useItemColumnDefs(projectId);
@@ -1482,6 +1488,10 @@ export function RoomItemsSection({
       ),
     [room.items],
   );
+  const finishNameById = useMemo(
+    () => new Map((finishes.data ?? []).map((finish) => [finish.id, finish.name])),
+    [finishes.data],
+  );
   const duplicateItem = useCallback(
     async (item: Item) => {
       await createItem.mutateAsync({
@@ -1531,8 +1541,18 @@ export function RoomItemsSection({
       },
       isMaterialPastePending: (itemId: string) =>
         materialCellPaste.isPasting && activeMaterialPasteItemId === itemId,
+      getMaterialFinishName: (material: Material) =>
+        material.finishId ? finishNameById.get(material.finishId) : undefined,
     }),
-    [activeMaterialPasteItemId, deleteItem, duplicateItem, materialCellPaste, moveItem, rooms],
+    [
+      activeMaterialPasteItemId,
+      deleteItem,
+      duplicateItem,
+      finishNameById,
+      materialCellPaste,
+      moveItem,
+      rooms,
+    ],
   );
   const saveItemPatch = useCallback<SaveItemPatch>(
     async (item, patch) => {
