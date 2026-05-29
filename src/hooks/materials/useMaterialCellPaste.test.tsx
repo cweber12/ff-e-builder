@@ -8,13 +8,13 @@ const {
   mockCreateAndAssignMutateAsync,
   mockUpdateMutateAsync,
   mockUploadMutateAsync,
-  mockGetQueryData,
+  mockInvalidateQueries,
 } = vi.hoisted(() => ({
   mockCreateFinishMutateAsync: vi.fn(),
   mockCreateAndAssignMutateAsync: vi.fn(),
   mockUpdateMutateAsync: vi.fn(),
   mockUploadMutateAsync: vi.fn(),
-  mockGetQueryData: vi.fn(),
+  mockInvalidateQueries: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
@@ -22,7 +22,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   return {
     ...actual,
     useQueryClient: () => ({
-      getQueryData: mockGetQueryData,
+      invalidateQueries: mockInvalidateQueries,
     }),
   };
 });
@@ -69,11 +69,7 @@ function makeMaterial(overrides: Partial<Material> = {}): Material {
 describe('useMaterialCellPaste', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetQueryData.mockImplementation((queryKey: readonly unknown[]) => {
-      if (queryKey[0] === 'materials') return [];
-      if (queryKey[0] === 'finishes') return [];
-      return undefined;
-    });
+    mockInvalidateQueries.mockResolvedValue(undefined);
     mockCreateFinishMutateAsync.mockResolvedValue({ id: 'finish-1' });
     mockCreateAndAssignMutateAsync.mockResolvedValue(
       makeMaterial({ id: 'material-created', finishId: 'finish-1' }),
@@ -100,10 +96,10 @@ describe('useMaterialCellPaste', () => {
       expect(status).toBe('created_material');
     });
 
-    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'FIN 001' });
+    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: '' });
     expect(mockCreateAndAssignMutateAsync).toHaveBeenCalledWith({
       itemId: 'item-1',
-      input: { name: 'MAT 001', materialId: '', finishId: 'finish-1' },
+      input: { name: '', materialId: '', finishId: 'finish-1' },
     });
     expect(mockUploadMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -136,7 +132,7 @@ describe('useMaterialCellPaste', () => {
       materialId: 'material-existing',
       patch: { finishId: 'finish-1' },
     });
-    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'FIN 001' });
+    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: '' });
     expect(mockUploadMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         entityType: 'finish',
@@ -173,17 +169,7 @@ describe('useMaterialCellPaste', () => {
     });
   });
 
-  it('increments generated names from existing project material and finish names', async () => {
-    mockGetQueryData.mockImplementation((queryKey: readonly unknown[]) => {
-      if (queryKey[0] === 'materials') {
-        return [makeMaterial({ name: 'Material 002' }), makeMaterial({ name: 'Not Default' })];
-      }
-      if (queryKey[0] === 'finishes') {
-        return [{ id: 'finish-existing', name: 'Finish 007' }];
-      }
-      return undefined;
-    });
-
+  it('sends empty names so server assigns default names', async () => {
     const { result } = renderHook(() =>
       useMaterialCellPaste('project-1', {
         kind: 'ffe',
@@ -201,10 +187,10 @@ describe('useMaterialCellPaste', () => {
       expect(status).toBe('created_material');
     });
 
-    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: 'FIN 008' });
+    expect(mockCreateFinishMutateAsync).toHaveBeenCalledWith({ name: '' });
     expect(mockCreateAndAssignMutateAsync).toHaveBeenCalledWith({
       itemId: 'item-1',
-      input: { name: 'MAT 003', materialId: '', finishId: 'finish-1' },
+      input: { name: '', materialId: '', finishId: 'finish-1' },
     });
   });
 

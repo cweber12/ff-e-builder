@@ -72,6 +72,34 @@ export async function generateImportName(sql: Sql, projectId: string): Promise<s
   return `Import ${max + 1}`;
 }
 
+export async function generateDefaultMaterialName(sql: Sql, projectId: string): Promise<string> {
+  const rows = await sql`
+    SELECT COALESCE(
+      MAX(CAST(SUBSTRING(name FROM '^MAT ([0-9]+)$') AS int))
+        FILTER (WHERE name ~ '^MAT [0-9]+$'),
+      0
+    ) AS max_n
+    FROM materials
+    WHERE project_id = ${projectId}
+  `;
+  const max = Number((rows[0] as { max_n?: number }).max_n ?? 0);
+  return `MAT ${String(max + 1).padStart(3, '0')}`;
+}
+
+export async function generateDefaultFinishName(sql: Sql, projectId: string): Promise<string> {
+  const rows = await sql`
+    SELECT COALESCE(
+      MAX(CAST(SUBSTRING(name FROM '^FIN ([0-9]+)$') AS int))
+        FILTER (WHERE name ~ '^FIN [0-9]+$'),
+      0
+    ) AS max_n
+    FROM finishes
+    WHERE project_id = ${projectId}
+  `;
+  const max = Number((rows[0] as { max_n?: number }).max_n ?? 0);
+  return `FIN ${String(max + 1).padStart(3, '0')}`;
+}
+
 export async function selectMaterialById(sql: Sql, materialId: string) {
   const rows = await sql`SELECT * FROM materials WHERE id = ${materialId}`;
   return rows[0];

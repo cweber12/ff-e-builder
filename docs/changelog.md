@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(materials): generate MAT/FIN paste defaults from API project data, include finish_id in generated item material payloads for swatch rendering, and clear paste pending UI after upload response
 - fix(materials): fallback swatch circles to full image blobs when thumbnails are unavailable and pass freshest FF&E item data into MaterialLibraryModal to prevent inconsistent assigned-material loading
 - fix(materials): rename paste defaults to MAT NNN and FIN NNN, refresh swatch cell/image queries after upload, and remove swatch-label truncation under thumbnails
 - fix(materials): show two-line swatch cell labels with material name plus finish name under each thumbnail in FF&E and Proposal tables

@@ -4,7 +4,7 @@ import { CreateFinishSchema, UpdateFinishSchema } from '../types';
 import { assertFinishOwnership, assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
-import { generateNextCode, selectFinishById } from './materialHelpers';
+import { generateDefaultFinishName, generateNextCode, selectFinishById } from './materialHelpers';
 
 const DEFAULT_SWATCH = '#D9D4C8';
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -44,6 +44,7 @@ router.post('/:projectId/finishes', async (c) => {
   }
 
   const sql = getDb(c.env);
+  const name = parsed.data.name.trim() || (await generateDefaultFinishName(sql, projectId));
   const code = parsed.data.code.trim() || (await generateNextCode(sql, 'finishes', projectId));
   const rows = await sql`
     INSERT INTO finishes (
@@ -53,7 +54,7 @@ router.post('/:projectId/finishes', async (c) => {
     VALUES (
       ${projectId},
       ${code},
-      ${parsed.data.name.trim()},
+      ${name},
       ${parsed.data.description},
       ${parsed.data.swatch_hex ?? DEFAULT_SWATCH},
       ${parsed.data.manufacturer},

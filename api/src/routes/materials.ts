@@ -17,6 +17,7 @@ import {
 import { getDb } from '../lib/db';
 import {
   countMaterialReferences,
+  generateDefaultMaterialName,
   forkMaterial,
   generateImportMaterialId,
   generateImportName,
@@ -263,7 +264,8 @@ router.post('/items/:itemId/materials/new', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const name = parsed.data.name.trim() || (await generateImportName(sql, itemContext.projectId));
+  const name =
+    parsed.data.name.trim() || (await generateDefaultMaterialName(sql, itemContext.projectId));
   const code =
     parsed.data.code?.trim() || (await generateNextCode(sql, 'materials', itemContext.projectId));
   const materialId =

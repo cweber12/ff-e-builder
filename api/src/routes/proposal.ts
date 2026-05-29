@@ -29,10 +29,10 @@ import {
 } from '../lib/ownership';
 import { findOpenRevision, openRevision } from '../lib/revisions';
 import {
+  generateDefaultMaterialName,
   generateNextCode,
   selectMaterialById,
   generateImportMaterialId,
-  generateImportName,
 } from './materialHelpers';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
@@ -670,7 +670,8 @@ router.post('/proposal/items/:id/materials/new', async (c) => {
   }
 
   const sql = getDb(c.env);
-  const name = parsed.data.name.trim() || (await generateImportName(sql, itemCtx.projectId));
+  const name =
+    parsed.data.name.trim() || (await generateDefaultMaterialName(sql, itemCtx.projectId));
   const code =
     parsed.data.code.trim() || (await generateNextCode(sql, 'materials', itemCtx.projectId));
   const materialId =

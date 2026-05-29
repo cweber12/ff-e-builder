@@ -82,7 +82,9 @@ export function useItemMaterialActions(context: MaterialContext) {
         upsertMaterial(old, material),
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: invalidationKey }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: invalidationKey });
+    },
     onError: (err) => toast.error(`Material assignment failed: ${err.message}`),
   });
 
@@ -96,7 +98,9 @@ export function useItemMaterialActions(context: MaterialContext) {
         upsertMaterial(old, material),
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: invalidationKey }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: invalidationKey });
+    },
     onError: (err) => toast.error(`Material assignment failed: ${err.message}`),
   });
 
@@ -105,7 +109,9 @@ export function useItemMaterialActions(context: MaterialContext) {
       kind === 'ffe'
         ? api.materials.removeFromItem(itemId, materialId)
         : api.materials.removeFromProposalItem(itemId, materialId),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: invalidationKey }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: invalidationKey });
+    },
     onError: (err) => toast.error(`Material removal failed: ${err.message}`),
   });
 
@@ -127,7 +133,9 @@ export function useItemMaterialActions(context: MaterialContext) {
         upsertMaterial(old, material),
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: invalidationKey }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: invalidationKey });
+    },
     onError: (err) => toast.error(`Material update failed: ${err.message}`),
   });
 
