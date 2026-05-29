@@ -109,31 +109,9 @@ SET code = r.rn::text
 FROM ranked r
 WHERE r.id = m.id;
 
--- ─── 6. Migrate material swatch images → finish images ───────────────────────
--- Existing image_assets rows linked to materials via material_id become finish
--- images so the finish carries the visual reference going forward.
-
-UPDATE image_assets ia
-SET
-  finish_id   = m.finish_id,
-  material_id = NULL,
-  entity_type = 'finish'
-FROM materials m
-WHERE ia.material_id = m.id
-  AND m.finish_id IS NOT NULL
-  AND ia.entity_type = 'material';
-
--- ─── 7. Make code NOT NULL on materials after population ─────────────────────
-
-ALTER TABLE materials
-  ALTER COLUMN code SET NOT NULL;
-
--- ─── 8. Add unique index for materials.code ───────────────────────────────────
-
-CREATE UNIQUE INDEX IF NOT EXISTS materials_project_code_idx
-  ON materials(project_id, code);
-
--- ─── 9. Update image_assets entity_type check constraint ─────────────────────
+-- ─── 6. Update image_assets entity_type check constraint ─────────────────────
+-- Must happen before converting rows to entity_type='finish' so existing
+-- pre-0038 shape constraints do not reject the data rewrite.
 
 ALTER TABLE image_assets DROP CONSTRAINT IF EXISTS image_assets_entity_type_chk;
 ALTER TABLE image_assets ADD CONSTRAINT image_assets_entity_type_chk CHECK (
@@ -152,7 +130,7 @@ ALTER TABLE image_assets ADD CONSTRAINT image_assets_entity_type_chk CHECK (
   )
 );
 
--- ─── 10. Update image_assets entity_shape check constraint ────────────────────
+-- ─── 7. Update image_assets entity_shape check constraint ────────────────────
 
 ALTER TABLE image_assets DROP CONSTRAINT IF EXISTS image_assets_entity_shape_chk;
 ALTER TABLE image_assets ADD CONSTRAINT image_assets_entity_shape_chk CHECK (
@@ -193,13 +171,37 @@ ALTER TABLE image_assets ADD CONSTRAINT image_assets_entity_shape_chk CHECK (
   )
 );
 
--- ─── 11. Update entity lookup index to include finish_id ──────────────────────
+-- ─── 8. Migrate material swatch images → finish images ───────────────────────
+-- Existing image_assets rows linked to materials via material_id become finish
+-- images so the finish carries the visual reference going forward.
+
+UPDATE image_assets ia
+SET
+  finish_id   = m.finish_id,
+  material_id = NULL,
+  entity_type = 'finish'
+FROM materials m
+WHERE ia.material_id = m.id
+  AND m.finish_id IS NOT NULL
+  AND ia.entity_type = 'material';
+
+-- ─── 9. Make code NOT NULL on materials after population ─────────────────────
+
+ALTER TABLE materials
+  ALTER COLUMN code SET NOT NULL;
+
+-- ─── 10. Add unique index for materials.code ──────────────────────────────────
+
+CREATE UNIQUE INDEX IF NOT EXISTS materials_project_code_idx
+  ON materials(project_id, code);
+
+-- ─── 11. Update entity lookup index to include finish_id ─────────────────────
 
 DROP INDEX IF EXISTS image_assets_entity_lookup_idx;
 CREATE INDEX IF NOT EXISTS image_assets_entity_lookup_idx
   ON image_assets(project_id, entity_type, room_id, item_id, material_id, proposal_item_id, finish_id, is_primary);
 
--- ─── 12. Add primary image unique index for finishes ──────────────────────────
+-- ─── 12. Add primary image unique index for finishes ─────────────────────────
 
 CREATE UNIQUE INDEX IF NOT EXISTS image_assets_primary_finish_idx
   ON image_assets(finish_id, entity_type)

@@ -13,6 +13,7 @@ vi.mock('../src/lib/ownership', () => ({
   getOwnedRoomContext: vi.fn(),
   getOwnedItemContext: vi.fn(),
   getOwnedMaterialContext: vi.fn(),
+  getOwnedFinishContext: vi.fn(),
   getOwnedProposalItemContext: vi.fn(),
 }));
 
@@ -20,6 +21,7 @@ import app from '../src/index';
 import { getDb } from '../src/lib/db';
 import { verifyFirebaseToken } from '../src/lib/firebase-auth';
 import {
+  getOwnedFinishContext,
   getOwnedItemContext,
   getOwnedProjectContext,
   getOwnedProposalItemContext,
@@ -27,6 +29,7 @@ import {
 
 const mockVerify = vi.mocked(verifyFirebaseToken);
 const mockGetDb = vi.mocked(getDb);
+const mockGetOwnedFinishContext = vi.mocked(getOwnedFinishContext);
 const mockGetOwnedItemContext = vi.mocked(getOwnedItemContext);
 const mockGetOwnedProjectContext = vi.mocked(getOwnedProjectContext);
 const mockGetOwnedProposalItemContext = vi.mocked(getOwnedProposalItemContext);
@@ -70,6 +73,10 @@ describe('Image uploads', () => {
       projectId,
       roomId: '00000000-0000-0000-0000-000000000004',
       itemId,
+    });
+    mockGetOwnedFinishContext.mockResolvedValue({
+      projectId,
+      finishId: '00000000-0000-0000-0000-000000000005',
     });
     mockGetOwnedProposalItemContext.mockResolvedValue({
       projectId,
@@ -269,6 +276,62 @@ describe('Image uploads', () => {
         entity_type: 'proposal_plan',
         proposal_item_id: proposalItemId,
         is_primary: true,
+      },
+    });
+  });
+
+  it('accepts finish image uploads', async () => {
+    const finishId = '00000000-0000-0000-0000-000000000005';
+    const sql = vi.fn(
+      async (strings: TemplateStringsArray) =>
+        await Promise.resolve().then(() => {
+          const query = strings.join('?');
+
+          if (query.includes('INSERT INTO image_assets')) {
+            return [
+              {
+                id: '00000000-0000-0000-0000-000000000015',
+                entity_type: 'finish',
+                owner_uid: 'user-123',
+                project_id: projectId,
+                room_id: null,
+                item_id: null,
+                material_id: null,
+                finish_id: finishId,
+                proposal_item_id: null,
+                r2_key: `users/user-123/projects/${projectId}/finishes/${finishId}/1.png`,
+                filename: 'finish.png',
+                content_type: 'image/png',
+                byte_size: 11,
+                alt_text: 'Finish image',
+                is_primary: true,
+                created_at: '2026-05-03T00:00:00Z',
+                updated_at: '2026-05-03T00:00:00Z',
+              },
+            ];
+          }
+
+          return [];
+        }),
+    );
+    mockGetDb.mockReturnValue(sql as unknown as ReturnType<typeof getDb>);
+
+    const res = await app.request(
+      `/api/v1/images?entity_type=finish&entity_id=${finishId}&alt_text=Finish+image`,
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+        body: multipartImageBody('finish.png'),
+      },
+      mockEnv,
+    );
+
+    expect(res.status).toBe(201);
+    await expect(res.json()).resolves.toMatchObject({
+      image: {
+        entity_type: 'finish',
+        finish_id: finishId,
+        project_id: projectId,
       },
     });
   });

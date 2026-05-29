@@ -583,6 +583,7 @@ export const ImageEntitySchema = z.object({
     'item_plan',
     'item_option',
     'material',
+    'finish',
     'proposal_item',
     'proposal_swatch',
     'proposal_plan',
