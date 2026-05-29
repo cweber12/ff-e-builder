@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Finish, Material } from '../../types';
@@ -169,7 +169,7 @@ describe('MaterialLibraryModal drag-to-preview', () => {
     fireEvent.drop(dropZone, { dataTransfer: dt });
 
     // Form now previews Oak without persisting
-    expect(screen.getByText('Oak')).toBeInTheDocument();
+    expect(within(dropZone).getByText('Oak')).toBeInTheDocument();
     expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
   });
 
@@ -180,7 +180,9 @@ describe('MaterialLibraryModal drag-to-preview', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
 
     // Door Pull already has finish-1 (Walnut)
-    expect(screen.getByText('Walnut')).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText('Finish drop zone')).getByText('Walnut'),
+    ).toBeInTheDocument();
 
     const dropZone = screen.getByLabelText('Finish drop zone');
     const dt = makeDt('finish-1');
@@ -188,7 +190,7 @@ describe('MaterialLibraryModal drag-to-preview', () => {
     fireEvent.drop(dropZone, { dataTransfer: dt });
 
     // Still shows Walnut; state unchanged
-    expect(screen.getByText('Walnut')).toBeInTheDocument();
+    expect(within(dropZone).getByText('Walnut')).toBeInTheDocument();
     expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
   });
 
@@ -202,7 +204,7 @@ describe('MaterialLibraryModal drag-to-preview', () => {
     fireEvent.drop(dropZone, { dataTransfer: makeDt('finish-2') });
 
     // Preview changed to Oak
-    expect(screen.getByText('Oak')).toBeInTheDocument();
+    expect(within(dropZone).getByText('Oak')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -233,7 +235,7 @@ describe('MaterialLibraryModal drag-to-preview', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
     await user.click(screen.getByLabelText('Assign Oak'));
 
-    expect(screen.getByText('Oak')).toBeInTheDocument();
+    expect(within(screen.getByLabelText('Finish drop zone')).getByText('Oak')).toBeInTheDocument();
     expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
   });
 });

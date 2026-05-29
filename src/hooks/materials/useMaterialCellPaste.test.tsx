@@ -17,11 +17,15 @@ const {
   mockGetQueryData: vi.fn(),
 }));
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({
-    getQueryData: mockGetQueryData,
-  }),
-}));
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>();
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      getQueryData: mockGetQueryData,
+    }),
+  };
+});
 
 vi.mock('../finishes/useFinishes', () => ({
   useCreateFinish: () => ({
