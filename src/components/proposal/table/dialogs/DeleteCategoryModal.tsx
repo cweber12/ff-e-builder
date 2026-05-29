@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Modal } from '../../primitives';
-import type { ProposalCategoryWithItems } from '../../../types';
+import { Button, Modal } from '../../../primitives';
+import type { ProposalCategoryWithItems } from '../../../../types';
 
 type DeleteCategoryModalProps = {
   category: ProposalCategoryWithItems | null;

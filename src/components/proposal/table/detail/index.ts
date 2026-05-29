@@ -1,0 +1,1 @@
+export { ProposalItemDetailPanel } from './ProposalItemDetailPanel';

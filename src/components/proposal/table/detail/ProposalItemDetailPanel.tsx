@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
-import { cn } from '../../../lib/utils';
-import { api } from '../../../lib/api';
+import { cn } from '../../../../lib/utils';
+import { api } from '../../../../lib/api';
 import {
   useAddProposalItemToFfe,
   useCreateProposalItem,
@@ -14,23 +14,23 @@ import {
   useProposalWithItems,
   useUpdateChangelogEntryNotes,
   useUpdateProposalItem,
-} from '../../../hooks';
-import { ImageFrame } from '../../shared/image/ImageFrame';
-import { PanZoomFrame } from '../../shared/image/PanZoomFrame';
-import { cents, formatMoney } from '../../../types';
-import { proposalLineTotalCents } from '../../../lib/money';
-import type { ImageAsset, ProposalItemChangelogEntry } from '../../../types';
-import { GeneratedItemEditableTextControl } from '../../shared/table/GeneratedItemEditableTextCell';
+} from '../../../../hooks';
+import { ImageFrame } from '../../../shared/image/ImageFrame';
+import { PanZoomFrame } from '../../../shared/image/PanZoomFrame';
+import { cents, formatMoney } from '../../../../types';
+import { proposalLineTotalCents } from '../../../../lib/money';
+import type { ImageAsset, ProposalItemChangelogEntry } from '../../../../types';
+import { GeneratedItemEditableTextControl } from '../../../shared/table/GeneratedItemEditableTextCell';
 import {
   GeneratedItemEditableMoneyControl,
   GeneratedItemEditableQuantityControl,
-} from '../../shared/table/GeneratedItemEditableNumberCell';
-import { GeneratedItemSizeControl } from '../../shared/table/GeneratedItemSizeModal';
-import { GeneratedItemMaterialsControl } from '../../shared/table/GeneratedItemMaterialsCell';
-import { MaterialLibraryModal } from '../../materials';
-import { Badge, Button, Modal } from '../../primitives';
-import { toast } from '../../primitives/toast-api';
-import type { UpdateProposalItemInput } from '../../../lib/api';
+} from '../../../shared/table/GeneratedItemEditableNumberCell';
+import { GeneratedItemSizeControl } from '../../../shared/table/GeneratedItemSizeModal';
+import { GeneratedItemMaterialsControl } from '../../../shared/table/GeneratedItemMaterialsCell';
+import { MaterialLibraryModal } from '../../../materials';
+import { Badge, Button, Modal } from '../../../primitives';
+import { toast } from '../../../primitives/toast-api';
+import type { UpdateProposalItemInput } from '../../../../lib/api';
 
 const PROPOSAL_QUANTITY_UNITS = ['unit', 'sq ft', 'ln ft', 'sq yd', 'cu yd', 'each'] as const;
 

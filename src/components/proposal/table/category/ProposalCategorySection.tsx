@@ -25,8 +25,8 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Badge, Button } from '../../primitives';
-import { toast } from '../../primitives/toast-api';
+import { Badge, Button } from '../../../primitives';
+import { toast } from '../../../primitives/toast-api';
 import {
   cents,
   formatMoney,
@@ -35,7 +35,7 @@ import {
   type ProposalStatus,
   type RevisionCostStatus,
   type RevisionSnapshot,
-} from '../../../types';
+} from '../../../../types';
 import {
   useAddProposalItemToFfe,
   useCreateProposalItem,
@@ -46,29 +46,29 @@ import {
   useRecentMaterials,
   useReorderProposalItems,
   useRevisionSnapshots,
-} from '../../../hooks';
-import { proposalLineTotalCents } from '../../../lib/money';
-import type { UpdateProposalItemInput } from '../../../lib/api';
-import { cn } from '../../../lib/utils';
+} from '../../../../hooks';
+import { proposalLineTotalCents } from '../../../../lib/money';
+import type { UpdateProposalItemInput } from '../../../../lib/api';
+import { cn } from '../../../../lib/utils';
 import {
   proposalPatchToGeneratedItemChangeInfo,
   type GeneratedItemChangeInfo,
-} from '../../../lib/table/generatedItemChangeInfo';
-import { GroupedTableSection, MobileField } from '../../shared/table/TableViewWrappers';
-import { SortableColHeader } from '../../shared/table/SortableColHeader';
-import { CustomColumnHeader } from '../../shared/table/CustomColumnHeader';
+} from '../../../../lib/table/generatedItemChangeInfo';
+import { GroupedTableSection, MobileField } from '../../../shared/table/TableViewWrappers';
+import { SortableColHeader } from '../../../shared/table/SortableColHeader';
+import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
 import {
   proposalStickyEdgeColumnClassNames,
   proposalStickyValueColumnClassNames,
-} from '../../shared/table/generatedItemStickyStyles';
-import { ImageFrame } from '../../shared/image/ImageFrame';
-import { ProposalRow } from './ProposalRow';
+} from '../../../shared/table/generatedItemStickyStyles';
+import { ImageFrame } from '../../../shared/image/ImageFrame';
+import { ProposalRow } from '../row/ProposalRow';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
-import { AddColumnModal } from '../../shared/modals/AddColumnModal';
+import { AddColumnModal } from '../../../shared/modals/AddColumnModal';
 import {
   ChangeConfirmModal,
   type ChangeConfirmResult,
-} from '../../shared/modals/ChangeConfirmModal';
+} from '../../../shared/modals/ChangeConfirmModal';
 import {
   baselineQtyColumnClassName,
   baselineTotalColumnClassName,
@@ -83,11 +83,11 @@ import {
   stickyRevTotalHeaderClassName,
   stickyRevUnitCostExpandedHeaderClassName,
   stickyRevUnitCostHeaderClassName,
-} from './proposalTableConstants';
-import { ProposalItemActionsMenu } from './ProposalItemActionsMenu';
+} from '../proposalTableConstants';
+import { ProposalItemActionsMenu } from '../row/ProposalItemActionsMenu';
 
 const MaterialLibraryModal = lazy(() =>
-  import('../../materials').then((module) => ({ default: module.MaterialLibraryModal })),
+  import('../../../materials').then((module) => ({ default: module.MaterialLibraryModal })),
 );
 
 type ProposalCategorySectionProps = {

@@ -1,4 +1,4 @@
-import { Button, Modal } from '../../primitives';
+import { Button, Modal } from '../../../primitives';
 
 type DeleteItemModalProps = {
   open: boolean;

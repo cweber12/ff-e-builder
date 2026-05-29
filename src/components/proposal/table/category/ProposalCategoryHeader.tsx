@@ -1,10 +1,16 @@
-import { cents, formatMoney, type CustomColumnDef } from '../../../types';
-import { InlineTextEdit } from '../../primitives/InlineTextEdit';
-import { Badge } from '../../primitives';
-import { DropdownMenu, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from '../../primitives';
-import { cn } from '../../../lib/utils';
-import { ColumnsPanel } from '../../shared/table/ColumnsPanel';
-import { ColumnNavArrows, GroupedTableHeader } from '../../shared/table/TableViewWrappers';
+import { cents, formatMoney, type CustomColumnDef } from '../../../../types';
+import { InlineTextEdit } from '../../../primitives/InlineTextEdit';
+import { Badge } from '../../../primitives';
+import {
+  DropdownMenu,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
+} from '../../../primitives';
+import { cn } from '../../../../lib/utils';
+import { ColumnsPanel } from '../../../shared/table/ColumnsPanel';
+import { ColumnNavArrows, GroupedTableHeader } from '../../../shared/table/TableViewWrappers';
 
 type ProposalCategoryHeaderProps = {
   categoryName: string;

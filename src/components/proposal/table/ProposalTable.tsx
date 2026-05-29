@@ -18,10 +18,10 @@ import {
 } from '../../../hooks';
 import { cents, formatMoney, type Project, type ProposalCategoryWithItems } from '../../../types';
 import { proposalCategorySubtotalCents, proposalProjectTotalCents } from '../../../lib/money';
-import { ProposalItemDetailPanel } from './ProposalItemDetailPanel';
-import { ProposalCategorySection } from './ProposalCategorySection';
+import { ProposalItemDetailPanel } from './detail/ProposalItemDetailPanel';
+import { ProposalCategorySection } from './category/ProposalCategorySection';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
-import { DeleteCategoryModal } from './DeleteCategoryModal';
+import { DeleteCategoryModal } from './dialogs/DeleteCategoryModal';
 import { ProposalEmptyState } from './ProposalEmptyState';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import { emptyProposalColumnIds } from '../../../lib/table/emptyColumns';

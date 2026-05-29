@@ -7,32 +7,32 @@ import {
   type CustomColumnDef,
   type ProposalItem,
   type ProposalStatus,
-} from '../../../types';
-import { proposalLineTotalCents } from '../../../lib/money';
-import type { UpdateProposalItemInput } from '../../../lib/api';
-import { useRevisionInfoForItem, useTableDensity, densityRowClass } from '../../../hooks';
-import { cn } from '../../../lib/utils';
-import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
+} from '../../../../types';
+import { proposalLineTotalCents } from '../../../../lib/money';
+import type { UpdateProposalItemInput } from '../../../../lib/api';
+import { useRevisionInfoForItem, useTableDensity, densityRowClass } from '../../../../hooks';
+import { cn } from '../../../../lib/utils';
+import { GeneratedItemDragHandle } from '../../../shared/table/GeneratedItemDragHandle';
 import {
   GeneratedItemEditableMoneyCell,
   GeneratedItemEditableNumberCell,
   GeneratedItemEditableQuantityCell,
-} from '../../shared/table/GeneratedItemEditableNumberCell';
-import { GeneratedItemEditableTextCell } from '../../shared/table/GeneratedItemEditableTextCell';
-import { GeneratedItemImageCell } from '../../shared/table/GeneratedItemImageCell';
-import { GeneratedItemMaterialsCell } from '../../shared/table/GeneratedItemMaterialsCell';
-import { GeneratedItemSizeCell } from '../../shared/table/GeneratedItemSizeModal';
+} from '../../../shared/table/GeneratedItemEditableNumberCell';
+import { GeneratedItemEditableTextCell } from '../../../shared/table/GeneratedItemEditableTextCell';
+import { GeneratedItemImageCell } from '../../../shared/table/GeneratedItemImageCell';
+import { GeneratedItemMaterialsCell } from '../../../shared/table/GeneratedItemMaterialsCell';
+import { GeneratedItemSizeCell } from '../../../shared/table/GeneratedItemSizeModal';
 import {
   proposalStickyEdgeColumnClassNames,
   proposalStickyValueColumnClassNames,
-} from '../../shared/table/generatedItemStickyStyles';
+} from '../../../shared/table/generatedItemStickyStyles';
 import {
   RevisionCostCell,
   GeneratedItemColumnChangeDot,
   RevisionNotesCell,
   RevisionQtyCell,
   RevisionTotalCell,
-} from '../revision';
+} from '../../revision';
 import {
   baselineQtyColumnClassName,
   baselineTotalColumnClassName,
@@ -43,7 +43,7 @@ import {
   stickyRevQtyCellClassName,
   stickyRevTotalCellClassName,
   stickyRevUnitCostCellClassName,
-} from './proposalTableConstants';
+} from '../proposalTableConstants';
 import { ProposalItemActionsMenu } from './ProposalItemActionsMenu';
 
 const PROPOSAL_CELL_DEBOUNCE_MS = 400;

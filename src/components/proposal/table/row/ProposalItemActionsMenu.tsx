@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import { GeneratedItemActionTrigger } from '../../shared/table/GeneratedItemActionControls';
-import { cn } from '../../../lib/utils';
-import { DeleteItemModal } from './DeleteItemModal';
-import { DropdownMenu, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from '../../primitives';
+import { GeneratedItemActionTrigger } from '../../../shared/table/GeneratedItemActionControls';
+import { cn } from '../../../../lib/utils';
+import { DeleteItemModal } from '../dialogs/DeleteItemModal';
+import {
+  DropdownMenu,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
+} from '../../../primitives';
 
 type ProposalItemActionsMenuProps = {
   itemName: string;
