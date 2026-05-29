@@ -194,7 +194,7 @@ type TableActions = {
   onDelete: (item: Item) => Promise<void>;
   onEditMaterials: (item: Item) => void;
   onPasteMaterialSwatch: (item: Item, file: File) => Promise<void>;
-  isMaterialPastePending: boolean;
+  isMaterialPastePending: (itemId: string) => boolean;
 };
 
 const saveValidatedPatch = (onSave: SaveItemPatch, item: Item, patch: EditableItemPatch) =>
@@ -680,7 +680,7 @@ const createColumns = (
         materials={row.original.materials}
         onOpen={() => actions.onEditMaterials(row.original)}
         onPasteImage={(file) => actions.onPasteMaterialSwatch(row.original, file)}
-        isPasting={actions.isMaterialPastePending}
+        isPasting={actions.isMaterialPastePending(row.original.id)}
       />
     ),
   },
@@ -992,7 +992,7 @@ function MobileItemCards({
                 materials={item.materials}
                 onOpen={() => actions.onEditMaterials(item)}
                 onPasteImage={(file) => actions.onPasteMaterialSwatch(item, file)}
-                isPasting={actions.isMaterialPastePending}
+                isPasting={actions.isMaterialPastePending(item.id)}
               />
             </MobileField>
             <MobileField label="Quantity">
@@ -1401,6 +1401,7 @@ export function RoomItemsSection({
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [materialItem, setMaterialItem] = useState<Item | null>(null);
+  const [activeMaterialPasteItemId, setActiveMaterialPasteItemId] = useState<string | null>(null);
   const [detailItem, setDetailItem] = useState<Item | null>(null);
   type PendingChange = GeneratedItemChangeInfo & {
     item: Item;
@@ -1516,15 +1517,22 @@ export function RoomItemsSection({
       },
       onEditMaterials: (item) => setMaterialItem(item),
       onPasteMaterialSwatch: async (item, file) => {
-        await materialCellPaste.pasteIntoCell({
-          itemId: item.id,
-          materials: item.materials,
-          file,
-        });
+        if (materialCellPaste.isPasting) return;
+        setActiveMaterialPasteItemId(item.id);
+        try {
+          await materialCellPaste.pasteIntoCell({
+            itemId: item.id,
+            materials: item.materials,
+            file,
+          });
+        } finally {
+          setActiveMaterialPasteItemId((current) => (current === item.id ? null : current));
+        }
       },
-      isMaterialPastePending: materialCellPaste.isPasting,
+      isMaterialPastePending: (itemId: string) =>
+        materialCellPaste.isPasting && activeMaterialPasteItemId === itemId,
     }),
-    [deleteItem, duplicateItem, materialCellPaste, moveItem, rooms],
+    [activeMaterialPasteItemId, deleteItem, duplicateItem, materialCellPaste, moveItem, rooms],
   );
   const saveItemPatch = useCallback<SaveItemPatch>(
     async (item, patch) => {

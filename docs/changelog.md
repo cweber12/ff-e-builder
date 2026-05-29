@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(materials): scope swatch paste pending UI to the active FF&E or Proposal row so only the target cell shows Pasting swatch
 - fix(materials): generate deterministic Material NNN and Finish NNN defaults during swatch paste creation so pasted cells avoid blank import-style names
 - fix(api): align Proposal create-and-assign material route with current materials schema by generating code and persisting finish/material-type fields
 - feat(materials): route swatch image paste in FF&E and Proposal materials cells (plus Catalog Editor Add swatch) through create+assign, attach-finish, and overwrite-or-discard branches with finish image uploads

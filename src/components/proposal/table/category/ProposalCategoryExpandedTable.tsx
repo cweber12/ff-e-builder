@@ -64,7 +64,7 @@ type ProposalCategoryExpandedTableProps = {
   onItemClick: (item: ProposalItem) => void;
   onSwatchOpen: (itemId: string | null) => void;
   onSwatchPaste: (item: ProposalItem, file: File) => Promise<void>;
-  isSwatchPasting: boolean;
+  isSwatchPastingForItem: (itemId: string) => boolean;
   onColumnDragEnd: (event: DragEndEvent) => void;
   onRowDragOver: (event: DragOverEvent) => void;
   onRowDragEnd: (event: DragEndEvent) => void;
@@ -99,7 +99,7 @@ export function ProposalCategoryExpandedTable({
   onItemClick,
   onSwatchOpen,
   onSwatchPaste,
-  isSwatchPasting,
+  isSwatchPastingForItem,
   onColumnDragEnd,
   onRowDragOver,
   onRowDragEnd,
@@ -327,7 +327,7 @@ export function ProposalCategoryExpandedTable({
                         proposalStatus={proposalStatus}
                         onSwatchOpen={onSwatchOpen}
                         onSwatchPaste={onSwatchPaste}
-                        isSwatchPasting={isSwatchPasting}
+                        isSwatchPasting={isSwatchPastingForItem(item.id)}
                         autoFocusItemName={item.id === pendingFocusItemId}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (

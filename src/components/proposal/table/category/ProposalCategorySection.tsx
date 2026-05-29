@@ -166,13 +166,20 @@ export function ProposalCategorySection({
 
   const [pendingChange, setPendingChange] = useState<PendingProposalCategoryChange | null>(null);
   const [activeSwatchItemId, setActiveSwatchItemId] = useState<string | null>(null);
+  const [activeSwatchPasteItemId, setActiveSwatchPasteItemId] = useState<string | null>(null);
   const handleSwatchPaste = useCallback(
     async (item: ProposalItem, file: File) => {
-      await materialCellPaste.pasteIntoCell({
-        itemId: item.id,
-        materials: item.materials,
-        file,
-      });
+      if (materialCellPaste.isPasting) return;
+      setActiveSwatchPasteItemId(item.id);
+      try {
+        await materialCellPaste.pasteIntoCell({
+          itemId: item.id,
+          materials: item.materials,
+          file,
+        });
+      } finally {
+        setActiveSwatchPasteItemId((current) => (current === item.id ? null : current));
+      }
     },
     [materialCellPaste],
   );
@@ -580,7 +587,9 @@ export function ProposalCategorySection({
                         proposalStatus={proposalStatus}
                         onSwatchOpen={setActiveSwatchItemId}
                         onSwatchPaste={handleSwatchPaste}
-                        isSwatchPasting={materialCellPaste.isPasting}
+                        isSwatchPasting={
+                          materialCellPaste.isPasting && activeSwatchPasteItemId === item.id
+                        }
                         autoFocusItemName={item.id === pendingFocusItemId}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
@@ -642,7 +651,9 @@ export function ProposalCategorySection({
         onItemClick={onItemClick}
         onSwatchOpen={setActiveSwatchItemId}
         onSwatchPaste={handleSwatchPaste}
-        isSwatchPasting={materialCellPaste.isPasting}
+        isSwatchPastingForItem={(itemId) =>
+          materialCellPaste.isPasting && activeSwatchPasteItemId === itemId
+        }
         onColumnDragEnd={handleColumnDragEnd}
         onRowDragOver={handleRowDragOver}
         onRowDragEnd={handleRowDragEnd}
