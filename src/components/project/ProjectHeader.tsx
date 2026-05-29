@@ -70,15 +70,20 @@ const TABS: HeaderTab[] = [
 function TabNav({ projectId, activeLabel }: { projectId: string; activeLabel?: string }) {
   return (
     <nav aria-label="Project tools" className="flex items-stretch">
-      {TABS.filter(({ label }) => label !== activeLabel).map(({ label, href }) => (
-        <Link
-          key={label}
-          to={href(projectId)}
-          className="inline-flex h-11 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900"
-        >
-          {label}
-        </Link>
-      ))}
+      {TABS.map(({ label, href }) => {
+        const isActive = label === activeLabel;
+        return (
+          <Link
+            key={label}
+            to={href(projectId)}
+            aria-current={isActive ? 'page' : undefined}
+            data-active={isActive || undefined}
+            className="relative inline-flex h-11 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:text-neutral-950 after:absolute after:inset-x-3 after:bottom-0 after:h-[2px] after:bg-brand-600 after:opacity-0 after:transition-opacity data-[active]:after:opacity-100"
+          >
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
@@ -174,7 +179,7 @@ export function ProjectHeader({
         <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
       </div>
 
-      <div className="relative flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
+      <div className="relative flex h-11 items-center border-b border-neutral-300 bg-white px-4 md:px-6">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
           {activeTab?.label ?? 'Project'}
         </h2>
