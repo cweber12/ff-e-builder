@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Finish, Material } from '../../types';
@@ -71,15 +71,7 @@ function renderPanel() {
   return render(<MaterialLibraryPanel context="ffe" projectId="project-1" roomId="room-1" />);
 }
 
-function makeDt(returnId: string) {
-  return {
-    setData: vi.fn(),
-    getData: vi.fn().mockReturnValue(returnId),
-    effectAllowed: '',
-  };
-}
-
-describe('MaterialLibraryModal dual-pane layout', () => {
+describe('MaterialLibraryModal edit layout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockState.finishes = [
@@ -92,18 +84,18 @@ describe('MaterialLibraryModal dual-pane layout', () => {
     ];
   });
 
-  it('shows finish library panel alongside edit form when editing a material', async () => {
+  it('shows the finish picker grid alongside the edit form when editing a material', async () => {
     const user = userEvent.setup();
     renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
 
     expect(screen.getByRole('region', { name: 'Finish library' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Assign Walnut')).toBeInTheDocument();
-    expect(screen.getByLabelText('Assign Oak')).toBeInTheDocument();
+    expect(screen.getByLabelText('Apply finish Walnut')).toBeInTheDocument();
+    expect(screen.getByLabelText('Apply finish Oak')).toBeInTheDocument();
   });
 
-  it('does not show finish library panel when creating a new material', async () => {
+  it('does not show the finish picker grid when creating a new material', async () => {
     const user = userEvent.setup();
     renderPanel();
 
@@ -112,7 +104,7 @@ describe('MaterialLibraryModal dual-pane layout', () => {
     expect(screen.queryByRole('region', { name: 'Finish library' })).not.toBeInTheDocument();
   });
 
-  it('hides finish library panel after cancelling edit', async () => {
+  it('hides the finish picker grid after cancelling edit', async () => {
     const user = userEvent.setup();
     renderPanel();
 
@@ -122,9 +114,19 @@ describe('MaterialLibraryModal dual-pane layout', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('region', { name: 'Finish library' })).not.toBeInTheDocument();
   });
+
+  it('marks the currently-assigned finish as selected', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
+
+    expect(screen.getByLabelText('Apply finish Walnut')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('Apply finish Oak')).toHaveAttribute('aria-pressed', 'false');
+  });
 });
 
-describe('MaterialLibraryModal finish library search', () => {
+describe('MaterialLibraryModal finish picker search', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockState.finishes = [
@@ -134,19 +136,19 @@ describe('MaterialLibraryModal finish library search', () => {
     mockState.materials = [makeMaterial('mat-1', 'Door Pull')];
   });
 
-  it('filters finishes by name in the library panel', async () => {
+  it('filters finishes by name in the picker grid', async () => {
     const user = userEvent.setup();
     renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
-    await user.type(screen.getByLabelText('Search finish library'), 'wal');
+    await user.type(screen.getByLabelText('Search finishes'), 'wal');
 
-    expect(screen.getByLabelText('Assign Walnut')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Assign Oak')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Apply finish Walnut')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Apply finish Oak')).not.toBeInTheDocument();
   });
 });
 
-describe('MaterialLibraryModal drag-to-preview', () => {
+describe('MaterialLibraryModal finish selection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockState.finishes = [
@@ -157,85 +159,48 @@ describe('MaterialLibraryModal drag-to-preview', () => {
     mockState.updateMutateAsync.mockResolvedValue(makeMaterial('mat-1', 'Door Pull', 'finish-2'));
   });
 
-  it('updates finish preview on drop without persisting', async () => {
+  it('selects a finish on click without persisting until save', async () => {
     const user = userEvent.setup();
     renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
+    await user.click(screen.getByLabelText('Apply finish Oak'));
 
-    const dropZone = screen.getByLabelText('Finish drop zone');
-    const dt = makeDt('finish-2');
-    fireEvent.dragOver(dropZone, { dataTransfer: dt });
-    fireEvent.drop(dropZone, { dataTransfer: dt });
-
-    // Form now previews Oak without persisting
-    expect(within(dropZone).getByText('Oak')).toBeInTheDocument();
+    expect(screen.getByLabelText('Apply finish Oak')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('Apply finish Walnut')).toHaveAttribute('aria-pressed', 'false');
     expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('same-finish drop is a no-op', async () => {
+  it('cancelling after selecting a finish does not persist', async () => {
     const user = userEvent.setup();
     renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
-
-    // Door Pull already has finish-1 (Walnut)
-    expect(
-      within(screen.getByLabelText('Finish drop zone')).getByText('Walnut'),
-    ).toBeInTheDocument();
-
-    const dropZone = screen.getByLabelText('Finish drop zone');
-    const dt = makeDt('finish-1');
-    fireEvent.dragOver(dropZone, { dataTransfer: dt });
-    fireEvent.drop(dropZone, { dataTransfer: dt });
-
-    // Still shows Walnut; state unchanged
-    expect(within(dropZone).getByText('Walnut')).toBeInTheDocument();
-    expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
-  });
-
-  it('cancel after drag restores draft without persisting', async () => {
-    const user = userEvent.setup();
-    renderPanel();
-
-    await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
-
-    const dropZone = screen.getByLabelText('Finish drop zone');
-    fireEvent.drop(dropZone, { dataTransfer: makeDt('finish-2') });
-
-    // Preview changed to Oak
-    expect(within(dropZone).getByText('Oak')).toBeInTheDocument();
-
+    await user.click(screen.getByLabelText('Apply finish Oak'));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
-    // Form is closed; no persistence occurred
-    expect(screen.queryByLabelText('Finish drop zone')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Finish library' })).not.toBeInTheDocument();
   });
 
-  it('persists dragged finish when Save is clicked', async () => {
+  it('persists the selected finish when Save is clicked', async () => {
     const user = userEvent.setup();
     renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
-
-    fireEvent.drop(screen.getByLabelText('Finish drop zone'), { dataTransfer: makeDt('finish-2') });
-
+    await user.click(screen.getByLabelText('Apply finish Oak'));
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
-    expect(mockState.updateMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'mat-1' }),
-    );
-  });
-
-  it('click on finish in library updates preview without drag', async () => {
-    const user = userEvent.setup();
-    renderPanel();
-
-    await user.click(screen.getByRole('button', { name: 'Edit Door Pull' }));
-    await user.click(screen.getByLabelText('Assign Oak'));
-
-    expect(within(screen.getByLabelText('Finish drop zone')).getByText('Oak')).toBeInTheDocument();
-    expect(mockState.updateMutateAsync).not.toHaveBeenCalled();
+    expect(mockState.updateMutateAsync).toHaveBeenCalledWith({
+      id: 'mat-1',
+      patch: {
+        name: 'Door Pull',
+        code: 'mat-1-code',
+        finishId: 'finish-2',
+        materialType: 'solid',
+        materialId: 'mat-1-mfr',
+        description: '',
+      },
+    });
   });
 });

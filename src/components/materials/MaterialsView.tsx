@@ -532,7 +532,6 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           <MaterialForm
             draft={materialDraft}
             editing={Boolean(editingMaterial)}
-            editingMaterialId={editingMaterialId ?? undefined}
             finishes={finishes.data ?? []}
             submitLabel={editingMaterialId ? 'Save changes' : 'Add material'}
             onDraftChange={setMaterialDraft}

@@ -13,7 +13,14 @@ import {
   useMaterials,
   useUpdateMaterial,
 } from '../../hooks';
-import type { Finish, Item, Material, MaterialType, ProposalItem } from '../../types';
+import type {
+  Finish,
+  Item,
+  Material,
+  MaterialCategory,
+  MaterialType,
+  ProposalItem,
+} from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 
@@ -108,6 +115,15 @@ const MATERIAL_TYPES: MaterialType[] = [
   'painted',
   'stained',
 ];
+
+const MATERIAL_CATEGORY_LABELS: Record<MaterialCategory, string> = {
+  wood: 'Wood',
+  metal: 'Metal',
+  stone: 'Stone',
+  glass: 'Glass',
+  fabric: 'Fabric',
+  solid_color: 'Solid Color',
+};
 
 const emptyDraft: MaterialDraft = {
   name: '',
@@ -291,92 +307,87 @@ export function MaterialLibraryPanel(props: MaterialLibraryPanelProps) {
         />
       )}
 
-      <div
-        className={`grid min-w-0 gap-5 ${
-          showForm
-            ? editingId
-              ? 'lg:grid-cols-[22rem_minmax(0,16rem)_minmax(0,1fr)]'
-              : 'lg:grid-cols-[22rem_minmax(0,1fr)]'
-            : ''
-        }`}
-      >
+      <div className={`grid min-w-0 gap-5 ${showForm ? 'lg:grid-cols-[22rem_minmax(0,1fr)]' : ''}`}>
         {showForm && (
           <MaterialForm
             draft={draft}
             editing={Boolean(editingMaterial)}
-            editingMaterialId={editingId ?? undefined}
             finishes={finishes.data ?? []}
             submitLabel={submitLabel}
+            showFinishPicker={!editingId}
             onDraftChange={setDraft}
             onCancel={resetDraft}
             onSubmit={() => void saveDraft()}
           />
         )}
 
-        {showForm && editingId && (
-          <FinishLibraryPanel
+        {showForm && editingId ? (
+          <FinishPickerGrid
             finishes={finishes.data ?? []}
-            onFinishSelect={(finish) =>
+            loading={finishes.isLoading}
+            selectedFinishId={draft.finishId}
+            onSelect={(finish) =>
               setDraft((c) => ({
                 ...c,
-                finishId: finish.id === c.finishId ? c.finishId : finish.id,
+                finishId: finish.id,
                 name: c.name || finish.name,
               }))
             }
+            onClear={() => setDraft((c) => ({ ...c, finishId: null }))}
           />
-        )}
-
-        <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-neutral-200 bg-canvas-chrome">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-4">
-            <div className="flex items-baseline gap-3">
-              <h3 className="eyebrow">Project materials</h3>
-              <span className="num text-[11px] font-semibold text-neutral-500">
-                {visibleMaterials.length} {visibleMaterials.length === 1 ? 'item' : 'items'}
-              </span>
+        ) : (
+          <section className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-neutral-200 bg-canvas-chrome">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-4">
+              <div className="flex items-baseline gap-3">
+                <h3 className="eyebrow">Project materials</h3>
+                <span className="num text-[11px] font-semibold text-neutral-500">
+                  {visibleMaterials.length} {visibleMaterials.length === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+              <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name or code…"
+                  className="input-base sm:w-64"
+                  aria-label="Search project materials"
+                />
+                {!showForm && (
+                  <Button type="button" size="sm" onClick={openCreateForm}>
+                    + New material
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or code…"
-                className="input-base sm:w-64"
-                aria-label="Search project materials"
-              />
-              {!showForm && (
-                <Button type="button" size="sm" onClick={openCreateForm}>
-                  + New material
-                </Button>
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-canvas-shell p-5">
+              {materials.isLoading ? (
+                <p className="text-sm text-neutral-500">Loading library...</p>
+              ) : visibleMaterials.length ? (
+                <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-4">
+                  {visibleMaterials.map((material) => (
+                    <MaterialPickerCard
+                      key={material.id}
+                      material={material}
+                      finish={finishes.data?.find((f) => f.id === material.finishId)}
+                      assigning={pendingAssignmentId === material.id}
+                      assignable={Boolean(activeItem)}
+                      onSelect={() => void assignExistingMaterial(material)}
+                      onEdit={() => startEdit(material, false)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="border-y border-dashed border-neutral-200 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
+                  {searchQuery.trim()
+                    ? 'No library items match the current search.'
+                    : activeItem
+                      ? 'All library items are already assigned to this item.'
+                      : 'Add the first item to build the project library.'}
+                </p>
               )}
             </div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-canvas-shell p-5">
-            {materials.isLoading ? (
-              <p className="text-sm text-neutral-500">Loading library...</p>
-            ) : visibleMaterials.length ? (
-              <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-4">
-                {visibleMaterials.map((material) => (
-                  <MaterialPickerCard
-                    key={material.id}
-                    material={material}
-                    finish={finishes.data?.find((f) => f.id === material.finishId)}
-                    assigning={pendingAssignmentId === material.id}
-                    assignable={Boolean(activeItem)}
-                    onSelect={() => void assignExistingMaterial(material)}
-                    onEdit={() => startEdit(material, false)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="border-y border-dashed border-neutral-200 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
-                {searchQuery.trim()
-                  ? 'No library items match the current search.'
-                  : activeItem
-                    ? 'All library items are already assigned to this item.'
-                    : 'Add the first item to build the project library.'}
-              </p>
-            )}
-          </div>
-        </section>
+          </section>
+        )}
       </div>
     </div>
   );
@@ -428,52 +439,110 @@ function RecentMaterialsStrip({
   );
 }
 
-function FinishLibraryPanel({
+function FinishPickerGrid({
   finishes,
-  onFinishSelect,
+  loading = false,
+  selectedFinishId,
+  onSelect,
+  onClear,
 }: {
   finishes: Finish[];
-  onFinishSelect: (finish: Finish) => void;
+  loading?: boolean | undefined;
+  selectedFinishId: string | null;
+  onSelect: (finish: Finish) => void;
+  onClear: () => void;
 }) {
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<MaterialCategory | 'all'>('all');
+
+  const availableCategories = useMemo(() => {
+    const present = new Set<MaterialCategory>();
+    finishes.forEach((f) => {
+      if (f.category) present.add(f.category);
+    });
+    return (Object.keys(MATERIAL_CATEGORY_LABELS) as MaterialCategory[]).filter((c) =>
+      present.has(c),
+    );
+  }, [finishes]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return finishes;
-    return finishes.filter(
-      (f) =>
-        f.name.toLowerCase().includes(q) ||
-        f.code.toLowerCase().includes(q) ||
-        f.manufacturer.toLowerCase().includes(q),
-    );
-  }, [finishes, search]);
+    return finishes
+      .filter((f) => activeCategory === 'all' || f.category === activeCategory)
+      .filter(
+        (f) =>
+          !q ||
+          f.name.toLowerCase().includes(q) ||
+          f.code.toLowerCase().includes(q) ||
+          f.manufacturer.toLowerCase().includes(q),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [finishes, search, activeCategory]);
 
   return (
     <section
       aria-label="Finish library"
       className="flex min-h-[28rem] max-h-[72vh] min-w-0 flex-col overflow-hidden border-y border-neutral-200 bg-canvas-chrome"
     >
-      <div className="flex items-center gap-2 border-b border-neutral-200 px-4 py-3">
-        <h3 className="eyebrow flex-1">Finishes</h3>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search…"
-          className="input-base text-xs"
-          aria-label="Search finish library"
-        />
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-4">
+        <div className="flex items-baseline gap-3">
+          <h3 className="eyebrow">Finishes</h3>
+          <span className="num text-[11px] font-semibold text-neutral-500">
+            {filtered.length} {filtered.length === 1 ? 'finish' : 'finishes'}
+          </span>
+        </div>
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, code, or maker…"
+            className="input-base sm:w-64"
+            aria-label="Search finishes"
+          />
+          {selectedFinishId && (
+            <Button type="button" size="sm" variant="ghost" onClick={onClear}>
+              Clear finish
+            </Button>
+          )}
+        </div>
       </div>
-      <p className="border-b border-dashed border-neutral-200 px-4 py-2 text-[11px] text-neutral-400">
-        Drag or click a finish to preview
-      </p>
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        {finishes.length === 0 ? (
-          <p className="text-xs text-neutral-400">No finishes in library yet.</p>
+      {availableCategories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-neutral-200 px-5 py-2.5">
+          <FinishCategoryChip
+            label="All"
+            active={activeCategory === 'all'}
+            onClick={() => setActiveCategory('all')}
+          />
+          {availableCategories.map((category) => (
+            <FinishCategoryChip
+              key={category}
+              label={MATERIAL_CATEGORY_LABELS[category]}
+              active={activeCategory === category}
+              onClick={() => setActiveCategory(category)}
+            />
+          ))}
+        </div>
+      )}
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-canvas-shell p-5">
+        {loading ? (
+          <p className="text-sm text-neutral-500">Loading finishes...</p>
+        ) : finishes.length === 0 ? (
+          <p className="border-y border-dashed border-neutral-200 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
+            No finishes in the library yet — add finishes from the Materials page.
+          </p>
         ) : filtered.length === 0 ? (
-          <p className="text-xs text-neutral-400">No finishes match.</p>
+          <p className="border-y border-dashed border-neutral-200 bg-canvas-chrome px-4 py-10 text-center text-sm text-neutral-500">
+            No finishes match the current filters.
+          </p>
         ) : (
-          <div className="grid gap-1.5">
+          <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-4">
             {filtered.map((finish) => (
-              <DraggableFinishItem key={finish.id} finish={finish} onSelect={onFinishSelect} />
+              <FinishPickerCard
+                key={finish.id}
+                finish={finish}
+                selected={finish.id === selectedFinishId}
+                onSelect={() => onSelect(finish)}
+              />
             ))}
           </div>
         )}
@@ -482,39 +551,103 @@ function FinishLibraryPanel({
   );
 }
 
-function DraggableFinishItem({
-  finish,
-  onSelect,
+function FinishCategoryChip({
+  label,
+  active,
+  onClick,
 }: {
-  finish: Finish;
-  onSelect: (finish: Finish) => void;
+  label: string;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData('text/plain', finish.id);
-        e.dataTransfer.effectAllowed = 'copy';
-      }}
-      onClick={() => onSelect(finish)}
-      aria-label={`Assign ${finish.name}`}
-      className="flex w-full cursor-grab items-center gap-2 rounded-sm border border-neutral-200 bg-surface px-2 py-1.5 text-left text-sm font-medium text-neutral-700 transition hover:border-brand-400 hover:bg-brand-50 active:cursor-grabbing focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+        active
+          ? 'border-brand-500 bg-brand-50 text-brand-700'
+          : 'border-neutral-200 bg-surface text-neutral-600 hover:border-brand-400 hover:text-brand-700'
+      }`}
     >
-      <ImageFrame
-        entityType="finish"
-        entityId={finish.id}
-        alt={finish.name}
-        className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
-        imageClassName="object-cover"
-        compact
-        disabled
-      />
-      <span className="min-w-0 flex-1 truncate">{finish.name}</span>
-      {finish.code && (
-        <span className="num shrink-0 text-[10px] text-neutral-500">{finish.code}</span>
-      )}
+      {label}
     </button>
+  );
+}
+
+function FinishPickerCard({
+  finish,
+  selected,
+  onSelect,
+}: {
+  finish: Finish;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect();
+    }
+  };
+
+  return (
+    <article
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={`Apply finish ${finish.name}`}
+      onClick={onSelect}
+      onKeyDown={handleKeyDown}
+      className={`tile-card group relative flex min-w-0 cursor-pointer flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+        selected ? 'ring-2 ring-brand-500 ring-offset-1' : ''
+      }`}
+    >
+      <div className="relative">
+        <ImageFrame
+          entityType="finish"
+          entityId={finish.id}
+          alt={finish.name}
+          className="h-24 w-full rounded-none border-0 shadow-none"
+          imageClassName="object-cover"
+          compact
+          disabled
+        />
+        {selected ? (
+          <span className="absolute right-2 top-2 inline-flex items-center rounded-full bg-brand-700 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+            Selected
+          </span>
+        ) : (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center bg-brand-900/0 opacity-0 transition group-hover:bg-brand-900/40 group-hover:opacity-100 group-focus-visible:bg-brand-900/40 group-focus-visible:opacity-100"
+            aria-hidden="true"
+          >
+            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-700 shadow-md">
+              Apply finish
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
+        <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
+          {finish.code || 'No code'}
+        </p>
+        <h4 className="truncate text-sm font-semibold leading-tight text-neutral-950">
+          {finish.name}
+        </h4>
+        {(finish.category || finish.manufacturer) && (
+          <p className="truncate text-[10px] text-neutral-500">
+            {[
+              finish.category ? MATERIAL_CATEGORY_LABELS[finish.category] : null,
+              finish.manufacturer,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -619,21 +752,21 @@ export function MaterialForm({
   editing,
   finishes,
   submitLabel,
+  showFinishPicker = true,
   onDraftChange,
   onCancel,
   onSubmit,
 }: {
   draft: MaterialDraft;
   editing: boolean;
-  editingMaterialId?: string | undefined;
   finishes: Finish[];
   submitLabel: string;
+  showFinishPicker?: boolean | undefined;
   onDraftChange: (updater: (current: MaterialDraft) => MaterialDraft) => void;
   onCancel?: (() => void) | undefined;
   onSubmit: () => void;
 }) {
   const [finishSearch, setFinishSearch] = useState('');
-  const [isDragOver, setIsDragOver] = useState(false);
 
   const selectedFinish = finishes.find((f) => f.id === draft.finishId);
 
@@ -663,100 +796,86 @@ export function MaterialForm({
       <div className="mt-3 grid gap-3">
         <div className="grid gap-1 text-sm font-medium text-neutral-700">
           <span>Finish</span>
-          <div
-            aria-label="Finish drop zone"
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragOver(false);
-              const finishId = e.dataTransfer.getData('text/plain');
-              if (!finishId || finishId === draft.finishId) return;
-              const finish = finishes.find((f) => f.id === finishId);
-              if (finish) selectFinish(finish);
-            }}
-            className={`rounded-sm transition-shadow ${isDragOver ? 'ring-2 ring-brand-500 ring-offset-1' : ''}`}
-          >
-            {selectedFinish ? (
-              <div className="flex items-center gap-2 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2">
-                <ImageFrame
-                  entityType="finish"
-                  entityId={selectedFinish.id}
-                  alt={selectedFinish.name}
-                  className="h-8 w-8 shrink-0 rounded-full border-0 shadow-none"
-                  imageClassName="object-cover"
-                  compact
-                  disabled
-                />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold text-neutral-950">
-                    {selectedFinish.name}
-                  </span>
-                  {selectedFinish.code && (
-                    <span className="num text-[10px] text-neutral-500">{selectedFinish.code}</span>
-                  )}
+          {selectedFinish ? (
+            <div className="flex items-center gap-2 rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-2">
+              <ImageFrame
+                entityType="finish"
+                entityId={selectedFinish.id}
+                alt={selectedFinish.name}
+                className="h-8 w-8 shrink-0 rounded-full border-0 shadow-none"
+                imageClassName="object-cover"
+                compact
+                disabled
+              />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold text-neutral-950">
+                  {selectedFinish.name}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => selectFinish(null)}
-                  className="shrink-0 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                >
-                  Clear
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-1">
-                <input
-                  value={finishSearch}
-                  onChange={(e) => setFinishSearch(e.target.value)}
-                  placeholder="Search finishes…"
-                  className={inputClassName}
-                />
-                {(finishSearch.trim() || draft.finishId === null) && finishes.length > 0 && (
-                  <div className="max-h-40 overflow-y-auto rounded-sm border border-neutral-200 bg-canvas-chrome">
-                    {filteredFinishes.length ? (
-                      filteredFinishes.slice(0, 20).map((finish) => (
-                        <button
-                          key={finish.id}
-                          type="button"
-                          onClick={() => selectFinish(finish)}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                        >
-                          <ImageFrame
-                            entityType="finish"
-                            entityId={finish.id}
-                            alt={finish.name}
-                            className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
-                            imageClassName="object-cover"
-                            compact
-                            disabled
-                          />
-                          <span className="min-w-0 flex-1 truncate font-medium text-neutral-950">
-                            {finish.name}
+                {selectedFinish.code && (
+                  <span className="num text-[10px] text-neutral-500">{selectedFinish.code}</span>
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => selectFinish(null)}
+                className="shrink-0 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                Clear
+              </button>
+            </div>
+          ) : showFinishPicker ? (
+            <div className="grid gap-1">
+              <input
+                value={finishSearch}
+                onChange={(e) => setFinishSearch(e.target.value)}
+                placeholder="Search finishes…"
+                className={inputClassName}
+              />
+              {(finishSearch.trim() || draft.finishId === null) && finishes.length > 0 && (
+                <div className="max-h-40 overflow-y-auto rounded-sm border border-neutral-200 bg-canvas-chrome">
+                  {filteredFinishes.length ? (
+                    filteredFinishes.slice(0, 20).map((finish) => (
+                      <button
+                        key={finish.id}
+                        type="button"
+                        onClick={() => selectFinish(finish)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                      >
+                        <ImageFrame
+                          entityType="finish"
+                          entityId={finish.id}
+                          alt={finish.name}
+                          className="h-7 w-7 shrink-0 rounded-full border-0 shadow-none"
+                          imageClassName="object-cover"
+                          compact
+                          disabled
+                        />
+                        <span className="min-w-0 flex-1 truncate font-medium text-neutral-950">
+                          {finish.name}
+                        </span>
+                        {finish.code && (
+                          <span className="num shrink-0 text-[10px] text-neutral-500">
+                            {finish.code}
                           </span>
-                          {finish.code && (
-                            <span className="num shrink-0 text-[10px] text-neutral-500">
-                              {finish.code}
-                            </span>
-                          )}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="px-3 py-2 text-xs text-neutral-500">No finishes match.</p>
-                    )}
-                  </div>
-                )}
-                {finishes.length === 0 && (
-                  <p className="text-xs text-neutral-400">
-                    No finishes in library yet — add some in the Finish Library tab.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-3 py-2 text-xs text-neutral-500">No finishes match.</p>
+                  )}
+                </div>
+              )}
+              {finishes.length === 0 && (
+                <p className="text-xs text-neutral-400">
+                  No finishes in library yet — add some from the Materials page.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="rounded-sm border border-dashed border-neutral-200 bg-canvas-chrome px-3 py-2 text-xs font-normal text-neutral-500">
+              Pick a finish from the list on the right to apply it to this material.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
