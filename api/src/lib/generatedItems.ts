@@ -1008,6 +1008,88 @@ export async function selectGeneratedItemsByRoom(sql: Sql, roomId: string) {
   `;
 }
 
+// FF&E catalog/list view: every FF&E-visible generated item in the project,
+// carrying its Proposal Category so the client can group by category (the FF&E
+// view groups by Proposal Category, not Location — see ADR-0012). Returns flat
+// rows; the route assembles them into category groups.
+export async function selectFfeCatalogItems(sql: Sql, projectId: string) {
+  return sql`
+    SELECT
+      i.id,
+      i.room_id,
+      i.proposal_category_id,
+      pc.name        AS category_name,
+      pc.sort_order  AS category_sort_order,
+      pc.created_at  AS category_created_at,
+      pc.updated_at  AS category_updated_at,
+      COALESCE(NULLIF(i.product_tag, ''), i.item_id_tag, '') AS product_tag,
+      i.drawings,
+      COALESCE(NULLIF(i.size_label, ''), i.dimensions, '') AS size_label,
+      i.quantity,
+      i.quantity_unit,
+      COALESCE(
+        NULLIF(i.item_name, ''),
+        NULLIF(i.product_tag, ''),
+        i.item_id_tag,
+        'Proposal item'
+      ) AS item_name,
+      i.description,
+      i.category,
+      i.item_id_tag,
+      i.dimensions,
+      i.notes,
+      i.qty,
+      i.unit_cost_cents,
+      i.lead_time,
+      i.status,
+      i.custom_data,
+      i.sort_order,
+      i.version,
+      i.created_at,
+      i.updated_at,
+      link.proposal_item_id AS linked_proposal_item_id,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', m.id,
+            'project_id', m.project_id,
+            'name', m.name,
+            'material_id', m.material_id,
+            'finish_id', m.finish_id,
+            'description', m.description,
+            'swatch_hex', m.swatch_hex,
+            'created_at', m.created_at,
+            'updated_at', m.updated_at
+          )
+          ORDER BY generated_materials.sort_order, lower(m.name)
+        )
+          FILTER (WHERE m.id IS NOT NULL),
+        '[]'::json
+      ) AS materials
+    FROM items i
+    JOIN proposal_categories pc ON pc.id = i.proposal_category_id
+    LEFT JOIN proposal_item_generated_item_links link ON link.item_id = i.id
+    LEFT JOIN LATERAL (
+      SELECT DISTINCT ON (material_id) material_id, sort_order
+      FROM (
+        SELECT im.material_id, im.sort_order
+        FROM item_materials im
+        WHERE im.item_id = i.id
+        UNION ALL
+        SELECT pim.material_id, pim.sort_order
+        FROM proposal_item_materials pim
+        WHERE pim.proposal_item_id = link.proposal_item_id
+      ) material_refs
+      ORDER BY material_id, sort_order
+    ) generated_materials ON true
+    LEFT JOIN materials m ON m.id = generated_materials.material_id
+    WHERE pc.project_id = ${projectId}
+      AND i.is_ffe_visible = true
+    GROUP BY i.id, link.proposal_item_id, pc.id
+    ORDER BY pc.sort_order, pc.created_at, i.sort_order, i.created_at
+  `;
+}
+
 export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryId: string) {
   // Canonical items cover migrated/shared rows; unlinked proposal_items preserve
   // current Proposal writes until the write bridge lands in a later slice.

@@ -6,6 +6,7 @@ export {
   companyKeys,
   roomKeys,
   itemKeys,
+  ffeKeys,
   imageKeys,
   finishKeys,
   materialKeys,

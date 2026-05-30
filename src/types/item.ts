@@ -53,6 +53,22 @@ export type Item = {
 
 export type GeneratedItem = Item & GeneratedItemProposalFields;
 
+/**
+ * A Proposal Category grouping of FF&E-visible items, used by the FF&E Catalog
+ * and the read-only card list. The FF&E view groups by Proposal Category rather
+ * than Location (ADR-0012). Structurally mirrors a Room group so the Catalog can
+ * consume it without engine changes.
+ */
+export type FfeCatalogGroup = {
+  id: string;
+  projectId: string;
+  name: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  items: Item[];
+};
+
 export type CustomColumnDef = {
   id: string;
   projectId: string;

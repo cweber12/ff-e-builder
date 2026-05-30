@@ -5,8 +5,27 @@ import { assertProjectOwnership } from '../lib/ownership';
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
 import { bakeApprovedRevision, closeOpenRevision } from '../lib/revisions';
+import { selectFfeCatalogItems } from '../lib/generatedItems';
 
 const router = new Hono<{ Bindings: Env; Variables: HonoVariables }>();
+
+type FfeCatalogItemRow = Record<string, unknown> & {
+  proposal_category_id: string;
+  category_name: string;
+  category_sort_order: number;
+  category_created_at: string;
+  category_updated_at: string;
+};
+
+type FfeCatalogGroupRow = {
+  id: string;
+  project_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  items: FfeCatalogItemRow[];
+};
 
 // GET /api/v1/projects — list caller's projects
 router.get('/', async (c) => {
@@ -156,6 +175,45 @@ router.get('/:id/rooms', async (c) => {
     ORDER BY sort_order, created_at
   `;
   return c.json({ rooms: rows });
+});
+
+// GET /api/v1/projects/:id/ffe/groups — FF&E-visible generated items grouped by
+// Proposal Category. Powers the FF&E Catalog and the read-only card list, which
+// group by category rather than Location (ADR-0012). Empty categories are omitted.
+router.get('/:id/ffe/groups', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+
+  try {
+    await assertProjectOwnership(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const rows = (await selectFfeCatalogItems(sql, id)) as FfeCatalogItemRow[];
+
+  const groups: FfeCatalogGroupRow[] = [];
+  const byCategory = new Map<string, FfeCatalogGroupRow>();
+  for (const row of rows) {
+    let group = byCategory.get(row.proposal_category_id);
+    if (!group) {
+      group = {
+        id: row.proposal_category_id,
+        project_id: id,
+        name: row.category_name,
+        sort_order: row.category_sort_order,
+        created_at: row.category_created_at,
+        updated_at: row.category_updated_at,
+        items: [],
+      };
+      byCategory.set(row.proposal_category_id, group);
+      groups.push(group);
+    }
+    group.items.push(row);
+  }
+
+  return c.json({ groups });
 });
 
 // POST /api/v1/projects/:id/rooms — create a room in a project

@@ -46,6 +46,7 @@ import {
   useColumnDefs,
   useProjects,
   useRoomsWithItems,
+  useFfeCatalogGroups,
   useProposalWithItems,
 } from './hooks';
 import { DashboardPage } from './pages/DashboardPage';
@@ -438,8 +439,9 @@ function ProjectProposalRoute() {
 }
 
 function ProjectCatalogRoute() {
-  const { project, roomsWithItems } = useProjectContext();
-  return <CatalogView project={project} rooms={roomsWithItems} />;
+  const { project } = useProjectContext();
+  const { groups } = useFfeCatalogGroups(project.id);
+  return <CatalogView project={project} rooms={groups} />;
 }
 
 function ProjectMaterialsRoute() {

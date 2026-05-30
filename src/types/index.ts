@@ -15,6 +15,7 @@ export type {
 export type { Room, RoomWithItems } from './room';
 export type {
   CustomColumnDef,
+  FfeCatalogGroup,
   GeneratedItem,
   GeneratedItemProposalFields,
   Item,

@@ -167,8 +167,11 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
     [setBodyColorToken, setFontFamily, setMetaColorToken, setTitleColorToken],
   );
   const entries = useMemo(() => flattenCatalogEntries(rooms, sortMode), [rooms, sortMode]);
+  // Address the catalog by item ID (order-independent); fall back to ?page=N.
+  const requestedItemId = searchParams.get('item');
+  const itemIndex = requestedItemId ? entries.findIndex((e) => e.item.id === requestedItemId) : -1;
   const requestedPage = Number(searchParams.get('page') ?? '1');
-  const pageIndex = clampPageIndex(requestedPage - 1, entries.length);
+  const pageIndex = itemIndex >= 0 ? itemIndex : clampPageIndex(requestedPage - 1, entries.length);
   const entry = entries[pageIndex];
   const [slideDirection, setSlideDirection] = useState<'next' | 'previous'>('next');
   const [editorOpen, setEditorOpen] = useState(false);
@@ -244,8 +247,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const setPage = (nextIndex: number) => {
     const clampedIndex = clampPageIndex(nextIndex, entries.length);
     setSlideDirection(clampedIndex >= pageIndex ? 'next' : 'previous');
-    const nextPage = clampedIndex + 1;
-    navigate({ search: `?page=${nextPage}` });
+    const target = entries[clampedIndex];
+    if (target) navigate({ search: `?item=${target.item.id}` });
   };
 
   if (!entry) {
@@ -257,7 +260,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
             No catalog items yet
           </h1>
           <p className="max-w-md text-sm leading-6 text-neutral-500">
-            Add FF&amp;E items to locations before creating a printable catalog.
+            Add Proposal items to FF&amp;E before creating a printable catalog.
           </p>
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
             Back
@@ -477,7 +480,7 @@ function CatalogPagePicker({
     <nav aria-label="Catalog page picker" className="no-print flex items-center gap-3">
       {currentEntry?.room.name ? (
         <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500 lg:block">
-          <span className="text-neutral-400">Room ·</span>{' '}
+          <span className="text-neutral-400">Category ·</span>{' '}
           <span className="text-neutral-800">{currentEntry.room.name}</span>
         </p>
       ) : null}

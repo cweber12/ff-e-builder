@@ -1,6 +1,28 @@
 import { apiFetch } from './transport';
 import { mapItem, type RawItem } from './mappers';
-import type { Item, ItemStatus, ProposalStatus } from '../../types';
+import type { FfeCatalogGroup, Item, ItemStatus, ProposalStatus } from '../../types';
+
+interface RawFfeCatalogGroup {
+  id: string;
+  project_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  items: RawItem[];
+}
+
+function mapFfeCatalogGroup(raw: RawFfeCatalogGroup): FfeCatalogGroup {
+  return {
+    id: raw.id,
+    projectId: raw.project_id,
+    name: raw.name,
+    sortOrder: raw.sort_order,
+    createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
+    items: raw.items.map(mapItem),
+  };
+}
 
 export type CreateItemInput = {
   itemName: string;
@@ -49,6 +71,12 @@ export const itemsApi = {
   list: (roomId: string): Promise<Item[]> =>
     apiFetch<{ items: RawItem[] }>(`/api/v1/rooms/${roomId}/items`).then((r) =>
       r.items.map(mapItem),
+    ),
+
+  // FF&E catalog/list view: FF&E-visible items grouped by Proposal Category.
+  listFfeGroups: (projectId: string): Promise<FfeCatalogGroup[]> =>
+    apiFetch<{ groups: RawFfeCatalogGroup[] }>(`/api/v1/projects/${projectId}/ffe/groups`).then(
+      (r) => r.groups.map(mapFfeCatalogGroup),
     ),
 
   create: (roomId: string, input: CreateItemInput): Promise<Item> =>

@@ -33,6 +33,10 @@ export const itemKeys = {
   forRoom: (roomId: string) => ['items', roomId] as const,
 };
 
+export const ffeKeys = {
+  catalogGroups: (projectId: string) => ['ffe', projectId, 'catalog-groups'] as const,
+};
+
 export const imageKeys = {
   all: ['images'] as const,
   forEntity: (entityType: ImageEntityType, entityId: string) =>
