@@ -1,7 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { api } from '../../lib/api';
 import { imageKeys, itemKeys, proposalKeys } from '../../lib/query';
-import type { Material } from '../../types';
+import type { ImageAsset, Material } from '../../types';
 import { useCreateFinish } from '../finishes/useFinishes';
 import { useUploadImage } from '../shared/useImages';
 import { useItemMaterialActions, type MaterialContext } from './useMaterials';
@@ -22,10 +24,16 @@ type MaterialCellPasteInput = {
 
 const DEFAULT_OVERWRITE_PROMPT =
   'This material already has a finish attached. Overwrite the existing swatch image?';
+const OVERWRITE_UNDO_WINDOW_MS = 10_000;
 
 function defaultConfirmOverwrite() {
   if (typeof window === 'undefined') return true;
   return window.confirm(DEFAULT_OVERWRITE_PROMPT);
+}
+
+function getPrimaryImage(images: ImageAsset[] | null | undefined) {
+  if (!images || images.length === 0) return null;
+  return images.find((image) => image.isPrimary) ?? images[0];
 }
 
 export function useMaterialCellPaste(projectId: string, context: MaterialContext) {
@@ -46,6 +54,19 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
       void queryClient.invalidateQueries({ queryKey: imageKeys.forEntity('finish', finishId) });
     },
     [context.itemGroupId, context.kind, queryClient],
+  );
+  const getPrimaryFinishImage = useCallback(
+    async (finishId: string) => {
+      const queryKey = imageKeys.forEntity('finish', finishId);
+      const cachedImages = queryClient.getQueryData<ImageAsset[]>(queryKey);
+      if (cachedImages !== undefined) return getPrimaryImage(cachedImages);
+      const fetchedImages = await queryClient.fetchQuery({
+        queryKey,
+        queryFn: () => api.images.list({ entityType: 'finish', entityId: finishId }),
+      });
+      return getPrimaryImage(fetchedImages);
+    },
+    [queryClient],
   );
 
   const pasteIntoCell = useCallback(
@@ -110,20 +131,57 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
         }
 
         if (!confirmOverwrite(primaryMaterial)) return 'discarded';
-        await uploadImage.mutateAsync({
+
+        let previousPrimaryImage: ImageAsset | null = null;
+        try {
+          previousPrimaryImage = await getPrimaryFinishImage(primaryMaterial.finishId);
+        } catch {
+          previousPrimaryImage = null;
+        }
+
+        const uploadedImage = await uploadImage.mutateAsync({
           entityType: 'finish',
           entityId: primaryMaterial.finishId,
           file,
           altText: `${primaryMaterial.name || 'Material'} swatch`,
         });
         refreshMaterialCell(primaryMaterial.finishId);
+
+        let undoConsumed = false;
+        const undoOverwrite = async () => {
+          if (undoConsumed) return;
+          undoConsumed = true;
+          try {
+            if (previousPrimaryImage) {
+              await api.images.setPrimary(previousPrimaryImage.id);
+            } else {
+              await api.images.delete(uploadedImage.id);
+            }
+            refreshMaterialCell(primaryMaterial.finishId);
+            toast.success('Previous swatch restored.');
+          } catch {
+            undoConsumed = false;
+            toast.error('Undo could not restore the previous swatch image.');
+          }
+        };
+
+        toast.success('Swatch updated.', {
+          duration: OVERWRITE_UNDO_WINDOW_MS,
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              void undoOverwrite();
+            },
+          },
+        });
+
         return 'overwritten';
       } finally {
         inFlightRef.current = false;
         setIsPasting(false);
       }
     },
-    [createFinish, materialActions, refreshMaterialCell, uploadImage],
+    [createFinish, getPrimaryFinishImage, materialActions, refreshMaterialCell, uploadImage],
   );
 
   return {

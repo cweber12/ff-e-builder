@@ -442,7 +442,9 @@ function CatalogEditorMediaManager({
         file,
       })
       .then((status) => {
-        if (status !== 'discarded') toast.success('Swatch updated from paste.');
+        if (status === 'created_material' || status === 'attached_finish') {
+          toast.success('Swatch updated from paste.');
+        }
       });
   };
 

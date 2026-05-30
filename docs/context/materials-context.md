@@ -30,7 +30,11 @@ multiple items, and each item can have multiple materials.
     upload the image to that finish
   - material assigned without finish: create a new finish, attach it, and upload
     the image
-  - material assigned with finish: prompt overwrite or discard before any upload
+  - material assigned with finish:
+    - prompt overwrite or discard before any upload
+    - successful overwrite shows a 10-second Undo action
+    - Undo restores the previous primary swatch when possible, otherwise
+      surface non-blocking failure feedback
 - In FF&E Catalog Editor, the `Add swatch` control in Media supports the same
   paste routing behavior for the active catalog item.
 - Use the Materials tab to view and manage all library entries for the project.
