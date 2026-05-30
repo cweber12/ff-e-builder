@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(table): add `resolveGeneratedItemColumns` policy seam and unit coverage for shared preset ordering, group mapping, sticky designation, and omit-when-empty metadata
 - docs(adr): add ADR-0011 — share a Generated Item Table Policy / Resolved Column Model across FF&E and Proposal instead of a unified table shell or rendering engine; record CONTEXT.md terms and correct architecture.md section 8.4 to match
 - docs(architecture): add canonical File And Folder Conventions (section 8) defining casing by file kind, folder layout, barrel policy, the shared Generated Item Table layout, and a tracked deviation/migration table; agent-routing Feature Module context pack now points at it
 - refactor(primitives): rename `toast-api.ts` to `toastApi.ts` to remove the lone kebab-case module name (Phase 0 of the structure cleanup)
