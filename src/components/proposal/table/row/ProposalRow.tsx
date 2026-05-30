@@ -23,10 +23,7 @@ import { GeneratedItemEditableTextCell } from '../../../shared/table/GeneratedIt
 import { GeneratedItemImageCell } from '../../../shared/table/GeneratedItemImageCell';
 import { GeneratedItemMaterialsCell } from '../../../shared/table/GeneratedItemMaterialsCell';
 import { GeneratedItemSizeCell } from '../../../shared/table/GeneratedItemSizeModal';
-import {
-  proposalStickyEdgeColumnClassNames,
-  proposalStickyValueColumnClassNames,
-} from '../../../shared/table/generatedItemStickyStyles';
+import { proposalGeneratedItemStickyClassNames } from '../../../shared/table/generatedItemStickyStyles';
 import {
   RevisionCostCell,
   GeneratedItemColumnChangeDot,
@@ -445,7 +442,10 @@ const ProposalRowContent = memo(
               onSaveUnit={(quantityUnit) => onSave({ quantityUnit })}
               debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
               indicator={dot('quantity')}
-              tdClassName={cn(proposalStickyValueColumnClassNames.quantity.cell, 'py-3')}
+              tdClassName={cn(
+                proposalGeneratedItemStickyClassNames.byColumnId.quantity?.cell,
+                'py-3',
+              )}
               inputClassName={editInputClassName}
             />
             <GeneratedItemEditableMoneyCell
@@ -453,13 +453,16 @@ const ProposalRowContent = memo(
               onSave={(unitCostCents) => onSave({ unitCostCents })}
               debounceMs={PROPOSAL_CELL_DEBOUNCE_MS}
               indicator={dot('unitCostCents')}
-              tdClassName={cn(proposalStickyValueColumnClassNames.unitCost.cell, 'py-3')}
+              tdClassName={cn(
+                proposalGeneratedItemStickyClassNames.byColumnId.unitCost?.cell,
+                'py-3',
+              )}
               inputClassName={editInputClassName}
             />
             <td
               className={cn(
                 'px-3 py-3 font-semibold text-neutral-900',
-                proposalStickyEdgeColumnClassNames.totalCell,
+                proposalGeneratedItemStickyClassNames.byColumnId.total?.cell,
               )}
             >
               {formatMoney(cents(lineTotal))}
@@ -467,7 +470,10 @@ const ProposalRowContent = memo(
           </>
         )}
         <td
-          className={cn('px-1 py-3', proposalStickyEdgeColumnClassNames.actionsCell)}
+          className={cn(
+            'px-1 py-3',
+            proposalGeneratedItemStickyClassNames.byColumnId.actions?.cell,
+          )}
           onClick={stopProp}
         >
           <ProposalItemActionsMenu

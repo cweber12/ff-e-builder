@@ -85,7 +85,8 @@ describe('resolveGeneratedItemColumns', () => {
     const ffe = resolveGeneratedItemColumns(FFE_GENERATED_ITEM_TABLE_PRESET, [], {});
     expect(ffe.find((column) => column.id === 'lineTotal')?.sticky).toBe('edge');
     expect(ffe.find((column) => column.id === 'actions')?.sticky).toBe('edge');
-    expect(ffe.find((column) => column.id === 'qty')?.sticky).toBeNull();
+    expect(ffe.find((column) => column.id === 'qty')?.sticky).toBe('value');
+    expect(ffe.find((column) => column.id === 'unitCostCents')?.sticky).toBe('value');
 
     const proposal = resolveGeneratedItemColumns(PROPOSAL_GENERATED_ITEM_TABLE_PRESET, [], {});
     expect(proposal.find((column) => column.id === 'quantity')?.sticky).toBe('value');

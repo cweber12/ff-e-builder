@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(table): drive FF&E and Proposal sticky column class assignment from shared resolver sticky descriptors, and add FF&E value-sticky behavior for Quantity and Unit Cost
 - fix(table): route FF&E and Proposal first-load empty-column omission through shared `resolveGeneratedItemColumns` policy metadata and remove duplicated per-view empty-column logic
 - refactor(table): add `resolveGeneratedItemColumns` policy seam and unit coverage for shared preset ordering, group mapping, sticky designation, and omit-when-empty metadata
 - docs(adr): add ADR-0011 — share a Generated Item Table Policy / Resolved Column Model across FF&E and Proposal instead of a unified table shell or rendering engine; record CONTEXT.md terms and correct architecture.md section 8.4 to match

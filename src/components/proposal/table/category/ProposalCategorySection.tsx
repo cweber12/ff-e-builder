@@ -41,10 +41,7 @@ import { cn } from '../../../../lib/utils';
 import { GroupedTableSection } from '../../../shared/table/TableViewWrappers';
 import { SortableColHeader } from '../../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
-import {
-  proposalStickyEdgeColumnClassNames,
-  proposalStickyValueColumnClassNames,
-} from '../../../shared/table/generatedItemStickyStyles';
+import { proposalGeneratedItemStickyClassNames } from '../../../shared/table/generatedItemStickyStyles';
 import { ProposalRow } from '../row/ProposalRow';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
 import { ProposalCategoryMobileCards } from './ProposalCategoryMobileCards';
@@ -519,7 +516,7 @@ export function ProposalCategorySection({
                       <th
                         className={cn(
                           'table-head-cell',
-                          proposalStickyValueColumnClassNames.quantity.header,
+                          proposalGeneratedItemStickyClassNames.byColumnId.quantity?.header,
                         )}
                       >
                         Quantity
@@ -527,7 +524,7 @@ export function ProposalCategorySection({
                       <th
                         className={cn(
                           'table-head-cell',
-                          proposalStickyValueColumnClassNames.unitCost.header,
+                          proposalGeneratedItemStickyClassNames.byColumnId.unitCost?.header,
                         )}
                       >
                         Unit Cost
@@ -535,7 +532,7 @@ export function ProposalCategorySection({
                       <th
                         className={cn(
                           'table-head-cell',
-                          proposalStickyEdgeColumnClassNames.totalHeader,
+                          proposalGeneratedItemStickyClassNames.byColumnId.total?.header,
                         )}
                       >
                         Total Cost
@@ -545,7 +542,7 @@ export function ProposalCategorySection({
                   <th
                     className={cn(
                       'table-head-cell',
-                      proposalStickyEdgeColumnClassNames.actionsHeader,
+                      proposalGeneratedItemStickyClassNames.byColumnId.actions?.header,
                     )}
                   />
                 </tr>

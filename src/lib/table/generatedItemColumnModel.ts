@@ -101,7 +101,11 @@ function resolveGroupMap(preset: GeneratedItemColumnsPreset): Map<string, string
 
 function resolveSticky(tableKey: GeneratedItemColumnsPreset['tableKey'], id: string): StickyKind {
   if (id === 'actions') return 'edge';
-  if (tableKey === 'ffe') return id === 'lineTotal' ? 'edge' : null;
+  if (tableKey === 'ffe') {
+    if (id === 'lineTotal') return 'edge';
+    if (id === 'qty' || id === 'unitCostCents') return 'value';
+    return null;
+  }
   if (id === 'total') return 'edge';
   if (id === 'quantity' || id === 'unitCost') return 'value';
   return null;

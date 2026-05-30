@@ -108,7 +108,7 @@ import {
   GeneratedItemSizeTrigger,
 } from '../../shared/table/GeneratedItemSizeModal';
 import { SortableColHeader } from '../../shared/table/SortableColHeader';
-import { ffeStickyEdgeColumnClassNames } from '../../shared/table/generatedItemStickyStyles';
+import { ffeGeneratedItemStickyClassNames } from '../../shared/table/generatedItemStickyStyles';
 import {
   ChangeConfirmModal,
   type ChangeConfirmResult,
@@ -1861,28 +1861,18 @@ export function RoomItemsSection({
                           if (colId === 'drag') {
                             return <th key={header.id} className="table-head-cell w-10 min-w-10" />;
                           }
-                          if (colId === 'lineTotal') {
+                          const stickyClassNames =
+                            ffeGeneratedItemStickyClassNames.byColumnId[colId];
+                          if (stickyClassNames) {
                             return (
                               <th
                                 key={header.id}
-                                className={cn(
-                                  'table-head-cell',
-                                  ffeStickyEdgeColumnClassNames.totalHeader,
-                                )}
+                                className={cn('table-head-cell', stickyClassNames.header)}
                               >
-                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                {colId === 'actions'
+                                  ? null
+                                  : flexRender(header.column.columnDef.header, header.getContext())}
                               </th>
-                            );
-                          }
-                          if (colId === 'actions') {
-                            return (
-                              <th
-                                key={header.id}
-                                className={cn(
-                                  'table-head-cell',
-                                  ffeStickyEdgeColumnClassNames.actionsHeader,
-                                )}
-                              />
                             );
                           }
                           if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {
@@ -2008,31 +1998,24 @@ export function RoomItemsSection({
                                   <th key={header.id} className="table-head-cell w-10 min-w-10" />
                                 );
                               }
-                              if (colId === 'lineTotal') {
+                              const stickyClassNames =
+                                ffeGeneratedItemStickyClassNames.byColumnId[colId];
+                              if (stickyClassNames) {
                                 return (
                                   <th
                                     key={header.id}
                                     className={cn(
                                       'table-head-cell',
-                                      ffeStickyEdgeColumnClassNames.totalExpandedHeader,
+                                      stickyClassNames.expandedHeader,
                                     )}
                                   >
-                                    {flexRender(
-                                      header.column.columnDef.header,
-                                      header.getContext(),
-                                    )}
+                                    {colId === 'actions'
+                                      ? null
+                                      : flexRender(
+                                          header.column.columnDef.header,
+                                          header.getContext(),
+                                        )}
                                   </th>
-                                );
-                              }
-                              if (colId === 'actions') {
-                                return (
-                                  <th
-                                    key={header.id}
-                                    className={cn(
-                                      'table-head-cell',
-                                      ffeStickyEdgeColumnClassNames.actionsExpandedHeader,
-                                    )}
-                                  />
                                 );
                               }
                               if ((DEFAULT_COLUMN_IDS as readonly string[]).includes(colId)) {

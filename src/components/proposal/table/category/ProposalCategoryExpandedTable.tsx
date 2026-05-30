@@ -18,10 +18,7 @@ import { cn } from '../../../../lib/utils';
 import { ProposalRow } from '../row/ProposalRow';
 import { SortableColHeader } from '../../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
-import {
-  proposalStickyEdgeColumnClassNames,
-  proposalStickyValueColumnClassNames,
-} from '../../../shared/table/generatedItemStickyStyles';
+import { proposalGeneratedItemStickyClassNames } from '../../../shared/table/generatedItemStickyStyles';
 import {
   baselineQtyColumnClassName,
   baselineTotalColumnClassName,
@@ -248,7 +245,7 @@ export function ProposalCategoryExpandedTable({
                       <th
                         className={cn(
                           'table-head-cell',
-                          proposalStickyValueColumnClassNames.quantity.expandedHeader,
+                          proposalGeneratedItemStickyClassNames.byColumnId.quantity?.expandedHeader,
                         )}
                       >
                         Quantity
@@ -256,7 +253,7 @@ export function ProposalCategoryExpandedTable({
                       <th
                         className={cn(
                           'table-head-cell',
-                          proposalStickyValueColumnClassNames.unitCost.expandedHeader,
+                          proposalGeneratedItemStickyClassNames.byColumnId.unitCost?.expandedHeader,
                         )}
                       >
                         Unit Cost
@@ -264,7 +261,7 @@ export function ProposalCategoryExpandedTable({
                       <th
                         className={cn(
                           'table-head-cell',
-                          proposalStickyEdgeColumnClassNames.totalExpandedHeader,
+                          proposalGeneratedItemStickyClassNames.byColumnId.total?.expandedHeader,
                         )}
                       >
                         Total Cost
@@ -274,7 +271,7 @@ export function ProposalCategoryExpandedTable({
                   <th
                     className={cn(
                       'table-head-cell',
-                      proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
+                      proposalGeneratedItemStickyClassNames.byColumnId.actions?.expandedHeader,
                     )}
                   />
                 </tr>
