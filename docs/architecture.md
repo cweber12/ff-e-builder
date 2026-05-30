@@ -410,11 +410,14 @@ src/
 - Canonical aggregate barrels are `src/types/index.ts`, `src/hooks/index.ts`, `src/lib/api.ts`, and `src/lib/export/index.ts`.
 - Keep one alias per export in a barrel. Redundant re-aliases (the same symbol exported under several near-synonym names) are cruft — remove them rather than grow them.
 
-### 8.4 The Shared Generated Item Table (ADR-0008)
+### 8.4 The Generated Item Table: Shared Policy, Not A Shared Shell (ADR-0008, ADR-0011)
 
-- The shared table and its cells live in `src/components/shared/table/` (`GeneratedItem*` files).
-- FF&E and Proposal are **views over the shared table**, selected by presets in `src/lib/table/generatedItemTablePresets.ts` (grouping + default columns). FF&E groups by Location; Proposal groups by Proposal Category.
-- New table behavior goes into the shared table + a preset, not into a feature-private table copy. See [context/generated-item-table-state.md](context/generated-item-table-state.md) for the current migration state.
+There is **no single `<GeneratedItemTable>` shell** and there is not meant to be one. FF&E renders with TanStack Table; Proposal hand-rolls its rows. ADR-0011 records why convergence on one engine is not worth it (FF&E is secondary to the Catalog). What is shared is **policy, not mechanics**:
+
+- **Shared cells** live in `src/components/shared/table/` (`GeneratedItem*` files) — the contents of a cell.
+- **The Generated Item Table Policy** is the single source of truth for column order, organization (groups), sticky designation, empty-column omission, and per-column actions/icons. It resolves a **View Preset** (`src/lib/table/generatedItemTablePresets.ts`) into a **Resolved Column Model**. Both shells read that model; each translates it to its own engine. FF&E groups by Location; Proposal groups by Proposal Category.
+- **Consistency by default, divergence by explicit preset flag.** Proposal behavior is canonical; FF&E derives from the same policy and opts out only through preset fields (ADR-0008 permits different default columns/labels). Do not fork a policy into per-view twins (the old `emptyFfeColumnIds`/`emptyProposalColumnIds` and `ffe`/`proposal` sticky-style pairs are the anti-pattern this replaces).
+- A consistency-affecting table change (order, sticky, organization, omission, actions) belongs in the policy/preset, **not** in `FfeTableView` or `ProposalCategorySection`. See [context/generated-item-table-state.md](context/generated-item-table-state.md) for migration state.
 
 ### 8.5 Known Deviations And Migration Phases
 
@@ -453,10 +456,11 @@ pnpm arch:scan
 
 Architecture decisions are recorded as ADRs in [adr/](adr/).
 
-| #                                               | Decision                                                                  | Status                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------- | ---------------------- |
-| [0001](adr/0001-server-side-db-proxy.md)        | Server-side DB proxy between the client and Neon                          | Accepted               |
-| [0002](adr/0002-manual-types-for-now.md)        | Hand-written TypeScript types; defer generation until schema pain is real | Accepted               |
-| [0003](adr/0003-no-storybook-yet.md)            | No Storybook in v1; rely on focused tests and written design-system docs  | Accepted               |
-| [0004](adr/0004-project-scoped-tool-models.md)  | Keep FF&E and Proposal as separate project-scoped data models             | Superseded by ADR-0008 |
-| [0008](adr/0008-shared-generated-item-table.md) | Treat FF&E and Proposal as shared Generated Item Table views              | Accepted               |
+| #                                               | Decision                                                                         | Status                 |
+| ----------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------- |
+| [0001](adr/0001-server-side-db-proxy.md)        | Server-side DB proxy between the client and Neon                                 | Accepted               |
+| [0002](adr/0002-manual-types-for-now.md)        | Hand-written TypeScript types; defer generation until schema pain is real        | Accepted               |
+| [0003](adr/0003-no-storybook-yet.md)            | No Storybook in v1; rely on focused tests and written design-system docs         | Accepted               |
+| [0004](adr/0004-project-scoped-tool-models.md)  | Keep FF&E and Proposal as separate project-scoped data models                    | Superseded by ADR-0008 |
+| [0008](adr/0008-shared-generated-item-table.md) | Treat FF&E and Proposal as shared Generated Item Table views                     | Accepted               |
+| [0011](adr/0011-generated-item-table-policy.md) | Share a Generated Item Table Policy/Resolved Column Model, not a shell or engine | Accepted               |
