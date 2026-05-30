@@ -132,9 +132,13 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
 
         if (!confirmOverwrite(primaryMaterial)) return 'discarded';
 
+        // finishId is narrowed to string by the guard above, but that narrowing
+        // is lost inside the async undo closure — capture it in a local.
+        const primaryFinishId = primaryMaterial.finishId;
+
         let previousPrimaryImage: ImageAsset | null = null;
         try {
-          previousPrimaryImage = await getPrimaryFinishImage(primaryMaterial.finishId);
+          previousPrimaryImage = (await getPrimaryFinishImage(primaryFinishId)) ?? null;
         } catch {
           previousPrimaryImage = null;
         }
@@ -145,7 +149,7 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
           file,
           altText: `${primaryMaterial.name || 'Material'} swatch`,
         });
-        refreshMaterialCell(primaryMaterial.finishId);
+        refreshMaterialCell(primaryFinishId);
 
         let undoConsumed = false;
         const undoOverwrite = async () => {
@@ -157,7 +161,7 @@ export function useMaterialCellPaste(projectId: string, context: MaterialContext
             } else {
               await api.images.delete(uploadedImage.id);
             }
-            refreshMaterialCell(primaryMaterial.finishId);
+            refreshMaterialCell(primaryFinishId);
             toast.success('Previous swatch restored.');
           } catch {
             undoConsumed = false;

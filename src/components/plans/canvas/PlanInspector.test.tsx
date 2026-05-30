@@ -196,6 +196,7 @@ function buildProps(overrides: Partial<PlanInspectorProps> = {}): PlanInspectorP
     onOpenCreateItemPanel: vi.fn(),
     creatingItemFromMeasurement: false,
     rectangleMode: 'measure' as const,
+    onRectangleModeChange: vi.fn(),
     onSetHighlight: vi.fn(),
     canSetHighlight: false,
     onSaveHighlight: vi.fn(),

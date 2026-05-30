@@ -4,15 +4,7 @@ import { PlanToolRail } from './PlanToolRail';
 
 describe('PlanToolRail', () => {
   it('disables downstream tools until the Measured Plan is calibrated', () => {
-    render(
-      <PlanToolRail
-        activeTool="calibrate"
-        isCalibrated={false}
-        onToolChange={vi.fn()}
-        rectangleMode="measure"
-        onRectangleModeChange={vi.fn()}
-      />,
-    );
+    render(<PlanToolRail activeTool="calibrate" isCalibrated={false} onToolChange={vi.fn()} />);
 
     expect(screen.getByRole('button', { name: 'Calibrate' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Pan' })).toBeEnabled();
@@ -24,15 +16,7 @@ describe('PlanToolRail', () => {
   it('enables measurement tools for calibrated Measured Plans', () => {
     const onToolChange = vi.fn();
 
-    render(
-      <PlanToolRail
-        activeTool="calibrate"
-        isCalibrated
-        onToolChange={onToolChange}
-        rectangleMode="measure"
-        onRectangleModeChange={vi.fn()}
-      />,
-    );
+    render(<PlanToolRail activeTool="calibrate" isCalibrated onToolChange={onToolChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Length Line' }));
 
