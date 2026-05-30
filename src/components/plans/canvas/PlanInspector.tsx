@@ -1,5 +1,5 @@
 import { MeasuredAreaSelect } from './MeasuredAreaSelect';
-import { MeasurementTargetPicker } from './MeasurementTargetPicker';
+import MeasurementTargetPicker from './MeasurementTargetPicker';
 import { getPlanToolLabel, PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './planToolDefinitions';
 import type { PlanToolGroupId } from './planToolDefinitions';
 import type {

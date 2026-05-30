@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(plans): align PlanInspector and MeasurementTargetPicker exports to prevent runtime module-link failures in the plans canvas inspector
 - feat(materials): add 10-second Undo toast for pasted swatch overwrites, restoring previous primary swatches when possible and showing non-blocking restore failures
 - fix(materials): enforce manual collision-policy parity in finishes/materials Excel imports by using exact normalized finish-name matching and row-level use-existing or swatch-overwrite outcomes
 - fix(table): drive FF&E and Proposal sticky column class assignment from shared resolver sticky descriptors, and add FF&E value-sticky behavior for Quantity and Unit Cost

@@ -14,7 +14,7 @@ type MeasurementTargetPickerProps = {
  * attaches to. Shows item ID + name and flags items that already carry a
  * measurement (re-measuring replaces the existing one).
  */
-export function MeasurementTargetPicker({
+function MeasurementTargetPicker({
   items,
   value,
   onChange,
@@ -126,3 +126,6 @@ export function MeasurementTargetPicker({
     </div>
   );
 }
+
+export { MeasurementTargetPicker };
+export default MeasurementTargetPicker;
