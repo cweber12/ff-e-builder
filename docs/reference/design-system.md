@@ -17,62 +17,148 @@ This document is the **source of truth** for all visual and interaction decision
 
 ## Tokens
 
-### Color Palette
+All colors are defined in `src/index.css` `:root` as space-separated RGB
+channels (e.g. `--color-brand-500: 31 88 145`) so Tailwind's opacity modifier
+works: `bg-brand-500/20` → `rgb(var(--color-brand-500) / 0.2)`. To retheme the
+app, override the variables in `:root` — no component edits required.
 
-| Token             | Class             | Hex       | Usage                                 |
-| ----------------- | ----------------- | --------- | ------------------------------------- |
-| `brand.50`        | `brand-50`        | `#F1F5F2` | Tinted backgrounds, subtle hover      |
-| `brand.500`       | `brand-500`       | `#1A6B4A` | Primary actions, headers, focus rings |
-| `brand.600`       | `brand-600`       | `#155A3E` | Hover state for primary elements      |
-| `brand.700`       | `brand-700`       | `#0F4631` | Active / pressed state                |
-| `surface.DEFAULT` | `surface`         | `#FFFFFF` | Card / panel backgrounds              |
-| `surface.muted`   | `surface-muted`   | `#F8F6F1` | Page background (warm off-white)      |
-| `surface.inverse` | `surface-inverse` | `#1C1C1A` | Dark surfaces, tooltips               |
-| `danger.500`      | `danger-500`      | `#DC2626` | Errors, destructive actions           |
-| `danger.600`      | `danger-600`      | `#B91C1C` | Hover/active on danger                |
-| `success.500`     | `success-500`     | `#059669` | Success states, positive budget       |
-| `warning.500`     | `warning-500`     | `#D97706` | Warnings, amber budget                |
+### Brand — steel / Prussian blue
 
-### Type Scale
+Dark, saturated steel blue. Carries primary actions, totals, active states, and
+focus rings. (Replaced the earlier green brand.)
 
-| Step | Tailwind class | Size | Usage                  |
-| ---- | -------------- | ---- | ---------------------- |
-| xs   | `text-xs`      | 12px | Metadata, timestamps   |
-| sm   | `text-sm`      | 14px | Secondary text, labels |
-| base | `text-base`    | 16px | Body copy              |
-| lg   | `text-lg`      | 18px | Sub-headings           |
-| xl   | `text-xl`      | 20px | Section headings       |
-| 2xl  | `text-2xl`     | 24px | Page headings          |
-| 3xl  | `text-3xl`     | 30px | Hero/display           |
+| Class       | RGB           | Hex       | Usage                                |
+| ----------- | ------------- | --------- | ------------------------------------ |
+| `brand-50`  | `232 240 248` | `#E8F0F8` | Tinted hover / selected backgrounds  |
+| `brand-100` | `200 219 237` | `#C8DBED` | Stronger tint (e.g. `ordered` badge) |
+| `brand-200` | `148 187 220` | `#94BBDC` | Badge rings, subtle borders          |
+| `brand-300` | `92 149 198`  | `#5C95C6` | Hover borders                        |
+| `brand-400` | `52 114 174`  | `#3472AE` | Hover borders on controls            |
+| `brand-500` | `31 88 145`   | `#1F5891` | **Primary** — focus rings, accents   |
+| `brand-600` | `22 69 117`   | `#164575` | Primary button fill                  |
+| `brand-700` | `16 52 92`    | `#10345C` | Hover / active, link text            |
+| `brand-800` | `11 38 68`    | `#0B2644` | Deep accents                         |
+| `brand-900` | `7 26 47`     | `#071A2F` | Deepest accent                       |
 
-### Spacing Scale
+### Neutral — cool slate gray
 
-The standard Tailwind spacing scale applies. Additional custom values:
+No warm beige bias. `200`/`300` are intentionally dark enough to read as ruled
+architectural lines rather than disappearing into the page.
 
-| Token        | Value    | Usage         |
-| ------------ | -------- | ------------- |
-| `spacing.18` | `4.5rem` | Navbar height |
+| Class         | RGB           | Hex       | Usage                                  |
+| ------------- | ------------- | --------- | -------------------------------------- |
+| `neutral-50`  | `246 248 251` | `#F6F8FB` | Subtle fills, skeletons                |
+| `neutral-100` | `236 240 245` | `#ECF0F5` | Hover fills, segmented track           |
+| `neutral-200` | `211 219 230` | `#D3DBE6` | Card / table borders (= `border`)      |
+| `neutral-300` | `174 186 201` | `#AEBAC9` | Strong dividers (= `border-strong`)    |
+| `neutral-400` | `130 145 163` | `#8291A3` | Disabled / decorative text only (~3:1) |
+| `neutral-500` | `92 106 124`  | `#5C6A7C` | Secondary text, labels (~5.5:1)        |
+| `neutral-600` | `62 76 94`    | `#3E4C5E` | Eyebrows, metadata (~8.7:1)            |
+| `neutral-700` | `41 53 69`    | `#293545` | Body text, control text                |
+| `neutral-800` | `25 35 49`    | `#192331` | Strong body                            |
+| `neutral-900` | `14 22 34`    | `#0E1622` | Default text color                     |
+| `neutral-950` | `8 14 22`     | `#080E16` | Headings                               |
+
+> **Contrast rule:** body and meaningful small text must sit at `neutral-500`
+> or darker on white. `neutral-400` is reserved for disabled states,
+> placeholders, dashes, and icons — never meaningful small copy.
+
+### Surface & canvas
+
+Three-layer surface hierarchy plus the near-white paper canvas family.
+
+| Class             | Hex       | Usage                                          |
+| ----------------- | --------- | ---------------------------------------------- |
+| `surface`         | `#FFFFFF` | Cards, tables, modals                          |
+| `surface-muted`   | `#E7EBF0` | The visible "gray panel" behind white cards    |
+| `surface-raised`  | `#FFFFFF` | Elevated overlays                              |
+| `surface-inverse` | `#0E1622` | Inverted strips                                |
+| `canvas` (bg)     | `#F9FAFC` | App page background (paper-textured)           |
+| `canvas-shell`    | `#F4F6FA` | Hover / inset on the canvas                    |
+| `canvas-chrome`   | `#FFFFFF` | Toolbars, headers, popovers                    |
+| `paper`           | `#FCFCFD` | Printable artifacts (proposal totals, catalog) |
+
+`border` = `#D3DBE6` (neutral-200); `border-strong` = `#AEBAC9` (neutral-300).
+
+### Semantic
+
+| Class                | Hex                           | Usage                  |
+| -------------------- | ----------------------------- | ---------------------- |
+| `danger-50/500/600`  | `#FEF2F2 / #DC2626 / #B91C1C` | Errors, destructive    |
+| `success-50/500/700` | `#ECFDF5 / #059669 / #046C4E` | Success, positive      |
+| `warning-50/500/700` | `#FFF7ED / #D97706 / #9A5406` | Warnings, amber budget |
+
+### Type scale
+
+Body anchors at **14px** (the data-dense default); the display serif steps up
+for page authority. Canonical role tokens live in `:root` as `--text-*`; the
+matching Tailwind size classes remain available for everyday use.
+
+| Role    | Token (`--text-*`) | Size | Tailwind   | Usage                         |
+| ------- | ------------------ | ---- | ---------- | ----------------------------- |
+| display | `--text-display`   | 32px | `text-3xl` | Page hero (Fraunces serif)    |
+| title   | `--text-title`     | 24px | `text-2xl` | Page / section h1             |
+| section | `--text-section`   | 17px | `text-lg`  | Card + panel headings         |
+| body    | `--text-body`      | 14px | `text-sm`  | Default reading + controls    |
+| caption | `--text-caption`   | 13px | —          | Secondary descriptive text    |
+| meta    | `--text-meta`      | 11px | —          | Eyebrows, labels, table heads |
+
+Body letter-spacing `-0.005em`; headings `-0.015em`. Tabular numerals apply by
+default to `table` and `[data-tabular]`.
+
+### Spacing
+
+The standard Tailwind spacing scale applies. A canonical numeric vocabulary is
+also documented in `:root` as `--space-1`…`--space-10` (4 / 8 / 12 / 16 / 20 /
+24 / 32 / 40px). Custom Tailwind additions:
+
+| Token         | Value     | Usage         |
+| ------------- | --------- | ------------- |
+| `spacing.13`  | `3.25rem` | —             |
+| `spacing.18`  | `4.5rem`  | Navbar height |
+| `spacing.112` | `28rem`   | Wide panels   |
+| `spacing.128` | `32rem`   | Wide panels   |
 
 ### Radii
 
-| Token  | Class          | Value | Usage           |
-| ------ | -------------- | ----- | --------------- |
-| `sm`   | `rounded-sm`   | 2px   | Micro elements  |
-| `md`   | `rounded-md`   | 6px   | Buttons, inputs |
-| `lg`   | `rounded-lg`   | 8px   | Cards           |
-| `xl`   | `rounded-xl`   | 12px  | Modals, drawers |
-| `2xl`  | `rounded-2xl`  | 16px  | Large panels    |
-| `pill` | `rounded-pill` | 999px | Status badges   |
+Architectural / spec-sheet — deliberately tight. The design system standardizes
+on `sm` and `md`; avoid larger Tailwind radii on app chrome.
+
+| Token  | Class          | Value    | Usage                              |
+| ------ | -------------- | -------- | ---------------------------------- |
+| `sm`   | `rounded-sm`   | `4px`    | Buttons, inputs, segmented control |
+| `md`   | `rounded-md`   | `6px`    | Cards, modals, drawers, popovers   |
+| `pill` | `rounded-pill` | `9999px` | Badges, status chips               |
+| `flat` | `rounded-flat` | `0`      | Full-bleed paper surfaces          |
 
 ### Shadows
 
-Use Tailwind's default shadow scale. Pattern:
+Custom, cool-tinted (`rgb(15 23 42)` base, not black), restrained. Pair with
+hairline borders rather than carrying elevation alone.
 
-| Class       | Usage                           |
-| ----------- | ------------------------------- |
-| `shadow-sm` | Inline editable values on hover |
-| `shadow-md` | Cards, dropdowns                |
-| `shadow-xl` | Modals, drawers                 |
+| Class          | Usage                                     |
+| -------------- | ----------------------------------------- |
+| `shadow-sm`    | Resting cards, inputs, primary buttons    |
+| `shadow-md`    | Dropdowns, hover lift on tiles            |
+| `shadow-lg`    | Menus / popovers                          |
+| `shadow-xl`    | Modals, drawers                           |
+| `shadow-paper` | Plan viewport "sheet on a drafting table" |
+
+### Transitions
+
+Canonical timings in `:root`; reach for these instead of ad-hoc durations.
+
+| Token               | Value                                 | Usage                        |
+| ------------------- | ------------------------------------- | ---------------------------- |
+| `--transition-fast` | `100ms ease`                          | Hover / active state changes |
+| `--transition-base` | `150ms ease`                          | Most color / border changes  |
+| `--transition-slow` | `250ms cubic-bezier(0.16, 1, 0.3, 1)` | Entrance reveals, lifts      |
+
+### Focus
+
+One affordance app-wide: a brand ring — `focus-visible:ring-2
+ring-brand-500/30 ring-offset-1` (the `.focus-ring` utility; `ring-inset` for
+flush items like menu rows). Never rely on color alone for state.
 
 ---
 
@@ -155,43 +241,84 @@ When a save mutation fails:
 
 ## Status Badge Spec
 
-Status badges are **pill-shaped** (`rounded-pill`), always contain an icon and a label, and use semantic colors.
+Status badges are **pill-shaped** (`rounded-pill`), always pair an inline SVG
+icon with a label, and use semantic surface tints. Icons are hand-drawn SVGs in
+`StatusBadge.tsx` (not emoji), stroked with `currentColor`.
 
 ### Item Status Values
 
-| Status     | Color                 | Icon | Label    |
-| ---------- | --------------------- | ---- | -------- |
-| `pending`  | `warning-500` bg tint | ⏳   | Pending  |
-| `approved` | `brand-500` bg tint   | ✓    | Approved |
-| `ordered`  | Blue bg tint          | 📦   | Ordered  |
-| `received` | `success-500` bg tint | ✓    | Received |
+| Status     | Background      | Text               | Icon  | Label    |
+| ---------- | --------------- | ------------------ | ----- | -------- |
+| `pending`  | `bg-warning-50` | `text-warning-700` | clock | Pending  |
+| `approved` | `bg-brand-50`   | `text-brand-700`   | check | Approved |
+| `ordered`  | `bg-brand-100`  | `text-brand-700`   | truck | Ordered  |
+| `received` | `bg-success-50` | `text-success-700` | box   | Received |
 
 ### Structure
 
 ```tsx
 <StatusBadge status="pending" />
-// → <span class="... rounded-pill ...">⏳ Pending</span>
+// → <span role="status" aria-label="Status: Pending"
+//         class="... rounded-pill ..."><svg.../> Pending</span>
 ```
 
-Badge does **not** carry onClick — it is a display-only primitive. Interaction for changing status lives in the parent component.
+`StatusBadge` does **not** carry onClick — it is a display-only primitive that
+sets `role="status"` and an `aria-label`. Interaction for changing status lives
+in the parent (e.g. the table's status editor).
+
+> Distinct from the generic `Badge` primitive, whose variants (`neutral`,
+> `brand`, `danger`, `warning`, `success`) all use a tinted fill + inset ring
+> drawn from the semantic tokens above.
 
 ---
 
 ## Primitives Reference
 
-All primitives live in `src/components/primitives/`.
+All primitives live in `src/components/primitives/` and are re-exported from its
+barrel (`index.ts`).
 
-| Component                 | Description                                           |
-| ------------------------- | ----------------------------------------------------- |
-| `Button`                  | Variants: `primary`, `secondary`, `ghost`, `danger`   |
-| `InlineTextEdit`          | Single-click edit, text fields                        |
-| `InlineNumberEdit`        | Double-click edit, numeric fields with formatter prop |
-| `StatusBadge`             | Read-only pill badge, semantic status colors          |
-| `Drawer`                  | Right-side slide-in panel, focus-trapped              |
-| `Modal`                   | Centered dialog, focus-trapped                        |
-| `Toast` / `ToastProvider` | Thin wrapper around `sonner`                          |
+| Component                                                                 | Description                                                                                                                                                                     |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button` / `ButtonLink`                                                   | Variants: `primary`, `secondary`, `ghost`, `danger`, `toolbar`, `toolbarPrimary`. Sizes `sm/md/lg`. `asChild` for link composition; subtle `active:scale-[0.98]` press feedback |
+| `Badge`                                                                   | Display chip. Variants `neutral`, `brand`, `danger`, `warning`, `success`; sizes `sm/md`; optional `uppercase`                                                                  |
+| `StatusBadge`                                                             | Read-only item-status pill (`pending`/`approved`/`ordered`/`received`) with SVG icon + `role="status"`                                                                          |
+| `SegmentedControl`                                                        | Mutually-exclusive toggle. Variants `segmented`/`toolbar`; tones `default`/`quiet`/`rail`/`status`                                                                              |
+| `InlineTextEdit`                                                          | Single-click edit, text fields                                                                                                                                                  |
+| `InlineNumberEdit`                                                        | Double-click (or pencil) edit, numeric fields with formatter prop                                                                                                               |
+| `Modal`                                                                   | Centered `<dialog>`, focus-trapped, Esc to close                                                                                                                                |
+| `Drawer`                                                                  | Right-side slide-in panel, focus-trapped                                                                                                                                        |
+| `DropdownMenu`                                                            | Portal-positioned menu with submenu support                                                                                                                                     |
+| `MenuPanel` + `MenuItem` / `MenuSeparator` / `MenuSubTrigger` / `MenuSub` | Composable floating menu surface                                                                                                                                                |
+| `LayoutSection`                                                           | Collapsible titled section                                                                                                                                                      |
+| `CompactRowGrid` / `GridCell`                                             | Two-column compact field grid                                                                                                                                                   |
+| `ColorChipGroup`                                                          | Radio-style color swatch picker                                                                                                                                                 |
+| `ToastProvider` / `toast`                                                 | Thin wrapper around `sonner`                                                                                                                                                    |
 
 See the source files in `src/components/primitives/` for full prop documentation.
+
+### Design-system utility classes
+
+Shared class utilities live in `src/index.css` `@layer components` — prefer
+these over re-deriving inline class strings.
+
+| Class                                                                     | Purpose                                                                   |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `.page-title`                                                             | Fraunces display serif for page-level heroes only                         |
+| `.eyebrow` / `.eyebrow-mono`                                              | Uppercase metadata label (11/10px, `neutral-600`, tracked)                |
+| `.card` + `.card-section[-lg]`                                            | White panel with hairline border + padding                                |
+| `.surface-flat` / `.surface-paper` / `.section-rule`                      | Section surface vocabulary (transparent vs. contained chrome vs. divider) |
+| `.input-base` / `.input-compact`                                          | Standard / compact text input                                             |
+| `.select-base`                                                            | Native `<select>` with painted chevron + consistent focus                 |
+| `.toolbar-select` / `.toolbar-input` / `.toolbar-label` / `.toolbar-stat` | Toolbar control vocabulary                                                |
+| `.toolbar-segmented` / `.segmented`                                       | Segmented toggles (toolbar vs. tracked variants)                          |
+| `.icon-btn`                                                               | Square 32px icon button                                                   |
+| `.menu-panel` / `.menu-item`                                              | Floating menu surface + row                                               |
+| `.focus-ring`                                                             | The canonical brand keyboard focus ring                                   |
+| `.metric-row` / `.metric-card` / `.status-chip` / `.num`                  | Plan-inspector readout primitives                                         |
+| `.table-head-cell`                                                        | Sticky table header cell (uppercase, hairline)                            |
+
+Native `<input type="checkbox">` / `type="radio"` inherit a brand
+`accent-color` globally.
 
 ---
 
