@@ -157,8 +157,16 @@ The shared item record that can appear in both FF&E and Proposal views. FF&E and
 _Avoid_: Treating FF&E Item and Proposal Item as unrelated records when referring to long-term table/export behavior
 
 **Generated Item Table**:
-The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default. Proposal-created Furniture items are visible in FF&E automatically; other Proposal items become visible in FF&E only when the user chooses Add to FF&E. Proposal revision indicators and notes can appear in FF&E for linked Generated Items, but cost resolution remains Proposal-owned.
-_Avoid_: Separate table engines, duplicated export table models
+The shared table behavior behind FF&E and Proposal. FF&E is the Location-grouped view of Generated Items; Proposal is the Proposal Category-grouped view of Generated Items. Creating a furniture item from FF&E should make that item available in Proposal under the Furniture Proposal Category by default. Proposal-created Furniture items are visible in FF&E automatically; other Proposal items become visible in FF&E only when the user chooses Add to FF&E. Proposal revision indicators and notes can appear in FF&E for linked Generated Items, but cost resolution remains Proposal-owned. FF&E and Proposal share cells and the **Generated Item Table Policy**, not a single table shell or rendering engine: FF&E uses TanStack Table, Proposal hand-rolls rows (ADR-0011).
+_Avoid_: One shared table shell or one rendering engine (the shells differ by design, ADR-0011); duplicated policy or export table models
+
+**Generated Item Table Policy**:
+The single source of truth for column order, organization (groups), sticky designation, empty-column omission, and per-column actions/icons across both table views. It resolves a **View Preset** into a **Resolved Column Model** that both shells read; each shell only translates the model into its own engine. Proposal behavior is canonical and FF&E opts out via preset fields (ADR-0011).
+_Avoid_: Per-view policy twins (e.g. `emptyFfeColumnIds` + `emptyProposalColumnIds`), deciding order/sticky/omission inside `FfeTableView` or `ProposalCategorySection`
+
+**Resolved Column Model**:
+The Generated Item Table Policy's output: an ordered list of column descriptors (id, label, group, sticky kind, `omitWhenEmpty`, cell kind, actions) consumed by both table shells. FF&E translates it to TanStack `ColumnDef[]`; Proposal translates it to its hand-rolled column order.
+_Avoid_: TanStack ColumnDef when referring to the engine-neutral descriptor list
 
 **Table Group**:
 The unit of organisation inside a tool's table view — a **Location** in FF&E, a **Proposal Category** in Proposal. Table Groups are view-specific groupings over Generated Items, not separate table engines. Removing a Location from FF&E clears its FF&E visibility only; it must not delete Generated Items, Proposal rows, images, revisions, or database records.
