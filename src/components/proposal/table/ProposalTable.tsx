@@ -25,7 +25,7 @@ import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { DeleteCategoryModal } from './dialogs/DeleteCategoryModal';
 import { ProposalEmptyState } from './ProposalEmptyState';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
-import { emptyProposalColumnIds } from '../../../lib/table/emptyColumns';
+import { resolveGeneratedItemColumns } from '../../../lib/table/generatedItemColumnModel';
 
 type ProposalTableProps = {
   projectId: string;
@@ -90,7 +90,19 @@ export function ProposalTable({
   const applyFirstLoadAutoHide = proposalColumns.columnConfig.applyFirstLoadAutoHide;
   useEffect(() => {
     if (isLoading || allProposalItems.length === 0) return;
-    applyFirstLoadAutoHide(emptyProposalColumnIds(allProposalItems, customColumnDefs));
+    const resolvedColumns = resolveGeneratedItemColumns(
+      PROPOSAL_GENERATED_ITEM_TABLE_PRESET,
+      allProposalItems,
+      {
+        customColumns: customColumnDefs.map((column) => ({
+          id: column.id,
+          label: column.label,
+        })),
+      },
+    );
+    applyFirstLoadAutoHide(
+      resolvedColumns.filter((column) => column.omitWhenEmpty).map((column) => column.id),
+    );
   }, [isLoading, allProposalItems, customColumnDefs, applyFirstLoadAutoHide]);
 
   const [addCategoryOpenInternal, setAddCategoryOpenInternal] = useState(false);

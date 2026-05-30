@@ -107,12 +107,41 @@ function resolveSticky(tableKey: GeneratedItemColumnsPreset['tableKey'], id: str
   return null;
 }
 
-function resolveOmitWhenEmpty(
-  tableKey: GeneratedItemColumnsPreset['tableKey'],
-  id: string,
-): boolean {
-  if (tableKey === 'ffe') return FFE_OMIT_WHEN_EMPTY_IDS.has(id);
-  return PROPOSAL_OMIT_WHEN_EMPTY_IDS.has(id);
+function isBlankString(value: string | null | undefined): boolean {
+  return !value || value.trim() === '';
+}
+
+function customColumnIsEmpty(items: readonly (Item | ProposalItem)[], columnId: string): boolean {
+  return !items.some((item) => !isBlankString(item.customData[columnId] ?? ''));
+}
+
+function resolveFfeOmitWhenEmpty(id: string, items: readonly Item[]): boolean {
+  if (items.length === 0) return false;
+  if (!FFE_OMIT_WHEN_EMPTY_IDS.has(id)) return false;
+  if (id === 'itemIdTag') return !items.some((item) => !isBlankString(item.itemIdTag));
+  if (id === 'drawings') return !items.some((item) => !isBlankString(item.drawings));
+  if (id === 'description') return !items.some((item) => !isBlankString(item.description));
+  if (id === 'dimensions') return !items.some((item) => !isBlankString(item.dimensions));
+  if (id === 'materials') return !items.some((item) => item.materials.length > 0);
+  if (id === 'category') return !items.some((item) => !isBlankString(item.category));
+  if (id === 'leadTime') return !items.some((item) => !isBlankString(item.leadTime));
+  if (id === 'notes') return !items.some((item) => !isBlankString(item.notes));
+  return false;
+}
+
+function resolveProposalOmitWhenEmpty(id: string, items: readonly ProposalItem[]): boolean {
+  if (items.length === 0) return false;
+  if (!PROPOSAL_OMIT_WHEN_EMPTY_IDS.has(id)) return false;
+  if (id === 'itemName') return !items.some((item) => !isBlankString(item.itemName));
+  if (id === 'plan') return !items.some((item) => !isBlankString(item.plan));
+  if (id === 'drawings') return !items.some((item) => !isBlankString(item.drawings));
+  if (id === 'location') return !items.some((item) => !isBlankString(item.location));
+  if (id === 'description') return !items.some((item) => !isBlankString(item.description));
+  if (id === 'notes') return !items.some((item) => !isBlankString(item.notes));
+  if (id === 'size') return !items.some((item) => !isBlankString(item.sizeLabel));
+  if (id === 'swatch') return !items.some((item) => item.materials.length > 0);
+  if (id === 'cbm') return !items.some((item) => item.cbm > 0);
+  return false;
 }
 
 function resolveCellKind(id: string): ResolvedColumnCellKind {
@@ -130,27 +159,36 @@ function resolveCellKind(id: string): ResolvedColumnCellKind {
 
 export function resolveGeneratedItemColumns(
   preset: GeneratedItemColumnsPreset,
-  _items: readonly (Item | ProposalItem)[],
+  items: readonly (Item | ProposalItem)[],
   viewState: GeneratedItemColumnViewState = {},
 ): ResolvedColumn[] {
   const groupMap = resolveGroupMap(preset);
-  const resolved = resolveColumnIds(preset).map((id) => ({
-    id,
-    label: resolveLabel(preset, id),
-    group: groupMap.get(id) ?? null,
-    sticky: resolveSticky(preset.tableKey, id),
-    omitWhenEmpty: resolveOmitWhenEmpty(preset.tableKey, id),
-    cellKind: resolveCellKind(id),
-    actions: [],
-    icons: [],
-  }));
+  const customColumnIds = new Set((viewState.customColumns ?? []).map((column) => column.id));
+  const resolved = resolveColumnIds(preset).map((id) => {
+    const omitWhenEmpty = customColumnIds.has(id)
+      ? customColumnIsEmpty(items, id)
+      : isFfePreset(preset)
+        ? resolveFfeOmitWhenEmpty(id, items as readonly Item[])
+        : resolveProposalOmitWhenEmpty(id, items as readonly ProposalItem[]);
+
+    return {
+      id,
+      label: resolveLabel(preset, id),
+      group: groupMap.get(id) ?? null,
+      sticky: resolveSticky(preset.tableKey, id),
+      omitWhenEmpty,
+      cellKind: resolveCellKind(id),
+      actions: [],
+      icons: [],
+    };
+  });
 
   const custom = (viewState.customColumns ?? []).map<ResolvedColumn>((column) => ({
     id: column.id,
     label: column.label ?? column.id,
     group: null,
     sticky: null,
-    omitWhenEmpty: true,
+    omitWhenEmpty: customColumnIsEmpty(items, column.id),
     cellKind: 'custom',
     actions: [],
     icons: [],

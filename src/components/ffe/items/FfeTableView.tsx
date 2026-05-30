@@ -27,7 +27,7 @@ import {
   type GeneratedItemChangeInfo,
 } from '../../../lib/table/generatedItemChangeInfo';
 import { FFE_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
-import { emptyFfeColumnIds } from '../../../lib/table/emptyColumns';
+import { resolveGeneratedItemColumns } from '../../../lib/table/generatedItemColumnModel';
 import {
   useItemMaterialActions,
   useMaterialCellPaste,
@@ -2181,7 +2181,19 @@ export function FfeTableView({
   const applyFfeAutoHide = ffeColumnConfig.applyFirstLoadAutoHide;
   useEffect(() => {
     if (isLoading || allFfeItems.length === 0) return;
-    applyFfeAutoHide(emptyFfeColumnIds(allFfeItems, ffeColumnDefs));
+    const resolvedColumns = resolveGeneratedItemColumns(
+      FFE_GENERATED_ITEM_TABLE_PRESET,
+      allFfeItems,
+      {
+        customColumns: ffeColumnDefs.map((column) => ({
+          id: column.id,
+          label: column.label,
+        })),
+      },
+    );
+    applyFfeAutoHide(
+      resolvedColumns.filter((column) => column.omitWhenEmpty).map((column) => column.id),
+    );
   }, [isLoading, allFfeItems, ffeColumnDefs, applyFfeAutoHide]);
 
   if (isLoading) return <ItemsLoadingState />;
