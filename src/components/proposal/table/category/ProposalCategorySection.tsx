@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { toast } from '../../../primitives/toast-api';
+import { toast } from '../../../primitives/toastApi';
 import {
   type CustomColumnDef,
   type ProposalItem,

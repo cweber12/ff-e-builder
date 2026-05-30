@@ -18,7 +18,7 @@ export { Drawer } from './Drawer';
 export { DropdownMenu } from './DropdownMenu';
 export { MenuPanel, MenuItem, MenuSeparator, MenuSubTrigger, MenuSub } from './MenuPanel';
 export { ToastProvider } from './Toast';
-export { toast } from './toast-api';
+export { toast } from './toastApi';
 export { LayoutSection } from './LayoutSection';
 export { CompactRowGrid, GridCell } from './CompactRowGrid';
 export { ColorChipGroup } from './ColorChipGroup';

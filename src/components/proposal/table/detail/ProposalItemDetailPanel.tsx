@@ -16,7 +16,7 @@ import { proposalLineTotalCents } from '../../../../lib/money';
 import type { ProposalItemChangelogEntry } from '../../../../types';
 import { MaterialLibraryModal } from '../../../materials';
 import { Button, Modal } from '../../../primitives';
-import { toast } from '../../../primitives/toast-api';
+import { toast } from '../../../primitives/toastApi';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
 import { ProposalItemDetailMediaStrip } from './ProposalItemDetailMediaStrip';
 import { ProposalItemDetailForm } from './ProposalItemDetailForm';

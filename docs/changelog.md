@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs(architecture): add canonical File And Folder Conventions (section 8) defining casing by file kind, folder layout, barrel policy, the shared Generated Item Table layout, and a tracked deviation/migration table; agent-routing Feature Module context pack now points at it
+- refactor(primitives): rename `toast-api.ts` to `toastApi.ts` to remove the lone kebab-case module name (Phase 0 of the structure cleanup)
 - fix(plans): correct quick-create measurement save payload shape so Add item from measurement persists measurement records reliably
 - feat(plans): reorganize measured-area inspector actions into clear Measured area, Apply measurement, and Plan image sections with updated button wording
 - feat(plans): add Add item from measurement quick-create panel that can create an Uncategorized proposal item, save the measurement, and publish the measured Plan Image in one flow

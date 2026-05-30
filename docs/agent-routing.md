@@ -76,6 +76,7 @@ Best when two or more boundaries are touched in one slice.
 
 - `AGENTS.md`
 - `CONTEXT.md`
+- `docs/architecture.md` section 8 (file and folder conventions) — derive paths from the convention before searching
 - Target module files under `src/components/`, `src/hooks/`, and `src/lib/`
 
 ### API
