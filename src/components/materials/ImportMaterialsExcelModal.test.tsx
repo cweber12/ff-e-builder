@@ -285,6 +285,81 @@ describe('ImportMaterialsExcelModal', () => {
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
+  it('uses exact normalized finish-name matching and does not collapse internal whitespace', async () => {
+    const user = userEvent.setup();
+    const columns = [
+      { key: 'name__1', label: 'Name', columnNumber: 1 },
+      { key: 'finish__2', label: 'Finish', columnNumber: 2 },
+    ];
+    mocks.parseMaterialSpreadsheet.mockResolvedValue(
+      makeParsedSpreadsheet({
+        columns,
+        rows: [
+          makeRow({
+            id: 'row-1',
+            rowNumber: 2,
+            values: {
+              name__1: 'Handle',
+              finish__2: 'Walnut  A',
+            },
+          }),
+        ],
+      }),
+    );
+    mocks.autoMapMaterialColumns.mockReturnValue({
+      ...emptyMap,
+      name: 'name__1',
+      finish: 'finish__2',
+    });
+
+    const finishes: Finish[] = [
+      {
+        id: 'finish-1',
+        projectId: 'project-1',
+        code: 'W-1',
+        name: 'Walnut A',
+        category: null,
+        subCategory: '',
+        description: '',
+        manufacturer: '',
+        sourceUrl: '',
+        swatchHex: '#D9D4C8',
+        createdAt: '',
+        updatedAt: '',
+      },
+    ];
+
+    const { container } = render(
+      <ImportMaterialsExcelModal
+        open
+        projectId="project-1"
+        finishes={finishes}
+        onClose={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    );
+
+    const input = container.querySelector('input[type="file"]');
+    await user.upload(
+      input as HTMLInputElement,
+      new File(['csv'], 'materials.csv', { type: 'text/csv' }),
+    );
+    await user.click(await screen.findByRole('button', { name: 'Import 1 row' }));
+
+    expect(await screen.findByText('Import complete: 1 material created.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Row 2: finish "Walnut\s+A" not found by name or code; imported without finish link\./,
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.createMaterialMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Handle',
+        finishId: null,
+      }),
+    );
+  });
+
   it('resets state when closed and re-opened', async () => {
     const user = userEvent.setup();
     const columns = [{ key: 'name__1', label: 'Name', columnNumber: 1 }];

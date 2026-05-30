@@ -584,6 +584,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
       <ImportFinishesExcelModal
         open={showImportFinishesModal}
         projectId={project.id}
+        finishes={finishes.data ?? []}
         onClose={() => setShowImportFinishesModal(false)}
         onSuccess={() => {
           void finishes.refetch();

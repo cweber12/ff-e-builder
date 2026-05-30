@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(materials): enforce manual collision-policy parity in finishes/materials Excel imports by using exact normalized finish-name matching and row-level use-existing or swatch-overwrite outcomes
 - fix(table): drive FF&E and Proposal sticky column class assignment from shared resolver sticky descriptors, and add FF&E value-sticky behavior for Quantity and Unit Cost
 - fix(table): route FF&E and Proposal first-load empty-column omission through shared `resolveGeneratedItemColumns` policy metadata and remove duplicated per-view empty-column logic
 - refactor(table): add `resolveGeneratedItemColumns` policy seam and unit coverage for shared preset ordering, group mapping, sticky designation, and omit-when-empty metadata

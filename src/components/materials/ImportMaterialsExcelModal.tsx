@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react';
-import { useCreateMaterial } from '../../hooks';
+import { normalizeFinishName, useCreateMaterial } from '../../hooks';
 import {
   autoMapMaterialColumns,
   parseMaterialSpreadsheet,
@@ -454,7 +454,7 @@ function normalizeLookupValue(value: string): string {
 function buildFinishLookupByName(finishes: Finish[]): Map<string, Finish> {
   const map = new Map<string, Finish>();
   for (const finish of finishes) {
-    const normalized = normalizeLookupValue(finish.name);
+    const normalized = normalizeFinishName(finish.name);
     if (!normalized || map.has(normalized)) continue;
     map.set(normalized, finish);
   }
@@ -477,8 +477,12 @@ function resolveFinish(
   finishByCode: Map<string, Finish>,
 ): Finish | null {
   if (!rawValue.trim()) return null;
-  const normalized = normalizeLookupValue(rawValue);
-  return finishByName.get(normalized) ?? finishByCode.get(normalized) ?? null;
+  const normalizedName = normalizeFinishName(rawValue);
+  if (normalizedName && finishByName.has(normalizedName)) {
+    return finishByName.get(normalizedName) ?? null;
+  }
+  const normalizedCode = normalizeLookupValue(rawValue);
+  return finishByCode.get(normalizedCode) ?? null;
 }
 
 function parseMaterialType(value: string): MaterialType | null {

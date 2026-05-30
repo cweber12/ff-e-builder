@@ -7,6 +7,7 @@ import type {
   FinishParsedRow,
   ParsedFinishSpreadsheet,
 } from '../../lib/import';
+import type { Finish } from '../../types';
 import { ImportFinishesExcelModal } from './ImportFinishesExcelModal';
 
 const mocks = vi.hoisted(() => ({
@@ -87,7 +88,13 @@ describe('ImportFinishesExcelModal', () => {
   it('rejects unsupported file types with a clear error', async () => {
     const user = userEvent.setup({ applyAccept: false });
     const { container } = render(
-      <ImportFinishesExcelModal open projectId="project-1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={[]}
+        onClose={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
     );
 
     const input = container.querySelector('input[type="file"]');
@@ -115,7 +122,13 @@ describe('ImportFinishesExcelModal', () => {
     );
 
     const { container } = render(
-      <ImportFinishesExcelModal open projectId="project-1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={[]}
+        onClose={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
     );
 
     const input = container.querySelector('input[type="file"]');
@@ -154,7 +167,13 @@ describe('ImportFinishesExcelModal', () => {
     });
 
     const { container } = render(
-      <ImportFinishesExcelModal open projectId="project-1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={[]}
+        onClose={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
     );
 
     const input = container.querySelector('input[type="file"]');
@@ -223,6 +242,7 @@ describe('ImportFinishesExcelModal', () => {
       <ImportFinishesExcelModal
         open
         projectId="project-1"
+        finishes={[]}
         onClose={vi.fn()}
         onSuccess={onSuccess}
       />,
@@ -236,11 +256,112 @@ describe('ImportFinishesExcelModal', () => {
     await user.click(await screen.findByRole('button', { name: 'Import 2 rows' }));
 
     expect(
-      await screen.findByText('Import complete: 1 finish created, 1 image imported.'),
+      await screen.findByText(
+        'Import complete: 1 finish created, 0 collisions used existing, 0 collisions overwrote swatch images, 1 image imported.',
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText('Row 3: finish create failed.')).toBeInTheDocument();
     expect(mocks.createFinishMutateAsync).toHaveBeenCalledTimes(2);
     expect(mocks.uploadImageMutateAsync).toHaveBeenCalledTimes(1);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies collision outcomes by using existing or overwriting swatch without creating a new finish', async () => {
+    const user = userEvent.setup();
+    const image: FinishImportImage = {
+      id: 'img-1',
+      filename: 'swatch.png',
+      contentType: 'image/png',
+      bytes: new Uint8Array([137, 80, 78, 71]),
+      row: 3,
+      column: 3,
+      rowEnd: 3,
+      columnEnd: 3,
+    };
+    const columns = [
+      { key: 'name__1', label: 'Name', columnNumber: 1 },
+      { key: 'image__3', label: 'Swatch', columnNumber: 3 },
+    ];
+    mocks.parseFinishSpreadsheet.mockResolvedValue(
+      makeParsedSpreadsheet({
+        columns,
+        rows: [
+          makeRow({
+            id: 'row-1',
+            rowNumber: 2,
+            values: { name__1: 'Walnut' },
+          }),
+          makeRow({
+            id: 'row-2',
+            rowNumber: 3,
+            values: { name__1: '  walnut  ' },
+            imagesByColumn: { image__3: [image] },
+          }),
+        ],
+      }),
+    );
+    mocks.autoMapFinishColumns.mockReturnValue({
+      ...emptyMap,
+      name: 'name__1',
+      image: 'image__3',
+    });
+
+    const finishes: Finish[] = [
+      {
+        id: 'finish-existing',
+        projectId: 'project-1',
+        code: 'F-1',
+        name: 'Walnut',
+        category: null,
+        subCategory: '',
+        description: '',
+        manufacturer: '',
+        sourceUrl: '',
+        swatchHex: '#D9D4C8',
+        createdAt: '',
+        updatedAt: '',
+      },
+    ];
+
+    const onSuccess = vi.fn();
+    const { container } = render(
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={finishes}
+        onClose={vi.fn()}
+        onSuccess={onSuccess}
+      />,
+    );
+
+    const input = container.querySelector('input[type="file"]');
+    await user.upload(
+      input as HTMLInputElement,
+      new File(['csv'], 'finishes.csv', { type: 'text/csv' }),
+    );
+    await user.click(await screen.findByRole('button', { name: 'Import 2 rows' }));
+
+    expect(
+      await screen.findByText(
+        'Import complete: 0 finishes created, 1 collision used existing, 1 collision overwrote swatch image, 1 image imported.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Row 2: finish "Walnut" already exists; used existing finish.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Row 3: finish "walnut" already exists; swatch image overwritten on existing finish.',
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.createFinishMutateAsync).not.toHaveBeenCalled();
+    expect(mocks.uploadImageMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mocks.uploadImageMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'finish',
+        entityId: 'finish-existing',
+      }),
+    );
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
@@ -260,7 +381,13 @@ describe('ImportFinishesExcelModal', () => {
 
     const onClose = vi.fn();
     const { container, rerender } = render(
-      <ImportFinishesExcelModal open projectId="project-1" onClose={onClose} onSuccess={vi.fn()} />,
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={[]}
+        onClose={onClose}
+        onSuccess={vi.fn()}
+      />,
     );
 
     const input = container.querySelector('input[type="file"]');
@@ -274,12 +401,19 @@ describe('ImportFinishesExcelModal', () => {
       <ImportFinishesExcelModal
         open={false}
         projectId="project-1"
+        finishes={[]}
         onClose={onClose}
         onSuccess={vi.fn()}
       />,
     );
     rerender(
-      <ImportFinishesExcelModal open projectId="project-1" onClose={onClose} onSuccess={vi.fn()} />,
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={[]}
+        onClose={onClose}
+        onSuccess={vi.fn()}
+      />,
     );
 
     expect(

@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react';
-import { useCreateFinish, useUploadImage } from '../../hooks';
+import { normalizeFinishName, useCreateFinish, useUploadImage } from '../../hooks';
 import {
   autoMapFinishColumns,
   parseFinishSpreadsheet,
@@ -17,13 +17,14 @@ import {
   type ImportProgress,
   type ParsedFinishSpreadsheet,
 } from '../../lib/import';
-import type { MaterialCategory } from '../../types';
+import type { Finish, MaterialCategory } from '../../types';
 import { Button, Modal } from '../primitives';
 import { ImportProgressBar } from '../shared/ImportProgressBar';
 
 type Props = {
   open: boolean;
   projectId: string;
+  finishes: Finish[];
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -32,6 +33,8 @@ type Step = 'upload' | 'confirm' | 'import';
 
 type ImportResult = {
   created: number;
+  usedExisting: number;
+  overwrittenSwatches: number;
   importedImages: number;
   warnings: string[];
 };
@@ -64,7 +67,7 @@ const MATERIAL_CATEGORY_BY_NORMALIZED_LABEL: Record<string, MaterialCategory> = 
   solidcolor: 'solid_color',
 };
 
-export function ImportFinishesExcelModal({ open, projectId, onClose, onSuccess }: Props) {
+export function ImportFinishesExcelModal({ open, projectId, finishes, onClose, onSuccess }: Props) {
   const createFinish = useCreateFinish(projectId);
   const uploadImage = useUploadImage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -177,7 +180,10 @@ export function ImportFinishesExcelModal({ open, projectId, onClose, onSuccess }
     });
 
     const warnings = [...parsed.warnings];
+    const finishesByName = buildFinishLookupByName(finishes);
     let created = 0;
+    let usedExisting = 0;
+    let overwrittenSwatches = 0;
     let importedImages = 0;
     let processed = 0;
 
@@ -192,10 +198,42 @@ export function ImportFinishesExcelModal({ open, projectId, onClose, onSuccess }
           if (!rowInput.name) {
             warnings.push(`Row ${row.rowNumber}: missing finish name, skipped.`);
           } else {
+            const collision = resolveFinishCollision(rowInput.name, finishesByName);
+            const image = pickRowImage(row, mapping.image);
+
+            if (collision) {
+              if (image) {
+                try {
+                  await uploadImage.mutateAsync({
+                    entityType: 'finish',
+                    entityId: collision.id,
+                    file: importImageToFile(image, `finish-row-${row.rowNumber}.png`),
+                    altText: collision.name,
+                  });
+                  importedImages += 1;
+                  overwrittenSwatches += 1;
+                  warnings.push(
+                    `Row ${row.rowNumber}: finish "${rowInput.name}" already exists; swatch image overwritten on existing finish.`,
+                  );
+                } catch {
+                  warnings.push(
+                    `Row ${row.rowNumber}: finish "${rowInput.name}" already exists; swatch overwrite failed.`,
+                  );
+                }
+              } else {
+                usedExisting += 1;
+                warnings.push(
+                  `Row ${row.rowNumber}: finish "${rowInput.name}" already exists; used existing finish.`,
+                );
+              }
+              continue;
+            }
+
             const saved = await createFinish.mutateAsync(rowInput);
             created += 1;
+            const normalizedSavedName = normalizeFinishName(saved.name);
+            if (normalizedSavedName) finishesByName.set(normalizedSavedName, saved);
 
-            const image = pickRowImage(row, mapping.image);
             if (image) {
               try {
                 await uploadImage.mutateAsync({
@@ -218,14 +256,14 @@ export function ImportFinishesExcelModal({ open, projectId, onClose, onSuccess }
         }
       }
 
-      setResult({ created, importedImages, warnings });
-      if (created > 0) onSuccess();
+      setResult({ created, usedExisting, overwrittenSwatches, importedImages, warnings });
+      if (created > 0 || overwrittenSwatches > 0) onSuccess();
     } catch {
       setError('Import failed. Please try again.');
     } finally {
       setImporting(false);
     }
-  }, [createFinish, onSuccess, parsed, uploadImage]);
+  }, [createFinish, finishes, onSuccess, parsed, uploadImage]);
 
   const totalRows = parsed?.rows.length ?? 0;
 
@@ -370,8 +408,11 @@ export function ImportFinishesExcelModal({ open, projectId, onClose, onSuccess }
               <div className="rounded-lg bg-brand-50 p-4">
                 <p className="text-sm font-semibold text-brand-700">
                   Import complete: {result.created} finish{result.created !== 1 ? 'es' : ''}{' '}
-                  created, {result.importedImages} image{result.importedImages !== 1 ? 's' : ''}{' '}
-                  imported.
+                  created, {result.usedExisting} collision{result.usedExisting !== 1 ? 's' : ''}{' '}
+                  used existing, {result.overwrittenSwatches} collision
+                  {result.overwrittenSwatches !== 1 ? 's' : ''} overwrote swatch image
+                  {result.overwrittenSwatches !== 1 ? 's' : ''}, {result.importedImages} image
+                  {result.importedImages !== 1 ? 's' : ''} imported.
                 </p>
               </div>
               {result.warnings.length > 0 && (
@@ -481,4 +522,20 @@ function importImageToFile(image: FinishImportImage, fallbackName: string): File
   const bytes = new Uint8Array(image.bytes);
   const blob = new Blob([bytes], { type: image.contentType });
   return new File([blob], image.filename || fallbackName, { type: image.contentType });
+}
+
+function buildFinishLookupByName(finishes: Finish[]): Map<string, Finish> {
+  const map = new Map<string, Finish>();
+  for (const finish of finishes) {
+    const normalized = normalizeFinishName(finish.name);
+    if (!normalized || map.has(normalized)) continue;
+    map.set(normalized, finish);
+  }
+  return map;
+}
+
+function resolveFinishCollision(name: string, finishByName: Map<string, Finish>): Finish | null {
+  const normalized = normalizeFinishName(name);
+  if (!normalized) return null;
+  return finishByName.get(normalized) ?? null;
 }

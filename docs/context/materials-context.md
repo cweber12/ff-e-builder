@@ -77,10 +77,14 @@ relationships may need relinking.
   - upload (`.xlsx`, `.xls`, `.csv` only; unsupported file types are rejected)
   - confirm (filename, row count, detected columns, recognized field mappings, parse warnings)
   - import (row-by-row finish creation, optional swatch image upload, progress, and warning summary)
+  - on project-scoped exact normalized finish-name collision (trim + case-insensitive), import
+    does not create a duplicate finish:
+    - no row image: uses existing finish and reports the row decision in summary warnings
+    - row image present: overwrites existing finish swatch image only and reports the row decision
 - The Project Materials import modal consumes the materials parser through the
   same 3-step flow and creates project material rows:
   - resolves the mapped Finish column against project finishes by
-    case-insensitive name first, then code
+    exact normalized name first (trim + case-insensitive), then code
   - unresolved finishes are non-fatal: the material is created with `finishId=null`
     and a row warning is added to the summary
 - Import warning semantics:
