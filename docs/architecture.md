@@ -356,7 +356,90 @@ The API Worker can be run locally with:
 pnpm --filter ffe-api dev
 ```
 
-## 8. Agent Guardrails
+## 8. File And Folder Conventions
+
+This section is the canonical naming and layout contract for `src/`. The goal is a structure an agent can predict without reading file bodies: given a concept and its kind, the path and casing should be derivable. Deviations are tracked in 8.5 with their migration phase.
+
+### 8.1 Casing By File Kind
+
+| Kind                                                   | Casing                                   | Example                                                  |
+| ------------------------------------------------------ | ---------------------------------------- | -------------------------------------------------------- |
+| React component file                                   | `PascalCase.tsx`                         | `FfeTable.tsx`, `ProposalSummaryView.tsx`                |
+| Hook file                                              | `useCamelCase.ts`                        | `useItems.ts`, `useColumnDefs.ts`                        |
+| Non-component module (lib helpers, config, pure logic) | `camelCase.ts`                           | `itemSort.ts`, `budgetCalc.ts`, `toastApi.ts`            |
+| Type module                                            | `camelCase.ts` (singular domain noun)    | `item.ts`, `proposalValidation.ts`                       |
+| Test                                                   | `<sibling>.test.ts(x)`, colocated        | `FfeTable.test.tsx`                                      |
+| Barrel                                                 | `index.ts`                               | —                                                        |
+| Folder (grouping or feature)                           | `lowercase`, `kebab-case` when multiword | `items/`, `proposal-status-select/`, `project-snapshot/` |
+
+Rules:
+
+- Never use kebab-case for `.ts`/`.tsx` module files (e.g. `toast-api.ts` is wrong; `toastApi.ts` is correct).
+- Never use PascalCase or camelCase for folders (e.g. `ProposalStatusSelect/` and `projectSnapshot/` are deviations; target is kebab-case).
+- A file's casing is decided by what it _is_, not where it lives: a hook under `src/components/**` is still `useXxx.ts`.
+
+### 8.2 Folder Layout
+
+```text
+src/
+  components/
+    primitives/          # design-system atoms, no domain knowledge (Button, Modal, Toast)
+    shared/              # cross-feature UI that knows the domain
+      table/             # the shared Generated Item Table (ADR-0008) + its cells
+      image/  auth/  modals/  proposal-status-select/
+    <feature>/           # one product area: ffe, proposal, plans, materials, project
+      <sub-area>/        # cohesive group within the feature: items, table, summary, import, ...
+  hooks/
+    shared/              # cross-feature hooks
+    <feature>/           # hooks owned by one product area
+  lib/
+    <concern>/           # api, auth, export, import, money, query, table, utils, ...
+  types/                 # one module per domain noun + a single index.ts barrel
+  pages/                 # one *Page.tsx per route entry
+  data/                  # seed / sample fixtures (non-production)
+```
+
+- **Feature areas are parallel.** `ffe/`, `proposal/`, `plans/`, `materials/`, `project/` use the same internal grammar: sub-area folders for cohesive groups, the same casing, the same barrel policy.
+- **Top-level view components keep their feature prefix** for grep-ability across areas: `FfeTable`, `ProposalTable`, `FfeSummaryView`, `ProposalSummaryView`. Do not drop the prefix just because the parent folder already says the feature (so `ffe/summary/SummaryView.tsx` is a deviation — target `FfeSummaryView.tsx`).
+- **`lib/<concern>/` is grouped by concern, not by feature.** Feature-specific logic lives under a feature-named subfolder of the concern (`lib/export/ffe/`, `lib/import/formats/proposal.ts`), never loose in a generic concern folder. A proposal-only file under `lib/table/` is a deviation.
+
+### 8.3 Barrel Policy
+
+- Every **leaf feature/sub-area folder** exposes an `index.ts` that re-exports its public surface.
+- **Cross-folder imports go through the barrel**; **intra-folder imports are direct** (sibling file path).
+- Canonical aggregate barrels are `src/types/index.ts`, `src/hooks/index.ts`, `src/lib/api.ts`, and `src/lib/export/index.ts`.
+- Keep one alias per export in a barrel. Redundant re-aliases (the same symbol exported under several near-synonym names) are cruft — remove them rather than grow them.
+
+### 8.4 The Generated Item Table: Shared Policy, Not A Shared Shell (ADR-0008, ADR-0011)
+
+There is **no single `<GeneratedItemTable>` shell** and there is not meant to be one. FF&E renders with TanStack Table; Proposal hand-rolls its rows. ADR-0011 records why convergence on one engine is not worth it (FF&E is secondary to the Catalog). What is shared is **policy, not mechanics**:
+
+- **Shared cells** live in `src/components/shared/table/` (`GeneratedItem*` files) — the contents of a cell.
+- **The Generated Item Table Policy** is the single source of truth for column order, organization (groups), sticky designation, empty-column omission, and per-column actions/icons. It resolves a **View Preset** (`src/lib/table/generatedItemTablePresets.ts`) into a **Resolved Column Model**. Both shells read that model; each translates it to its own engine. FF&E groups by Location; Proposal groups by Proposal Category.
+- **Consistency by default, divergence by explicit preset flag.** Proposal behavior is canonical; FF&E derives from the same policy and opts out only through preset fields (ADR-0008 permits different default columns/labels). Do not fork a policy into per-view twins (the old `emptyFfeColumnIds`/`emptyProposalColumnIds` and `ffe`/`proposal` sticky-style pairs are the anti-pattern this replaces).
+- A consistency-affecting table change (order, sticky, organization, omission, actions) belongs in the policy/preset, **not** in `FfeTableView` or `ProposalCategorySection`. See [context/generated-item-table-state.md](context/generated-item-table-state.md) for migration state.
+
+### 8.5 Known Deviations And Migration Phases
+
+These are the gaps between the tree today and 8.1–8.4. Phase 0 = zero-risk, no import churn beyond the renamed symbol; Phase 1 = renames within a folder; Phase 2 = cross-folder moves that change many import paths.
+
+| Deviation                                                                                                                  | Target                                                    | Phase | Status  |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----: | ------- |
+| `components/primitives/toast-api.ts`                                                                                       | `toastApi.ts`                                             |     0 | Done    |
+| `components/shared/ProposalStatusSelect/`                                                                                  | `proposal-status-select/` (or fold into `shared/`)        |     1 | Pending |
+| `components/ffe/summary/SummaryView.tsx`                                                                                   | `FfeSummaryView.tsx` (match `ProposalSummaryView`)        |     1 | Pending |
+| `lib/projectSnapshot/`                                                                                                     | `lib/project-snapshot/`                                   |     2 | Pending |
+| `lib/table/proposalStatusConfig.ts` (proposal-only under generic `table/`)                                                 | `lib/proposal/proposalStatusConfig.ts`                    |     2 | Pending |
+| Missing barrels in some leaf folders (`plans/list`, `project/modals`, `project/snapshot`, `shared/modals`, `shared/table`) | add `index.ts` per 8.3                                    |     1 | Pending |
+| Deprecated re-export shim `hooks/ffe/useItemColumnDefs.ts`                                                                 | delete after callers move to `hooks/shared/useColumnDefs` |     2 | Pending |
+
+Refresh the generated map after any structural change so it reflects the new paths:
+
+```bash
+pnpm arch:scan
+```
+
+## 9. Agent Guardrails
 
 - Read `README.md`, `AGENTS.md`, this file, and `docs/changelog.md` before broad changes.
 - Never commit automatically; provide a conventional commit message after changes.
@@ -365,17 +448,19 @@ pnpm --filter ffe-api dev
 - Put domain types in `src/types/` and export them from `src/types/index.ts`.
 - Put hooks in `src/hooks/` and export them from `src/hooks/index.ts`.
 - Put reusable UI primitives in `src/components/primitives/` and export them from its barrel.
+- Follow the file and folder conventions in section 8 for naming, casing, layout, and barrels; when adding a structural deviation you cannot avoid, record it in the section 8.5 table.
 - Update docs and `docs/changelog.md` when feature behavior, public APIs, env vars, file structure, or dependencies change.
 - Keep monetary values as integer cents from DB through API and application state.
 
-## 9. Decisions
+## 10. Decisions
 
 Architecture decisions are recorded as ADRs in [adr/](adr/).
 
-| #                                               | Decision                                                                  | Status                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------- | ---------------------- |
-| [0001](adr/0001-server-side-db-proxy.md)        | Server-side DB proxy between the client and Neon                          | Accepted               |
-| [0002](adr/0002-manual-types-for-now.md)        | Hand-written TypeScript types; defer generation until schema pain is real | Accepted               |
-| [0003](adr/0003-no-storybook-yet.md)            | No Storybook in v1; rely on focused tests and written design-system docs  | Accepted               |
-| [0004](adr/0004-project-scoped-tool-models.md)  | Keep FF&E and Proposal as separate project-scoped data models             | Superseded by ADR-0008 |
-| [0008](adr/0008-shared-generated-item-table.md) | Treat FF&E and Proposal as shared Generated Item Table views              | Accepted               |
+| #                                               | Decision                                                                         | Status                 |
+| ----------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------- |
+| [0001](adr/0001-server-side-db-proxy.md)        | Server-side DB proxy between the client and Neon                                 | Accepted               |
+| [0002](adr/0002-manual-types-for-now.md)        | Hand-written TypeScript types; defer generation until schema pain is real        | Accepted               |
+| [0003](adr/0003-no-storybook-yet.md)            | No Storybook in v1; rely on focused tests and written design-system docs         | Accepted               |
+| [0004](adr/0004-project-scoped-tool-models.md)  | Keep FF&E and Proposal as separate project-scoped data models                    | Superseded by ADR-0008 |
+| [0008](adr/0008-shared-generated-item-table.md) | Treat FF&E and Proposal as shared Generated Item Table views                     | Accepted               |
+| [0011](adr/0011-generated-item-table-policy.md) | Share a Generated Item Table Policy/Resolved Column Model, not a shell or engine | Accepted               |

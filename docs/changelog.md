@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(table): drive FF&E and Proposal sticky column class assignment from shared resolver sticky descriptors, and add FF&E value-sticky behavior for Quantity and Unit Cost
+- fix(table): route FF&E and Proposal first-load empty-column omission through shared `resolveGeneratedItemColumns` policy metadata and remove duplicated per-view empty-column logic
+- refactor(table): add `resolveGeneratedItemColumns` policy seam and unit coverage for shared preset ordering, group mapping, sticky designation, and omit-when-empty metadata
+- docs(adr): add ADR-0011 — share a Generated Item Table Policy / Resolved Column Model across FF&E and Proposal instead of a unified table shell or rendering engine; record CONTEXT.md terms and correct architecture.md section 8.4 to match
+- docs(architecture): add canonical File And Folder Conventions (section 8) defining casing by file kind, folder layout, barrel policy, the shared Generated Item Table layout, and a tracked deviation/migration table; agent-routing Feature Module context pack now points at it
+- refactor(primitives): rename `toast-api.ts` to `toastApi.ts` to remove the lone kebab-case module name (Phase 0 of the structure cleanup)
+- fix(plans): correct quick-create measurement save payload shape so Add item from measurement persists measurement records reliably
+- feat(plans): reorganize measured-area inspector actions into clear Measured area, Apply measurement, and Plan image sections with updated button wording
+- feat(plans): add Add item from measurement quick-create panel that can create an Uncategorized proposal item, save the measurement, and publish the measured Plan Image in one flow
+- feat(plans): switch measured-area highlights to high-visibility yellow on canvas and exported Plan Images with a clean solid border
+- fix(ui): remove the project options button from the top-right project header and rely on project summary editing entry points
 - fix(materials): generate MAT/FIN paste defaults from API project data, include finish_id in generated item material payloads for swatch rendering, and clear paste pending UI after upload response
 - fix(materials): fallback swatch circles to full image blobs when thumbnails are unavailable and pass freshest FF&E item data into MaterialLibraryModal to prevent inconsistent assigned-material loading
 - fix(materials): rename paste defaults to MAT NNN and FIN NNN, refresh swatch cell/image queries after upload, and remove swatch-label truncation under thumbnails

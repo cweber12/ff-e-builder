@@ -100,6 +100,9 @@ export type PlanInspectorProps = {
   rectangleMode: RectangleModeId;
   onSetHighlight: () => void;
   canSetHighlight: boolean;
+  canOpenCreateItemPanel: boolean;
+  onOpenCreateItemPanel: () => void;
+  creatingItemFromMeasurement: boolean;
   onSaveHighlight: () => void;
   savingHighlight: boolean;
   canSaveHighlight: boolean;
@@ -188,6 +191,9 @@ export function PlanInspector({
   rectangleMode,
   onSetHighlight,
   canSetHighlight,
+  canOpenCreateItemPanel,
+  onOpenCreateItemPanel,
+  creatingItemFromMeasurement,
   onSaveHighlight,
   savingHighlight,
   canSaveHighlight,
@@ -555,6 +561,32 @@ export function PlanInspector({
                         </select>
                       </label>
 
+                      {rectangleMode === 'measure' ? (
+                        <div className="space-y-2 rounded-lg border border-neutral-200 bg-white/80 px-3 py-2">
+                          {measurementItems.length === 0 ? (
+                            <p className="text-xs text-neutral-600">
+                              No items yet. Create one now and include this measurement + plan
+                              image.
+                            </p>
+                          ) : (
+                            <p className="text-xs text-neutral-600">
+                              Need a new item instead? Create one directly from this measured area.
+                            </p>
+                          )}
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={onOpenCreateItemPanel}
+                            disabled={!canOpenCreateItemPanel || creatingItemFromMeasurement}
+                          >
+                            {creatingItemFromMeasurement
+                              ? 'Creating item...'
+                              : 'Add new item from measurement'}
+                          </Button>
+                        </div>
+                      ) : null}
+
                       <div className="flex flex-wrap gap-2">
                         {rectangleMode === 'highlight' ? (
                           <>
@@ -776,41 +808,131 @@ export function PlanInspector({
                     onSelect={onSelectMeasurement}
                     onClear={onClearMeasurementSelection}
                   />
-                </div>
-              ) : null}
 
-              {selectedMeasurement ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {activeTool === 'rectangle' ? (
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      onClick={() => {
-                        onToolChange('crop');
-                        onClearCropDraft();
-                      }}
-                    >
-                      Crop plan image
-                    </Button>
+                  {selectedMeasurement ? (
+                    <div className="mt-3 space-y-3">
+                      <section className="rounded-xl border border-neutral-200 bg-white/80 p-3">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="eyebrow">Measured area</span>
+                          {selectedMeasurementItem ? (
+                            <span className="num-muted truncate text-[11px]">
+                              {selectedMeasurementItem.primaryLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-xs text-neutral-600">
+                          Keep this measurement, or remove it if you want to redraw.
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={onClearMeasurementSelection}
+                          >
+                            Clear selection
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="danger"
+                            size="sm"
+                            onClick={onDeleteMeasurement}
+                            disabled={deletingMeasurement}
+                          >
+                            {deletingMeasurement ? <>Removing&hellip;</> : 'Remove measurement'}
+                          </Button>
+                        </div>
+                      </section>
+
+                      {selectedMeasurementItem &&
+                      selectedMeasurementDisplay &&
+                      rectangleMode !== 'highlight' ? (
+                        <section className="rounded-xl border border-neutral-200 bg-white/80 p-3">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="eyebrow">Apply measurement</span>
+                            <span className="num-muted truncate text-[11px]">
+                              {selectedMeasurementItem.primaryLabel}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-neutral-600">
+                            Choose how to write this measured value to the linked item.
+                          </p>
+                          <label className="mt-2 block">
+                            <span className="sr-only">Apply measurement</span>
+                            <select
+                              aria-label="Apply measurement"
+                              value={measurementApplicationMode}
+                              onChange={(event) =>
+                                onMeasurementApplicationModeChange(
+                                  event.target.value as MeasurementApplicationMode,
+                                )
+                              }
+                              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+                            >
+                              {selectedMeasurementItem.targetKind === 'proposal' ? (
+                                <>
+                                  <option value="proposal-area">
+                                    Use area ({formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
+                                    {formatAreaUnit(calibration?.unit ?? 'ft')})
+                                  </option>
+                                  <option value="proposal-horizontal">
+                                    Use horizontal (
+                                    {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
+                                    {calibration?.unit ?? 'ft'})
+                                  </option>
+                                  <option value="proposal-vertical">
+                                    Use vertical (
+                                    {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
+                                    {calibration?.unit ?? 'ft'})
+                                  </option>
+                                </>
+                              ) : (
+                                <option value="ffe-dimensions">
+                                  Update dimensions ({selectedMeasurementDisplay.dimensionsText})
+                                </option>
+                              )}
+                              <option value="reference-only">Reference only</option>
+                            </select>
+                          </label>
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            className="mt-2 w-full"
+                            onClick={onApplyMeasurement}
+                            disabled={
+                              applyingMeasurement || measurementApplicationMode === 'reference-only'
+                            }
+                          >
+                            {applyingMeasurement ? (
+                              <>&hellip;Applying</>
+                            ) : (
+                              'Apply measurement to item'
+                            )}
+                          </Button>
+                        </section>
+                      ) : null}
+
+                      <section className="rounded-xl border border-neutral-200 bg-white/80 p-3">
+                        <span className="eyebrow">Plan image</span>
+                        <p className="mt-1 text-xs text-neutral-600">
+                          Open the crop editor to frame and publish the plan image for this item.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => {
+                            onToolChange('crop');
+                            onClearCropDraft();
+                          }}
+                        >
+                          Open crop editor
+                        </Button>
+                      </section>
+                    </div>
                   ) : null}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClearMeasurementSelection}
-                  >
-                    Clear selection
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={onDeleteMeasurement}
-                    disabled={deletingMeasurement}
-                  >
-                    {deletingMeasurement ? <>Deleting&hellip;</> : 'Delete measurement'}
-                  </Button>
                 </div>
               ) : null}
             </>
@@ -836,7 +958,7 @@ export function PlanInspector({
           </section>
         ) : null}
 
-        {(activeTool === 'rectangle' || activeTool === 'crop') &&
+        {activeTool === 'crop' &&
         selectedMeasurement &&
         selectedMeasurementItem &&
         selectedMeasurementDisplay &&
@@ -891,7 +1013,7 @@ export function PlanInspector({
               onClick={onApplyMeasurement}
               disabled={applyingMeasurement || measurementApplicationMode === 'reference-only'}
             >
-              {applyingMeasurement ? <>Applying&hellip;</> : 'Apply to item'}
+              {applyingMeasurement ? <>Applying&hellip;</> : 'Apply measurement to item'}
             </Button>
           </div>
         ) : null}

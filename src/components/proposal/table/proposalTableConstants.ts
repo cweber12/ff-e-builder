@@ -16,17 +16,17 @@ const editInputClassName =
   'rounded-sm border border-neutral-200 bg-canvas-chrome px-2 py-1 text-sm text-neutral-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30';
 
 const stickyRevQtyHeaderClassName =
-  'sticky right-[232px] z-40 bg-canvas-chrome w-20 min-w-[80px] border-l-2 border-l-brand-400';
+  'sticky right-[232px] z-40 bg-canvas-shell w-20 min-w-[80px] border-l-2 border-l-brand-400';
 const stickyRevUnitCostHeaderClassName =
-  'sticky right-[136px] z-40 bg-canvas-chrome w-24 min-w-[96px]';
-const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-canvas-chrome w-24 min-w-[96px]';
+  'sticky right-[136px] z-40 bg-canvas-shell w-24 min-w-[96px]';
+const stickyRevTotalHeaderClassName = 'sticky right-10 z-40 bg-canvas-shell w-24 min-w-[96px]';
 
 const stickyRevQtyExpandedHeaderClassName =
-  'sticky top-0 right-[232px] z-50 bg-canvas-chrome w-20 min-w-[80px] border-l-2 border-l-brand-400';
+  'sticky top-0 right-[232px] z-50 bg-canvas-shell w-20 min-w-[80px] border-l-2 border-l-brand-400';
 const stickyRevUnitCostExpandedHeaderClassName =
-  'sticky top-0 right-[136px] z-50 bg-canvas-chrome w-24 min-w-[96px]';
+  'sticky top-0 right-[136px] z-50 bg-canvas-shell w-24 min-w-[96px]';
 const stickyRevTotalExpandedHeaderClassName =
-  'sticky top-0 right-10 z-50 bg-canvas-chrome w-24 min-w-[96px]';
+  'sticky top-0 right-10 z-50 bg-canvas-shell w-24 min-w-[96px]';
 
 const stickyRevQtyCellClassName =
   'sticky right-[232px] z-10 bg-canvas-chrome w-20 min-w-[80px] group-hover:bg-canvas-shell';

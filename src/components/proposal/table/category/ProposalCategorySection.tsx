@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { toast } from '../../../primitives/toast-api';
+import { toast } from '../../../primitives/toastApi';
 import {
   type CustomColumnDef,
   type ProposalItem,
@@ -41,10 +41,7 @@ import { cn } from '../../../../lib/utils';
 import { GroupedTableSection } from '../../../shared/table/TableViewWrappers';
 import { SortableColHeader } from '../../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
-import {
-  proposalStickyEdgeColumnClassNames,
-  proposalStickyValueColumnClassNames,
-} from '../../../shared/table/generatedItemStickyStyles';
+import { proposalGeneratedItemStickyClassNames } from '../../../shared/table/generatedItemStickyStyles';
 import { ProposalRow } from '../row/ProposalRow';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
 import { ProposalCategoryMobileCards } from './ProposalCategoryMobileCards';
@@ -105,6 +102,8 @@ type ProposalCategorySectionProps = {
   onAddCustomColumn: (label: string) => Promise<void>;
   proposalStatus: ProposalStatus;
   onPrefetchItems: () => void;
+  activeColumnGroup: string;
+  onActiveColumnGroupChange: (groupId: string) => void;
 };
 
 export function ProposalCategorySection({
@@ -131,6 +130,8 @@ export function ProposalCategorySection({
   onAddCustomColumn,
   proposalStatus,
   onPrefetchItems,
+  activeColumnGroup,
+  onActiveColumnGroupChange,
 }: ProposalCategorySectionProps) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -385,6 +386,8 @@ export function ProposalCategorySection({
         visibleColumns={visibleColumnsForPanel}
         hiddenDefaults={hiddenDefaults}
         customColumnDefs={customColumnDefs}
+        activeColumnGroup={activeColumnGroup}
+        onActiveColumnGroupChange={onActiveColumnGroupChange}
         onToggle={onToggle}
         onPrefetchItems={onPrefetchItems}
         onCategoryNameSave={onCategoryNameSave}
@@ -414,10 +417,8 @@ export function ProposalCategorySection({
                 onDragEnd={handleColumnDragEnd}
               >
                 <tr>
-                  <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-neutral-200 bg-canvas-chrome px-1" />
-                  <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
-                    ID
-                  </th>
+                  <th className="table-head-cell sticky left-0 z-40 w-8 min-w-8 px-1" />
+                  <th className="table-head-cell sticky left-8 z-40 w-24 min-w-24">ID</th>
                   <SortableContext
                     items={draggableColOrder}
                     strategy={horizontalListSortingStrategy}
@@ -430,11 +431,7 @@ export function ProposalCategorySection({
                             key={colId}
                             colId={colId}
                             label={meta.label}
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
-                              meta.className,
-                            )}
-                            onHide={() => onHideColumn(colId)}
+                            className={cn('table-head-cell', meta.className)}
                           />
                         );
                       }
@@ -444,8 +441,7 @@ export function ProposalCategorySection({
                         <SortableColHeader
                           key={colId}
                           colId={colId}
-                          className="h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome min-w-36"
-                          onHide={() => onHideColumn(colId)}
+                          className="table-head-cell min-w-36"
                         >
                           <CustomColumnHeader
                             def={customDef}
@@ -458,17 +454,10 @@ export function ProposalCategorySection({
                   </SortableContext>
                   {hasOpenRevision ? (
                     <>
+                      <th className={cn('table-head-cell', revisionNotesColumnClassName)}>Notes</th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          revisionNotesColumnClassName,
-                        )}
-                      >
-                        Notes
-                      </th>
-                      <th
-                        className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'table-head-cell text-neutral-500',
                           'border-l border-l-neutral-300',
                           baselineQtyColumnClassName,
                         )}
@@ -478,7 +467,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'table-head-cell text-neutral-500',
                           baselineUnitCostColumnClassName,
                         )}
                       >
@@ -487,7 +476,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'table-head-cell text-neutral-500',
                           baselineTotalColumnClassName,
                         )}
                       >
@@ -496,7 +485,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'table-head-cell text-brand-700',
                           stickyRevQtyHeaderClassName,
                         )}
                       >
@@ -505,7 +494,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'table-head-cell text-brand-700',
                           stickyRevUnitCostHeaderClassName,
                         )}
                       >
@@ -514,7 +503,7 @@ export function ProposalCategorySection({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'table-head-cell text-brand-700',
                           stickyRevTotalHeaderClassName,
                         )}
                       >
@@ -526,24 +515,24 @@ export function ProposalCategorySection({
                     <>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          proposalStickyValueColumnClassNames.quantity.header,
+                          'table-head-cell',
+                          proposalGeneratedItemStickyClassNames.byColumnId.quantity?.header,
                         )}
                       >
                         Quantity
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          proposalStickyValueColumnClassNames.unitCost.header,
+                          'table-head-cell',
+                          proposalGeneratedItemStickyClassNames.byColumnId.unitCost?.header,
                         )}
                       >
                         Unit Cost
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          proposalStickyEdgeColumnClassNames.totalHeader,
+                          'table-head-cell',
+                          proposalGeneratedItemStickyClassNames.byColumnId.total?.header,
                         )}
                       >
                         Total Cost
@@ -552,8 +541,8 @@ export function ProposalCategorySection({
                   )}
                   <th
                     className={cn(
-                      'h-10 border-b border-neutral-200',
-                      proposalStickyEdgeColumnClassNames.actionsHeader,
+                      'table-head-cell',
+                      proposalGeneratedItemStickyClassNames.byColumnId.actions?.header,
                     )}
                   />
                 </tr>
@@ -649,7 +638,6 @@ export function ProposalCategorySection({
         pendingFocusItemId={pendingFocusItemId}
         proposalStatus={proposalStatus}
         onClose={() => setIsExpanded(false)}
-        onHideColumn={onHideColumn}
         onRenameCustomColumn={onRenameCustomColumn}
         onDeleteCustomColumn={onDeleteCustomColumn}
         onItemSave={handleItemSave}

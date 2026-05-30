@@ -18,10 +18,7 @@ import { cn } from '../../../../lib/utils';
 import { ProposalRow } from '../row/ProposalRow';
 import { SortableColHeader } from '../../../shared/table/SortableColHeader';
 import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
-import {
-  proposalStickyEdgeColumnClassNames,
-  proposalStickyValueColumnClassNames,
-} from '../../../shared/table/generatedItemStickyStyles';
+import { proposalGeneratedItemStickyClassNames } from '../../../shared/table/generatedItemStickyStyles';
 import {
   baselineQtyColumnClassName,
   baselineTotalColumnClassName,
@@ -54,7 +51,6 @@ type ProposalCategoryExpandedTableProps = {
   pendingFocusItemId: string | null;
   proposalStatus: ProposalStatus;
   onClose: () => void;
-  onHideColumn: (id: string) => void;
   onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
   onDeleteCustomColumn: (defId: string) => void;
   onItemSave: (item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) => void;
@@ -90,7 +86,6 @@ export function ProposalCategoryExpandedTable({
   pendingFocusItemId,
   proposalStatus,
   onClose,
-  onHideColumn,
   onRenameCustomColumn,
   onDeleteCustomColumn,
   onItemSave,
@@ -149,10 +144,8 @@ export function ProposalCategoryExpandedTable({
                 onDragEnd={onColumnDragEnd}
               >
                 <tr>
-                  <th className="sticky left-0 z-40 h-10 w-8 min-w-8 border-b border-neutral-200 bg-canvas-chrome px-1" />
-                  <th className="sticky left-8 z-40 h-10 w-24 min-w-24 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600">
-                    ID
-                  </th>
+                  <th className="table-head-cell sticky left-0 z-40 w-8 min-w-8 px-1" />
+                  <th className="table-head-cell sticky left-8 z-40 w-24 min-w-24">ID</th>
                   <SortableContext
                     items={draggableColOrder}
                     strategy={horizontalListSortingStrategy}
@@ -165,11 +158,7 @@ export function ProposalCategoryExpandedTable({
                             key={colId}
                             colId={colId}
                             label={meta.label}
-                            className={cn(
-                              'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600 bg-canvas-chrome',
-                              meta.className,
-                            )}
-                            onHide={() => onHideColumn(colId)}
+                            className={cn('table-head-cell', meta.className)}
                           />
                         );
                       }
@@ -181,8 +170,7 @@ export function ProposalCategoryExpandedTable({
                         <SortableColHeader
                           key={colId}
                           colId={colId}
-                          className="h-10 min-w-36 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600"
-                          onHide={() => onHideColumn(colId)}
+                          className="table-head-cell min-w-36"
                         >
                           <CustomColumnHeader
                             def={customDef}
@@ -195,17 +183,10 @@ export function ProposalCategoryExpandedTable({
                   </SortableContext>
                   {hasOpenRevision ? (
                     <>
+                      <th className={cn('table-head-cell', revisionNotesColumnClassName)}>Notes</th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          revisionNotesColumnClassName,
-                        )}
-                      >
-                        Notes
-                      </th>
-                      <th
-                        className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'table-head-cell text-neutral-500',
                           'border-l border-l-neutral-300',
                           baselineQtyColumnClassName,
                         )}
@@ -215,7 +196,7 @@ export function ProposalCategoryExpandedTable({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'table-head-cell text-neutral-500',
                           baselineUnitCostColumnClassName,
                         )}
                       >
@@ -224,7 +205,7 @@ export function ProposalCategoryExpandedTable({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 bg-canvas-chrome px-3 font-semibold uppercase tracking-[0.12em] text-neutral-500',
+                          'table-head-cell text-neutral-500',
                           baselineTotalColumnClassName,
                         )}
                       >
@@ -233,7 +214,7 @@ export function ProposalCategoryExpandedTable({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'table-head-cell text-brand-700',
                           stickyRevQtyExpandedHeaderClassName,
                         )}
                       >
@@ -242,7 +223,7 @@ export function ProposalCategoryExpandedTable({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'table-head-cell text-brand-700',
                           stickyRevUnitCostExpandedHeaderClassName,
                         )}
                       >
@@ -251,7 +232,7 @@ export function ProposalCategoryExpandedTable({
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-brand-700',
+                          'table-head-cell text-brand-700',
                           stickyRevTotalExpandedHeaderClassName,
                         )}
                       >
@@ -263,24 +244,24 @@ export function ProposalCategoryExpandedTable({
                     <>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          proposalStickyValueColumnClassNames.quantity.expandedHeader,
+                          'table-head-cell',
+                          proposalGeneratedItemStickyClassNames.byColumnId.quantity?.expandedHeader,
                         )}
                       >
                         Quantity
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          proposalStickyValueColumnClassNames.unitCost.expandedHeader,
+                          'table-head-cell',
+                          proposalGeneratedItemStickyClassNames.byColumnId.unitCost?.expandedHeader,
                         )}
                       >
                         Unit Cost
                       </th>
                       <th
                         className={cn(
-                          'h-10 border-b border-neutral-200 px-3 font-semibold uppercase tracking-[0.12em] text-neutral-600',
-                          proposalStickyEdgeColumnClassNames.totalExpandedHeader,
+                          'table-head-cell',
+                          proposalGeneratedItemStickyClassNames.byColumnId.total?.expandedHeader,
                         )}
                       >
                         Total Cost
@@ -289,8 +270,8 @@ export function ProposalCategoryExpandedTable({
                   )}
                   <th
                     className={cn(
-                      'h-10 border-b border-neutral-200',
-                      proposalStickyEdgeColumnClassNames.actionsExpandedHeader,
+                      'table-head-cell',
+                      proposalGeneratedItemStickyClassNames.byColumnId.actions?.expandedHeader,
                     )}
                   />
                 </tr>

@@ -5,7 +5,7 @@ import { flexRender, type Row } from '@tanstack/react-table';
 import { cn } from '../../../lib/utils';
 import type { Item } from '../../../types';
 import { GeneratedItemDragHandle } from '../../shared/table/GeneratedItemDragHandle';
-import { ffeStickyEdgeColumnClassNames } from '../../shared/table/generatedItemStickyStyles';
+import { ffeGeneratedItemStickyClassNames } from '../../shared/table/generatedItemStickyStyles';
 import type { TableDensity } from '../../../hooks';
 import { densityRowClass } from '../../../hooks';
 
@@ -60,11 +60,11 @@ function SortableItemRowImpl({
           key={cell.id}
           className={cn(
             'px-3 py-3 text-neutral-700',
+            cell.column.id !== 'actions' && 'table-body-divider',
             defaultColumnClassName(cell.column.id),
             defaultColumnWraps(cell.column.id) ? 'whitespace-normal' : 'whitespace-nowrap',
             cell.column.id === 'plan' && 'overflow-hidden',
-            cell.column.id === 'lineTotal' && ffeStickyEdgeColumnClassNames.totalCell,
-            cell.column.id === 'actions' && ffeStickyEdgeColumnClassNames.actionsCell,
+            ffeGeneratedItemStickyClassNames.byColumnId[cell.column.id]?.cell,
           )}
         >
           {cell.column.id === 'drag' ? (

@@ -159,6 +159,8 @@ The worker stores both the PNG and original PDF in R2 and writes all PDF metadat
 4. Creates `Measurement` row with `rectX/Y/Width/Height` (pixels), `horizontalSpanBase` + `verticalSpanBase` (mm)
 5. **One measurement per item per plan** — if a prior measurement exists for the same `targetItemId`, it is deleted (and its images) before the new one is created
 
+If no target item exists yet, users can choose **Add item from measurement** in the Plans inspector. This opens a right-side create panel, auto-creates/reuses the `Uncategorized` Proposal Category, creates the item with optional field defaults, saves the Measurement, and immediately writes a Plan Image using the measured area.
+
 This links the rectangle to the item on the plan. The proposal item is **not updated yet**.
 
 #### Stage 2a — Crop plan image (optional)
@@ -169,7 +171,7 @@ This links the rectangle to the item on the plan. The proposal item is **not upd
 4. `savePlanImageForMeasurement()` runs:
    - Downloads raw plan blob via `api.plans.downloadContent()`
    - `measurementCropToPixelCrop()` converts normalized fractions → pixel coords using `planNaturalSize`
-   - `createHighlightedPlanCrop()` draws crop region + semi-transparent blue measurement rect overlay → PNG blob
+   - `createHighlightedPlanCrop()` draws crop region + bright yellow measurement rect overlay (solid stroke, no dashed border) → PNG blob
    - Deletes existing `proposal_plan` image assets for the item
    - Uploads PNG via `api.images.upload({ entityType: 'proposal_plan', entityId: targetItemId })`
    - Calls `restorePlanColumn()` to ensure the plan image column is visible in the proposal table
@@ -185,6 +187,8 @@ This links the rectangle to the item on the plan. The proposal item is **not upd
 3. If `project.proposalStatus !== 'in_progress'`, `ChangeConfirmModal` prompts for change log metadata before proceeding
 4. `api.proposal.updateItem(targetItemId, { quantity, quantityUnit, version, changeLog })`
 5. `proposalKeys.items(containerId)` cache updated
+
+In rectangle mode, post-save measurement actions are grouped in this order: **Measured area** (selection/remove), **Apply measurement** (mode + apply), then **Plan image** (open crop editor). The labels use explicit verbs (for example, _Apply measurement to item_ and _Open crop editor_) to reduce ambiguity.
 
 **Note:** Application mode is transient UI state — it is not stored on the `Measurement` row.
 
@@ -488,7 +492,7 @@ When `sourceType === 'image'`:
 
 All R2 assets are auth-gated:
 
-```
+```text
 apiFetchResponse(path)          // adds Authorization: Bearer <token>
   → Worker assertProjectOwnership
   → R2 stream

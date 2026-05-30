@@ -6,6 +6,10 @@ import {
   ChangeConfirmModal,
   type ChangeConfirmResult,
 } from '../components/shared/modals/ChangeConfirmModal';
+import {
+  PlanCreateItemPanel,
+  type PlanCreateItemDraft,
+} from '../components/plans/canvas/PlanCreateItemPanel';
 import { PlanInspector } from '../components/plans/canvas/PlanInspector';
 import { PlanToolRail } from '../components/plans/canvas/PlanToolRail';
 import { PlanViewport } from '../components/plans/canvas/PlanViewport';
@@ -33,7 +37,9 @@ import { ApiError } from '../lib/api/transport';
 import {
   convertBaseToPlanUnits,
   convertPlanUnitsToBase,
+  formatAreaUnit,
   formatDisplayNumber,
+  formatPlanLength,
   getLineLength,
   measurementToRectBounds,
   normalizeRectDraft,
@@ -99,6 +105,10 @@ export function PlanCanvasPage({
     height: number;
     targetItem: MeasurementItemRef;
   } | null>(null);
+  const [createItemPanelOpen, setCreateItemPanelOpen] = useState(false);
+  const [createItemPreviewUrl, setCreateItemPreviewUrl] = useState<string | null>(null);
+  const [createItemPreviewLoading, setCreateItemPreviewLoading] = useState(false);
+  const [isCreatingItemFromMeasurement, setIsCreatingItemFromMeasurement] = useState(false);
   const [pendingMeasurementApply, setPendingMeasurementApply] = useState<{
     roundedQuantity: number;
     quantityUnit: string;
@@ -202,7 +212,16 @@ export function PlanCanvasPage({
     setSelectedMeasurementTargetKey('');
     setMeasurementApplicationMode('reference-only');
     setLengthLineLabelInput('');
+    setCreateItemPanelOpen(false);
   }, [selectedPlanId]);
+
+  useEffect(() => {
+    return () => {
+      if (createItemPreviewUrl) {
+        URL.revokeObjectURL(createItemPreviewUrl);
+      }
+    };
+  }, [createItemPreviewUrl]);
 
   useEffect(() => {
     if (!calibration) return;
@@ -303,6 +322,33 @@ export function PlanCanvasPage({
     calibration && draftMeasurementHeightPlanUnits !== null
       ? convertPlanUnitsToBase(draftMeasurementHeightPlanUnits, calibration.unit)
       : null;
+  const proposalCategoryOptions = useMemo(
+    () =>
+      proposalCategoriesWithItems
+        .map((category) => category.name)
+        .sort((a, b) => a.localeCompare(b)),
+    [proposalCategoriesWithItems],
+  );
+  const uncategorizedCategoryName = 'Uncategorized';
+  const canOpenCreateItemPanel =
+    rectangleMode === 'measure' &&
+    normalizedMeasurementDraft !== null &&
+    draftMeasurementWidthBase !== null &&
+    draftMeasurementHeightBase !== null;
+  const createItemMeasurementSizeLabel =
+    calibration &&
+    draftMeasurementWidthPlanUnits !== null &&
+    draftMeasurementHeightPlanUnits !== null
+      ? `${formatPlanLength(draftMeasurementWidthPlanUnits, calibration.unit)} x ${formatPlanLength(draftMeasurementHeightPlanUnits, calibration.unit)}`
+      : normalizedMeasurementDraft
+        ? `${formatDisplayNumber(normalizedMeasurementDraft.width)} x ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
+        : 'No measurement draft';
+  const createItemMeasurementAreaLabel =
+    calibration &&
+    draftMeasurementWidthPlanUnits !== null &&
+    draftMeasurementHeightPlanUnits !== null
+      ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits * draftMeasurementHeightPlanUnits)} ${formatAreaUnit(calibration.unit)}`
+      : null;
   const selectedMeasurementTarget =
     selectedMeasurementTargetKey.length > 0
       ? (measurementItemsByKey.get(selectedMeasurementTargetKey) ?? null)
@@ -400,6 +446,179 @@ export function PlanCanvasPage({
     setSelectedLengthLineId(null);
     setLengthLineDraft(null);
     setLengthLineLabelInput('');
+  };
+
+  const handleOpenCreateItemPanel = () => {
+    if (!canOpenCreateItemPanel || !normalizedMeasurementDraft) return;
+    setCreateItemPanelOpen(true);
+  };
+
+  useEffect(() => {
+    if (!createItemPanelOpen || !selectedPlan || !normalizedMeasurementDraft) {
+      if (createItemPreviewUrl) {
+        URL.revokeObjectURL(createItemPreviewUrl);
+        setCreateItemPreviewUrl(null);
+      }
+      return;
+    }
+
+    let cancelled = false;
+
+    const buildPreview = async () => {
+      setCreateItemPreviewLoading(true);
+      try {
+        const sourceBlob = await api.plans.downloadContent(project.id, selectedPlanId);
+        const previewBlob = await createHighlightedPlanCrop({
+          sourceBlob,
+          crop: {
+            cropX: normalizedMeasurementDraft.x,
+            cropY: normalizedMeasurementDraft.y,
+            cropWidth: normalizedMeasurementDraft.width,
+            cropHeight: normalizedMeasurementDraft.height,
+          },
+          measurementRect: {
+            x: normalizedMeasurementDraft.x,
+            y: normalizedMeasurementDraft.y,
+            width: normalizedMeasurementDraft.width,
+            height: normalizedMeasurementDraft.height,
+          },
+        });
+        if (cancelled) return;
+
+        const previewUrl = URL.createObjectURL(previewBlob);
+        setCreateItemPreviewUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return previewUrl;
+        });
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to build measured item preview:', error);
+          toast.error('Could not build the plan image preview. You can still save the item.');
+        }
+      } finally {
+        if (!cancelled) setCreateItemPreviewLoading(false);
+      }
+    };
+
+    void buildPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    createItemPanelOpen,
+    createItemPreviewUrl,
+    normalizedMeasurementDraft,
+    project.id,
+    selectedPlan,
+    selectedPlanId,
+  ]);
+
+  const ensureProposalCategory = async (rawName: string) => {
+    const normalizedName = rawName.trim().toLocaleLowerCase();
+    const existing = proposalCategoriesWithItems.find(
+      (category) => category.name.trim().toLocaleLowerCase() === normalizedName,
+    );
+    if (existing) return existing;
+
+    try {
+      return await api.proposal.createCategory(project.id, {
+        name: rawName.trim(),
+        sortOrder: proposalCategoriesWithItems.length,
+      });
+    } catch {
+      // If another user created it first, re-fetch and reuse.
+      const categories = await api.proposal.categories(project.id);
+      const matched = categories.find(
+        (category) => category.name.trim().toLocaleLowerCase() === normalizedName,
+      );
+      if (matched) return matched;
+      throw new Error('Could not resolve the target Proposal Category.');
+    }
+  };
+
+  const handleCreateItemFromMeasurement = async (draft: PlanCreateItemDraft) => {
+    if (
+      !normalizedMeasurementDraft ||
+      draftMeasurementWidthBase === null ||
+      draftMeasurementHeightBase === null
+    ) {
+      return;
+    }
+
+    setIsCreatingItemFromMeasurement(true);
+    try {
+      const categoryName = draft.categoryName.trim() || uncategorizedCategoryName;
+      const category = await ensureProposalCategory(categoryName);
+
+      const existingItemCount = proposalCategoriesWithItems.reduce(
+        (total, proposalCategory) => total + proposalCategory.items.length,
+        0,
+      );
+      const autoTag = `PLAN-${String(existingItemCount + 1).padStart(3, '0')}`;
+      const horizontalFeet = convertBaseToPlanUnits(draftMeasurementWidthBase, 'ft');
+      const verticalFeet = convertBaseToPlanUnits(draftMeasurementHeightBase, 'ft');
+      const measuredAreaSqFt = Math.max(1, Math.round(horizontalFeet * verticalFeet));
+
+      const createdItem = await api.proposal.createItem(category.id, {
+        productTag: draft.productTag.trim() || autoTag,
+        description: draft.description.trim() || 'Measured area item',
+        location: draft.location.trim(),
+        quantity: measuredAreaSqFt,
+        quantityUnit: 'sq ft',
+      });
+
+      queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(category.id), (old) => [
+        ...(old ?? []),
+        createdItem,
+      ]);
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.categories(project.id) });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.withItems(project.id) });
+
+      const measurementCrop = pixelCropToMeasurementCrop(
+        normalizedMeasurementDraft,
+        planNaturalSize,
+      );
+      const createdMeasurement = await createMeasurement.mutateAsync({
+        targetKind: 'proposal',
+        targetItemId: createdItem.id,
+        targetTagSnapshot: createdItem.productTag || autoTag,
+        rectX: normalizedMeasurementDraft.x,
+        rectY: normalizedMeasurementDraft.y,
+        rectWidth: normalizedMeasurementDraft.width,
+        rectHeight: normalizedMeasurementDraft.height,
+        horizontalSpanBase: draftMeasurementWidthBase,
+        verticalSpanBase: draftMeasurementHeightBase,
+        cropX: measurementCrop?.cropX ?? null,
+        cropY: measurementCrop?.cropY ?? null,
+        cropWidth: measurementCrop?.cropWidth ?? null,
+        cropHeight: measurementCrop?.cropHeight ?? null,
+      });
+
+      await savePlanImageForMeasurement(
+        createdMeasurement,
+        {
+          cropX: normalizedMeasurementDraft.x,
+          cropY: normalizedMeasurementDraft.y,
+          cropWidth: normalizedMeasurementDraft.width,
+          cropHeight: normalizedMeasurementDraft.height,
+        },
+        createdItem.linkedFfeItemId,
+      );
+
+      setCreateItemPanelOpen(false);
+      setSelectedMeasurementId(createdMeasurement.id);
+      setSelectedMeasurementTargetKey(`proposal:${createdItem.id}`);
+      setMeasurementDraft(null);
+      setActiveTool('rectangle');
+      toast.success('Item created from measurement.');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create item from measurement.';
+      toast.error(message);
+    } finally {
+      setIsCreatingItemFromMeasurement(false);
+    }
   };
 
   const handleSaveMeasurement = async () => {
@@ -1078,6 +1297,9 @@ export function PlanCanvasPage({
             rectangleMode={rectangleMode}
             onSetHighlight={handleSetHighlight}
             canSetHighlight={canSetHighlight}
+            canOpenCreateItemPanel={canOpenCreateItemPanel}
+            onOpenCreateItemPanel={handleOpenCreateItemPanel}
+            creatingItemFromMeasurement={isCreatingItemFromMeasurement}
             onSaveHighlight={() => void handleSaveHighlight()}
             savingHighlight={isSavingHighlight}
             canSaveHighlight={canSaveHighlight}
@@ -1115,6 +1337,18 @@ export function PlanCanvasPage({
           onCancel={() => setPendingMeasurementApply(null)}
         />
       )}
+      <PlanCreateItemPanel
+        open={createItemPanelOpen}
+        categoryOptions={proposalCategoryOptions}
+        defaultCategoryName={uncategorizedCategoryName}
+        measurementSizeLabel={createItemMeasurementSizeLabel}
+        measurementAreaLabel={createItemMeasurementAreaLabel}
+        previewUrl={createItemPreviewUrl}
+        previewLoading={createItemPreviewLoading}
+        submitting={isCreatingItemFromMeasurement}
+        onClose={() => setCreateItemPanelOpen(false)}
+        onSubmit={(draft) => void handleCreateItemFromMeasurement(draft)}
+      />
     </>
   );
 }
@@ -1198,10 +1432,10 @@ async function createHighlightedPlanCrop({
   const highlightY = measurementRect.y - cropY;
 
   context.save();
-  context.fillStyle = 'rgba(31, 88, 145, 0.10)';
-  context.strokeStyle = '#164575';
+  context.fillStyle = 'rgba(255, 212, 0, 0.2)';
+  context.strokeStyle = '#FFD400';
   context.lineWidth = Math.max(1.5, Math.min(cropWidth, cropHeight) * 0.008);
-  context.setLineDash([10, 8]);
+  context.setLineDash([]);
   context.fillRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
   context.strokeRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
   context.restore();

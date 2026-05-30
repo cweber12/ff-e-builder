@@ -23,7 +23,16 @@ type UseGeneratedItemColumnsOptions<TColumn> = {
   buildCustomColumn: (def: CustomColumnDef) => TColumn;
   insertBeforeId?: string;
   nonDraggableIds?: readonly string[];
+  /**
+   * Active column-group id from the "view" switcher. When set to a group id,
+   * only that group's columns (plus the preset's anchor columns and any custom
+   * columns) are displayed. `undefined` or `'all'` shows every visible column.
+   */
+  activeGroupId?: string | undefined;
 };
+
+/** The implicit "show everything" view — not stored in `preset.columnGroups`. */
+export const ALL_COLUMN_GROUP_ID = 'all';
 
 function resolveHideableIds(preset: GeneratedItemColumnsPreset) {
   if ('defaultColumnIds' in preset) return preset.defaultColumnIds;
@@ -47,6 +56,7 @@ export function useGeneratedItemColumns<TColumn>({
   buildCustomColumn,
   insertBeforeId,
   nonDraggableIds = [],
+  activeGroupId,
 }: UseGeneratedItemColumnsOptions<TColumn>) {
   const hideableColumnIds = resolveHideableIds(preset);
   const columnConfig = useColumnConfig(
@@ -67,9 +77,25 @@ export function useGeneratedItemColumns<TColumn>({
     [customColumnDefs],
   );
 
+  // Group filter: when a group is active, keep only its columns + the preset's
+  // anchor columns + any custom columns. Layers on top of the visible/hidden
+  // order from useColumnConfig — it never mutates the stored config.
+  const isInActiveGroup = useMemo(() => {
+    if (!activeGroupId || activeGroupId === ALL_COLUMN_GROUP_ID) return () => true;
+    const group = preset.columnGroups.find((candidate) => candidate.id === activeGroupId);
+    if (!group) return () => true;
+    const allowed = new Set<string>([...preset.anchorColumnIds, ...group.columnIds]);
+    return (columnId: string) => allowed.has(columnId) || customDefMap.has(columnId);
+  }, [activeGroupId, preset, customDefMap]);
+
+  const displayedOrder = useMemo(
+    () => columnConfig.visibleOrder.filter(isInActiveGroup),
+    [columnConfig.visibleOrder, isInActiveGroup],
+  );
+
   const visibleColumns = useMemo(
     () =>
-      columnConfig.visibleOrder
+      displayedOrder
         .map((columnId) => {
           const defaultColumn = defaultColumnMap.get(columnId);
           if (defaultColumn !== undefined) return defaultColumn;
@@ -78,7 +104,7 @@ export function useGeneratedItemColumns<TColumn>({
           return buildCustomColumn(customDef);
         })
         .filter((column): column is TColumn => column !== null),
-    [buildCustomColumn, columnConfig.visibleOrder, customDefMap, defaultColumnMap],
+    [buildCustomColumn, displayedOrder, customDefMap, defaultColumnMap],
   );
 
   const hiddenDefaults = useMemo(
@@ -92,8 +118,8 @@ export function useGeneratedItemColumns<TColumn>({
 
   const nonDraggableIdSet = useMemo(() => new Set(nonDraggableIds), [nonDraggableIds]);
   const draggableColumnIds = useMemo(
-    () => columnConfig.visibleOrder.filter((id) => !nonDraggableIdSet.has(id)),
-    [columnConfig.visibleOrder, nonDraggableIdSet],
+    () => displayedOrder.filter((id) => !nonDraggableIdSet.has(id)),
+    [displayedOrder, nonDraggableIdSet],
   );
 
   return {
