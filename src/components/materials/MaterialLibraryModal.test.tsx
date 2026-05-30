@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Finish, Material } from '../../types';
-import { MaterialLibraryPanel } from './MaterialLibraryModal';
+import { MaterialBadges, MaterialLibraryPanel } from './MaterialLibraryModal';
 
 const mockState = vi.hoisted(() => ({
   finishes: [] as Finish[],
@@ -69,6 +69,18 @@ function makeMaterial(id: string, name: string, finishId: string | null = null):
 
 function renderPanel() {
   return render(<MaterialLibraryPanel context="ffe" projectId="project-1" roomId="room-1" />);
+}
+
+function makeClipboardData(file: File) {
+  return {
+    items: [
+      {
+        kind: 'file',
+        type: file.type,
+        getAsFile: () => file,
+      },
+    ],
+  };
 }
 
 describe('MaterialLibraryModal edit layout', () => {
@@ -202,5 +214,53 @@ describe('MaterialLibraryModal finish selection', () => {
         description: '',
       },
     });
+  });
+});
+
+describe('MaterialBadges paste routing', () => {
+  it('routes inline paste to onPasteImage for empty material slots', () => {
+    const onPasteImage = vi.fn();
+    const swatch = new File(['png'], 'swatch.png', { type: 'image/png' });
+
+    render(
+      <MaterialBadges
+        materials={[]}
+        onOpen={vi.fn()}
+        onPasteImage={onPasteImage}
+        getFinishName={vi.fn()}
+      />,
+    );
+
+    fireEvent.paste(screen.getByRole('button', { name: 'Edit item materials' }), {
+      clipboardData: makeClipboardData(swatch),
+    });
+
+    expect(onPasteImage).toHaveBeenCalledTimes(1);
+    expect(onPasteImage).toHaveBeenCalledWith(swatch);
+  });
+
+  it('routes document paste while focused and stops after blur', () => {
+    const onPasteImage = vi.fn();
+    const swatch = new File(['png'], 'swatch.png', { type: 'image/png' });
+
+    render(
+      <MaterialBadges
+        materials={[makeMaterial('mat-1', 'Door Pull', 'finish-1')]}
+        onOpen={vi.fn()}
+        onPasteImage={onPasteImage}
+        getFinishName={vi.fn()}
+      />,
+    );
+
+    const pasteTarget = screen.getByTitle('Paste swatch image (Ctrl+V)');
+    fireEvent.focus(pasteTarget);
+    fireEvent.paste(document, { clipboardData: makeClipboardData(swatch) });
+
+    expect(onPasteImage).toHaveBeenCalledTimes(1);
+
+    fireEvent.blur(pasteTarget);
+    fireEvent.paste(document, { clipboardData: makeClipboardData(swatch) });
+
+    expect(onPasteImage).toHaveBeenCalledTimes(1);
   });
 });

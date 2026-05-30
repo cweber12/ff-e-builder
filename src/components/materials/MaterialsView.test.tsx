@@ -233,6 +233,23 @@ describe('MaterialsView options actions', () => {
       expect(mockState.materialsRefetch).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('does not run delete-all when cancelled', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(screen.getByRole('button', { name: /options/i }));
+    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /delete all finishes/i }),
+      ).not.toBeInTheDocument();
+    });
+    expect(mockState.deleteFinishMutateAsync).not.toHaveBeenCalled();
+    expect(mockState.deleteMaterialMutateAsync).not.toHaveBeenCalled();
+  });
 });
 
 describe('finish name collision prompt', () => {

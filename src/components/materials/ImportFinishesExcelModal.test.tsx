@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
@@ -190,6 +190,44 @@ describe('ImportFinishesExcelModal', () => {
     expect(screen.getByText('Category: Category')).toBeInTheDocument();
     expect(screen.getByText('Image: Swatch')).toBeInTheDocument();
     expect(screen.getByText('Sheet has merged cells; values were normalized.')).toBeInTheDocument();
+  });
+
+  it('supports drag-drop upload through confirm and import', async () => {
+    const user = userEvent.setup();
+    const columns = [{ key: 'name__1', label: 'Name', columnNumber: 1 }];
+    mocks.parseFinishSpreadsheet.mockResolvedValue(
+      makeParsedSpreadsheet({
+        columns,
+        rows: [makeRow({ values: { name__1: 'Walnut' } })],
+      }),
+    );
+    mocks.autoMapFinishColumns.mockReturnValue({
+      ...emptyMap,
+      name: 'name__1',
+    });
+
+    const onSuccess = vi.fn();
+    render(
+      <ImportFinishesExcelModal
+        open
+        projectId="project-1"
+        finishes={[]}
+        onClose={vi.fn()}
+        onSuccess={onSuccess}
+      />,
+    );
+
+    const file = new File(['csv'], 'finishes.csv', { type: 'text/csv' });
+    const dropTarget = screen.getByText('Drop file here or click to browse');
+    fireEvent.drop(dropTarget, { dataTransfer: { files: [file] } });
+
+    expect(await screen.findByText('Detected columns (1)')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Import 1 row' }));
+
+    expect(await screen.findByText(/Import complete: 1 finish created,/i)).toBeInTheDocument();
+    expect(mocks.parseFinishSpreadsheet).toHaveBeenCalledWith(file);
+    expect(mocks.createFinishMutateAsync).toHaveBeenCalledTimes(1);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
   it('imports rows, uploads swatch images, and reports summary warnings', async () => {
