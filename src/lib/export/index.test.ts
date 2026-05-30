@@ -138,6 +138,11 @@ const makeProposalItem = (overrides: Partial<ProposalItem> = {}): ProposalItem =
   sizeD: '32',
   sizeH: '32',
   sizeUnit: 'ft/in',
+  footprintLabel: '',
+  footprintW: '',
+  footprintD: '',
+  footprintUnit: '',
+  footprintArea: null,
   materials: [
     {
       id: 'm1',

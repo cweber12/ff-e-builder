@@ -218,6 +218,14 @@ _Avoid_: Screenshot, render URL
 A measured or imported plan visual attached directly to an FF&E Item or Proposal Item. When an FF&E Item and Proposal Item are linked through a Generated Item, both views should show the same Plan Images. In Proposal, the Plan cell is image-only; imported/API Plan text remains stored as fallback export data.
 _Avoid_: Rendering, Swatch, Measured Plan when referring to the item-level derived image
 
+**Footprint**:
+The plan-derived width × depth (and computed area) an item occupies on a Measured Plan, stored on a Proposal Item and shown as the **Footprint** column in the Proposal view. Captured from a Rectangle Measurement: applying a measurement writes **either** the item's quantity (area / one measured side) **or** its Footprint — never both. Footprint is presentation/reference data; it never changes quantity. For items priced in units (e.g. a table), Footprint records the floor area the item covers without disturbing the unit quantity.
+_Avoid_: Size (the product spec dimensions, a separate field); changing quantity when recording Footprint
+
+**Plan Image Highlight**:
+A direct path to attach a **Plan Image** to an FF&E Item or Proposal Item by marking a highlight area on the **Measured Plan**, without creating a **Measurement**. Distinct from the Measure → **Measurement Crop** flow: the highlight is baked onto the cropped Plan Image purely for presentation and produces no canonical measured geometry. Reached via the Rectangle tool's Highlight sub-mode.
+_Avoid_: Measurement when referring to a highlight-only Plan Image; treating the highlight as a saved measured record
+
 **Plan Calibration**:
 The shared scale definition for one Measured Plan. Plan Calibration is established from a known-length line on that Measured Plan, includes the unit context for that plan, and is reused by every Measurement taken from it.
 _Avoid_: Per-item scale, temporary ruler state
@@ -275,6 +283,7 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A **Measured Plan** can produce derived **Plan Images** attached to either **FF&E Items** or **Proposal Items** after a user confirms the measured item association.
 - A **Measured Plan** owns one shared **Plan Calibration**, and all **Measurements** taken from that plan reuse that calibration.
 - A **Measurement** belongs to exactly one **Measured Plan** and attaches to exactly one **FF&E Item** or **Proposal Item** via the resolved user-facing item tag.
+- In the Plans measurement flow, the item picker lists **Proposal Items only** (presented as a single clean item list of ID + name, with no FF&E/Proposal wording). FF&E Items are measured through their linked Proposal entry, which syncs the derived **Plan Image** back to the FF&E Item. An FF&E Item with no linked Proposal Item is not directly measurable from this flow.
 - A **Measurement** is the canonical geometry for a measured area; a separate **Measurement Crop** can be adjusted before saving the derived **Plan Image**.
 - A **Measured Plan** can have at most one active **Measurement** per attached item. Remeasuring the same item on the same plan replaces the existing Measurement and regenerates the derived Plan Image.
 - A **Plans** workspace defaults to a library of **Measured Plans** with lightweight status and opens into plan-specific measurement work.
@@ -284,6 +293,8 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A **Length Line** can be saved without item attachment as a calibration or reference measurement.
 - A saved **Length Line** on a Measured Plan can be promoted into that plan’s **Plan Calibration**.
 - A saved **Rectangle Measurement** requires explicit item attachment and is the canonical source for the derived item-level **Plan Image**.
+- A **Plan Image Highlight** is a sanctioned exception: it attaches a **Plan Image** to an item directly from a marked highlight area, without creating a **Measurement**. It carries no canonical measured geometry and is presentation-only.
+- Applying a **Measurement** to a Proposal Item is exclusive: it updates **either** the item's quantity (area or one measured side) **or** records the item's **Footprint** (W × D + area), never both. Footprint never changes quantity, so an item measured in units keeps its unit quantity while still recording the floor area it covers.
 - A **Rectangle Measurement** stores two measured sides plus orientation metadata without inferring semantic item dimensions like width or depth.
 - A **Measurement** is the authoritative measured record for item geometry in the Plans domain, while existing item dimension fields remain separate presentation/spec text.
 - A **Plan Calibration** in v1 is established by drawing a line on the Measured Plan and entering the real-world length for that line; abstract architectural scale notation is not the primary calibration path.

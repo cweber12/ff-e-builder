@@ -62,6 +62,11 @@ type ProposalItemSource = {
   size_d: string | null;
   size_h: string | null;
   size_unit: string | null;
+  footprint_label: string | null;
+  footprint_w: string | null;
+  footprint_d: string | null;
+  footprint_unit: string | null;
+  footprint_area: number | string | null;
   cbm: number | string | null;
   quantity: number | string | null;
   quantity_unit: string | null;
@@ -446,6 +451,7 @@ async function insertGeneratedItemMirrorForProposalItem(
       lead_time, status, custom_data, sort_order, is_ffe_visible,
       proposal_category_id, product_tag, plan, drawings, location,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
+      footprint_label, footprint_w, footprint_d, footprint_unit, footprint_area,
       cbm, quantity, quantity_unit
     )
     VALUES (
@@ -478,6 +484,11 @@ async function insertGeneratedItemMirrorForProposalItem(
       ${input.size_d ?? ''},
       ${input.size_h ?? ''},
       ${input.size_unit ?? 'in'},
+      ${input.footprint_label ?? ''},
+      ${input.footprint_w ?? ''},
+      ${input.footprint_d ?? ''},
+      ${input.footprint_unit ?? ''},
+      ${input.footprint_area ?? null},
       ${input.cbm ?? 0},
       ${input.quantity ?? 1},
       ${input.quantity_unit ?? 'unit'}
@@ -573,6 +584,7 @@ export async function createGeneratedItemFromProposal(
     INSERT INTO proposal_items (
       category_id, product_tag, item_name, plan, drawings, location, description, notes,
       size_label, size_mode, size_w, size_d, size_h, size_unit,
+      footprint_label, footprint_w, footprint_d, footprint_unit, footprint_area,
       cbm, quantity, quantity_unit, unit_cost_cents, sort_order, custom_data
     )
     VALUES (
@@ -590,6 +602,11 @@ export async function createGeneratedItemFromProposal(
       ${input.size_d ?? ''},
       ${input.size_h ?? ''},
       ${input.size_unit ?? 'in'},
+      ${input.footprint_label ?? ''},
+      ${input.footprint_w ?? ''},
+      ${input.footprint_d ?? ''},
+      ${input.footprint_unit ?? ''},
+      ${input.footprint_area ?? null},
       ${input.cbm ?? 0},
       ${input.quantity ?? 1},
       ${input.quantity_unit ?? 'unit'},
@@ -626,6 +643,11 @@ function proposalItemSourceToCreateInput(source: ProposalItemSource): CreateProp
     size_d: source.size_d ?? '',
     size_h: source.size_h ?? '',
     size_unit: source.size_unit ?? 'in',
+    footprint_label: source.footprint_label ?? '',
+    footprint_w: source.footprint_w ?? '',
+    footprint_d: source.footprint_d ?? '',
+    footprint_unit: source.footprint_unit ?? '',
+    footprint_area: source.footprint_area != null ? Number(source.footprint_area) : null,
     cbm: Number(source.cbm ?? 0),
     quantity: Number(source.quantity ?? 1),
     quantity_unit: source.quantity_unit ?? 'unit',
@@ -748,6 +770,11 @@ export async function mirrorProposalItemToGeneratedItem(
       size_d               = pi.size_d,
       size_h               = pi.size_h,
       size_unit            = pi.size_unit,
+      footprint_label      = pi.footprint_label,
+      footprint_w          = pi.footprint_w,
+      footprint_d          = pi.footprint_d,
+      footprint_unit       = pi.footprint_unit,
+      footprint_area       = pi.footprint_area,
       cbm                  = pi.cbm,
       quantity             = pi.quantity,
       quantity_unit        = pi.quantity_unit,
@@ -1116,6 +1143,11 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         i.size_d,
         i.size_h,
         i.size_unit,
+        i.footprint_label,
+        i.footprint_w,
+        i.footprint_d,
+        i.footprint_unit,
+        i.footprint_area,
         i.cbm,
         i.quantity,
         i.quantity_unit,
@@ -1180,6 +1212,11 @@ export async function selectGeneratedItemsByProposalCategory(sql: Sql, categoryI
         pi.size_d,
         pi.size_h,
         pi.size_unit,
+        pi.footprint_label,
+        pi.footprint_w,
+        pi.footprint_d,
+        pi.footprint_unit,
+        pi.footprint_area,
         pi.cbm,
         pi.quantity,
         pi.quantity_unit,

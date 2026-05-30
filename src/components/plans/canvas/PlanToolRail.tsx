@@ -1,23 +1,14 @@
 import type { ReactNode } from 'react';
-import { SegmentedControl } from '../../primitives';
 import { PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './planToolDefinitions';
-import type { PlanToolId, RectangleModeId } from './types';
+import type { PlanToolId } from './types';
 
 type PlanToolRailProps = {
   activeTool: PlanToolId;
   isCalibrated: boolean;
   onToolChange: (tool: PlanToolId) => void;
-  rectangleMode: RectangleModeId;
-  onRectangleModeChange: (mode: RectangleModeId) => void;
 };
 
-export function PlanToolRail({
-  activeTool,
-  isCalibrated,
-  onToolChange,
-  rectangleMode,
-  onRectangleModeChange,
-}: PlanToolRailProps) {
+export function PlanToolRail({ activeTool, isCalibrated, onToolChange }: PlanToolRailProps) {
   return (
     <aside
       className="overflow-y-auto border-r border-neutral-200 bg-canvas-chrome/80 py-3 backdrop-blur"
@@ -41,7 +32,6 @@ export function PlanToolRail({
               {tools.map((tool) => {
                 const disabled = tool.id !== 'calibrate' && tool.id !== 'pan' && !isCalibrated;
                 const active = activeTool === tool.id;
-                const showRectangleModes = tool.id === 'rectangle' && active && !disabled;
 
                 return (
                   <div key={tool.id} className="flex w-11 flex-col items-center gap-1">
@@ -78,32 +68,6 @@ export function PlanToolRail({
                         </span>
                       ) : null}
                     </button>
-
-                    {showRectangleModes ? (
-                      <SegmentedControl
-                        ariaLabel="Rectangle sub-mode"
-                        value={rectangleMode}
-                        onChange={(mode) => onRectangleModeChange(mode)}
-                        tone="rail"
-                      >
-                        <SegmentedControl.Option
-                          value="measure"
-                          aria-label="Measure mode"
-                          title="Measure — capture dimensions"
-                        >
-                          <span className="sr-only">Measure</span>
-                          <MeasureModeIcon />
-                        </SegmentedControl.Option>
-                        <SegmentedControl.Option
-                          value="highlight"
-                          aria-label="Highlight mode"
-                          title="Highlight — mark area on the saved plan image"
-                        >
-                          <span className="sr-only">Highlight</span>
-                          <HighlightModeIcon />
-                        </SegmentedControl.Option>
-                      </SegmentedControl>
-                    ) : null}
                   </div>
                 );
               })}
@@ -197,42 +161,6 @@ function LockIcon() {
     >
       <rect x="2" y="4.5" width="6" height="4" rx="0.8" />
       <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" />
-    </svg>
-  );
-}
-
-function MeasureModeIcon() {
-  // Rectangle with an architectural dimension line above it — "this mode
-  // turns the box into a saved width × height measurement."
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      className="h-3.5 w-3.5"
-      aria-hidden
-    >
-      <path d="M3 2v2M13 2v2M3 3h10" strokeLinecap="round" />
-      <rect x="3" y="6" width="10" height="7" rx="0.5" />
-    </svg>
-  );
-}
-
-function HighlightModeIcon() {
-  // Rectangle with a translucent marker sweep running diagonally through it
-  // — visually reads as "highlighter on the plan."
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      className="h-3.5 w-3.5"
-      aria-hidden
-    >
-      <rect x="2.5" y="3.5" width="11" height="9" rx="0.5" />
-      <path d="M3.5 11.5 12.5 4.5" strokeWidth="2.6" strokeLinecap="round" opacity="0.45" />
     </svg>
   );
 }

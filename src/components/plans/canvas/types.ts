@@ -9,6 +9,7 @@ export type MeasurementApplicationMode =
   | 'proposal-horizontal'
   | 'proposal-vertical'
   | 'proposal-area'
+  | 'proposal-footprint'
   | 'ffe-dimensions';
 
 export type MeasurementItemRef = {

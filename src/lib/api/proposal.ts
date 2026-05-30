@@ -38,6 +38,11 @@ export type CreateProposalItemInput = {
   sizeD?: string;
   sizeH?: string;
   sizeUnit?: string;
+  footprintLabel?: string;
+  footprintW?: string;
+  footprintD?: string;
+  footprintUnit?: string;
+  footprintArea?: number | null;
   cbm?: number;
   quantity?: number;
   quantityUnit?: string;
@@ -83,6 +88,11 @@ const proposalItemCreatePayload = (input: CreateProposalItemInput) => ({
   size_d: input.sizeD ?? '',
   size_h: input.sizeH ?? '',
   size_unit: input.sizeUnit ?? 'in',
+  footprint_label: input.footprintLabel ?? '',
+  footprint_w: input.footprintW ?? '',
+  footprint_d: input.footprintD ?? '',
+  footprint_unit: input.footprintUnit ?? '',
+  footprint_area: input.footprintArea ?? null,
   cbm: input.cbm ?? 0,
   quantity: input.quantity ?? 1,
   quantity_unit: input.quantityUnit ?? 'unit',
@@ -106,6 +116,11 @@ const proposalItemUpdatePayload = (patch: UpdateProposalItemInput) => ({
   size_d: patch.sizeD,
   size_h: patch.sizeH,
   size_unit: patch.sizeUnit,
+  footprint_label: patch.footprintLabel,
+  footprint_w: patch.footprintW,
+  footprint_d: patch.footprintD,
+  footprint_unit: patch.footprintUnit,
+  footprint_area: patch.footprintArea,
   cbm: patch.cbm,
   quantity: patch.quantity,
   quantity_unit: patch.quantityUnit,

@@ -117,6 +117,7 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
     'description',
     'notes',
     'size',
+    'footprint',
     'swatch',
     'cbm',
   ],
@@ -129,6 +130,7 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
     description: { label: 'Product Description', className: 'min-w-64', wraps: true },
     notes: { label: 'Notes', className: 'min-w-48' },
     size: { label: 'Size', className: 'w-44 min-w-44' },
+    footprint: { label: 'Footprint', className: 'w-44 min-w-44' },
     swatch: { label: 'Swatch', className: 'min-w-36' },
     cbm: { label: 'CBM', className: 'w-24 min-w-24' },
   },
@@ -144,7 +146,11 @@ export const PROPOSAL_GENERATED_ITEM_TABLE_PRESET = {
       label: 'Product',
       columnIds: ['itemName', 'rendering', 'description', 'location'],
     },
-    { id: 'specs', label: 'Specs', columnIds: ['plan', 'drawings', 'size', 'swatch', 'cbm'] },
+    {
+      id: 'specs',
+      label: 'Specs',
+      columnIds: ['plan', 'drawings', 'size', 'footprint', 'swatch', 'cbm'],
+    },
     { id: 'pricing', label: 'Pricing', columnIds: ['notes'] },
   ],
 } as const satisfies GeneratedItemTablePreset & {

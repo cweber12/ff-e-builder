@@ -40,6 +40,12 @@ export type ProposalItem = {
   sizeD: string;
   sizeH: string;
   sizeUnit: MeasurementUnit;
+  /** Plan-derived footprint (W × D + area an item occupies on a Measured Plan). */
+  footprintLabel: string;
+  footprintW: string;
+  footprintD: string;
+  footprintUnit: string;
+  footprintArea: number | null;
   materials: Material[];
   cbm: number;
   quantity: number;

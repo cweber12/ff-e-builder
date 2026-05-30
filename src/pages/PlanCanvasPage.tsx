@@ -6,6 +6,7 @@ import {
   ChangeConfirmModal,
   type ChangeConfirmResult,
 } from '../components/shared/modals/ChangeConfirmModal';
+import { ConfirmDialog } from '../components/shared/modals/ConfirmDialog';
 import {
   PlanCreateItemPanel,
   type PlanCreateItemDraft,
@@ -69,7 +70,6 @@ type PlanCanvasPageProps = {
 export function PlanCanvasPage({
   project,
   planId,
-  roomsWithItems,
   proposalCategoriesWithItems,
 }: PlanCanvasPageProps) {
   const navigate = useNavigate();
@@ -117,6 +117,10 @@ export function PlanCanvasPage({
     version: number;
     previousQuantity: number;
   } | null>(null);
+  const [showRecalibrationConfirm, setShowRecalibrationConfirm] = useState(false);
+  const [pendingMeasurementReplace, setPendingMeasurementReplace] = useState<{
+    targetLabel: string;
+  } | null>(null);
 
   const selectedPlan = useMemo(
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
@@ -145,8 +149,8 @@ export function PlanCanvasPage({
   const deleteMeasurement = useDeletePlanMeasurement(project.id, selectedPlanId);
 
   const measurementItems = useMemo(
-    () => buildMeasurementItems(roomsWithItems, proposalCategoriesWithItems),
-    [proposalCategoriesWithItems, roomsWithItems],
+    () => buildMeasurementItems(proposalCategoriesWithItems),
+    [proposalCategoriesWithItems],
   );
   const measurementItemsByKey = useMemo(
     () => new Map(measurementItems.map((item) => [item.key, item])),
@@ -194,10 +198,11 @@ export function PlanCanvasPage({
       return;
     }
     // For calibrated plans, advance the default tool past the setup stage.
-    // 'calibrate' and 'crop' are setup/follow-up stages, never sensible
-    // defaults once the plan is ready to measure — land on 'length'.
+    // 'calibrate' and 'crop' are setup/follow-up stages, never sensible defaults
+    // once the plan is ready to measure — land on 'rectangle', the item
+    // measurement tool that is the primary reason for opening a calibrated plan.
     setActiveTool((current) =>
-      current === 'calibrate' || current === 'crop' ? 'length' : current,
+      current === 'calibrate' || current === 'crop' ? 'rectangle' : current,
     );
   }, [isCalibrated, selectedPlan]);
 
@@ -349,6 +354,31 @@ export function PlanCanvasPage({
     draftMeasurementHeightPlanUnits !== null
       ? `${formatDisplayNumber(draftMeasurementWidthPlanUnits * draftMeasurementHeightPlanUnits)} ${formatAreaUnit(calibration.unit)}`
       : null;
+  const createItemQuantityOptions =
+    calibration &&
+    draftMeasurementWidthPlanUnits !== null &&
+    draftMeasurementHeightPlanUnits !== null
+      ? [
+          {
+            value: 'area' as const,
+            label: `Area — ${formatDisplayNumber(draftMeasurementWidthPlanUnits * draftMeasurementHeightPlanUnits)} ${formatAreaUnit(calibration.unit)}`,
+          },
+          {
+            value: 'horizontal' as const,
+            label: `Width — ${formatPlanLength(draftMeasurementWidthPlanUnits, calibration.unit)}`,
+          },
+          {
+            value: 'vertical' as const,
+            label: `Depth — ${formatPlanLength(draftMeasurementHeightPlanUnits, calibration.unit)}`,
+          },
+        ]
+      : [];
+  const createItemFootprintLabel =
+    calibration &&
+    draftMeasurementWidthPlanUnits !== null &&
+    draftMeasurementHeightPlanUnits !== null
+      ? `${formatPlanLength(draftMeasurementWidthPlanUnits, calibration.unit)} × ${formatPlanLength(draftMeasurementHeightPlanUnits, calibration.unit)}`
+      : '';
   const selectedMeasurementTarget =
     selectedMeasurementTargetKey.length > 0
       ? (measurementItemsByKey.get(selectedMeasurementTargetKey) ?? null)
@@ -403,18 +433,65 @@ export function PlanCanvasPage({
     planNaturalSize.height > 0 &&
     !isSavingPlanImage;
 
-  const handleSaveCalibration = async () => {
+  const persistCalibration = async () => {
     if (!canSaveCalibration || !calibrationDraft || calibrationPixelLength === null) return;
+    const newPixelsPerUnit = calibrationPixelLength / calibrationLengthValue;
+    const unit = calibrationUnit;
     await setCalibration.mutateAsync({
       startX: calibrationDraft.startX,
       startY: calibrationDraft.startY,
       endX: calibrationDraft.endX,
       endY: calibrationDraft.endY,
       realWorldLength: calibrationLengthValue,
-      unit: calibrationUnit,
-      pixelsPerUnit: calibrationPixelLength / calibrationLengthValue,
+      unit,
+      pixelsPerUnit: newPixelsPerUnit,
     });
+
+    // Recompute dependent Measurements from their image-space geometry so their
+    // measured values stay consistent with the new scale (CONTEXT.md). Crop
+    // fields are preserved, so derived Plan Images are not regenerated here —
+    // those refresh when each Measurement is next re-saved through the crop flow.
+    for (const measurement of measurements) {
+      const horizontalSpanBase = convertPlanUnitsToBase(
+        measurement.rectWidth / newPixelsPerUnit,
+        unit,
+      );
+      const verticalSpanBase = convertPlanUnitsToBase(
+        measurement.rectHeight / newPixelsPerUnit,
+        unit,
+      );
+      await updateMeasurement.mutateAsync({
+        measurementId: measurement.id,
+        input: {
+          targetKind: measurement.targetKind,
+          targetItemId: measurement.targetItemId,
+          targetTagSnapshot: measurement.targetTagSnapshot,
+          rectX: measurement.rectX,
+          rectY: measurement.rectY,
+          rectWidth: measurement.rectWidth,
+          rectHeight: measurement.rectHeight,
+          horizontalSpanBase,
+          verticalSpanBase,
+          cropX: measurement.cropX,
+          cropY: measurement.cropY,
+          cropWidth: measurement.cropWidth,
+          cropHeight: measurement.cropHeight,
+        },
+      });
+    }
+
     setCalibrationDraft(null);
+  };
+
+  const handleSaveCalibration = async () => {
+    if (!canSaveCalibration) return;
+    // Re-scaling a plan that already has Measurements changes every measured
+    // value derived from it — confirm before doing so (CONTEXT.md).
+    if (isCalibrated && measurements.length > 0) {
+      setShowRecalibrationConfirm(true);
+      return;
+    }
+    await persistCalibration();
   };
 
   const handleSaveLengthLine = async () => {
@@ -556,16 +633,29 @@ export function PlanCanvasPage({
         0,
       );
       const autoTag = `PLAN-${String(existingItemCount + 1).padStart(3, '0')}`;
-      const horizontalFeet = convertBaseToPlanUnits(draftMeasurementWidthBase, 'ft');
-      const verticalFeet = convertBaseToPlanUnits(draftMeasurementHeightBase, 'ft');
-      const measuredAreaSqFt = Math.max(1, Math.round(horizontalFeet * verticalFeet));
+      const unit = calibration?.unit ?? 'ft';
+
+      // The measurement is applied EITHER to the item's quantity (area / one
+      // measured side) OR recorded as its Footprint (W × D) — never both.
+      const valueFields =
+        draft.applyMode === 'footprint'
+          ? {
+              quantity: 1,
+              quantityUnit: 'unit',
+              ...buildFootprintFields(draftMeasurementWidthBase, draftMeasurementHeightBase, unit),
+            }
+          : computeMeasureQuantity(
+              draftMeasurementWidthBase,
+              draftMeasurementHeightBase,
+              unit,
+              draft.quantityMeasure,
+            );
 
       const createdItem = await api.proposal.createItem(category.id, {
         productTag: draft.productTag.trim() || autoTag,
         description: draft.description.trim() || 'Measured area item',
         location: draft.location.trim(),
-        quantity: measuredAreaSqFt,
-        quantityUnit: 'sq ft',
+        ...valueFields,
       });
 
       queryClient.setQueryData<ProposalItem[]>(proposalKeys.items(category.id), (old) => [
@@ -621,7 +711,7 @@ export function PlanCanvasPage({
     }
   };
 
-  const handleSaveMeasurement = async () => {
+  const persistMeasurement = async () => {
     if (
       !canSaveMeasurement ||
       !normalizedMeasurementDraft ||
@@ -681,6 +771,32 @@ export function PlanCanvasPage({
     }
 
     setMeasurementDraft(null);
+  };
+
+  const handleSaveMeasurement = async () => {
+    if (
+      !canSaveMeasurement ||
+      !normalizedMeasurementDraft ||
+      !selectedMeasurementTarget ||
+      draftMeasurementWidthBase === null ||
+      draftMeasurementHeightBase === null
+    ) {
+      return;
+    }
+
+    // Saving a new measurement for an item that already has one replaces the old
+    // measurement and removes its plan image — confirm before that happens.
+    if (!selectedMeasurementId) {
+      const existing = measurements.find(
+        (m) => m.targetItemId === selectedMeasurementTarget.targetItemId,
+      );
+      if (existing) {
+        setPendingMeasurementReplace({ targetLabel: selectedMeasurementTarget.primaryLabel });
+        return;
+      }
+    }
+
+    await persistMeasurement();
   };
 
   const handleSetHighlight = () => {
@@ -985,6 +1101,41 @@ export function PlanCanvasPage({
       return;
     }
 
+    // Footprint records the measured W × D on the item without touching quantity.
+    // It is not a price-affecting change, so it writes directly with no changelog.
+    if (
+      selectedMeasurementItem.targetKind === 'proposal' &&
+      measurementApplicationMode === 'proposal-footprint'
+    ) {
+      setIsApplyingMeasurement(true);
+      try {
+        const footprint = buildFootprintFields(
+          selectedMeasurement.horizontalSpanBase,
+          selectedMeasurement.verticalSpanBase,
+          calibration?.unit ?? 'ft',
+        );
+        const updated = await api.proposal.updateItem(selectedMeasurementItem.targetItemId, {
+          ...footprint,
+          version: selectedMeasurementItem.version,
+        });
+        queryClient.setQueryData<ProposalItem[]>(
+          proposalKeys.items(selectedMeasurementItem.containerId),
+          (old) => (old ?? []).map((item) => (item.id === updated.id ? updated : item)),
+        );
+        toast.success('Footprint saved to item.');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Footprint update failed.';
+        toast.error(
+          err instanceof ApiError && err.status === 409
+            ? 'This item changed elsewhere. Refresh the project and try again.'
+            : message,
+        );
+      } finally {
+        setIsApplyingMeasurement(false);
+      }
+      return;
+    }
+
     if (selectedMeasurementItem.targetKind === 'proposal') {
       const horizontalFeet = convertBaseToPlanUnits(selectedMeasurement.horizontalSpanBase, 'ft');
       const verticalFeet = convertBaseToPlanUnits(selectedMeasurement.verticalSpanBase, 'ft');
@@ -1162,8 +1313,6 @@ export function PlanCanvasPage({
             activeTool={activeTool}
             isCalibrated={isCalibrated}
             onToolChange={setActiveTool}
-            rectangleMode={rectangleMode}
-            onRectangleModeChange={setRectangleMode}
           />
 
           <main className="min-h-0 overflow-hidden">
@@ -1295,6 +1444,7 @@ export function PlanCanvasPage({
             applyingMeasurement={isApplyingMeasurement}
             onApplyMeasurement={() => void handleApplyMeasurement()}
             rectangleMode={rectangleMode}
+            onRectangleModeChange={setRectangleMode}
             onSetHighlight={handleSetHighlight}
             canSetHighlight={canSetHighlight}
             canOpenCreateItemPanel={canOpenCreateItemPanel}
@@ -1343,42 +1493,103 @@ export function PlanCanvasPage({
         defaultCategoryName={uncategorizedCategoryName}
         measurementSizeLabel={createItemMeasurementSizeLabel}
         measurementAreaLabel={createItemMeasurementAreaLabel}
+        quantityOptions={createItemQuantityOptions}
+        footprintLabel={createItemFootprintLabel}
         previewUrl={createItemPreviewUrl}
         previewLoading={createItemPreviewLoading}
         submitting={isCreatingItemFromMeasurement}
         onClose={() => setCreateItemPanelOpen(false)}
         onSubmit={(draft) => void handleCreateItemFromMeasurement(draft)}
       />
+      <ConfirmDialog
+        open={showRecalibrationConfirm}
+        title="Re-scale this plan?"
+        message={
+          <>
+            This plan has{' '}
+            <strong>
+              {measurements.length} measurement{measurements.length === 1 ? '' : 's'}
+            </strong>
+            . Saving a new calibration re-scales every measured value derived from this plan. Saved
+            plan images stay as they are until each measurement is re-cropped.
+          </>
+        }
+        confirmLabel="Re-scale plan"
+        busy={setCalibration.isPending || updateMeasurement.isPending}
+        onConfirm={() => {
+          setShowRecalibrationConfirm(false);
+          void persistCalibration();
+        }}
+        onCancel={() => setShowRecalibrationConfirm(false)}
+      />
+      <ConfirmDialog
+        open={pendingMeasurementReplace !== null}
+        title="Replace existing measurement?"
+        message={
+          <>
+            <strong>{pendingMeasurementReplace?.targetLabel}</strong> already has a measurement and
+            plan image on this plan. Saving will replace the existing measurement and remove its
+            current plan image.
+          </>
+        }
+        confirmLabel="Replace measurement"
+        destructive
+        busy={
+          createMeasurement.isPending || updateMeasurement.isPending || deleteMeasurement.isPending
+        }
+        onConfirm={() => {
+          setPendingMeasurementReplace(null);
+          void persistMeasurement();
+        }}
+        onCancel={() => setPendingMeasurementReplace(null)}
+      />
     </>
   );
 }
 
-function buildMeasurementItems(
-  roomsWithItems: RoomWithItems[],
-  proposalCategoriesWithItems: ProposalCategoryWithItems[],
-) {
-  const items: MeasurementItemRef[] = [];
+type QuantityMeasure = 'area' | 'horizontal' | 'vertical';
 
-  for (const room of roomsWithItems) {
-    for (const item of room.items) {
-      // Skip room items that are already represented by a proposal entry — the
-      // proposal entry is the canonical dropdown choice for linked items.
-      if (item.linkedProposalItemId) continue;
-      items.push({
-        key: `ffe:${item.id}`,
-        targetKind: 'ffe',
-        targetItemId: item.id,
-        targetTagSnapshot: item.itemIdTag?.trim() || item.itemName,
-        primaryLabel: item.itemIdTag?.trim() || item.itemName,
-        secondaryLabel: item.itemName,
-        containerLabel: room.name,
-        containerId: room.id,
-        version: item.version,
-        dimensions: item.dimensions,
-        linkedProposalItemId: item.linkedProposalItemId ?? null,
-      });
-    }
+function linearQuantityUnit(unit: PlanMeasurementUnit) {
+  if (unit === 'ft') return 'ln ft';
+  if (unit === 'in') return 'ln in';
+  if (unit === 'm') return 'ln m';
+  if (unit === 'cm') return 'ln cm';
+  return 'ln mm';
+}
+
+function computeMeasureQuantity(
+  widthBase: number,
+  heightBase: number,
+  unit: PlanMeasurementUnit,
+  measure: QuantityMeasure,
+) {
+  const width = convertBaseToPlanUnits(widthBase, unit);
+  const depth = convertBaseToPlanUnits(heightBase, unit);
+  if (measure === 'area') {
+    return { quantity: Math.max(1, Math.round(width * depth)), quantityUnit: formatAreaUnit(unit) };
   }
+  const linear = measure === 'horizontal' ? width : depth;
+  return { quantity: parseFloat(linear.toFixed(2)), quantityUnit: linearQuantityUnit(unit) };
+}
+
+function buildFootprintFields(widthBase: number, heightBase: number, unit: PlanMeasurementUnit) {
+  const width = convertBaseToPlanUnits(widthBase, unit);
+  const depth = convertBaseToPlanUnits(heightBase, unit);
+  const area = width * depth;
+  return {
+    footprintW: formatDisplayNumber(width),
+    footprintD: formatDisplayNumber(depth),
+    footprintUnit: unit,
+    footprintArea: parseFloat(area.toFixed(3)),
+    footprintLabel: `${formatPlanLength(width, unit)} × ${formatPlanLength(depth, unit)} (${formatDisplayNumber(area)} ${formatAreaUnit(unit)})`,
+  };
+}
+
+function buildMeasurementItems(proposalCategoriesWithItems: ProposalCategoryWithItems[]) {
+  // Proposal items are the canonical, user-facing measurement targets. FF&E items
+  // are reached through their linked Proposal entry, which syncs the derived Plan
+  // Image (and any applied value) back to the FF&E row. See CONTEXT.md.
+  const items: MeasurementItemRef[] = [];
 
   for (const category of proposalCategoriesWithItems) {
     for (const item of category.items) {

@@ -133,6 +133,11 @@ export interface RawProposalItem {
   size_d: string;
   size_h: string;
   size_unit: string;
+  footprint_label?: string;
+  footprint_w?: string;
+  footprint_d?: string;
+  footprint_unit?: string;
+  footprint_area?: number | string | null;
   materials?: RawMaterial[];
   cbm: string;
   quantity: string;
@@ -381,6 +386,11 @@ export const mapProposalItem = (r: RawProposalItem): ProposalItem => ({
   sizeD: r.size_d,
   sizeH: r.size_h,
   sizeUnit: r.size_unit as ProposalItem['sizeUnit'],
+  footprintLabel: r.footprint_label ?? '',
+  footprintW: r.footprint_w ?? '',
+  footprintD: r.footprint_d ?? '',
+  footprintUnit: r.footprint_unit ?? '',
+  footprintArea: r.footprint_area != null ? Number(r.footprint_area) : null,
   materials: Array.isArray(r.materials) ? r.materials.map(mapMaterial) : [],
   cbm: Number(r.cbm),
   quantity: Number(r.quantity),

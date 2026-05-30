@@ -62,6 +62,7 @@ const PROPOSAL_OMIT_WHEN_EMPTY_IDS = new Set([
   'description',
   'notes',
   'size',
+  'footprint',
   'swatch',
   'cbm',
 ]);
@@ -143,6 +144,7 @@ function resolveProposalOmitWhenEmpty(id: string, items: readonly ProposalItem[]
   if (id === 'description') return !items.some((item) => !isBlankString(item.description));
   if (id === 'notes') return !items.some((item) => !isBlankString(item.notes));
   if (id === 'size') return !items.some((item) => !isBlankString(item.sizeLabel));
+  if (id === 'footprint') return !items.some((item) => !isBlankString(item.footprintLabel));
   if (id === 'swatch') return !items.some((item) => item.materials.length > 0);
   if (id === 'cbm') return !items.some((item) => item.cbm > 0);
   return false;

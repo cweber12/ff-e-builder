@@ -307,6 +307,11 @@ router.patch('/proposal/items/:id', async (c) => {
       size_d              = COALESCE(${d.size_d ?? null}, size_d),
       size_h              = COALESCE(${d.size_h ?? null}, size_h),
       size_unit           = COALESCE(${d.size_unit ?? null}, size_unit),
+      footprint_label     = COALESCE(${d.footprint_label ?? null}, footprint_label),
+      footprint_w         = COALESCE(${d.footprint_w ?? null}, footprint_w),
+      footprint_d         = COALESCE(${d.footprint_d ?? null}, footprint_d),
+      footprint_unit      = COALESCE(${d.footprint_unit ?? null}, footprint_unit),
+      footprint_area      = COALESCE(${d.footprint_area ?? null}, footprint_area),
       cbm                 = COALESCE(${d.cbm ?? null}, cbm),
       quantity            = CASE WHEN ${lockPriceFields}::boolean THEN quantity
                                  ELSE COALESCE(${d.quantity ?? null}, quantity) END,

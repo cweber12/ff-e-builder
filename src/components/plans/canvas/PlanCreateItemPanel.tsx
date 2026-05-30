@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../primitives';
 
+export type PlanCreateItemApplyMode = 'quantity' | 'footprint';
+export type PlanCreateItemQuantityMeasure = 'area' | 'horizontal' | 'vertical';
+
 export type PlanCreateItemDraft = {
   categoryName: string;
   productTag: string;
   description: string;
   location: string;
+  applyMode: PlanCreateItemApplyMode;
+  quantityMeasure: PlanCreateItemQuantityMeasure;
 };
 
 type PlanCreateItemPanelProps = {
@@ -14,6 +19,8 @@ type PlanCreateItemPanelProps = {
   defaultCategoryName: string;
   measurementSizeLabel: string;
   measurementAreaLabel: string | null;
+  quantityOptions: { value: PlanCreateItemQuantityMeasure; label: string }[];
+  footprintLabel: string;
   previewUrl: string | null;
   previewLoading: boolean;
   submitting: boolean;
@@ -27,6 +34,8 @@ export function PlanCreateItemPanel({
   defaultCategoryName,
   measurementSizeLabel,
   measurementAreaLabel,
+  quantityOptions,
+  footprintLabel,
   previewUrl,
   previewLoading,
   submitting,
@@ -43,6 +52,8 @@ export function PlanCreateItemPanel({
   const [productTag, setProductTag] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [applyMode, setApplyMode] = useState<PlanCreateItemApplyMode>('quantity');
+  const [quantityMeasure, setQuantityMeasure] = useState<PlanCreateItemQuantityMeasure>('area');
 
   useEffect(() => {
     if (!open) return;
@@ -50,6 +61,8 @@ export function PlanCreateItemPanel({
     setProductTag('');
     setDescription('');
     setLocation('');
+    setApplyMode('quantity');
+    setQuantityMeasure('area');
   }, [defaultCategoryName, open]);
 
   if (!open) return null;
@@ -109,6 +122,63 @@ export function PlanCreateItemPanel({
               </div>
             )}
           </div>
+        </section>
+
+        <section className="mt-4 space-y-2 rounded-xl border border-neutral-200 bg-white/80 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+            Apply measurement to
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setApplyMode('quantity')}
+              className={[
+                'rounded-lg border px-3 py-2 text-sm font-medium transition',
+                applyMode === 'quantity'
+                  ? 'border-brand-500 bg-brand-50 text-brand-700'
+                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300',
+              ].join(' ')}
+            >
+              Quantity
+            </button>
+            <button
+              type="button"
+              onClick={() => setApplyMode('footprint')}
+              className={[
+                'rounded-lg border px-3 py-2 text-sm font-medium transition',
+                applyMode === 'footprint'
+                  ? 'border-brand-500 bg-brand-50 text-brand-700'
+                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300',
+              ].join(' ')}
+            >
+              Footprint
+            </button>
+          </div>
+          {applyMode === 'quantity' ? (
+            <label className="block">
+              <span className="mb-1 mt-1 block text-xs text-neutral-500">
+                Measured value written to the item&rsquo;s quantity
+              </span>
+              <select
+                value={quantityMeasure}
+                onChange={(event) =>
+                  setQuantityMeasure(event.target.value as PlanCreateItemQuantityMeasure)
+                }
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500"
+              >
+                {quantityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p className="mt-1 text-xs leading-5 text-neutral-600">
+              Records the plan footprint{footprintLabel ? ` (${footprintLabel})` : ''} on the item.
+              Quantity stays at 1 unit.
+            </p>
+          )}
         </section>
 
         <section className="mt-4 space-y-3">
@@ -189,6 +259,8 @@ export function PlanCreateItemPanel({
               productTag,
               description,
               location,
+              applyMode,
+              quantityMeasure,
             })
           }
           disabled={submitting}

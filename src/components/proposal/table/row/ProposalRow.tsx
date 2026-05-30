@@ -291,6 +291,18 @@ const ProposalRowContent = memo(
           tdClassName="py-3"
         />
       ),
+      footprint: (
+        <td className="px-3 py-3 align-top text-sm text-neutral-700">
+          <span className="inline-flex items-center gap-1.5">
+            {item.footprintLabel ? (
+              <span className="tabular-nums">{item.footprintLabel}</span>
+            ) : (
+              <span className="text-neutral-300">—</span>
+            )}
+            {dot('footprint')}
+          </span>
+        </td>
+      ),
       swatch: (
         <GeneratedItemMaterialsCell
           materials={item.materials}

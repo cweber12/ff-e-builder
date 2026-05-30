@@ -1,4 +1,5 @@
 import { MeasuredAreaSelect } from './MeasuredAreaSelect';
+import { MeasurementTargetPicker } from './MeasurementTargetPicker';
 import { getPlanToolLabel, PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './planToolDefinitions';
 import type { PlanToolGroupId } from './planToolDefinitions';
 import type {
@@ -8,7 +9,7 @@ import type {
   PlanToolId,
   RectangleModeId,
 } from './types';
-import { Button } from '../../primitives';
+import { Button, SegmentedControl } from '../../primitives';
 import type { LengthLine, Measurement, PlanCalibration, PlanMeasurementUnit } from '../../../types';
 import type { LineDraft, RectBounds } from '../../../lib/plans';
 import {
@@ -98,6 +99,7 @@ export type PlanInspectorProps = {
   applyingMeasurement: boolean;
   onApplyMeasurement: () => void;
   rectangleMode: RectangleModeId;
+  onRectangleModeChange: (mode: RectangleModeId) => void;
   onSetHighlight: () => void;
   canSetHighlight: boolean;
   canOpenCreateItemPanel: boolean;
@@ -189,6 +191,7 @@ export function PlanInspector({
   applyingMeasurement,
   onApplyMeasurement,
   rectangleMode,
+  onRectangleModeChange,
   onSetHighlight,
   canSetHighlight,
   canOpenCreateItemPanel,
@@ -210,6 +213,9 @@ export function PlanInspector({
             <p className="eyebrow">Inspector</p>
             <h2 className="mt-0.5 font-display text-lg font-semibold text-neutral-950">
               {getPlanToolLabel(activeTool)}
+              {activeTool === 'rectangle'
+                ? ` · ${rectangleMode === 'highlight' ? 'Highlight' : 'Measure'}`
+                : ''}
             </h2>
           </div>
         </div>
@@ -225,6 +231,15 @@ export function PlanInspector({
           </div>
           {activeTool === 'calibrate' ? (
             <>
+              {!isCalibrated ? (
+                <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-800">
+                  <p className="font-semibold uppercase tracking-[0.12em]">Calibration required</p>
+                  <p className="mt-1">
+                    Draw a reference line on the plan and enter its real-world length. The Length,
+                    Rectangle, and Crop tools stay locked until this plan is calibrated.
+                  </p>
+                </div>
+              ) : null}
               <p className="mt-3 text-sm font-medium text-neutral-800">
                 {isCalibrated ? 'Calibrated' : 'Needs calibration'}
               </p>
@@ -519,6 +534,25 @@ export function PlanInspector({
             <>
               {activeTool === 'rectangle' ? (
                 <div className="mt-3 space-y-3">
+                  <div>
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                      Mode
+                    </span>
+                    <SegmentedControl
+                      ariaLabel="Rectangle mode"
+                      value={rectangleMode}
+                      onChange={onRectangleModeChange}
+                    >
+                      <SegmentedControl.Option value="measure">Measure</SegmentedControl.Option>
+                      <SegmentedControl.Option value="highlight">Highlight</SegmentedControl.Option>
+                    </SegmentedControl>
+                    <p className="mt-1 text-xs leading-5 text-neutral-500">
+                      {rectangleMode === 'highlight'
+                        ? 'Mark an area to bake onto the saved plan image — no measurement is saved.'
+                        : 'Capture a width × height measurement and attach it to an item.'}
+                    </p>
+                  </div>
+
                   {normalizedMeasurementDraft ? (
                     <>
                       <MetricRow
@@ -540,26 +574,14 @@ export function PlanInspector({
                         />
                       ) : null}
 
-                      <label className="block">
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                          Associate with item
-                        </span>
-                        <select
-                          value={selectedMeasurementTargetKey}
-                          onChange={(event) => onMeasurementTargetKeyChange(event.target.value)}
-                          className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
-                        >
-                          <option value="">Choose an item</option>
-                          {measurementItems.map((item) => (
-                            <option key={item.key} value={item.key}>
-                              {item.primaryLabel} –{' '}
-                              {item.secondaryLabel.length > 12
-                                ? `${item.secondaryLabel.slice(0, 12)}…`
-                                : item.secondaryLabel}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      <MeasurementTargetPicker
+                        items={measurementItems}
+                        value={selectedMeasurementTargetKey}
+                        onChange={onMeasurementTargetKeyChange}
+                        measuredTargetItemIds={
+                          new Set(measurements.map((measurement) => measurement.targetItemId))
+                        }
+                      />
 
                       {rectangleMode === 'measure' ? (
                         <div className="space-y-2 rounded-lg border border-neutral-200 bg-white/80 px-3 py-2">
@@ -885,6 +907,19 @@ export function PlanInspector({
                                     {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
                                     {calibration?.unit ?? 'ft'})
                                   </option>
+                                  <option value="proposal-footprint">
+                                    Record as footprint (
+                                    {formatPlanLength(
+                                      selectedMeasurementDisplay.horizontal,
+                                      calibration?.unit ?? 'ft',
+                                    )}{' '}
+                                    ×{' '}
+                                    {formatPlanLength(
+                                      selectedMeasurementDisplay.vertical,
+                                      calibration?.unit ?? 'ft',
+                                    )}
+                                    )
+                                  </option>
                                 </>
                               ) : (
                                 <option value="ffe-dimensions">
@@ -995,6 +1030,18 @@ export function PlanInspector({
                     <option value="proposal-vertical">
                       Use vertical - {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
                       {calibration?.unit ?? 'ft'}
+                    </option>
+                    <option value="proposal-footprint">
+                      Record as footprint -{' '}
+                      {formatPlanLength(
+                        selectedMeasurementDisplay.horizontal,
+                        calibration?.unit ?? 'ft',
+                      )}{' '}
+                      ×{' '}
+                      {formatPlanLength(
+                        selectedMeasurementDisplay.vertical,
+                        calibration?.unit ?? 'ft',
+                      )}
                     </option>
                   </>
                 ) : (
