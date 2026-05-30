@@ -17,34 +17,44 @@
   To retheme the app, override these variables in :root or a scoped selector.
 */
 :root {
-  /* Brand — deep steel/Prussian blue. Same hue family as before but
-     significantly more saturated and darker at every step so primary
-     actions, totals, and active states carry real weight on the page. */
-  --color-brand-50: 232 240 248;
-  --color-brand-100: 200 219 237;
+  /* Brand — deep steel/Prussian blue. The 200→900 steps stay blue and carry
+     every blue border, label, icon, and dark fill in the app.
+
+     The two lightest steps (50 / 100) are intentionally REPURPOSED as warm
+     parchment-neutral "tint" surfaces. App-wide these two are only ever used
+     as background fills (bg-brand-50 / bg-brand-100, hover + selected states,
+     chips, avatars) — never as text/border/ring. Resolving them to warm sand
+     instead of pale blue turns every light-blue fill into a neutral surface in
+     a single move, while the blue borders/text painted with brand-300..700 are
+     untouched. This is what produces the "light neutral background + dark blue
+     border" button language. Do NOT use 50/100 for text or borders. */
+  --color-brand-50: 236 229 214; /* warm sand — hover / selected fills, chips */
+  --color-brand-100: 224 214 195; /* deeper sand — active fills, avatars */
   --color-brand-200: 148 187 220;
   --color-brand-300: 92 149 198;
   --color-brand-400: 52 114 174;
-  --color-brand-500: 31 88 145; /* #1F5891 — new primary */
+  --color-brand-500: 31 88 145; /* #1F5891 — primary button blue */
   --color-brand-600: 22 69 117; /* #164575 */
   --color-brand-700: 16 52 92; /* #10345C */
   --color-brand-800: 11 38 68;
   --color-brand-900: 7 26 47;
 
-  /* Neutral — cool slate-grays with no warm beige bias. 200 and 300 are
-     intentionally darker than before so borders read as architectural
-     ruled lines instead of disappearing into the page. */
-  --color-neutral-50: 246 248 251;
-  --color-neutral-100: 236 240 245;
-  --color-neutral-200: 211 219 230; /* visible card / table borders */
-  --color-neutral-300: 174 186 201; /* strong dividers */
-  --color-neutral-400: 130 145 163;
-  --color-neutral-500: 92 106 124;
-  --color-neutral-600: 62 76 94;
-  --color-neutral-700: 41 53 69;
-  --color-neutral-800: 25 35 49;
-  --color-neutral-900: 14 22 34;
-  --color-neutral-950: 8 14 22;
+  /* Neutral — warm greige. Retuned from the old cool slate so the whole app
+     reads as ink on parchment rather than graphite on paper. R > G > B at
+     every step keeps a consistent warm bias; the dark end stays a warm
+     charcoal (not brown) so body text and headings remain crisp. 200 and 300
+     are kept dark enough to read as architectural ruled lines. */
+  --color-neutral-50: 247 244 237;
+  --color-neutral-100: 239 234 224;
+  --color-neutral-200: 224 217 204; /* visible card / table borders */
+  --color-neutral-300: 189 180 165; /* strong dividers */
+  --color-neutral-400: 151 141 125;
+  --color-neutral-500: 112 103 89;
+  --color-neutral-600: 82 74 63;
+  --color-neutral-700: 56 50 43;
+  --color-neutral-800: 39 35 29;
+  --color-neutral-900: 28 24 20;
+  --color-neutral-950: 19 16 13;
 
   /* Surface — three-layer hierarchy:
        • surface         (#FFFFFF)         → cards, tables, modals
@@ -53,15 +63,15 @@
                                               pure-white cards above
        • surface-raised  (#FFFFFF)         → elevated overlays
        • surface-inverse (#0E1622)         → reserved for inverted strips */
-  --color-surface: 255 255 255;
-  --color-surface-muted: 231 235 240;
+  --color-surface: 255 255 255; /* crisp white — cards/tables read as paper sheets laid on the parchment */
+  --color-surface-muted: 233 226 213;
   --color-surface-raised: 255 255 255;
-  --color-surface-inverse: 14 22 34;
+  --color-surface-inverse: 28 24 20;
 
   /* Dedicated border tokens — used by tables, cards, and dividers when a
      stronger weight than neutral-200 is wanted. */
-  --color-border: 211 219 230;
-  --color-border-strong: 174 186 201;
+  --color-border: 224 217 204;
+  --color-border-strong: 189 180 165;
 
   /* Semantic */
   --color-danger-50: 254 242 242;
@@ -81,16 +91,16 @@
        plan-line    → cool slate (saved length lines, the "ink" stroke)
        plan-measure → steel brand (in-progress drafts, dashed)
        plan-active  → deep brand (selected overlays, authoritative) */
-  --color-canvas-bg: 249 250 252; /* #F9FAFC — page bg */
-  --color-canvas-shell: 244 246 250; /* #F4F6FA — hover / inset */
-  --color-canvas-chrome: 255 255 255; /* #FFFFFF — toolbars, headers */
-  --color-plan-line: 41 53 69;
+  --color-canvas-bg: 244 238 226; /* #F4EEE2 — warm parchment page */
+  --color-canvas-shell: 236 228 213; /* #ECE4D5 — warm inset / hover */
+  --color-canvas-chrome: 252 249 244; /* #FCF9F4 — warm near-white chrome (toolbars, tables, drawers) */
+  --color-plan-line: 56 50 43; /* warm ink stroke */
   --color-plan-measure: 31 88 145;
   --color-plan-active: 16 52 92;
 
   /* Paper — near-white printable artifact surface (proposal totals, catalog
-     pages). Now harmonized with the cool app body. */
-  --color-paper: 252 252 253; /* #FCFCFD */
+     pages). A hair warm so it sits in the parchment family. */
+  --color-paper: 252 249 244; /* #FCF9F4 */
 
   /* Radius scale — architectural / spec-sheet. Tightened from the previous
      soft values so cards and controls read as precisely drawn rather than
@@ -162,7 +172,7 @@
   /* Blueprint hatch — diagonal rule pattern for empty states and the canvas
      viewport background when no plan is loaded. Stroke uses neutral-300 at
      low opacity so the texture is felt, not seen. */
-  --blueprint-hatch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M-1 7l8-8M5 13l8-8' stroke='%23AEBAC9' stroke-width='0.5' opacity='0.35'/></svg>");
+  --blueprint-hatch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M-1 7l8-8M5 13l8-8' stroke='%23BDB4A5' stroke-width='0.5' opacity='0.4'/></svg>");
 }
 
 @layer base {
@@ -184,12 +194,12 @@
     font-feature-settings: 'ss01', 'ss02', 'cv11';
     letter-spacing: -0.005em;
     background-color: rgb(var(--color-canvas-bg));
-    /* Subtle paper grain — two offset dot layers so the page never reads as
-       flat white. Stronger grain available via .paper-texture for the plan
-       canvas. */
+    /* Subtle paper grain — two offset dot layers in a warm sepia so the
+       parchment never reads as flat. Stronger grain available via
+       .paper-texture for the plan canvas. */
     background-image:
-      radial-gradient(rgb(15 23 42 / 0.018) 1px, transparent 1px),
-      radial-gradient(rgb(15 23 42 / 0.012) 1px, transparent 1px);
+      radial-gradient(rgb(120 92 54 / 0.05) 1px, transparent 1px),
+      radial-gradient(rgb(120 92 54 / 0.035) 1px, transparent 1px);
     background-size:
       3px 3px,
       7px 7px;
@@ -223,6 +233,16 @@
   input[type='radio'] {
     accent-color: rgb(var(--color-brand-600));
   }
+
+  /* Line-icon refinement — Lucide ships every glyph at stroke-width 2 on a
+     24px grid. Across this dense, spec-sheet UI a hair-lighter 1.5 stroke with
+     fully rounded joins reads cleaner, calmer, and more precisely drafted.
+     One rule re-weights every Lucide icon in the app. */
+  svg.lucide {
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 }
 
 @layer components {
@@ -237,8 +257,8 @@
   .paper-texture {
     background-color: rgb(var(--color-canvas-bg));
     background-image:
-      radial-gradient(rgb(15 23 42 / 0.028) 1px, transparent 1px),
-      radial-gradient(rgb(15 23 42 / 0.018) 1px, transparent 1px);
+      radial-gradient(rgb(120 92 54 / 0.07) 1px, transparent 1px),
+      radial-gradient(rgb(120 92 54 / 0.045) 1px, transparent 1px);
     background-size:
       3px 3px,
       7px 7px;
@@ -272,7 +292,7 @@
   }
   .segmented > button[aria-pressed='true'],
   .segmented > button[data-active='true'] {
-    @apply bg-brand-600 text-white;
+    @apply bg-brand-500 text-white;
   }
   .segmented > button:not([aria-pressed='true']):not([data-active='true']):hover {
     @apply bg-neutral-100 text-neutral-900;
@@ -326,28 +346,67 @@
     @apply inline-flex items-center gap-1;
   }
 
+  /* Header / toolbar toggle tabs — borderless and background-free. Affordance
+     comes from a brand underline that wipes in from the left on hover and
+     stays lit under the active option. (The --quiet / --rail / --status
+     variants below keep their own contained styling and opt out below.) */
   .toolbar-segmented > button,
   .toolbar-segmented > a {
-    @apply inline-flex h-8 items-center rounded-sm border border-neutral-200 bg-white px-3
-           text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-700
+    @apply relative inline-flex h-8 items-center bg-transparent px-2.5
+           text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500
            transition-colors duration-150;
   }
 
-  .toolbar-segmented > button[aria-pressed='true'],
-  .toolbar-segmented > button[data-active='true'],
-  .toolbar-segmented > button[aria-checked='true'],
-  .toolbar-segmented > a[data-active='true'] {
-    @apply border-brand-500 bg-brand-50 text-brand-700;
+  .toolbar-segmented > button::after,
+  .toolbar-segmented > a::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 3px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: rgb(var(--color-brand-500));
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .toolbar-segmented > button:hover,
   .toolbar-segmented > a:hover {
-    @apply border-brand-400 bg-brand-50 text-brand-700;
+    @apply text-neutral-900;
+  }
+
+  .toolbar-segmented > button:hover::after,
+  .toolbar-segmented > a:hover::after {
+    transform: scaleX(1);
+  }
+
+  .toolbar-segmented > button[aria-pressed='true'],
+  .toolbar-segmented > button[data-active],
+  .toolbar-segmented > button[aria-checked='true'],
+  .toolbar-segmented > a[data-active] {
+    @apply text-brand-700;
+  }
+
+  .toolbar-segmented > button[aria-pressed='true']::after,
+  .toolbar-segmented > button[data-active]::after,
+  .toolbar-segmented > button[aria-checked='true']::after,
+  .toolbar-segmented > a[data-active]::after {
+    transform: scaleX(1);
+    height: 2px;
   }
 
   .toolbar-segmented > button:focus-visible,
   .toolbar-segmented > a:focus-visible {
-    @apply outline-none ring-2 ring-brand-500/30 ring-offset-1;
+    @apply rounded-sm outline-none ring-2 ring-brand-500/30 ring-offset-1;
+  }
+
+  /* Contained variants keep their pill/box styling and skip the underline. */
+  .toolbar-segmented--quiet > button::after,
+  .toolbar-segmented--rail > button::after,
+  .toolbar-segmented--status > button::after {
+    display: none;
   }
 
   .toolbar-segmented.toolbar-segmented--status {
@@ -403,7 +462,7 @@
     @apply h-3.5 w-3.5 shrink-0;
     stroke: currentColor;
     fill: none;
-    stroke-width: 1.6;
+    stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
@@ -456,6 +515,69 @@
            focus-visible:outline-none focus-visible:ring-2
            focus-visible:ring-brand-500/30 focus-visible:ring-offset-1
            disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  /* Header action button — borderless, background-free. Consumed by the
+     Button `toolbar` / `toolbarPrimary` variants in the project app bar so the
+     whole header speaks one underline-accent language (matching the tab nav).
+     Affordance is a brand underline that wipes in on hover plus a faint shade
+     pulse on press; the --primary modifier keeps its underline lit so the lead
+     action still reads without a fill. */
+  .btn-toolbar {
+    @apply relative h-8 bg-transparent px-3
+           text-[11px] uppercase tracking-[0.1em] text-neutral-600;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .btn-toolbar::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 3px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: rgb(var(--color-brand-500));
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .btn-toolbar:hover {
+    @apply text-brand-700;
+  }
+
+  .btn-toolbar:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* Press — faint warm shade + the underline thickens. */
+  .btn-toolbar:active {
+    background: rgb(var(--color-brand-500) / 0.06);
+  }
+
+  .btn-toolbar:active::after {
+    transform: scaleX(1);
+    height: 2px;
+  }
+
+  .btn-toolbar:disabled::after {
+    display: none;
+  }
+
+  .btn-toolbar--primary {
+    @apply text-brand-700;
+  }
+
+  .btn-toolbar--primary::after {
+    transform: scaleX(1);
+    height: 2px;
+  }
+
+  .btn-toolbar--primary:hover::after {
+    height: 2.5px;
   }
 
   /* Universal keyboard focus ring — apply to interactive elements that
@@ -869,12 +991,12 @@
   }
 
   .catalog-layout-primary {
-    background: theme('colors.brand.600');
+    background: theme('colors.brand.500');
     color: white;
   }
 
   .catalog-layout-primary:hover {
-    background: theme('colors.brand.700');
+    background: theme('colors.brand.600');
   }
 
   .catalog-layout-secondary {
@@ -1886,7 +2008,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: rgb(var(--color-brand-500) / 0.12);
+    background: rgb(var(--color-neutral-200) / 0.7);
     color: theme('colors.brand.700');
     font-size: 42px;
     font-weight: 700;

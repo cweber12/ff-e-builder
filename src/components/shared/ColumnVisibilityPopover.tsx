@@ -214,7 +214,7 @@ export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilit
         aria-label="Column visibility & density"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={cn(open && 'border-brand-500 bg-brand-50 text-brand-700')}
+        className={cn(open && 'btn-toolbar--primary')}
       >
         <ColumnsIcon />
         Columns

@@ -21,16 +21,21 @@ export type ButtonVariant =
   | 'toolbarPrimary';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-700',
+  // Filled actions use the slightly lighter brand-500 (was brand-600) so primary
+  // buttons read a touch brighter against the warm parchment surfaces.
+  primary: 'bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:bg-brand-600',
+  // Secondary: light neutral surface with a dark-blue border on hover —
+  // hover:bg-brand-50 now resolves to warm sand (see index.css token notes).
   secondary:
     'bg-white border border-neutral-200 text-neutral-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-50',
   ghost:
     'bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-brand-700 active:bg-neutral-100',
   danger: 'bg-danger-500 text-white shadow-sm hover:bg-danger-600 active:bg-danger-600',
-  toolbar:
-    'border border-neutral-200 bg-canvas-chrome text-neutral-700 text-[11px] font-semibold uppercase tracking-[0.10em] hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700',
-  toolbarPrimary:
-    'border border-brand-600 bg-brand-600 text-white text-[11px] font-semibold uppercase tracking-[0.10em] hover:border-brand-700 hover:bg-brand-700',
+  // Header toolbar buttons: borderless, background-free, with an animated brand
+  // underline (.btn-toolbar in index.css). `font-semibold` is kept as a utility
+  // so it wins over the base `font-medium`.
+  toolbar: 'btn-toolbar font-semibold',
+  toolbarPrimary: 'btn-toolbar btn-toolbar--primary font-semibold',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
