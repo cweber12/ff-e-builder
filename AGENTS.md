@@ -100,6 +100,7 @@ When implementing GitHub issues:
 ### Pre-Implementation Issue Gate
 
 - For issue work, fetch issue metadata and discussion context before coding: state, labels, and comments.
+- For issue work, use **local-first evidence**: rely on repository files plus issue metadata/comments first; do not run web search unless the user explicitly asks or local sources cannot answer a required implementation detail.
 - If triage is unresolved (for example, still `needs-triage` or conflicting state labels), stop and resolve triage state first.
 - Moving an issue to `ready-for-agent` requires posting the required triage note/agent brief in the issue.
 - The agent must not implement while triage is unresolved.
@@ -147,10 +148,18 @@ When implementing GitHub issues:
 
 - **Path Discovery Gate.** When path certainty is low, discover first using `rg --files` and `rg -n` before reading guessed paths. Do not burn cycles on avoidable bad-path reads.
 
+- **Read targeted ranges before whole large files.** For files over a few hundred lines, use `rg -n`/grep to locate the relevant region and read only that range (with the read tool's offset/limit). Reserve full-file reads for files you will edit broadly or that are genuinely small. This extends the Path Discovery Gate to read size, not just path certainty.
+
+- **Shell selection (Windows / PowerShell environments).** This repo's primary shell is PowerShell. Default to the PowerShell tool for environment, `git`, `gh`, and package-manager commands; reserve the Bash tool for genuine POSIX scripts. Never mix syntaxes across tools — do not pass PowerShell constructs (`$null`, `2>$null`, `Select-Object`) to Bash, or bash constructs (`2>/dev/null`, backtick command substitution) to PowerShell. A shell/syntax mismatch is an avoidable wasted round trip.
+
+- **Bound sub-agent (scout / Explore) output.** When dispatching search or exploration subagents, state an output budget in the prompt (for example: "≤150 words per file; report only signatures that affect the plan; no full file trees or summary tables"). The subagent's report is paid for in context regardless of how much you use — consume findings to sharpen your own work, do not request exhaustive dumps you will only skim.
+
 - **Dirty Tree Isolation Protocol.** If the worktree already has unrelated modified files, continue with issue/task implementation using explicit path-scoped staging for touched files only. Stop and ask for guidance only when pre-existing changes overlap files in your approved scope or create merge/behavior ambiguity.
 
 - **Commit automatically after every change.** Stage all changes and commit using conventional-commits format (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`) with a body explaining the _why_. Do not use quotation marks in commit messages.
 - **When staged, always include generated architecture map artifacts in the same commit.** If `docs/generated/architecture-map.json` and/or `docs/generated/architecture-map.md` are already staged or modified by checks, commit them together with related code changes (do not split into a separate commit).
+
+- **Confirm execution mode for large multi-slice plans.** Plan approval is not automatically approval to implement every slice inline. For plans of several slices, after the first slice (or before starting), confirm whether the user wants continued inline implementation or the remaining slices converted to issues (`to-issues`). Do not read ahead or pull files for later slices until the execution mode is settled — abandoned look-ahead reads are wasted context.
 
 - **MANDATORY — Sliced-work flow.** When a multi-slice plan has been agreed with the user, follow this loop for **every** slice without exception:
   1. Implement the slice.
@@ -181,7 +190,7 @@ When implementing GitHub issues:
 ### Execution fallback for sandboxed CLI agents
 
 - **Primary mode:** run normal repo commands in the default sandbox first.
-- **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312`), retry once using an approved escalated execution path.
+- **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312` or `windows sandbox: spawn setup refresh`), retry once using an approved escalated execution path.
 - **Session fallback mode:** after the first confirmed `CreateProcessAsUserW failed: 1312` in a session, default subsequent command attempts to escalated execution for the same task category (discovery, verification, git metadata, or GitHub issue operations) to avoid repetitive retry churn.
 - **Immediate escalation retry rule:** on that known launcher failure signature, escalate on the next attempt immediately for the same command intent.
 - **No repeated non-escalated retries:** do not repeat the same command intent multiple times in non-escalated mode after the known launcher failure is observed.

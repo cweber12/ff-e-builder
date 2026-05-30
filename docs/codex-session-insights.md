@@ -75,3 +75,23 @@ Categories:
 - **Hypothesis / candidate fix:** Capture a documented expectation for post-commit re-check scope when lint-staged mutates files, and evaluate whether pre-commit targeted formatting/lint could reduce repeated loops.
 - **Frequency seen:** this session only.
 - **Status:** logged
+
+## 2026-05-30 — Session: Follow-up on immediate-rule hardening
+
+### Mandatory Agent Brief path-existence preflight may add fixed overhead
+
+- **Category:** tooling-friction
+- **What happened:** A candidate rule was to require explicit path-existence checks for every Agent Brief before coding.
+- **Impact:** Could prevent mismatch churn, but would add at least one fixed discovery pass even when scopes are already correct.
+- **Hypothesis / candidate fix:** Measure path-mismatch frequency first, then decide whether to require universal preflight checks or trigger them only when path certainty is low.
+- **Frequency seen:** this session only (proposal stage).
+- **Status:** logged
+
+### Automatic post-commit verification after lint-staged rewrites may over-serialize flow
+
+- **Category:** wasted-action
+- **What happened:** A candidate rule was to always rerun targeted tests after any commit that runs lint-staged auto-fixes.
+- **Impact:** Improves confidence but may add repeated test loops in sessions where hooks only apply formatting changes with low behavioral risk.
+- **Hypothesis / candidate fix:** Collect data on how often hook rewrites change executable code versus formatting-only diffs, then scope the rerun rule by risk.
+- **Frequency seen:** this session only (proposal stage).
+- **Status:** logged
