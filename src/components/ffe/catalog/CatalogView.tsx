@@ -4,6 +4,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Minus,
+  Plus,
   Printer,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -22,6 +24,7 @@ import {
 } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
 import { Button } from '../../primitives';
+import { SidebarButton, SidebarButtonGroup } from '../../shared/sidebar';
 import { imageAssetToPngDataUrl } from '../../../lib/export/imageHelpers';
 import {
   type CatalogColorToken,
@@ -46,6 +49,7 @@ type CatalogViewProps = {
 
 type CatalogCostDisplay = 'qtyOnly' | 'cost';
 type CatalogToggleValue = 'shown' | 'hidden';
+type CatalogZoomValue = '75' | '100' | '125' | '150';
 
 const DEFAULT_WATERMARK: WatermarkConfig = {
   enabled: false,
@@ -175,6 +179,9 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const entry = entries[pageIndex];
   const [slideDirection, setSlideDirection] = useState<'next' | 'previous'>('next');
   const [editorOpen, setEditorOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useCatalogSessionPreference<CatalogZoomValue>('100');
+  const [viewportFitScale, setViewportFitScale] = useState(1);
+  const [catalogViewportHeight, setCatalogViewportHeight] = useState(0);
 
   // ── Company watermark ──────────────────────────────────────────────────────
   const { data: company, isError: companyLoadError } = useCompany();
@@ -217,6 +224,26 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
     };
   }, [primaryLogoAsset]);
 
+  useEffect(() => {
+    const updateViewportFit = () => {
+      const header = document.querySelector('[data-project-header="true"]');
+      const tabs = document.querySelector('[data-project-header-tabs="true"]');
+      const referenceRect = (tabs ?? header)?.getBoundingClientRect();
+      const topOffset = referenceRect ? Math.ceil(referenceRect.bottom) : 88;
+      const availableHeight = Math.max(window.innerHeight - topOffset - 16, 360);
+      setCatalogViewportHeight(availableHeight);
+      setViewportFitScale(Math.min(1, availableHeight / 1056));
+    };
+
+    updateViewportFit();
+    window.addEventListener('resize', updateViewportFit);
+    window.addEventListener('orientationchange', updateViewportFit);
+    return () => {
+      window.removeEventListener('resize', updateViewportFit);
+      window.removeEventListener('orientationchange', updateViewportFit);
+    };
+  }, []);
+
   const updateWatermark = useCallback(
     (update: Partial<WatermarkConfig>) => setWatermarkConfig((prev) => ({ ...prev, ...update })),
     [],
@@ -251,6 +278,11 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
     if (target) navigate({ search: `?item=${target.item.id}` });
   };
 
+  const requestedZoomScale = Number(zoomLevel) / 100;
+  const displayScale = viewportFitScale * requestedZoomScale;
+  const scaledPageWidth = 816 * displayScale;
+  const scaledPageHeight = 1056 * displayScale;
+
   if (!entry) {
     return (
       <div className="min-h-screen bg-canvas-bg px-6 py-16">
@@ -276,8 +308,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         project={project}
         rooms={rooms}
         currentEntry={entry}
-        currentIndex={pageIndex}
-        total={entries.length}
         currentItemId={entry?.item.id}
         onLayoutChange={handleLayoutChange}
         watermarkConfig={watermarkConfig}
@@ -293,29 +323,57 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       <CatalogToolbarPicker
         rooms={rooms}
         currentIndex={pageIndex}
-        total={entries.length}
         currentEntry={entry}
         onPageChange={setPage}
+        zoomLevel={zoomLevel}
+        onZoomChange={setZoomLevel}
       />
 
-      <div className="screen-only catalog-stage">
+      <div className="screen-only catalog-stage" style={{ minHeight: catalogViewportHeight }}>
         <div
-          key={entry.item.id}
-          className={slideDirection === 'next' ? 'catalog-page-next' : 'catalog-page-previous'}
+          className="catalog-stage-frame"
+          style={{ width: scaledPageWidth, minWidth: scaledPageWidth, height: scaledPageHeight }}
         >
-          <CatalogPage
-            project={project}
-            entry={entry}
-            pageNumber={pageIndex + 1}
-            pageCount={entries.length}
-            layoutConfig={layoutConfig}
-            typographyConfig={typographyConfig}
-            onLayoutChange={handleLayoutChange}
-            watermarkConfig={watermarkConfig}
-            logoDataUrl={logoDataUrl}
-            companyName={companyName}
-            editorOpen={editorOpen}
-          />
+          <button
+            type="button"
+            className="catalog-stage-nav catalog-stage-nav-left"
+            aria-label="Previous catalog item"
+            disabled={pageIndex === 0}
+            onClick={() => setPage(pageIndex - 1)}
+          >
+            <ChevronLeft className="catalog-stage-nav-icon" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="catalog-stage-nav catalog-stage-nav-right"
+            aria-label="Next catalog item"
+            disabled={pageIndex === entries.length - 1}
+            onClick={() => setPage(pageIndex + 1)}
+          >
+            <ChevronRight className="catalog-stage-nav-icon" aria-hidden="true" />
+          </button>
+          <div
+            key={entry.item.id}
+            className={cn(
+              'catalog-stage-page',
+              slideDirection === 'next' ? 'catalog-page-next' : 'catalog-page-previous',
+            )}
+            style={{ transform: `scale(${displayScale})` }}
+          >
+            <CatalogPage
+              project={project}
+              entry={entry}
+              pageNumber={pageIndex + 1}
+              pageCount={entries.length}
+              layoutConfig={layoutConfig}
+              typographyConfig={typographyConfig}
+              onLayoutChange={handleLayoutChange}
+              watermarkConfig={watermarkConfig}
+              logoDataUrl={logoDataUrl}
+              companyName={companyName}
+              editorOpen={editorOpen}
+            />
+          </div>
         </div>
       </div>
 
@@ -355,8 +413,6 @@ function CatalogActionsBar({
   project,
   rooms,
   currentEntry,
-  currentIndex,
-  total,
   currentItemId,
   onLayoutChange,
   watermarkConfig,
@@ -371,8 +427,6 @@ function CatalogActionsBar({
   project: Project;
   rooms: RoomWithItems[];
   currentEntry: CatalogEntry | undefined;
-  currentIndex: number;
-  total: number;
   currentItemId: string | undefined;
   onLayoutChange: (update: Partial<CatalogLayoutConfig>) => void;
   watermarkConfig: WatermarkConfig;
@@ -386,17 +440,11 @@ function CatalogActionsBar({
 }) {
   return (
     <SlotPortal slotId={CATALOG_ACTIONS_SLOT_ID}>
-      <div className="project-sidebar-slot">
-        <Button
-          type="button"
-          variant="toolbar"
-          aria-label="Print catalog"
-          className="project-sidebar-control justify-start"
-          onClick={() => window.print()}
-        >
+      <SidebarButtonGroup>
+        <SidebarButton type="button" aria-label="Print catalog" onClick={() => window.print()}>
           <Printer className="toolbar-icon" aria-hidden="true" />
           Print
-        </Button>
+        </SidebarButton>
         <CatalogExportButton
           project={project}
           rooms={rooms}
@@ -419,15 +467,7 @@ function CatalogActionsBar({
           onEditorOpenChange={onEditorOpenChange}
           onTypographyChange={onTypographyChange}
         />
-        <span
-          aria-hidden
-          className="ml-1 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500"
-        >
-          <span className="num text-neutral-950">{currentIndex + 1}</span>
-          <span className="text-neutral-300">/</span>
-          <span className="num">{total}</span>
-        </span>
-      </div>
+      </SidebarButtonGroup>
     </SlotPortal>
   );
 }
@@ -435,24 +475,27 @@ function CatalogActionsBar({
 function CatalogToolbarPicker({
   rooms,
   currentIndex,
-  total,
   currentEntry,
   onPageChange,
+  zoomLevel,
+  onZoomChange,
 }: {
   rooms: RoomWithItems[];
   currentIndex: number;
-  total: number;
   currentEntry: CatalogEntry | undefined;
   onPageChange: (index: number) => void;
+  zoomLevel: CatalogZoomValue;
+  onZoomChange: (value: CatalogZoomValue) => void;
 }) {
   return (
     <SlotPortal slotId={CATALOG_PICKER_SLOT_ID}>
       <CatalogPagePicker
         rooms={rooms}
         currentIndex={currentIndex}
-        total={total}
         currentEntry={currentEntry}
         onPageChange={onPageChange}
+        zoomLevel={zoomLevel}
+        onZoomChange={onZoomChange}
       />
     </SlotPortal>
   );
@@ -465,70 +508,93 @@ function CatalogToolbarPicker({
 function CatalogPagePicker({
   rooms,
   currentIndex,
-  total,
   currentEntry,
   onPageChange,
+  zoomLevel,
+  onZoomChange,
 }: {
   rooms: RoomWithItems[];
   currentIndex: number;
-  total: number;
   currentEntry: CatalogEntry | undefined;
   onPageChange: (index: number) => void;
+  zoomLevel: CatalogZoomValue;
+  onZoomChange: (value: CatalogZoomValue) => void;
 }) {
   let itemIndex = 0;
 
+  const handleZoomStep = (direction: 'in' | 'out') => {
+    const levels: CatalogZoomValue[] = ['75', '100', '125', '150'];
+    const current = levels.indexOf(zoomLevel);
+    const next =
+      direction === 'in' ? Math.min(current + 1, levels.length - 1) : Math.max(current - 1, 0);
+    const nextLevel = levels[next] ?? '100';
+    onZoomChange(nextLevel);
+  };
+
   return (
-    <nav aria-label="Catalog page picker" className="no-print project-sidebar-slot">
+    <nav aria-label="Catalog page picker" className="no-print catalog-sidebar-picker">
       {currentEntry?.room.name ? (
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-          <span className="text-neutral-400">Category ·</span>{' '}
+        <p className="catalog-sidebar-picker-room">
+          <span className="text-neutral-400">Category</span>{' '}
           <span className="text-neutral-800">{currentEntry.room.name}</span>
         </p>
       ) : null}
-      <div className="flex w-full items-center gap-2">
-        <Button
-          type="button"
-          variant="toolbar"
-          disabled={currentIndex === 0}
-          aria-label="Previous catalog item"
-          className="project-sidebar-control !w-auto justify-center px-2"
-          onClick={() => onPageChange(currentIndex - 1)}
-        >
-          <ChevronLeft className="toolbar-icon" aria-hidden="true" />
-        </Button>
-        <label className="sr-only" htmlFor="catalog-jump">
-          Jump to catalog item
-        </label>
-        <select
-          id="catalog-jump"
-          value={currentIndex}
-          onChange={(event) => onPageChange(Number(event.target.value))}
-          className="toolbar-select w-full min-w-0 flex-1"
-        >
-          {rooms.map((room) => (
-            <optgroup key={room.id} label={room.name}>
-              {room.items.map((item) => {
-                const optionIndex = itemIndex;
-                itemIndex += 1;
-                return (
-                  <option key={item.id} value={optionIndex}>
-                    {item.itemName}
-                  </option>
-                );
-              })}
-            </optgroup>
-          ))}
-        </select>
-        <Button
-          type="button"
-          variant="toolbar"
-          disabled={currentIndex === total - 1}
-          aria-label="Next catalog item"
-          className="project-sidebar-control !w-auto justify-center px-2"
-          onClick={() => onPageChange(currentIndex + 1)}
-        >
-          <ChevronRight className="toolbar-icon" aria-hidden="true" />
-        </Button>
+      <label className="sr-only" htmlFor="catalog-jump">
+        Jump to catalog item
+      </label>
+      <select
+        id="catalog-jump"
+        value={currentIndex}
+        onChange={(event) => onPageChange(Number(event.target.value))}
+        className="toolbar-select w-full min-w-0"
+      >
+        {rooms.map((room) => (
+          <optgroup key={room.id} label={room.name}>
+            {room.items.map((item) => {
+              const optionIndex = itemIndex;
+              itemIndex += 1;
+              return (
+                <option key={item.id} value={optionIndex}>
+                  {item.itemName}
+                </option>
+              );
+            })}
+          </optgroup>
+        ))}
+      </select>
+      <div className="catalog-sidebar-zoom-row">
+        <span className="catalog-sidebar-zoom-label">Zoom</span>
+        <div className="catalog-sidebar-zoom-controls">
+          <button
+            type="button"
+            aria-label="Zoom out"
+            className="catalog-sidebar-zoom-btn"
+            onClick={() => handleZoomStep('out')}
+            disabled={zoomLevel === '75'}
+          >
+            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+          <select
+            aria-label="Catalog zoom level"
+            className="toolbar-select catalog-sidebar-zoom-select"
+            value={zoomLevel}
+            onChange={(event) => onZoomChange(event.target.value as CatalogZoomValue)}
+          >
+            <option value="75">75%</option>
+            <option value="100">100%</option>
+            <option value="125">125%</option>
+            <option value="150">150%</option>
+          </select>
+          <button
+            type="button"
+            aria-label="Zoom in"
+            className="catalog-sidebar-zoom-btn"
+            onClick={() => handleZoomStep('in')}
+            disabled={zoomLevel === '150'}
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </nav>
   );
@@ -602,19 +668,18 @@ function CatalogExportButton({
 
   return (
     <div ref={ref} className="relative w-full">
-      <Button
+      <SidebarButton
         type="button"
-        variant="toolbar"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Export catalog"
-        className="project-sidebar-control justify-between"
+        className="justify-between"
         onClick={() => setOpen((v) => !v)}
       >
         <Download className="toolbar-icon" aria-hidden="true" />
         Export
         <ChevronDown className="toolbar-icon" aria-hidden="true" />
-      </Button>
+      </SidebarButton>
       {open && (
         <div
           role="menu"
@@ -678,6 +743,7 @@ function CatalogEditorPanelButton({
 }) {
   const isOpen = editorState.editorOpen;
   const ref = useRef<HTMLDivElement>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<{ left: number; bottom: number } | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -704,23 +770,46 @@ function CatalogEditorPanelButton({
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, onEditorOpenChange]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updateAnchor = () => {
+      const sidebar = document.querySelector('.project-tab-toolbar-sidebar');
+      const tabs = document.querySelector('[data-project-header-tabs="true"]');
+      const triggerRect = ref.current?.getBoundingClientRect();
+      const sidebarRect = sidebar?.getBoundingClientRect();
+      const tabsRect = tabs?.getBoundingClientRect();
+
+      const anchorX = Math.round((sidebarRect?.right ?? triggerRect?.right ?? 0) + 1);
+      const anchorY = Math.round(tabsRect?.bottom ?? triggerRect?.bottom ?? 0);
+      setPopoverAnchor({
+        left: Math.max(anchorX, 12),
+        bottom: Math.max(window.innerHeight - anchorY + 1, 12),
+      });
+    };
+
+    updateAnchor();
+    window.addEventListener('resize', updateAnchor);
+    window.addEventListener('scroll', updateAnchor, true);
+    return () => {
+      window.removeEventListener('resize', updateAnchor);
+      window.removeEventListener('scroll', updateAnchor, true);
+    };
+  }, [isOpen]);
+
   return (
     <div ref={ref} className="relative inline-flex w-full">
-      <Button
+      <SidebarButton
         type="button"
         aria-label={isOpen ? 'Close editor' : 'Open editor'}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        variant="toolbar"
-        className={cn(
-          'project-sidebar-control justify-start',
-          isOpen && 'bg-brand-50 text-brand-700',
-        )}
+        selected={isOpen}
         onClick={() => onEditorOpenChange(!isOpen)}
       >
         <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
         Editor
-      </Button>
+      </SidebarButton>
       {isOpen && (
         <CatalogEditorPanel
           project={project}
@@ -731,6 +820,17 @@ function CatalogEditorPanelButton({
           watermarkConfig={watermarkConfig}
           onWatermarkChange={onWatermarkChange}
           logoDataUrl={logoDataUrl}
+          {...(popoverAnchor
+            ? {
+                popoverStyle: {
+                  left: `${popoverAnchor.left}px`,
+                  bottom: `${popoverAnchor.bottom}px`,
+                  top: 'auto',
+                  right: 'auto',
+                  position: 'fixed' as const,
+                },
+              }
+            : {})}
           onClose={() => onEditorOpenChange(false)}
         />
       )}

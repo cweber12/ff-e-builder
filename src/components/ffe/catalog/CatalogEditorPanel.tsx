@@ -3,6 +3,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ClipboardEvent as ReactClipboardEvent,
   type ReactNode,
 } from 'react';
@@ -81,6 +82,7 @@ export function CatalogEditorPanel({
   watermarkConfig,
   onWatermarkChange,
   logoDataUrl,
+  popoverStyle,
   onClose,
 }: {
   project: Project;
@@ -91,6 +93,7 @@ export function CatalogEditorPanel({
   watermarkConfig: WatermarkConfig;
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl: string | null;
+  popoverStyle?: CSSProperties;
   onClose: () => void;
 }) {
   const layoutConfig = editorState.layoutConfig;
@@ -119,6 +122,7 @@ export function CatalogEditorPanel({
       aria-modal="true"
       aria-label="Catalog editor"
       className="catalog-layout-popover"
+      style={popoverStyle}
     >
       <div className="catalog-layout-popover-header">
         <div>

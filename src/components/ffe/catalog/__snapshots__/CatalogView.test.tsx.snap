@@ -4,6 +4,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
 <article
   aria-label="Channel Lounge Chair catalog page"
   class="catalog-page mx-auto bg-white text-neutral-950 shadow-xl catalog-page--edit-mode"
+  style="font-family: "Source Sans 3", "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;"
 >
   <header
     class="catalog-header"

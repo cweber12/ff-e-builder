@@ -155,7 +155,7 @@ function ProjectLayout() {
         isCatalogRoute ? (
           // CatalogView portals its own toolbar (Print / Export / Editor /
           // page counter) into this slot.
-          <SidebarButtonGroup id={CATALOG_ACTIONS_SLOT_ID} />
+          <div id={CATALOG_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
         ) : null
       ) : isProposalRoute ? (
         <ProposalActions

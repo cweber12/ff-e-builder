@@ -114,7 +114,7 @@ export function ProjectHeader({
   const activeTab = TABS.find((tab) => tab.isActive(project.id, location.pathname));
 
   return (
-    <header className="no-print relative z-10 shrink-0 overflow-visible">
+    <header data-project-header="true" className="no-print relative z-10 shrink-0 overflow-visible">
       <div className="flex h-11 items-center gap-3 bg-white px-4 md:px-6">
         <StudioMark />
         <span aria-hidden className="mx-1 h-4 w-px bg-neutral-200" />
@@ -137,7 +137,10 @@ export function ProjectHeader({
         </div>
       </div>
 
-      <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
+      <div
+        data-project-header-tabs="true"
+        className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6"
+      >
         <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
       </div>
     </header>

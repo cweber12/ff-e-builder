@@ -488,6 +488,56 @@
     @apply [&>*]:w-full;
   }
 
+  .sidebar-view-toggle {
+    @apply inline-flex h-8 w-full items-center gap-2 rounded-sm px-2.5 text-[11px] uppercase tracking-[0.1em]
+           text-neutral-900 transition-colors duration-150 hover:text-neutral-950;
+  }
+
+  .sidebar-view-toggle-label {
+    @apply text-neutral-500;
+  }
+
+  .sidebar-view-toggle-value {
+    @apply font-semibold text-neutral-950;
+  }
+
+  .sidebar-view-toggle-icon {
+    @apply ml-auto h-3.5 w-3.5 text-neutral-500 transition-transform duration-150;
+  }
+
+  .sidebar-view-menu {
+    @apply absolute left-0 right-0 top-[calc(100%+6px)] z-40 min-w-0;
+  }
+
+  .catalog-sidebar-picker {
+    @apply flex w-full flex-col gap-2;
+  }
+
+  .catalog-sidebar-picker-room {
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500;
+  }
+
+  .catalog-sidebar-zoom-row {
+    @apply mt-0.5 flex items-center justify-between gap-2;
+  }
+
+  .catalog-sidebar-zoom-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500;
+  }
+
+  .catalog-sidebar-zoom-controls {
+    @apply flex items-center gap-1;
+  }
+
+  .catalog-sidebar-zoom-select {
+    @apply h-8 w-[88px] py-1 pl-2 pr-7 text-[11px] font-semibold uppercase tracking-[0.08em];
+  }
+
+  .catalog-sidebar-zoom-btn {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-sm text-neutral-600 transition-colors duration-150
+           hover:text-neutral-900 disabled:pointer-events-none disabled:text-neutral-300;
+  }
+
   .sidebar-button-group {
     @apply flex w-full flex-col items-stretch justify-start gap-2 text-left
            [&>*]:w-full [&>*]:max-w-full [&>*]:min-w-0;
@@ -918,7 +968,7 @@
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
-    z-index: 40;
+    z-index: 60;
     width: min(480px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
@@ -2305,6 +2355,60 @@
   .catalog-stage {
     perspective: 1800px;
     perspective-origin: 50% 48%;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12px 20px 24px;
+    overflow: auto;
+  }
+
+  .catalog-stage-frame {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .catalog-stage-page {
+    transform-origin: top left;
+    width: 816px;
+    height: 1056px;
+  }
+
+  .catalog-stage-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: theme('colors.neutral.800');
+    transform: translateY(-50%);
+    transition:
+      color 120ms ease,
+      opacity 120ms ease;
+  }
+
+  .catalog-stage-nav:hover {
+    color: theme('colors.neutral.950');
+  }
+
+  .catalog-stage-nav:disabled {
+    opacity: 0.24;
+    cursor: default;
+  }
+
+  .catalog-stage-nav-left {
+    left: -58px;
+  }
+
+  .catalog-stage-nav-right {
+    right: -58px;
+  }
+
+  .catalog-stage-nav-icon {
+    height: 34px;
+    width: 34px;
+    stroke-width: 1.8;
   }
 
   .catalog-page-next {
@@ -2805,6 +2909,24 @@
 }
 
 @media screen and (max-width: 860px) {
+  .catalog-stage {
+    justify-content: flex-start;
+    padding-inline: 12px;
+  }
+
+  .catalog-stage-nav-left {
+    left: -12px;
+  }
+
+  .catalog-stage-nav-right {
+    right: -12px;
+  }
+
+  .catalog-stage-nav-icon {
+    height: 28px;
+    width: 28px;
+  }
+
   .catalog-page {
     width: calc(100vw - 32px);
     height: auto;

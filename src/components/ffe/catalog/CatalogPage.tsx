@@ -190,10 +190,7 @@ export function CatalogPage({
     ...DEFAULT_TYPOGRAPHY_CONFIG,
     ...typographyConfigProp,
   };
-  const typographyFontFamily =
-    typography.fontFamily === DEFAULT_TYPOGRAPHY_CONFIG.fontFamily
-      ? undefined
-      : resolveCatalogFontFamily(typography.fontFamily);
+  const typographyFontFamily = resolveCatalogFontFamily(typography.fontFamily);
   const titleTextStyle =
     typography.titleColorToken === DEFAULT_TYPOGRAPHY_CONFIG.titleColorToken
       ? undefined
@@ -216,7 +213,7 @@ export function CatalogPage({
         'catalog-page mx-auto bg-white text-neutral-950 shadow-xl',
         editorOpen && 'catalog-page--edit-mode',
       )}
-      style={typographyFontFamily ? { fontFamily: typographyFontFamily } : undefined}
+      style={{ fontFamily: typographyFontFamily }}
       aria-label={`${item.itemName} catalog page`}
     >
       <header className={cn('catalog-header', hasHeaderMark && 'relative')}>
