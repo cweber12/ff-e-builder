@@ -133,8 +133,8 @@ export function ProjectTabToolbarSidebar({
   }
 
   return (
-    <aside className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:w-60 lg:border-b-0 lg:border-r lg:border-r-neutral-200">
-      <div className="space-y-3 overflow-x-hidden p-3 md:p-4">
+    <aside className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200">
+      <div className="flex h-full flex-col space-y-3 overflow-x-hidden p-3 md:p-4">
         {header ? <div className="project-sidebar-section min-w-0">{header}</div> : null}
         {sidebarSections.map((section) => (
           <section key={section.key} className="project-sidebar-section">

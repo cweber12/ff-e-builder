@@ -243,7 +243,7 @@ function ProjectLayout() {
       ) : (
         <>
           <ProjectHeader project={project} userMenu={<UserMenu />} />
-          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
               <ProjectTabToolbarSidebar
                 projectId={project.id}
