@@ -10,22 +10,22 @@ import type { SaveState } from '../../hooks/shared/useSaveStatus';
 // ---------------------------------------------------------------------------
 function SkeletonBar() {
   return (
-    <div className="shrink-0">
-      <div className="flex h-11 items-center gap-3 bg-white px-4 md:px-6">
-        <StudioMark />
-        <span aria-hidden className="mx-2 h-4 w-px bg-neutral-200" />
-        <div className="h-2.5 w-16 animate-pulse bg-neutral-100" />
-        <div className="h-4 w-40 animate-pulse bg-neutral-100" />
+    <aside className="no-print flex w-full shrink-0 flex-col border-b border-neutral-200 bg-white lg:h-screen lg:w-72 lg:border-b-0 lg:border-r">
+      <div className="border-b border-neutral-200 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <StudioMark />
+          <div className="h-2.5 w-24 animate-pulse bg-neutral-100" />
+        </div>
       </div>
-      <div className="flex h-11 items-center gap-4 border-b border-neutral-200 bg-white px-4 md:px-6">
-        {[80, 64, 56, 72, 56].map((w, i) => (
-          <div key={i} className="h-3 animate-pulse bg-neutral-100" style={{ width: w }} />
+      <div className="space-y-5 px-5 py-5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-8 animate-pulse rounded bg-neutral-100" />
         ))}
       </div>
-      <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
-        <div className="h-3 w-20 animate-pulse bg-neutral-100" />
+      <div className="mt-auto border-t border-neutral-200 px-5 py-4">
+        <div className="h-3 w-32 animate-pulse bg-neutral-100" />
       </div>
-    </div>
+    </aside>
   );
 }
 
@@ -68,7 +68,7 @@ const TABS: HeaderTab[] = [
 
 function TabNav({ projectId, activeLabel }: { projectId: string; activeLabel?: string }) {
   return (
-    <nav aria-label="Project tools" className="flex items-stretch">
+    <nav aria-label="Project tools" className="flex flex-col gap-1">
       {TABS.map(({ label, href }) => {
         const isActive = label === activeLabel;
         return (
@@ -77,7 +77,7 @@ function TabNav({ projectId, activeLabel }: { projectId: string; activeLabel?: s
             to={href(projectId)}
             aria-current={isActive ? 'page' : undefined}
             data-active={isActive || undefined}
-            className="inline-flex h-11 items-center px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:font-bold data-[active]:text-neutral-950"
+            className="inline-flex h-9 items-center rounded-md px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 data-[active]:bg-neutral-100 data-[active]:font-bold data-[active]:text-neutral-950"
           >
             {label}
           </Link>
@@ -129,32 +129,30 @@ export function ProjectHeader({
   const activeTab = TABS.find((tab) => tab.isActive(project.id, location.pathname));
 
   return (
-    <header className="no-print relative z-10 shrink-0 overflow-visible">
-      <div className="flex h-11 items-center gap-3 bg-white px-4 md:px-6">
-        <StudioMark />
-        <span aria-hidden className="mx-1 h-4 w-px bg-neutral-200" />
-        <Link to="/projects" className="eyebrow shrink-0 transition-colors hover:text-brand-700">
-          Projects
-        </Link>
-        <span className="text-xs text-neutral-300" aria-hidden="true">
-          /
-        </span>
+    <aside className="no-print flex w-full shrink-0 flex-col border-b border-neutral-200 bg-white lg:h-screen lg:w-72 lg:border-b-0 lg:border-r">
+      <div className="border-b border-neutral-200 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <StudioMark />
+          <span aria-hidden className="h-4 w-px bg-neutral-200" />
+          <Link to="/projects" className="eyebrow shrink-0 transition-colors hover:text-brand-700">
+            Projects
+          </Link>
+        </div>
         <Link
           to={`/projects/${project.id}`}
-          className="min-w-0 truncate font-display text-[15px] font-semibold leading-none tracking-tight text-neutral-950 transition-colors hover:text-brand-700"
+          className="mt-3 block truncate font-display text-[15px] font-semibold leading-none tracking-tight text-neutral-950 transition-colors hover:text-brand-700"
           title={project.name}
         >
           {project.name}
         </Link>
-        <div className="ml-auto flex items-center gap-2">{userMenu}</div>
       </div>
 
-      <div className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6">
-        <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
-      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="mb-4">
+          <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
+        </div>
 
-      <div className="relative flex h-11 items-center border-b border-neutral-300 bg-white px-4 md:px-6">
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="space-y-4 border-t border-neutral-200 pt-4">
           {toolbarLeft}
 
           {showViewToggle && (
@@ -176,19 +174,18 @@ export function ProjectHeader({
             </div>
           )}
 
-          {actions}
-        </div>
+          {toolbarCenter}
 
-        {toolbarCenter ? (
-          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="pointer-events-auto">{toolbarCenter}</div>
-          </div>
-        ) : null}
-
-        <div className="ml-auto flex items-center gap-1">
-          <SaveStatusIndicator state={saveState} relTime={saveRelTime} errorAction={onSaveRetry} />
+          <div className="flex flex-wrap items-center gap-2">{actions}</div>
         </div>
       </div>
-    </header>
+
+      <div className="flex items-center justify-between gap-2 border-t border-neutral-200 px-5 py-3">
+        <div className="flex items-center gap-1">
+          <SaveStatusIndicator state={saveState} relTime={saveRelTime} errorAction={onSaveRetry} />
+        </div>
+        <div className="flex items-center gap-2">{userMenu}</div>
+      </div>
+    </aside>
   );
 }

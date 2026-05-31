@@ -233,7 +233,7 @@ function ProjectLayout() {
           </>
         ) : null
       ) : (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <ProjectHeader
             project={project}
             actions={headerActions}
@@ -241,78 +241,80 @@ function ProjectLayout() {
             toolbarCenter={headerToolbarCenter}
             userMenu={<UserMenu />}
           />
-          {isLoading ? (
-            <div className="flex justify-center py-24">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
-            </div>
-          ) : project ? (
-            <>
-              <h1 className="sr-only">{project.name}</h1>
-              {isTableRoute ? (
-                // Full-width flush layout for FF&E and Proposal table routes
-                <div className="flex flex-1 flex-col overflow-hidden">
-                  <Outlet
-                    context={
-                      {
-                        project,
-                        roomsWithItems,
-                        proposalCategoriesWithItems,
-                        onImport: () => setImportOpen(true),
-                        onProposalImport: () => setProposalImportOpen(true),
-                        addRoomOpen,
-                        onAddRoomOpenChange: setAddRoomOpen,
-                        addCategoryOpen,
-                        onAddCategoryOpenChange: setAddCategoryOpen,
-                      } satisfies ProjectContext
-                    }
-                  />
-                </div>
-              ) : (
-                // Padded layout for other routes (Budget, Materials, Plans, Overview)
-                <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
-                  <Outlet
-                    context={
-                      {
-                        project,
-                        roomsWithItems,
-                        proposalCategoriesWithItems,
-                        onImport: () => setImportOpen(true),
-                        onProposalImport: () => setProposalImportOpen(true),
-                        addRoomOpen,
-                        onAddRoomOpenChange: setAddRoomOpen,
-                        addCategoryOpen,
-                        onAddCategoryOpenChange: setAddCategoryOpen,
-                      } satisfies ProjectContext
-                    }
-                  />
-                </section>
-              )}
-              {project && (
-                <>
-                  <ImportExcelModal
-                    open={importOpen}
-                    projectId={project.id}
-                    rooms={roomsWithItems}
-                    onClose={() => setImportOpen(false)}
-                    onSuccess={() => {
-                      setImportOpen(false);
-                      void queryClient.invalidateQueries();
-                    }}
-                  />
-                  <ImportProposalExcelModal
-                    open={proposalImportOpen}
-                    projectId={project.id}
-                    categories={proposalCategoriesWithItems}
-                    onClose={() => setProposalImportOpen(false)}
-                    onSuccess={() => {
-                      void queryClient.invalidateQueries();
-                    }}
-                  />
-                </>
-              )}
-            </>
-          ) : null}
-        </>
+          <div className="min-h-0 min-w-0 flex-1">
+            {isLoading ? (
+              <div className="flex justify-center py-24">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+              </div>
+            ) : project ? (
+              <>
+                <h1 className="sr-only">{project.name}</h1>
+                {isTableRoute ? (
+                  // Full-width flush layout for FF&E and Proposal table routes
+                  <div className="flex h-full flex-1 flex-col overflow-hidden">
+                    <Outlet
+                      context={
+                        {
+                          project,
+                          roomsWithItems,
+                          proposalCategoriesWithItems,
+                          onImport: () => setImportOpen(true),
+                          onProposalImport: () => setProposalImportOpen(true),
+                          addRoomOpen,
+                          onAddRoomOpenChange: setAddRoomOpen,
+                          addCategoryOpen,
+                          onAddCategoryOpenChange: setAddCategoryOpen,
+                        } satisfies ProjectContext
+                      }
+                    />
+                  </div>
+                ) : (
+                  // Padded layout for other routes (Budget, Materials, Plans, Overview)
+                  <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
+                    <Outlet
+                      context={
+                        {
+                          project,
+                          roomsWithItems,
+                          proposalCategoriesWithItems,
+                          onImport: () => setImportOpen(true),
+                          onProposalImport: () => setProposalImportOpen(true),
+                          addRoomOpen,
+                          onAddRoomOpenChange: setAddRoomOpen,
+                          addCategoryOpen,
+                          onAddCategoryOpenChange: setAddCategoryOpen,
+                        } satisfies ProjectContext
+                      }
+                    />
+                  </section>
+                )}
+                {project && (
+                  <>
+                    <ImportExcelModal
+                      open={importOpen}
+                      projectId={project.id}
+                      rooms={roomsWithItems}
+                      onClose={() => setImportOpen(false)}
+                      onSuccess={() => {
+                        setImportOpen(false);
+                        void queryClient.invalidateQueries();
+                      }}
+                    />
+                    <ImportProposalExcelModal
+                      open={proposalImportOpen}
+                      projectId={project.id}
+                      categories={proposalCategoriesWithItems}
+                      onClose={() => setProposalImportOpen(false)}
+                      onSuccess={() => {
+                        void queryClient.invalidateQueries();
+                      }}
+                    />
+                  </>
+                )}
+              </>
+            ) : null}
+          </div>
+        </div>
       )}
     </main>
   );
