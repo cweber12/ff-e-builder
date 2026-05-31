@@ -56,14 +56,16 @@ export function FfeActions({
   return (
     <div
       className={
-        isColumn ? 'flex flex-col items-stretch gap-2 [&>*]:w-full' : 'flex items-center gap-2'
+        isColumn
+          ? 'flex w-full flex-col items-start gap-2 [&>*]:max-w-full'
+          : 'flex items-center gap-2'
       }
     >
       <Button
         type="button"
         variant="addAction"
         onClick={onAddRoom}
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
@@ -76,7 +78,7 @@ export function FfeActions({
         variant="toolbar"
         onClick={onImport}
         title="Import from Excel"
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Import
@@ -84,7 +86,7 @@ export function FfeActions({
 
       <ExportMenu
         disabled={!hasItems}
-        {...(isColumn ? { className: 'w-full', buttonClassName: 'w-full justify-between' } : {})}
+        {...(isColumn ? { buttonClassName: 'justify-start' } : {})}
         label={
           <>
             <Download className="toolbar-icon" aria-hidden="true" />
@@ -117,7 +119,7 @@ export function FfeActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="ffe"
-        {...(isColumn ? { buttonClassName: 'w-full justify-start' } : {})}
+        {...(isColumn ? { buttonClassName: 'justify-start' } : {})}
       />
     </div>
   );
@@ -141,7 +143,7 @@ function FfeSortToggle({
       aria-label="Item sort order"
       className={
         layout === 'column'
-          ? 'toolbar-segmented !flex !w-full !flex-col !items-stretch [&>button]:!justify-start'
+          ? 'toolbar-segmented !flex !flex-col !items-start [&>button]:!justify-start'
           : 'toolbar-segmented'
       }
     >
@@ -236,14 +238,16 @@ export function ProposalActions({
   return (
     <div
       className={
-        isColumn ? 'flex flex-col items-stretch gap-2 [&>*]:w-full' : 'flex items-center gap-2'
+        isColumn
+          ? 'flex w-full flex-col items-start gap-2 [&>*]:max-w-full'
+          : 'flex items-center gap-2'
       }
     >
       <Button
         type="button"
         variant="addAction"
         onClick={onAddCategory}
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add category
@@ -254,7 +258,7 @@ export function ProposalActions({
         variant="toolbar"
         onClick={onImport}
         title="Import from Excel"
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Import
@@ -266,7 +270,7 @@ export function ProposalActions({
         disabled={!hasItems}
         onClick={() => setExportModalOpen(true)}
         title="Export"
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         <Download className="toolbar-icon" aria-hidden="true" />
         Export
@@ -286,7 +290,7 @@ export function ProposalActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="proposal"
-        {...(isColumn ? { buttonClassName: 'w-full justify-start' } : {})}
+        {...(isColumn ? { buttonClassName: 'justify-start' } : {})}
       />
 
       <div
@@ -300,7 +304,7 @@ export function ProposalActions({
           status={project.proposalStatus}
           onChange={handleStatusChange}
           disabled={updateProject.isPending}
-          {...(isColumn ? { className: 'w-full', compact: true } : {})}
+          {...(isColumn ? { compact: true } : {})}
           {...(openRev
             ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
             : {})}

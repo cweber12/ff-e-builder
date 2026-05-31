@@ -152,7 +152,7 @@ function ProjectLayout() {
           // page counter) into this slot.
           <div
             id={CATALOG_ACTIONS_SLOT_ID}
-            className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch [&>*]:!text-left"
+            className="flex min-w-0 flex-col items-start gap-2 [&>*]:!min-w-0 [&>*]:!max-w-full [&>*]:!self-start [&>*]:!text-left"
           />
         ) : (
           <FfeActions
@@ -182,12 +182,12 @@ function ProjectLayout() {
       ) : isMaterialsRoute ? (
         <div
           id={MATERIALS_ACTIONS_SLOT_ID}
-          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch [&>*]:!text-left"
+          className="flex min-w-0 flex-col items-start gap-2 [&>*]:!min-w-0 [&>*]:!max-w-full [&>*]:!self-start [&>*]:!text-left"
         />
       ) : isPlansRoute ? (
         <div
           id={PLANS_ACTIONS_SLOT_ID}
-          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch [&>*]:!text-left"
+          className="flex min-w-0 flex-col items-start gap-2 [&>*]:!min-w-0 [&>*]:!max-w-full [&>*]:!self-start [&>*]:!text-left"
         />
       ) : null
     ) : null;
@@ -204,14 +204,14 @@ function ProjectLayout() {
     !isLoading && isPlansRoute ? (
       <div
         id={PLANS_FILTER_SLOT_ID}
-        className="toolbar-segmented !flex !w-full !flex-col !items-stretch"
+        className="toolbar-segmented !flex !flex-col !items-start"
         role="tablist"
         aria-label="Filter plans"
       />
     ) : !isLoading && isMaterialsRoute ? (
       <div
         id={MATERIALS_FILTER_SLOT_ID}
-        className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:min-w-0 [&>*]:w-full [&>*]:max-w-full"
+        className="flex min-w-0 flex-col items-start gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
       />
     ) : null;
 
@@ -413,7 +413,7 @@ function ProjectTabToolbarSidebar({
   }
 
   return (
-    <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-chrome/40 lg:w-72 lg:border-b-0 lg:border-r">
+    <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-chrome/40 lg:w-64 lg:border-b-0 lg:border-r">
       <div className="space-y-5 overflow-x-hidden p-4 md:p-5">
         {sidebarSections.map((section) => (
           <section key={section.key} className="min-w-0 space-y-2">
@@ -447,14 +447,16 @@ function BudgetPageActions({
   return (
     <div
       className={
-        isColumn ? 'flex flex-col items-stretch gap-2 [&>*]:w-full' : 'flex items-center gap-2'
+        isColumn
+          ? 'flex w-full flex-col items-start gap-2 [&>*]:max-w-full'
+          : 'flex items-center gap-2'
       }
     >
       <Button
         type="button"
         variant="toolbar"
         onClick={() => setFfeOpen(true)}
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         FF&amp;E Budget
       </Button>
@@ -462,7 +464,7 @@ function BudgetPageActions({
         type="button"
         variant="toolbar"
         onClick={() => setProposalOpen(true)}
-        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+        {...(isColumn ? { className: 'justify-start' } : {})}
       >
         Proposal Budget
       </Button>
@@ -470,7 +472,7 @@ function BudgetPageActions({
         label="Export"
         size="sm"
         buttonVariant="toolbar"
-        {...(isColumn ? { className: 'w-full', buttonClassName: 'w-full justify-between' } : {})}
+        {...(isColumn ? { buttonClassName: 'justify-start' } : {})}
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
           exportProposalCsv(
