@@ -111,14 +111,14 @@ function ChangelogEntryRow({
               type="button"
               onClick={() => void handleSave()}
               disabled={updateNotes.isPending}
-              className="text-xs font-medium text-brand-600 hover:underline disabled:opacity-50"
+              className="text-link text-xs font-medium text-brand-600 disabled:opacity-50"
             >
               {updateNotes.isPending ? 'Saving…' : 'Save'}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="text-xs text-neutral-500 hover:underline"
+              className="text-link text-xs text-neutral-500"
             >
               Cancel
             </button>
@@ -137,7 +137,7 @@ function ChangelogEntryRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="mt-1.5 text-xs text-neutral-400 hover:text-brand-600 hover:underline"
+          className="text-link mt-1.5 text-xs text-neutral-400 hover:text-brand-600"
         >
           + Add notes
         </button>

@@ -23,7 +23,7 @@ export function DeferredCostBanner({ deferredCount, onReview }: DeferredCostBann
             variant="ghost"
             size="sm"
             onClick={onReview}
-            className="h-auto px-0 text-xs font-medium hover:bg-transparent hover:underline"
+            className="text-link h-auto px-0 text-xs font-medium hover:bg-transparent"
           >
             Review
           </Button>

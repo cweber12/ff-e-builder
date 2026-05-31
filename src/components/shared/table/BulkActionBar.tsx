@@ -52,7 +52,7 @@ export function BulkActionBar({
                   type="button"
                   onClick={action.handler}
                   className={cn(
-                    'text-sm hover:underline',
+                    'text-link text-sm',
                     action.danger
                       ? 'text-danger-600 hover:text-danger-500'
                       : 'text-neutral-700 hover:text-neutral-900',

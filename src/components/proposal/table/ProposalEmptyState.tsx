@@ -43,7 +43,7 @@ export function ProposalEmptyState({
             <button
               type="button"
               onClick={onDuplicate}
-              className="text-xs text-neutral-500 underline-offset-2 hover:text-brand-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              className="text-link text-xs text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
               Or duplicate from another project
             </button>

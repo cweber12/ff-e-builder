@@ -198,7 +198,7 @@ export function AddItemDrawer({
               <button
                 key={category}
                 type="button"
-                className="text-xs font-medium text-brand-700 underline-offset-2 hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="text-link text-xs font-medium text-brand-700 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                 onClick={() => setValue('category', category, { shouldDirty: true })}
               >
                 {category}

@@ -82,7 +82,7 @@ export function DashboardPage() {
           ) : (
             <p className="mt-3 text-sm text-neutral-500">
               Company groupings appear here once projects have a company name assigned.{' '}
-              <Link to="/company" className="font-medium text-brand-600 hover:underline">
+              <Link to="/company" className="text-link font-medium text-brand-600">
                 Set up your company profile.
               </Link>
             </p>

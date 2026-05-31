@@ -26,7 +26,7 @@ export function SaveStatusIndicator({ state, relTime, errorAction }: SaveStatusI
             variant="ghost"
             size="sm"
             onClick={errorAction}
-            className="h-auto px-1 text-[11px] text-danger-600 hover:bg-transparent hover:text-danger-600 hover:underline"
+            className="text-link h-auto px-1 text-[11px] text-danger-600 hover:bg-transparent hover:text-danger-600"
           >
             Retry
           </Button>

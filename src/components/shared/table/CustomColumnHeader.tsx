@@ -61,7 +61,7 @@ export function CustomColumnHeader({ def, onDelete, onRename }: CustomColumnHead
         title={`Rename column "${def.label}"`}
         onClick={() => setEditing(true)}
         onPointerDown={(e) => e.stopPropagation()}
-        className="flex-1 text-left hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="text-link flex-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         {def.label}
       </button>

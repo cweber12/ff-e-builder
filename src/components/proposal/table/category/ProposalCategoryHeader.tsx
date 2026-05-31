@@ -118,7 +118,7 @@ export function ProposalCategoryHeader({
           onClick={onAddItem}
           title={`Add item to ${categoryName}`}
           aria-label={`Add item to ${categoryName}`}
-          className="inline-flex shrink-0 items-center gap-1 rounded-pill border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className="text-link shrink-0 gap-1 text-xs font-semibold text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <span aria-hidden="true" className="text-sm leading-none">
             +

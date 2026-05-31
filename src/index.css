@@ -1,9 +1,10 @@
 @import '@fontsource-variable/dm-sans';
 @import '@fontsource-variable/jetbrains-mono';
 @import '@fontsource-variable/manrope';
-/* Fraunces — restrained display serif for page-level heroes only (.page-title).
+/* Fraunces — restrained display serif for ALL headings (h1–h4) and .page-title.
    `full.css` carries the opsz/SOFT/WONK axes so we can pin a crisp, non-quirky
-   cut (SOFT 0, WONK 0) rather than the default fashion-contrast letterforms. */
+   cut (SOFT 0, WONK 0) rather than the default fashion-contrast letterforms.
+   Micro-labels (.eyebrow, .table-head-cell, meta) deliberately stay on Manrope. */
 @import '@fontsource-variable/fraunces/full.css';
 
 @tailwind base;
@@ -49,8 +50,8 @@
   --color-neutral-200: 224 217 204; /* visible card / table borders */
   --color-neutral-300: 189 180 165; /* strong dividers */
   --color-neutral-400: 151 141 125;
-  --color-neutral-500: 112 103 89;
-  --color-neutral-600: 82 74 63;
+  --color-neutral-500: 96 88 75; /* darkened a step for more readable secondary text */
+  --color-neutral-600: 68 61 52; /* darkened a step for more readable secondary text */
   --color-neutral-700: 56 50 43;
   --color-neutral-800: 39 35 29;
   --color-neutral-900: 28 24 20;
@@ -64,7 +65,7 @@
        • surface-raised  (#FFFFFF)         → elevated overlays
        • surface-inverse (#0E1622)         → reserved for inverted strips */
   --color-surface: 255 255 255; /* crisp white — cards/tables read as paper sheets laid on the parchment */
-  --color-surface-muted: 233 226 213;
+  --color-surface-muted: 240 236 229; /* #F0ECE5 — gray panel, lightened into the new bg family */
   --color-surface-raised: 255 255 255;
   --color-surface-inverse: 28 24 20;
 
@@ -91,16 +92,16 @@
        plan-line    → cool slate (saved length lines, the "ink" stroke)
        plan-measure → steel brand (in-progress drafts, dashed)
        plan-active  → deep brand (selected overlays, authoritative) */
-  --color-canvas-bg: 244 238 226; /* #F4EEE2 — warm parchment page */
-  --color-canvas-shell: 236 228 213; /* #ECE4D5 — warm inset / hover */
-  --color-canvas-chrome: 252 249 244; /* #FCF9F4 — warm near-white chrome (toolbars, tables, drawers) */
+  --color-canvas-bg: 250 248 244; /* #FAF8F4 — Programa-light: near-white, faintly warm parchment */
+  --color-canvas-shell: 242 238 230; /* #F2EEE6 — warm inset / hover, lifted to match the lighter page */
+  --color-canvas-chrome: 253 252 249; /* #FDFCF9 — near-white chrome (toolbars, tables, drawers) */
   --color-plan-line: 56 50 43; /* warm ink stroke */
   --color-plan-measure: 31 88 145;
   --color-plan-active: 16 52 92;
 
   /* Paper — near-white printable artifact surface (proposal totals, catalog
      pages). A hair warm so it sits in the parchment family. */
-  --color-paper: 252 249 244; /* #FCF9F4 */
+  --color-paper: 253 252 249; /* #FDFCF9 — matches chrome */
 
   /* Radius scale — architectural / spec-sheet. Tightened from the previous
      soft values so cards and controls read as precisely drawn rather than
@@ -198,8 +199,8 @@
        parchment never reads as flat. Stronger grain available via
        .paper-texture for the plan canvas. */
     background-image:
-      radial-gradient(rgb(120 92 54 / 0.05) 1px, transparent 1px),
-      radial-gradient(rgb(120 92 54 / 0.035) 1px, transparent 1px);
+      radial-gradient(rgb(120 92 54 / 0.035) 1px, transparent 1px),
+      radial-gradient(rgb(120 92 54 / 0.025) 1px, transparent 1px);
     background-size:
       3px 3px,
       7px 7px;
@@ -207,15 +208,24 @@
       0 0,
       1px 2px;
     background-attachment: fixed;
-    color: rgb(var(--color-neutral-900));
+    color: rgb(var(--color-neutral-950));
   }
 
-  /* Headings inherit Manrope through font-family above, but tighten
-     letter-spacing and weight for the architectural / spec-sheet voice. */
+  /* Headings use the crisp Fraunces cut for a distinctive, editorial voice that
+     still reads as clean lines rather than fashion-contrast serif. Axes match
+     .page-title (SOFT 0, WONK 0 kills the quirky alternates) but at opsz 30 —
+     a step below the page hero's 40 since section/card headers run smaller.
+     Weight stays on the `wght` axis via font-weight so utilities still respond.
+     Body and micro-labels stay on Manrope (set on body / .eyebrow / .table-head-cell). */
   h1,
   h2,
   h3,
   h4 {
+    font-family: 'Fraunces Variable', Georgia, Cambria, 'Times New Roman', serif;
+    font-variation-settings:
+      'opsz' 30,
+      'SOFT' 0,
+      'WONK' 0;
     letter-spacing: -0.015em;
     font-weight: 600;
     color: rgb(var(--color-neutral-950));
@@ -537,12 +547,12 @@
     left: 10px;
     right: 10px;
     bottom: 3px;
-    height: 1.5px;
+    height: 1px;
     border-radius: 2px;
     background: rgb(var(--color-brand-500));
     transform: scaleX(0);
     transform-origin: left center;
-    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform var(--transition-slow);
   }
 
   .btn-toolbar:hover {
@@ -560,7 +570,7 @@
 
   .btn-toolbar:active::after {
     transform: scaleX(1);
-    height: 2px;
+    height: 1.5px;
   }
 
   .btn-toolbar:disabled::after {
@@ -573,11 +583,56 @@
 
   .btn-toolbar--primary::after {
     transform: scaleX(1);
-    height: 2px;
+    height: 1.5px;
   }
 
   .btn-toolbar--primary:hover::after {
-    height: 2.5px;
+    height: 2px;
+  }
+
+  /* Text link — the canonical clickable-text affordance app-wide. No border,
+     no fill, no box: just text with a thin underline that wipes in from the left
+     on hover and thickens slightly on press. Color-agnostic: the underline is
+     `currentColor`, so it inherits whatever text color (and `hover:text-*`
+     utility) the element already carries — it drops onto brand links, neutral
+     hints, and danger actions alike without forcing a brand color. Replaces
+     ad-hoc `hover:underline` and the old dashed "+ Add" boxes. */
+  .text-link {
+    @apply relative inline-flex items-center text-inherit;
+    transition: color var(--transition-base);
+  }
+
+  .text-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    border-radius: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--transition-slow);
+  }
+
+  .text-link:hover::after,
+  .text-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .text-link:active::after {
+    height: 1.5px;
+  }
+
+  .text-link:disabled,
+  .text-link[aria-disabled='true'] {
+    @apply pointer-events-none opacity-50;
+  }
+
+  .text-link:disabled::after,
+  .text-link[aria-disabled='true']::after {
+    display: none;
   }
 
   /* Universal keyboard focus ring — apply to interactive elements that
@@ -1009,10 +1064,10 @@
     color: theme('colors.brand.700');
   }
 
-  /* Page title — the one place the Fraunces display serif appears. Reserved
-     for page-level heroes (Dashboard welcome, sign-in, company profile, error
-     pages). NOT for panel/modal titles, card numbers, or any dense UI — those
-     stay on Manrope via `font-display`.
+  /* Page title — the page-level hero (Dashboard welcome, sign-in, company
+     profile, error pages). Shares the Fraunces serif now used on all headings,
+     but steps the optical size up to opsz 40 for display-grade contrast and
+     authority. Sub-headings (h1–h4) sit at opsz 30; micro-labels stay Manrope.
 
      Axes are pinned for a refined, credible cut: opsz 40 gives display-grade
      contrast without the extreme thicks/thins of high opsz; SOFT 0 keeps
@@ -2219,36 +2274,65 @@
     opacity: 1;
   }
 
+  /* Catalog "+ Add" affordances — bare text links (no dashed box). They share
+     the .text-link underline mechanic: relative + animated ::after, color shifts
+     to brand-700 on hover. */
   .catalog-add-option-btn,
   .catalog-add-notes-btn,
   .catalog-add-approval-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 10px;
-    border-radius: 6px;
-    border: 1.5px dashed theme('colors.brand.300');
-    background: theme('colors.brand.50');
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.04em;
     color: theme('colors.brand.600');
     cursor: pointer;
-    transition:
-      border-color 150ms ease,
-      background-color 150ms ease;
+    transition: color var(--transition-base);
+  }
+
+  .catalog-add-option-btn::after,
+  .catalog-add-notes-btn::after,
+  .catalog-add-approval-btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    border-radius: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--transition-slow);
   }
 
   .catalog-add-option-btn:hover:not(:disabled),
   .catalog-add-notes-btn:hover,
   .catalog-add-approval-btn:hover {
-    border-color: theme('colors.brand.500');
-    background: rgb(var(--color-brand-100));
+    color: theme('colors.brand.700');
+  }
+
+  .catalog-add-option-btn:hover:not(:disabled)::after,
+  .catalog-add-notes-btn:hover::after,
+  .catalog-add-approval-btn:hover::after {
+    transform: scaleX(1);
+  }
+
+  .catalog-add-option-btn:active::after,
+  .catalog-add-notes-btn:active::after,
+  .catalog-add-approval-btn:active::after {
+    height: 1.5px;
   }
 
   .catalog-add-option-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .catalog-add-option-btn:disabled::after {
+    display: none;
   }
 
   /* Square dashed upload area used inside the option grid for empty slots */

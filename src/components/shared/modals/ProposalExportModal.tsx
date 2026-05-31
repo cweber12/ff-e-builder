@@ -183,16 +183,12 @@ export function ProposalExportModal({
               <button
                 type="button"
                 onClick={selectAll}
-                className="text-xs text-brand-600 hover:underline"
+                className="text-link text-xs text-brand-600"
               >
                 Select all
               </button>
               <span className="text-neutral-300">·</span>
-              <button
-                type="button"
-                onClick={clearAll}
-                className="text-xs text-brand-600 hover:underline"
-              >
+              <button type="button" onClick={clearAll} className="text-link text-xs text-brand-600">
                 Clear
               </button>
             </div>
