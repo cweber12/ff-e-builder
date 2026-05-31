@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): replace invalid Tailwind `text-brand-800/900/950` apply utilities in add-action styles with supported brand shades to restore Vite CSS compilation
 - feat(ui): shift project-toolbar action hierarchy left, remove redundant active-tab title text, add animated theme-tinted Add actions, compact proposal status control, and refresh toolbar/category icons including Columns
 - fix(plans): align PlanInspector and MeasurementTargetPicker exports to prevent runtime module-link failures in the plans canvas inspector
 - feat(materials): add 10-second Undo toast for pasted swatch overwrites, restoring previous primary swatches when possible and showing non-blocking restore failures

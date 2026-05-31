@@ -594,7 +594,7 @@
      more expressive hover and press motion than neutral toolbar actions. */
   .btn-add-action {
     @apply relative h-8 overflow-hidden rounded-sm bg-brand-100 px-3
-           text-[11px] uppercase tracking-[0.1em] text-brand-800;
+           text-[11px] uppercase tracking-[0.1em] text-brand-700;
     transition:
       color 160ms ease,
       background-color 200ms ease,
@@ -618,7 +618,7 @@
   }
 
   .btn-add-action:hover {
-    @apply bg-brand-200 text-brand-900;
+    @apply bg-brand-200 text-brand-700;
     box-shadow:
       0 6px 16px -10px rgb(var(--color-brand-600) / 0.55),
       0 0 0 1px rgb(var(--color-brand-500) / 0.08) inset;
@@ -630,7 +630,7 @@
   }
 
   .btn-add-action:active {
-    @apply bg-brand-300 text-brand-950;
+    @apply bg-brand-300 text-brand-700;
     transform: translateY(0);
   }
 
@@ -645,7 +645,7 @@
 
   .btn-add-inline {
     @apply inline-flex h-7 items-center gap-1.5 rounded-sm bg-brand-100 px-2.5
-           text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-800;
+           text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-700;
     transition:
       color 160ms ease,
       background-color 180ms ease,
@@ -653,12 +653,12 @@
   }
 
   .btn-add-inline:hover {
-    @apply bg-brand-200 text-brand-900;
+    @apply bg-brand-200 text-brand-700;
     transform: translateY(-0.5px);
   }
 
   .btn-add-inline:active {
-    @apply bg-brand-300 text-brand-950;
+    @apply bg-brand-300 text-brand-700;
     transform: translateY(0);
   }
 
