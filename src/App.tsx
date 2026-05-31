@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Link,
   Navigate,
@@ -35,7 +35,8 @@ import {
   ProposalActions,
   ProposalRevisionChip,
 } from './components/project/AppBarActions';
-import { Button } from './components/primitives';
+import { Button, SidebarButton } from './components/primitives';
+import { ProjectTabToolbarSidebar, SidebarButtonGroup } from './components/shared/sidebar';
 import { recordSession } from './lib/utils';
 import {
   exportSummaryCsv,
@@ -153,16 +154,13 @@ function ProjectLayout() {
   const isLoading = projectsLoading || dataLoading || proposalLoading;
 
   // Action cluster rendered in the app bar's right side
-  const sidebarActions =
+  const sidebarButtonGroup =
     !isLoading && project ? (
       isFfeRoute ? (
         isCatalogRoute ? (
           // CatalogView portals its own toolbar (Print / Export / Editor /
           // page counter) into this slot.
-          <div
-            id={CATALOG_ACTIONS_SLOT_ID}
-            className="flex min-w-0 flex-col items-start gap-2 [&>*]:!min-w-0 [&>*]:!max-w-full [&>*]:!self-start [&>*]:!text-left"
-          />
+          <SidebarButtonGroup id={CATALOG_ACTIONS_SLOT_ID} />
         ) : (
           <FfeActions
             project={project}
@@ -189,9 +187,9 @@ function ProjectLayout() {
           layout="column"
         />
       ) : isMaterialsRoute ? (
-        <div id={MATERIALS_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
+        <SidebarButtonGroup id={MATERIALS_ACTIONS_SLOT_ID} />
       ) : isPlansRoute ? (
-        <div id={PLANS_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
+        <SidebarButtonGroup id={PLANS_ACTIONS_SLOT_ID} />
       ) : null
     ) : null;
 
@@ -271,7 +269,7 @@ function ProjectLayout() {
                 header={sidebarHeader}
                 toolbarLeft={sidebarToolbarLeft}
                 toolbarCenter={sidebarToolbarCenter}
-                actions={sidebarActions}
+                actions={sidebarButtonGroup}
                 filtersLabel={isMaterialsRoute ? '' : 'Filters'}
                 actionsLabel={isMaterialsRoute || isBudgetRoute ? '' : 'Actions'}
               />
@@ -356,87 +354,6 @@ function ProjectLayout() {
   );
 }
 
-function ProjectTabToolbarSidebar({
-  projectId,
-  showViewToggle,
-  isCatalogRoute,
-  header,
-  toolbarLeft,
-  toolbarCenter,
-  actions,
-  filtersLabel,
-  actionsLabel,
-}: {
-  projectId: string;
-  showViewToggle: boolean;
-  isCatalogRoute: boolean;
-  header?: ReactNode;
-  toolbarLeft: ReactNode;
-  toolbarCenter: ReactNode;
-  actions: ReactNode;
-  filtersLabel?: string;
-  actionsLabel?: string;
-}) {
-  if (!showViewToggle && !header && !toolbarLeft && !toolbarCenter && !actions) return null;
-
-  const sidebarSections: Array<{ key: string; label?: string; content: ReactNode }> = [];
-
-  if (showViewToggle) {
-    sidebarSections.push({
-      key: 'view',
-      label: 'View',
-      content: (
-        <div role="radiogroup" aria-label="FF&E view mode" className="toolbar-segmented">
-          <Link to={`/projects/${projectId}/ffe/catalog`} data-active={isCatalogRoute || undefined}>
-            Catalog
-          </Link>
-          <Link to={`/projects/${projectId}/ffe/table`} data-active={!isCatalogRoute || undefined}>
-            Table
-          </Link>
-        </div>
-      ),
-    });
-  }
-
-  if (toolbarLeft) {
-    sidebarSections.push({
-      key: 'contextual-filters',
-      label: filtersLabel ?? 'Filters',
-      content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
-    });
-  }
-
-  if (toolbarCenter) {
-    sidebarSections.push({
-      key: 'contextual-tools',
-      label: 'Tools',
-      content: <div className="project-sidebar-slot">{toolbarCenter}</div>,
-    });
-  }
-
-  if (actions) {
-    sidebarSections.push({
-      key: 'actions',
-      label: actionsLabel ?? 'Actions',
-      content: <div className="project-sidebar-slot">{actions}</div>,
-    });
-  }
-
-  return (
-    <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:w-60 lg:border-b-0 lg:border-r lg:border-r-neutral-200">
-      <div className="space-y-3 overflow-x-hidden p-3 md:p-4">
-        {header ? <div className="project-sidebar-section min-w-0">{header}</div> : null}
-        {sidebarSections.map((section) => (
-          <section key={section.key} className="project-sidebar-section">
-            {section.label ? <p className="project-sidebar-title">{section.label}</p> : null}
-            <div className="min-w-0 pt-0.5">{section.content}</div>
-          </section>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
 function BudgetPageActions({
   project,
   roomsWithItems,
@@ -456,34 +373,30 @@ function BudgetPageActions({
   const proposalColumnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
 
   return (
-    <div
-      className={
-        isColumn
-          ? 'flex w-full flex-col items-start gap-2 [&>*]:max-w-full'
-          : 'flex items-center gap-2'
-      }
-    >
-      <Button
-        type="button"
-        variant="toolbar"
-        onClick={() => setFfeOpen(true)}
-        {...(isColumn ? { className: 'justify-start' } : {})}
-      >
-        FF&amp;E Budget
-      </Button>
-      <Button
-        type="button"
-        variant="toolbar"
-        onClick={() => setProposalOpen(true)}
-        {...(isColumn ? { className: 'justify-start' } : {})}
-      >
-        Proposal Budget
-      </Button>
+    <div className={isColumn ? 'sidebar-button-group' : 'flex items-center gap-2'}>
+      {isColumn ? (
+        <SidebarButton type="button" onClick={() => setFfeOpen(true)}>
+          FF&amp;E Budget
+        </SidebarButton>
+      ) : (
+        <Button type="button" variant="toolbar" onClick={() => setFfeOpen(true)}>
+          FF&amp;E Budget
+        </Button>
+      )}
+      {isColumn ? (
+        <SidebarButton type="button" onClick={() => setProposalOpen(true)}>
+          Proposal Budget
+        </SidebarButton>
+      ) : (
+        <Button type="button" variant="toolbar" onClick={() => setProposalOpen(true)}>
+          Proposal Budget
+        </Button>
+      )}
       <ExportMenu
         label="Export"
         size="sm"
         buttonVariant="toolbar"
-        {...(isColumn ? { buttonClassName: 'justify-start' } : {})}
+        {...(isColumn ? { className: 'w-full', buttonClassName: 'sidebar-button' } : {})}
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
           exportProposalCsv(

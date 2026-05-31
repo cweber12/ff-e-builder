@@ -11,7 +11,7 @@ import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
 import { ExportMenu } from '../shared/ExportMenu';
-import { Button } from '../primitives';
+import { Button, SidebarButton } from '../primitives';
 import {
   useUpdateProject,
   useProposalRevisions,
@@ -21,6 +21,7 @@ import {
 import { useColumnConfig } from '../../hooks/shared';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
 import { ProposalExportModal } from '../shared/modals/ProposalExportModal';
+import { SidebarButtonGroup } from '../shared/sidebar';
 
 // Toolbar actions use shared Button toolbar variants.
 
@@ -54,45 +55,37 @@ export function FfeActions({
   const ffeColumnOrder = () => readColumnConfigFromStorage(project.id, 'ffe')?.order;
 
   return (
-    <div className={isColumn ? 'project-sidebar-slot' : 'flex items-center gap-2'}>
-      <Button
-        type="button"
-        variant="addAction"
-        onClick={onAddRoom}
-        {...(isColumn
-          ? {
-              className:
-                'project-sidebar-control project-sidebar-action justify-start [&>svg:first-child]:mr-0.5',
-            }
-          : {})}
-      >
-        <Plus className="toolbar-icon" aria-hidden="true" />
-        Add room
-      </Button>
+    <div className={isColumn ? 'sidebar-button-group' : 'flex items-center gap-2'}>
+      {isColumn ? (
+        <SidebarButton variant="add" type="button" onClick={onAddRoom}>
+          <Plus className="toolbar-icon" aria-hidden="true" />
+          Add room
+        </SidebarButton>
+      ) : (
+        <Button type="button" variant="addAction" onClick={onAddRoom}>
+          <Plus className="toolbar-icon" aria-hidden="true" />
+          Add room
+        </Button>
+      )}
 
-      <Button
-        type="button"
-        variant="toolbar"
-        onClick={onImport}
-        title="Import from Excel"
-        {...(isColumn
-          ? {
-              className:
-                'project-sidebar-control project-sidebar-action justify-start [&>svg:first-child]:mr-0.5',
-            }
-          : {})}
-      >
-        <Upload className="toolbar-icon" aria-hidden="true" />
-        Import
-      </Button>
+      {isColumn ? (
+        <SidebarButton type="button" onClick={onImport} title="Import from Excel">
+          <Upload className="toolbar-icon" aria-hidden="true" />
+          Import
+        </SidebarButton>
+      ) : (
+        <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
+          <Upload className="toolbar-icon" aria-hidden="true" />
+          Import
+        </Button>
+      )}
 
       <ExportMenu
         disabled={!hasItems}
         {...(isColumn
           ? {
               className: 'w-full',
-              buttonClassName:
-                'project-sidebar-control project-sidebar-action justify-start [&>svg:last-child]:ml-auto',
+              buttonClassName: 'sidebar-button',
             }
           : {})}
         label={
@@ -127,18 +120,13 @@ export function FfeActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="ffe"
-        {...(isColumn
-          ? {
-              buttonClassName:
-                'project-sidebar-control project-sidebar-action justify-start [&>svg:first-child]:mr-0.5',
-            }
-          : {})}
+        {...(isColumn ? { buttonClassName: 'sidebar-button' } : {})}
       />
 
       {isColumn ? (
         <div className="mt-1 w-full">
           <p className="toolbar-label mb-1 block">Sort rows</p>
-          <FfeSortToggle projectId={project.id} layout="row" />
+          <FfeSortToggle projectId={project.id} layout="column" />
         </div>
       ) : (
         <FfeSortToggle projectId={project.id} layout="row" />
@@ -159,16 +147,35 @@ function FfeSortToggle({
 }) {
   const { sortMode, setSortMode } = useFfeItemSort(projectId);
 
+  if (layout === 'column') {
+    return (
+      <SidebarButtonGroup role="radiogroup" aria-label="Item sort order">
+        <SidebarButton
+          type="button"
+          role="radio"
+          aria-checked={sortMode === 'manual'}
+          selected={sortMode === 'manual'}
+          onClick={() => setSortMode('manual')}
+          title="Custom drag-and-drop order"
+        >
+          Custom
+        </SidebarButton>
+        <SidebarButton
+          type="button"
+          role="radio"
+          aria-checked={sortMode === 'idTag'}
+          selected={sortMode === 'idTag'}
+          onClick={() => setSortMode('idTag')}
+          title="Sort items alphanumerically by ID"
+        >
+          By ID
+        </SidebarButton>
+      </SidebarButtonGroup>
+    );
+  }
+
   return (
-    <div
-      role="radiogroup"
-      aria-label="Item sort order"
-      className={
-        layout === 'column'
-          ? 'toolbar-segmented project-sidebar-slot !flex !flex-col !items-start [&>button]:!justify-start'
-          : 'toolbar-segmented'
-      }
-    >
+    <div role="radiogroup" aria-label="Item sort order" className="toolbar-segmented">
       <button
         type="button"
         role="radio"
@@ -258,39 +265,53 @@ export function ProposalActions({
   }
 
   return (
-    <div className={isColumn ? 'project-sidebar-slot' : 'flex items-center gap-2'}>
-      <Button
-        type="button"
-        variant="addAction"
-        onClick={onAddCategory}
-        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
-      >
-        <Plus className="toolbar-icon" aria-hidden="true" />
-        Add category
-      </Button>
+    <div className={isColumn ? 'sidebar-button-group' : 'flex items-center gap-2'}>
+      {isColumn ? (
+        <SidebarButton variant="add" type="button" onClick={onAddCategory}>
+          <Plus className="toolbar-icon" aria-hidden="true" />
+          Add category
+        </SidebarButton>
+      ) : (
+        <Button type="button" variant="addAction" onClick={onAddCategory}>
+          <Plus className="toolbar-icon" aria-hidden="true" />
+          Add category
+        </Button>
+      )}
 
-      <Button
-        type="button"
-        variant="toolbar"
-        onClick={onImport}
-        title="Import from Excel"
-        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
-      >
-        <Upload className="toolbar-icon" aria-hidden="true" />
-        Import
-      </Button>
+      {isColumn ? (
+        <SidebarButton type="button" onClick={onImport} title="Import from Excel">
+          <Upload className="toolbar-icon" aria-hidden="true" />
+          Import
+        </SidebarButton>
+      ) : (
+        <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
+          <Upload className="toolbar-icon" aria-hidden="true" />
+          Import
+        </Button>
+      )}
 
-      <Button
-        type="button"
-        variant="toolbar"
-        disabled={!hasItems}
-        onClick={() => setExportModalOpen(true)}
-        title="Export"
-        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
-      >
-        <Download className="toolbar-icon" aria-hidden="true" />
-        Export
-      </Button>
+      {isColumn ? (
+        <SidebarButton
+          type="button"
+          disabled={!hasItems}
+          onClick={() => setExportModalOpen(true)}
+          title="Export"
+        >
+          <Download className="toolbar-icon" aria-hidden="true" />
+          Export
+        </SidebarButton>
+      ) : (
+        <Button
+          type="button"
+          variant="toolbar"
+          disabled={!hasItems}
+          onClick={() => setExportModalOpen(true)}
+          title="Export"
+        >
+          <Download className="toolbar-icon" aria-hidden="true" />
+          Export
+        </Button>
+      )}
 
       <ProposalExportModal
         open={exportModalOpen}
@@ -306,7 +327,7 @@ export function ProposalActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="proposal"
-        {...(isColumn ? { buttonClassName: 'project-sidebar-control justify-start' } : {})}
+        {...(isColumn ? { buttonClassName: 'sidebar-button' } : {})}
       />
 
       <div

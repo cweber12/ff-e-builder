@@ -27,6 +27,7 @@ export { BulkActionBar } from './table/BulkActionBar';
 export type { BulkAction } from './table/BulkActionBar';
 export { DeferredCostBanner } from './DeferredCostBanner';
 export { SaveStatusIndicator } from './SaveStatusIndicator';
+export { ProjectTabToolbarSidebar, SidebarButtonGroup } from './sidebar';
 export {
   ProposalStatusSelect,
   ProposalStatusDots,
