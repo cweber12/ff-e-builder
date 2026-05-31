@@ -21,6 +21,7 @@ function MeasurementTargetPicker({
   measuredTargetItemIds,
 }: MeasurementTargetPickerProps) {
   const [query, setQuery] = useState('');
+  const [editing, setEditing] = useState(false);
 
   const groups = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -43,6 +44,7 @@ function MeasurementTargetPicker({
   }, [items, query]);
 
   const selected = items.find((item) => item.key === value) ?? null;
+  const showList = !selected || editing;
 
   return (
     <div>
@@ -54,6 +56,24 @@ function MeasurementTargetPicker({
         <p className="rounded-lg border border-neutral-200 bg-white/80 px-3 py-2 text-xs text-neutral-500">
           No items yet. Create one from this measured area below.
         </p>
+      ) : !showList && selected ? (
+        <div className="flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-neutral-900">
+              {selected.primaryLabel}
+            </span>
+            <span className="block truncate text-xs text-neutral-500">
+              {selected.containerLabel}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="shrink-0 text-xs font-semibold text-brand-700 transition hover:text-brand-800"
+          >
+            Change
+          </button>
+        </div>
       ) : (
         <>
           <input
@@ -64,7 +84,7 @@ function MeasurementTargetPicker({
             className="mb-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-400"
           />
 
-          <div className="max-h-56 overflow-y-auto rounded-lg border border-neutral-200 bg-white">
+          <div className="max-h-44 overflow-y-auto rounded-lg border border-neutral-200 bg-white">
             {groups.length === 0 ? (
               <p className="px-3 py-3 text-xs text-neutral-500">No items match “{query}”.</p>
             ) : (
@@ -80,7 +100,11 @@ function MeasurementTargetPicker({
                       <button
                         key={item.key}
                         type="button"
-                        onClick={() => onChange(item.key)}
+                        onClick={() => {
+                          onChange(item.key);
+                          setQuery('');
+                          setEditing(false);
+                        }}
                         className={[
                           'flex w-full items-center gap-2 px-3 py-2 text-left transition',
                           active
@@ -110,17 +134,6 @@ function MeasurementTargetPicker({
               ))
             )}
           </div>
-
-          {selected ? (
-            <p className="mt-1.5 text-xs text-neutral-500">
-              Selected:{' '}
-              <span className="font-medium text-neutral-700">{selected.primaryLabel}</span>
-            </p>
-          ) : (
-            <p className="mt-1.5 text-xs text-neutral-400">
-              Choose an item to attach this measurement.
-            </p>
-          )}
         </>
       )}
     </div>

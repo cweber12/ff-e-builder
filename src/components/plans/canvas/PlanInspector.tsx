@@ -541,127 +541,116 @@ export function PlanInspector({
                       <SegmentedControl.Option value="measure">Measure</SegmentedControl.Option>
                       <SegmentedControl.Option value="highlight">Highlight</SegmentedControl.Option>
                     </SegmentedControl>
-                    <p className="mt-1 text-xs leading-5 text-neutral-500">
-                      {rectangleMode === 'highlight'
-                        ? 'Mark an area to bake onto the saved plan image — no measurement is saved.'
-                        : 'Capture a width × height measurement and attach it to an item.'}
-                    </p>
+                    {rectangleMode === 'highlight' ? (
+                      <p className="mt-1 text-xs leading-5 text-neutral-500">
+                        Mark an area to bake onto the saved plan image — no measurement is saved.
+                      </p>
+                    ) : null}
                   </div>
 
                   {normalizedMeasurementDraft ? (
-                    <>
-                      <MetricRow
-                        label="Draft size"
-                        value={
-                          calibration &&
+                    rectangleMode === 'measure' ? (
+                      <>
+                        <p className="text-xs tabular-nums text-neutral-500">
+                          {calibration &&
                           draftMeasurementWidthPlanUnits !== null &&
-                          draftMeasurementHeightPlanUnits !== null
-                            ? `${formatPlanLength(draftMeasurementWidthPlanUnits, calibration.unit)} × ${formatPlanLength(draftMeasurementHeightPlanUnits, calibration.unit)}`
-                            : `${formatDisplayNumber(normalizedMeasurementDraft.width)} × ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
-                        }
-                      />
-                      {calibration &&
-                      draftMeasurementWidthPlanUnits !== null &&
-                      draftMeasurementHeightPlanUnits !== null ? (
-                        <MetricRow
-                          label="Draft area"
-                          value={`${formatDisplayNumber(draftMeasurementWidthPlanUnits * draftMeasurementHeightPlanUnits)} ${formatAreaUnit(calibration.unit)}`}
-                        />
-                      ) : null}
-
-                      <MeasurementTargetPicker
-                        items={measurementItems}
-                        value={selectedMeasurementTargetKey}
-                        onChange={onMeasurementTargetKeyChange}
-                        measuredTargetItemIds={
-                          new Set(measurements.map((measurement) => measurement.targetItemId))
-                        }
-                      />
-
-                      {rectangleMode === 'measure' && draftTargetKind ? (
-                        <MeasurementApplyModePicker
-                          targetKind={draftTargetKind}
-                          mode={measurementApplicationMode}
-                          onChange={onMeasurementApplicationModeChange}
-                          unit={calibration?.unit ?? 'ft'}
-                          widthPlanUnits={draftMeasurementWidthPlanUnits}
-                          heightPlanUnits={draftMeasurementHeightPlanUnits}
-                        />
-                      ) : null}
-
-                      {rectangleMode === 'measure' ? (
-                        <div className="space-y-2 rounded-lg border border-neutral-200 bg-white/80 px-3 py-2">
-                          {measurementItems.length === 0 ? (
-                            <p className="text-xs text-neutral-600">
-                              No items yet. Create one now and include this measurement + plan
-                              image.
-                            </p>
+                          draftMeasurementHeightPlanUnits !== null ? (
+                            <>
+                              <span className="font-semibold text-neutral-800">
+                                {formatDisplayNumber(
+                                  draftMeasurementWidthPlanUnits * draftMeasurementHeightPlanUnits,
+                                )}{' '}
+                                {formatAreaUnit(calibration.unit)}
+                              </span>
+                              {'  ·  '}
+                              {formatPlanLength(
+                                draftMeasurementWidthPlanUnits,
+                                calibration.unit,
+                              )} ×{' '}
+                              {formatPlanLength(draftMeasurementHeightPlanUnits, calibration.unit)}
+                            </>
                           ) : (
-                            <p className="text-xs text-neutral-600">
-                              Need a new item instead? Create one directly from this measured area.
-                            </p>
+                            `${formatDisplayNumber(normalizedMeasurementDraft.width)} × ${formatDisplayNumber(normalizedMeasurementDraft.height)} px`
                           )}
+                        </p>
+
+                        <MeasurementTargetPicker
+                          items={measurementItems}
+                          value={selectedMeasurementTargetKey}
+                          onChange={onMeasurementTargetKeyChange}
+                          measuredTargetItemIds={
+                            new Set(measurements.map((measurement) => measurement.targetItemId))
+                          }
+                        />
+
+                        {draftTargetKind ? (
+                          <MeasurementApplyModePicker
+                            targetKind={draftTargetKind}
+                            mode={measurementApplicationMode}
+                            onChange={onMeasurementApplicationModeChange}
+                            unit={calibration?.unit ?? 'ft'}
+                            widthPlanUnits={draftMeasurementWidthPlanUnits}
+                            heightPlanUnits={draftMeasurementHeightPlanUnits}
+                          />
+                        ) : null}
+
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             type="button"
-                            variant="secondary"
+                            variant="primary"
                             size="sm"
-                            onClick={onOpenCreateItemPanel}
-                            disabled={!canOpenCreateItemPanel || creatingItemFromMeasurement}
+                            onClick={onSaveAndApplyMeasurement}
+                            disabled={!canSaveAndApplyMeasurement}
                           >
-                            {creatingItemFromMeasurement
-                              ? 'Creating item...'
-                              : 'Add new item from measurement'}
+                            {savingMeasurement ? <>Saving&hellip;</> : 'Save & apply to item'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={onClearMeasurementDraft}
+                            disabled={savingMeasurement}
+                          >
+                            Clear draft
                           </Button>
                         </div>
-                      ) : null}
 
+                        <button
+                          type="button"
+                          onClick={onOpenCreateItemPanel}
+                          disabled={!canOpenCreateItemPanel || creatingItemFromMeasurement}
+                          className="text-xs font-semibold text-brand-700 transition hover:text-brand-800 disabled:text-neutral-400"
+                        >
+                          {creatingItemFromMeasurement
+                            ? 'Creating item…'
+                            : '+ New item from this area'}
+                        </button>
+                      </>
+                    ) : (
                       <div className="flex flex-wrap gap-2">
-                        {rectangleMode === 'highlight' ? (
-                          <>
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              onClick={onSetHighlight}
-                              disabled={!canSetHighlight}
-                            >
-                              Set crop area
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={onClearMeasurementDraft}
-                            >
-                              Clear draft
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              onClick={onSaveAndApplyMeasurement}
-                              disabled={!canSaveAndApplyMeasurement}
-                            >
-                              {savingMeasurement ? <>Saving&hellip;</> : 'Save & apply to item'}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={onClearMeasurementDraft}
-                              disabled={savingMeasurement}
-                            >
-                              Clear draft
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={onSetHighlight}
+                          disabled={!canSetHighlight}
+                        >
+                          Set crop area
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={onClearMeasurementDraft}
+                        >
+                          Clear draft
+                        </Button>
                       </div>
-                    </>
+                    )
                   ) : (
-                    <p className="text-sm text-neutral-500">No draft area.</p>
+                    <p className="text-sm text-neutral-500">
+                      Draw a rectangle on the plan to measure.
+                    </p>
                   )}
                 </div>
               ) : null}
@@ -820,22 +809,13 @@ export function PlanInspector({
                 </div>
               ) : null}
 
-              {activeTool === 'rectangle' ? (
+              {activeTool === 'rectangle' && !normalizedMeasurementDraft ? (
                 <div className="mt-4 border-t border-neutral-200 pt-3">
-                  <MeasuredAreaSelect
-                    measurements={measurements}
-                    measurementItemsByMeasurementId={measurementItemsByMeasurementId}
-                    measurementsLoading={measurementsLoading}
-                    selectedMeasurementId={selectedMeasurementId}
-                    onSelect={onSelectMeasurement}
-                    onClear={onClearMeasurementSelection}
-                  />
-
                   {selectedMeasurement ? (
-                    <div className="mt-3 space-y-3">
+                    <div className="space-y-3">
                       <div className="rounded-xl border border-neutral-200 bg-white/80 px-3 py-2">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="eyebrow">Applied to item</span>
+                          <span className="eyebrow">Selected measurement</span>
                           {selectedMeasurementItem ? (
                             <span className="num-muted truncate text-[11px]">
                               {selectedMeasurementItem.primaryLabel}
@@ -863,15 +843,30 @@ export function PlanInspector({
                         ) : null}
                       </div>
 
+                      <div>
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            onToolChange('crop');
+                            onClearCropDraft();
+                          }}
+                        >
+                          Open crop editor
+                        </Button>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          Frame and publish the plan image for this item.
+                        </p>
+                      </div>
+
                       <LayoutSection
                         id="measured-area-manage"
-                        label="Measured area"
+                        label="Manage measurement"
                         defaultOpen={false}
                       >
-                        <p className="text-xs text-neutral-600">
-                          Keep this measurement, or remove it if you want to redraw.
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             type="button"
                             variant="ghost"
@@ -891,26 +886,23 @@ export function PlanInspector({
                           </Button>
                         </div>
                       </LayoutSection>
-
-                      <LayoutSection id="plan-image" label="Plan image" defaultOpen={false}>
-                        <p className="text-xs text-neutral-600">
-                          Open the crop editor to frame and publish the plan image for this item.
-                        </p>
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => {
-                            onToolChange('crop');
-                            onClearCropDraft();
-                          }}
-                        >
-                          Open crop editor
-                        </Button>
-                      </LayoutSection>
                     </div>
-                  ) : null}
+                  ) : (
+                    <>
+                      <MeasuredAreaSelect
+                        measurements={measurements}
+                        measurementItemsByMeasurementId={measurementItemsByMeasurementId}
+                        measurementsLoading={measurementsLoading}
+                        selectedMeasurementId={selectedMeasurementId}
+                        onSelect={onSelectMeasurement}
+                        onClear={onClearMeasurementSelection}
+                      />
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Draw a rectangle to measure a new item, or pick a saved area to edit its
+                        plan image.
+                      </p>
+                    </>
+                  )}
                 </div>
               ) : null}
             </>
