@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   safeName,
-  exportTableCsv,
   exportSummaryCsv,
   exportProposalCsv,
   exportFinishesExcel,
@@ -237,43 +236,6 @@ describe('safeName', () => {
 
   it('collapses multiple separators into one hyphen', () => {
     expect(safeName('project--name')).toBe('project-name');
-  });
-});
-
-// ─── exportTableCsv ──────────────────────────────────────────────────────────
-
-describe('exportTableCsv', () => {
-  it('triggers a download with a .csv filename', () => {
-    exportTableCsv(makeProject(), [makeRoom()]);
-    expect(downloadedFilename).toMatch(/\.csv$/);
-  });
-
-  it('uses project name in the filename', () => {
-    exportTableCsv(makeProject({ name: 'My Project' }), [makeRoom()]);
-    expect(downloadedFilename).toContain('my-project');
-  });
-
-  it('appends room name to filename when filterRoom is provided', () => {
-    const room = makeRoom({ name: 'Living Room' });
-    exportTableCsv(makeProject(), [room], room);
-    expect(downloadedFilename).toContain('living-room');
-  });
-
-  it('creates a CSV blob with correct headers', () => {
-    exportTableCsv(makeProject(), [makeRoom()]);
-    expect(capturedBlobContent).toContain('Item Name');
-    expect(capturedBlobContent).toContain('Unit Cost');
-  });
-
-  it('includes item data in CSV rows', () => {
-    const item = makeItem({ itemName: 'Lounge Sofa' });
-    exportTableCsv(makeProject(), [makeRoom({ items: [item] })]);
-    expect(capturedBlobContent).toContain('Lounge Sofa');
-  });
-
-  it('handles empty rooms gracefully', () => {
-    exportTableCsv(makeProject(), [makeRoom({ items: [] })]);
-    expect(capturedBlobContent).toContain('Item Name');
   });
 });
 

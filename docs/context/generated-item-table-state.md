@@ -32,7 +32,7 @@ Important bridge files:
 
 - `api/src/lib/generatedItems.ts` contains the Worker read/write bridge between `items`, `proposal_items`, visibility, default groups, mirroring, and revision effects.
 - `src/lib/api/items.ts` and Proposal API clients keep route-level compatibility for the React app.
-- `src/components/ffe/items/FfeTable.tsx` and `src/components/proposal/table/ProposalTable.tsx` are still separate table implementations, but increasingly share cell and style modules.
+- `src/components/ffe/list/FfeItemList.tsx` and `src/components/proposal/table/ProposalTable.tsx` are separate FF&E/Proposal surfaces, with shared Generated Item cell and style modules primarily used by Proposal.
 
 ## Shared Field Expectations
 
@@ -70,7 +70,7 @@ The following table behavior has already been consolidated into shared modules:
 - Shared sticky style helpers for regular FF&E/Proposal edge/value columns: `src/components/shared/table/generatedItemStickyStyles.ts`
 - Shared Proposal revision indicator UI used by FF&E: `src/components/proposal/revision`
 
-FF&E and Proposal still own their full table composition, data hooks, row actions, grouped layout, and some sticky revision table structure.
+Proposal still owns full table composition, data hooks, row actions, grouped layout, and sticky revision table structure.
 
 ## Intentional Deferrals
 
@@ -89,7 +89,7 @@ These may still be valid future work, but they should happen only after shared i
 
 - `proposal_items` remains writable compatibility storage.
 - Some Proposal revision table layout is still Proposal-specific and intentionally complex.
-- FF&E table editing still exists and should not regress, but Proposal is the preferred surface for pricing and revision edits.
+- FF&E table editing has been retired; Proposal remains the editable table surface for pricing and revision workflows.
 - Generated Item exports are not fully unified yet; FF&E Catalog generation should be the next export-oriented target once table data consistency is confirmed.
 - Some legacy test warnings unrelated to table data may still appear, such as React Router future flag warnings and Plan test `act(...)` warnings.
 

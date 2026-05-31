@@ -1,1 +1,0 @@
-export { FfeTable } from './FfeTable';

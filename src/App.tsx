@@ -25,16 +25,11 @@ import {
 import { BudgetView } from './components/project/BudgetView';
 import { FfeBudgetModal } from './components/project/modals/FfeBudgetModal';
 import { ProposalBudgetModal } from './components/project/modals/ProposalBudgetModal';
-import { ImportExcelModal } from './components/ffe/import/ImportExcelModal';
 import { ImportProposalExcelModal } from './components/proposal/import/ImportProposalExcelModal';
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
-import {
-  FfeActions,
-  ProposalActions,
-  ProposalRevisionChip,
-} from './components/project/AppBarActions';
+import { ProposalActions, ProposalRevisionChip } from './components/project/AppBarActions';
 import { Button } from './components/primitives';
 import {
   ProjectTabToolbarSidebar,
@@ -76,11 +71,7 @@ type ProjectContext = {
   project: Project;
   roomsWithItems: RoomWithItems[];
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
-  onImport: () => void;
   onProposalImport: () => void;
-  /** Controlled Add Room modal state (lifted to ProjectLayout). */
-  addRoomOpen: boolean;
-  onAddRoomOpenChange: (open: boolean) => void;
   /** Controlled Add Category modal state (lifted to ProjectLayout). */
   addCategoryOpen: boolean;
   onAddCategoryOpenChange: (open: boolean) => void;
@@ -140,10 +131,7 @@ function ProjectLayout() {
   const { roomsWithItems, isLoading: dataLoading } = useRoomsWithItems(id ?? '');
   const { categoriesWithItems: proposalCategoriesWithItems, isLoading: proposalLoading } =
     useProposalWithItems(id ?? '', new Set());
-  const [importOpen, setImportOpen] = useState(false);
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
-  // Lifted modal state for table routes
-  const [addRoomOpen, setAddRoomOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
@@ -168,16 +156,7 @@ function ProjectLayout() {
           // CatalogView portals its own toolbar (Print / Export / Editor /
           // page counter) into this slot.
           <SidebarButtonGroup id={CATALOG_ACTIONS_SLOT_ID} />
-        ) : (
-          <FfeActions
-            project={project}
-            roomsWithItems={roomsWithItems}
-            isCatalog={isCatalogRoute}
-            onAddRoom={() => setAddRoomOpen(true)}
-            onImport={() => setImportOpen(true)}
-            layout="column"
-          />
-        )
+        ) : null
       ) : isProposalRoute ? (
         <ProposalActions
           project={project}
@@ -252,10 +231,7 @@ function ProjectLayout() {
                     project,
                     roomsWithItems,
                     proposalCategoriesWithItems,
-                    onImport: () => setImportOpen(true),
                     onProposalImport: () => setProposalImportOpen(true),
-                    addRoomOpen,
-                    onAddRoomOpenChange: setAddRoomOpen,
                     addCategoryOpen,
                     onAddCategoryOpenChange: setAddCategoryOpen,
                   } satisfies ProjectContext
@@ -290,7 +266,7 @@ function ProjectLayout() {
                 <>
                   <h1 className="sr-only">{project.name}</h1>
                   {isTableRoute ? (
-                    // Full-width flush layout for FF&E and Proposal table routes
+                    // Full-width flush layout for table routes
                     <div className="flex h-full flex-1 flex-col overflow-hidden">
                       <Outlet
                         context={
@@ -298,10 +274,7 @@ function ProjectLayout() {
                             project,
                             roomsWithItems,
                             proposalCategoriesWithItems,
-                            onImport: () => setImportOpen(true),
                             onProposalImport: () => setProposalImportOpen(true),
-                            addRoomOpen,
-                            onAddRoomOpenChange: setAddRoomOpen,
                             addCategoryOpen,
                             onAddCategoryOpenChange: setAddCategoryOpen,
                           } satisfies ProjectContext
@@ -317,10 +290,7 @@ function ProjectLayout() {
                             project,
                             roomsWithItems,
                             proposalCategoriesWithItems,
-                            onImport: () => setImportOpen(true),
                             onProposalImport: () => setProposalImportOpen(true),
-                            addRoomOpen,
-                            onAddRoomOpenChange: setAddRoomOpen,
                             addCategoryOpen,
                             onAddCategoryOpenChange: setAddCategoryOpen,
                           } satisfies ProjectContext
@@ -330,16 +300,6 @@ function ProjectLayout() {
                   )}
                   {project && (
                     <>
-                      <ImportExcelModal
-                        open={importOpen}
-                        projectId={project.id}
-                        rooms={roomsWithItems}
-                        onClose={() => setImportOpen(false)}
-                        onSuccess={() => {
-                          setImportOpen(false);
-                          void queryClient.invalidateQueries();
-                        }}
-                      />
                       <ImportProposalExcelModal
                         open={proposalImportOpen}
                         projectId={project.id}

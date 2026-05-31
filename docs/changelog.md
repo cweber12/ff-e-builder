@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ffe): remove the legacy FF&E editable table stack and table-only imports/exports, keeping Catalog and List as the active FF&E surfaces
 - feat(catalog): add FF&E item status editing to the Catalog Editor Text tab and persist changes through existing item update mutations
 - feat(ffe): wire end-to-end Add to FF&E and Remove from FF&E visibility flows across Proposal row/detail actions, Proposal category bulk add, and FF&E List Add+ picker with shared FF&E and Proposal query invalidation
 - feat(ffe): add a read-only FF&E List view grouped by Proposal Category with Catalog/List navigation, item-card catalog deep links, and legacy `/ffe/table` redirect compatibility

@@ -6,8 +6,7 @@ import type {
   ProposalItem,
   RoomWithItems,
 } from '../../types';
-import { buildStatusBreakdown, sortedItems } from './ffe/ffeRows';
-import { buildFfeExportColumns } from './ffe/ffeColumns';
+import { buildStatusBreakdown } from './ffe/statusBreakdown';
 import { csvCell, fmtMoney, safeName, triggerDownload } from './shared';
 
 type ProposalCsvColumn = {
@@ -85,32 +84,6 @@ function buildProposalCsvColumns(
     if (def && !seen.has(key)) ordered.push(def);
   }
   return ordered;
-}
-
-export function exportTableCsv(
-  project: Project,
-  rooms: RoomWithItems[],
-  filterRoom?: RoomWithItems,
-  customColumnDefs: CustomColumnDef[] = [],
-  visibleColumnOrder?: string[],
-): void {
-  const targetRooms = filterRoom ? [filterRoom] : rooms;
-  const allItems = targetRooms.flatMap((r) => sortedItems(r));
-  const columns = buildFfeExportColumns(allItems, customColumnDefs, visibleColumnOrder).filter(
-    (column) => !column.isImage,
-  );
-  const dataRows = targetRooms.flatMap((room) =>
-    sortedItems(room).map((item) => [
-      project.name,
-      room.name,
-      ...columns.map((c) => c.value(item)),
-    ]),
-  );
-  const rows = [['Project', 'Room', ...columns.map((c) => c.label)], ...dataRows];
-  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const suffix = filterRoom ? `-${safeName(filterRoom.name)}` : '';
-  triggerDownload(blob, `${safeName(project.name)}${suffix}-items.csv`);
 }
 
 export function exportSummaryCsv(project: Project, rooms: RoomWithItems[]): void {
