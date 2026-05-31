@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - fix(ui): align FF&E sidebar actions left, switch the View toggle to toolbar-segmented styling, move open-revision status from room headers to the sidebar top, and anchor the Columns popover from the trigger top-right toward the right
+- fix(ui): normalize FF&E sidebar action button text to true left-justified alignment, force full-width export trigger alignment, remove hover scale motion, and increase hover text weight emphasis
 - fix(ui): polish tab-specific project sidebars with compact utility-panel cards, consistent left-aligned controls, narrower width, and a dropdown-based compact Proposal status selector that preserves confirmation flow
 - fix(ui): tighten the tab-toolbar sidebar width and remove forced full-width stretching so stacked controls align left with intrinsic sizing where appropriate
 - fix(ui): left-align stacked tab-sidebar controls and convert portal toolbar groups to full-width vertical forms with start-aligned labels, inputs, and actions

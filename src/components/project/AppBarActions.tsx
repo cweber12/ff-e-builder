@@ -59,7 +59,12 @@ export function FfeActions({
         type="button"
         variant="addAction"
         onClick={onAddRoom}
-        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
+        {...(isColumn
+          ? {
+              className:
+                'project-sidebar-control project-sidebar-action justify-start [&>svg:first-child]:mr-0.5',
+            }
+          : {})}
       >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
@@ -70,7 +75,12 @@ export function FfeActions({
         variant="toolbar"
         onClick={onImport}
         title="Import from Excel"
-        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
+        {...(isColumn
+          ? {
+              className:
+                'project-sidebar-control project-sidebar-action justify-start [&>svg:first-child]:mr-0.5',
+            }
+          : {})}
       >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Import
@@ -78,7 +88,13 @@ export function FfeActions({
 
       <ExportMenu
         disabled={!hasItems}
-        {...(isColumn ? { buttonClassName: 'project-sidebar-control justify-start' } : {})}
+        {...(isColumn
+          ? {
+              className: 'w-full',
+              buttonClassName:
+                'project-sidebar-control project-sidebar-action justify-start [&>svg:last-child]:ml-auto',
+            }
+          : {})}
         label={
           <>
             <Download className="toolbar-icon" aria-hidden="true" />
@@ -111,7 +127,12 @@ export function FfeActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="ffe"
-        {...(isColumn ? { buttonClassName: 'project-sidebar-control justify-start' } : {})}
+        {...(isColumn
+          ? {
+              buttonClassName:
+                'project-sidebar-control project-sidebar-action justify-start [&>svg:first-child]:mr-0.5',
+            }
+          : {})}
       />
 
       {isColumn ? (
