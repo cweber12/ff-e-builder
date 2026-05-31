@@ -65,7 +65,7 @@ export function FfeActions({
         Add room
       </Button>
 
-      <FfeSortToggle projectId={project.id} />
+      <FfeSortToggle projectId={project.id} layout={layout} />
 
       <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
         <Upload className="toolbar-icon" aria-hidden="true" />
@@ -74,6 +74,9 @@ export function FfeActions({
 
       <ExportMenu
         disabled={!hasItems}
+        {...(layout === 'column'
+          ? { className: 'w-full', buttonClassName: 'w-full justify-between' }
+          : {})}
         label={
           <>
             <Download className="toolbar-icon" aria-hidden="true" />
@@ -103,7 +106,11 @@ export function FfeActions({
         }
       />
 
-      <ColumnVisibilityPopover projectId={project.id} tableKey="ffe" />
+      <ColumnVisibilityPopover
+        projectId={project.id}
+        tableKey="ffe"
+        {...(layout === 'column' ? { buttonClassName: 'w-full justify-between' } : {})}
+      />
     </div>
   );
 }
@@ -111,11 +118,25 @@ export function FfeActions({
 // ---------------------------------------------------------------------------
 // FF&E item sort toggle
 // ---------------------------------------------------------------------------
-function FfeSortToggle({ projectId }: { projectId: string }) {
+function FfeSortToggle({
+  projectId,
+  layout = 'row',
+}: {
+  projectId: string;
+  layout?: 'row' | 'column';
+}) {
   const { sortMode, setSortMode } = useFfeItemSort(projectId);
 
   return (
-    <div role="radiogroup" aria-label="Item sort order" className="toolbar-segmented">
+    <div
+      role="radiogroup"
+      aria-label="Item sort order"
+      className={
+        layout === 'column'
+          ? 'toolbar-segmented !flex !w-full !flex-col !items-stretch [&>button]:!justify-start'
+          : 'toolbar-segmented'
+      }
+    >
       <button
         type="button"
         role="radio"
@@ -243,12 +264,16 @@ export function ProposalActions({
         visibleOrder={exportVisibleOrder}
       />
 
-      <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />
+      <ColumnVisibilityPopover
+        projectId={project.id}
+        tableKey="proposal"
+        {...(layout === 'column' ? { buttonClassName: 'w-full justify-between' } : {})}
+      />
 
       <div
         className={
           layout === 'column'
-            ? 'flex items-center border-t border-neutral-200 pt-2'
+            ? 'min-w-0 border-t border-neutral-200 pt-2'
             : 'flex items-center border-l border-neutral-200 pl-2'
         }
       >
@@ -256,6 +281,7 @@ export function ProposalActions({
           status={project.proposalStatus}
           onChange={handleStatusChange}
           disabled={updateProject.isPending}
+          {...(layout === 'column' ? { className: 'w-full', compact: true } : {})}
           {...(openRev
             ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
             : {})}

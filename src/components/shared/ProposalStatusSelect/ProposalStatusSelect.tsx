@@ -11,6 +11,7 @@ interface ProposalStatusSelectProps {
   onChange: (next: ProposalStatus) => void | Promise<void>;
   disabled?: boolean;
   className?: string;
+  compact?: boolean;
   revisionGuard?: { openRevisionLabel: string; unresolvedCount: number };
 }
 
@@ -36,6 +37,7 @@ export function ProposalStatusSelect({
   onChange,
   disabled,
   className,
+  compact = false,
   revisionGuard,
 }: ProposalStatusSelectProps) {
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
@@ -117,7 +119,9 @@ export function ProposalStatusSelect({
                 }}
               >
                 <StageMarker isCurrent={isCurrent} isPast={isPast} blocked={blocksHere} />
-                <span className="hidden lg:inline">{STAGE_LABEL[stage]}</span>
+                <span className={compact ? 'hidden' : 'hidden lg:inline'}>
+                  {STAGE_LABEL[stage]}
+                </span>
               </SegmentedControl.Option>
             </Fragment>
           );

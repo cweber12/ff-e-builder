@@ -149,9 +149,14 @@ function PlusIcon() {
 interface ColumnVisibilityPopoverProps {
   projectId: string;
   tableKey: 'ffe' | 'proposal';
+  buttonClassName?: string;
 }
 
-export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilityPopoverProps) {
+export function ColumnVisibilityPopover({
+  projectId,
+  tableKey,
+  buttonClassName,
+}: ColumnVisibilityPopoverProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -195,7 +200,7 @@ export function ColumnVisibilityPopover({ projectId, tableKey }: ColumnVisibilit
         aria-label="Column visibility & density"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={cn(open && 'btn-toolbar--primary')}
+        className={cn(open && 'btn-toolbar--primary', buttonClassName)}
       >
         <ColumnsIcon />
         Columns

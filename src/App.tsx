@@ -150,7 +150,10 @@ function ProjectLayout() {
         isCatalogRoute ? (
           // CatalogView portals its own toolbar (Print / Export / Editor /
           // page counter) into this slot.
-          <div id={CATALOG_ACTIONS_SLOT_ID} className="flex flex-col items-stretch gap-2" />
+          <div
+            id={CATALOG_ACTIONS_SLOT_ID}
+            className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch"
+          />
         ) : (
           <FfeActions
             project={project}
@@ -177,27 +180,39 @@ function ProjectLayout() {
           layout="column"
         />
       ) : isMaterialsRoute ? (
-        <div id={MATERIALS_ACTIONS_SLOT_ID} className="flex flex-col items-stretch gap-2" />
+        <div
+          id={MATERIALS_ACTIONS_SLOT_ID}
+          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch"
+        />
       ) : isPlansRoute ? (
-        <div id={PLANS_ACTIONS_SLOT_ID} className="flex flex-col items-stretch gap-2" />
+        <div
+          id={PLANS_ACTIONS_SLOT_ID}
+          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch"
+        />
       ) : null
     ) : null;
 
   const sidebarToolbarCenter =
     !isLoading && isCatalogRoute ? (
-      <div id={CATALOG_PICKER_SLOT_ID} className="flex flex-col items-stretch gap-2" />
+      <div
+        id={CATALOG_PICKER_SLOT_ID}
+        className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:min-w-0 [&>*]:w-full"
+      />
     ) : null;
 
   const sidebarToolbarLeft =
     !isLoading && isPlansRoute ? (
       <div
         id={PLANS_FILTER_SLOT_ID}
-        className="toolbar-segmented !flex !flex-col !items-stretch"
+        className="toolbar-segmented !flex !w-full !flex-col !items-stretch"
         role="tablist"
         aria-label="Filter plans"
       />
     ) : !isLoading && isMaterialsRoute ? (
-      <div id={MATERIALS_FILTER_SLOT_ID} className="flex flex-col items-stretch gap-2" />
+      <div
+        id={MATERIALS_FILTER_SLOT_ID}
+        className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:min-w-0 [&>*]:w-full [&>*]:max-w-full"
+      />
     ) : null;
 
   return (
@@ -446,6 +461,9 @@ function BudgetPageActions({
         label="Export"
         size="sm"
         buttonVariant="toolbar"
+        {...(layout === 'column'
+          ? { className: 'w-full', buttonClassName: 'w-full justify-between' }
+          : {})}
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
           exportProposalCsv(
