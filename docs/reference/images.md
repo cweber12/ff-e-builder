@@ -94,8 +94,7 @@ and render object URLs, revoking those URLs when components unmount.
 The shared image frame is used for:
 
 - project cards on `/projects`
-- room image frames beside each room table on `/projects/:id/ffe/table`
-- item thumbnails before the item ID on the table view
+- FF&E list item cards on `/projects/:id/ffe/list`
 - FF&E item Plan frames in the item detail panel
 - catalog item image slots on `/projects/:id/ffe/catalog`
 - material cards in the project material library

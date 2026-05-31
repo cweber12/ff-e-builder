@@ -16,7 +16,7 @@ import {
   CATALOG_ACTIONS_SLOT_ID,
   CATALOG_PICKER_SLOT_ID,
 } from './components/ffe/catalog/CatalogView';
-import { FfeTable } from './components/ffe/items';
+import { FfeItemList } from './components/ffe/list';
 import {
   MATERIALS_ACTIONS_SLOT_ID,
   MATERIALS_FILTER_SLOT_ID,
@@ -106,7 +106,8 @@ function App() {
           <Route index element={<ProjectOverviewRoute />} />
           <Route path="snapshot" element={<Navigate to=".." replace />} />
           <Route path="ffe" element={<ProjectToolRedirect tool="ffe" />} />
-          <Route path="ffe/table" element={<ProjectTableRoute />} />
+          <Route path="ffe/table" element={<ProjectRedirectTo target="ffe/list" />} />
+          <Route path="ffe/list" element={<ProjectListRoute />} />
           <Route path="ffe/catalog" element={<ProjectCatalogRoute />} />
           <Route path="ffe/materials" element={<ProjectRedirectTo target="materials" />} />
           <Route path="ffe/summary" element={<ProjectRedirectTo target="budget" />} />
@@ -118,7 +119,7 @@ function App() {
           <Route path="plans/:planId" element={<ProjectPlanCanvasRoute />} />
           <Route path="materials" element={<ProjectMaterialsRoute />} />
           <Route path="budget" element={<ProjectBudgetRoute />} />
-          <Route path="table" element={<Navigate to="ffe/table" replace />} />
+          <Route path="table" element={<Navigate to="ffe/list" replace />} />
           <Route path="catalog" element={<Navigate to="ffe/catalog" replace />} />
           <Route path="summary" element={<Navigate to="budget" replace />} />
         </Route>
@@ -149,7 +150,7 @@ function ProjectLayout() {
   const isPlansRoute = !!id && location.pathname.includes(`/projects/${id}/plans`);
   const isMaterialsRoute = !!id && location.pathname.includes(`/projects/${id}/materials`);
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
-  const isTableRoute = (isFfeRoute && !isCatalogRoute) || isProposalRoute;
+  const isTableRoute = isProposalRoute;
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
 
   // Projects loaded but this ID doesn't exist → 404
@@ -454,19 +455,10 @@ function ProjectRedirectTo({ target }: { target: string }) {
   return <Navigate to={`/projects/${id}/${target}`} replace />;
 }
 
-function ProjectTableRoute() {
-  const { project, roomsWithItems, onImport, addRoomOpen, onAddRoomOpenChange } =
-    useProjectContext();
-  return (
-    <FfeTable
-      projectId={project.id}
-      project={project}
-      roomsWithItems={roomsWithItems}
-      onImport={onImport}
-      addRoomOpen={addRoomOpen}
-      onAddRoomOpenChange={onAddRoomOpenChange}
-    />
-  );
+function ProjectListRoute() {
+  const { project } = useProjectContext();
+  const { groups, isLoading } = useFfeCatalogGroups(project.id);
+  return <FfeItemList projectId={project.id} groups={groups} isLoading={isLoading} />;
 }
 
 function ProjectOverviewRoute() {

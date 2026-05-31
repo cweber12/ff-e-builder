@@ -15,7 +15,7 @@ Routes covered:
 
 - `/signin`
 - `/projects`
-- `/projects/:id/ffe/table`
+- `/projects/:id/ffe/list`
 - `/projects/:id/ffe/catalog`
 - `/projects/:id/budget`
 

@@ -71,6 +71,10 @@ describe('ProjectSnapshotPage', () => {
     expect(screen.getByText('FF&E Snapshot')).toBeInTheDocument();
     expect(screen.getByText('Proposal Snapshot')).toBeInTheDocument();
     expect(screen.getByText('Finish Library')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open ff&e/i })).toHaveAttribute(
+      'href',
+      '/projects/project-1/ffe/list',
+    );
     expect(screen.getByRole('link', { name: /budget/i })).toHaveAttribute(
       'href',
       '/projects/project-1/budget',

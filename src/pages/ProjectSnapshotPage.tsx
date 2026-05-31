@@ -53,7 +53,7 @@ export function ProjectSnapshotPage({
           <ToolSnapshotCard
             title="FF&E Snapshot"
             summary={ffeSummary}
-            to={`/projects/${project.id}/ffe/table`}
+            to={`/projects/${project.id}/ffe/list`}
             count={roomsWithItems.length}
             countLabel="rooms"
             description="High-level FF&E progress"

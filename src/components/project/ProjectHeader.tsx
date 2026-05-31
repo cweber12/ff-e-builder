@@ -38,7 +38,7 @@ type HeaderTab = {
 const TABS: HeaderTab[] = [
   {
     label: 'FF&E',
-    href: (id: string) => `/projects/${id}/ffe/table`,
+    href: (id: string) => `/projects/${id}/ffe/catalog`,
     isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/ffe`),
   },
   {

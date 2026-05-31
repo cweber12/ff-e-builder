@@ -45,11 +45,8 @@ export function ProjectTabToolbarSidebar({
             </Link>
           </SidebarButton>
           <SidebarButton asChild selected={!isCatalogRoute}>
-            <Link
-              to={`/projects/${projectId}/ffe/table`}
-              data-active={!isCatalogRoute || undefined}
-            >
-              Table
+            <Link to={`/projects/${projectId}/ffe/list`} data-active={!isCatalogRoute || undefined}>
+              List
             </Link>
           </SidebarButton>
         </SidebarButtonGroup>

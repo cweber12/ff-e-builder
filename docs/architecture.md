@@ -92,7 +92,8 @@ The current implementation state and future cleanup plan for FF&E/Proposal table
 - `/projects` lists projects, editable user information, and project image previews.
 - `/projects/:id` redirects to `/projects/:id/snapshot`.
 - `/projects/:id/snapshot` shows the read-first Project Snapshot landing page for the open Project.
-- `/projects/:id/ffe/table` shows the editable FF&E table grouped by Location.
+- `/projects/:id/ffe/list` shows a read-only FF&E card list grouped by Proposal Category.
+- `/projects/:id/ffe/table` is a compatibility route that redirects to `/projects/:id/ffe/list`.
 - `/projects/:id/ffe/catalog` shows printable FF&E catalog pages with inline item-text editing, option renderings, and customer approval markup.
 - `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
 - `/projects/:id/ffe/summary` shows FF&E budget and status summaries.

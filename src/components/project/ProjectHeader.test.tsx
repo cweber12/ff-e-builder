@@ -47,7 +47,10 @@ describe('ProjectHeader', () => {
   it('renders project tab navigation', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />);
 
-    expect(screen.getByRole('link', { name: 'FF&E' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'FF&E' })).toHaveAttribute(
+      'href',
+      '/projects/proj-1/ffe/catalog',
+    );
     expect(screen.getByRole('link', { name: 'Proposal' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Plans' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Materials' })).toBeInTheDocument();

@@ -102,7 +102,7 @@ export function BudgetView({ project, roomsWithItems, proposalCategoriesWithItem
           budgetCents={ffeBudgetCents}
           itemCount={roomsWithItems.reduce((n, r) => n + r.items.length, 0)}
           itemLabel="items"
-          linkTo={`/projects/${id}/ffe/table`}
+          linkTo={`/projects/${id}/ffe/list`}
         />
         <ToolCard
           label="Proposal"
