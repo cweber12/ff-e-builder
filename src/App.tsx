@@ -346,34 +346,66 @@ function ProjectTabToolbarSidebar({
 }) {
   if (!showViewToggle && !toolbarLeft && !toolbarCenter && !actions) return null;
 
+  const sidebarSections: Array<{ key: string; label: string; content: ReactNode }> = [];
+
+  if (showViewToggle) {
+    sidebarSections.push({
+      key: 'view',
+      label: 'View',
+      content: (
+        <div className="flex min-w-0 flex-col gap-1">
+          <Link
+            to={`/projects/${projectId}/ffe/catalog`}
+            data-active={isCatalogRoute || undefined}
+            className="inline-flex h-9 min-w-0 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+          >
+            Catalog
+          </Link>
+          <Link
+            to={`/projects/${projectId}/ffe/table`}
+            data-active={!isCatalogRoute || undefined}
+            className="inline-flex h-9 min-w-0 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+          >
+            Table
+          </Link>
+        </div>
+      ),
+    });
+  }
+
+  if (toolbarLeft) {
+    sidebarSections.push({
+      key: 'contextual-filters',
+      label: 'Filters',
+      content: <div className="flex min-w-0 flex-col gap-2">{toolbarLeft}</div>,
+    });
+  }
+
+  if (toolbarCenter) {
+    sidebarSections.push({
+      key: 'contextual-tools',
+      label: 'Tools',
+      content: <div className="flex min-w-0 flex-col gap-2">{toolbarCenter}</div>,
+    });
+  }
+
+  if (actions) {
+    sidebarSections.push({
+      key: 'actions',
+      label: 'Actions',
+      content: <div className="flex min-w-0 flex-col gap-2">{actions}</div>,
+    });
+  }
+
   return (
     <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-chrome/40 lg:w-72 lg:border-b-0 lg:border-r">
-      <div className="space-y-5 p-4 md:p-5">
-        {showViewToggle ? (
-          <section className="space-y-2">
-            <p className="toolbar-label">View</p>
-            <div className="flex flex-col gap-1">
-              <Link
-                to={`/projects/${projectId}/ffe/catalog`}
-                data-active={isCatalogRoute || undefined}
-                className="inline-flex h-9 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
-              >
-                Catalog
-              </Link>
-              <Link
-                to={`/projects/${projectId}/ffe/table`}
-                data-active={!isCatalogRoute || undefined}
-                className="inline-flex h-9 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
-              >
-                Table
-              </Link>
-            </div>
+      <div className="space-y-5 overflow-x-hidden p-4 md:p-5">
+        {sidebarSections.map((section) => (
+          <section key={section.key} className="min-w-0 space-y-2">
+            <p className="toolbar-label">{section.label}</p>
+            <div className="min-w-0">{section.content}</div>
           </section>
-        ) : null}
-
-        {toolbarLeft ? <section className="space-y-2">{toolbarLeft}</section> : null}
-        {toolbarCenter ? <section className="space-y-2">{toolbarCenter}</section> : null}
-        {actions ? <section className="space-y-2">{actions}</section> : null}
+        ))}
       </div>
     </aside>
   );
