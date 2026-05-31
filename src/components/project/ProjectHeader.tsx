@@ -77,7 +77,7 @@ function TabNav({ projectId, activeLabel }: { projectId: string; activeLabel?: s
             to={href(projectId)}
             aria-current={isActive ? 'page' : undefined}
             data-active={isActive || undefined}
-            className="relative inline-flex h-11 items-center px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:text-neutral-950 after:absolute after:inset-x-3 after:bottom-0 after:h-[2px] after:bg-brand-500 after:opacity-0 after:transition-opacity data-[active]:after:opacity-100"
+            className="inline-flex h-11 items-center px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:font-bold data-[active]:text-neutral-950"
           >
             {label}
           </Link>
