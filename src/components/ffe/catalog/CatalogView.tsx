@@ -386,11 +386,12 @@ function CatalogActionsBar({
 }) {
   return (
     <SlotPortal slotId={CATALOG_ACTIONS_SLOT_ID}>
-      <div className="flex items-center gap-2">
+      <div className="project-sidebar-slot">
         <Button
           type="button"
           variant="toolbar"
           aria-label="Print catalog"
+          className="project-sidebar-control justify-start"
           onClick={() => window.print()}
         >
           <Printer className="toolbar-icon" aria-hidden="true" />
@@ -477,19 +478,20 @@ function CatalogPagePicker({
   let itemIndex = 0;
 
   return (
-    <nav aria-label="Catalog page picker" className="no-print flex items-center gap-3">
+    <nav aria-label="Catalog page picker" className="no-print project-sidebar-slot">
       {currentEntry?.room.name ? (
-        <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500 lg:block">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
           <span className="text-neutral-400">Category ·</span>{' '}
           <span className="text-neutral-800">{currentEntry.room.name}</span>
         </p>
       ) : null}
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center gap-2">
         <Button
           type="button"
           variant="toolbar"
           disabled={currentIndex === 0}
           aria-label="Previous catalog item"
+          className="project-sidebar-control !w-auto justify-center px-2"
           onClick={() => onPageChange(currentIndex - 1)}
         >
           <ChevronLeft className="toolbar-icon" aria-hidden="true" />
@@ -501,7 +503,7 @@ function CatalogPagePicker({
           id="catalog-jump"
           value={currentIndex}
           onChange={(event) => onPageChange(Number(event.target.value))}
-          className="toolbar-select min-w-56"
+          className="toolbar-select w-full min-w-0 flex-1"
         >
           {rooms.map((room) => (
             <optgroup key={room.id} label={room.name}>
@@ -522,6 +524,7 @@ function CatalogPagePicker({
           variant="toolbar"
           disabled={currentIndex === total - 1}
           aria-label="Next catalog item"
+          className="project-sidebar-control !w-auto justify-center px-2"
           onClick={() => onPageChange(currentIndex + 1)}
         >
           <ChevronRight className="toolbar-icon" aria-hidden="true" />
@@ -598,13 +601,14 @@ function CatalogExportButton({
   const swatchesOnlyOptions = { ...exportOptions, showSwatchLabels: false };
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative w-full">
       <Button
         type="button"
         variant="toolbar"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Export catalog"
+        className="project-sidebar-control justify-between"
         onClick={() => setOpen((v) => !v)}
       >
         <Download className="toolbar-icon" aria-hidden="true" />
@@ -701,14 +705,17 @@ function CatalogEditorPanelButton({
   }, [isOpen, onEditorOpenChange]);
 
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div ref={ref} className="relative inline-flex w-full">
       <Button
         type="button"
         aria-label={isOpen ? 'Close editor' : 'Open editor'}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         variant="toolbar"
-        className={cn(isOpen && 'border-brand-500 bg-brand-50 text-brand-700')}
+        className={cn(
+          'project-sidebar-control justify-start',
+          isOpen && 'bg-brand-50 text-brand-700',
+        )}
         onClick={() => onEditorOpenChange(!isOpen)}
       >
         <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />

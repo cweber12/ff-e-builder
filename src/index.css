@@ -472,11 +472,11 @@
      neutral control styling. Emphasis components (add actions, alerts, badges)
      keep their dedicated treatments. */
   .project-sidebar-section {
-    @apply min-w-0 rounded-sm border border-neutral-200/80 bg-canvas-chrome/65 px-2.5 py-2.5;
+    @apply min-w-0 rounded-sm;
   }
 
   .project-sidebar-title {
-    @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500;
+    @apply mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-700;
   }
 
   .project-sidebar-slot {
@@ -489,18 +489,18 @@
   }
 
   .project-sidebar-link {
-    @apply inline-flex h-8 min-w-0 items-center justify-start rounded-sm border border-neutral-200
-           bg-white px-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900
+    @apply inline-flex h-8 min-w-0 items-center justify-start rounded-sm
+           bg-transparent px-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900
            transition-colors duration-150
-           hover:bg-neutral-50 hover:text-neutral-900
+           hover:bg-neutral-100 hover:text-neutral-900
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1
-           data-[active]:border-neutral-300 data-[active]:bg-neutral-100 data-[active]:text-neutral-950;
+           data-[active]:bg-neutral-100 data-[active]:text-neutral-950;
   }
 
   .project-sidebar-control {
-    @apply w-full justify-start rounded-sm border border-neutral-200 bg-white
+    @apply w-full justify-start rounded-sm bg-transparent
            text-neutral-900 transition-colors duration-150
-           hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900
+           hover:bg-neutral-100 hover:text-neutral-900
            focus-visible:ring-brand-500/35;
   }
 
@@ -543,6 +543,71 @@
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  /* ----------------------------------------------------------------- */
+  /* Uniform sidebar interaction language                               */
+  /* Black text · no borders · hover grow + bold · click bounce ·       */
+  /* selected wears the hover emphasis. (Add actions keep their own     */
+  /* btn-add-action motion, so they opt out of the scale transform.)   */
+  /* ----------------------------------------------------------------- */
+  .project-sidebar-section button,
+  .project-sidebar-section .project-sidebar-control,
+  .project-sidebar-section .project-sidebar-link,
+  .project-sidebar-section .toolbar-segmented > button,
+  .project-sidebar-section .toolbar-segmented > a {
+    @apply text-neutral-900;
+    transform-origin: left center;
+    transition:
+      transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 140ms ease,
+      color 140ms ease,
+      box-shadow 140ms ease;
+  }
+
+  .project-sidebar-section button:hover,
+  .project-sidebar-section .project-sidebar-control:hover,
+  .project-sidebar-section .project-sidebar-link:hover,
+  .project-sidebar-section .toolbar-segmented > button:hover,
+  .project-sidebar-section .toolbar-segmented > a:hover {
+    @apply font-semibold text-neutral-900;
+  }
+
+  .project-sidebar-section button:not(.btn-add-action):hover,
+  .project-sidebar-section .project-sidebar-control:hover,
+  .project-sidebar-section .project-sidebar-link:hover,
+  .project-sidebar-section .toolbar-segmented > button:hover,
+  .project-sidebar-section .toolbar-segmented > a:hover {
+    transform: scale(1.02);
+  }
+
+  .project-sidebar-section button:not(.btn-add-action):active,
+  .project-sidebar-section .project-sidebar-control:active,
+  .project-sidebar-section .project-sidebar-link:active,
+  .project-sidebar-section .toolbar-segmented > button:active,
+  .project-sidebar-section .toolbar-segmented > a:active {
+    transform: scale(0.96);
+  }
+
+  .project-sidebar-section .project-sidebar-link[data-active],
+  .project-sidebar-section .toolbar-segmented > button[data-active],
+  .project-sidebar-section .toolbar-segmented > button[data-active='true'],
+  .project-sidebar-section .toolbar-segmented > button[aria-checked='true'],
+  .project-sidebar-section .toolbar-segmented > button[aria-pressed='true'] {
+    @apply font-semibold;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .project-sidebar-section button,
+    .project-sidebar-section .project-sidebar-control,
+    .project-sidebar-section .project-sidebar-link,
+    .project-sidebar-section .toolbar-segmented > button,
+    .project-sidebar-section .toolbar-segmented > a {
+      transition:
+        background-color 140ms ease,
+        color 140ms ease;
+      transform: none !important;
+    }
   }
 
   /* Standard form input — apply on text, search, url, email inputs and

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Plus, SlidersHorizontal } from 'lucide-react';
+import { Plus, SlidersHorizontal } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   exportFinishesExcel,
@@ -415,7 +415,6 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
       <MaterialsToolbarLeft
         activeTab={activeTab}
         viewMode={viewMode}
-        categoryFilter={categoryFilter}
         activeCount={activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length}
         onImportFromExcel={(tab) => {
           if (tab === 'finishes') {
@@ -428,17 +427,16 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         onDeleteAll={openDeleteAllModal}
         onActiveTabChange={setActiveTab}
         onViewModeChange={setViewMode}
-        onCategoryFilterChange={setCategoryFilter}
       />
       <MaterialsToolbarActions
         activeTab={activeTab}
-        filteredFinishes={filteredFinishes}
-        filteredMaterials={filteredMaterials}
         query={query}
         showForm={showForm}
+        categoryFilter={categoryFilter}
         onQueryChange={setQuery}
         onCreateFinish={openCreateFinishForm}
         onCreateMaterial={openCreateMaterialForm}
+        onCategoryFilterChange={setCategoryFilter}
       />
 
       {activeTab === 'finishes' ? (
@@ -615,25 +613,21 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
 function MaterialsToolbarLeft({
   activeTab,
   viewMode,
-  categoryFilter,
   activeCount,
   onImportFromExcel,
   onExport,
   onDeleteAll,
   onActiveTabChange,
   onViewModeChange,
-  onCategoryFilterChange,
 }: {
   activeTab: LibraryTab;
   viewMode: 'grid' | 'table';
-  categoryFilter: CategoryFilter;
   activeCount: number;
   onImportFromExcel: (tab: LibraryTab) => void;
   onExport: (tab: LibraryTab, format: 'csv' | 'xlsx' | 'pdf') => void;
   onDeleteAll: (tab: LibraryTab) => void;
   onActiveTabChange: (value: LibraryTab) => void;
   onViewModeChange: (value: 'grid' | 'table') => void;
-  onCategoryFilterChange: (value: CategoryFilter) => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const exportMenu = useActionsMenu();
@@ -656,89 +650,95 @@ function MaterialsToolbarLeft({
 
   return createPortal(
     <>
-      <DropdownMenu
-        wrapperClassName="relative inline-flex"
-        panelClassName="z-[120] min-w-52"
-        positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
-        renderTrigger={({ triggerRef, open, toggleMenu }) => (
-          <Button
-            ref={triggerRef}
-            type="button"
-            variant="toolbar"
-            aria-haspopup="menu"
-            aria-expanded={open}
-            className="project-sidebar-control justify-between"
-            onClick={(event) => {
-              setOptionsTriggerElement(event.currentTarget);
-              if (exportMenu.open) exportMenu.closeMenu();
-              toggleMenu();
-            }}
-          >
-            <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
-            Options
-            <ChevronDown className="toolbar-icon" aria-hidden="true" />
-          </Button>
-        )}
-      >
-        {({ closeMenu }) => (
-          <>
-            <div className="px-2.5 py-2">
-              <p className="toolbar-label pb-1">View</p>
-              <SegmentedControl
-                value={viewMode}
-                onChange={onViewModeChange}
-                ariaLabel="Materials view mode"
-                variant="toolbar"
-                className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
-              >
-                <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
-                <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
-              </SegmentedControl>
-            </div>
-            <MenuSeparator />
-            <MenuItem
-              className="px-3 py-2"
-              onClick={() => {
-                closeMenu();
-                onImportFromExcel(activeTab);
-              }}
-            >
-              Import from Excel
-            </MenuItem>
-            <MenuItem
-              className={
-                activeCount === 0
-                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                  : 'px-3 py-2'
-              }
-              disabled={activeCount === 0}
+      <div className="flex w-full items-center gap-2">
+        <DropdownMenu
+          wrapperClassName="relative inline-flex"
+          panelClassName="z-[120] min-w-52"
+          positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
+          renderTrigger={({ triggerRef, open, toggleMenu }) => (
+            <Button
+              ref={triggerRef}
+              type="button"
+              variant="toolbar"
               aria-haspopup="menu"
-              onClick={() => {
-                closeMenu();
-                if (activeCount === 0 || !optionsTriggerElement) return;
-                exportMenu.triggerRef.current = optionsTriggerElement;
-                exportMenu.openMenu();
+              aria-expanded={open}
+              aria-label="Options"
+              title="Options"
+              className="project-sidebar-control !w-auto justify-center px-2"
+              onClick={(event) => {
+                setOptionsTriggerElement(event.currentTarget);
+                if (exportMenu.open) exportMenu.closeMenu();
+                toggleMenu();
               }}
             >
-              Export
-            </MenuItem>
-            <MenuItem
-              disabled={activeCount === 0}
-              className={
-                activeCount === 0
-                  ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                  : 'px-3 py-2 text-danger-600 hover:bg-danger-50 hover:text-danger-700'
-              }
-              onClick={() => {
-                closeMenu();
-                onDeleteAll(activeTab);
-              }}
-            >
-              Delete All
-            </MenuItem>
-          </>
-        )}
-      </DropdownMenu>
+              <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
+            </Button>
+          )}
+        >
+          {({ closeMenu }) => (
+            <>
+              <div className="px-2.5 py-2">
+                <p className="toolbar-label pb-1">View</p>
+                <SegmentedControl
+                  value={viewMode}
+                  onChange={onViewModeChange}
+                  ariaLabel="Materials view mode"
+                  variant="toolbar"
+                  className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
+                >
+                  <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
+                  <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
+                </SegmentedControl>
+              </div>
+              <MenuSeparator />
+              <MenuItem
+                className="px-3 py-2"
+                onClick={() => {
+                  closeMenu();
+                  onImportFromExcel(activeTab);
+                }}
+              >
+                Import from Excel
+              </MenuItem>
+              <MenuItem
+                className={
+                  activeCount === 0
+                    ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                    : 'px-3 py-2'
+                }
+                disabled={activeCount === 0}
+                aria-haspopup="menu"
+                onClick={() => {
+                  closeMenu();
+                  if (activeCount === 0 || !optionsTriggerElement) return;
+                  exportMenu.triggerRef.current = optionsTriggerElement;
+                  exportMenu.openMenu();
+                }}
+              >
+                Export
+              </MenuItem>
+              <MenuItem
+                disabled={activeCount === 0}
+                className={
+                  activeCount === 0
+                    ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
+                    : 'px-3 py-2 text-danger-600 hover:bg-danger-50 hover:text-danger-700'
+                }
+                onClick={() => {
+                  closeMenu();
+                  onDeleteAll(activeTab);
+                }}
+              >
+                Delete All
+              </MenuItem>
+            </>
+          )}
+        </DropdownMenu>
+        <span className="toolbar-stat ml-auto">
+          <span className="num text-neutral-950">{activeCount}</span>
+          <span className="text-neutral-500">{activeCount === 1 ? 'item' : 'items'}</span>
+        </span>
+      </div>
       <SegmentedControl
         value={activeTab}
         onChange={onActiveTabChange}
@@ -746,23 +746,9 @@ function MaterialsToolbarLeft({
         variant="toolbar"
         className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
       >
-        <SegmentedControl.Option value="finishes">Finish Library</SegmentedControl.Option>
-        <SegmentedControl.Option value="materials">Project Materials</SegmentedControl.Option>
+        <SegmentedControl.Option value="finishes">Finishes</SegmentedControl.Option>
+        <SegmentedControl.Option value="materials">Materials</SegmentedControl.Option>
       </SegmentedControl>
-      {activeTab === 'finishes' && (
-        <select
-          value={categoryFilter}
-          onChange={(e) => onCategoryFilterChange(e.target.value as CategoryFilter)}
-          className="toolbar-select w-full"
-          aria-label="Filter by category"
-        >
-          {FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      )}
       {exportMenu.open &&
         exportMenuPosition &&
         createPortal(
@@ -826,22 +812,22 @@ function MaterialsToolbarLeft({
 
 function MaterialsToolbarActions({
   activeTab,
-  filteredFinishes,
-  filteredMaterials,
   query,
   showForm,
+  categoryFilter,
   onQueryChange,
   onCreateFinish,
   onCreateMaterial,
+  onCategoryFilterChange,
 }: {
   activeTab: LibraryTab;
-  filteredFinishes: Finish[];
-  filteredMaterials: Material[];
   query: string;
   showForm: boolean;
+  categoryFilter: CategoryFilter;
   onQueryChange: (value: string) => void;
   onCreateFinish: () => void;
   onCreateMaterial: () => void;
+  onCategoryFilterChange: (value: CategoryFilter) => void;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
 
@@ -852,22 +838,8 @@ function MaterialsToolbarActions({
 
   if (!slot) return null;
 
-  const count = activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length;
-  const itemLabel = count === 1 ? 'item' : 'items';
-
   return createPortal(
     <div className="project-sidebar-slot">
-      <span className="toolbar-stat">
-        <span className="num text-neutral-950">{count}</span>
-        <span className="text-neutral-500">{itemLabel}</span>
-      </span>
-      <input
-        value={query}
-        onChange={(event) => onQueryChange(event.target.value)}
-        placeholder={activeTab === 'finishes' ? 'Search finishes' : 'Search materials'}
-        className="toolbar-input w-full"
-        aria-label={activeTab === 'finishes' ? 'Search finishes' : 'Search project materials'}
-      />
       {!showForm && (
         <Button
           type="button"
@@ -878,6 +850,27 @@ function MaterialsToolbarActions({
           <Plus className="toolbar-icon" aria-hidden="true" />
           {activeTab === 'finishes' ? 'New finish' : 'New material'}
         </Button>
+      )}
+      <input
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
+        placeholder={activeTab === 'finishes' ? 'Search finishes' : 'Search materials'}
+        className="toolbar-input w-full"
+        aria-label={activeTab === 'finishes' ? 'Search finishes' : 'Search project materials'}
+      />
+      {activeTab === 'finishes' && (
+        <select
+          value={categoryFilter}
+          onChange={(event) => onCategoryFilterChange(event.target.value as CategoryFilter)}
+          className="toolbar-select w-full"
+          aria-label="Filter by category"
+        >
+          {FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       )}
     </div>,
     slot,

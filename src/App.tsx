@@ -30,7 +30,11 @@ import { ImportProposalExcelModal } from './components/proposal/import/ImportPro
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
-import { FfeActions, ProposalActions } from './components/project/AppBarActions';
+import {
+  FfeActions,
+  ProposalActions,
+  ProposalRevisionChip,
+} from './components/project/AppBarActions';
 import { Button } from './components/primitives';
 import { recordSession } from './lib/utils';
 import {
@@ -53,7 +57,12 @@ import { DashboardPage } from './pages/DashboardPage';
 import { CompanyProfilePage } from './pages/CompanyProfilePage';
 import { PlanCanvasPage } from './pages/PlanCanvasPage';
 import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
-import { PlansPage, PLANS_ACTIONS_SLOT_ID, PLANS_FILTER_SLOT_ID } from './pages/PlansPage';
+import {
+  PlansPage,
+  PLANS_ACTIONS_SLOT_ID,
+  PLANS_FILTER_SLOT_ID,
+  PLANS_SUMMARY_SLOT_ID,
+} from './pages/PlansPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
 
 type ProjectContext = {
@@ -206,6 +215,15 @@ function ProjectLayout() {
       <div id={MATERIALS_FILTER_SLOT_ID} className="project-sidebar-slot" />
     ) : null;
 
+  const sidebarHeader =
+    !isLoading && project ? (
+      isProposalRoute ? (
+        <ProposalRevisionChip project={project} />
+      ) : isPlansRoute ? (
+        <div id={PLANS_SUMMARY_SLOT_ID} className="min-w-0" />
+      ) : null
+    ) : null;
+
   return (
     <main
       className={[
@@ -250,9 +268,12 @@ function ProjectLayout() {
                 projectId={project.id}
                 showViewToggle={isFfeRoute}
                 isCatalogRoute={isCatalogRoute}
+                header={sidebarHeader}
                 toolbarLeft={sidebarToolbarLeft}
                 toolbarCenter={sidebarToolbarCenter}
                 actions={sidebarActions}
+                filtersLabel={isMaterialsRoute ? '' : 'Filters'}
+                actionsLabel={isMaterialsRoute || isBudgetRoute ? '' : 'Actions'}
               />
             ) : null}
             <div className="min-h-0 min-w-0 flex-1">
@@ -339,20 +360,26 @@ function ProjectTabToolbarSidebar({
   projectId,
   showViewToggle,
   isCatalogRoute,
+  header,
   toolbarLeft,
   toolbarCenter,
   actions,
+  filtersLabel,
+  actionsLabel,
 }: {
   projectId: string;
   showViewToggle: boolean;
   isCatalogRoute: boolean;
+  header?: ReactNode;
   toolbarLeft: ReactNode;
   toolbarCenter: ReactNode;
   actions: ReactNode;
+  filtersLabel?: string;
+  actionsLabel?: string;
 }) {
-  if (!showViewToggle && !toolbarLeft && !toolbarCenter && !actions) return null;
+  if (!showViewToggle && !header && !toolbarLeft && !toolbarCenter && !actions) return null;
 
-  const sidebarSections: Array<{ key: string; label: string; content: ReactNode }> = [];
+  const sidebarSections: Array<{ key: string; label?: string; content: ReactNode }> = [];
 
   if (showViewToggle) {
     sidebarSections.push({
@@ -382,7 +409,7 @@ function ProjectTabToolbarSidebar({
   if (toolbarLeft) {
     sidebarSections.push({
       key: 'contextual-filters',
-      label: 'Filters',
+      label: filtersLabel ?? 'Filters',
       content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
     });
   }
@@ -398,7 +425,7 @@ function ProjectTabToolbarSidebar({
   if (actions) {
     sidebarSections.push({
       key: 'actions',
-      label: 'Actions',
+      label: actionsLabel ?? 'Actions',
       content: <div className="project-sidebar-slot">{actions}</div>,
     });
   }
@@ -406,9 +433,10 @@ function ProjectTabToolbarSidebar({
   return (
     <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:w-60 lg:border-b-0 lg:border-r lg:border-r-neutral-200">
       <div className="space-y-3 overflow-x-hidden p-3 md:p-4">
+        {header ? <div className="project-sidebar-section min-w-0">{header}</div> : null}
         {sidebarSections.map((section) => (
           <section key={section.key} className="project-sidebar-section">
-            <p className="project-sidebar-title">{section.label}</p>
+            {section.label ? <p className="project-sidebar-title">{section.label}</p> : null}
             <div className="min-w-0 pt-0.5">{section.content}</div>
           </section>
         ))}

@@ -15,6 +15,7 @@ type PlansPageProps = {
 
 export const PLANS_ACTIONS_SLOT_ID = 'plans-actions-slot';
 export const PLANS_FILTER_SLOT_ID = 'plans-filter-slot';
+export const PLANS_SUMMARY_SLOT_ID = 'plans-summary-slot';
 
 type FilterId = 'all' | 'calibrated' | 'uncalibrated';
 type SortId = 'added' | 'name' | 'measurements';
@@ -74,15 +75,11 @@ export function PlansPage({ project }: PlansPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl py-4">
+      <PlansSummaryBar planCount={planCount} calibratedCount={calibratedCount} />
+
       <PlansFilterBar filter={filter} onFilterChange={setFilter} />
 
-      <PlansActionsBar
-        planCount={planCount}
-        calibratedCount={calibratedCount}
-        sort={sort}
-        onSortChange={setSort}
-        onUpload={() => setUploadOpen(true)}
-      />
+      <PlansActionsBar sort={sort} onSortChange={setSort} onUpload={() => setUploadOpen(true)} />
 
       <PlanUploadModal
         open={uploadOpen}
@@ -190,14 +187,10 @@ function EmptyState({ title, description, actionLabel, onAction }: EmptyStatePro
 }
 
 function PlansActionsBar({
-  planCount,
-  calibratedCount,
   sort,
   onSortChange,
   onUpload,
 }: {
-  planCount: number;
-  calibratedCount: number;
   sort: SortId;
   onSortChange: (value: SortId) => void;
   onUpload: () => void;
@@ -213,14 +206,6 @@ function PlansActionsBar({
 
   return createPortal(
     <div className="project-sidebar-slot">
-      <span className="toolbar-stat">
-        <span className="num text-neutral-950">{planCount}</span>
-        <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
-      </span>
-      <span className="toolbar-stat toolbar-stat--success">
-        <span className="num">{calibratedCount}</span>
-        <span>calibrated</span>
-      </span>
       <label className="toolbar-label flex w-full flex-col items-start gap-1">
         <span>Sort</span>
         <select
@@ -245,6 +230,36 @@ function PlansActionsBar({
         <Upload className="toolbar-icon" aria-hidden="true" />
         Upload plan
       </Button>
+    </div>,
+    slot,
+  );
+}
+
+function PlansSummaryBar({
+  planCount,
+  calibratedCount,
+}: {
+  planCount: number;
+  calibratedCount: number;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setSlot(document.getElementById(PLANS_SUMMARY_SLOT_ID));
+  }, []);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <div className="flex w-full items-center gap-1.5">
+      <span className="toolbar-stat flex-1 justify-center !px-2 !py-0.5 text-[10px]">
+        <span className="num text-neutral-950">{planCount}</span>
+        <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
+      </span>
+      <span className="toolbar-stat toolbar-stat--success flex-1 justify-center !px-2 !py-0.5 text-[10px]">
+        <span className="num">{calibratedCount}</span>
+        <span>calibrated</span>
+      </span>
     </div>,
     slot,
   );

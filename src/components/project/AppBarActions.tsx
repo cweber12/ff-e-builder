@@ -65,8 +65,6 @@ export function FfeActions({
         Add room
       </Button>
 
-      <FfeSortToggle projectId={project.id} layout={layout} />
-
       <Button
         type="button"
         variant="toolbar"
@@ -115,6 +113,15 @@ export function FfeActions({
         tableKey="ffe"
         {...(isColumn ? { buttonClassName: 'project-sidebar-control justify-start' } : {})}
       />
+
+      {isColumn ? (
+        <div className="mt-1 w-full">
+          <p className="toolbar-label mb-1 block">Sort rows</p>
+          <FfeSortToggle projectId={project.id} layout="row" />
+        </div>
+      ) : (
+        <FfeSortToggle projectId={project.id} layout="row" />
+      )}
     </div>
   );
 }
@@ -300,6 +307,39 @@ export function ProposalActions({
             : {})}
         />
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Proposal revision summary — compact chip for the top of the sidebar
+// ---------------------------------------------------------------------------
+export function ProposalRevisionChip({ project }: { project: Project }) {
+  const { data: revisions = [] } = useProposalRevisions(project.id);
+  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
+
+  const openRev = revisions.find((r) => r.closedAt === null) ?? null;
+  if (!openRev) return null;
+
+  const revSnapshots = snapshots.filter((s) => s.revisionId === openRev.id);
+  const flagged = revSnapshots.filter((s) => s.costStatus === 'flagged').length;
+  const resolved = revSnapshots.filter((s) => s.costStatus === 'resolved').length;
+
+  return (
+    <div className="flex w-full flex-col gap-1 rounded-sm bg-brand-50/60 px-2.5 py-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-900">
+        {openRev.label}
+      </span>
+      <span className="flex items-center gap-3 text-[10px] font-medium text-neutral-700">
+        <span className="inline-flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-warning-500" aria-hidden="true" />
+          {flagged} flagged
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden="true" />
+          {resolved} resolved
+        </span>
+      </span>
     </div>
   );
 }
