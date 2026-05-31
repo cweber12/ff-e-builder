@@ -4,12 +4,11 @@ import { getPlanToolLabel, PLAN_TOOL_DEFINITIONS, PLAN_TOOL_GROUPS } from './pla
 import type { PlanToolGroupId } from './planToolDefinitions';
 import type {
   MeasurementApplicationMode,
-  MeasurementDisplay,
   MeasurementItemRef,
   PlanToolId,
   RectangleModeId,
 } from './types';
-import { Button, SegmentedControl } from '../../primitives';
+import { Button, LayoutSection, SegmentedControl } from '../../primitives';
 import type { LengthLine, Measurement, PlanCalibration, PlanMeasurementUnit } from '../../../types';
 import type { LineDraft, RectBounds } from '../../../lib/plans';
 import {
@@ -68,15 +67,15 @@ export type PlanInspectorProps = {
   selectedMeasurement: Measurement | null;
   selectedMeasurementItem: MeasurementItemRef | null;
   selectedMeasurementRect: RectBounds | null;
-  selectedMeasurementDisplay: MeasurementDisplay | null;
   selectedMeasurementTargetKey: string;
   onMeasurementTargetKeyChange: (value: string) => void;
   draftMeasurementWidthPlanUnits: number | null;
   draftMeasurementHeightPlanUnits: number | null;
-  canSaveMeasurement: boolean;
+  draftTargetKind: 'proposal' | 'ffe' | null;
+  canSaveAndApplyMeasurement: boolean;
   savingMeasurement: boolean;
   deletingMeasurement: boolean;
-  onSaveMeasurement: () => void;
+  onSaveAndApplyMeasurement: () => void;
   onClearMeasurementDraft: () => void;
   onSelectMeasurement: (measurementId: string, item: MeasurementItemRef | null) => void;
   onClearMeasurementSelection: () => void;
@@ -96,8 +95,6 @@ export type PlanInspectorProps = {
   onClearSavedCrop: () => void;
   measurementApplicationMode: MeasurementApplicationMode;
   onMeasurementApplicationModeChange: (mode: MeasurementApplicationMode) => void;
-  applyingMeasurement: boolean;
-  onApplyMeasurement: () => void;
   rectangleMode: RectangleModeId;
   onRectangleModeChange: (mode: RectangleModeId) => void;
   onSetHighlight: () => void;
@@ -160,15 +157,15 @@ export function PlanInspector({
   selectedMeasurement,
   selectedMeasurementItem,
   selectedMeasurementRect,
-  selectedMeasurementDisplay,
   selectedMeasurementTargetKey,
   onMeasurementTargetKeyChange,
   draftMeasurementWidthPlanUnits,
   draftMeasurementHeightPlanUnits,
-  canSaveMeasurement,
+  draftTargetKind,
+  canSaveAndApplyMeasurement,
   savingMeasurement,
   deletingMeasurement,
-  onSaveMeasurement,
+  onSaveAndApplyMeasurement,
   onClearMeasurementDraft,
   onSelectMeasurement,
   onClearMeasurementSelection,
@@ -188,8 +185,6 @@ export function PlanInspector({
   onClearSavedCrop,
   measurementApplicationMode,
   onMeasurementApplicationModeChange,
-  applyingMeasurement,
-  onApplyMeasurement,
   rectangleMode,
   onRectangleModeChange,
   onSetHighlight,
@@ -583,6 +578,17 @@ export function PlanInspector({
                         }
                       />
 
+                      {rectangleMode === 'measure' && draftTargetKind ? (
+                        <MeasurementApplyModePicker
+                          targetKind={draftTargetKind}
+                          mode={measurementApplicationMode}
+                          onChange={onMeasurementApplicationModeChange}
+                          unit={calibration?.unit ?? 'ft'}
+                          widthPlanUnits={draftMeasurementWidthPlanUnits}
+                          heightPlanUnits={draftMeasurementHeightPlanUnits}
+                        />
+                      ) : null}
+
                       {rectangleMode === 'measure' ? (
                         <div className="space-y-2 rounded-lg border border-neutral-200 bg-white/80 px-3 py-2">
                           {measurementItems.length === 0 ? (
@@ -636,16 +642,10 @@ export function PlanInspector({
                               type="button"
                               variant="primary"
                               size="sm"
-                              onClick={onSaveMeasurement}
-                              disabled={!canSaveMeasurement}
+                              onClick={onSaveAndApplyMeasurement}
+                              disabled={!canSaveAndApplyMeasurement}
                             >
-                              {savingMeasurement ? (
-                                <>Saving&hellip;</>
-                              ) : selectedMeasurement ? (
-                                'Update measurement'
-                              ) : (
-                                'Save measurement'
-                              )}
+                              {savingMeasurement ? <>Saving&hellip;</> : 'Save & apply to item'}
                             </Button>
                             <Button
                               type="button"
@@ -833,16 +833,42 @@ export function PlanInspector({
 
                   {selectedMeasurement ? (
                     <div className="mt-3 space-y-3">
-                      <section className="rounded-xl border border-neutral-200 bg-white/80 p-3">
+                      <div className="rounded-xl border border-neutral-200 bg-white/80 px-3 py-2">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="eyebrow">Measured area</span>
+                          <span className="eyebrow">Applied to item</span>
                           {selectedMeasurementItem ? (
                             <span className="num-muted truncate text-[11px]">
                               {selectedMeasurementItem.primaryLabel}
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-xs text-neutral-600">
+                        {calibration ? (
+                          <p className="mt-1 text-sm tabular-nums text-neutral-900">
+                            {formatPlanLength(
+                              convertBaseToPlanUnits(
+                                selectedMeasurement.horizontalSpanBase,
+                                calibration.unit,
+                              ),
+                              calibration.unit,
+                            )}{' '}
+                            ×{' '}
+                            {formatPlanLength(
+                              convertBaseToPlanUnits(
+                                selectedMeasurement.verticalSpanBase,
+                                calibration.unit,
+                              ),
+                              calibration.unit,
+                            )}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <LayoutSection
+                        id="measured-area-manage"
+                        label="Measured area"
+                        defaultOpen={false}
+                      >
+                        <p className="text-xs text-neutral-600">
                           Keep this measurement, or remove it if you want to redraw.
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -864,93 +890,10 @@ export function PlanInspector({
                             {deletingMeasurement ? <>Removing&hellip;</> : 'Remove measurement'}
                           </Button>
                         </div>
-                      </section>
+                      </LayoutSection>
 
-                      {selectedMeasurementItem &&
-                      selectedMeasurementDisplay &&
-                      rectangleMode !== 'highlight' ? (
-                        <section className="rounded-xl border border-neutral-200 bg-white/80 p-3">
-                          <div className="flex items-baseline justify-between gap-2">
-                            <span className="eyebrow">Apply measurement</span>
-                            <span className="num-muted truncate text-[11px]">
-                              {selectedMeasurementItem.primaryLabel}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-neutral-600">
-                            Choose how to write this measured value to the linked item.
-                          </p>
-                          <label className="mt-2 block">
-                            <span className="sr-only">Apply measurement</span>
-                            <select
-                              aria-label="Apply measurement"
-                              value={measurementApplicationMode}
-                              onChange={(event) =>
-                                onMeasurementApplicationModeChange(
-                                  event.target.value as MeasurementApplicationMode,
-                                )
-                              }
-                              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-                            >
-                              {selectedMeasurementItem.targetKind === 'proposal' ? (
-                                <>
-                                  <option value="proposal-area">
-                                    Use area ({formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
-                                    {formatAreaUnit(calibration?.unit ?? 'ft')})
-                                  </option>
-                                  <option value="proposal-horizontal">
-                                    Use horizontal (
-                                    {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
-                                    {calibration?.unit ?? 'ft'})
-                                  </option>
-                                  <option value="proposal-vertical">
-                                    Use vertical (
-                                    {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
-                                    {calibration?.unit ?? 'ft'})
-                                  </option>
-                                  <option value="proposal-footprint">
-                                    Record as footprint (
-                                    {formatPlanLength(
-                                      selectedMeasurementDisplay.horizontal,
-                                      calibration?.unit ?? 'ft',
-                                    )}{' '}
-                                    ×{' '}
-                                    {formatPlanLength(
-                                      selectedMeasurementDisplay.vertical,
-                                      calibration?.unit ?? 'ft',
-                                    )}
-                                    )
-                                  </option>
-                                </>
-                              ) : (
-                                <option value="ffe-dimensions">
-                                  Update dimensions ({selectedMeasurementDisplay.dimensionsText})
-                                </option>
-                              )}
-                              <option value="reference-only">Reference only</option>
-                            </select>
-                          </label>
-                          <Button
-                            type="button"
-                            variant="primary"
-                            size="sm"
-                            className="mt-2 w-full"
-                            onClick={onApplyMeasurement}
-                            disabled={
-                              applyingMeasurement || measurementApplicationMode === 'reference-only'
-                            }
-                          >
-                            {applyingMeasurement ? (
-                              <>&hellip;Applying</>
-                            ) : (
-                              'Apply measurement to item'
-                            )}
-                          </Button>
-                        </section>
-                      ) : null}
-
-                      <section className="rounded-xl border border-neutral-200 bg-white/80 p-3">
-                        <span className="eyebrow">Plan image</span>
-                        <p className="mt-1 text-xs text-neutral-600">
+                      <LayoutSection id="plan-image" label="Plan image" defaultOpen={false}>
+                        <p className="text-xs text-neutral-600">
                           Open the crop editor to frame and publish the plan image for this item.
                         </p>
                         <Button
@@ -965,7 +908,7 @@ export function PlanInspector({
                         >
                           Open crop editor
                         </Button>
-                      </section>
+                      </LayoutSection>
                     </div>
                   ) : null}
                 </div>
@@ -992,80 +935,61 @@ export function PlanInspector({
             </div>
           </section>
         ) : null}
-
-        {activeTool === 'crop' &&
-        selectedMeasurement &&
-        selectedMeasurementItem &&
-        selectedMeasurementDisplay &&
-        rectangleMode !== 'highlight' ? (
-          <div className="action-bar space-y-2.5">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="eyebrow">Apply measurement</span>
-              <span className="num-muted truncate text-[11px]">
-                {selectedMeasurementItem.primaryLabel}
-              </span>
-            </div>
-            <label className="block">
-              <span className="sr-only">Apply measurement</span>
-              <select
-                aria-label="Apply measurement"
-                value={measurementApplicationMode}
-                onChange={(event) =>
-                  onMeasurementApplicationModeChange(
-                    event.target.value as MeasurementApplicationMode,
-                  )
-                }
-                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-              >
-                {selectedMeasurementItem.targetKind === 'proposal' ? (
-                  <>
-                    <option value="proposal-area">
-                      Use area - {formatDisplayNumber(selectedMeasurementDisplay.area)}{' '}
-                      {formatAreaUnit(calibration?.unit ?? 'ft')}
-                    </option>
-                    <option value="proposal-horizontal">
-                      Use horizontal - {formatDisplayNumber(selectedMeasurementDisplay.horizontal)}{' '}
-                      {calibration?.unit ?? 'ft'}
-                    </option>
-                    <option value="proposal-vertical">
-                      Use vertical - {formatDisplayNumber(selectedMeasurementDisplay.vertical)}{' '}
-                      {calibration?.unit ?? 'ft'}
-                    </option>
-                    <option value="proposal-footprint">
-                      Record as footprint -{' '}
-                      {formatPlanLength(
-                        selectedMeasurementDisplay.horizontal,
-                        calibration?.unit ?? 'ft',
-                      )}{' '}
-                      ×{' '}
-                      {formatPlanLength(
-                        selectedMeasurementDisplay.vertical,
-                        calibration?.unit ?? 'ft',
-                      )}
-                    </option>
-                  </>
-                ) : (
-                  <option value="ffe-dimensions">
-                    Update dimensions - {selectedMeasurementDisplay.dimensionsText}
-                  </option>
-                )}
-                <option value="reference-only">Reference only</option>
-              </select>
-            </label>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              className="w-full"
-              onClick={onApplyMeasurement}
-              disabled={applyingMeasurement || measurementApplicationMode === 'reference-only'}
-            >
-              {applyingMeasurement ? <>Applying&hellip;</> : 'Apply measurement to item'}
-            </Button>
-          </div>
-        ) : null}
       </div>
     </aside>
+  );
+}
+
+function MeasurementApplyModePicker({
+  targetKind,
+  mode,
+  onChange,
+  unit,
+  widthPlanUnits,
+  heightPlanUnits,
+}: {
+  targetKind: 'proposal' | 'ffe';
+  mode: MeasurementApplicationMode;
+  onChange: (mode: MeasurementApplicationMode) => void;
+  unit: PlanMeasurementUnit;
+  widthPlanUnits: number | null;
+  heightPlanUnits: number | null;
+}) {
+  const hasDims = widthPlanUnits !== null && heightPlanUnits !== null;
+  const areaLabel = hasDims
+    ? `${formatDisplayNumber(widthPlanUnits * heightPlanUnits)} ${formatAreaUnit(unit)}`
+    : '';
+  const widthLabel = widthPlanUnits !== null ? formatPlanLength(widthPlanUnits, unit) : '';
+  const depthLabel = heightPlanUnits !== null ? formatPlanLength(heightPlanUnits, unit) : '';
+  const dimsLabel = hasDims
+    ? `${formatPlanLength(widthPlanUnits, unit)} × ${formatPlanLength(heightPlanUnits, unit)}`
+    : '';
+
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        Apply to item as
+      </span>
+      <select
+        aria-label="Apply measurement as"
+        value={mode}
+        onChange={(event) => onChange(event.target.value as MeasurementApplicationMode)}
+        className="input-base shadow-sm"
+      >
+        {targetKind === 'proposal' ? (
+          <>
+            <option value="proposal-area">Area{areaLabel ? ` · ${areaLabel}` : ''}</option>
+            <option value="proposal-horizontal">Width{widthLabel ? ` · ${widthLabel}` : ''}</option>
+            <option value="proposal-vertical">Depth{depthLabel ? ` · ${depthLabel}` : ''}</option>
+            <option value="proposal-footprint">
+              Footprint{dimsLabel ? ` · ${dimsLabel}` : ''}
+            </option>
+          </>
+        ) : (
+          <option value="ffe-dimensions">Dimensions{dimsLabel ? ` · ${dimsLabel}` : ''}</option>
+        )}
+      </select>
+    </label>
   );
 }
 

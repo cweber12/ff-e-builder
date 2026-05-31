@@ -177,18 +177,37 @@ This links the rectangle to the item on the plan. The proposal item is **not upd
    - Calls `restorePlanColumn()` to ensure the plan image column is visible in the proposal table
    - **Dual-write:** if `MeasurementItemRef.linkedFfeItemId` is set, the same PNG is also uploaded as `entity_type: 'item_plan'` for the linked FFE item
 
-#### Stage 2b — Apply to item (optional)
+#### Stage 2b — Save + apply (single action)
 
-1. With measurement selected, choose application mode in inspector:
-   - `proposal-horizontal` → `quantity = horizontal span in ft`, `quantityUnit = 'ln ft'`
-   - `proposal-vertical` → `quantity = vertical span in ft`, `quantityUnit = 'ln ft'`
-   - `proposal-area` → `quantity = Math.round(hFt * vFt)`, `quantityUnit = 'sq ft'`
-2. Click **Apply to item**
-3. If `project.proposalStatus !== 'in_progress'`, `ChangeConfirmModal` prompts for change log metadata before proceeding
-4. `api.proposal.updateItem(targetItemId, { quantity, quantityUnit, version, changeLog })`
-5. `proposalKeys.items(containerId)` cache updated
+Saving a measurement and writing its value to the linked item is **one step**. In the draft
+panel (rectangle / `measure` mode) the user picks the target item, picks how to apply, then
+clicks **Save & apply to item**. The application-mode picker defaults to the target's kind
+(`proposal-area` for proposal items, `ffe-dimensions` for FF&E items).
 
-In rectangle mode, post-save measurement actions are grouped in this order: **Measured area** (selection/remove), **Apply measurement** (mode + apply), then **Plan image** (open crop editor). The labels use explicit verbs (for example, _Apply measurement to item_ and _Open crop editor_) to reduce ambiguity.
+Apply modes:
+
+- `proposal-horizontal` → `quantity = horizontal span in ft`, `quantityUnit = 'ln ft'`
+- `proposal-vertical` → `quantity = vertical span in ft`, `quantityUnit = 'ln ft'`
+- `proposal-area` → `quantity = Math.round(hFt * vFt)`, `quantityUnit = 'sq ft'`
+- `proposal-footprint` → writes footprint W × D fields directly (no `quantity`, no change log, not price-affecting)
+- `ffe-dimensions` → writes the FF&E `dimensions` string
+
+Flow (`handleSaveAndApplyMeasurement` → `persistMeasurement()` then `applyMeasurementValue()`):
+
+1. `persistMeasurement()` upserts the `Measurement` row (geometry + base spans)
+2. `applyMeasurementValue()` writes the chosen value to the item, computed from the **draft**
+   values (not the persisted record — the derived `selectedMeasurement*` state lags one tick)
+3. For proposal quantity modes, if `project.proposalStatus !== 'in_progress'`, `ChangeConfirmModal`
+   prompts for change-log metadata before `executeApplyMeasurement` runs
+4. `api.proposal.updateItem(...)` / `api.items.update(...)` then the matching query cache update
+
+If the target item already has a measurement, a **Replace existing measurement?** `ConfirmDialog`
+fires first; on confirm it runs persist + apply via a stored `pendingSaveAndApply` payload.
+
+Once a measurement is selected, the inspector shows a compact summary plus two collapsed
+`LayoutSection` accordions — **Measured area** (clear/remove) and **Plan image** (open crop
+editor). There is no separate apply step on a selected measurement; changing the applied value
+means re-drawing.
 
 **Note:** Application mode is transient UI state — it is not stored on the `Measurement` row.
 
@@ -290,10 +309,11 @@ Dropdown for picking measurement target. Shows hierarchy: Category → Item. Bui
 type PlanToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
 type RectangleModeId = 'measure' | 'highlight';
 type MeasurementApplicationMode =
-  | 'reference-only' // view-only; no item update
   | 'proposal-horizontal' // horizontal span → quantity (ln ft)
   | 'proposal-vertical' // vertical span → quantity (ln ft)
-  | 'proposal-area'; // area → quantity (sq ft)
+  | 'proposal-area' // area → quantity (sq ft)
+  | 'proposal-footprint' // W × D → footprint fields (no quantity, not price-affecting)
+  | 'ffe-dimensions'; // W × D → FF&E dimensions string
 
 type MeasurementItemRef = {
   key: string; // "proposal:{id}"

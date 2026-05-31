@@ -5,7 +5,6 @@ export type PlanToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
 export type RectangleModeId = 'measure' | 'highlight';
 
 export type MeasurementApplicationMode =
-  | 'reference-only'
   | 'proposal-horizontal'
   | 'proposal-vertical'
   | 'proposal-area'

@@ -152,24 +152,15 @@ function buildProps(overrides: Partial<PlanInspectorProps> = {}): PlanInspectorP
           height: selectedMeasurement.rectHeight,
         }
       : null,
-    selectedMeasurementDisplay: selectedMeasurement
-      ? {
-          horizontal: selectedMeasurement.horizontalSpanBase / 304.8,
-          vertical: selectedMeasurement.verticalSpanBase / 304.8,
-          area:
-            (selectedMeasurement.horizontalSpanBase / 304.8) *
-            (selectedMeasurement.verticalSpanBase / 304.8),
-          dimensionsText: 'Measured from plan: 12 ft x 9 ft',
-        }
-      : null,
     selectedMeasurementTargetKey: selectedMeasurementItem?.key ?? '',
     onMeasurementTargetKeyChange: vi.fn(),
     draftMeasurementWidthPlanUnits: null,
     draftMeasurementHeightPlanUnits: null,
-    canSaveMeasurement: false,
+    draftTargetKind: selectedMeasurementItem?.targetKind ?? null,
+    canSaveAndApplyMeasurement: false,
     savingMeasurement: false,
     deletingMeasurement: false,
-    onSaveMeasurement: vi.fn(),
+    onSaveAndApplyMeasurement: vi.fn(),
     onClearMeasurementDraft: vi.fn(),
     onSelectMeasurement: vi.fn(),
     onClearMeasurementSelection: vi.fn(),
@@ -190,8 +181,6 @@ function buildProps(overrides: Partial<PlanInspectorProps> = {}): PlanInspectorP
     measurementApplicationMode:
       selectedMeasurement?.targetKind === 'proposal' ? 'proposal-area' : 'ffe-dimensions',
     onMeasurementApplicationModeChange: vi.fn(),
-    applyingMeasurement: false,
-    onApplyMeasurement: vi.fn(),
     canOpenCreateItemPanel: false,
     onOpenCreateItemPanel: vi.fn(),
     creatingItemFromMeasurement: false,
@@ -234,25 +223,75 @@ describe('PlanInspector', () => {
     expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
   });
 
-  it('shows proposal measurement application options for proposal crops', () => {
+  it('shows proposal apply-mode options in the draft panel and reports changes', () => {
     const onMeasurementApplicationModeChange = vi.fn();
 
     render(
       <PlanInspector
         {...buildProps({
-          activeTool: 'crop',
-          selectedMeasurement: measurements[1]!,
+          activeTool: 'rectangle',
+          rectangleMode: 'measure',
+          normalizedMeasurementDraft: { x: 360, y: 180, width: 220, height: 160 },
+          draftMeasurementWidthPlanUnits: 8,
+          draftMeasurementHeightPlanUnits: 6,
+          draftTargetKind: 'proposal',
+          selectedMeasurementTargetKey: 'proposal:proposal-item-1',
+          measurementApplicationMode: 'proposal-area',
           onMeasurementApplicationModeChange,
         })}
       />,
     );
 
-    fireEvent.change(screen.getByRole('combobox', { name: /Apply measurement/i }), {
-      target: { value: 'proposal-horizontal' },
-    });
+    const picker = screen.getByRole('combobox', { name: /Apply measurement as/i });
+    expect(screen.getByRole('option', { name: /Area/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Footprint/i })).toBeInTheDocument();
 
-    expect(screen.getByRole('option', { name: /Use area/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
+    fireEvent.change(picker, { target: { value: 'proposal-horizontal' } });
     expect(onMeasurementApplicationModeChange).toHaveBeenCalledWith('proposal-horizontal');
+  });
+
+  it('offers a single Dimensions apply mode for FF&E draft targets', () => {
+    render(
+      <PlanInspector
+        {...buildProps({
+          activeTool: 'rectangle',
+          rectangleMode: 'measure',
+          normalizedMeasurementDraft: { x: 100, y: 120, width: 240, height: 180 },
+          draftMeasurementWidthPlanUnits: 12,
+          draftMeasurementHeightPlanUnits: 9,
+          draftTargetKind: 'ffe',
+          selectedMeasurementTargetKey: 'ffe:item-1',
+          measurementApplicationMode: 'ffe-dimensions',
+        })}
+      />,
+    );
+
+    const picker = screen.getByRole('combobox', { name: /Apply measurement as/i });
+    expect(picker).toHaveValue('ffe-dimensions');
+    expect(screen.getByRole('option', { name: /Dimensions/i })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Footprint/i })).not.toBeInTheDocument();
+  });
+
+  it('runs save and apply from a single draft button', () => {
+    const onSaveAndApplyMeasurement = vi.fn();
+
+    render(
+      <PlanInspector
+        {...buildProps({
+          activeTool: 'rectangle',
+          rectangleMode: 'measure',
+          normalizedMeasurementDraft: { x: 360, y: 180, width: 220, height: 160 },
+          draftMeasurementWidthPlanUnits: 8,
+          draftMeasurementHeightPlanUnits: 6,
+          draftTargetKind: 'proposal',
+          selectedMeasurementTargetKey: 'proposal:proposal-item-1',
+          canSaveAndApplyMeasurement: true,
+          onSaveAndApplyMeasurement,
+        })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save & apply to item' }));
+    expect(onSaveAndApplyMeasurement).toHaveBeenCalledTimes(1);
   });
 });
