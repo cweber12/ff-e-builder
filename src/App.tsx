@@ -180,15 +180,9 @@ function ProjectLayout() {
           layout="column"
         />
       ) : isMaterialsRoute ? (
-        <div
-          id={MATERIALS_ACTIONS_SLOT_ID}
-          className="flex min-w-0 flex-col items-start gap-2 [&>*]:!min-w-0 [&>*]:!max-w-full [&>*]:!self-start [&>*]:!text-left"
-        />
+        <div id={MATERIALS_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
       ) : isPlansRoute ? (
-        <div
-          id={PLANS_ACTIONS_SLOT_ID}
-          className="flex min-w-0 flex-col items-start gap-2 [&>*]:!min-w-0 [&>*]:!max-w-full [&>*]:!self-start [&>*]:!text-left"
-        />
+        <div id={PLANS_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
       ) : null
     ) : null;
 
@@ -196,7 +190,7 @@ function ProjectLayout() {
     !isLoading && isCatalogRoute ? (
       <div
         id={CATALOG_PICKER_SLOT_ID}
-        className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:min-w-0 [&>*]:w-full"
+        className="project-sidebar-slot project-sidebar-slot--stretch"
       />
     ) : null;
 
@@ -204,15 +198,12 @@ function ProjectLayout() {
     !isLoading && isPlansRoute ? (
       <div
         id={PLANS_FILTER_SLOT_ID}
-        className="toolbar-segmented !flex !flex-col !items-start"
+        className="toolbar-segmented project-sidebar-slot !flex !flex-col !items-start"
         role="tablist"
         aria-label="Filter plans"
       />
     ) : !isLoading && isMaterialsRoute ? (
-      <div
-        id={MATERIALS_FILTER_SLOT_ID}
-        className="flex min-w-0 flex-col items-start gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-      />
+      <div id={MATERIALS_FILTER_SLOT_ID} className="project-sidebar-slot" />
     ) : null;
 
   return (
@@ -368,18 +359,18 @@ function ProjectTabToolbarSidebar({
       key: 'view',
       label: 'View',
       content: (
-        <div className="flex min-w-0 flex-col gap-1">
+        <div className="project-sidebar-slot gap-1.5">
           <Link
             to={`/projects/${projectId}/ffe/catalog`}
             data-active={isCatalogRoute || undefined}
-            className="inline-flex h-9 min-w-0 items-center justify-start rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+            className="project-sidebar-link"
           >
             Catalog
           </Link>
           <Link
             to={`/projects/${projectId}/ffe/table`}
             data-active={!isCatalogRoute || undefined}
-            className="inline-flex h-9 min-w-0 items-center justify-start rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+            className="project-sidebar-link"
           >
             Table
           </Link>
@@ -392,7 +383,7 @@ function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'contextual-filters',
       label: 'Filters',
-      content: <div className="flex min-w-0 flex-col gap-2">{toolbarLeft}</div>,
+      content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
     });
   }
 
@@ -400,7 +391,7 @@ function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'contextual-tools',
       label: 'Tools',
-      content: <div className="flex min-w-0 flex-col gap-2">{toolbarCenter}</div>,
+      content: <div className="project-sidebar-slot">{toolbarCenter}</div>,
     });
   }
 
@@ -408,17 +399,17 @@ function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'actions',
       label: 'Actions',
-      content: <div className="flex min-w-0 flex-col gap-2">{actions}</div>,
+      content: <div className="project-sidebar-slot">{actions}</div>,
     });
   }
 
   return (
-    <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-chrome/40 lg:w-64 lg:border-b-0 lg:border-r">
-      <div className="space-y-5 overflow-x-hidden p-4 md:p-5">
+    <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:w-60 lg:border-b-0 lg:border-r lg:border-r-neutral-200">
+      <div className="space-y-3 overflow-x-hidden p-3 md:p-4">
         {sidebarSections.map((section) => (
-          <section key={section.key} className="min-w-0 space-y-2">
-            <p className="toolbar-label">{section.label}</p>
-            <div className="min-w-0">{section.content}</div>
+          <section key={section.key} className="project-sidebar-section">
+            <p className="project-sidebar-title">{section.label}</p>
+            <div className="min-w-0 pt-0.5">{section.content}</div>
           </section>
         ))}
       </div>

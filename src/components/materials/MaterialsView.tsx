@@ -667,7 +667,7 @@ function MaterialsToolbarLeft({
             variant="toolbar"
             aria-haspopup="menu"
             aria-expanded={open}
-            className="w-full justify-between"
+            className="project-sidebar-control justify-between"
             onClick={(event) => {
               setOptionsTriggerElement(event.currentTarget);
               if (exportMenu.open) exportMenu.closeMenu();
@@ -856,7 +856,7 @@ function MaterialsToolbarActions({
   const itemLabel = count === 1 ? 'item' : 'items';
 
   return createPortal(
-    <div className="flex w-full flex-col items-stretch gap-2 text-left">
+    <div className="project-sidebar-slot">
       <span className="toolbar-stat">
         <span className="num text-neutral-950">{count}</span>
         <span className="text-neutral-500">{itemLabel}</span>

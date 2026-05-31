@@ -43,6 +43,7 @@ export function ProposalStatusSelect({
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
   const currentIndex = PROPOSAL_STATUS_CONFIG[status].stageIndex;
   const isAdvanceBlocked = revisionGuard != null && revisionGuard.unresolvedCount > 0;
+  const blockedMessage = `Cannot advance: ${revisionGuard?.unresolvedCount ?? 0} flagged item${revisionGuard?.unresolvedCount === 1 ? '' : 's'} in revision ${revisionGuard?.openRevisionLabel ?? ''}.`;
 
   const handleStageClick = (next: ProposalStatus) => {
     if (disabled) return;
@@ -55,6 +56,56 @@ export function ProposalStatusSelect({
     await onChange(pendingStatus);
     setPendingStatus(null);
   };
+
+  if (compact) {
+    return (
+      <>
+        <div className={cn('flex w-full flex-col items-start gap-1.5', className)}>
+          <select
+            aria-label="Proposal status"
+            value={status}
+            disabled={disabled}
+            onChange={(event) => handleStageClick(event.target.value as ProposalStatus)}
+            className={cn(
+              'toolbar-select w-full text-neutral-900 hover:text-neutral-900',
+              disabled && 'pointer-events-none opacity-60',
+            )}
+          >
+            {proposalStatuses.map((stage) => {
+              const stageIndex = PROPOSAL_STATUS_CONFIG[stage].stageIndex;
+              const isFuture = stageIndex > currentIndex;
+              const blocksHere = isAdvanceBlocked && stage !== 'in_progress' && isFuture;
+              return (
+                <option
+                  key={stage}
+                  value={stage}
+                  disabled={blocksHere}
+                  title={blocksHere ? blockedMessage : STAGE_TOOLTIPS[stage]}
+                >
+                  {STAGE_LABEL[stage]}
+                </option>
+              );
+            })}
+          </select>
+          {isAdvanceBlocked ? (
+            <p className="text-[11px] font-medium text-danger-600">
+              Resolve flagged costs before advancing status.
+            </p>
+          ) : null}
+        </div>
+
+        {pendingStatus && (
+          <ProposalStatusConfirmModal
+            from={status}
+            to={pendingStatus}
+            {...(status === 'in_progress' && revisionGuard ? { revisionGuard } : {})}
+            onConfirm={handleConfirm}
+            onCancel={() => setPendingStatus(null)}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -91,15 +142,9 @@ export function ProposalStatusSelect({
               )}
               <SegmentedControl.Option
                 value={stage}
-                title={
-                  blocksHere
-                    ? `Cannot advance: ${revisionGuard?.unresolvedCount ?? 0} flagged item${revisionGuard?.unresolvedCount === 1 ? '' : 's'} in revision ${revisionGuard?.openRevisionLabel ?? ''}.`
-                    : STAGE_TOOLTIPS[stage]
-                }
+                title={blocksHere ? blockedMessage : STAGE_TOOLTIPS[stage]}
                 aria-label={`${STAGE_LABEL[stage]} — ${
-                  blocksHere
-                    ? `Cannot advance: ${revisionGuard?.unresolvedCount ?? 0} flagged item${revisionGuard?.unresolvedCount === 1 ? '' : 's'} in revision ${revisionGuard?.openRevisionLabel ?? ''}.`
-                    : STAGE_TOOLTIPS[stage]
+                  blocksHere ? blockedMessage : STAGE_TOOLTIPS[stage]
                 }`}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={cn(
@@ -119,9 +164,7 @@ export function ProposalStatusSelect({
                 }}
               >
                 <StageMarker isCurrent={isCurrent} isPast={isPast} blocked={blocksHere} />
-                <span className={compact ? 'hidden' : 'hidden lg:inline'}>
-                  {STAGE_LABEL[stage]}
-                </span>
+                <span className="hidden lg:inline">{STAGE_LABEL[stage]}</span>
               </SegmentedControl.Option>
             </Fragment>
           );

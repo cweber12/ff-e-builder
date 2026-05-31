@@ -212,7 +212,7 @@ function PlansActionsBar({
   if (!slot) return null;
 
   return createPortal(
-    <div className="flex w-full flex-col items-stretch gap-2 text-left">
+    <div className="project-sidebar-slot">
       <span className="toolbar-stat">
         <span className="num text-neutral-950">{planCount}</span>
         <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
@@ -240,7 +240,7 @@ function PlansActionsBar({
         variant="toolbar"
         onClick={onUpload}
         aria-haspopup="dialog"
-        className="w-full justify-start"
+        className="project-sidebar-control justify-start"
       >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Upload plan

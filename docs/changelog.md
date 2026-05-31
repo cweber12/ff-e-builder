@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): polish tab-specific project sidebars with compact utility-panel cards, consistent left-aligned controls, narrower width, and a dropdown-based compact Proposal status selector that preserves confirmation flow
 - fix(ui): tighten the tab-toolbar sidebar width and remove forced full-width stretching so stacked controls align left with intrinsic sizing where appropriate
 - fix(ui): left-align stacked tab-sidebar controls and convert portal toolbar groups to full-width vertical forms with start-aligned labels, inputs, and actions
 - fix(ui): force tab-toolbar action clusters and portal slots into full-width column layout to prevent sidebar overflow on plans, materials, and project action controls

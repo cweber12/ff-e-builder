@@ -468,6 +468,74 @@
     @apply border-success-700/25 bg-success-50 text-success-700;
   }
 
+  /* Project tab utility sidebar: compact left-aligned cards with restrained,
+     neutral control styling. Emphasis components (add actions, alerts, badges)
+     keep their dedicated treatments. */
+  .project-sidebar-section {
+    @apply min-w-0 rounded-sm border border-neutral-200/80 bg-canvas-chrome/65 px-2.5 py-2.5;
+  }
+
+  .project-sidebar-title {
+    @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500;
+  }
+
+  .project-sidebar-slot {
+    @apply flex min-w-0 flex-col items-start gap-2 text-left
+           [&>*]:max-w-full [&>*]:min-w-0 [&>*]:self-start;
+  }
+
+  .project-sidebar-slot--stretch {
+    @apply [&>*]:w-full;
+  }
+
+  .project-sidebar-link {
+    @apply inline-flex h-8 min-w-0 items-center justify-start rounded-sm border border-neutral-200
+           bg-white px-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900
+           transition-colors duration-150
+           hover:bg-neutral-50 hover:text-neutral-900
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1
+           data-[active]:border-neutral-300 data-[active]:bg-neutral-100 data-[active]:text-neutral-950;
+  }
+
+  .project-sidebar-control {
+    @apply w-full justify-start rounded-sm border border-neutral-200 bg-white
+           text-neutral-900 transition-colors duration-150
+           hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900
+           focus-visible:ring-brand-500/35;
+  }
+
+  .project-sidebar-control::after {
+    display: none;
+  }
+
+  .project-sidebar-section .btn-toolbar--primary {
+    @apply border-neutral-300 bg-neutral-100 text-neutral-950;
+  }
+
+  .project-sidebar-section .toolbar-select {
+    @apply text-neutral-900 hover:border-neutral-300 hover:text-neutral-900;
+  }
+
+  .project-sidebar-section .toolbar-input {
+    @apply hover:border-neutral-300;
+  }
+
+  .project-sidebar-section .toolbar-segmented > button,
+  .project-sidebar-section .toolbar-segmented > a {
+    @apply text-neutral-700;
+  }
+
+  .project-sidebar-section .toolbar-segmented > button:hover,
+  .project-sidebar-section .toolbar-segmented > a:hover {
+    @apply bg-neutral-100 text-neutral-900;
+  }
+
+  .project-sidebar-section .toolbar-segmented > button[data-active='true'],
+  .project-sidebar-section .toolbar-segmented > button[aria-checked='true'],
+  .project-sidebar-section .toolbar-segmented > a[data-active='true'] {
+    @apply text-neutral-950;
+  }
+
   .toolbar-icon {
     @apply h-3.5 w-3.5 shrink-0;
     stroke: currentColor;
