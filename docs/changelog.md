@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): left-align stacked tab-sidebar controls and convert portal toolbar groups to full-width vertical forms with start-aligned labels, inputs, and actions
 - fix(ui): force tab-toolbar action clusters and portal slots into full-width column layout to prevent sidebar overflow on plans, materials, and project action controls
 - fix(ui): structure tab-specific sidebar controls into labeled vertical sections with enforced single-column containers and overflow guards
 - fix(ui): restore the project header as a top bar and move only tab-specific toolbar controls into a clean vertical sidebar layout

@@ -152,7 +152,7 @@ function ProjectLayout() {
           // page counter) into this slot.
           <div
             id={CATALOG_ACTIONS_SLOT_ID}
-            className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch"
+            className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch [&>*]:!text-left"
           />
         ) : (
           <FfeActions
@@ -182,12 +182,12 @@ function ProjectLayout() {
       ) : isMaterialsRoute ? (
         <div
           id={MATERIALS_ACTIONS_SLOT_ID}
-          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch"
+          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch [&>*]:!text-left"
         />
       ) : isPlansRoute ? (
         <div
           id={PLANS_ACTIONS_SLOT_ID}
-          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch"
+          className="flex min-w-0 flex-col items-stretch gap-2 [&>*]:!flex [&>*]:!min-w-0 [&>*]:!w-full [&>*]:!max-w-full [&>*]:!flex-col [&>*]:!items-stretch [&>*]:!text-left"
         />
       ) : null
     ) : null;
@@ -372,14 +372,14 @@ function ProjectTabToolbarSidebar({
           <Link
             to={`/projects/${projectId}/ffe/catalog`}
             data-active={isCatalogRoute || undefined}
-            className="inline-flex h-9 min-w-0 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+            className="inline-flex h-9 min-w-0 items-center justify-start rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
           >
             Catalog
           </Link>
           <Link
             to={`/projects/${projectId}/ffe/table`}
             data-active={!isCatalogRoute || undefined}
-            className="inline-flex h-9 min-w-0 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+            className="inline-flex h-9 min-w-0 items-center justify-start rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
           >
             Table
           </Link>
@@ -437,6 +437,7 @@ function BudgetPageActions({
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
   layout?: 'row' | 'column';
 }) {
+  const isColumn = layout === 'column';
   const [ffeOpen, setFfeOpen] = useState(false);
   const [proposalOpen, setProposalOpen] = useState(false);
   const { data: proposalCustomColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
@@ -446,24 +447,30 @@ function BudgetPageActions({
   return (
     <div
       className={
-        layout === 'column'
-          ? 'flex flex-col items-stretch gap-2 [&>*]:w-full'
-          : 'flex items-center gap-2'
+        isColumn ? 'flex flex-col items-stretch gap-2 [&>*]:w-full' : 'flex items-center gap-2'
       }
     >
-      <Button type="button" variant="toolbar" onClick={() => setFfeOpen(true)}>
+      <Button
+        type="button"
+        variant="toolbar"
+        onClick={() => setFfeOpen(true)}
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+      >
         FF&amp;E Budget
       </Button>
-      <Button type="button" variant="toolbar" onClick={() => setProposalOpen(true)}>
+      <Button
+        type="button"
+        variant="toolbar"
+        onClick={() => setProposalOpen(true)}
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+      >
         Proposal Budget
       </Button>
       <ExportMenu
         label="Export"
         size="sm"
         buttonVariant="toolbar"
-        {...(layout === 'column'
-          ? { className: 'w-full', buttonClassName: 'w-full justify-between' }
-          : {})}
+        {...(isColumn ? { className: 'w-full', buttonClassName: 'w-full justify-between' } : {})}
         onCsv={() => {
           exportSummaryCsv(project, roomsWithItems);
           exportProposalCsv(

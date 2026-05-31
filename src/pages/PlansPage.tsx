@@ -212,7 +212,7 @@ function PlansActionsBar({
   if (!slot) return null;
 
   return createPortal(
-    <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col items-stretch gap-2 text-left">
       <span className="toolbar-stat">
         <span className="num text-neutral-950">{planCount}</span>
         <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
@@ -221,12 +221,12 @@ function PlansActionsBar({
         <span className="num">{calibratedCount}</span>
         <span>calibrated</span>
       </span>
-      <label className="flex items-center gap-2 toolbar-label">
+      <label className="toolbar-label flex w-full flex-col items-start gap-1">
         <span>Sort</span>
         <select
           value={sort}
           onChange={(event) => onSortChange(event.target.value as SortId)}
-          className="toolbar-select"
+          className="toolbar-select w-full"
         >
           {SORTS.map((entry) => (
             <option key={entry.id} value={entry.id}>
@@ -235,7 +235,13 @@ function PlansActionsBar({
           ))}
         </select>
       </label>
-      <Button type="button" variant="toolbar" onClick={onUpload} aria-haspopup="dialog">
+      <Button
+        type="button"
+        variant="toolbar"
+        onClick={onUpload}
+        aria-haspopup="dialog"
+        className="w-full justify-start"
+      >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Upload plan
       </Button>

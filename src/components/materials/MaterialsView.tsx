@@ -667,6 +667,7 @@ function MaterialsToolbarLeft({
             variant="toolbar"
             aria-haspopup="menu"
             aria-expanded={open}
+            className="w-full justify-between"
             onClick={(event) => {
               setOptionsTriggerElement(event.currentTarget);
               if (exportMenu.open) exportMenu.closeMenu();
@@ -688,7 +689,7 @@ function MaterialsToolbarLeft({
                 onChange={onViewModeChange}
                 ariaLabel="Materials view mode"
                 variant="toolbar"
-                className="w-full [&>button]:flex-1 [&>button]:justify-center"
+                className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
               >
                 <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
                 <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
@@ -743,6 +744,7 @@ function MaterialsToolbarLeft({
         onChange={onActiveTabChange}
         ariaLabel="Library section"
         variant="toolbar"
+        className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
       >
         <SegmentedControl.Option value="finishes">Finish Library</SegmentedControl.Option>
         <SegmentedControl.Option value="materials">Project Materials</SegmentedControl.Option>
@@ -751,7 +753,7 @@ function MaterialsToolbarLeft({
         <select
           value={categoryFilter}
           onChange={(e) => onCategoryFilterChange(e.target.value as CategoryFilter)}
-          className="toolbar-select"
+          className="toolbar-select w-full"
           aria-label="Filter by category"
         >
           {FILTER_OPTIONS.map((opt) => (
@@ -854,7 +856,7 @@ function MaterialsToolbarActions({
   const itemLabel = count === 1 ? 'item' : 'items';
 
   return createPortal(
-    <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col items-stretch gap-2 text-left">
       <span className="toolbar-stat">
         <span className="num text-neutral-950">{count}</span>
         <span className="text-neutral-500">{itemLabel}</span>
@@ -863,7 +865,7 @@ function MaterialsToolbarActions({
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         placeholder={activeTab === 'finishes' ? 'Search finishes' : 'Search materials'}
-        className="toolbar-input w-64"
+        className="toolbar-input w-full"
         aria-label={activeTab === 'finishes' ? 'Search finishes' : 'Search project materials'}
       />
       {!showForm && (
@@ -871,6 +873,7 @@ function MaterialsToolbarActions({
           type="button"
           variant="addAction"
           onClick={activeTab === 'finishes' ? onCreateFinish : onCreateMaterial}
+          className="w-full justify-start"
         >
           <Plus className="toolbar-icon" aria-hidden="true" />
           {activeTab === 'finishes' ? 'New finish' : 'New material'}

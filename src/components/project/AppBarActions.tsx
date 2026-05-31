@@ -48,6 +48,7 @@ export function FfeActions({
   onImport,
   layout = 'row',
 }: FfeActionsProps) {
+  const isColumn = layout === 'column';
   const hasItems = roomsWithItems.some((r) => r.items.length > 0);
   const { data: ffeCustomColumnDefs = [] } = useItemColumnDefs(project.id);
   const ffeColumnOrder = () => readColumnConfigFromStorage(project.id, 'ffe')?.order;
@@ -55,28 +56,35 @@ export function FfeActions({
   return (
     <div
       className={
-        layout === 'column'
-          ? 'flex flex-col items-stretch gap-2 [&>*]:w-full'
-          : 'flex items-center gap-2'
+        isColumn ? 'flex flex-col items-stretch gap-2 [&>*]:w-full' : 'flex items-center gap-2'
       }
     >
-      <Button type="button" variant="addAction" onClick={onAddRoom}>
+      <Button
+        type="button"
+        variant="addAction"
+        onClick={onAddRoom}
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+      >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
       </Button>
 
       <FfeSortToggle projectId={project.id} layout={layout} />
 
-      <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
+      <Button
+        type="button"
+        variant="toolbar"
+        onClick={onImport}
+        title="Import from Excel"
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+      >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Import
       </Button>
 
       <ExportMenu
         disabled={!hasItems}
-        {...(layout === 'column'
-          ? { className: 'w-full', buttonClassName: 'w-full justify-between' }
-          : {})}
+        {...(isColumn ? { className: 'w-full', buttonClassName: 'w-full justify-between' } : {})}
         label={
           <>
             <Download className="toolbar-icon" aria-hidden="true" />
@@ -109,7 +117,7 @@ export function FfeActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="ffe"
-        {...(layout === 'column' ? { buttonClassName: 'w-full justify-between' } : {})}
+        {...(isColumn ? { buttonClassName: 'w-full justify-start' } : {})}
       />
     </div>
   );
@@ -194,6 +202,7 @@ export function ProposalActions({
   onImport,
   layout = 'row',
 }: ProposalActionsProps) {
+  const isColumn = layout === 'column';
   const { data: userProfile } = useUserProfile();
   const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
   const updateProject = useUpdateProject();
@@ -227,17 +236,26 @@ export function ProposalActions({
   return (
     <div
       className={
-        layout === 'column'
-          ? 'flex flex-col items-stretch gap-2 [&>*]:w-full'
-          : 'flex items-center gap-2'
+        isColumn ? 'flex flex-col items-stretch gap-2 [&>*]:w-full' : 'flex items-center gap-2'
       }
     >
-      <Button type="button" variant="addAction" onClick={onAddCategory}>
+      <Button
+        type="button"
+        variant="addAction"
+        onClick={onAddCategory}
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+      >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add category
       </Button>
 
-      <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
+      <Button
+        type="button"
+        variant="toolbar"
+        onClick={onImport}
+        title="Import from Excel"
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
+      >
         <Upload className="toolbar-icon" aria-hidden="true" />
         Import
       </Button>
@@ -248,6 +266,7 @@ export function ProposalActions({
         disabled={!hasItems}
         onClick={() => setExportModalOpen(true)}
         title="Export"
+        {...(isColumn ? { className: 'w-full justify-start' } : {})}
       >
         <Download className="toolbar-icon" aria-hidden="true" />
         Export
@@ -267,12 +286,12 @@ export function ProposalActions({
       <ColumnVisibilityPopover
         projectId={project.id}
         tableKey="proposal"
-        {...(layout === 'column' ? { buttonClassName: 'w-full justify-between' } : {})}
+        {...(isColumn ? { buttonClassName: 'w-full justify-start' } : {})}
       />
 
       <div
         className={
-          layout === 'column'
+          isColumn
             ? 'min-w-0 border-t border-neutral-200 pt-2'
             : 'flex items-center border-l border-neutral-200 pl-2'
         }
@@ -281,7 +300,7 @@ export function ProposalActions({
           status={project.proposalStatus}
           onChange={handleStatusChange}
           disabled={updateProject.isPending}
-          {...(layout === 'column' ? { className: 'w-full', compact: true } : {})}
+          {...(isColumn ? { className: 'w-full', compact: true } : {})}
           {...(openRev
             ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
             : {})}
