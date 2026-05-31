@@ -301,7 +301,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-canvas-bg">
+    <div className="flex flex-col bg-canvas-bg">
       <CatalogActionsBar
         project={project}
         rooms={rooms}
@@ -327,7 +327,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         onZoomChange={setZoomLevel}
       />
 
-      <div className="screen-only catalog-stage flex-1">
+      <div className="screen-only catalog-stage h-[calc(100vh-88px)]">
         <div
           className="catalog-stage-frame"
           style={{ width: scaledPageWidth, minWidth: scaledPageWidth, height: scaledPageHeight }}

@@ -269,7 +269,7 @@ function ProjectLayout() {
                   <h1 className="sr-only">{project.name}</h1>
                   {isTableRoute || isCatalogRoute ? (
                     // Full-width flush layout for table and catalog routes
-                    <div className="flex h-full flex-1 flex-col overflow-hidden">
+                    <div className="flex flex-1 flex-col">
                       <Outlet
                         context={
                           {
