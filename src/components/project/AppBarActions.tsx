@@ -59,7 +59,7 @@ export function FfeActions({
         type="button"
         variant="addAction"
         onClick={onAddRoom}
-        {...(isColumn ? { className: 'justify-start' } : {})}
+        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
       >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
@@ -78,7 +78,7 @@ export function FfeActions({
 
       <ExportMenu
         disabled={!hasItems}
-        {...(isColumn ? { buttonClassName: 'project-sidebar-control justify-between' } : {})}
+        {...(isColumn ? { buttonClassName: 'project-sidebar-control justify-start' } : {})}
         label={
           <>
             <Download className="toolbar-icon" aria-hidden="true" />
@@ -242,7 +242,7 @@ export function ProposalActions({
         type="button"
         variant="addAction"
         onClick={onAddCategory}
-        {...(isColumn ? { className: 'justify-start' } : {})}
+        {...(isColumn ? { className: 'project-sidebar-control justify-start' } : {})}
       >
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add category

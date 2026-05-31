@@ -217,7 +217,7 @@ function ProjectLayout() {
 
   const sidebarHeader =
     !isLoading && project ? (
-      isProposalRoute ? (
+      isFfeRoute || isProposalRoute ? (
         <ProposalRevisionChip project={project} />
       ) : isPlansRoute ? (
         <div id={PLANS_SUMMARY_SLOT_ID} className="min-w-0" />
@@ -386,19 +386,11 @@ function ProjectTabToolbarSidebar({
       key: 'view',
       label: 'View',
       content: (
-        <div className="project-sidebar-slot gap-1.5">
-          <Link
-            to={`/projects/${projectId}/ffe/catalog`}
-            data-active={isCatalogRoute || undefined}
-            className="project-sidebar-link"
-          >
+        <div role="radiogroup" aria-label="FF&E view mode" className="toolbar-segmented">
+          <Link to={`/projects/${projectId}/ffe/catalog`} data-active={isCatalogRoute || undefined}>
             Catalog
           </Link>
-          <Link
-            to={`/projects/${projectId}/ffe/table`}
-            data-active={!isCatalogRoute || undefined}
-            className="project-sidebar-link"
-          >
+          <Link to={`/projects/${projectId}/ffe/table`} data-active={!isCatalogRoute || undefined}>
             Table
           </Link>
         </div>

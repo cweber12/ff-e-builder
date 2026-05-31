@@ -1207,7 +1207,6 @@ export function RoomHeader({
   isMobile,
   itemCount,
   subtotal,
-  openRevisionLabel,
   project,
   visibleColumns,
   customColumns,
@@ -1233,7 +1232,6 @@ export function RoomHeader({
   isMobile: boolean;
   itemCount: number;
   subtotal: number;
-  openRevisionLabel?: string;
   project?: Project;
   visibleColumns: { id: string; label: string; isCustom?: boolean }[];
   customColumns: import('../../../types').CustomColumnDef[];
@@ -1284,11 +1282,6 @@ export function RoomHeader({
         <span className="shrink-0 rounded-pill bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-black/10">
           {itemCount} {itemCount === 1 ? 'item' : 'items'}
         </span>
-        {openRevisionLabel && (
-          <span className="shrink-0 rounded-pill border border-warning-600/30 bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700">
-            Revision {openRevisionLabel} open - resolve costs in Proposal
-          </span>
-        )}
         {!isMobile && !collapsed && (
           <ColumnGroupTabs
             groups={FFE_GENERATED_ITEM_TABLE_PRESET.columnGroups}
@@ -1700,7 +1693,6 @@ export function RoomItemsSection({
         isMobile={isMobile}
         itemCount={itemCount}
         subtotal={subtotal}
-        {...(openRevision ? { openRevisionLabel: openRevision.label } : {})}
         {...(project !== undefined ? { project } : {})}
         visibleColumns={visibleColumnsForPanel}
         customColumns={columnDefs}

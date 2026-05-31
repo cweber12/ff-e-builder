@@ -273,8 +273,8 @@ describe('FfeTable', () => {
     renderTable();
 
     expect(
-      screen.getAllByText('Revision 1.0 open - resolve costs in Proposal').length,
-    ).toBeGreaterThan(0);
+      screen.queryByText('Revision 1.0 open - resolve costs in Proposal'),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByTitle('View Proposal revision history').length).toBeGreaterThan(0);
   });
 
@@ -296,8 +296,8 @@ describe('FfeTable', () => {
     renderTable();
 
     expect(
-      screen.getAllByText('Revision 1.0 open - resolve costs in Proposal').length,
-    ).toBeGreaterThan(0);
+      screen.queryByText('Revision 1.0 open - resolve costs in Proposal'),
+    ).not.toBeInTheDocument();
   });
 
   it('renders room subtotals matching roomSubtotalCents', () => {

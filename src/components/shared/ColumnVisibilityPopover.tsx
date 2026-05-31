@@ -213,8 +213,8 @@ export function ColumnVisibilityPopover({
             ref={popoverRef}
             style={{
               position: 'fixed',
-              top: triggerRect.bottom + 6,
-              right: window.innerWidth - triggerRect.right,
+              top: triggerRect.top,
+              left: triggerRect.right + 6,
             }}
             className="z-[200] w-64 rounded-sm border border-neutral-200 bg-canvas-chrome shadow-lg"
           >
