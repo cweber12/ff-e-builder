@@ -38,15 +38,28 @@ interface FfeActionsProps {
   isCatalog?: boolean;
   onAddRoom: () => void;
   onImport: () => void;
+  layout?: 'row' | 'column';
 }
 
-export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: FfeActionsProps) {
+export function FfeActions({
+  project,
+  roomsWithItems,
+  onAddRoom,
+  onImport,
+  layout = 'row',
+}: FfeActionsProps) {
   const hasItems = roomsWithItems.some((r) => r.items.length > 0);
   const { data: ffeCustomColumnDefs = [] } = useItemColumnDefs(project.id);
   const ffeColumnOrder = () => readColumnConfigFromStorage(project.id, 'ffe')?.order;
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={
+        layout === 'column'
+          ? 'flex flex-col items-stretch gap-2 [&>*]:w-full'
+          : 'flex items-center gap-2'
+      }
+    >
       <Button type="button" variant="addAction" onClick={onAddRoom}>
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
@@ -150,6 +163,7 @@ interface ProposalActionsProps {
   categoriesWithItems: ProposalCategoryWithItems[];
   onAddCategory: () => void;
   onImport: () => void;
+  layout?: 'row' | 'column';
 }
 
 export function ProposalActions({
@@ -157,6 +171,7 @@ export function ProposalActions({
   categoriesWithItems,
   onAddCategory,
   onImport,
+  layout = 'row',
 }: ProposalActionsProps) {
   const { data: userProfile } = useUserProfile();
   const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
@@ -189,7 +204,13 @@ export function ProposalActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={
+        layout === 'column'
+          ? 'flex flex-col items-stretch gap-2 [&>*]:w-full'
+          : 'flex items-center gap-2'
+      }
+    >
       <Button type="button" variant="addAction" onClick={onAddCategory}>
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add category
@@ -224,7 +245,13 @@ export function ProposalActions({
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />
 
-      <div className="flex items-center border-l border-neutral-200 pl-2">
+      <div
+        className={
+          layout === 'column'
+            ? 'flex items-center border-t border-neutral-200 pt-2'
+            : 'flex items-center border-l border-neutral-200 pl-2'
+        }
+      >
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}

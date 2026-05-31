@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Link,
   Navigate,
@@ -144,13 +144,13 @@ function ProjectLayout() {
   const isLoading = projectsLoading || dataLoading || proposalLoading;
 
   // Action cluster rendered in the app bar's right side
-  const headerActions =
+  const sidebarActions =
     !isLoading && project ? (
       isFfeRoute ? (
         isCatalogRoute ? (
           // CatalogView portals its own toolbar (Print / Export / Editor /
           // page counter) into this slot.
-          <div id={CATALOG_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
+          <div id={CATALOG_ACTIONS_SLOT_ID} className="flex flex-col items-stretch gap-2" />
         ) : (
           <FfeActions
             project={project}
@@ -158,6 +158,7 @@ function ProjectLayout() {
             isCatalog={isCatalogRoute}
             onAddRoom={() => setAddRoomOpen(true)}
             onImport={() => setImportOpen(true)}
+            layout="column"
           />
         )
       ) : isProposalRoute ? (
@@ -166,35 +167,37 @@ function ProjectLayout() {
           categoriesWithItems={proposalCategoriesWithItems}
           onAddCategory={() => setAddCategoryOpen(true)}
           onImport={() => setProposalImportOpen(true)}
+          layout="column"
         />
       ) : isBudgetRoute ? (
         <BudgetPageActions
           project={project}
           roomsWithItems={roomsWithItems}
           proposalCategoriesWithItems={proposalCategoriesWithItems}
+          layout="column"
         />
       ) : isMaterialsRoute ? (
-        <div id={MATERIALS_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
+        <div id={MATERIALS_ACTIONS_SLOT_ID} className="flex flex-col items-stretch gap-2" />
       ) : isPlansRoute ? (
-        <div id={PLANS_ACTIONS_SLOT_ID} className="flex items-center gap-2" />
+        <div id={PLANS_ACTIONS_SLOT_ID} className="flex flex-col items-stretch gap-2" />
       ) : null
     ) : null;
 
-  const headerToolbarCenter =
+  const sidebarToolbarCenter =
     !isLoading && isCatalogRoute ? (
-      <div id={CATALOG_PICKER_SLOT_ID} className="flex items-center justify-center" />
+      <div id={CATALOG_PICKER_SLOT_ID} className="flex flex-col items-stretch gap-2" />
     ) : null;
 
-  const headerToolbarLeft =
+  const sidebarToolbarLeft =
     !isLoading && isPlansRoute ? (
       <div
         id={PLANS_FILTER_SLOT_ID}
-        className="toolbar-segmented"
+        className="toolbar-segmented !flex !flex-col !items-stretch"
         role="tablist"
         aria-label="Filter plans"
       />
     ) : !isLoading && isMaterialsRoute ? (
-      <div id={MATERIALS_FILTER_SLOT_ID} className="flex items-center gap-2" />
+      <div id={MATERIALS_FILTER_SLOT_ID} className="flex flex-col items-stretch gap-2" />
     ) : null;
 
   return (
@@ -233,90 +236,146 @@ function ProjectLayout() {
           </>
         ) : null
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <ProjectHeader
-            project={project}
-            actions={headerActions}
-            toolbarLeft={headerToolbarLeft}
-            toolbarCenter={headerToolbarCenter}
-            userMenu={<UserMenu />}
-          />
-          <div className="min-h-0 min-w-0 flex-1">
-            {isLoading ? (
-              <div className="flex justify-center py-24">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
-              </div>
-            ) : project ? (
-              <>
-                <h1 className="sr-only">{project.name}</h1>
-                {isTableRoute ? (
-                  // Full-width flush layout for FF&E and Proposal table routes
-                  <div className="flex h-full flex-1 flex-col overflow-hidden">
-                    <Outlet
-                      context={
-                        {
-                          project,
-                          roomsWithItems,
-                          proposalCategoriesWithItems,
-                          onImport: () => setImportOpen(true),
-                          onProposalImport: () => setProposalImportOpen(true),
-                          addRoomOpen,
-                          onAddRoomOpenChange: setAddRoomOpen,
-                          addCategoryOpen,
-                          onAddCategoryOpenChange: setAddCategoryOpen,
-                        } satisfies ProjectContext
-                      }
-                    />
-                  </div>
-                ) : (
-                  // Padded layout for other routes (Budget, Materials, Plans, Overview)
-                  <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
-                    <Outlet
-                      context={
-                        {
-                          project,
-                          roomsWithItems,
-                          proposalCategoriesWithItems,
-                          onImport: () => setImportOpen(true),
-                          onProposalImport: () => setProposalImportOpen(true),
-                          addRoomOpen,
-                          onAddRoomOpenChange: setAddRoomOpen,
-                          addCategoryOpen,
-                          onAddCategoryOpenChange: setAddCategoryOpen,
-                        } satisfies ProjectContext
-                      }
-                    />
-                  </section>
-                )}
-                {project && (
-                  <>
-                    <ImportExcelModal
-                      open={importOpen}
-                      projectId={project.id}
-                      rooms={roomsWithItems}
-                      onClose={() => setImportOpen(false)}
-                      onSuccess={() => {
-                        setImportOpen(false);
-                        void queryClient.invalidateQueries();
-                      }}
-                    />
-                    <ImportProposalExcelModal
-                      open={proposalImportOpen}
-                      projectId={project.id}
-                      categories={proposalCategoriesWithItems}
-                      onClose={() => setProposalImportOpen(false)}
-                      onSuccess={() => {
-                        void queryClient.invalidateQueries();
-                      }}
-                    />
-                  </>
-                )}
-              </>
+        <>
+          <ProjectHeader project={project} userMenu={<UserMenu />} />
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+            {project ? (
+              <ProjectTabToolbarSidebar
+                projectId={project.id}
+                showViewToggle={isFfeRoute}
+                isCatalogRoute={isCatalogRoute}
+                toolbarLeft={sidebarToolbarLeft}
+                toolbarCenter={sidebarToolbarCenter}
+                actions={sidebarActions}
+              />
             ) : null}
+            <div className="min-h-0 min-w-0 flex-1">
+              {isLoading ? (
+                <div className="flex justify-center py-24">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+                </div>
+              ) : project ? (
+                <>
+                  <h1 className="sr-only">{project.name}</h1>
+                  {isTableRoute ? (
+                    // Full-width flush layout for FF&E and Proposal table routes
+                    <div className="flex h-full flex-1 flex-col overflow-hidden">
+                      <Outlet
+                        context={
+                          {
+                            project,
+                            roomsWithItems,
+                            proposalCategoriesWithItems,
+                            onImport: () => setImportOpen(true),
+                            onProposalImport: () => setProposalImportOpen(true),
+                            addRoomOpen,
+                            onAddRoomOpenChange: setAddRoomOpen,
+                            addCategoryOpen,
+                            onAddCategoryOpenChange: setAddCategoryOpen,
+                          } satisfies ProjectContext
+                        }
+                      />
+                    </div>
+                  ) : (
+                    // Padded layout for other routes (Budget, Materials, Plans, Overview)
+                    <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
+                      <Outlet
+                        context={
+                          {
+                            project,
+                            roomsWithItems,
+                            proposalCategoriesWithItems,
+                            onImport: () => setImportOpen(true),
+                            onProposalImport: () => setProposalImportOpen(true),
+                            addRoomOpen,
+                            onAddRoomOpenChange: setAddRoomOpen,
+                            addCategoryOpen,
+                            onAddCategoryOpenChange: setAddCategoryOpen,
+                          } satisfies ProjectContext
+                        }
+                      />
+                    </section>
+                  )}
+                  {project && (
+                    <>
+                      <ImportExcelModal
+                        open={importOpen}
+                        projectId={project.id}
+                        rooms={roomsWithItems}
+                        onClose={() => setImportOpen(false)}
+                        onSuccess={() => {
+                          setImportOpen(false);
+                          void queryClient.invalidateQueries();
+                        }}
+                      />
+                      <ImportProposalExcelModal
+                        open={proposalImportOpen}
+                        projectId={project.id}
+                        categories={proposalCategoriesWithItems}
+                        onClose={() => setProposalImportOpen(false)}
+                        onSuccess={() => {
+                          void queryClient.invalidateQueries();
+                        }}
+                      />
+                    </>
+                  )}
+                </>
+              ) : null}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </main>
+  );
+}
+
+function ProjectTabToolbarSidebar({
+  projectId,
+  showViewToggle,
+  isCatalogRoute,
+  toolbarLeft,
+  toolbarCenter,
+  actions,
+}: {
+  projectId: string;
+  showViewToggle: boolean;
+  isCatalogRoute: boolean;
+  toolbarLeft: ReactNode;
+  toolbarCenter: ReactNode;
+  actions: ReactNode;
+}) {
+  if (!showViewToggle && !toolbarLeft && !toolbarCenter && !actions) return null;
+
+  return (
+    <aside className="no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-chrome/40 lg:w-72 lg:border-b-0 lg:border-r">
+      <div className="space-y-5 p-4 md:p-5">
+        {showViewToggle ? (
+          <section className="space-y-2">
+            <p className="toolbar-label">View</p>
+            <div className="flex flex-col gap-1">
+              <Link
+                to={`/projects/${projectId}/ffe/catalog`}
+                data-active={isCatalogRoute || undefined}
+                className="inline-flex h-9 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+              >
+                Catalog
+              </Link>
+              <Link
+                to={`/projects/${projectId}/ffe/table`}
+                data-active={!isCatalogRoute || undefined}
+                className="inline-flex h-9 items-center rounded-sm border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 data-[active]:border-neutral-200 data-[active]:bg-white data-[active]:text-brand-700"
+              >
+                Table
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
+        {toolbarLeft ? <section className="space-y-2">{toolbarLeft}</section> : null}
+        {toolbarCenter ? <section className="space-y-2">{toolbarCenter}</section> : null}
+        {actions ? <section className="space-y-2">{actions}</section> : null}
+      </div>
+    </aside>
   );
 }
 
@@ -324,10 +383,12 @@ function BudgetPageActions({
   project,
   roomsWithItems,
   proposalCategoriesWithItems,
+  layout = 'row',
 }: {
   project: Project;
   roomsWithItems: RoomWithItems[];
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
+  layout?: 'row' | 'column';
 }) {
   const [ffeOpen, setFfeOpen] = useState(false);
   const [proposalOpen, setProposalOpen] = useState(false);
@@ -336,7 +397,13 @@ function BudgetPageActions({
   const proposalColumnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={
+        layout === 'column'
+          ? 'flex flex-col items-stretch gap-2 [&>*]:w-full'
+          : 'flex items-center gap-2'
+      }
+    >
       <Button type="button" variant="toolbar" onClick={() => setFfeOpen(true)}>
         FF&amp;E Budget
       </Button>

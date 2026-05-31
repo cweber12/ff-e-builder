@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): restore the project header as a top bar and move only tab-specific toolbar controls into a clean vertical sidebar layout
 - feat(ui): reorient project header/tab toolbar into a clean left-edge sidebar with vertical project navigation and action rail sections
 - fix(ui): display the selected project header tab in bold text instead of using an underline indicator
 - fix(ui): replace invalid Tailwind `text-brand-800/900/950` apply utilities in add-action styles with supported brand shades to restore Vite CSS compilation
