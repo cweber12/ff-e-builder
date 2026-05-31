@@ -119,4 +119,15 @@ describe('proposalApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
   });
+
+  it('adds all category items to FF&E with an explicit bulk worker action', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ updatedCount: 3 }));
+
+    await proposalApi.addCategoryToFfe('category-1');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/proposal/categories/category-1/add-all-to-ffe'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
 });

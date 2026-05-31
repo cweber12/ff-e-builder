@@ -33,6 +33,8 @@ type ProposalCategoryHeaderProps = {
   onCategoryNameSave: (name: string) => void;
   onCategoryDelete: () => void;
   onAddItem: () => void;
+  onAddAllToFfe: () => void;
+  addableToFfeCount: number;
   onMoveColumn: (fromId: string, toId: string) => void;
   onHideColumn: (id: string) => void;
   onRestoreDefault: (id: string) => void;
@@ -60,6 +62,8 @@ export function ProposalCategoryHeader({
   onCategoryNameSave,
   onCategoryDelete,
   onAddItem,
+  onAddAllToFfe,
+  addableToFfeCount,
   onMoveColumn,
   onHideColumn,
   onRestoreDefault,
@@ -147,6 +151,8 @@ export function ProposalCategoryHeader({
             hiddenDefaults={hiddenDefaults}
             onCategoryDelete={onCategoryDelete}
             onAddItem={onAddItem}
+            onAddAllToFfe={onAddAllToFfe}
+            addableToFfeCount={addableToFfeCount}
             onExpand={onExpand}
             onRestoreDefault={onRestoreDefault}
             onOpenAddColumnModal={onOpenAddColumnModal}
@@ -163,6 +169,8 @@ type CategoryActionsMenuProps = {
   hiddenDefaults: { id: string; label: string }[];
   onCategoryDelete: () => void;
   onAddItem: () => void;
+  onAddAllToFfe: () => void;
+  addableToFfeCount: number;
   onExpand: () => void;
   onRestoreDefault: (id: string) => void;
   onOpenAddColumnModal: () => void;
@@ -174,6 +182,8 @@ function CategoryActionsMenu({
   hiddenDefaults,
   onCategoryDelete,
   onAddItem,
+  onAddAllToFfe,
+  addableToFfeCount,
   onExpand,
   onRestoreDefault,
   onOpenAddColumnModal,
@@ -225,6 +235,15 @@ function CategoryActionsMenu({
             }}
           >
             Add item
+          </MenuItem>
+          <MenuItem
+            disabled={addableToFfeCount <= 0}
+            onClick={() => {
+              closeMenu();
+              onAddAllToFfe();
+            }}
+          >
+            Add all to FF&amp;E
           </MenuItem>
           <MenuSubTrigger
             ref={submenuTriggerRef}

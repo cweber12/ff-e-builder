@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(ffe): wire end-to-end Add to FF&E and Remove from FF&E visibility flows across Proposal row/detail actions, Proposal category bulk add, and FF&E List Add+ picker with shared FF&E and Proposal query invalidation
 - feat(ffe): add a read-only FF&E List view grouped by Proposal Category with Catalog/List navigation, item-card catalog deep links, and legacy `/ffe/table` redirect compatibility
 - fix(ui): center Sidebar Add button content, keep non-add sidebar buttons left-aligned by making trailing-chevron alignment explicit, and move SidebarButton from primitives into shared/sidebar
 - refactor(ui): extract shared ProjectTabToolbarSidebar plus SidebarButton and SidebarButtonGroup primitives to unify tab-sidebar button layout, left alignment, hover weight emphasis, and blue Add action states

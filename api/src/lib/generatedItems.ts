@@ -707,6 +707,27 @@ export async function addProposalItemToFfe(sql: Sql, proposalItemId: string) {
   return rows[0] as DbRow | undefined;
 }
 
+export async function addProposalCategoryToFfe(sql: Sql, proposalCategoryId: string) {
+  const proposalItemRows = await sql`
+    SELECT id
+    FROM proposal_items
+    WHERE category_id = ${proposalCategoryId}
+    ORDER BY sort_order, created_at
+  `;
+  const proposalItemIds = proposalItemRows
+    .map((row) => (row as { id?: string }).id)
+    .filter((id): id is string => Boolean(id));
+
+  if (proposalItemIds.length === 0) {
+    return { updatedCount: 0 };
+  }
+
+  await Promise.all(
+    proposalItemIds.map((proposalItemId) => addProposalItemToFfe(sql, proposalItemId)),
+  );
+  return { updatedCount: proposalItemIds.length };
+}
+
 export async function mirrorGeneratedItemToProposalItem(
   sql: Sql,
   itemId: string,

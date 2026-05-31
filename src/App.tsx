@@ -53,6 +53,8 @@ import {
 import {
   readColumnConfigFromStorage,
   useColumnDefs,
+  useAddProposalItemToFfe,
+  useRemoveItemFromFfe,
   useProjects,
   useRoomsWithItems,
   useFfeCatalogGroups,
@@ -456,9 +458,25 @@ function ProjectRedirectTo({ target }: { target: string }) {
 }
 
 function ProjectListRoute() {
-  const { project } = useProjectContext();
+  const { project, proposalCategoriesWithItems } = useProjectContext();
   const { groups, isLoading } = useFfeCatalogGroups(project.id);
-  return <FfeItemList projectId={project.id} groups={groups} isLoading={isLoading} />;
+  const addProposalItemToFfe = useAddProposalItemToFfe(project.id);
+  const removeItemFromFfe = useRemoveItemFromFfe(project.id);
+
+  return (
+    <FfeItemList
+      projectId={project.id}
+      groups={groups}
+      proposalCategoriesWithItems={proposalCategoriesWithItems}
+      onAddToFfeItems={async (proposalItemIds) => {
+        await Promise.all(
+          proposalItemIds.map((proposalItemId) => addProposalItemToFfe.mutateAsync(proposalItemId)),
+        );
+      }}
+      onRemoveFromFfe={removeItemFromFfe.mutateAsync}
+      isLoading={isLoading}
+    />
+  );
 }
 
 function ProjectOverviewRoute() {

@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import { itemKeys, projectKeys, proposalKeys, roomKeys } from '../../lib/query';
+import { ffeKeys, itemKeys, projectKeys, proposalKeys, roomKeys } from '../../lib/query';
 import {
   appendListItem,
   appendUniqueListItem,
@@ -261,10 +261,28 @@ export function useAddProposalItemToFfe(projectId: string) {
   return useMutation({
     mutationFn: (id: string) => api.proposal.addItemToFfe(id),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ffeKeys.catalogGroups(projectId) });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.withItems(projectId) });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.categories(projectId) });
       void queryClient.invalidateQueries({ queryKey: roomKeys.forProject(projectId) });
       void queryClient.invalidateQueries({ queryKey: itemKeys.all });
     },
     onError: (err) => toast.error(`Add to FF&E failed: ${err.message}`),
+  });
+}
+
+export function useAddProposalCategoryToFfe(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (categoryId: string) => api.proposal.addCategoryToFfe(categoryId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ffeKeys.catalogGroups(projectId) });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.withItems(projectId) });
+      void queryClient.invalidateQueries({ queryKey: proposalKeys.categories(projectId) });
+      void queryClient.invalidateQueries({ queryKey: roomKeys.forProject(projectId) });
+      void queryClient.invalidateQueries({ queryKey: itemKeys.all });
+    },
+    onError: (err) => toast.error(`Add all to FF&E failed: ${err.message}`),
   });
 }
 

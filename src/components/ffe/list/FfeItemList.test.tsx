@@ -1,8 +1,14 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { FfeItemList } from './FfeItemList';
-import type { FfeCatalogGroup, Item } from '../../../types';
+import type {
+  FfeCatalogGroup,
+  Item,
+  ProposalCategoryWithItems,
+  ProposalItem,
+} from '../../../types';
 
 vi.mock('../../shared/image/ImageFrame', () => ({
   ImageFrame: ({ alt }: { alt: string }) => <div>{alt}</div>,
@@ -45,6 +51,58 @@ function makeGroup(overrides: Partial<FfeCatalogGroup>): FfeCatalogGroup {
   };
 }
 
+function makeProposalItem(overrides: Partial<ProposalItem>): ProposalItem {
+  return {
+    id: 'proposal-item-1',
+    categoryId: 'category-1',
+    productTag: 'FR-01',
+    itemName: 'Proposal Item',
+    plan: '',
+    drawings: '',
+    location: '',
+    description: '',
+    notes: '',
+    sizeLabel: '',
+    sizeMode: 'imperial',
+    sizeW: '',
+    sizeD: '',
+    sizeH: '',
+    sizeUnit: 'ft/in',
+    footprintLabel: '',
+    footprintW: '',
+    footprintD: '',
+    footprintUnit: '',
+    footprintArea: null,
+    materials: [],
+    cbm: 0,
+    quantity: 1,
+    quantityUnit: 'unit',
+    unitCostCents: 0,
+    sortOrder: 0,
+    customData: {},
+    version: 1,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+    linkedFfeItemId: null,
+    ...overrides,
+  };
+}
+
+function makeProposalCategory(
+  overrides: Partial<ProposalCategoryWithItems>,
+): ProposalCategoryWithItems {
+  return {
+    id: 'category-1',
+    projectId: 'project-1',
+    name: 'Furniture',
+    sortOrder: 0,
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+    items: [],
+    ...overrides,
+  };
+}
+
 describe('FfeItemList', () => {
   it('orders groups by sortOrder and cards by ID tag', () => {
     const groups: FfeCatalogGroup[] = [
@@ -68,7 +126,7 @@ describe('FfeItemList', () => {
 
     render(
       <MemoryRouter>
-        <FfeItemList projectId="project-1" groups={groups} />
+        <FfeItemList projectId="project-1" groups={groups} proposalCategoriesWithItems={[]} />
       </MemoryRouter>,
     );
 
@@ -96,7 +154,7 @@ describe('FfeItemList', () => {
     );
   });
 
-  it('renders non-mutating Add and Remove affordances', () => {
+  it('disables Add and Remove when no handlers/candidates are available', () => {
     const groups: FfeCatalogGroup[] = [
       makeGroup({
         items: [makeItem({ id: 'item-1', itemName: 'Desk', itemIdTag: 'FR-01' })],
@@ -105,11 +163,58 @@ describe('FfeItemList', () => {
 
     render(
       <MemoryRouter>
-        <FfeItemList projectId="project-1" groups={groups} />
+        <FfeItemList projectId="project-1" groups={groups} proposalCategoriesWithItems={[]} />
       </MemoryRouter>,
     );
 
     expect(screen.getByRole('button', { name: 'Add FF&E item' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Remove Desk from FF&E' })).toBeDisabled();
+  });
+
+  it('shows Add+ picker with only not-yet-added proposal items and submits selected items', async () => {
+    const user = userEvent.setup();
+    const onAddToFfeItems = vi.fn().mockResolvedValue(undefined);
+    const proposalCategoriesWithItems: ProposalCategoryWithItems[] = [
+      makeProposalCategory({
+        id: 'category-1',
+        name: 'Furniture',
+        sortOrder: 1,
+        items: [
+          makeProposalItem({
+            id: 'proposal-item-1',
+            productTag: 'FR-10',
+            itemName: 'Sofa',
+            linkedFfeItemId: null,
+          }),
+          makeProposalItem({
+            id: 'proposal-item-2',
+            productTag: 'FR-20',
+            itemName: 'Already Added',
+            linkedFfeItemId: 'ffe-item-2',
+          }),
+        ],
+      }),
+    ];
+
+    render(
+      <MemoryRouter>
+        <FfeItemList
+          projectId="project-1"
+          groups={[]}
+          proposalCategoriesWithItems={proposalCategoriesWithItems}
+          onAddToFfeItems={onAddToFfeItems}
+        />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add FF&E item' }));
+    expect(screen.getByText('Add to FF&E')).toBeInTheDocument();
+    expect(screen.getByText('Sofa')).toBeInTheDocument();
+    expect(screen.queryByText('Already Added')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'Add selected (1)' }));
+
+    expect(onAddToFfeItems).toHaveBeenCalledWith(['proposal-item-1']);
   });
 });

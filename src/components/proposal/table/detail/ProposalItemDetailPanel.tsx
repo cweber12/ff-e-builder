@@ -24,7 +24,6 @@ import { ProposalItemDetailChangelog } from './ProposalItemDetailChangelog';
 import {
   buildProposalItemDuplicateInput,
   proposalItemDisplayName,
-  proposalItemLocationName,
 } from '../proposalTableItemHelpers';
 
 type Props = {
@@ -104,10 +103,9 @@ export function ProposalItemDetailPanel({
 
   const handleAddToFfe = () => {
     const displayName = proposalItemDisplayName(item);
-    const locationName = proposalItemLocationName(item);
     addToFfe.mutate(item.id, {
       onSuccess: () => {
-        toast.success(`${displayName} added to FF&E location ${locationName}.`);
+        toast.success(`${displayName} added to FF&E.`);
       },
     });
   };

@@ -9,6 +9,7 @@ export {
 export { useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom } from './useRooms';
 export { useRoomsWithItems } from './useRoomsWithItems';
 export { useFfeCatalogGroups } from './useFfeCatalogGroups';
+export { useRemoveItemFromFfe } from './useRemoveItemFromFfe';
 export {
   useItemColumnDefs,
   useCreateItemColumnDef,

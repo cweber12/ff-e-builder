@@ -14,6 +14,7 @@ import {
 import { getDb } from '../lib/db';
 import { deleteR2Keys } from '../lib/r2';
 import {
+  addProposalCategoryToFfe,
   addProposalItemToFfe,
   createGeneratedItemFromProposal,
   mirrorProposalItemToGeneratedItem,
@@ -405,6 +406,21 @@ router.post('/proposal/items/:id/add-to-ffe', async (c) => {
   const item = await addProposalItemToFfe(sql, id);
   if (!item) return c.json({ error: 'Not found' }, 404);
   return c.json({ item });
+});
+
+router.post('/proposal/categories/:id/add-all-to-ffe', async (c) => {
+  const uid = c.get('uid');
+  const id = c.req.param('id');
+
+  try {
+    await assertProposalCategoryOwnership(c.env, id, uid);
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const sql = getDb(c.env);
+  const result = await addProposalCategoryToFfe(sql, id);
+  return c.json(result);
 });
 
 // PATCH /api/v1/proposal/revisions/:revisionId/items/:itemId/cost

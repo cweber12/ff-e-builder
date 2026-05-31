@@ -206,6 +206,11 @@ export const proposalApi = {
       () => undefined,
     ),
 
+  addCategoryToFfe: (id: string): Promise<void> =>
+    apiFetch<unknown>(`/api/v1/proposal/categories/${id}/add-all-to-ffe`, {
+      method: 'POST',
+    }).then(() => undefined),
+
   deleteItem: (id: string): Promise<void> =>
     apiFetch<void>(`/api/v1/proposal/items/${id}`, { method: 'DELETE' }),
 

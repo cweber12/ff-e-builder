@@ -24,6 +24,7 @@ import {
   type RevisionSnapshot,
 } from '../../../../types';
 import {
+  useAddProposalCategoryToFfe,
   useAddProposalItemToFfe,
   useCreateProposalItem,
   useDeleteProposalItem,
@@ -71,7 +72,6 @@ import {
 import {
   buildProposalItemDuplicateInput,
   proposalItemDisplayName,
-  proposalItemLocationName,
 } from '../proposalTableItemHelpers';
 
 const MaterialLibraryModal = lazy(() =>
@@ -136,6 +136,7 @@ export function ProposalCategorySection({
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const addItemToFfe = useAddProposalItemToFfe(projectId);
+  const addCategoryToFfe = useAddProposalCategoryToFfe(projectId);
   const moveItem = useMoveProposalItem();
   const reorderItems = useReorderProposalItems(categoryId);
   const materialCellPaste = useMaterialCellPaste(projectId, {
@@ -306,6 +307,10 @@ export function ProposalCategorySection({
   );
 
   const itemCount = items.length;
+  const addableToFfeItems = useMemo(
+    () => sortedItems.filter((item) => !item.linkedFfeItemId),
+    [sortedItems],
+  );
 
   const productTagPrefix = categoryName.slice(0, 2).toUpperCase();
   const nextProductTag = useMemo(() => {
@@ -342,15 +347,24 @@ export function ProposalCategorySection({
   const handleAddItemToFfe = useCallback(
     (item: ProposalItem) => {
       const displayName = proposalItemDisplayName(item);
-      const locationName = proposalItemLocationName(item);
       addItemToFfe.mutate(item.id, {
         onSuccess: () => {
-          toast.success(`${displayName} added to FF&E location ${locationName}.`);
+          toast.success(`${displayName} added to FF&E.`);
         },
       });
     },
     [addItemToFfe],
   );
+
+  const handleAddAllToFfe = useCallback(() => {
+    if (addableToFfeItems.length === 0) return;
+    addCategoryToFfe.mutate(categoryId, {
+      onSuccess: () => {
+        const label = addableToFfeItems.length === 1 ? 'item' : 'items';
+        toast.success(`Added ${addableToFfeItems.length} ${label} to FF&E.`);
+      },
+    });
+  }, [addCategoryToFfe, addableToFfeItems, categoryId]);
 
   const handleDeleteItem = useCallback(
     (item: ProposalItem) => deleteItem.mutate(item.id),
@@ -393,6 +407,8 @@ export function ProposalCategorySection({
         onCategoryNameSave={onCategoryNameSave}
         onCategoryDelete={onCategoryDelete}
         onAddItem={handleAddItem}
+        onAddAllToFfe={handleAddAllToFfe}
+        addableToFfeCount={addableToFfeItems.length}
         onMoveColumn={onMoveColumn}
         onHideColumn={onHideColumn}
         onRestoreDefault={onRestoreDefault}

@@ -10,6 +10,7 @@ export {
   useProposalItemChangelog,
   useMoveProposalItem,
   useAddProposalItemToFfe,
+  useAddProposalCategoryToFfe,
   useDeleteProposalItem,
   useProposalRevisions,
   useRevisionSnapshots,
