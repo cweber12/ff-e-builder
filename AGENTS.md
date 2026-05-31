@@ -19,69 +19,24 @@ Use chat for planning, product decisions, PRDs, issue breakdowns, and implementa
 
 ---
 
-## Planning Handoff Contract (Required)
+## Planning Handoff (Optional, On Request)
 
-When a spec, planning, investigation, or implementation workflow is triggered, the agent must return a structured handoff before implementation begins.
+The 8-section handoff format below is a template — use it **only when the user requests a handoff prompt** or when you explicitly offer one and the user accepts.
 
-### Required handoff format
+- After a planning or triage session, **offer** to produce a handoff prompt. Do not generate one automatically.
+- A `ready-for-agent` issue carrying an Agent Brief is implemented **directly** — no self-preflight, no regenerated handoff.
+- For large, ambiguous, cross-cutting work, or anything touching public APIs, DB migrations, dependencies, or CI/build: stop and confirm scope in prose before coding. A formatted handoff is one option; a short scope-confirmation exchange is sufficient.
 
-1. **Task**
-   - One-sentence statement of the requested outcome.
+### Handoff format (on request)
 
-2. **Scope**
-   - Editable files as an explicit path list.
-   - Out-of-scope areas as explicit exclusions.
-
-3. **Behavior**
-   - Expected behavior.
-   - Actual/current behavior.
-   - Reproduction steps.
-   - Relevant error snippet, limited to a small excerpt.
-
-4. **Constraints**
-   - Keep changes minimal and reviewable.
-   - No broad refactors unless explicitly requested.
-   - No dependency, CI, or build changes without Ask First approval.
-
-5. **Proposed File List**
-   - Exact files to modify, with a one-line reason for each.
-
-6. **Verification Plan**
-   - Smallest targeted checks first.
-   - Full-suite verification only when required by risk or requested by the user.
-
-7. **Risks and Assumptions**
-   - Key assumptions requiring confirmation.
-   - Regressions to watch for.
-
-8. **Suggested Commit Message**
-   - Subject and body following the repo commit message policy.
-
-### Ready-for-Agent Fast Path (Issue Implementation)
-
-Use this fast path instead of the full handoff only when **all** of the following are true:
-
-- Issue is labeled `ready-for-agent`
-- An Agent Brief is present in the issue comments or body
-- Scope is low-risk and implementation-only (no API/public-contract changes, DB migrations, dependency changes, or CI/build config changes)
-
-Fast-path output (required before coding) is a compact preflight with:
-
-1. **Task** (one sentence)
-2. **Scope** (explicit editable files + explicit out-of-scope)
-3. **Verification Plan** (targeted checks first)
-4. **Risks/Assumptions** (1-3 bullets)
-5. **Suggested Commit Message** (subject + why)
-
-### Enforcement
-
-- The agent must not start implementation until either the full handoff or fast-path preflight is provided.
-- If the task is large, ambiguous, cross-cutting, changes public APIs, touches data migrations, changes dependencies, or affects CI/build configuration, human approval of the handoff is required before coding.
-- If fast-path eligibility is not fully met, use the full handoff format above.
-- If the task is small and the user explicitly asks for direct implementation, the handoff/preflight can be concise, but it still must identify scope, files, verification, risks, and the commit message before code changes begin.
-- During implementation, stay within the approved file list and scope. If a new file or broader change becomes necessary, stop and ask for approval before continuing.
-- If the user provides a completed planning handoff from chat, do not re-plan from scratch. Validate it against the repo, call out any mismatch, and proceed only within the approved scope.
-- If the issue already includes a complete Agent Brief and meets fast-path eligibility, do not regenerate a second full planning handoff.
+1. **Task** — One-sentence statement of the requested outcome.
+2. **Scope** — Editable files as an explicit path list; out-of-scope areas as explicit exclusions.
+3. **Behavior** — Expected / actual / reproduction steps / relevant error snippet.
+4. **Constraints** — Keep changes minimal and reviewable. No broad refactors unless requested. No dependency, CI, or build changes without Ask First approval.
+5. **Proposed File List** — Exact files to modify, with a one-line reason for each.
+6. **Verification Plan** — Smallest targeted checks first.
+7. **Risks and Assumptions** — Key assumptions requiring confirmation; regressions to watch for.
+8. **Suggested Commit Message** — Subject and body following the repo commit message policy.
 
 ---
 
@@ -92,7 +47,7 @@ When implementing GitHub issues:
 1. Fetch the issue (`gh issue view <number>`).
 2. Apply the **Pre-Implementation Issue Gate** (below). Do not implement while triage is unresolved.
 3. Implement the change within the approved scope.
-4. Apply the **Targeted Verification Gate** (below) unless an approved sliced-work plan delegates verification to the user.
+4. Apply the **Verification Policy** before committing (see Operating rules).
 5. Commit — one issue per commit where possible.
 6. Apply the **Post-Implementation Completion Gate** (below).
 7. **Split overlapping issues into separate isolated commits.** Use a backup/reset/apply strategy: implement one issue, commit, then layer the next on top. Do not bundle unrelated issue changes into a single commit.
@@ -104,29 +59,13 @@ When implementing GitHub issues:
 - If triage is unresolved (for example, still `needs-triage` or conflicting state labels), stop and resolve triage state first.
 - Moving an issue to `ready-for-agent` requires posting the required triage note/agent brief in the issue.
 - The agent must not implement while triage is unresolved.
-- If acting as a planning/triage agent, generate the exact CLI handoff prompt and wait for explicit user confirmation before implementation begins.
-- If acting as the implementation agent on a `ready-for-agent` issue with an Agent Brief, run the **Ready-for-Agent Fast Path** preflight and proceed without regenerating a second full planning handoff.
+- If acting as a planning/triage agent, produce a handoff prompt only if the user asks; otherwise proceed per the scope-confirmation gate above.
+- If acting as the implementation agent on a `ready-for-agent` issue with an Agent Brief, implement directly — no self-preflight, no regenerated handoff.
 - This same gate applies to planning sessions that will lead to implementation handoff.
-
-### Targeted Verification Gate
-
-- Before completion, run targeted checks for the touched scope (for example, targeted Vitest plus targeted ESLint on changed files).
-- Run full-suite verification only when risk, scope, or explicit user request requires it.
-- Exception: if an approved sliced-work plan explicitly delegates verification to the user, do not run those checks; clearly mark verification as pending user execution.
 
 ### Post-Implementation Completion Gate
 
-- After commit, post an issue completion comment that includes:
-  - concise implementation summary
-  - changed files list
-  - checks run (or explicit note that verification was user-delegated per sliced-work)
-  - commit hash
-- Use `/docs/reference/issue-completion-template.md` as the default structure for completion comments.
-- Completion close-checklist (required, same turn):
-  1. Post completion comment.
-  2. Confirm comment URL exists.
-  3. Close issue or move to repo-defined completed state.
-- Then close the issue or move it to the repo-defined completed state in the same turn.
+- After commit, post an issue completion comment and close the issue. See [/docs/reference/issue-completion-template.md](/docs/reference/issue-completion-template.md) for the required structure and close checklist.
 - Do not end the issue workflow without both the completion comment and completion state update.
 
 ---
@@ -137,14 +76,13 @@ When implementing GitHub issues:
 
 ### Verification Policy (Single Source of Truth)
 
-- **Issue work and approved planning handoffs:** run smallest-scope targeted checks first (for example targeted Vitest and targeted ESLint on changed files).
-- **Ad-hoc non-issue changes:** run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` unless the user explicitly says they will run checks manually.
-- **Run full-suite verification only when risk, scope, or explicit user request requires it.**
-- **Sliced-work exception:** if an approved sliced-work plan explicitly delegates verification to the user, do not run those commands; mark verification as pending user execution.
-- **Never commit code that fails typecheck or tests.**
+- **Agent runs targeted tests** (`pnpm exec vitest run <path>`) for touched scope before committing.
+- **Agent runs lint + typecheck before committing** (`pnpm exec eslint <changed-files>` and `pnpm typecheck`).
+- **User runs the full suite** (`pnpm test && pnpm build`) when necessary — never run it automatically.
+- **Never commit code that fails typecheck, lint, or targeted tests.**
 
 - **Prefer cheap, fast mechanisms for codebase search and build verification.** Use lightweight tooling (search agents, execution subagents) for discovery and verification. See agent-specific files for the exact tools available in your environment.
-- **Confirm verification before drafting the commit message.** Apply the **Verification Policy (Single Source of Truth)** above.
+- **Confirm verification before drafting the commit message.**
 
 - **Path Discovery Gate.** When path certainty is low, discover first using `rg --files` and `rg -n` before reading guessed paths. Do not burn cycles on avoidable bad-path reads.
 
@@ -163,11 +101,10 @@ When implementing GitHub issues:
 
 - **MANDATORY — Sliced-work flow.** When a multi-slice plan has been agreed with the user, follow this loop for **every** slice without exception:
   1. Implement the slice.
-  2. **Do not run `pnpm test`, `pnpm typecheck`, `pnpm lint`, or `pnpm build` yourself** unless the user explicitly asks. The user runs them manually.
+  2. Run targeted tests and lint + typecheck before committing (see Verification Policy above). User runs the full suite when necessary.
   3. Commit the changes automatically and output the commit message in a fenced code block.
   4. Wait for the user to confirm their manual checks are green before starting the next slice.
   5. If the user reports failures, fix them in the same slice, amend or add a follow-up commit, and re-issue the commit message; do not advance.
-     This rule overrides any default urge to chain slices or run verification commands without confirmation.
 
 - **Never run destructive commands** (`rm -rf`, DB drops, `git push --force`) without explicit user confirmation in the same message.
 
@@ -187,35 +124,9 @@ When implementing GitHub issues:
 
 - **Deploy the API worker with `pnpm --filter ffe-api deploy`.** Do not use raw `wrangler deploy`.
 
-### Execution fallback for sandboxed CLI agents
+### CLI commands and sandbox fallback
 
-- **Primary mode:** run normal repo commands in the default sandbox first.
-- **Known failure signature:** if a command fails before execution with a process-creation/sandbox error (for example `CreateProcessAsUserW failed: 1312` or `windows sandbox: spawn setup refresh`), retry once using an approved escalated execution path.
-- **Session fallback mode:** after the first confirmed `CreateProcessAsUserW failed: 1312` in a session, default subsequent command attempts to escalated execution for the same task category (discovery, verification, git metadata, or GitHub issue operations) to avoid repetitive retry churn.
-- **Immediate escalation retry rule:** on that known launcher failure signature, escalate on the next attempt immediately for the same command intent.
-- **No repeated non-escalated retries:** do not repeat the same command intent multiple times in non-escalated mode after the known launcher failure is observed.
-- **Retry rule:** keep the same command and intent on retry; do not broaden scope during fallback.
-- **Safety boundary:** escalation is for reliability, not privilege expansion. Do not escalate destructive commands (`rm -rf`, `git reset --hard`, force-push, DB drops) without explicit same-message user confirmation.
-- **Reference-first rule:** before composing new command variants, check `/docs/reference/cli-command-reference.md` for an existing template and use it when applicable.
-- **Learning loop rule:** when a reusable command format succeeds after experimentation, add or update its template in `/docs/reference/cli-command-reference.md` (template only; never task-specific arguments, secrets, tokens, IDs, or user data).
-- **Quality gate for updates:** only record command formats that are likely to recur; if a similar template already exists, update that entry instead of creating a near-duplicate.
-- **Safe recurring categories for session fallback mode:** `gh issue view/comment/close`, `rg --files`, `rg -n`, `Get-Content`, `pnpm exec vitest run <path>`, `pnpm exec eslint <path>`, `git status`, `git add <paths>`, `git commit`.
-
-Use these command patterns for common tasks:
-
-- **Fast search/discovery**
-  - `rg --files`
-  - `rg -n "<pattern>" src docs`
-- **Targeted verification**
-  - `pnpm exec vitest run <path-to-test>`
-  - `pnpm exec eslint <path-to-file>`
-- **Full verification**
-  - `pnpm typecheck && pnpm lint && pnpm test && pnpm build`
-- **Issue triage operations (GitHub)**
-  - `gh issue view <number> --json number,title,body,labels,state,author,createdAt,updatedAt,url`
-  - `gh issue view <number> --comments`
-  - `gh issue edit <number> --add-label <label> --remove-label <label>`
-  - `gh issue comment <number> --body-file <file>`
+See [/docs/reference/cli-command-reference.md](/docs/reference/cli-command-reference.md) for known-good command templates (search, git, gh, verification) and the sandbox launcher fallback procedure (`CreateProcessAsUserW failed: 1312`).
 
 ---
 
@@ -299,10 +210,10 @@ Every feature is done when **all** of the following are true:
 - [ ] **Types updated** — TypeScript interfaces/types reflect the change
 - [ ] **Tests added/updated** — unit or integration tests cover the new behavior (skip for style-only changes, copy edits, and config tweaks)
 - [ ] **Docs updated** — `/README.md`, `/docs/`, and any sub-folder README updated for user-visible features, API changes, or architectural decisions
-- [ ] **TypeScript compiles clean** — confirmed by user running `pnpm typecheck`
-- [ ] **Lint exits 0** — confirmed by user running `pnpm lint`
-- [ ] **All tests green** — confirmed by user running `pnpm test`
-- [ ] **Build succeeds** — confirmed by user running `pnpm build`
+- [ ] **TypeScript compiles clean** — agent runs `pnpm typecheck` before commit; user confirms full compile when risk requires it
+- [ ] **Lint exits 0** — agent runs `pnpm exec eslint <changed>` before commit; user confirms full lint when risk requires it
+- [ ] **Targeted tests green** — agent runs `pnpm exec vitest run <path>` for touched scope before commit
+- [ ] **Full suite** — user runs `pnpm test && pnpm build` when risk or scope requires it
 - [ ] **Commit message drafted** — conventional-commits format with a body explaining the _why_
 
 ---

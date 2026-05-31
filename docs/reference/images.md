@@ -1,6 +1,6 @@
 # Image Storage
 
-FF&E Builder stores image bytes in a private Cloudflare R2 bucket named
+ChillDesignStudio stores image bytes in a private Cloudflare R2 bucket named
 `ffe-images`. The React app never talks to R2 directly and never uses public
 bucket URLs. All image access goes through the authenticated Cloudflare Worker.
 

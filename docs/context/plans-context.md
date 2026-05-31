@@ -575,3 +575,18 @@ useEffect(() => {
 | `Modal`          | `<dialog>` native, backdrop-click dismiss                          |
 | `Button`         | `variant: 'default' \| 'ghost' \| 'outline'`, `size: 'sm' \| 'md'` |
 | `InlineTextEdit` | Click-to-edit text field                                           |
+
+---
+
+## v1 Plans constraints
+
+These implementation-scope rules were moved here from CONTEXT.md to keep the always-read domain doc lean. They apply to the current v1 Plans workspace.
+
+- In v1, calibrated Measured Plans and saved Measurements are immediately usable; there is no separate publish/finalize workflow.
+- In v1, a **Measured Plan** image is not replaced in place. Users create a new Measured Plan instead.
+- In v1, **Measured Plan** uploads accept image files and selected PDF pages. PDF uploads are rendered to stable page images for calibration, measurement, and crop publishing; the app does not parse PDF text or vector geometry.
+- In v1, item surfaces can show a lightweight indicator that a Measurement or Plan Image exists, but measurement editing remains inside **Plans**. The indicator deep-links into **Plans** with the relevant **Measured Plan** and **Measurement** selected.
+- In v1, an opened **Measured Plan** supports non-destructive display rotation.
+- In v1, zoom and pan in the Plans workspace are session-local UI state and do not persist when reopening a plan.
+- In v1, **Measurements** keep only current authoritative state; there is no revision history.
+- In v1, **Length Lines** are saved current-state records on a Measured Plan, individually deletable, with no history.

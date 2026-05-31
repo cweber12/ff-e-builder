@@ -304,16 +304,10 @@ _Avoid_: Category, room, sheet (when referring to the logical import block)
 - A saved **Rectangle Measurement** can be edited directly on the canvas, updating that Measurement rather than forcing a brand-new record.
 - Changing a **Plan Calibration** requires confirmation when dependent Measurements exist and recomputes their measured values from the same image-space geometry.
 - Changing a **Plan Calibration** does not immediately regenerate derived **Plan Images**; those update when each affected Measurement is next re-saved through the crop flow.
-- In v1, calibrated Measured Plans and saved Measurements are immediately usable; there is no separate publish/finalize workflow.
-- In v1, a **Measured Plan** image is not replaced in place. Users create a new Measured Plan instead.
-- In v1, item surfaces can show a lightweight indicator that a Measurement or Plan Image exists, but measurement editing remains inside **Plans**.
-- In v1, **Measured Plan** uploads accept image files and selected PDF pages. PDF uploads are rendered to stable page images for calibration, measurement, and crop publishing; the app does not parse PDF text or vector geometry.
-- The item-side Measurement/Plan Image indicator deep-links into **Plans** with the relevant **Measured Plan** and **Measurement** selected.
-- In v1, an opened **Measured Plan** supports non-destructive display rotation.
-- In v1, zoom and pan in the Plans workspace are session-local UI state and do not persist when reopening a plan.
-- In v1, **Measurements** keep only current authoritative state; there is no revision history.
-- In v1, **Length Lines** are saved current-state records on a Measured Plan, individually deletable, with no history.
 - A **Measured Plan** can exist in the Plans library while still `Uncalibrated`.
+
+Granular v1 implementation constraints for the Plans workspace (PDF rendering, display rotation, session-local zoom/pan, measurement history policy, item-surface indicator) live in [/docs/context/plans-context.md](/docs/context/plans-context.md).
+
 - A **Budget Mode** controls whether a **Project** displays one shared budget or separate **FF&E** and **Proposal** budgets.
 - A **Proposal** export can use different **Export Modes** without changing the underlying **Proposal Items**.
 

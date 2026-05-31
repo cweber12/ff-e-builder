@@ -1,6 +1,6 @@
 # Privacy
 
-FF&E Builder does not include third-party analytics.
+ChillDesignStudio does not include third-party analytics.
 
 ## Local counters
 

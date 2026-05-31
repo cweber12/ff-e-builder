@@ -1,6 +1,6 @@
 # Accessibility
 
-FF&E Builder treats accessibility as a release gate. Playwright runs axe-core
+ChillDesignStudio treats accessibility as a release gate. Playwright runs axe-core
 against the primary routes and fails on violations above `minor`.
 
 ## Automated audit
@@ -15,9 +15,9 @@ Routes covered:
 
 - `/signin`
 - `/projects`
-- `/projects/demo-project/table`
-- `/projects/demo-project/catalog`
-- `/projects/demo-project/summary`
+- `/projects/:id/ffe/table`
+- `/projects/:id/ffe/catalog`
+- `/projects/:id/budget`
 
 ## Manual checks
 
@@ -26,7 +26,7 @@ Routes covered:
 - Every button has an accessible name.
 - Every form input is associated with a visible label.
 - Status badges expose text via `role="status"` and `aria-label`, not color alone.
-- Brand green `#1A6B4A` on white passes WCAG AA for normal text.
+- Brand steel blue `#1F5891` on white passes WCAG AA for normal text.
 
 ## Known notes
 

@@ -1,6 +1,6 @@
-# FF&E Builder — Design System
+# ChillDesignStudio — Design System
 
-This document is the **source of truth** for all visual and interaction decisions in FF&E Builder. UI code must conform to these rules; deviations require an ADR.
+This document is the **source of truth** for all visual and interaction decisions in ChillDesignStudio. UI code must conform to these rules; deviations require an ADR.
 
 ---
 
