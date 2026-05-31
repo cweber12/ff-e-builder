@@ -7,8 +7,14 @@ import {
   type ReactNode,
 } from 'react';
 import { cn } from '../../../lib/utils';
-import { type Project } from '../../../types';
-import { useDeleteImage, useImages, useMaterialCellPaste, useUploadImage } from '../../../hooks';
+import { type ItemStatus, type Project } from '../../../types';
+import {
+  useDeleteImage,
+  useImages,
+  useMaterialCellPaste,
+  useUpdateItem,
+  useUploadImage,
+} from '../../../hooks';
 import { toast } from 'sonner';
 import { ColorChipGroup, CompactRowGrid, GridCell, SegmentedControl } from '../../primitives';
 import { MaterialLibraryModal } from '../../materials';
@@ -49,6 +55,13 @@ const COLOR_TOKEN_OPTIONS: Array<{ token: CatalogColorToken; hex: string; label:
   { token: 'slate-700', hex: resolveCatalogColorToken('slate-700'), label: 'Slate 700' },
 ];
 
+const ITEM_STATUS_OPTIONS: Array<{ value: ItemStatus; label: string }> = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'ordered', label: 'Ordered' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'received', label: 'Received' },
+];
+
 type CatalogEditorTab = 'text' | 'media' | 'typography' | 'layout' | 'document-mark';
 
 const CATALOG_EDITOR_TABS: Array<{ id: CatalogEditorTab; label: string }> = [
@@ -81,6 +94,20 @@ export function CatalogEditorPanel({
   onClose: () => void;
 }) {
   const layoutConfig = editorState.layoutConfig;
+  const item = currentEntry?.item;
+  const updateItem = useUpdateItem(item?.roomId ?? '');
+  const currentStatus: ItemStatus = item?.status ?? 'pending';
+  const isSavingStatus = updateItem.isPending;
+  const setItemStatus = (nextStatus: ItemStatus) => {
+    if (!item || nextStatus === item.status || isSavingStatus) return;
+    updateItem.mutate({
+      id: item.id,
+      patch: {
+        status: nextStatus,
+        version: item.version,
+      },
+    });
+  };
   const hasLogo = Boolean(logoDataUrl);
   const isDocumentMarkEnabled = watermarkConfig.enabled;
   const showDocumentMarkControls = hasLogo;
@@ -172,6 +199,20 @@ export function CatalogEditorPanel({
                   >
                     <SegmentedControl.Option value="shown">Show</SegmentedControl.Option>
                     <SegmentedControl.Option value="hidden">Hide</SegmentedControl.Option>
+                  </SegmentedControl>
+                </GridCell>
+                <GridCell label="Item status">
+                  <SegmentedControl
+                    ariaLabel="Item status"
+                    value={currentStatus}
+                    disabled={!item || isSavingStatus}
+                    onChange={(value) => setItemStatus(value)}
+                  >
+                    {ITEM_STATUS_OPTIONS.map((statusOption) => (
+                      <SegmentedControl.Option key={statusOption.value} value={statusOption.value}>
+                        {statusOption.label}
+                      </SegmentedControl.Option>
+                    ))}
                   </SegmentedControl>
                 </GridCell>
               </CompactRowGrid>
