@@ -212,7 +212,9 @@ function ProjectLayout() {
     <main
       className={[
         'flex flex-col',
-        isPlanCanvasRoute || isTableRoute ? 'h-screen overflow-hidden' : 'min-h-screen',
+        isPlanCanvasRoute || isTableRoute || isCatalogRoute
+          ? 'h-screen overflow-hidden'
+          : 'min-h-screen',
       ].join(' ')}
     >
       {isPlanCanvasRoute ? (
@@ -265,8 +267,8 @@ function ProjectLayout() {
               ) : project ? (
                 <>
                   <h1 className="sr-only">{project.name}</h1>
-                  {isTableRoute ? (
-                    // Full-width flush layout for table routes
+                  {isTableRoute || isCatalogRoute ? (
+                    // Full-width flush layout for table and catalog routes
                     <div className="flex h-full flex-1 flex-col overflow-hidden">
                       <Outlet
                         context={

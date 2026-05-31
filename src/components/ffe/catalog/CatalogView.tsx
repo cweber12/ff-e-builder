@@ -181,7 +181,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useCatalogSessionPreference<CatalogZoomValue>('100');
   const [viewportFitScale, setViewportFitScale] = useState(1);
-  const [catalogViewportHeight, setCatalogViewportHeight] = useState(0);
 
   // ── Company watermark ──────────────────────────────────────────────────────
   const { data: company, isError: companyLoadError } = useCompany();
@@ -231,7 +230,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
       const referenceRect = (tabs ?? header)?.getBoundingClientRect();
       const topOffset = referenceRect ? Math.ceil(referenceRect.bottom) : 88;
       const availableHeight = Math.max(window.innerHeight - topOffset - 16, 360);
-      setCatalogViewportHeight(availableHeight);
       setViewportFitScale(Math.min(1, availableHeight / 1056));
     };
 
@@ -303,7 +301,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-canvas-bg">
+    <div className="flex h-full flex-col bg-canvas-bg">
       <CatalogActionsBar
         project={project}
         rooms={rooms}
@@ -329,7 +327,7 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         onZoomChange={setZoomLevel}
       />
 
-      <div className="screen-only catalog-stage" style={{ minHeight: catalogViewportHeight }}>
+      <div className="screen-only catalog-stage flex-1">
         <div
           className="catalog-stage-frame"
           style={{ width: scaledPageWidth, minWidth: scaledPageWidth, height: scaledPageHeight }}
