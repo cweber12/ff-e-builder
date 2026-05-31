@@ -1,6 +1,7 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Plus } from 'lucide-react';
 import {
   closestCenter,
   DndContext,
@@ -345,7 +346,7 @@ function EditableStatusCell({ item, onSave }: { item: Item; onSave: SaveItemPatc
         }}
         className="rounded px-1 text-neutral-400 hover:text-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        <MoreIcon />
+        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
       </button>
       {menuOpen &&
         menuRect &&
@@ -503,39 +504,6 @@ function RowActionsCell({ item, actions }: { item: Item; actions: TableActions }
         </div>
       </Modal>
     </>
-  );
-}
-
-function ChevronIcon({ direction = 'down' }: { direction?: 'down' | 'left' | 'right' }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-      className={cn(
-        'h-4 w-4 transition-transform',
-        direction === 'left' && 'rotate-90',
-        direction === 'right' && '-rotate-90',
-      )}
-    >
-      <path
-        d="m5.5 8 4.5 4.5L14.5 8"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function MoreIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-      <circle cx="5" cy="10" r="1.5" />
-      <circle cx="10" cy="10" r="1.5" />
-      <circle cx="15" cy="10" r="1.5" />
-    </svg>
   );
 }
 
@@ -887,7 +855,7 @@ function EmptyProjectState({ onAddRoom }: { onAddRoom?: (() => void) | undefined
           Locations and FF&amp;E items will appear here once this project has a location schedule.
         </p>
         {onAddRoom && (
-          <Button type="button" variant="secondary" onClick={onAddRoom}>
+          <Button type="button" variant="addAction" onClick={onAddRoom}>
             Add location
           </Button>
         )}
@@ -1099,7 +1067,7 @@ function RoomActionsMenu({
           onClick={toggleMenu}
           className="icon-btn"
         >
-          <MoreIcon />
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
         </button>
       )}
     >
@@ -1140,7 +1108,7 @@ function RoomActionsMenu({
             onClick={toggleSubmenu}
           >
             Add column
-            <ChevronIcon direction="right" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </MenuSubTrigger>
           <MenuSub
             open={submenuOpen}
@@ -1296,7 +1264,11 @@ export function RoomHeader({
           title={`${collapsed ? 'Expand' : 'Collapse'} ${room.name}`}
           className="shrink-0 rounded px-1 text-xs text-neutral-400 transition-colors hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         >
-          <ChevronIcon direction={collapsed ? 'right' : 'down'} />
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          )}
         </button>
         <InlineTextEdit
           value={room.name}
@@ -1335,11 +1307,9 @@ export function RoomHeader({
           onClick={onAddItem}
           title={`Add item to ${room.name}`}
           aria-label={`Add item to ${room.name}`}
-          className="text-link shrink-0 gap-1 text-xs font-semibold text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          className="btn-add-inline shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
-          <span aria-hidden="true" className="text-sm leading-none">
-            +
-          </span>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           Add item
         </button>
         <ColumnsPanel
@@ -1828,7 +1798,11 @@ export function RoomItemsSection({
                 aria-label={imageCollapsed ? 'Show location image' : 'Hide location image'}
                 title={imageCollapsed ? 'Show location image' : 'Hide location image'}
               >
-                <ChevronIcon direction={imageCollapsed ? 'right' : 'left'} />
+                {imageCollapsed ? (
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                )}
               </button>
             </div>
             {!imageCollapsed && (

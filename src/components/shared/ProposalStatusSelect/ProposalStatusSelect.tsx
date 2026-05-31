@@ -63,7 +63,7 @@ export function ProposalStatusSelect({
         variant="toolbar"
         tone="status"
         className={cn(
-          'flex items-center gap-0',
+          'flex items-center gap-0.5',
           disabled && 'pointer-events-none opacity-60',
           className,
         )}
@@ -82,7 +82,7 @@ export function ProposalStatusSelect({
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'h-px w-4 sm:w-6',
+                    'h-px w-2 sm:w-3',
                     isPast || isCurrent ? 'bg-brand-400' : 'bg-neutral-300',
                   )}
                 />
@@ -101,13 +101,13 @@ export function ProposalStatusSelect({
                 }`}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={cn(
-                  'group inline-flex h-8 items-center gap-1.5 uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+                  'group inline-flex items-center gap-1 uppercase tracking-[0.08em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
                   isCurrent
                     ? 'text-brand-700 hover:bg-brand-50'
                     : isPast
                       ? 'text-neutral-600 hover:bg-neutral-100'
                       : blocksHere
-                        ? 'cursor-not-allowed text-amber-600 hover:bg-amber-50'
+                        ? 'cursor-not-allowed text-danger-600 hover:bg-danger-50'
                         : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600',
                 )}
                 onClick={(event) => {
@@ -117,7 +117,7 @@ export function ProposalStatusSelect({
                 }}
               >
                 <StageMarker isCurrent={isCurrent} isPast={isPast} blocked={blocksHere} />
-                <span className="hidden md:inline">{STAGE_LABEL[stage]}</span>
+                <span className="hidden lg:inline">{STAGE_LABEL[stage]}</span>
               </SegmentedControl.Option>
             </Fragment>
           );
@@ -150,7 +150,7 @@ function StageMarker({
     return (
       <span
         aria-hidden="true"
-        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-amber-500 bg-amber-100 text-[9px] font-bold text-amber-700"
+        className="inline-flex h-3 w-3 items-center justify-center rounded-full border border-danger-500 bg-danger-50 text-[8px] font-bold text-danger-600"
       >
         !
       </span>
@@ -160,7 +160,7 @@ function StageMarker({
     return (
       <span
         aria-hidden="true"
-        className="inline-block h-3.5 w-3.5 rounded-full border-2 border-brand-500 bg-brand-100"
+        className="inline-block h-3 w-3 rounded-full border-2 border-brand-500 bg-brand-100"
       />
     );
   }
@@ -168,9 +168,9 @@ function StageMarker({
     return (
       <span
         aria-hidden="true"
-        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-brand-500 text-white"
+        className="inline-flex h-3 w-3 items-center justify-center rounded-full bg-brand-500 text-white"
       >
-        <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5">
+        <svg viewBox="0 0 12 12" fill="none" className="h-2 w-2">
           <path
             d="m3 6 2 2 4-4"
             stroke="currentColor"
@@ -185,7 +185,7 @@ function StageMarker({
   return (
     <span
       aria-hidden="true"
-      className="inline-block h-3.5 w-3.5 rounded-full border border-neutral-300 bg-transparent"
+      className="inline-block h-3 w-3 rounded-full border border-neutral-300 bg-transparent"
     />
   );
 }

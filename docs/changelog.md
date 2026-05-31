@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(ui): shift project-toolbar action hierarchy left, remove redundant active-tab title text, add animated theme-tinted Add actions, compact proposal status control, and refresh toolbar/category icons including Columns
 - fix(plans): align PlanInspector and MeasurementTargetPicker exports to prevent runtime module-link failures in the plans canvas inspector
 - feat(materials): add 10-second Undo toast for pasted swatch overwrites, restoring previous primary swatches when possible and showing non-blocking restore failures
 - fix(materials): enforce manual collision-policy parity in finishes/materials Excel imports by using exact normalized finish-name matching and row-level use-existing or swatch-overwrite outcomes

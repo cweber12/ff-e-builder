@@ -54,7 +54,7 @@ describe('ProjectHeader', () => {
     expect(screen.getByRole('link', { name: 'Budget' })).toBeInTheDocument();
   });
 
-  it('marks the selected tab as active and mirrors it in the toolbar header', () => {
+  it('marks the selected tab as active without rendering a duplicate toolbar heading', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />, [
       '/projects/proj-1/proposal/table',
     ]);
@@ -64,7 +64,7 @@ describe('ProjectHeader', () => {
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('heading', { name: 'Proposal' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Proposal' })).not.toBeInTheDocument();
   });
 
   it('does not render project options in the top-right cluster', () => {

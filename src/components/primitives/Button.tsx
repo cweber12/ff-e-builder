@@ -18,7 +18,8 @@ export type ButtonVariant =
   | 'ghost'
   | 'danger'
   | 'toolbar'
-  | 'toolbarPrimary';
+  | 'toolbarPrimary'
+  | 'addAction';
 
 const variantClasses: Record<ButtonVariant, string> = {
   // Filled actions use the slightly lighter brand-500 (was brand-600) so primary
@@ -36,6 +37,8 @@ const variantClasses: Record<ButtonVariant, string> = {
   // so it wins over the base `font-medium`.
   toolbar: 'btn-toolbar font-semibold',
   toolbarPrimary: 'btn-toolbar btn-toolbar--primary font-semibold',
+  // Dedicated Add actions: themed light fill, no border, and motion-rich affordance.
+  addAction: 'btn-add-action font-semibold',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -63,7 +66,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   }: ButtonProps,
   ref,
 ) {
-  const isToolbarVariant = variant === 'toolbar' || variant === 'toolbarPrimary';
+  const isToolbarVariant =
+    variant === 'toolbar' || variant === 'toolbarPrimary' || variant === 'addAction';
   const classes = cn(
     'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
     'transition duration-150 active:scale-[0.98]',

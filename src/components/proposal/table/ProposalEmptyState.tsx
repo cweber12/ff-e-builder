@@ -1,3 +1,4 @@
+import { Plus, Upload } from 'lucide-react';
 import { Button } from '../../primitives';
 
 type ProposalEmptyStateProps = {
@@ -25,17 +26,12 @@ export function ProposalEmptyState({
           <div className="flex flex-wrap items-center justify-center gap-2">
             {onImport && (
               <Button type="button" variant="primary" size="md" onClick={onImport}>
-                <UploadIcon />
+                <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 Import
               </Button>
             )}
-            <Button
-              type="button"
-              variant={onImport ? 'secondary' : 'primary'}
-              size="md"
-              onClick={onAddCategory}
-            >
-              <PlusIcon />
+            <Button type="button" variant="addAction" size="md" onClick={onAddCategory}>
+              <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               Add Category
             </Button>
           </div>
@@ -51,27 +47,5 @@ export function ProposalEmptyState({
         </div>
       </div>
     </div>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
-      <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function UploadIcon() {
-  return (
-    <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
-      <path
-        d="M7 1v8M4 4l3-3 3 3M2 11h10"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Columns3, EyeOff, Plus } from 'lucide-react';
 import { useColumnConfig } from '../../hooks/shared';
 import { useTableDensity, type TableDensity } from '../../hooks/shared/useTableDensity';
 import { useColumnDefs } from '../../hooks';
@@ -130,35 +131,15 @@ const DENSITY_OPTIONS: { value: TableDensity; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 function ColumnsIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="toolbar-icon" aria-hidden="true">
-      <rect x="2" y="3" width="3" height="10" rx="0.5" />
-      <rect x="6.5" y="3" width="3" height="10" rx="0.5" />
-      <rect x="11" y="3" width="3" height="10" rx="0.5" />
-    </svg>
-  );
+  return <Columns3 className="toolbar-icon" aria-hidden="true" />;
 }
 
 function EyeOffIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
-      <path
-        d="M2 2l12 12M6.5 6.59A3 3 0 009.41 9.5M3.6 4.4A7.5 7.5 0 001 8s2.7 5 7 5a6.8 6.8 0 003.4-.93M6 3.14A6.7 6.7 0 018 3c4.3 0 7 5 7 5a8 8 0 01-2.1 2.54"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <EyeOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />;
 }
 
 function PlusIcon() {
-  return (
-    <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3 shrink-0" aria-hidden="true">
-      <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
+  return <Plus className="h-3 w-3 shrink-0" aria-hidden="true" />;
 }
 
 // ---------------------------------------------------------------------------

@@ -869,7 +869,7 @@ function MaterialsToolbarActions({
       {!showForm && (
         <Button
           type="button"
-          variant="toolbarPrimary"
+          variant="addAction"
           onClick={activeTab === 'finishes' ? onCreateFinish : onCreateMaterial}
         >
           <Plus className="toolbar-icon" aria-hidden="true" />

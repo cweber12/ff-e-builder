@@ -154,30 +154,30 @@ export function ProjectHeader({
       </div>
 
       <div className="relative flex h-11 items-center border-b border-neutral-300 bg-white px-4 md:px-6">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
-          {activeTab?.label ?? 'Project'}
-        </h2>
+        <div className="flex min-w-0 items-center gap-2">
+          {toolbarLeft}
 
-        {toolbarLeft}
+          {showViewToggle && (
+            <div className="toolbar-segmented">
+              <Link
+                to={`/projects/${project.id}/ffe/catalog`}
+                data-active={isCatalogRoute || undefined}
+                className="no-underline"
+              >
+                Catalog
+              </Link>
+              <Link
+                to={`/projects/${project.id}/ffe/table`}
+                data-active={!isCatalogRoute || undefined}
+                className="no-underline"
+              >
+                Table
+              </Link>
+            </div>
+          )}
 
-        {showViewToggle && (
-          <div className="toolbar-segmented ml-4">
-            <Link
-              to={`/projects/${project.id}/ffe/catalog`}
-              data-active={isCatalogRoute || undefined}
-              className="no-underline"
-            >
-              Catalog
-            </Link>
-            <Link
-              to={`/projects/${project.id}/ffe/table`}
-              data-active={!isCatalogRoute || undefined}
-              className="no-underline"
-            >
-              Table
-            </Link>
-          </div>
-        )}
+          {actions}
+        </div>
 
         {toolbarCenter ? (
           <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -185,10 +185,8 @@ export function ProjectHeader({
           </div>
         ) : null}
 
-        {/* Right side */}
         <div className="ml-auto flex items-center gap-1">
           <SaveStatusIndicator state={saveState} relTime={saveRelTime} errorAction={onSaveRetry} />
-          {actions}
         </div>
       </div>
     </header>

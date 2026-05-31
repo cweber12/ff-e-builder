@@ -47,7 +47,7 @@ export function FfeActions({ project, roomsWithItems, onAddRoom, onImport }: Ffe
 
   return (
     <div className="flex items-center gap-2">
-      <Button type="button" variant="toolbarPrimary" onClick={onAddRoom}>
+      <Button type="button" variant="addAction" onClick={onAddRoom}>
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add room
       </Button>
@@ -190,7 +190,7 @@ export function ProposalActions({
 
   return (
     <div className="flex items-center gap-2">
-      <Button type="button" variant="toolbarPrimary" onClick={onAddCategory}>
+      <Button type="button" variant="addAction" onClick={onAddCategory}>
         <Plus className="toolbar-icon" aria-hidden="true" />
         Add category
       </Button>
@@ -224,7 +224,7 @@ export function ProposalActions({
 
       <ColumnVisibilityPopover projectId={project.id} tableKey="proposal" />
 
-      <div className="ml-auto flex items-center border-l border-neutral-200 pl-2">
+      <div className="flex items-center border-l border-neutral-200 pl-2">
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}

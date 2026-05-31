@@ -189,12 +189,12 @@ function ProjectLayout() {
     !isLoading && isPlansRoute ? (
       <div
         id={PLANS_FILTER_SLOT_ID}
-        className="toolbar-segmented ml-4"
+        className="toolbar-segmented"
         role="tablist"
         aria-label="Filter plans"
       />
     ) : !isLoading && isMaterialsRoute ? (
-      <div id={MATERIALS_FILTER_SLOT_ID} className="ml-4 flex items-center gap-2" />
+      <div id={MATERIALS_FILTER_SLOT_ID} className="flex items-center gap-2" />
     ) : null;
 
   return (

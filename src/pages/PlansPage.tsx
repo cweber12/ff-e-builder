@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Upload } from 'lucide-react';
 import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
 import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
 import { PlanUploadModal } from '../components/plans/list/PlanUploadModal';
@@ -234,20 +235,12 @@ function PlansActionsBar({
           ))}
         </select>
       </label>
-      <Button type="button" variant="toolbarPrimary" onClick={onUpload} aria-haspopup="dialog">
-        <UploadIcon />
+      <Button type="button" variant="toolbar" onClick={onUpload} aria-haspopup="dialog">
+        <Upload className="toolbar-icon" aria-hidden="true" />
         Upload plan
       </Button>
     </div>,
     slot,
-  );
-}
-
-function UploadIcon() {
-  return (
-    <svg viewBox="0 0 14 14" className="toolbar-icon" aria-hidden="true">
-      <path d="M7 1v8M4 4l3-3 3 3M2 11h10" />
-    </svg>
   );
 }
 
