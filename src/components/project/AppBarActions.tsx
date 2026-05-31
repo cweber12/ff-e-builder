@@ -11,7 +11,7 @@ import { useFfeItemSort, useUserProfile } from '../../hooks';
 import { readColumnConfigFromStorage, useColumnDefs, useItemColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
 import { ExportMenu } from '../shared/ExportMenu';
-import { Button, SidebarButton } from '../primitives';
+import { Button } from '../primitives';
 import {
   useUpdateProject,
   useProposalRevisions,
@@ -21,7 +21,7 @@ import {
 import { useColumnConfig } from '../../hooks/shared';
 import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
 import { ProposalExportModal } from '../shared/modals/ProposalExportModal';
-import { SidebarButtonGroup } from '../shared/sidebar';
+import { SidebarButton, SidebarButtonGroup } from '../shared/sidebar';
 
 // Toolbar actions use shared Button toolbar variants.
 

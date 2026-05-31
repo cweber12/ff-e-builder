@@ -51,7 +51,7 @@ export function ExportMenu({
           disabled={disabled}
         >
           {label}
-          <ChevronDown className="toolbar-icon" aria-hidden="true" />
+          <ChevronDown className="sidebar-button-trailing-icon toolbar-icon" aria-hidden="true" />
         </Button>
       )}
     >

@@ -22,4 +22,3 @@ export { toast } from './toastApi';
 export { LayoutSection } from './LayoutSection';
 export { CompactRowGrid, GridCell } from './CompactRowGrid';
 export { ColorChipGroup } from './ColorChipGroup';
-export { SidebarButton } from './SidebarButton';

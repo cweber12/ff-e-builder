@@ -5,7 +5,7 @@ import { useColumnConfig } from '../../hooks/shared';
 import { useTableDensity, type TableDensity } from '../../hooks/shared/useTableDensity';
 import { useColumnDefs } from '../../hooks';
 import { cn } from '../../lib/utils';
-import { SidebarButton } from '../primitives';
+import { SidebarButton } from './sidebar';
 
 // ---------------------------------------------------------------------------
 // Column metadata — parallel to the label maps inside each table component.

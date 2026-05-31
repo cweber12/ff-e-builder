@@ -35,8 +35,12 @@ import {
   ProposalActions,
   ProposalRevisionChip,
 } from './components/project/AppBarActions';
-import { Button, SidebarButton } from './components/primitives';
-import { ProjectTabToolbarSidebar, SidebarButtonGroup } from './components/shared/sidebar';
+import { Button } from './components/primitives';
+import {
+  ProjectTabToolbarSidebar,
+  SidebarButton,
+  SidebarButtonGroup,
+} from './components/shared/sidebar';
 import { recordSession } from './lib/utils';
 import {
   exportSummaryCsv,

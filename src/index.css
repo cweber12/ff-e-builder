@@ -512,8 +512,7 @@
     margin-right: 0.125rem;
   }
 
-  .sidebar-button > .toolbar-icon:last-child,
-  .sidebar-button > svg:last-child {
+  .sidebar-button > .sidebar-button-trailing-icon {
     margin-left: auto;
   }
 
@@ -527,7 +526,7 @@
   }
 
   .sidebar-button--add {
-    @apply relative overflow-hidden bg-brand-500 text-white;
+    @apply relative justify-center overflow-hidden bg-brand-500 text-center text-white;
     transition:
       color 160ms ease,
       background-color 200ms ease,

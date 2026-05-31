@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): center Sidebar Add button content, keep non-add sidebar buttons left-aligned by making trailing-chevron alignment explicit, and move SidebarButton from primitives into shared/sidebar
 - refactor(ui): extract shared ProjectTabToolbarSidebar plus SidebarButton and SidebarButtonGroup primitives to unify tab-sidebar button layout, left alignment, hover weight emphasis, and blue Add action states
 - fix(ui): align FF&E sidebar actions left, switch the View toggle to toolbar-segmented styling, move open-revision status from room headers to the sidebar top, and anchor the Columns popover from the trigger top-right toward the right
 - fix(ui): normalize FF&E sidebar action button text to true left-justified alignment, force full-width export trigger alignment, remove hover scale motion, and increase hover text weight emphasis
