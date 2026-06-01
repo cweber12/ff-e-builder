@@ -147,20 +147,23 @@ export function ProjectHeader({
 
       <div
         data-project-header-tabs="true"
-        className="relative flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6"
+        className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-white px-4 md:px-6"
       >
-        <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
         {panelToggleLabel ? (
           <button
             type="button"
             onClick={() => onTogglePanel?.()}
             aria-label={panelToggleLabel}
             aria-pressed={!panelCollapsed}
-            className="ml-auto inline-flex h-11 items-center px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 aria-[pressed=true]:font-bold aria-[pressed=true]:text-neutral-950"
+            className="inline-flex h-11 items-center justify-self-start px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 aria-[pressed=true]:font-bold aria-[pressed=true]:text-neutral-950"
           >
             {panelToggleLabel}
           </button>
         ) : null}
+        <div className="justify-self-center">
+          <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
+        </div>
+        <div aria-hidden="true" />
       </div>
     </header>
   );
