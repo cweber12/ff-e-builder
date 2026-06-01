@@ -29,7 +29,11 @@ import { ImportProposalExcelModal } from './components/proposal/import/ImportPro
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
-import { ProposalActions, ProposalRevisionChip } from './components/project/AppBarActions';
+import {
+  ProposalActions,
+  ProposalRevisionChip,
+  ProposalSidebarContext,
+} from './components/project/AppBarActions';
 import { Button } from './components/primitives';
 import {
   ProjectTabToolbarSidebar,
@@ -204,8 +208,10 @@ function ProjectLayout() {
 
   const sidebarHeader =
     !isLoading && project ? (
-      isFfeRoute || isProposalRoute ? (
+      isFfeRoute ? (
         <ProposalRevisionChip project={project} />
+      ) : isProposalRoute ? (
+        <ProposalSidebarContext project={project} />
       ) : isPlansRoute ? (
         <div id={PLANS_SUMMARY_SLOT_ID} className="min-w-0" />
       ) : null

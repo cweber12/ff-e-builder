@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(proposal): move Proposal status control from sidebar Actions into proposal context under the sidebar header while keeping ProposalActions focused on add/import/export and columns
 - refactor(catalog): replace sidebar zoom select and +/- buttons with always-visible segmented zoom options while keeping item jump selection unchanged
 - refactor(ffe): replace sidebar View dropdown with always-visible FF&E List/Catalog segmented controls in View & Filters for one-click mode switching
 - refactor(ui): shift tab-sidebar shell colors and interaction states to semantic sidebar CSS variables with dark-mode overrides, and remove hardcoded sidebar background and border utilities from the shell markup

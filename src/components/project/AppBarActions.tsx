@@ -52,7 +52,6 @@ export function ProposalActions({
   const isColumn = layout === 'column';
   const { data: userProfile } = useUserProfile();
   const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
-  const updateProject = useUpdateProject();
   const { data: revisions = [] } = useProposalRevisions(project.id);
   const { data: snapshots = [] } = useRevisionSnapshots(project.id);
   const { data: changelog = [] } = useRevisionChangelog(project.id);
@@ -67,18 +66,6 @@ export function ProposalActions({
   const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
-
-  const openRev = revisions.find((r) => r.closedAt === null) ?? null;
-  const unresolvedCount = openRev
-    ? snapshots.filter((s) => s.revisionId === openRev.id && s.costStatus === 'flagged').length
-    : 0;
-
-  async function handleStatusChange(next: ProposalStatus) {
-    await updateProject.mutateAsync({
-      id: project.id,
-      patch: { proposalStatus: next },
-    });
-  }
 
   return (
     <div className={isColumn ? 'sidebar-button-group' : 'flex items-center gap-2'}>
@@ -145,26 +132,6 @@ export function ProposalActions({
         tableKey="proposal"
         {...(isColumn ? { buttonClassName: 'sidebar-button' } : {})}
       />
-
-      <div
-        className={
-          isColumn
-            ? 'w-full border-t border-neutral-200/80 pt-2.5'
-            : 'flex items-center border-l border-neutral-200 pl-2'
-        }
-      >
-        {isColumn ? <p className="toolbar-label pb-1">Proposal status</p> : null}
-        <ProposalStatusSelect
-          status={project.proposalStatus}
-          onChange={handleStatusChange}
-          disabled={updateProject.isPending}
-          {...(isColumn ? { compact: true } : {})}
-          {...(isColumn ? { className: 'w-full' } : {})}
-          {...(openRev
-            ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
-            : {})}
-        />
-      </div>
     </div>
   );
 }
@@ -198,6 +165,43 @@ export function ProposalRevisionChip({ project }: { project: Project }) {
           {resolved} resolved
         </span>
       </span>
+    </div>
+  );
+}
+
+export function ProposalSidebarContext({ project }: { project: Project }) {
+  const updateProject = useUpdateProject();
+  const { data: revisions = [] } = useProposalRevisions(project.id);
+  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
+
+  const openRev = revisions.find((r) => r.closedAt === null) ?? null;
+  const unresolvedCount = openRev
+    ? snapshots.filter((s) => s.revisionId === openRev.id && s.costStatus === 'flagged').length
+    : 0;
+
+  async function handleStatusChange(next: ProposalStatus) {
+    await updateProject.mutateAsync({
+      id: project.id,
+      patch: { proposalStatus: next },
+    });
+  }
+
+  return (
+    <div className="project-sidebar-slot gap-2.5">
+      <ProposalRevisionChip project={project} />
+      <div className="w-full border-t border-neutral-200/80 pt-2">
+        <p className="toolbar-label pb-1">Proposal status</p>
+        <ProposalStatusSelect
+          status={project.proposalStatus}
+          onChange={handleStatusChange}
+          disabled={updateProject.isPending}
+          compact
+          className="w-full"
+          {...(openRev
+            ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
+            : {})}
+        />
+      </div>
     </div>
   );
 }
