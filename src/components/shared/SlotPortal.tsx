@@ -5,7 +5,16 @@ export function SlotPortal({ slotId, children }: { slotId: string; children: Rea
   const [slot, setSlot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    setSlot(document.getElementById(slotId));
+    const updateSlot = () => {
+      const nextSlot = document.getElementById(slotId);
+      setSlot((currentSlot) => (currentSlot === nextSlot ? currentSlot : nextSlot));
+    };
+
+    updateSlot();
+
+    const observer = new MutationObserver(updateSlot);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [slotId]);
 
   if (!slot) return null;

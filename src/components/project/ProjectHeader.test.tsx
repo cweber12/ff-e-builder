@@ -80,15 +80,30 @@ describe('ProjectHeader', () => {
 
   it('renders the panel toggle button in the tab header and toggles it', () => {
     const onTogglePanel = vi.fn();
-    renderWithRouter(
+    const { rerender } = renderWithRouter(
       <ProjectHeader project={makeProject()} panelCollapsed={true} onTogglePanel={onTogglePanel} />,
       ['/projects/proj-1/materials'],
     );
 
-    const toggle = screen.getByRole('button', { name: 'Open/Close Materials panel' });
+    const toggle = screen.getByRole('button', { name: 'Open Materials panel' });
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(toggle);
     expect(onTogglePanel).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <MemoryRouter initialEntries={['/projects/proj-1/materials']}>
+        <ProjectHeader
+          project={makeProject()}
+          panelCollapsed={false}
+          onTogglePanel={onTogglePanel}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Close Materials panel' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });

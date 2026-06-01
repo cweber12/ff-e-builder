@@ -116,6 +116,10 @@ export function ProjectHeader({
   if (!project) return <SkeletonBar />;
 
   const activeTab = TABS.find((tab) => tab.isActive(project.id, location.pathname));
+  const panelToggleLabel =
+    activeTab && onTogglePanel
+      ? `${panelCollapsed ? 'Open' : 'Close'} ${activeTab.label} panel`
+      : null;
 
   return (
     <header data-project-header="true" className="no-print relative z-10 shrink-0 overflow-visible">
@@ -146,17 +150,16 @@ export function ProjectHeader({
         className="relative flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6"
       >
         <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
-        {activeTab && onTogglePanel ? (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <button
-              type="button"
-              onClick={onTogglePanel}
-              aria-pressed={!panelCollapsed}
-              className="pointer-events-auto rounded-md border border-neutral-300 bg-white px-2 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-700 transition-colors hover:bg-neutral-50"
-            >
-              Open/Close {activeTab.label} panel
-            </button>
-          </div>
+        {panelToggleLabel ? (
+          <button
+            type="button"
+            onClick={() => onTogglePanel?.()}
+            aria-label={panelToggleLabel}
+            aria-pressed={!panelCollapsed}
+            className="ml-auto inline-flex h-11 items-center px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 aria-[pressed=true]:font-bold aria-[pressed=true]:text-neutral-950"
+          >
+            {panelToggleLabel}
+          </button>
         ) : null}
       </div>
     </header>

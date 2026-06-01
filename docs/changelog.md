@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - feat(ui): add a collapsed-by-default project tab sidebar with a centered tab-header Open/Close <current tab> panel toggle that expands content to full width when closed
+- fix(ui): rebind tab-sidebar portal slots after panel collapse/expand remounts so Materials and Catalog controls no longer disappear, and update the tab-header panel toggle to stateful Open/Close tab-style text
 - fix(catalog): portal the editor popover to the document body for reliable click interaction above the catalog canvas, narrow panel width, and convert multi-option status and document-mark placement controls to dropdowns
 - fix(catalog): replace Editor tab pills with a top category dropdown, force single-column editor toggle rows, and raise the editor popover stacking so it stays clickable above the catalog stage
 - feat(catalog): move page navigation chevrons beside the catalog canvas, convert sidebar View into a dropdown with category/item and zoom controls, anchor the Editor popover from the header/sidebar corner, and enforce export-safe catalog fonts for preview/PDF parity
