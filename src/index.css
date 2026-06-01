@@ -468,31 +468,18 @@
     @apply border-success-700/25 bg-success-50 text-success-700;
   }
 
-  /* Project tab utility sidebar: compact left-aligned cards with restrained,
-     neutral control styling. Emphasis components (add actions, alerts, badges)
-     keep their dedicated treatments. */
+  /* Project tab utility sidebar: a restrained control rail with clear section
+     boundaries and no boxed section containers. */
   .project-sidebar-section {
-    @apply min-w-0 rounded-sm;
-  }
-
-  .project-sidebar-section--quiet {
-    @apply pb-0;
-  }
-
-  .project-sidebar-section--quiet .project-sidebar-title {
-    @apply text-neutral-500;
+    @apply min-w-0;
   }
 
   .project-sidebar-section--actions {
-    @apply rounded-md border border-neutral-200 bg-white p-2 shadow-sm;
+    @apply pt-0;
   }
 
-  .project-sidebar-section--wide {
-    @apply md:col-span-2 lg:col-span-1;
-  }
-
-  .project-sidebar-section--actions .project-sidebar-title {
-    @apply text-neutral-700;
+  .project-sidebar-section--context {
+    @apply pb-0;
   }
 
   .project-tab-toolbar-sidebar--collapsed {
@@ -500,7 +487,15 @@
   }
 
   .project-sidebar-shell {
-    @apply flex min-h-0 min-w-0 flex-col lg:h-full lg:flex-row;
+    @apply flex min-h-0 min-w-0 flex-col lg:h-full;
+  }
+
+  .project-sidebar-header {
+    @apply flex h-10 items-center border-b border-neutral-200/90 px-3;
+  }
+
+  .project-sidebar-header-title {
+    @apply truncate text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-950;
   }
 
   .project-sidebar-content {
@@ -512,23 +507,19 @@
   }
 
   .project-sidebar-rail--collapsed {
-    @apply p-2;
+    @apply flex-col justify-between p-2;
   }
 
   @screen lg {
     .project-sidebar-rail--collapsed {
-      @apply h-full p-0;
+      @apply h-full p-2;
     }
   }
 
-  .project-sidebar-rail--expanded {
-    @apply h-10 w-full border-b border-neutral-200 bg-canvas-shell/80;
-  }
-
-  @screen lg {
-    .project-sidebar-rail--expanded {
-      @apply h-full w-10 border-b-0 border-r border-neutral-200;
-    }
+  .project-sidebar-rail-label {
+    @apply max-h-28 overflow-hidden text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-500;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
   }
 
   .project-sidebar-rail-toggle {
@@ -536,7 +527,11 @@
   }
 
   .project-sidebar-title {
-    @apply mb-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-700;
+    @apply mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600;
+  }
+
+  .project-sidebar-divider {
+    @apply my-1 border-t border-neutral-200/70;
   }
 
   .project-sidebar-slot {

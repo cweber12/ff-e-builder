@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProjectHeader } from './ProjectHeader';
@@ -81,5 +81,20 @@ describe('ProjectHeader', () => {
   it('does not render a duplicate sidebar toggle in the tab header', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />, ['/projects/proj-1/materials']);
     expect(screen.queryByRole('button', { name: /sidebar/i })).not.toBeInTheDocument();
+  });
+
+  it('renders sidebar toggle in tab header when provided', () => {
+    const onToggleSidebar = vi.fn();
+    renderWithRouter(
+      <ProjectHeader
+        project={makeProject()}
+        sidebarCollapsed={false}
+        onToggleSidebar={onToggleSidebar}
+      />,
+      ['/projects/proj-1/materials'],
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Collapse project sidebar' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
   });
 });

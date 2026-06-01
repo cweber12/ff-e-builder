@@ -11,6 +11,7 @@ describe('ProjectTabToolbarSidebar', () => {
       <MemoryRouter>
         <ProjectTabToolbarSidebar
           projectId="proj-1"
+          sidebarTitle="FF&E — Catalog"
           showViewToggle={true}
           isCatalogRoute={true}
           collapsed={true}
@@ -25,5 +26,26 @@ describe('ProjectTabToolbarSidebar', () => {
 
     expect(screen.getByRole('button', { name: 'Open project sidebar' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Open .* section/i })).not.toBeInTheDocument();
+  });
+
+  it('does not render an in-sidebar collapse toggle when expanded', () => {
+    render(
+      <MemoryRouter>
+        <ProjectTabToolbarSidebar
+          projectId="proj-1"
+          sidebarTitle="FF&E — Catalog"
+          showViewToggle={true}
+          isCatalogRoute={true}
+          collapsed={false}
+          onTogglePanel={noop}
+          header={<div>Summary</div>}
+          toolbarLeft={<div>Filters</div>}
+          toolbarCenter={<div>Tools</div>}
+          actions={<div>Actions</div>}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Collapse project sidebar' })).toBeNull();
   });
 });

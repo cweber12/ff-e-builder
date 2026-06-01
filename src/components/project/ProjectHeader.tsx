@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Sidebar } from 'lucide-react';
 import type { Project } from '../../types';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
 import { StudioMark } from '../shared/auth/AuthGate';
@@ -95,6 +96,8 @@ export interface ProjectHeaderProps {
   saveState?: SaveState;
   saveRelTime?: string | null;
   onSaveRetry?: (() => void) | null;
+  sidebarCollapsed?: boolean;
+  onToggleSidebar?: (() => void) | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,6 +109,8 @@ export function ProjectHeader({
   saveState = 'idle',
   saveRelTime = null,
   onSaveRetry = null,
+  sidebarCollapsed = false,
+  onToggleSidebar = null,
 }: ProjectHeaderProps) {
   const location = useLocation();
 
@@ -141,7 +146,23 @@ export function ProjectHeader({
         data-project-header-tabs="true"
         className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-white px-4 md:px-6"
       >
-        <div aria-hidden="true" />
+        <div className="justify-self-start">
+          {onToggleSidebar ? (
+            <button
+              type="button"
+              className="icon-btn text-neutral-500 hover:text-neutral-950"
+              aria-label={sidebarCollapsed ? 'Open project sidebar' : 'Collapse project sidebar'}
+              aria-expanded={!sidebarCollapsed}
+              aria-controls="project-tab-toolbar-sidebar"
+              onClick={onToggleSidebar}
+              title={sidebarCollapsed ? 'Open project sidebar' : 'Collapse project sidebar'}
+            >
+              <Sidebar className="toolbar-icon" aria-hidden="true" />
+            </button>
+          ) : (
+            <div aria-hidden="true" />
+          )}
+        </div>
         <div className="justify-self-center">
           <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
         </div>

@@ -1,5 +1,5 @@
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import { SidebarButton } from './SidebarButton';
@@ -7,6 +7,7 @@ import { SidebarButtonGroup } from './SidebarButtonGroup';
 
 interface ProjectTabToolbarSidebarProps {
   projectId: string;
+  sidebarTitle: string;
   showViewToggle: boolean;
   isCatalogRoute: boolean;
   collapsed?: boolean;
@@ -21,6 +22,7 @@ interface ProjectTabToolbarSidebarProps {
 
 export function ProjectTabToolbarSidebar({
   projectId,
+  sidebarTitle,
   showViewToggle,
   isCatalogRoute,
   collapsed = false,
@@ -61,87 +63,94 @@ export function ProjectTabToolbarSidebar({
 
   const sidebarSections: Array<{
     key: string;
-    label: string;
+    label?: string;
     content: ReactNode;
-    className?: string;
+    sectionClassName?: string;
   }> = [];
+
+  const viewAndFiltersBlocks: ReactNode[] = [];
 
   if (showViewToggle) {
     const currentView = isCatalogRoute ? 'Catalog' : 'List';
-    sidebarSections.push({
-      key: 'view',
-      label: 'View',
-      className: 'project-sidebar-section--quiet project-sidebar-section--wide',
-      content: (
-        <div className="space-y-2">
-          <div ref={viewMenuRef} className="relative">
-            <button
-              type="button"
-              className="sidebar-view-toggle"
-              aria-haspopup="menu"
-              aria-expanded={viewMenuOpen}
-              onClick={() => setViewMenuOpen((open) => !open)}
-            >
-              <span className="sidebar-view-toggle-label">View</span>
-              <span className="sidebar-view-toggle-value">{currentView}</span>
-              <ChevronDown
-                className={cn('sidebar-view-toggle-icon', viewMenuOpen && 'rotate-180')}
-                aria-hidden="true"
-              />
-            </button>
-            {viewMenuOpen ? (
-              <div role="menu" aria-label="FF&E view mode" className="sidebar-view-menu menu-panel">
-                <SidebarButton asChild selected={isCatalogRoute} role="menuitem">
-                  <Link
-                    to={`/projects/${projectId}/ffe/catalog`}
-                    data-active={isCatalogRoute || undefined}
-                    onClick={() => setViewMenuOpen(false)}
-                  >
-                    Catalog
-                  </Link>
-                </SidebarButton>
-                <SidebarButton asChild selected={!isCatalogRoute} role="menuitem">
-                  <Link
-                    to={`/projects/${projectId}/ffe/list`}
-                    data-active={!isCatalogRoute || undefined}
-                    onClick={() => setViewMenuOpen(false)}
-                  >
-                    List
-                  </Link>
-                </SidebarButton>
-              </div>
-            ) : null}
-          </div>
-          {toolbarCenter ? <div className="project-sidebar-slot">{toolbarCenter}</div> : null}
+    viewAndFiltersBlocks.push(
+      <div key="view-toggle" className="space-y-2">
+        <div ref={viewMenuRef} className="relative">
+          <button
+            type="button"
+            className="sidebar-view-toggle"
+            aria-haspopup="menu"
+            aria-expanded={viewMenuOpen}
+            onClick={() => setViewMenuOpen((open) => !open)}
+          >
+            <span className="sidebar-view-toggle-label">View</span>
+            <span className="sidebar-view-toggle-value">{currentView}</span>
+            <ChevronDown
+              className={cn('sidebar-view-toggle-icon', viewMenuOpen && 'rotate-180')}
+              aria-hidden="true"
+            />
+          </button>
+          {viewMenuOpen ? (
+            <div role="menu" aria-label="FF&E view mode" className="sidebar-view-menu menu-panel">
+              <SidebarButton asChild selected={isCatalogRoute} role="menuitem">
+                <Link
+                  to={`/projects/${projectId}/ffe/catalog`}
+                  data-active={isCatalogRoute || undefined}
+                  onClick={() => setViewMenuOpen(false)}
+                >
+                  Catalog
+                </Link>
+              </SidebarButton>
+              <SidebarButton asChild selected={!isCatalogRoute} role="menuitem">
+                <Link
+                  to={`/projects/${projectId}/ffe/list`}
+                  data-active={!isCatalogRoute || undefined}
+                  onClick={() => setViewMenuOpen(false)}
+                >
+                  List
+                </Link>
+              </SidebarButton>
+            </div>
+          ) : null}
         </div>
-      ),
-    });
+      </div>,
+    );
+    if (toolbarCenter) {
+      viewAndFiltersBlocks.push(
+        <div key="view-toolbar-center" className="project-sidebar-slot">
+          {toolbarCenter}
+        </div>,
+      );
+    }
   }
 
   if (header) {
     sidebarSections.push({
-      key: 'summary',
-      label: 'Context',
-      className: 'project-sidebar-section--quiet',
+      key: 'context',
       content: <div className="project-sidebar-slot">{header}</div>,
     });
   }
 
   if (toolbarLeft) {
-    sidebarSections.push({
-      key: 'contextual-filters',
-      label: filtersLabel ?? 'Filters',
-      className: 'project-sidebar-section--quiet',
-      content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
-    });
+    viewAndFiltersBlocks.push(
+      <div key="view-toolbar-left" className="project-sidebar-slot">
+        {toolbarLeft}
+      </div>,
+    );
   }
 
   if (toolbarCenter && !showViewToggle) {
+    viewAndFiltersBlocks.push(
+      <div key="toolbar-center" className="project-sidebar-slot">
+        {toolbarCenter}
+      </div>,
+    );
+  }
+
+  if (viewAndFiltersBlocks.length > 0) {
     sidebarSections.push({
-      key: 'contextual-tools',
-      label: 'Tools',
-      className: 'project-sidebar-section--quiet',
-      content: <div className="project-sidebar-slot">{toolbarCenter}</div>,
+      key: 'view-and-filters',
+      label: filtersLabel ?? 'View & Filters',
+      content: <div className="project-sidebar-slot">{viewAndFiltersBlocks}</div>,
     });
   }
 
@@ -149,7 +158,7 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'actions',
       label: actionsLabel ?? 'Actions',
-      className: 'project-sidebar-section--actions project-sidebar-section--wide',
+      sectionClassName: 'project-sidebar-section--actions',
       content: <SidebarButtonGroup>{actions}</SidebarButtonGroup>,
     });
   }
@@ -162,6 +171,9 @@ export function ProjectTabToolbarSidebar({
         className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/80 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
       >
         <div className="project-sidebar-rail project-sidebar-rail--collapsed h-full">
+          <span className="project-sidebar-rail-label" aria-hidden="true">
+            {sidebarTitle}
+          </span>
           {onTogglePanel ? (
             <button
               type="button"
@@ -189,27 +201,26 @@ export function ProjectTabToolbarSidebar({
       className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
     >
       <div className="project-sidebar-shell lg:h-full">
-        <div className="project-sidebar-rail project-sidebar-rail--expanded">
-          {onTogglePanel ? (
-            <button
-              type="button"
-              className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950"
-              aria-label="Collapse project sidebar"
-              aria-controls="project-tab-toolbar-sidebar"
-              aria-expanded="true"
-              title="Collapse project sidebar"
-              onClick={onTogglePanel}
-            >
-              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
-            </button>
-          ) : null}
+        <div className="project-sidebar-header">
+          <p className="project-sidebar-header-title">{sidebarTitle}</p>
         </div>
-        <div className="project-sidebar-content grid gap-2 overflow-x-hidden p-3 md:grid-cols-2 md:items-start lg:h-full lg:grid-cols-1 lg:p-3">
-          {sidebarSections.map((section) => (
-            <section key={section.key} className={cn('project-sidebar-section', section.className)}>
-              <p className="project-sidebar-title">{section.label}</p>
-              <div className="min-w-0">{section.content}</div>
-            </section>
+        <div className="project-sidebar-content flex flex-col gap-3 overflow-x-hidden p-3 lg:h-full">
+          {sidebarSections.map((section, index) => (
+            <Fragment key={section.key}>
+              <section
+                className={cn(
+                  'project-sidebar-section',
+                  section.sectionClassName,
+                  !section.label && 'project-sidebar-section--context',
+                )}
+              >
+                {section.label ? <p className="project-sidebar-title">{section.label}</p> : null}
+                <div className="min-w-0">{section.content}</div>
+              </section>
+              {index < sidebarSections.length - 1 ? (
+                <div className="project-sidebar-divider" aria-hidden="true" />
+              ) : null}
+            </Fragment>
           ))}
         </div>
       </div>

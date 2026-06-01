@@ -133,7 +133,7 @@ function ProjectLayout() {
     useProposalWithItems(id ?? '', new Set());
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
@@ -211,6 +211,18 @@ function ProjectLayout() {
       ) : null
     ) : null;
 
+  const sidebarTitle = isFfeRoute
+    ? `FF&E — ${isCatalogRoute ? 'Catalog' : 'List'}`
+    : isProposalRoute
+      ? 'Proposal'
+      : isPlansRoute
+        ? 'Plans'
+        : isMaterialsRoute
+          ? 'Materials'
+          : isBudgetRoute
+            ? 'Budget'
+            : 'Project';
+
   return (
     <main
       className={[
@@ -247,11 +259,19 @@ function ProjectLayout() {
         ) : null
       ) : (
         <>
-          <ProjectHeader project={project} userMenu={<UserMenu />} />
+          <ProjectHeader
+            project={project}
+            userMenu={<UserMenu />}
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleSidebar={
+              canToggleSidebar ? () => setSidebarCollapsed((collapsed) => !collapsed) : null
+            }
+          />
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
               <ProjectTabToolbarSidebar
                 projectId={project.id}
+                sidebarTitle={sidebarTitle}
                 showViewToggle={isFfeRoute}
                 isCatalogRoute={isCatalogRoute}
                 collapsed={sidebarCollapsed}
