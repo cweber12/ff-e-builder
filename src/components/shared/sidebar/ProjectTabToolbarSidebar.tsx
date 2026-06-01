@@ -9,6 +9,7 @@ interface ProjectTabToolbarSidebarProps {
   projectId: string;
   showViewToggle: boolean;
   isCatalogRoute: boolean;
+  collapsed?: boolean;
   header?: ReactNode;
   toolbarLeft: ReactNode;
   toolbarCenter: ReactNode;
@@ -21,6 +22,7 @@ export function ProjectTabToolbarSidebar({
   projectId,
   showViewToggle,
   isCatalogRoute,
+  collapsed = false,
   header,
   toolbarLeft,
   toolbarCenter,
@@ -54,6 +56,8 @@ export function ProjectTabToolbarSidebar({
   useEffect(() => {
     setViewMenuOpen(false);
   }, [isCatalogRoute]);
+
+  if (collapsed) return null;
 
   if (!showViewToggle && !header && !toolbarLeft && !toolbarCenter && !actions) return null;
 

@@ -95,6 +95,8 @@ export interface ProjectHeaderProps {
   saveState?: SaveState;
   saveRelTime?: string | null;
   onSaveRetry?: (() => void) | null;
+  panelCollapsed?: boolean;
+  onTogglePanel?: (() => void) | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,6 +108,8 @@ export function ProjectHeader({
   saveState = 'idle',
   saveRelTime = null,
   onSaveRetry = null,
+  panelCollapsed = true,
+  onTogglePanel = null,
 }: ProjectHeaderProps) {
   const location = useLocation();
 
@@ -139,9 +143,21 @@ export function ProjectHeader({
 
       <div
         data-project-header-tabs="true"
-        className="flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6"
+        className="relative flex h-11 items-center border-b border-neutral-200 bg-white px-4 md:px-6"
       >
         <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
+        {activeTab && onTogglePanel ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={onTogglePanel}
+              aria-pressed={!panelCollapsed}
+              className="pointer-events-auto rounded-md border border-neutral-300 bg-white px-2 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-700 transition-colors hover:bg-neutral-50"
+            >
+              Open/Close {activeTab.label} panel
+            </button>
+          </div>
+        ) : null}
       </div>
     </header>
   );

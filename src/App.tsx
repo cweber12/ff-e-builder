@@ -133,6 +133,7 @@ function ProjectLayout() {
     useProposalWithItems(id ?? '', new Set());
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
@@ -142,6 +143,8 @@ function ProjectLayout() {
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
   const isTableRoute = isProposalRoute;
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
+  const canToggleSidebar =
+    isFfeRoute || isProposalRoute || isPlansRoute || isMaterialsRoute || isBudgetRoute;
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
@@ -244,13 +247,21 @@ function ProjectLayout() {
         ) : null
       ) : (
         <>
-          <ProjectHeader project={project} userMenu={<UserMenu />} />
+          <ProjectHeader
+            project={project}
+            userMenu={<UserMenu />}
+            panelCollapsed={sidebarCollapsed}
+            onTogglePanel={
+              canToggleSidebar ? () => setSidebarCollapsed((collapsed) => !collapsed) : null
+            }
+          />
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
               <ProjectTabToolbarSidebar
                 projectId={project.id}
                 showViewToggle={isFfeRoute}
                 isCatalogRoute={isCatalogRoute}
+                collapsed={sidebarCollapsed}
                 header={sidebarHeader}
                 toolbarLeft={sidebarToolbarLeft}
                 toolbarCenter={sidebarToolbarCenter}

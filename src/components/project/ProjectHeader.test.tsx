@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProjectHeader } from './ProjectHeader';
 import type { Project } from '../../types';
@@ -76,5 +76,19 @@ describe('ProjectHeader', () => {
     expect(
       screen.queryByRole('button', { name: 'Open options for Living Room Reno' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('renders the panel toggle button in the tab header and toggles it', () => {
+    const onTogglePanel = vi.fn();
+    renderWithRouter(
+      <ProjectHeader project={makeProject()} panelCollapsed={true} onTogglePanel={onTogglePanel} />,
+      ['/projects/proj-1/materials'],
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Open/Close Materials panel' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(toggle);
+    expect(onTogglePanel).toHaveBeenCalledTimes(1);
   });
 });
