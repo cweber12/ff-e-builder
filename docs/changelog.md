@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ui): add shared sidebar section-header, divider, and field-group primitives and wire ProjectTabToolbarSidebar to use them for consistent cross-tab section composition
 - feat(ui): move the project sidebar toggle into the tab header, remove the expanded sidebar rail toggle, and introduce a titled/divided sidebar shell hierarchy for clearer context and section structure
 - fix(ui): remove duplicate header/sidebar chevrons, convert collapsed sidebar to a rail-only toggle, and tighten tab-sidebar section spacing with a persistent expanded-state rail
 - feat(ui): add a collapsed-by-default project tab sidebar with a centered tab-header Open/Close <current tab> panel toggle that expands content to full width when closed

@@ -530,6 +530,14 @@
     @apply mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600;
   }
 
+  .project-sidebar-section-header {
+    @apply mb-1 flex items-center justify-between gap-2;
+  }
+
+  .project-sidebar-section-meta {
+    @apply text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500;
+  }
+
   .project-sidebar-divider {
     @apply my-1 border-t border-neutral-200/70;
   }
@@ -541,6 +549,10 @@
 
   .project-sidebar-slot--stretch {
     @apply [&>*]:w-full;
+  }
+
+  .project-sidebar-field-group {
+    @apply gap-1.5;
   }
 
   .sidebar-view-toggle {

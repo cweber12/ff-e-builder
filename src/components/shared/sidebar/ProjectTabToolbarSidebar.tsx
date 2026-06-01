@@ -2,8 +2,11 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
+import { SidebarDivider } from './SidebarDivider';
 import { SidebarButton } from './SidebarButton';
 import { SidebarButtonGroup } from './SidebarButtonGroup';
+import { SidebarFieldGroup } from './SidebarFieldGroup';
+import { SidebarSectionHeader } from './SidebarSectionHeader';
 
 interface ProjectTabToolbarSidebarProps {
   projectId: string;
@@ -73,7 +76,7 @@ export function ProjectTabToolbarSidebar({
   if (showViewToggle) {
     const currentView = isCatalogRoute ? 'Catalog' : 'List';
     viewAndFiltersBlocks.push(
-      <div key="view-toggle" className="space-y-2">
+      <SidebarFieldGroup key="view-toggle" className="space-y-2">
         <div ref={viewMenuRef} className="relative">
           <button
             type="button"
@@ -112,13 +115,11 @@ export function ProjectTabToolbarSidebar({
             </div>
           ) : null}
         </div>
-      </div>,
+      </SidebarFieldGroup>,
     );
     if (toolbarCenter) {
       viewAndFiltersBlocks.push(
-        <div key="view-toolbar-center" className="project-sidebar-slot">
-          {toolbarCenter}
-        </div>,
+        <SidebarFieldGroup key="view-toolbar-center">{toolbarCenter}</SidebarFieldGroup>,
       );
     }
   }
@@ -126,38 +127,36 @@ export function ProjectTabToolbarSidebar({
   if (header) {
     sidebarSections.push({
       key: 'context',
-      content: <div className="project-sidebar-slot">{header}</div>,
+      content: <SidebarFieldGroup>{header}</SidebarFieldGroup>,
     });
   }
 
   if (toolbarLeft) {
     viewAndFiltersBlocks.push(
-      <div key="view-toolbar-left" className="project-sidebar-slot">
-        {toolbarLeft}
-      </div>,
+      <SidebarFieldGroup key="view-toolbar-left">{toolbarLeft}</SidebarFieldGroup>,
     );
   }
 
   if (toolbarCenter && !showViewToggle) {
     viewAndFiltersBlocks.push(
-      <div key="toolbar-center" className="project-sidebar-slot">
-        {toolbarCenter}
-      </div>,
+      <SidebarFieldGroup key="toolbar-center">{toolbarCenter}</SidebarFieldGroup>,
     );
   }
 
   if (viewAndFiltersBlocks.length > 0) {
+    const sectionLabel = filtersLabel === '' ? undefined : (filtersLabel ?? 'View & Filters');
     sidebarSections.push({
       key: 'view-and-filters',
-      label: filtersLabel ?? 'View & Filters',
-      content: <div className="project-sidebar-slot">{viewAndFiltersBlocks}</div>,
+      ...(sectionLabel ? { label: sectionLabel } : {}),
+      content: <SidebarFieldGroup>{viewAndFiltersBlocks}</SidebarFieldGroup>,
     });
   }
 
   if (actions) {
+    const sectionLabel = actionsLabel === '' ? undefined : (actionsLabel ?? 'Actions');
     sidebarSections.push({
       key: 'actions',
-      label: actionsLabel ?? 'Actions',
+      ...(sectionLabel ? { label: sectionLabel } : {}),
       sectionClassName: 'project-sidebar-section--actions',
       content: <SidebarButtonGroup>{actions}</SidebarButtonGroup>,
     });
@@ -214,12 +213,10 @@ export function ProjectTabToolbarSidebar({
                   !section.label && 'project-sidebar-section--context',
                 )}
               >
-                {section.label ? <p className="project-sidebar-title">{section.label}</p> : null}
+                {section.label ? <SidebarSectionHeader label={section.label} /> : null}
                 <div className="min-w-0">{section.content}</div>
               </section>
-              {index < sidebarSections.length - 1 ? (
-                <div className="project-sidebar-divider" aria-hidden="true" />
-              ) : null}
+              {index < sidebarSections.length - 1 ? <SidebarDivider /> : null}
             </Fragment>
           ))}
         </div>
