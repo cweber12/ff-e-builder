@@ -15,12 +15,12 @@ Date: 2026-06-01
 
 ## Interactions & States
 
-- [ ] **Harden Plans state persistence across collapse/reopen**: Preserve selected filter and sort state while ensuring UI controls re-render after remount. Covers repeated toggles, route-stable state, and action control availability. _Modifies: src/pages/PlansPage.tsx and tests in src/pages/PlansPage.test.tsx._
-- [ ] **Reduce sidebar noise and tighten action hierarchy**: Normalize spacing, typographic emphasis, and selected/hover behavior for sidebar controls so primary actions stand out without clutter. Covers idle, hover, active, selected, disabled states. _Modifies: shared sidebar CSS and SidebarButton behavior._
+- [x] **Harden Plans state persistence across collapse/reopen**: Preserve selected filter and sort state while ensuring UI controls re-render after remount. Covers repeated toggles, route-stable state, and action control availability. _Modifies: src/pages/PlansPage.tsx and tests in src/pages/PlansPage.test.tsx._
+- [x] **Reduce sidebar noise and tighten action hierarchy**: Normalize spacing, typographic emphasis, and selected/hover behavior for sidebar controls so primary actions stand out without clutter. Covers idle, hover, active, selected, disabled states. _Modifies: shared sidebar CSS and SidebarButton behavior._
 
 ## Responsive & Polish
 
-- [ ] **Desktop/tablet behavior pass for sidebar shell**: Validate compact spacing and hierarchy at desktop and tablet widths while preserving mobile fallback discoverability. Breakpoints: lg primary, md secondary. _Modifies: shared sidebar layout classes/styles._
+- [x] **Desktop/tablet behavior pass for sidebar shell**: Validate compact spacing and hierarchy at desktop and tablet widths while preserving mobile fallback discoverability. Breakpoints: lg primary, md secondary. _Modifies: shared sidebar layout classes/styles._
 - [ ] **Accessibility verification pass**: Ensure WCAG 2.1 AA contrast, focus-visible styles, semantic labels, keyboard navigation, and aria-expanded/aria-current integrity for toggle/rail/sections. _Modifies: relevant sidebar/header components and tests as needed._
 
 ## Review

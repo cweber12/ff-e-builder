@@ -73,7 +73,7 @@ export function ProjectTabToolbarSidebar({
       key: 'view',
       label: 'View',
       shortLabel: currentView === 'Catalog' ? 'CAT' : 'LIST',
-      className: 'project-sidebar-section--quiet',
+      className: 'project-sidebar-section--quiet project-sidebar-section--wide',
       content: (
         <div className="space-y-2">
           <div ref={viewMenuRef} className="relative">
@@ -155,7 +155,7 @@ export function ProjectTabToolbarSidebar({
       key: 'actions',
       label: actionsLabel ?? 'Actions',
       shortLabel: 'ACT',
-      className: 'project-sidebar-section--actions',
+      className: 'project-sidebar-section--actions project-sidebar-section--wide',
       content: <SidebarButtonGroup>{actions}</SidebarButtonGroup>,
     });
   }
@@ -209,11 +209,11 @@ export function ProjectTabToolbarSidebar({
       aria-label="Project tab sidebar"
       className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
     >
-      <div className="flex h-full flex-col space-y-3 overflow-x-hidden p-3 md:p-4">
+      <div className="grid gap-3 overflow-x-hidden p-3 md:grid-cols-2 md:items-start lg:h-full lg:grid-cols-1 lg:p-4">
         {onTogglePanel ? (
           <button
             type="button"
-            className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950"
+            className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950 md:col-span-2 lg:col-span-1"
             aria-label="Collapse project sidebar"
             aria-controls="project-tab-toolbar-sidebar"
             aria-expanded="true"
