@@ -657,7 +657,7 @@
   }
 
   .catalog-sidebar-zoom-row {
-    @apply mt-0.5 flex items-center justify-between gap-2;
+    @apply mt-0.5 flex flex-col items-start gap-1.5;
   }
 
   .catalog-sidebar-zoom-label {
@@ -665,16 +665,7 @@
   }
 
   .catalog-sidebar-zoom-controls {
-    @apply flex items-center gap-1;
-  }
-
-  .catalog-sidebar-zoom-select {
-    @apply h-8 w-[88px] py-1 pl-2 pr-7 text-[11px] font-semibold uppercase tracking-[0.08em];
-  }
-
-  .catalog-sidebar-zoom-btn {
-    @apply inline-flex h-7 w-7 items-center justify-center rounded-sm text-neutral-600 transition-colors duration-150
-           hover:text-neutral-900 disabled:pointer-events-none disabled:text-neutral-300;
+    @apply w-full;
   }
 
   .sidebar-button-group {

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(catalog): replace sidebar zoom select and +/- buttons with always-visible segmented zoom options while keeping item jump selection unchanged
 - refactor(ffe): replace sidebar View dropdown with always-visible FF&E List/Catalog segmented controls in View & Filters for one-click mode switching
 - refactor(ui): shift tab-sidebar shell colors and interaction states to semantic sidebar CSS variables with dark-mode overrides, and remove hardcoded sidebar background and border utilities from the shell markup
 - refactor(ui): add shared sidebar section-header, divider, and field-group primitives and wire ProjectTabToolbarSidebar to use them for consistent cross-tab section composition

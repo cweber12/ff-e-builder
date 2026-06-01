@@ -5,8 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Minus,
-  Plus,
   Printer,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -24,7 +22,7 @@ import {
   type FfeItemSortMode,
 } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
-import { Button } from '../../primitives';
+import { Button, SegmentedControl } from '../../primitives';
 import { SidebarButton, SidebarButtonGroup } from '../../shared/sidebar';
 import { imageAssetToPngDataUrl } from '../../../lib/export/imageHelpers';
 import {
@@ -535,15 +533,6 @@ function CatalogPagePicker({
 }) {
   let itemIndex = 0;
 
-  const handleZoomStep = (direction: 'in' | 'out') => {
-    const levels: CatalogZoomValue[] = ['75', '100', '125', '150'];
-    const current = levels.indexOf(zoomLevel);
-    const next =
-      direction === 'in' ? Math.min(current + 1, levels.length - 1) : Math.max(current - 1, 0);
-    const nextLevel = levels[next] ?? '100';
-    onZoomChange(nextLevel);
-  };
-
   return (
     <nav aria-label="Catalog page picker" className="no-print catalog-sidebar-picker">
       {currentEntry?.room.name ? (
@@ -577,37 +566,18 @@ function CatalogPagePicker({
       </select>
       <div className="catalog-sidebar-zoom-row">
         <span className="catalog-sidebar-zoom-label">Zoom</span>
-        <div className="catalog-sidebar-zoom-controls">
-          <button
-            type="button"
-            aria-label="Zoom out"
-            className="catalog-sidebar-zoom-btn"
-            onClick={() => handleZoomStep('out')}
-            disabled={zoomLevel === '75'}
-          >
-            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-          <select
-            aria-label="Catalog zoom level"
-            className="toolbar-select catalog-sidebar-zoom-select"
-            value={zoomLevel}
-            onChange={(event) => onZoomChange(event.target.value as CatalogZoomValue)}
-          >
-            <option value="75">75%</option>
-            <option value="100">100%</option>
-            <option value="125">125%</option>
-            <option value="150">150%</option>
-          </select>
-          <button
-            type="button"
-            aria-label="Zoom in"
-            className="catalog-sidebar-zoom-btn"
-            onClick={() => handleZoomStep('in')}
-            disabled={zoomLevel === '150'}
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        </div>
+        <SegmentedControl<CatalogZoomValue>
+          value={zoomLevel}
+          onChange={onZoomChange}
+          ariaLabel="Catalog zoom level"
+          variant="toolbar"
+          className="catalog-sidebar-zoom-controls [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
+        >
+          <SegmentedControl.Option value="75">75%</SegmentedControl.Option>
+          <SegmentedControl.Option value="100">100%</SegmentedControl.Option>
+          <SegmentedControl.Option value="125">125%</SegmentedControl.Option>
+          <SegmentedControl.Option value="150">150%</SegmentedControl.Option>
+        </SegmentedControl>
       </div>
     </nav>
   );
@@ -686,7 +656,7 @@ function CatalogExportButton({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Export catalog"
-        className="justify-between"
+        className="justify-start"
         onClick={() => setOpen((v) => !v)}
       >
         <Download className="toolbar-icon" aria-hidden="true" />
