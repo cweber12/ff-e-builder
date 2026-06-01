@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(materials): remove Materials options dropdown and render always-visible view, import, export, and delete-all sidebar controls for both Finishes and Materials modes
 - refactor(proposal): move Proposal status control from sidebar Actions into proposal context under the sidebar header while keeping ProposalActions focused on add/import/export and columns
 - refactor(catalog): replace sidebar zoom select and +/- buttons with always-visible segmented zoom options while keeping item jump selection unchanged
 - refactor(ffe): replace sidebar View dropdown with always-visible FF&E List/Catalog segmented controls in View & Filters for one-click mode switching

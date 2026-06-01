@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Plus, SlidersHorizontal } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   exportFinishesExcel,
@@ -11,7 +10,6 @@ import {
 import {
   useCreateFinish,
   useCreateMaterial,
-  useActionsMenu,
   useDeleteFinish,
   useDeleteImage,
   useDeleteMaterial,
@@ -32,15 +30,7 @@ import type {
   Project,
 } from '../../types';
 import { imageKeys } from '../../lib/query';
-import {
-  Button,
-  DropdownMenu,
-  MenuItem,
-  MenuPanel,
-  MenuSeparator,
-  Modal,
-  SegmentedControl,
-} from '../primitives';
+import { Button, Modal, SegmentedControl } from '../primitives';
 import { SlotPortal } from '../shared/SlotPortal';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
@@ -630,108 +620,12 @@ function MaterialsToolbarLeft({
   onActiveTabChange: (value: LibraryTab) => void;
   onViewModeChange: (value: 'grid' | 'table') => void;
 }) {
-  const exportMenu = useActionsMenu();
-  const [optionsTriggerElement, setOptionsTriggerElement] = useState<HTMLButtonElement | null>(
-    null,
-  );
-
-  const exportMenuPosition = exportMenu.getPortalPosition(exportMenu.triggerRef, {
-    align: 'bottom',
-    edge: 'left',
-    offsetY: 4,
-  });
-
   return (
     <SlotPortal slotId={MATERIALS_FILTER_SLOT_ID}>
-      <>
-        <div className="flex w-full items-center gap-2">
-          <DropdownMenu
-            wrapperClassName="relative inline-flex"
-            panelClassName="z-[120] min-w-52"
-            positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
-            renderTrigger={({ triggerRef, open, toggleMenu }) => (
-              <Button
-                ref={triggerRef}
-                type="button"
-                variant="toolbar"
-                aria-haspopup="menu"
-                aria-expanded={open}
-                aria-label="Options"
-                title="Options"
-                className="project-sidebar-control !w-auto justify-center px-2"
-                onClick={(event) => {
-                  setOptionsTriggerElement(event.currentTarget);
-                  if (exportMenu.open) exportMenu.closeMenu();
-                  toggleMenu();
-                }}
-              >
-                <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
-              </Button>
-            )}
-          >
-            {({ closeMenu }) => (
-              <>
-                <div className="px-2.5 py-2">
-                  <p className="toolbar-label pb-1">View</p>
-                  <SegmentedControl
-                    value={viewMode}
-                    onChange={onViewModeChange}
-                    ariaLabel="Materials view mode"
-                    variant="toolbar"
-                    className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
-                  >
-                    <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
-                    <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
-                  </SegmentedControl>
-                </div>
-                <MenuSeparator />
-                <MenuItem
-                  className="px-3 py-2"
-                  onClick={() => {
-                    closeMenu();
-                    onImportFromExcel(activeTab);
-                  }}
-                >
-                  Import from Excel
-                </MenuItem>
-                <MenuItem
-                  className={
-                    activeCount === 0
-                      ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                      : 'px-3 py-2'
-                  }
-                  disabled={activeCount === 0}
-                  aria-haspopup="menu"
-                  onClick={() => {
-                    closeMenu();
-                    if (activeCount === 0 || !optionsTriggerElement) return;
-                    exportMenu.triggerRef.current = optionsTriggerElement;
-                    exportMenu.openMenu();
-                  }}
-                >
-                  Export
-                </MenuItem>
-                <MenuItem
-                  disabled={activeCount === 0}
-                  className={
-                    activeCount === 0
-                      ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                      : 'px-3 py-2 text-danger-600 hover:bg-danger-50 hover:text-danger-700'
-                  }
-                  onClick={() => {
-                    closeMenu();
-                    onDeleteAll(activeTab);
-                  }}
-                >
-                  Delete All
-                </MenuItem>
-              </>
-            )}
-          </DropdownMenu>
-          <h2 className="toolbar-title">
-            {activeTab === 'finishes' ? 'Finishes' : 'Materials'} ({activeCount})
-          </h2>
-        </div>
+      <div className="project-sidebar-slot gap-2">
+        <h2 className="toolbar-title">
+          {activeTab === 'finishes' ? 'Finishes' : 'Materials'} ({activeCount})
+        </h2>
         <SegmentedControl
           value={activeTab}
           onChange={onActiveTabChange}
@@ -742,63 +636,68 @@ function MaterialsToolbarLeft({
           <SegmentedControl.Option value="finishes">Finishes</SegmentedControl.Option>
           <SegmentedControl.Option value="materials">Materials</SegmentedControl.Option>
         </SegmentedControl>
-        {exportMenu.open &&
-          exportMenuPosition &&
-          createPortal(
-            <MenuPanel
-              ref={exportMenu.panelRef}
-              position={exportMenuPosition}
-              className="z-[121] min-w-36"
-            >
-              <MenuItem
-                className={
-                  activeCount === 0
-                    ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                    : 'px-3 py-2'
-                }
-                disabled={activeCount === 0}
-                onClick={() => {
-                  if (activeCount === 0) return;
-                  exportMenu.closeMenu();
-                  onExport(activeTab, 'csv');
-                }}
-              >
-                Export CSV
-              </MenuItem>
-              <MenuItem
-                className={
-                  activeCount === 0
-                    ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                    : 'px-3 py-2'
-                }
-                disabled={activeCount === 0}
-                onClick={() => {
-                  if (activeCount === 0) return;
-                  exportMenu.closeMenu();
-                  onExport(activeTab, 'xlsx');
-                }}
-              >
-                Export Excel
-              </MenuItem>
-              <MenuItem
-                className={
-                  activeCount === 0
-                    ? 'cursor-not-allowed px-3 py-2 text-neutral-400 hover:bg-white hover:text-neutral-400'
-                    : 'px-3 py-2'
-                }
-                disabled={activeCount === 0}
-                onClick={() => {
-                  if (activeCount === 0) return;
-                  exportMenu.closeMenu();
-                  onExport(activeTab, 'pdf');
-                }}
-              >
-                Export PDF
-              </MenuItem>
-            </MenuPanel>,
-            document.body,
-          )}
-      </>
+        <div className="project-sidebar-divider" aria-hidden="true" />
+        <p className="toolbar-label">View</p>
+        <SegmentedControl
+          value={viewMode}
+          onChange={onViewModeChange}
+          ariaLabel="Materials view mode"
+          variant="toolbar"
+          className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
+        >
+          <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
+          <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
+        </SegmentedControl>
+        <div className="project-sidebar-divider" aria-hidden="true" />
+        <Button
+          type="button"
+          variant="toolbar"
+          onClick={() => onImportFromExcel(activeTab)}
+          className="project-sidebar-control"
+        >
+          Import from Excel
+        </Button>
+        <p className="toolbar-label">Export</p>
+        <div className="sidebar-button-group">
+          <Button
+            type="button"
+            variant="toolbar"
+            className="project-sidebar-control"
+            onClick={() => onExport(activeTab, 'csv')}
+            disabled={activeCount === 0}
+          >
+            Export CSV
+          </Button>
+          <Button
+            type="button"
+            variant="toolbar"
+            className="project-sidebar-control"
+            onClick={() => onExport(activeTab, 'xlsx')}
+            disabled={activeCount === 0}
+          >
+            Export Excel
+          </Button>
+          <Button
+            type="button"
+            variant="toolbar"
+            className="project-sidebar-control"
+            onClick={() => onExport(activeTab, 'pdf')}
+            disabled={activeCount === 0}
+          >
+            Export PDF
+          </Button>
+        </div>
+        <div className="project-sidebar-divider" aria-hidden="true" />
+        <Button
+          type="button"
+          variant="toolbar"
+          className="project-sidebar-control text-danger-600 hover:bg-danger-50 hover:text-danger-700"
+          disabled={activeCount === 0}
+          onClick={() => onDeleteAll(activeTab)}
+        >
+          Delete All
+        </Button>
+      </div>
     </SlotPortal>
   );
 }

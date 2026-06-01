@@ -134,7 +134,7 @@ function renderView() {
   );
 }
 
-describe('MaterialsView options actions', () => {
+describe('MaterialsView sidebar actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
@@ -142,15 +142,11 @@ describe('MaterialsView options actions', () => {
     mockState.materials = [makeMaterial('material-1', 'Laminate')];
   });
 
-  it('routes options export actions by active tab', async () => {
+  it('routes export actions by active tab', async () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    expect(screen.queryByRole('menuitem', { name: /export csv/i })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('menuitem', { name: /^export$/i }));
-    expect(await screen.findByRole('menuitem', { name: /export csv/i })).toBeInTheDocument();
-    await user.click(screen.getByRole('menuitem', { name: /export csv/i }));
+    await user.click(screen.getByRole('button', { name: /export csv/i }));
 
     expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
       expect.any(Object),
@@ -159,19 +155,15 @@ describe('MaterialsView options actions', () => {
     );
     expect(mockState.exportMaterialsExcel).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('button', { name: /options/i }));
     await user.click(screen.getByRole('radio', { name: /table/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^export$/i }));
-    await user.click(screen.getByRole('menuitem', { name: /export excel/i }));
+    await user.click(screen.getByRole('button', { name: /export excel/i }));
     expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
       expect.any(Object),
       expect.arrayContaining(mockState.finishes),
     );
 
-    await user.click(screen.getByRole('radio', { name: /project materials/i }));
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^export$/i }));
-    await user.click(screen.getByRole('menuitem', { name: /export pdf/i }));
+    await user.click(screen.getByRole('radio', { name: /^materials$/i }));
+    await user.click(screen.getByRole('button', { name: /export pdf/i }));
 
     expect(mockState.exportMaterialsPdf).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'project-1' }),
@@ -184,21 +176,21 @@ describe('MaterialsView options actions', () => {
     renderView();
 
     await user.type(screen.getByRole('textbox', { name: /search finishes/i }), 'no-match-term');
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    expect(screen.getByRole('menuitem', { name: /^export$/i })).toBeDisabled();
-    expect(screen.queryByRole('menuitem', { name: /export csv/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /export csv/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /export excel/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /export pdf/i })).toBeDisabled();
 
-    await user.click(screen.getByRole('radio', { name: /project materials/i }));
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    expect(screen.getByRole('menuitem', { name: /^export$/i })).toBeDisabled();
+    await user.click(screen.getByRole('radio', { name: /^materials$/i }));
+    expect(screen.getByRole('button', { name: /export csv/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /export excel/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /export pdf/i })).toBeDisabled();
   });
 
   it('runs delete-all through per-item delete hooks for each tab', async () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
+    await user.click(screen.getByRole('button', { name: /delete all/i }));
 
     expect(await screen.findByText('This will permanently delete 2 finishes.')).toBeInTheDocument();
     expect(
@@ -217,9 +209,8 @@ describe('MaterialsView options actions', () => {
     });
     expect(mockState.deleteMaterialMutateAsync).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('radio', { name: /project materials/i }));
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
+    await user.click(screen.getByRole('radio', { name: /^materials$/i }));
+    await user.click(screen.getByRole('button', { name: /delete all/i }));
 
     expect(
       await screen.findByText('This will permanently delete 1 project materials.'),
@@ -238,8 +229,7 @@ describe('MaterialsView options actions', () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: /options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
+    await user.click(screen.getByRole('button', { name: /delete all/i }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => {
