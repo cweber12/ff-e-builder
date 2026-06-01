@@ -21,7 +21,7 @@ Date: 2026-06-01
 ## Responsive & Polish
 
 - [x] **Desktop/tablet behavior pass for sidebar shell**: Validate compact spacing and hierarchy at desktop and tablet widths while preserving mobile fallback discoverability. Breakpoints: lg primary, md secondary. _Modifies: shared sidebar layout classes/styles._
-- [ ] **Accessibility verification pass**: Ensure WCAG 2.1 AA contrast, focus-visible styles, semantic labels, keyboard navigation, and aria-expanded/aria-current integrity for toggle/rail/sections. _Modifies: relevant sidebar/header components and tests as needed._
+- [x] **Accessibility verification pass**: Ensure WCAG 2.1 AA contrast, focus-visible styles, semantic labels, keyboard navigation, and aria-expanded/aria-current integrity for toggle/rail/sections. _Modifies: relevant sidebar/header components and tests as needed._
 
 ## Review
 

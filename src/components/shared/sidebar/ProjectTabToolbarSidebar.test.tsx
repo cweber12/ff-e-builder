@@ -24,9 +24,12 @@ describe('ProjectTabToolbarSidebar', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Open project sidebar' })).toBeInTheDocument();
-    expect(screen.getByText('CAT')).toBeInTheDocument();
-    expect(screen.getByText('CTX')).toBeInTheDocument();
-    expect(screen.getByText('FIL')).toBeInTheDocument();
-    expect(screen.getByText('ACT')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open View section' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Open Context section' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open Filters section' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open Actions section' })).toBeInTheDocument();
   });
 });

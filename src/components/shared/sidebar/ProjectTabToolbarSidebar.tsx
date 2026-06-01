@@ -181,19 +181,22 @@ export function ProjectTabToolbarSidebar({
               <ChevronLeft className="toolbar-icon" aria-hidden="true" />
             </button>
           ) : null}
-          <div className="project-sidebar-rail-stack" aria-label="Sidebar sections">
+          <div className="project-sidebar-rail-stack" role="list" aria-label="Sidebar sections">
             {sidebarSections.map((section, index) => (
-              <div
+              <button
                 key={section.key}
+                type="button"
                 className={cn(
                   'project-sidebar-rail-item',
                   index === 0 && 'project-sidebar-rail-item--active',
                 )}
-                title={section.label}
-                aria-label={section.label}
+                title={`Open ${section.label} section`}
+                aria-label={`Open ${section.label} section`}
+                aria-current={index === 0 ? 'true' : undefined}
+                onClick={() => onTogglePanel?.()}
               >
                 <span className="project-sidebar-rail-item-short">{section.shortLabel}</span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
