@@ -1,9 +1,9 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
+import { Fragment, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
+import { SegmentedControl } from '../../primitives';
 import { SidebarDivider } from './SidebarDivider';
-import { SidebarButton } from './SidebarButton';
 import { SidebarButtonGroup } from './SidebarButtonGroup';
 import { SidebarFieldGroup } from './SidebarFieldGroup';
 import { SidebarSectionHeader } from './SidebarSectionHeader';
@@ -37,32 +37,7 @@ export function ProjectTabToolbarSidebar({
   filtersLabel,
   actionsLabel,
 }: ProjectTabToolbarSidebarProps) {
-  const [viewMenuOpen, setViewMenuOpen] = useState(false);
-  const viewMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!viewMenuOpen) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (viewMenuRef.current && !viewMenuRef.current.contains(event.target as Node)) {
-        setViewMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onPointerDown);
-    return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [viewMenuOpen]);
-
-  useEffect(() => {
-    if (!viewMenuOpen) return;
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setViewMenuOpen(false);
-    };
-    document.addEventListener('keydown', onEscape);
-    return () => document.removeEventListener('keydown', onEscape);
-  }, [viewMenuOpen]);
-
-  useEffect(() => {
-    setViewMenuOpen(false);
-  }, [isCatalogRoute]);
+  const navigate = useNavigate();
 
   const sidebarSections: Array<{
     key: string;
@@ -74,47 +49,22 @@ export function ProjectTabToolbarSidebar({
   const viewAndFiltersBlocks: ReactNode[] = [];
 
   if (showViewToggle) {
-    const currentView = isCatalogRoute ? 'Catalog' : 'List';
+    const currentView = isCatalogRoute ? 'catalog' : 'list';
     viewAndFiltersBlocks.push(
       <SidebarFieldGroup key="view-toggle" className="space-y-2">
-        <div ref={viewMenuRef} className="relative">
-          <button
-            type="button"
-            className="sidebar-view-toggle"
-            aria-haspopup="menu"
-            aria-expanded={viewMenuOpen}
-            onClick={() => setViewMenuOpen((open) => !open)}
-          >
-            <span className="sidebar-view-toggle-label">View</span>
-            <span className="sidebar-view-toggle-value">{currentView}</span>
-            <ChevronDown
-              className={cn('sidebar-view-toggle-icon', viewMenuOpen && 'rotate-180')}
-              aria-hidden="true"
-            />
-          </button>
-          {viewMenuOpen ? (
-            <div role="menu" aria-label="FF&E view mode" className="sidebar-view-menu menu-panel">
-              <SidebarButton asChild selected={isCatalogRoute} role="menuitem">
-                <Link
-                  to={`/projects/${projectId}/ffe/catalog`}
-                  data-active={isCatalogRoute || undefined}
-                  onClick={() => setViewMenuOpen(false)}
-                >
-                  Catalog
-                </Link>
-              </SidebarButton>
-              <SidebarButton asChild selected={!isCatalogRoute} role="menuitem">
-                <Link
-                  to={`/projects/${projectId}/ffe/list`}
-                  data-active={!isCatalogRoute || undefined}
-                  onClick={() => setViewMenuOpen(false)}
-                >
-                  List
-                </Link>
-              </SidebarButton>
-            </div>
-          ) : null}
-        </div>
+        <SidebarSectionHeader label="View" />
+        <SegmentedControl
+          value={currentView}
+          onChange={(value) => {
+            navigate(`/projects/${projectId}/ffe/${value}`);
+          }}
+          ariaLabel="FF&E view mode"
+          variant="toolbar"
+          className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
+        >
+          <SegmentedControl.Option value="catalog">Catalog</SegmentedControl.Option>
+          <SegmentedControl.Option value="list">List</SegmentedControl.Option>
+        </SegmentedControl>
       </SidebarFieldGroup>,
     );
     if (toolbarCenter) {

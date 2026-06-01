@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ffe): replace sidebar View dropdown with always-visible FF&E List/Catalog segmented controls in View & Filters for one-click mode switching
 - refactor(ui): shift tab-sidebar shell colors and interaction states to semantic sidebar CSS variables with dark-mode overrides, and remove hardcoded sidebar background and border utilities from the shell markup
 - refactor(ui): add shared sidebar section-header, divider, and field-group primitives and wire ProjectTabToolbarSidebar to use them for consistent cross-tab section composition
 - feat(ui): move the project sidebar toggle into the tab header, remove the expanded sidebar rail toggle, and introduce a titled/divided sidebar shell hierarchy for clearer context and section structure

@@ -48,4 +48,27 @@ describe('ProjectTabToolbarSidebar', () => {
 
     expect(screen.queryByRole('button', { name: 'Collapse project sidebar' })).toBeNull();
   });
+
+  it('shows always-visible FF&E view segmented options when expanded', () => {
+    render(
+      <MemoryRouter>
+        <ProjectTabToolbarSidebar
+          projectId="proj-1"
+          sidebarTitle="FF&E — Catalog"
+          showViewToggle={true}
+          isCatalogRoute={true}
+          collapsed={false}
+          onTogglePanel={noop}
+          header={<div>Summary</div>}
+          toolbarLeft={<div>Filters</div>}
+          toolbarCenter={<div>Tools</div>}
+          actions={<div>Actions</div>}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('radiogroup', { name: 'FF&E view mode' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Catalog' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'List' })).toBeInTheDocument();
+  });
 });
