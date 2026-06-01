@@ -968,8 +968,8 @@
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
-    z-index: 1200;
-    width: min(480px, calc(100vw - 32px));
+    z-index: 3200;
+    width: min(360px, calc(100vw - 16px));
     display: flex;
     flex-direction: column;
     border: 1px solid theme('colors.neutral.200');
@@ -1144,6 +1144,10 @@
   .catalog-layout-option-row--stacked .segmented {
     width: 100%;
     max-width: 100%;
+  }
+
+  .catalog-layout-option-row--stacked .toolbar-select {
+    width: 100%;
   }
 
   .catalog-layout-watermark-row {

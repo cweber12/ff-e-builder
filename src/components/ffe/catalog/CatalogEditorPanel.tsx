@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  type Ref,
   useRef,
   useState,
   type CSSProperties,
@@ -83,6 +84,7 @@ export function CatalogEditorPanel({
   onWatermarkChange,
   logoDataUrl,
   popoverStyle,
+  panelRef,
   onClose,
 }: {
   project: Project;
@@ -94,6 +96,7 @@ export function CatalogEditorPanel({
   onWatermarkChange: (update: Partial<WatermarkConfig>) => void;
   logoDataUrl: string | null;
   popoverStyle?: CSSProperties;
+  panelRef?: Ref<HTMLDivElement>;
   onClose: () => void;
 }) {
   const layoutConfig = editorState.layoutConfig;
@@ -118,6 +121,7 @@ export function CatalogEditorPanel({
 
   return (
     <div
+      ref={panelRef}
       role="dialog"
       aria-modal="true"
       aria-label="Catalog editor"
@@ -207,18 +211,19 @@ export function CatalogEditorPanel({
                   </SegmentedControl>
                 </GridCell>
                 <GridCell label="Item status">
-                  <SegmentedControl
-                    ariaLabel="Item status"
+                  <select
+                    aria-label="Item status"
+                    className="toolbar-select"
                     value={currentStatus}
                     disabled={!item || isSavingStatus}
-                    onChange={(value) => setItemStatus(value)}
+                    onChange={(event) => setItemStatus(event.target.value as ItemStatus)}
                   >
                     {ITEM_STATUS_OPTIONS.map((statusOption) => (
-                      <SegmentedControl.Option key={statusOption.value} value={statusOption.value}>
+                      <option key={statusOption.value} value={statusOption.value}>
                         {statusOption.label}
-                      </SegmentedControl.Option>
+                      </option>
                     ))}
-                  </SegmentedControl>
+                  </select>
                 </GridCell>
               </CompactRowGrid>
             </>
@@ -363,29 +368,24 @@ export function CatalogEditorPanel({
                       </SegmentedControl>
                     </GridCell>
                     <GridCell label="Placement">
-                      <SegmentedControl
-                        ariaLabel="Document Mark placement"
+                      <select
+                        aria-label="Document Mark placement"
+                        className="toolbar-select"
                         value={`${watermarkConfig.placementV}-${watermarkConfig.placementH}`}
                         disabled={!isDocumentMarkEnabled}
-                        onChange={(value) => {
-                          const [placementV, placementH] = value.split('-') as [
+                        onChange={(event) => {
+                          const [placementV, placementH] = event.target.value.split('-') as [
                             WatermarkConfig['placementV'],
                             WatermarkConfig['placementH'],
                           ];
                           onWatermarkChange({ placementV, placementH, enabled: true });
                         }}
                       >
-                        <SegmentedControl.Option value="footer-left">Left</SegmentedControl.Option>
-                        <SegmentedControl.Option value="footer-center">
-                          Center
-                        </SegmentedControl.Option>
-                        <SegmentedControl.Option value="footer-right">
-                          Right
-                        </SegmentedControl.Option>
-                        <SegmentedControl.Option value="header-left">
-                          Header
-                        </SegmentedControl.Option>
-                      </SegmentedControl>
+                        <option value="footer-left">Footer left</option>
+                        <option value="footer-center">Footer center</option>
+                        <option value="footer-right">Footer right</option>
+                        <option value="header-left">Header left</option>
+                      </select>
                     </GridCell>
                   </CompactRowGrid>
                   <div className="catalog-opacity-row">

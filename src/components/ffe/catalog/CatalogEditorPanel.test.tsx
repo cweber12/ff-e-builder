@@ -81,7 +81,6 @@ describe('CatalogEditorPanel', () => {
     const user = userEvent.setup();
     const entry = makeEntry();
     const targetStatus = entry.item.status === 'ordered' ? 'approved' : 'ordered';
-    const targetLabel = targetStatus === 'approved' ? 'Approved' : 'Ordered';
 
     render(
       <CatalogEditorPanel
@@ -97,7 +96,7 @@ describe('CatalogEditorPanel', () => {
       />,
     );
 
-    await user.click(screen.getByRole('radio', { name: targetLabel }));
+    await user.selectOptions(screen.getByRole('combobox', { name: /item status/i }), targetStatus);
 
     expect(mutateUpdateItem).toHaveBeenCalledWith({
       id: entry.item.id,
@@ -132,5 +131,38 @@ describe('CatalogEditorPanel', () => {
     expect(
       screen.getByText('Option image and swatch controls are being consolidated here.'),
     ).toBeInTheDocument();
+  });
+
+  it('renders document mark placement as a dropdown and emits placement updates', async () => {
+    const user = userEvent.setup();
+    const onWatermarkChange = vi.fn();
+    const enabledWatermark = { ...makeEditorState().watermark, enabled: true };
+
+    render(
+      <CatalogEditorPanel
+        project={catalogProjectFixture}
+        currentEntry={makeEntry()}
+        editorState={makeEditorState()}
+        onTypographyChange={vi.fn()}
+        onLayoutChange={vi.fn()}
+        watermarkConfig={enabledWatermark}
+        onWatermarkChange={onWatermarkChange}
+        logoDataUrl="data:image/png;base64,abc"
+        onClose={vi.fn()}
+      />,
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: /catalog editor category/i }), [
+      'document-mark',
+    ]);
+    await user.selectOptions(screen.getByRole('combobox', { name: /document mark placement/i }), [
+      'footer-right',
+    ]);
+
+    expect(onWatermarkChange).toHaveBeenCalledWith({
+      placementV: 'footer',
+      placementH: 'right',
+      enabled: true,
+    });
   });
 });

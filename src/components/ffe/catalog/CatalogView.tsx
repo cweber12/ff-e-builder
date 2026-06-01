@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronDown,
   ChevronLeft,
@@ -755,16 +756,18 @@ function CatalogEditorPanelButton({
 }) {
   const isOpen = editorState.editorOpen;
   const ref = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [popoverAnchor, setPopoverAnchor] = useState<{ left: number; top: number } | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     const handler = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (ref.current && !ref.current.contains(target)) {
-        const catalogStage = document.querySelector('.catalog-stage');
-        if (!catalogStage || !catalogStage.contains(target)) onEditorOpenChange(false);
-      }
+      const clickedTrigger = ref.current?.contains(target) ?? false;
+      const clickedPanel = panelRef.current?.contains(target) ?? false;
+      if (clickedTrigger || clickedPanel) return;
+      const catalogStage = document.querySelector('.catalog-stage');
+      if (!catalogStage || !catalogStage.contains(target)) onEditorOpenChange(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -822,32 +825,32 @@ function CatalogEditorPanelButton({
         <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
         Editor
       </SidebarButton>
-      {isOpen && (
-        <CatalogEditorPanel
-          project={project}
-          currentEntry={currentEntry}
-          editorState={editorState}
-          onTypographyChange={onTypographyChange}
-          onLayoutChange={onLayoutChange}
-          watermarkConfig={watermarkConfig}
-          onWatermarkChange={onWatermarkChange}
-          logoDataUrl={logoDataUrl}
-          {...(popoverAnchor
-            ? {
-                popoverStyle: {
-                  left: `${popoverAnchor.left}px`,
-                  top: `${popoverAnchor.top}px`,
-                  bottom: 'auto',
-                  right: 'auto',
-                  position: 'fixed' as const,
-                  zIndex: 1200,
-                  pointerEvents: 'auto',
-                },
-              }
-            : {})}
-          onClose={() => onEditorOpenChange(false)}
-        />
-      )}
+      {isOpen && popoverAnchor
+        ? createPortal(
+            <CatalogEditorPanel
+              project={project}
+              currentEntry={currentEntry}
+              editorState={editorState}
+              onTypographyChange={onTypographyChange}
+              onLayoutChange={onLayoutChange}
+              watermarkConfig={watermarkConfig}
+              onWatermarkChange={onWatermarkChange}
+              logoDataUrl={logoDataUrl}
+              panelRef={panelRef}
+              popoverStyle={{
+                left: `${popoverAnchor.left}px`,
+                top: `${popoverAnchor.top}px`,
+                bottom: 'auto',
+                right: 'auto',
+                position: 'fixed' as const,
+                zIndex: 3200,
+                pointerEvents: 'auto',
+              }}
+              onClose={() => onEditorOpenChange(false)}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
