@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(ui): persist tab-sidebar collapsed state per project and tool context with expanded-by-default fallback on first visit and route-context rehydration
 - refactor(budget): replace Budget sidebar export dropdown with direct CSV/Excel/PDF actions and split controls into explicit Set Budgets and Export groups
 - refactor(plans): remove Plans calibrated/needs-calibration sidebar filters, keep sort as an always-visible View & Filters control, and preserve upload actions plus calibration signaling on plan cards
 - refactor(materials): remove Materials options dropdown and render always-visible view, import, export, and delete-all sidebar controls for both Finishes and Materials modes

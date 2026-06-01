@@ -50,6 +50,11 @@ import {
   exportProposalPdf,
 } from './lib/export';
 import {
+  readSidebarCollapsedPreference,
+  type SidebarToolContext,
+  writeSidebarCollapsedPreference,
+} from './lib/sidebarPreferences';
+import {
   readColumnConfigFromStorage,
   useColumnDefs,
   useAddProposalItemToFfe,
@@ -149,6 +154,33 @@ function ProjectLayout() {
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
   const canToggleSidebar =
     isFfeRoute || isProposalRoute || isPlansRoute || isMaterialsRoute || isBudgetRoute;
+  const sidebarToolContext: SidebarToolContext | null = isFfeRoute
+    ? 'ffe'
+    : isProposalRoute
+      ? 'proposal'
+      : isPlansRoute
+        ? 'plans'
+        : isMaterialsRoute
+          ? 'materials'
+          : isBudgetRoute
+            ? 'budget'
+            : null;
+
+  useEffect(() => {
+    if (!project?.id || !sidebarToolContext) return;
+    const persisted = readSidebarCollapsedPreference(project.id, sidebarToolContext);
+    setSidebarCollapsed(persisted ?? false);
+  }, [project?.id, sidebarToolContext]);
+
+  const toggleSidebar = () => {
+    if (!project?.id || !sidebarToolContext) return;
+
+    setSidebarCollapsed((collapsed) => {
+      const next = !collapsed;
+      writeSidebarCollapsedPreference(project.id, sidebarToolContext, next);
+      return next;
+    });
+  };
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
@@ -264,9 +296,7 @@ function ProjectLayout() {
             project={project}
             userMenu={<UserMenu />}
             sidebarCollapsed={sidebarCollapsed}
-            onToggleSidebar={
-              canToggleSidebar ? () => setSidebarCollapsed((collapsed) => !collapsed) : null
-            }
+            onToggleSidebar={canToggleSidebar ? toggleSidebar : null}
           />
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
@@ -276,9 +306,7 @@ function ProjectLayout() {
                 showViewToggle={isFfeRoute}
                 isCatalogRoute={isCatalogRoute}
                 collapsed={sidebarCollapsed}
-                onTogglePanel={
-                  canToggleSidebar ? () => setSidebarCollapsed((collapsed) => !collapsed) : null
-                }
+                onTogglePanel={canToggleSidebar ? toggleSidebar : null}
                 header={sidebarHeader}
                 toolbarLeft={sidebarToolbarLeft}
                 toolbarCenter={sidebarToolbarCenter}
