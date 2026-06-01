@@ -27,7 +27,6 @@ import { FfeBudgetModal } from './components/project/modals/FfeBudgetModal';
 import { ProposalBudgetModal } from './components/project/modals/ProposalBudgetModal';
 import { ImportProposalExcelModal } from './components/proposal/import/ImportProposalExcelModal';
 import { ProjectHeader } from './components/project/ProjectHeader';
-import { ExportMenu } from './components/shared/ExportMenu';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
 import {
   ProposalActions,
@@ -39,6 +38,7 @@ import {
   ProjectTabToolbarSidebar,
   SidebarButton,
   SidebarButtonGroup,
+  SidebarDivider,
 } from './components/shared/sidebar';
 import { recordSession } from './lib/utils';
 import {
@@ -351,7 +351,7 @@ function ProjectLayout() {
   );
 }
 
-function BudgetPageActions({
+export function BudgetPageActions({
   project,
   roomsWithItems,
   proposalCategoriesWithItems,
@@ -368,64 +368,92 @@ function BudgetPageActions({
   const { data: proposalCustomColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
 
   const proposalColumnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
+  const exportCsv = () => {
+    exportSummaryCsv(project, roomsWithItems);
+    exportProposalCsv(
+      project,
+      proposalCategoriesWithItems,
+      proposalCustomColumnDefs,
+      proposalColumnOrder(),
+    );
+  };
+  const exportExcel = () => {
+    void exportSummaryExcel(project, roomsWithItems);
+    void exportProposalExcel(
+      project,
+      proposalCategoriesWithItems,
+      null,
+      proposalCustomColumnDefs,
+      undefined,
+      proposalColumnOrder(),
+    );
+  };
+  const exportPdf = () => {
+    exportSummaryPdf(project, roomsWithItems);
+    void exportProposalPdf(
+      project,
+      proposalCategoriesWithItems,
+      null,
+      {},
+      proposalCustomColumnDefs,
+      proposalColumnOrder(),
+    );
+  };
 
   return (
-    <div className={isColumn ? 'sidebar-button-group' : 'flex items-center gap-2'}>
-      {isColumn ? (
-        <SidebarButton type="button" onClick={() => setFfeOpen(true)}>
-          FF&amp;E Budget
-        </SidebarButton>
-      ) : (
-        <Button type="button" variant="toolbar" onClick={() => setFfeOpen(true)}>
-          FF&amp;E Budget
-        </Button>
-      )}
-      {isColumn ? (
-        <SidebarButton type="button" onClick={() => setProposalOpen(true)}>
-          Proposal Budget
-        </SidebarButton>
-      ) : (
-        <Button type="button" variant="toolbar" onClick={() => setProposalOpen(true)}>
-          Proposal Budget
-        </Button>
-      )}
-      <ExportMenu
-        label="Export"
-        size="sm"
-        buttonVariant="toolbar"
-        {...(isColumn ? { className: 'w-full', buttonClassName: 'sidebar-button' } : {})}
-        onCsv={() => {
-          exportSummaryCsv(project, roomsWithItems);
-          exportProposalCsv(
-            project,
-            proposalCategoriesWithItems,
-            proposalCustomColumnDefs,
-            proposalColumnOrder(),
-          );
-        }}
-        onExcel={() => {
-          void exportSummaryExcel(project, roomsWithItems);
-          void exportProposalExcel(
-            project,
-            proposalCategoriesWithItems,
-            null,
-            proposalCustomColumnDefs,
-            undefined,
-            proposalColumnOrder(),
-          );
-        }}
-        onPdf={() => {
-          exportSummaryPdf(project, roomsWithItems);
-          void exportProposalPdf(
-            project,
-            proposalCategoriesWithItems,
-            null,
-            {},
-            proposalCustomColumnDefs,
-            proposalColumnOrder(),
-          );
-        }}
-      />
+    <div className={isColumn ? 'project-sidebar-slot gap-2' : 'flex items-center gap-2'}>
+      {isColumn ? <p className="toolbar-label">Set Budgets</p> : null}
+      <SidebarButtonGroup className={isColumn ? undefined : 'md:flex-row md:items-center'}>
+        {isColumn ? (
+          <SidebarButton type="button" onClick={() => setFfeOpen(true)}>
+            FF&amp;E Budget
+          </SidebarButton>
+        ) : (
+          <Button type="button" variant="toolbar" onClick={() => setFfeOpen(true)}>
+            FF&amp;E Budget
+          </Button>
+        )}
+        {isColumn ? (
+          <SidebarButton type="button" onClick={() => setProposalOpen(true)}>
+            Proposal Budget
+          </SidebarButton>
+        ) : (
+          <Button type="button" variant="toolbar" onClick={() => setProposalOpen(true)}>
+            Proposal Budget
+          </Button>
+        )}
+      </SidebarButtonGroup>
+      {isColumn ? <SidebarDivider /> : null}
+      {isColumn ? <p className="toolbar-label">Export</p> : null}
+      <SidebarButtonGroup className={isColumn ? undefined : 'md:flex-row md:items-center'}>
+        {isColumn ? (
+          <SidebarButton type="button" onClick={exportCsv}>
+            Export CSV
+          </SidebarButton>
+        ) : (
+          <Button type="button" variant="toolbar" onClick={exportCsv}>
+            Export CSV
+          </Button>
+        )}
+        {isColumn ? (
+          <SidebarButton type="button" onClick={exportExcel}>
+            Export Excel
+          </SidebarButton>
+        ) : (
+          <Button type="button" variant="toolbar" onClick={exportExcel}>
+            Export Excel
+          </Button>
+        )}
+        {isColumn ? (
+          <SidebarButton type="button" onClick={exportPdf}>
+            Export PDF
+          </SidebarButton>
+        ) : (
+          <Button type="button" variant="toolbar" onClick={exportPdf}>
+            Export PDF
+          </Button>
+        )}
+      </SidebarButtonGroup>
       <FfeBudgetModal
         open={ffeOpen}
         onClose={() => setFfeOpen(false)}
