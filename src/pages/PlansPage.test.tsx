@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
-import { PLANS_ACTIONS_SLOT_ID } from './PlansPage';
+import { PLANS_ACTIONS_SLOT_ID, PLANS_FILTER_SLOT_ID, PLANS_SUMMARY_SLOT_ID } from './PlansPage';
 
 vi.mock('../components/plans/list/PlanUploadModal', () => ({
   PlanUploadModal: vi.fn(({ open }: { open: boolean }) =>
@@ -90,5 +90,54 @@ describe('PlansPage', () => {
     expect(screen.getByTestId('plan-upload-modal')).toBeInTheDocument();
 
     slot.remove();
+  });
+
+  it('rebinds plans sidebar portals after slots unmount and remount', async () => {
+    const makeSlot = (id: string) => {
+      const el = document.createElement('div');
+      el.id = id;
+      document.body.appendChild(el);
+      return el;
+    };
+
+    const actionsSlot = makeSlot(PLANS_ACTIONS_SLOT_ID);
+    const filterSlot = makeSlot(PLANS_FILTER_SLOT_ID);
+    const summarySlot = makeSlot(PLANS_SUMMARY_SLOT_ID);
+
+    const view = render(
+      <MemoryRouter>
+        <PlansPage project={project} />
+      </MemoryRouter>,
+    );
+
+    expect(within(actionsSlot).getByRole('button', { name: 'Upload plan' })).toBeInTheDocument();
+    expect(within(filterSlot).getByRole('tab', { name: 'All' })).toBeInTheDocument();
+    expect(within(summarySlot).getByText('plan')).toBeInTheDocument();
+
+    actionsSlot.remove();
+    filterSlot.remove();
+    summarySlot.remove();
+
+    const nextActionsSlot = makeSlot(PLANS_ACTIONS_SLOT_ID);
+    const nextFilterSlot = makeSlot(PLANS_FILTER_SLOT_ID);
+    const nextSummarySlot = makeSlot(PLANS_SUMMARY_SLOT_ID);
+
+    view.rerender(
+      <MemoryRouter>
+        <PlansPage project={project} />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        within(nextActionsSlot).getByRole('button', { name: 'Upload plan' }),
+      ).toBeInTheDocument();
+      expect(within(nextFilterSlot).getByRole('tab', { name: 'All' })).toBeInTheDocument();
+      expect(within(nextSummarySlot).getByText('plan')).toBeInTheDocument();
+    });
+
+    nextActionsSlot.remove();
+    nextFilterSlot.remove();
+    nextSummarySlot.remove();
   });
 });

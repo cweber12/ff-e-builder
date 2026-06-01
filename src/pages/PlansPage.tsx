@@ -128,6 +128,25 @@ export function PlansPage({ project }: PlansPageProps) {
   );
 }
 
+function useSidebarPortalSlot(slotId: string) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const resolveSlot = () => {
+      const next = document.getElementById(slotId);
+      setSlot((current) => (current === next ? current : next));
+    };
+
+    resolveSlot();
+    const observer = new MutationObserver(resolveSlot);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, [slotId]);
+
+  return slot;
+}
+
 function PlansFilterBar({
   filter,
   onFilterChange,
@@ -135,12 +154,7 @@ function PlansFilterBar({
   filter: FilterId;
   onFilterChange: (value: FilterId) => void;
 }) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const el = document.getElementById(PLANS_FILTER_SLOT_ID);
-    setSlot(el);
-  }, []);
+  const slot = useSidebarPortalSlot(PLANS_FILTER_SLOT_ID);
 
   if (!slot) return null;
 
@@ -195,12 +209,7 @@ function PlansActionsBar({
   onSortChange: (value: SortId) => void;
   onUpload: () => void;
 }) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const el = document.getElementById(PLANS_ACTIONS_SLOT_ID);
-    setSlot(el);
-  }, []);
+  const slot = useSidebarPortalSlot(PLANS_ACTIONS_SLOT_ID);
 
   if (!slot) return null;
 
@@ -242,11 +251,7 @@ function PlansSummaryBar({
   planCount: number;
   calibratedCount: number;
 }) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setSlot(document.getElementById(PLANS_SUMMARY_SLOT_ID));
-  }, []);
+  const slot = useSidebarPortalSlot(PLANS_SUMMARY_SLOT_ID);
 
   if (!slot) return null;
 
