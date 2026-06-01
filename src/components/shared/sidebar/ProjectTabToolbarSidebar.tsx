@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
@@ -62,7 +62,6 @@ export function ProjectTabToolbarSidebar({
   const sidebarSections: Array<{
     key: string;
     label: string;
-    shortLabel: string;
     content: ReactNode;
     className?: string;
   }> = [];
@@ -72,7 +71,6 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'view',
       label: 'View',
-      shortLabel: currentView === 'Catalog' ? 'CAT' : 'LIST',
       className: 'project-sidebar-section--quiet project-sidebar-section--wide',
       content: (
         <div className="space-y-2">
@@ -124,7 +122,6 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'summary',
       label: 'Context',
-      shortLabel: 'CTX',
       className: 'project-sidebar-section--quiet',
       content: <div className="project-sidebar-slot">{header}</div>,
     });
@@ -134,7 +131,6 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'contextual-filters',
       label: filtersLabel ?? 'Filters',
-      shortLabel: 'FIL',
       className: 'project-sidebar-section--quiet',
       content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
     });
@@ -144,7 +140,6 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'contextual-tools',
       label: 'Tools',
-      shortLabel: 'TLS',
       className: 'project-sidebar-section--quiet',
       content: <div className="project-sidebar-slot">{toolbarCenter}</div>,
     });
@@ -154,7 +149,6 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'actions',
       label: actionsLabel ?? 'Actions',
-      shortLabel: 'ACT',
       className: 'project-sidebar-section--actions project-sidebar-section--wide',
       content: <SidebarButtonGroup>{actions}</SidebarButtonGroup>,
     });
@@ -167,7 +161,7 @@ export function ProjectTabToolbarSidebar({
         aria-label="Project tab sidebar"
         className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/80 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
       >
-        <div className="project-sidebar-rail h-full">
+        <div className="project-sidebar-rail project-sidebar-rail--collapsed h-full">
           {onTogglePanel ? (
             <button
               type="button"
@@ -178,27 +172,9 @@ export function ProjectTabToolbarSidebar({
               title="Open project sidebar"
               onClick={onTogglePanel}
             >
-              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
+              <ChevronRight className="toolbar-icon" aria-hidden="true" />
             </button>
           ) : null}
-          <div className="project-sidebar-rail-stack" role="list" aria-label="Sidebar sections">
-            {sidebarSections.map((section, index) => (
-              <button
-                key={section.key}
-                type="button"
-                className={cn(
-                  'project-sidebar-rail-item',
-                  index === 0 && 'project-sidebar-rail-item--active',
-                )}
-                title={`Open ${section.label} section`}
-                aria-label={`Open ${section.label} section`}
-                aria-current={index === 0 ? 'true' : undefined}
-                onClick={() => onTogglePanel?.()}
-              >
-                <span className="project-sidebar-rail-item-short">{section.shortLabel}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </aside>
     );
@@ -212,26 +188,30 @@ export function ProjectTabToolbarSidebar({
       aria-label="Project tab sidebar"
       className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
     >
-      <div className="grid gap-3 overflow-x-hidden p-3 md:grid-cols-2 md:items-start lg:h-full lg:grid-cols-1 lg:p-4">
-        {onTogglePanel ? (
-          <button
-            type="button"
-            className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950 md:col-span-2 lg:col-span-1"
-            aria-label="Collapse project sidebar"
-            aria-controls="project-tab-toolbar-sidebar"
-            aria-expanded="true"
-            title="Collapse project sidebar"
-            onClick={onTogglePanel}
-          >
-            <ChevronLeft className="toolbar-icon" aria-hidden="true" />
-          </button>
-        ) : null}
-        {sidebarSections.map((section) => (
-          <section key={section.key} className={cn('project-sidebar-section', section.className)}>
-            <p className="project-sidebar-title">{section.label}</p>
-            <div className="min-w-0 pt-0.5">{section.content}</div>
-          </section>
-        ))}
+      <div className="project-sidebar-shell lg:h-full">
+        <div className="project-sidebar-rail project-sidebar-rail--expanded">
+          {onTogglePanel ? (
+            <button
+              type="button"
+              className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950"
+              aria-label="Collapse project sidebar"
+              aria-controls="project-tab-toolbar-sidebar"
+              aria-expanded="true"
+              title="Collapse project sidebar"
+              onClick={onTogglePanel}
+            >
+              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+        <div className="project-sidebar-content grid gap-2 overflow-x-hidden p-3 md:grid-cols-2 md:items-start lg:h-full lg:grid-cols-1 lg:p-3">
+          {sidebarSections.map((section) => (
+            <section key={section.key} className={cn('project-sidebar-section', section.className)}>
+              <p className="project-sidebar-title">{section.label}</p>
+              <div className="min-w-0">{section.content}</div>
+            </section>
+          ))}
+        </div>
       </div>
     </aside>
   );

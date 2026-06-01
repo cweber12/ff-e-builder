@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Project } from '../../types';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
 import { StudioMark } from '../shared/auth/AuthGate';
@@ -96,8 +95,6 @@ export interface ProjectHeaderProps {
   saveState?: SaveState;
   saveRelTime?: string | null;
   onSaveRetry?: (() => void) | null;
-  panelCollapsed?: boolean;
-  onTogglePanel?: (() => void) | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -109,18 +106,12 @@ export function ProjectHeader({
   saveState = 'idle',
   saveRelTime = null,
   onSaveRetry = null,
-  panelCollapsed = true,
-  onTogglePanel = null,
 }: ProjectHeaderProps) {
   const location = useLocation();
 
   if (!project) return <SkeletonBar />;
 
   const activeTab = TABS.find((tab) => tab.isActive(project.id, location.pathname));
-  const panelToggleLabel =
-    activeTab && onTogglePanel
-      ? `${panelCollapsed ? 'Open' : 'Collapse'} ${activeTab.label} sidebar`
-      : null;
 
   return (
     <header data-project-header="true" className="no-print relative z-10 shrink-0 overflow-visible">
@@ -150,23 +141,7 @@ export function ProjectHeader({
         data-project-header-tabs="true"
         className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-white px-4 md:px-6"
       >
-        {panelToggleLabel ? (
-          <button
-            type="button"
-            onClick={() => onTogglePanel?.()}
-            aria-label={panelToggleLabel}
-            aria-controls="project-tab-toolbar-sidebar"
-            aria-expanded={!panelCollapsed}
-            title={panelToggleLabel}
-            className="icon-btn justify-self-start text-neutral-500 hover:text-neutral-950"
-          >
-            {panelCollapsed ? (
-              <ChevronRight className="toolbar-icon" aria-hidden="true" />
-            ) : (
-              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
-            )}
-          </button>
-        ) : null}
+        <div aria-hidden="true" />
         <div className="justify-self-center">
           <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
         </div>

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProjectHeader } from './ProjectHeader';
 import type { Project } from '../../types';
@@ -78,33 +78,8 @@ describe('ProjectHeader', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('renders the panel toggle button in the tab header and toggles it', () => {
-    const onTogglePanel = vi.fn();
-    const { rerender } = renderWithRouter(
-      <ProjectHeader project={makeProject()} panelCollapsed={true} onTogglePanel={onTogglePanel} />,
-      ['/projects/proj-1/materials'],
-    );
-
-    const toggle = screen.getByRole('button', { name: 'Open Materials sidebar' });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(toggle).toHaveAttribute('aria-controls', 'project-tab-toolbar-sidebar');
-
-    fireEvent.click(toggle);
-    expect(onTogglePanel).toHaveBeenCalledTimes(1);
-
-    rerender(
-      <MemoryRouter initialEntries={['/projects/proj-1/materials']}>
-        <ProjectHeader
-          project={makeProject()}
-          panelCollapsed={false}
-          onTogglePanel={onTogglePanel}
-        />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByRole('button', { name: 'Collapse Materials sidebar' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+  it('does not render a duplicate sidebar toggle in the tab header', () => {
+    renderWithRouter(<ProjectHeader project={makeProject()} />, ['/projects/proj-1/materials']);
+    expect(screen.queryByRole('button', { name: /sidebar/i })).not.toBeInTheDocument();
   });
 });

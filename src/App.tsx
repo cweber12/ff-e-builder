@@ -247,14 +247,7 @@ function ProjectLayout() {
         ) : null
       ) : (
         <>
-          <ProjectHeader
-            project={project}
-            userMenu={<UserMenu />}
-            panelCollapsed={sidebarCollapsed}
-            onTogglePanel={
-              canToggleSidebar ? () => setSidebarCollapsed((collapsed) => !collapsed) : null
-            }
-          />
+          <ProjectHeader project={project} userMenu={<UserMenu />} />
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
               <ProjectTabToolbarSidebar

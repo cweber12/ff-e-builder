@@ -6,7 +6,7 @@ import { ProjectTabToolbarSidebar } from './ProjectTabToolbarSidebar';
 const noop = vi.fn();
 
 describe('ProjectTabToolbarSidebar', () => {
-  it('renders a slim collapsed rail with context markers and reopen control', () => {
+  it('renders a slim collapsed rail with only the reopen control', () => {
     render(
       <MemoryRouter>
         <ProjectTabToolbarSidebar
@@ -24,12 +24,6 @@ describe('ProjectTabToolbarSidebar', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Open project sidebar' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open View section' })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
-    expect(screen.getByRole('button', { name: 'Open Context section' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open Filters section' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open Actions section' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Open .* section/i })).not.toBeInTheDocument();
   });
 });
