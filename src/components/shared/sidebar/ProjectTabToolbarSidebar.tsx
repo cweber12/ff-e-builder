@@ -167,7 +167,7 @@ export function ProjectTabToolbarSidebar({
       <aside
         id="project-tab-toolbar-sidebar"
         aria-label="Project tab sidebar"
-        className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/80 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
+        className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-r"
       >
         <div className="project-sidebar-rail project-sidebar-rail--collapsed h-full">
           <span className="project-sidebar-rail-label" aria-hidden="true">
@@ -197,7 +197,7 @@ export function ProjectTabToolbarSidebar({
     <aside
       id="project-tab-toolbar-sidebar"
       aria-label="Project tab sidebar"
-      className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
+      className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r"
     >
       <div className="project-sidebar-shell lg:h-full">
         <div className="project-sidebar-header">

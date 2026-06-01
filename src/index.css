@@ -174,6 +174,67 @@
      viewport background when no plan is loaded. Stroke uses neutral-300 at
      low opacity so the texture is felt, not seen. */
   --blueprint-hatch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M-1 7l8-8M5 13l8-8' stroke='%23BDB4A5' stroke-width='0.5' opacity='0.4'/></svg>");
+
+  /* Sidebar semantic tokens (v2) */
+  --sidebar-bg: rgb(var(--color-canvas-shell) / 0.72);
+  --sidebar-bg-collapsed: rgb(var(--color-canvas-shell) / 0.8);
+  --sidebar-border: rgb(var(--color-neutral-200) / 0.88);
+  --sidebar-divider: rgb(var(--color-neutral-200) / 0.72);
+  --sidebar-header-border: rgb(var(--color-neutral-300) / 0.52);
+
+  --sidebar-text-header: rgb(var(--color-neutral-950));
+  --sidebar-text-label: rgb(var(--color-neutral-600));
+  --sidebar-text-meta: rgb(var(--color-neutral-500));
+  --sidebar-text-rail: rgb(var(--color-neutral-500));
+
+  --sidebar-control-text: rgb(var(--color-neutral-950));
+  --sidebar-control-text-hover: rgb(var(--color-neutral-950));
+  --sidebar-control-text-disabled: rgb(var(--color-neutral-400));
+  --sidebar-control-bg-hover: rgb(var(--color-neutral-100) / 0.35);
+  --sidebar-control-bg-active: rgb(var(--color-brand-100) / 0.36);
+  --sidebar-focus-ring: rgb(var(--color-brand-500) / 0.32);
+}
+
+[data-theme='dark'] {
+  --sidebar-bg: rgb(24 24 23 / 0.72);
+  --sidebar-bg-collapsed: rgb(24 24 23 / 0.84);
+  --sidebar-border: rgb(99 99 99 / 0.45);
+  --sidebar-divider: rgb(115 115 115 / 0.36);
+  --sidebar-header-border: rgb(163 163 163 / 0.28);
+
+  --sidebar-text-header: rgb(250 250 249);
+  --sidebar-text-label: rgb(214 211 209);
+  --sidebar-text-meta: rgb(168 162 158);
+  --sidebar-text-rail: rgb(168 162 158);
+
+  --sidebar-control-text: rgb(250 250 249);
+  --sidebar-control-text-hover: rgb(255 255 255);
+  --sidebar-control-text-disabled: rgb(120 113 108);
+  --sidebar-control-bg-hover: rgb(63 63 70 / 0.44);
+  --sidebar-control-bg-active: rgb(37 99 235 / 0.24);
+  --sidebar-focus-ring: rgb(96 165 250 / 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --sidebar-bg: rgb(24 24 23 / 0.72);
+    --sidebar-bg-collapsed: rgb(24 24 23 / 0.84);
+    --sidebar-border: rgb(99 99 99 / 0.45);
+    --sidebar-divider: rgb(115 115 115 / 0.36);
+    --sidebar-header-border: rgb(163 163 163 / 0.28);
+
+    --sidebar-text-header: rgb(250 250 249);
+    --sidebar-text-label: rgb(214 211 209);
+    --sidebar-text-meta: rgb(168 162 158);
+    --sidebar-text-rail: rgb(168 162 158);
+
+    --sidebar-control-text: rgb(250 250 249);
+    --sidebar-control-text-hover: rgb(255 255 255);
+    --sidebar-control-text-disabled: rgb(120 113 108);
+    --sidebar-control-bg-hover: rgb(63 63 70 / 0.44);
+    --sidebar-control-bg-active: rgb(37 99 235 / 0.24);
+    --sidebar-focus-ring: rgb(96 165 250 / 0.45);
+  }
 }
 
 @layer base {
@@ -483,19 +544,26 @@
   }
 
   .project-tab-toolbar-sidebar--collapsed {
-    @apply bg-canvas-shell/80;
+    background-color: var(--sidebar-bg-collapsed);
   }
 
   .project-sidebar-shell {
     @apply flex min-h-0 min-w-0 flex-col lg:h-full;
   }
 
+  .project-tab-toolbar-sidebar {
+    border-color: var(--sidebar-border);
+    background-color: var(--sidebar-bg);
+  }
+
   .project-sidebar-header {
-    @apply flex h-10 items-center border-b border-neutral-200/90 px-3;
+    @apply flex h-10 items-center border-b px-3;
+    border-color: var(--sidebar-header-border);
   }
 
   .project-sidebar-header-title {
-    @apply truncate text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-950;
+    @apply truncate text-[11px] font-semibold uppercase tracking-[0.1em];
+    color: var(--sidebar-text-header);
   }
 
   .project-sidebar-content {
@@ -517,7 +585,8 @@
   }
 
   .project-sidebar-rail-label {
-    @apply max-h-28 overflow-hidden text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-500;
+    @apply max-h-28 overflow-hidden text-center text-[9px] font-semibold uppercase tracking-[0.12em];
+    color: var(--sidebar-text-rail);
     writing-mode: vertical-rl;
     text-orientation: mixed;
   }
@@ -527,7 +596,8 @@
   }
 
   .project-sidebar-title {
-    @apply mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600;
+    @apply mb-1 text-[10px] font-semibold uppercase tracking-[0.12em];
+    color: var(--sidebar-text-label);
   }
 
   .project-sidebar-section-header {
@@ -535,11 +605,13 @@
   }
 
   .project-sidebar-section-meta {
-    @apply text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500;
+    @apply text-[10px] font-medium uppercase tracking-[0.08em];
+    color: var(--sidebar-text-meta);
   }
 
   .project-sidebar-divider {
-    @apply my-1 border-t border-neutral-200/70;
+    @apply my-1 border-t;
+    border-color: var(--sidebar-divider);
   }
 
   .project-sidebar-slot {
@@ -612,10 +684,12 @@
 
   .sidebar-button {
     @apply inline-flex h-8 w-full items-center justify-start gap-2 rounded-sm bg-transparent px-2.5
-           text-left text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-900
+           text-left text-[11px] font-medium uppercase tracking-[0.1em]
            transition-colors duration-150
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/35 focus-visible:ring-offset-1
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
            disabled:pointer-events-none disabled:opacity-50;
+    color: var(--sidebar-control-text);
+    --tw-ring-color: var(--sidebar-focus-ring);
     transform: none !important;
   }
 
@@ -635,7 +709,8 @@
 
   .sidebar-button:hover,
   .sidebar-button--selected {
-    @apply bg-transparent font-bold text-neutral-950;
+    @apply bg-transparent font-bold;
+    color: var(--sidebar-control-text-hover);
   }
 
   .sidebar-button:active {
