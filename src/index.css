@@ -1649,6 +1649,11 @@
     grid-template-rows: auto 1fr auto auto;
     gap: 20px;
     padding: 48px 52px;
+    /* Always use the export-safe font stack regardless of global body font */
+    font-family: 'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif;
+    /* Reset global body styles that bleed in via inheritance */
+    letter-spacing: normal;
+    font-feature-settings: normal;
   }
 
   .catalog-header {

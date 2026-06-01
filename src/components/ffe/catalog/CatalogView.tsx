@@ -350,27 +350,41 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
           >
             <ChevronRight className="catalog-stage-nav-icon" aria-hidden="true" />
           </button>
+          {/* Outer wrapper handles display scale; inner div runs the entrance animation at
+              natural coordinates so keyframes never fight the inline transform. */}
           <div
-            key={entry.item.id}
-            className={cn(
-              'catalog-stage-page',
-              slideDirection === 'next' ? 'catalog-page-next' : 'catalog-page-previous',
-            )}
-            style={{ transform: `scale(${displayScale})` }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              transform: `scale(${displayScale})`,
+              transformOrigin: 'top left',
+              transformStyle: 'preserve-3d',
+              width: '816px',
+              height: '1056px',
+            }}
           >
-            <CatalogPage
-              project={project}
-              entry={entry}
-              pageNumber={pageIndex + 1}
-              pageCount={entries.length}
-              layoutConfig={layoutConfig}
-              typographyConfig={typographyConfig}
-              onLayoutChange={handleLayoutChange}
-              watermarkConfig={watermarkConfig}
-              logoDataUrl={logoDataUrl}
-              companyName={companyName}
-              editorOpen={editorOpen}
-            />
+            <div
+              key={entry.item.id}
+              className={cn(
+                'catalog-stage-page',
+                slideDirection === 'next' ? 'catalog-page-next' : 'catalog-page-previous',
+              )}
+            >
+              <CatalogPage
+                project={project}
+                entry={entry}
+                pageNumber={pageIndex + 1}
+                pageCount={entries.length}
+                layoutConfig={layoutConfig}
+                typographyConfig={typographyConfig}
+                onLayoutChange={handleLayoutChange}
+                watermarkConfig={watermarkConfig}
+                logoDataUrl={logoDataUrl}
+                companyName={companyName}
+                editorOpen={editorOpen}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -741,7 +755,7 @@ function CatalogEditorPanelButton({
 }) {
   const isOpen = editorState.editorOpen;
   const ref = useRef<HTMLDivElement>(null);
-  const [popoverAnchor, setPopoverAnchor] = useState<{ left: number; bottom: number } | null>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<{ left: number; top: number } | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -782,7 +796,7 @@ function CatalogEditorPanelButton({
       const anchorY = Math.round(tabsRect?.bottom ?? triggerRect?.bottom ?? 0);
       setPopoverAnchor({
         left: Math.max(anchorX, 12),
-        bottom: Math.max(window.innerHeight - anchorY + 1, 12),
+        top: anchorY + 1,
       });
     };
 
@@ -822,8 +836,8 @@ function CatalogEditorPanelButton({
             ? {
                 popoverStyle: {
                   left: `${popoverAnchor.left}px`,
-                  bottom: `${popoverAnchor.bottom}px`,
-                  top: 'auto',
+                  top: `${popoverAnchor.top}px`,
+                  bottom: 'auto',
                   right: 'auto',
                   position: 'fixed' as const,
                 },
