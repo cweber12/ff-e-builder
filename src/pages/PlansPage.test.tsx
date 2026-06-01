@@ -111,7 +111,8 @@ describe('PlansPage', () => {
     );
 
     expect(within(actionsSlot).getByRole('button', { name: 'Upload plan' })).toBeInTheDocument();
-    expect(within(filterSlot).getByRole('tab', { name: 'All' })).toBeInTheDocument();
+    expect(within(filterSlot).getByRole('combobox', { name: 'Sort' })).toBeInTheDocument();
+    expect(within(filterSlot).queryByRole('tab', { name: 'All' })).not.toBeInTheDocument();
     expect(within(summarySlot).getByText('plan')).toBeInTheDocument();
 
     actionsSlot.remove();
@@ -132,7 +133,7 @@ describe('PlansPage', () => {
       expect(
         within(nextActionsSlot).getByRole('button', { name: 'Upload plan' }),
       ).toBeInTheDocument();
-      expect(within(nextFilterSlot).getByRole('tab', { name: 'All' })).toBeInTheDocument();
+      expect(within(nextFilterSlot).getByRole('combobox', { name: 'Sort' })).toBeInTheDocument();
       expect(within(nextSummarySlot).getByText('plan')).toBeInTheDocument();
     });
 

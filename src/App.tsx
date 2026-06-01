@@ -196,12 +196,7 @@ function ProjectLayout() {
 
   const sidebarToolbarLeft =
     !isLoading && isPlansRoute ? (
-      <div
-        id={PLANS_FILTER_SLOT_ID}
-        className="toolbar-segmented project-sidebar-slot !flex !flex-col !items-start"
-        role="tablist"
-        aria-label="Filter plans"
-      />
+      <div id={PLANS_FILTER_SLOT_ID} className="project-sidebar-slot" />
     ) : !isLoading && isMaterialsRoute ? (
       <div id={MATERIALS_FILTER_SLOT_ID} className="project-sidebar-slot" />
     ) : null;

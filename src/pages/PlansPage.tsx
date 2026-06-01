@@ -17,14 +17,7 @@ export const PLANS_ACTIONS_SLOT_ID = 'plans-actions-slot';
 export const PLANS_FILTER_SLOT_ID = 'plans-filter-slot';
 export const PLANS_SUMMARY_SLOT_ID = 'plans-summary-slot';
 
-type FilterId = 'all' | 'calibrated' | 'uncalibrated';
 type SortId = 'added' | 'name' | 'measurements';
-
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'calibrated', label: 'Calibrated' },
-  { id: 'uncalibrated', label: 'Needs calibration' },
-];
 
 const SORTS: { id: SortId; label: string }[] = [
   { id: 'added', label: 'Recently added' },
@@ -36,7 +29,6 @@ export function PlansPage({ project }: PlansPageProps) {
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
   const createPlan = useCreateMeasuredPlan(project.id);
   const deletePlan = useDeleteMeasuredPlan(project.id);
-  const [filter, setFilter] = useState<FilterId>('all');
   const [sort, setSort] = useState<SortId>('added');
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -48,15 +40,13 @@ export function PlansPage({ project }: PlansPageProps) {
 
   const visiblePlans = useMemo(() => {
     const list = plans ?? [];
-    const filtered =
-      filter === 'all' ? list : list.filter((plan) => plan.calibrationStatus === filter);
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = [...list].sort((a, b) => {
       if (sort === 'name') return a.name.localeCompare(b.name);
       if (sort === 'measurements') return b.measurementCount - a.measurementCount;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
     return sorted;
-  }, [filter, plans, sort]);
+  }, [plans, sort]);
 
   async function handleDelete(plan: MeasuredPlan) {
     const message =
@@ -77,9 +67,9 @@ export function PlansPage({ project }: PlansPageProps) {
     <div className="mx-auto max-w-7xl py-4">
       <PlansSummaryBar planCount={planCount} calibratedCount={calibratedCount} />
 
-      <PlansFilterBar filter={filter} onFilterChange={setFilter} />
+      <PlansViewFilters sort={sort} onSortChange={setSort} />
 
-      <PlansActionsBar sort={sort} onSortChange={setSort} onUpload={() => setUploadOpen(true)} />
+      <PlansActionsBar onUpload={() => setUploadOpen(true)} />
 
       <PlanUploadModal
         open={uploadOpen}
@@ -115,14 +105,7 @@ export function PlansPage({ project }: PlansPageProps) {
             actionLabel="Upload your first plan"
             onAction={() => setUploadOpen(true)}
           />
-        ) : (
-          <EmptyState
-            title="No plans match this filter"
-            description="Try a different filter to see plans that aren't currently visible."
-            actionLabel="Show all plans"
-            onAction={() => setFilter('all')}
-          />
-        )}
+        ) : null}
       </section>
     </div>
   );
@@ -147,35 +130,32 @@ function useSidebarPortalSlot(slotId: string) {
   return slot;
 }
 
-function PlansFilterBar({
-  filter,
-  onFilterChange,
+function PlansViewFilters({
+  sort,
+  onSortChange,
 }: {
-  filter: FilterId;
-  onFilterChange: (value: FilterId) => void;
+  sort: SortId;
+  onSortChange: (value: SortId) => void;
 }) {
   const slot = useSidebarPortalSlot(PLANS_FILTER_SLOT_ID);
 
   if (!slot) return null;
 
   return createPortal(
-    <>
-      {FILTERS.map((entry) => {
-        const active = filter === entry.id;
-        return (
-          <button
-            key={entry.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            data-active={active || undefined}
-            onClick={() => onFilterChange(entry.id)}
-          >
+    <label className="toolbar-label flex w-full flex-col items-start gap-1">
+      <span>Sort</span>
+      <select
+        value={sort}
+        onChange={(event) => onSortChange(event.target.value as SortId)}
+        className="toolbar-select w-full"
+      >
+        {SORTS.map((entry) => (
+          <option key={entry.id} value={entry.id}>
             {entry.label}
-          </button>
-        );
-      })}
-    </>,
+          </option>
+        ))}
+      </select>
+    </label>,
     slot,
   );
 }
@@ -200,35 +180,13 @@ function EmptyState({ title, description, actionLabel, onAction }: EmptyStatePro
   );
 }
 
-function PlansActionsBar({
-  sort,
-  onSortChange,
-  onUpload,
-}: {
-  sort: SortId;
-  onSortChange: (value: SortId) => void;
-  onUpload: () => void;
-}) {
+function PlansActionsBar({ onUpload }: { onUpload: () => void }) {
   const slot = useSidebarPortalSlot(PLANS_ACTIONS_SLOT_ID);
 
   if (!slot) return null;
 
   return createPortal(
     <div className="project-sidebar-slot">
-      <label className="toolbar-label flex w-full flex-col items-start gap-1">
-        <span>Sort</span>
-        <select
-          value={sort}
-          onChange={(event) => onSortChange(event.target.value as SortId)}
-          className="toolbar-select w-full"
-        >
-          {SORTS.map((entry) => (
-            <option key={entry.id} value={entry.id}>
-              {entry.label}
-            </option>
-          ))}
-        </select>
-      </label>
       <Button
         type="button"
         variant="toolbar"
