@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(catalog): replace Editor tab pills with a top category dropdown, force single-column editor toggle rows, and raise the editor popover stacking so it stays clickable above the catalog stage
 - feat(catalog): move page navigation chevrons beside the catalog canvas, convert sidebar View into a dropdown with category/item and zoom controls, anchor the Editor popover from the header/sidebar corner, and enforce export-safe catalog fonts for preview/PDF parity
 - refactor(ffe): remove the legacy FF&E editable table stack and table-only imports/exports, keeping Catalog and List as the active FF&E surfaces
 - feat(catalog): add FF&E item status editing to the Catalog Editor Text tab and persist changes through existing item update mutations

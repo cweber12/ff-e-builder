@@ -840,6 +840,8 @@ function CatalogEditorPanelButton({
                   bottom: 'auto',
                   right: 'auto',
                   position: 'fixed' as const,
+                  zIndex: 1200,
+                  pointerEvents: 'auto',
                 },
               }
             : {})}

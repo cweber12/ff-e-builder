@@ -968,13 +968,14 @@
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
-    z-index: 60;
+    z-index: 1200;
     width: min(480px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
     border: 1px solid theme('colors.neutral.200');
     background: rgb(var(--color-canvas-chrome));
     box-shadow: var(--paper-shadow);
+    pointer-events: auto;
   }
 
   .catalog-layout-popover-header {
@@ -994,39 +995,25 @@
     padding: 0 14px 14px;
   }
 
-  .catalog-layout-tabs {
+  .catalog-layout-category-row {
     display: flex;
+    flex-direction: column;
     gap: 6px;
-    overflow-x: auto;
     border-bottom: 1px solid theme('colors.neutral.200');
-    padding: 8px 0;
+    padding: 10px 0 8px;
   }
 
-  .catalog-layout-tab {
-    border: 1px solid transparent;
-    border-radius: 6px;
-    padding: 5px 10px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+  .catalog-layout-category-label {
+    margin: 0;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: theme('colors.neutral.600');
-    transition:
-      color 140ms ease,
-      border-color 140ms ease,
-      background-color 140ms ease;
+    color: theme('colors.brand.600');
   }
 
-  .catalog-layout-tab:hover {
-    border-color: theme('colors.brand.300');
-    background: theme('colors.brand.50');
-    color: theme('colors.brand.700');
-  }
-
-  .catalog-layout-tab-active {
-    border-color: theme('colors.brand.500');
-    background: theme('colors.brand.50');
-    color: theme('colors.brand.700');
+  .catalog-layout-category-select {
+    width: 100%;
   }
 
   .catalog-layout-panel {
@@ -1109,15 +1096,9 @@
 
   .catalog-layout-compact-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     column-gap: 16px;
     row-gap: 12px;
-  }
-
-  @media (max-width: 420px) {
-    .catalog-layout-compact-grid {
-      grid-template-columns: minmax(0, 1fr);
-    }
   }
 
   /* ---- Redesigned layout panel groups ---- */

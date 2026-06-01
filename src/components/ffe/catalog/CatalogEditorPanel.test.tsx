@@ -107,4 +107,30 @@ describe('CatalogEditorPanel', () => {
       },
     });
   });
+
+  it('switches editor sections from the category dropdown', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CatalogEditorPanel
+        project={catalogProjectFixture}
+        currentEntry={makeEntry()}
+        editorState={makeEditorState()}
+        onTypographyChange={vi.fn()}
+        onLayoutChange={vi.fn()}
+        watermarkConfig={makeEditorState().watermark}
+        onWatermarkChange={vi.fn()}
+        logoDataUrl={null}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const categorySelect = screen.getByRole('combobox', { name: /catalog editor category/i });
+    await user.selectOptions(categorySelect, 'media');
+
+    expect(categorySelect).toHaveValue('media');
+    expect(
+      screen.getByText('Option image and swatch controls are being consolidated here.'),
+    ).toBeInTheDocument();
+  });
 });

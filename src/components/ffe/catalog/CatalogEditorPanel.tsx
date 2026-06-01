@@ -140,22 +140,23 @@ export function CatalogEditorPanel({
       </div>
 
       <div className="catalog-layout-popover-body">
-        <div className="catalog-layout-tabs" role="tablist" aria-label="Catalog editor sections">
-          {CATALOG_EDITOR_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              className={cn(
-                'catalog-layout-tab',
-                activeTab === tab.id && 'catalog-layout-tab-active',
-              )}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="catalog-layout-category-row">
+          <label htmlFor="catalog-editor-category" className="catalog-layout-category-label">
+            Category
+          </label>
+          <select
+            id="catalog-editor-category"
+            aria-label="Catalog editor category"
+            className="toolbar-select catalog-layout-category-select"
+            value={activeTab}
+            onChange={(event) => setActiveTab(event.target.value as CatalogEditorTab)}
+          >
+            {CATALOG_EDITOR_TABS.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="catalog-layout-panel">
