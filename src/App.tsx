@@ -262,6 +262,9 @@ function ProjectLayout() {
                 showViewToggle={isFfeRoute}
                 isCatalogRoute={isCatalogRoute}
                 collapsed={sidebarCollapsed}
+                onTogglePanel={
+                  canToggleSidebar ? () => setSidebarCollapsed((collapsed) => !collapsed) : null
+                }
                 header={sidebarHeader}
                 toolbarLeft={sidebarToolbarLeft}
                 toolbarCenter={sidebarToolbarCenter}

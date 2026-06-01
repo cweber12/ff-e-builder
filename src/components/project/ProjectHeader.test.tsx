@@ -85,8 +85,9 @@ describe('ProjectHeader', () => {
       ['/projects/proj-1/materials'],
     );
 
-    const toggle = screen.getByRole('button', { name: 'Open Materials panel' });
-    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    const toggle = screen.getByRole('button', { name: 'Open Materials sidebar' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveAttribute('aria-controls', 'project-tab-toolbar-sidebar');
 
     fireEvent.click(toggle);
     expect(onTogglePanel).toHaveBeenCalledTimes(1);
@@ -101,8 +102,8 @@ describe('ProjectHeader', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('button', { name: 'Close Materials panel' })).toHaveAttribute(
-      'aria-pressed',
+    expect(screen.getByRole('button', { name: 'Collapse Materials sidebar' })).toHaveAttribute(
+      'aria-expanded',
       'true',
     );
   });

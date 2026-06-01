@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronLeft } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
@@ -10,6 +10,7 @@ interface ProjectTabToolbarSidebarProps {
   showViewToggle: boolean;
   isCatalogRoute: boolean;
   collapsed?: boolean;
+  onTogglePanel?: (() => void) | null;
   header?: ReactNode;
   toolbarLeft: ReactNode;
   toolbarCenter: ReactNode;
@@ -23,6 +24,7 @@ export function ProjectTabToolbarSidebar({
   showViewToggle,
   isCatalogRoute,
   collapsed = false,
+  onTogglePanel = null,
   header,
   toolbarLeft,
   toolbarCenter,
@@ -57,16 +59,19 @@ export function ProjectTabToolbarSidebar({
     setViewMenuOpen(false);
   }, [isCatalogRoute]);
 
-  if (collapsed) return null;
-
-  if (!showViewToggle && !header && !toolbarLeft && !toolbarCenter && !actions) return null;
-
-  const sidebarSections: Array<{ key: string; label?: string; content: ReactNode }> = [];
+  const sidebarSections: Array<{
+    key: string;
+    label: string;
+    shortLabel: string;
+    content: ReactNode;
+  }> = [];
 
   if (showViewToggle) {
     const currentView = isCatalogRoute ? 'Catalog' : 'List';
     sidebarSections.push({
       key: 'view',
+      label: 'View',
+      shortLabel: currentView === 'Catalog' ? 'CAT' : 'LIST',
       content: (
         <div className="space-y-2">
           <div ref={viewMenuRef} className="relative">
@@ -113,10 +118,20 @@ export function ProjectTabToolbarSidebar({
     });
   }
 
+  if (header) {
+    sidebarSections.push({
+      key: 'summary',
+      label: 'Context',
+      shortLabel: 'CTX',
+      content: <div className="project-sidebar-slot">{header}</div>,
+    });
+  }
+
   if (toolbarLeft) {
     sidebarSections.push({
       key: 'contextual-filters',
       label: filtersLabel ?? 'Filters',
+      shortLabel: 'FIL',
       content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
     });
   }
@@ -124,6 +139,8 @@ export function ProjectTabToolbarSidebar({
   if (toolbarCenter && !showViewToggle) {
     sidebarSections.push({
       key: 'contextual-tools',
+      label: 'Tools',
+      shortLabel: 'TLS',
       content: <div className="project-sidebar-slot">{toolbarCenter}</div>,
     });
   }
@@ -132,17 +149,77 @@ export function ProjectTabToolbarSidebar({
     sidebarSections.push({
       key: 'actions',
       label: actionsLabel ?? 'Actions',
+      shortLabel: 'ACT',
       content: <SidebarButtonGroup>{actions}</SidebarButtonGroup>,
     });
   }
 
+  if (collapsed) {
+    return (
+      <aside
+        id="project-tab-toolbar-sidebar"
+        aria-label="Project tab sidebar"
+        className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/80 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
+      >
+        <div className="project-sidebar-rail h-full">
+          {onTogglePanel ? (
+            <button
+              type="button"
+              className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950"
+              aria-label="Open project sidebar"
+              aria-controls="project-tab-toolbar-sidebar"
+              aria-expanded="false"
+              title="Open project sidebar"
+              onClick={onTogglePanel}
+            >
+              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
+            </button>
+          ) : null}
+          <div className="project-sidebar-rail-stack" aria-label="Sidebar sections">
+            {sidebarSections.map((section, index) => (
+              <div
+                key={section.key}
+                className={cn(
+                  'project-sidebar-rail-item',
+                  index === 0 && 'project-sidebar-rail-item--active',
+                )}
+                title={section.label}
+                aria-label={section.label}
+              >
+                <span className="project-sidebar-rail-item-short">{section.shortLabel}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
+  if (!showViewToggle && !header && !toolbarLeft && !toolbarCenter && !actions) return null;
+
   return (
-    <aside className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200">
+    <aside
+      id="project-tab-toolbar-sidebar"
+      aria-label="Project tab sidebar"
+      className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b border-neutral-200 bg-canvas-shell/70 lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:border-r-neutral-200"
+    >
       <div className="flex h-full flex-col space-y-3 overflow-x-hidden p-3 md:p-4">
-        {header ? <div className="project-sidebar-section min-w-0">{header}</div> : null}
+        {onTogglePanel ? (
+          <button
+            type="button"
+            className="project-sidebar-rail-toggle icon-btn text-neutral-500 hover:text-neutral-950"
+            aria-label="Collapse project sidebar"
+            aria-controls="project-tab-toolbar-sidebar"
+            aria-expanded="true"
+            title="Collapse project sidebar"
+            onClick={onTogglePanel}
+          >
+            <ChevronLeft className="toolbar-icon" aria-hidden="true" />
+          </button>
+        ) : null}
         {sidebarSections.map((section) => (
           <section key={section.key} className="project-sidebar-section">
-            {section.label ? <p className="project-sidebar-title">{section.label}</p> : null}
+            <p className="project-sidebar-title">{section.label}</p>
             <div className="min-w-0 pt-0.5">{section.content}</div>
           </section>
         ))}

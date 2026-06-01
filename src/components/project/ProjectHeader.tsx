@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Project } from '../../types';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
 import { StudioMark } from '../shared/auth/AuthGate';
@@ -118,7 +119,7 @@ export function ProjectHeader({
   const activeTab = TABS.find((tab) => tab.isActive(project.id, location.pathname));
   const panelToggleLabel =
     activeTab && onTogglePanel
-      ? `${panelCollapsed ? 'Open' : 'Close'} ${activeTab.label} panel`
+      ? `${panelCollapsed ? 'Open' : 'Collapse'} ${activeTab.label} sidebar`
       : null;
 
   return (
@@ -154,10 +155,16 @@ export function ProjectHeader({
             type="button"
             onClick={() => onTogglePanel?.()}
             aria-label={panelToggleLabel}
-            aria-pressed={!panelCollapsed}
-            className="inline-flex h-11 items-center justify-self-start px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 aria-[pressed=true]:font-bold aria-[pressed=true]:text-neutral-950"
+            aria-controls="project-tab-toolbar-sidebar"
+            aria-expanded={!panelCollapsed}
+            title={panelToggleLabel}
+            className="icon-btn justify-self-start text-neutral-500 hover:text-neutral-950"
           >
-            {panelToggleLabel}
+            {panelCollapsed ? (
+              <ChevronRight className="toolbar-icon" aria-hidden="true" />
+            ) : (
+              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
+            )}
           </button>
         ) : null}
         <div className="justify-self-center">

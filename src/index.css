@@ -475,6 +475,35 @@
     @apply min-w-0 rounded-sm;
   }
 
+  .project-tab-toolbar-sidebar--collapsed {
+    @apply bg-canvas-shell/80;
+  }
+
+  .project-sidebar-rail {
+    @apply flex h-full flex-col items-center gap-3 overflow-hidden p-2 pt-3;
+  }
+
+  .project-sidebar-rail-toggle {
+    @apply shrink-0;
+  }
+
+  .project-sidebar-rail-stack {
+    @apply flex w-full flex-1 flex-col items-center gap-2 pt-1;
+  }
+
+  .project-sidebar-rail-item {
+    @apply flex h-10 w-10 items-center justify-center rounded-sm border border-neutral-200 bg-white text-[10px]
+           font-semibold uppercase tracking-[0.12em] text-neutral-500 shadow-sm;
+  }
+
+  .project-sidebar-rail-item--active {
+    @apply border-brand-400 bg-brand-50 text-brand-700;
+  }
+
+  .project-sidebar-rail-item-short {
+    @apply select-none;
+  }
+
   .project-sidebar-title {
     @apply mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-700;
   }

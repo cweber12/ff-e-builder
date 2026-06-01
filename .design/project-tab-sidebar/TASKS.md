@@ -5,8 +5,8 @@ Date: 2026-06-01
 
 ## Foundation
 
-- [ ] **Stabilize Plans sidebar portal wiring**: Ensure Plans summary/filter/action portal targets rebind correctly after sidebar collapse and remount so controls never disappear on reopen. Done when close/reopen cycles always restore controls without user refresh. _Modifies: src/pages/PlansPage.tsx. Reuses: existing slot IDs and portal architecture._
-- [ ] **Define unified sidebar section shell rules**: Establish a single structural pattern for section ordering and labeling (context -> filters -> actions) and apply to shared sidebar container composition. Done when tabs follow consistent hierarchy with reduced visual noise. _Modifies: src/components/shared/sidebar/ProjectTabToolbarSidebar.tsx and existing sidebar CSS utilities._
+- [x] **Stabilize Plans sidebar portal wiring**: Ensure Plans summary/filter/action portal targets rebind correctly after sidebar collapse and remount so controls never disappear on reopen. Done when close/reopen cycles always restore controls without user refresh. _Modifies: src/pages/PlansPage.tsx. Reuses: existing slot IDs and portal architecture._
+- [x] **Define unified sidebar section shell rules**: Establish a single structural pattern for section ordering and labeling (context -> filters -> actions) and apply to shared sidebar container composition. Done when tabs follow consistent hierarchy with reduced visual noise. _Modifies: src/components/shared/sidebar/ProjectTabToolbarSidebar.tsx and existing sidebar CSS utilities._
 
 ## Core UI
 
