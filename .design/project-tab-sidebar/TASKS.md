@@ -25,4 +25,4 @@ Date: 2026-06-01
 
 ## Review
 
-- [ ] **Design review**: Run design review against .design/project-tab-sidebar/DESIGN_BRIEF.md and resolve any fidelity gaps.
+- [x] **Design review**: Run design review against .design/project-tab-sidebar/DESIGN_BRIEF.md and resolve any fidelity gaps.
