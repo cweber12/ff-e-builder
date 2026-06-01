@@ -475,6 +475,22 @@
     @apply min-w-0 rounded-sm;
   }
 
+  .project-sidebar-section--quiet {
+    @apply pb-0.5;
+  }
+
+  .project-sidebar-section--quiet .project-sidebar-title {
+    @apply text-neutral-500;
+  }
+
+  .project-sidebar-section--actions {
+    @apply rounded-md border border-neutral-200 bg-white p-2 shadow-sm;
+  }
+
+  .project-sidebar-section--actions .project-sidebar-title {
+    @apply text-neutral-700;
+  }
+
   .project-tab-toolbar-sidebar--collapsed {
     @apply bg-canvas-shell/80;
   }
@@ -505,11 +521,11 @@
   }
 
   .project-sidebar-title {
-    @apply mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-700;
+    @apply mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-700;
   }
 
   .project-sidebar-slot {
-    @apply flex min-w-0 flex-col items-start gap-2 text-left
+    @apply flex min-w-0 flex-col items-start gap-1.5 text-left
            [&>*]:max-w-full [&>*]:min-w-0 [&>*]:self-start;
   }
 
@@ -568,7 +584,7 @@
   }
 
   .sidebar-button-group {
-    @apply flex w-full flex-col items-stretch justify-start gap-2 text-left
+    @apply flex w-full flex-col items-stretch justify-start gap-1.5 text-left
            [&>*]:w-full [&>*]:max-w-full [&>*]:min-w-0;
   }
 

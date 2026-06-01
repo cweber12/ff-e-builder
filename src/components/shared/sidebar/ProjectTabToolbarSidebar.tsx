@@ -64,6 +64,7 @@ export function ProjectTabToolbarSidebar({
     label: string;
     shortLabel: string;
     content: ReactNode;
+    className?: string;
   }> = [];
 
   if (showViewToggle) {
@@ -72,6 +73,7 @@ export function ProjectTabToolbarSidebar({
       key: 'view',
       label: 'View',
       shortLabel: currentView === 'Catalog' ? 'CAT' : 'LIST',
+      className: 'project-sidebar-section--quiet',
       content: (
         <div className="space-y-2">
           <div ref={viewMenuRef} className="relative">
@@ -123,6 +125,7 @@ export function ProjectTabToolbarSidebar({
       key: 'summary',
       label: 'Context',
       shortLabel: 'CTX',
+      className: 'project-sidebar-section--quiet',
       content: <div className="project-sidebar-slot">{header}</div>,
     });
   }
@@ -132,6 +135,7 @@ export function ProjectTabToolbarSidebar({
       key: 'contextual-filters',
       label: filtersLabel ?? 'Filters',
       shortLabel: 'FIL',
+      className: 'project-sidebar-section--quiet',
       content: <div className="project-sidebar-slot">{toolbarLeft}</div>,
     });
   }
@@ -141,6 +145,7 @@ export function ProjectTabToolbarSidebar({
       key: 'contextual-tools',
       label: 'Tools',
       shortLabel: 'TLS',
+      className: 'project-sidebar-section--quiet',
       content: <div className="project-sidebar-slot">{toolbarCenter}</div>,
     });
   }
@@ -150,6 +155,7 @@ export function ProjectTabToolbarSidebar({
       key: 'actions',
       label: actionsLabel ?? 'Actions',
       shortLabel: 'ACT',
+      className: 'project-sidebar-section--actions',
       content: <SidebarButtonGroup>{actions}</SidebarButtonGroup>,
     });
   }
@@ -218,7 +224,7 @@ export function ProjectTabToolbarSidebar({
           </button>
         ) : null}
         {sidebarSections.map((section) => (
-          <section key={section.key} className="project-sidebar-section">
+          <section key={section.key} className={cn('project-sidebar-section', section.className)}>
             <p className="project-sidebar-title">{section.label}</p>
             <div className="min-w-0 pt-0.5">{section.content}</div>
           </section>

@@ -10,8 +10,8 @@ Date: 2026-06-01
 
 ## Core UI
 
-- [ ] **Replace verbose panel toggle with pinned icon control**: Swap Open/Close text button for compact icon toggle with tooltip and explicit expanded/collapsed semantics. Done when state is obvious at a glance and keyboard accessible. _Modifies: src/components/project/ProjectHeader.tsx. Reuses: existing header tab row and panelCollapsed state._
-- [ ] **Introduce collapsed rail orientation affordance**: Add slim collapsed rail with active context indicator and icon affordances to preserve orientation when panel is hidden. Done when users can tell current workspace state before reopening. _Modifies: src/components/shared/sidebar/ProjectTabToolbarSidebar.tsx and sidebar styles. New: collapsed rail subcomponent if needed._
+- [x] **Replace verbose panel toggle with pinned icon control**: Swap Open/Close text button for compact icon toggle with tooltip and explicit expanded/collapsed semantics. Done when state is obvious at a glance and keyboard accessible. _Modifies: src/components/project/ProjectHeader.tsx. Reuses: existing header tab row and panelCollapsed state._
+- [x] **Introduce collapsed rail orientation affordance**: Add slim collapsed rail with active context indicator and icon affordances to preserve orientation when panel is hidden. Done when users can tell current workspace state before reopening. _Modifies: src/components/shared/sidebar/ProjectTabToolbarSidebar.tsx and sidebar styles. New: collapsed rail subcomponent if needed._
 
 ## Interactions & States
 
