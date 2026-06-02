@@ -156,6 +156,7 @@ type ColumnVisibilityPanelProps = {
   projectId: string;
   tableKey: 'ffe' | 'proposal';
   triggerRect: DOMRect;
+  side?: 'left' | 'right';
   onClose: () => void;
 };
 
@@ -163,6 +164,7 @@ export function ColumnVisibilityPanel({
   projectId,
   tableKey,
   triggerRect,
+  side = 'right',
   onClose,
 }: ColumnVisibilityPanelProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -189,7 +191,9 @@ export function ColumnVisibilityPanel({
       style={{
         position: 'fixed',
         top: triggerRect.top,
-        left: triggerRect.right + 6,
+        ...(side === 'left'
+          ? { right: window.innerWidth - triggerRect.left }
+          : { left: triggerRect.right + 6 }),
       }}
       className="z-[200] w-64 rounded-sm border border-neutral-200 bg-canvas-chrome shadow-lg"
     >

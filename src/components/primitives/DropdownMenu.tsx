@@ -5,6 +5,8 @@ import { MenuPanel } from './MenuPanel';
 
 type PositionOptions = {
   align?: 'top' | 'bottom';
+  anchorEdge?: 'left' | 'right';
+  panelEdge?: 'left' | 'right';
   edge?: 'left' | 'right';
   offsetY?: number;
   offsetX?: number;

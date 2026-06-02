@@ -329,7 +329,7 @@ function ProjectLayout() {
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={canToggleSidebar ? toggleSidebar : null}
           />
-          <div className="flex flex-1 flex-col lg:flex-row">
+          <div className="flex flex-1 flex-col lg:flex-row-reverse">
             {project ? (
               <ProjectTabToolbarSidebar
                 sidebarTitle={sidebarTitle}
@@ -514,7 +514,13 @@ export function BudgetOptionsMenu({
             <MenuSub
               open={submenuOpen}
               panelRef={submenuPanelRef}
-              position={getSubmenuPosition({ align: 'top', edge: 'right', offsetX: 6 })}
+              position={getSubmenuPosition({
+                align: 'top',
+                anchorEdge: 'left',
+                panelEdge: 'right',
+                offsetY: 0,
+                offsetX: 0,
+              })}
               className="z-[281] min-w-44"
             >
               <MenuItem

@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Fragment, type ReactNode } from 'react';
 import { cn } from '../../../lib/utils';
 import { SidebarDivider } from './SidebarDivider';
@@ -43,7 +43,7 @@ export function ProjectTabToolbarSidebar({
       <aside
         id="project-tab-toolbar-sidebar"
         aria-label="Project tab sidebar"
-        className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-r"
+        className="project-tab-toolbar-sidebar project-tab-toolbar-sidebar--collapsed no-print w-full shrink-0 border-b lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-14 lg:self-start lg:border-b-0 lg:border-l"
       >
         <div className="project-sidebar-rail project-sidebar-rail--collapsed h-full">
           <span className="project-sidebar-rail-label" aria-hidden="true">
@@ -59,7 +59,7 @@ export function ProjectTabToolbarSidebar({
               title="Open project sidebar"
               onClick={onTogglePanel}
             >
-              <ChevronRight className="toolbar-icon" aria-hidden="true" />
+              <ChevronLeft className="toolbar-icon" aria-hidden="true" />
             </button>
           ) : null}
         </div>
@@ -75,11 +75,11 @@ export function ProjectTabToolbarSidebar({
     <aside
       id="project-tab-toolbar-sidebar"
       aria-label="Project tab sidebar"
-      className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-r"
+      className="project-tab-toolbar-sidebar no-print w-full shrink-0 border-b lg:sticky lg:top-[88px] lg:h-[calc(100vh-88px)] lg:w-60 lg:self-start lg:border-b-0 lg:border-l"
     >
       <div className="project-sidebar-shell lg:h-full">
         <div className="project-sidebar-header">
-          <div className="project-sidebar-header-side">
+          <div className="project-sidebar-header-side project-sidebar-header-side--left">
             {headerLeft ?? <span aria-hidden="true" />}
           </div>
           <p className="project-sidebar-header-title">{sidebarTitle}</p>

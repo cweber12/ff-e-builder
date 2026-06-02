@@ -12,6 +12,8 @@ type SidebarHeaderMenuRenderProps = {
   submenuPanelRef: RefObject<HTMLDivElement>;
   getSubmenuPosition: (options?: {
     align?: 'top' | 'bottom';
+    anchorEdge?: 'left' | 'right';
+    panelEdge?: 'left' | 'right';
     edge?: 'left' | 'right';
     offsetY?: number;
     offsetX?: number;
@@ -29,11 +31,17 @@ export function SidebarHeaderMenu({
   ariaLabel = 'Sidebar options',
   children,
 }: SidebarHeaderMenuProps) {
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
   return (
     <DropdownMenu
       wrapperClassName="w-full"
       panelClassName="z-[280] min-w-52"
-      positionOptions={{ align: 'bottom', edge: 'left', offsetY: 6 }}
+      positionOptions={
+        isDesktop
+          ? { align: 'top', anchorEdge: 'left', panelEdge: 'right', offsetY: 0, offsetX: 0 }
+          : { align: 'bottom', edge: 'left', offsetY: 6 }
+      }
       renderTrigger={({ triggerRef, open, toggleMenu }) => (
         <button
           ref={triggerRef}

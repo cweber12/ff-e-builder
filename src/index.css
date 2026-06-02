@@ -580,6 +580,10 @@
     @apply flex min-w-0 items-center;
   }
 
+  .project-sidebar-header-side--left {
+    @apply justify-start;
+  }
+
   .project-sidebar-header-side--right {
     @apply justify-end;
   }
@@ -587,6 +591,20 @@
   .project-sidebar-header-title {
     @apply truncate text-center text-[11px] font-semibold uppercase tracking-[0.1em];
     color: var(--sidebar-text-header);
+  }
+
+  @screen lg {
+    .project-sidebar-header-side--left {
+      @apply order-3 justify-end;
+    }
+
+    .project-sidebar-header-title {
+      @apply order-2;
+    }
+
+    .project-sidebar-header-side--right {
+      @apply order-1 justify-start;
+    }
   }
 
   .project-sidebar-header-inline-slot {

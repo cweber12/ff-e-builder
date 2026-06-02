@@ -9,9 +9,12 @@ import {
 
 type AnchorAlign = 'top' | 'bottom';
 type AnchorEdge = 'left' | 'right';
+type PanelEdge = 'left' | 'right';
 
 type PortalPositionOptions = {
   align?: AnchorAlign;
+  anchorEdge?: AnchorEdge;
+  panelEdge?: PanelEdge;
   edge?: AnchorEdge;
   offsetY?: number;
   offsetX?: number;
@@ -19,6 +22,8 @@ type PortalPositionOptions = {
 
 const defaultPortalPositionOptions: Required<PortalPositionOptions> = {
   align: 'bottom',
+  anchorEdge: 'right',
+  panelEdge: 'right',
   edge: 'right',
   offsetY: 4,
   offsetX: 0,
@@ -104,6 +109,8 @@ export function useActionsMenu() {
       if (!anchor) return null;
       const rect = anchor.getBoundingClientRect();
       const resolved = { ...defaultPortalPositionOptions, ...options };
+      const anchorEdge = options.anchorEdge ?? options.edge ?? resolved.anchorEdge;
+      const panelEdge = options.panelEdge ?? options.edge ?? resolved.panelEdge;
 
       const style: CSSProperties = {
         position: 'fixed',
@@ -112,10 +119,12 @@ export function useActionsMenu() {
       style.top =
         resolved.align === 'bottom' ? rect.bottom + resolved.offsetY : rect.top + resolved.offsetY;
 
-      if (resolved.edge === 'right') {
-        style.right = window.innerWidth - rect.right + resolved.offsetX;
+      const anchorX = anchorEdge === 'right' ? rect.right : rect.left;
+
+      if (panelEdge === 'right') {
+        style.right = window.innerWidth - anchorX + resolved.offsetX;
       } else {
-        style.left = rect.left + resolved.offsetX;
+        style.left = anchorX + resolved.offsetX;
       }
 
       return style;

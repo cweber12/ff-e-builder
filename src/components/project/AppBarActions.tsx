@@ -147,6 +147,7 @@ export function ProposalOptionsMenu({
           projectId={project.id}
           tableKey="proposal"
           triggerRect={columnsAnchorRect}
+          side={typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'left' : 'right'}
           onClose={() => setColumnsOpen(false)}
         />
       ) : null}

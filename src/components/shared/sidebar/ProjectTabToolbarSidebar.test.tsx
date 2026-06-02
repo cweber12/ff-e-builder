@@ -22,6 +22,8 @@ describe('ProjectTabToolbarSidebar', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Open project sidebar' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Project tab sidebar')).toHaveClass('lg:border-l');
+    expect(screen.getByLabelText('Project tab sidebar')).not.toHaveClass('lg:border-r');
     expect(screen.queryByRole('button', { name: /Open .* section/i })).not.toBeInTheDocument();
   });
 
@@ -64,5 +66,7 @@ describe('ProjectTabToolbarSidebar', () => {
 
     expect(screen.getByRole('button', { name: 'Options' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Catalog' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Project tab sidebar')).toHaveClass('lg:border-l');
+    expect(screen.getByLabelText('Project tab sidebar')).not.toHaveClass('lg:border-r');
   });
 });

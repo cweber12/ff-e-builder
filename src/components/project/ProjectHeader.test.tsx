@@ -85,7 +85,7 @@ describe('ProjectHeader', () => {
 
   it('renders sidebar toggle in tab header when provided', () => {
     const onToggleSidebar = vi.fn();
-    renderWithRouter(
+    const { container } = renderWithRouter(
       <ProjectHeader
         project={makeProject()}
         sidebarCollapsed={false}
@@ -96,5 +96,8 @@ describe('ProjectHeader', () => {
 
     const toggle = screen.getByRole('button', { name: 'Collapse project sidebar' });
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const tabsRow = container.querySelector('[data-project-header-tabs="true"]');
+    expect(tabsRow?.firstElementChild?.querySelector('button')).toBeNull();
+    expect(tabsRow?.lastElementChild?.querySelector('button')).toBe(toggle);
   });
 });

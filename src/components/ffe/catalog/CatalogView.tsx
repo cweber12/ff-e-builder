@@ -33,6 +33,7 @@ import {
   DEFAULT_TYPOGRAPHY_CONFIG,
 } from './CatalogPage';
 import { CatalogEditorPanel, type CatalogEditorState } from './CatalogEditorPanel';
+import { resolveCatalogEditorPopoverAnchor } from './catalogEditorPopoverAnchor';
 
 type CatalogViewProps = {
   project: Project;
@@ -510,7 +511,13 @@ function CatalogActionsBar({
               <MenuSub
                 open={submenuOpen}
                 panelRef={submenuPanelRef}
-                position={getSubmenuPosition({ align: 'top', edge: 'right', offsetX: 6 })}
+                position={getSubmenuPosition({
+                  align: 'top',
+                  anchorEdge: 'left',
+                  panelEdge: 'right',
+                  offsetY: 0,
+                  offsetX: 0,
+                })}
                 className="z-[281] min-w-48"
               >
                 <MenuItem
@@ -701,7 +708,11 @@ function CatalogEditorPanelPortal({
 }) {
   const isOpen = editorState.editorOpen;
   const panelRef = useRef<HTMLDivElement>(null);
-  const [popoverAnchor, setPopoverAnchor] = useState<{ left: number; top: number } | null>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<{
+    top: number;
+    left?: number;
+    right?: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -736,13 +747,7 @@ function CatalogEditorPanelPortal({
       const tabs = document.querySelector('[data-project-header-tabs="true"]');
       const sidebarRect = sidebar?.getBoundingClientRect();
       const tabsRect = tabs?.getBoundingClientRect();
-
-      const anchorX = Math.round((sidebarRect?.right ?? 0) + 1);
-      const anchorY = Math.round(tabsRect?.bottom ?? 0);
-      setPopoverAnchor({
-        left: Math.max(anchorX, 12),
-        top: anchorY + 1,
-      });
+      setPopoverAnchor(resolveCatalogEditorPopoverAnchor(sidebarRect, tabsRect, window.innerWidth));
     };
 
     updateAnchor();
@@ -768,10 +773,14 @@ function CatalogEditorPanelPortal({
       logoDataUrl={logoDataUrl}
       panelRef={panelRef}
       popoverStyle={{
-        left: `${popoverAnchor.left}px`,
         top: `${popoverAnchor.top}px`,
         bottom: 'auto',
-        right: 'auto',
+        ...(popoverAnchor.left !== undefined
+          ? { left: `${popoverAnchor.left}px` }
+          : { left: 'auto' }),
+        ...(popoverAnchor.right !== undefined
+          ? { right: `${popoverAnchor.right}px` }
+          : { right: 'auto' }),
         position: 'fixed' as const,
         zIndex: 3200,
         pointerEvents: 'auto',

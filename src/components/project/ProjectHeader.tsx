@@ -146,7 +146,11 @@ export function ProjectHeader({
         data-project-header-tabs="true"
         className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-white px-4 md:px-6"
       >
-        <div className="justify-self-start">
+        <div aria-hidden="true" />
+        <div className="justify-self-center">
+          <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
+        </div>
+        <div className="justify-self-end">
           {onToggleSidebar ? (
             <button
               type="button"
@@ -163,10 +167,6 @@ export function ProjectHeader({
             <div aria-hidden="true" />
           )}
         </div>
-        <div className="justify-self-center">
-          <TabNav projectId={project.id} {...(activeTab ? { activeLabel: activeTab.label } : {})} />
-        </div>
-        <div aria-hidden="true" />
       </div>
     </header>
   );
