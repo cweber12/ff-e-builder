@@ -572,6 +572,15 @@
            data-[active]:text-neutral-950;
   }
 
+  .project-tool-sidebar-divider {
+    @apply mx-2 my-3 border-t;
+    border-color: var(--sidebar-divider);
+  }
+
+  .project-tool-sidebar-section {
+    @apply flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-y-auto;
+  }
+
   .project-tab-toolbar-sidebar--collapsed {
     background-color: var(--sidebar-bg-collapsed);
   }
