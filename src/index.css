@@ -572,6 +572,26 @@
            data-[active]:text-neutral-950;
   }
 
+  .project-tool-sidebar-row {
+    @apply flex items-center gap-1;
+  }
+
+  .project-tool-sidebar-row > .project-tool-sidebar-link {
+    @apply min-w-0 flex-1;
+  }
+
+  .project-tool-options-trigger {
+    @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-transparent
+           text-neutral-500 transition-colors hover:text-neutral-900
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
+    --tw-ring-color: var(--sidebar-focus-ring);
+  }
+
+  .project-tool-options-trigger:hover,
+  .project-tool-options-trigger[aria-expanded='true'] {
+    color: var(--sidebar-control-text-hover);
+  }
+
   .project-tool-sidebar-divider {
     @apply mx-2 my-3 border-t;
     border-color: var(--sidebar-divider);

@@ -331,13 +331,14 @@ function ProjectLayout() {
             onToggleSidebar={canToggleSidebar ? toggleSidebar : null}
           />
           <div className="flex flex-1 flex-col lg:flex-row">
-            {project ? <ProjectToolSidebar project={project} /> : null}
+            {project ? (
+              <ProjectToolSidebar project={project} optionsMenu={sidebarHeaderLeft} />
+            ) : null}
             <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row-reverse">
               {project ? (
                 <ProjectTabToolbarSidebar
                   sidebarTitle={sidebarTitle}
                   collapsed={sidebarCollapsed}
-                  headerLeft={sidebarHeaderLeft}
                   headerRight={sidebarHeaderRight}
                   header={sidebarHeader}
                   toolbarLeft={sidebarToolbarLeft}

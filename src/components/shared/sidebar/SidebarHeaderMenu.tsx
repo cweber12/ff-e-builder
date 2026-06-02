@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import type { CSSProperties, ReactNode, RefObject } from 'react';
 import { DropdownMenu } from '../../primitives';
 
@@ -21,13 +21,11 @@ type SidebarHeaderMenuRenderProps = {
 };
 
 type SidebarHeaderMenuProps = {
-  label?: string;
   ariaLabel?: string;
   children: (props: SidebarHeaderMenuRenderProps) => ReactNode;
 };
 
 export function SidebarHeaderMenu({
-  label = 'Options',
   ariaLabel = 'Sidebar options',
   children,
 }: SidebarHeaderMenuProps) {
@@ -35,7 +33,7 @@ export function SidebarHeaderMenu({
 
   return (
     <DropdownMenu
-      wrapperClassName="w-full"
+      wrapperClassName="shrink-0"
       panelClassName="z-[280] min-w-52"
       positionOptions={
         isDesktop
@@ -49,11 +47,10 @@ export function SidebarHeaderMenu({
           aria-label={ariaLabel}
           aria-haspopup="menu"
           aria-expanded={open}
-          className="project-sidebar-header-control justify-start"
+          className="project-tool-options-trigger"
           onClick={toggleMenu}
         >
-          <span>{label}</span>
-          <ChevronDown className="project-sidebar-header-control-icon" aria-hidden="true" />
+          <Menu className="toolbar-icon" aria-hidden="true" />
         </button>
       )}
     >

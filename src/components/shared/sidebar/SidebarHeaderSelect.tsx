@@ -1,5 +1,5 @@
-import { MenuItem } from '../../primitives';
-import { SidebarHeaderMenu } from './SidebarHeaderMenu';
+import { ChevronDown } from 'lucide-react';
+import { DropdownMenu, MenuItem } from '../../primitives';
 
 type SidebarHeaderSelectOption = {
   label: string;
@@ -14,8 +14,32 @@ type SidebarHeaderSelectProps = {
 };
 
 export function SidebarHeaderSelect({ valueLabel, ariaLabel, options }: SidebarHeaderSelectProps) {
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
   return (
-    <SidebarHeaderMenu label={valueLabel} ariaLabel={ariaLabel}>
+    <DropdownMenu
+      wrapperClassName="w-full"
+      panelClassName="z-[280] min-w-44"
+      positionOptions={
+        isDesktop
+          ? { align: 'top', anchorEdge: 'left', panelEdge: 'right', offsetY: 0, offsetX: 0 }
+          : { align: 'bottom', edge: 'left', offsetY: 6 }
+      }
+      renderTrigger={({ triggerRef, open, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label={ariaLabel}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="project-sidebar-header-control justify-start"
+          onClick={toggleMenu}
+        >
+          <span>{valueLabel}</span>
+          <ChevronDown className="project-sidebar-header-control-icon" aria-hidden="true" />
+        </button>
+      )}
+    >
       {({ closeMenu }) =>
         options.map((option) => (
           <MenuItem
@@ -31,6 +55,6 @@ export function SidebarHeaderSelect({ valueLabel, ariaLabel, options }: SidebarH
           </MenuItem>
         ))
       }
-    </SidebarHeaderMenu>
+    </DropdownMenu>
   );
 }
