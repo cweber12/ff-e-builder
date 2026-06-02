@@ -598,7 +598,30 @@
   }
 
   .project-tool-sidebar-section {
-    @apply flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-y-auto;
+    @apply flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto;
+  }
+
+  /* Flatten the brand-colored primary action (Add / New / Upload / Editor) so it
+     reads as a neutral tab-styled row, cohesive with the nav above. */
+  .project-tool-sidebar-section .btn-add-action,
+  .project-tool-sidebar-section .sidebar-button--add {
+    @apply justify-start rounded-sm bg-transparent text-left font-medium shadow-none;
+    color: var(--sidebar-control-text);
+    transform: none;
+  }
+
+  .project-tool-sidebar-section .btn-add-action::before,
+  .project-tool-sidebar-section .sidebar-button--add::before {
+    display: none;
+  }
+
+  .project-tool-sidebar-section .btn-add-action:hover,
+  .project-tool-sidebar-section .sidebar-button--add:hover,
+  .project-tool-sidebar-section .btn-add-action:active,
+  .project-tool-sidebar-section .sidebar-button--add:active {
+    @apply bg-transparent font-bold shadow-none;
+    color: var(--sidebar-control-text-hover);
+    transform: none;
   }
 
   .project-tab-toolbar-sidebar--collapsed {

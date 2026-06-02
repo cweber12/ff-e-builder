@@ -755,13 +755,11 @@ function CatalogEditorPanelPortal({
     if (!isOpen) return;
 
     const updateAnchor = () => {
-      const sidebarRect = getVisibleElementRect('.project-tab-toolbar-sidebar');
+      const railRect = getVisibleElementRect('.project-tool-sidebar');
       const headerRect =
         getVisibleElementRect('[data-project-header-tabs="true"]') ??
         getVisibleElementRect('[data-project-header="true"]');
-      setPopoverAnchor(
-        resolveCatalogEditorPopoverAnchor(sidebarRect, headerRect, window.innerWidth),
-      );
+      setPopoverAnchor(resolveCatalogEditorPopoverAnchor(railRect, headerRect));
     };
 
     updateAnchor();

@@ -40,7 +40,6 @@ import {
 } from './components/project/AppBarActions';
 import { Button, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from './components/primitives';
 import {
-  ProjectTabToolbarSidebar,
   SidebarButton,
   SidebarButtonGroup,
   SidebarHeaderMenu,
@@ -55,11 +54,6 @@ import {
   exportProposalExcel,
   exportProposalPdf,
 } from './lib/export';
-import {
-  readSidebarCollapsedPreference,
-  type SidebarToolContext,
-  writeSidebarCollapsedPreference,
-} from './lib/sidebarPreferences';
 import {
   readColumnConfigFromStorage,
   useColumnDefs,
@@ -149,7 +143,6 @@ function ProjectLayout() {
     useProposalWithItems(id ?? '', new Set());
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
@@ -159,35 +152,6 @@ function ProjectLayout() {
   const isCatalogRoute = location.pathname.includes('/ffe/catalog');
   const isTableRoute = isProposalRoute;
   const isBudgetRoute = !!id && location.pathname.endsWith('/budget');
-  const canToggleSidebar =
-    isFfeRoute || isProposalRoute || isPlansRoute || isMaterialsRoute || isBudgetRoute;
-  const sidebarToolContext: SidebarToolContext | null = isFfeRoute
-    ? 'ffe'
-    : isProposalRoute
-      ? 'proposal'
-      : isPlansRoute
-        ? 'plans'
-        : isMaterialsRoute
-          ? 'materials'
-          : isBudgetRoute
-            ? 'budget'
-            : null;
-
-  useEffect(() => {
-    if (!project?.id || !sidebarToolContext) return;
-    const persisted = readSidebarCollapsedPreference(project.id, sidebarToolContext);
-    setSidebarCollapsed(persisted ?? false);
-  }, [project?.id, sidebarToolContext]);
-
-  const toggleSidebar = () => {
-    if (!project?.id || !sidebarToolContext) return;
-
-    setSidebarCollapsed((collapsed) => {
-      const next = !collapsed;
-      writeSidebarCollapsedPreference(project.id, sidebarToolContext, next);
-      return next;
-    });
-  };
 
   // Projects loaded but this ID doesn't exist → 404
   if (!projectsLoading && projects !== undefined && !project) return <NotFound />;
@@ -276,17 +240,31 @@ function ProjectLayout() {
       ) : null
     ) : null;
 
-  const sidebarTitle = isFfeRoute
-    ? 'FF&E'
-    : isProposalRoute
-      ? 'Proposal'
-      : isPlansRoute
-        ? 'Plans'
-        : isMaterialsRoute
-          ? 'Materials'
-          : isBudgetRoute
-            ? 'Budget'
-            : 'Project';
+  // Contextual controls for the active tool, stacked below the rail tabs. Each
+  // group reuses `.project-sidebar-section` so the relocated selects, inputs,
+  // and segmented controls keep their established styling.
+  const hasSection = Boolean(
+    sidebarHeaderRight ||
+    sidebarHeader ||
+    sidebarToolbarLeft ||
+    sidebarToolbarCenter ||
+    sidebarActions,
+  );
+  const sidebarSection = hasSection ? (
+    <>
+      {sidebarHeaderRight ? (
+        <div className="project-sidebar-section">{sidebarHeaderRight}</div>
+      ) : null}
+      {sidebarHeader ? <div className="project-sidebar-section">{sidebarHeader}</div> : null}
+      {sidebarToolbarLeft ? (
+        <div className="project-sidebar-section">{sidebarToolbarLeft}</div>
+      ) : null}
+      {sidebarToolbarCenter ? (
+        <div className="project-sidebar-section">{sidebarToolbarCenter}</div>
+      ) : null}
+      {sidebarActions ? <div className="project-sidebar-section">{sidebarActions}</div> : null}
+    </>
+  ) : null;
 
   return (
     <main
@@ -324,28 +302,16 @@ function ProjectLayout() {
         ) : null
       ) : (
         <>
-          <ProjectHeader
-            project={project}
-            userMenu={<UserMenu />}
-            sidebarCollapsed={sidebarCollapsed}
-            onToggleSidebar={canToggleSidebar ? toggleSidebar : null}
-          />
+          <ProjectHeader project={project} userMenu={<UserMenu />} />
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
-              <ProjectToolSidebar project={project} optionsMenu={sidebarHeaderLeft} />
+              <ProjectToolSidebar
+                project={project}
+                optionsMenu={sidebarHeaderLeft}
+                section={sidebarSection}
+              />
             ) : null}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row-reverse">
-              {project ? (
-                <ProjectTabToolbarSidebar
-                  sidebarTitle={sidebarTitle}
-                  collapsed={sidebarCollapsed}
-                  headerRight={sidebarHeaderRight}
-                  header={sidebarHeader}
-                  toolbarLeft={sidebarToolbarLeft}
-                  toolbarCenter={sidebarToolbarCenter}
-                  actions={sidebarActions}
-                />
-              ) : null}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="min-h-0 min-w-0 flex-1">
                 {isLoading ? (
                   <div className="flex justify-center py-24">

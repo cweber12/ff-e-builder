@@ -68,7 +68,9 @@ the affected sidebar/header components.
 
 - [x] 1. Rail widen (208px) + section scaffold + divider (structure + CSS).
 - [x] 2. Hamburger on active tab + relocate options menus (desktop).
-- [ ] 3. Per-tool section content + tab styling (relocate slot hosts into the rail).
-- [ ] 4. FF&E Zoom nested in options menu + flip editor popover anchor.
+- [x] 3. Per-tool section content + tab styling (relocate slot hosts into the rail). Also
+     retired the right-sidebar usage + collapse plumbing, and flipped the editor popover
+     anchor to the rail (pulled forward from slice 4).
+- [ ] 4. FF&E Zoom nested in options menu (editor popover anchor already done in slice 3).
 - [ ] 5. Mobile combined drop panel.
 - [ ] 6. Remove dead code (`ProjectTabToolbarSidebar`, `sidebarPreferences`, collapse) + fix tests.

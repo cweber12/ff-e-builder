@@ -8,17 +8,17 @@ import { resolveCatalogEditorPopoverAnchor } from './catalogEditorPopoverAnchor'
 import { catalogProjectFixture, catalogRoomsFixture } from '../../../data/catalogFixture';
 
 describe('CatalogPage', () => {
-  it('anchors the desktop editor flush to the sidebar inner border', () => {
+  it('anchors the editor flush to the right edge of the tool rail', () => {
     const anchor = resolveCatalogEditorPopoverAnchor(
       {
-        left: 1020,
-        right: 1280,
-        top: 88,
+        left: 0,
+        right: 208,
+        top: 44,
         bottom: 920,
-        x: 1020,
-        y: 88,
-        width: 260,
-        height: 832,
+        x: 0,
+        y: 44,
+        width: 208,
+        height: 876,
         toJSON() {
           return this;
         },
@@ -36,44 +36,27 @@ describe('CatalogPage', () => {
           return this;
         },
       } satisfies DOMRect,
-      1280,
     );
 
-    expect(anchor).toEqual({ top: 45, right: 260 });
+    expect(anchor).toEqual({ top: 45, left: 209 });
   });
 
-  it('keeps the mobile editor anchored from the sidebar right edge', () => {
-    const anchor = resolveCatalogEditorPopoverAnchor(
-      {
-        left: 0,
-        right: 320,
-        top: 88,
-        bottom: 920,
-        x: 0,
-        y: 88,
-        width: 320,
-        height: 832,
-        toJSON() {
-          return this;
-        },
-      } satisfies DOMRect,
-      {
-        left: 0,
-        right: 390,
-        top: 44,
-        bottom: 88,
-        x: 0,
-        y: 44,
-        width: 390,
-        height: 44,
-        toJSON() {
-          return this;
-        },
-      } satisfies DOMRect,
-      390,
-    );
+  it('returns null when the rail is not measured (e.g. hidden on mobile)', () => {
+    const anchor = resolveCatalogEditorPopoverAnchor(undefined, {
+      left: 0,
+      right: 390,
+      top: 44,
+      bottom: 88,
+      x: 0,
+      y: 44,
+      width: 390,
+      height: 44,
+      toJSON() {
+        return this;
+      },
+    } satisfies DOMRect);
 
-    expect(anchor).toEqual({ top: 89, left: 321 });
+    expect(anchor).toBeNull();
   });
 
   it('matches the rendered catalog page snapshot for a fixture item', () => {

@@ -1,22 +1,12 @@
 export function resolveCatalogEditorPopoverAnchor(
-  sidebarRect: DOMRect | undefined,
+  railRect: DOMRect | undefined,
   headerRect: DOMRect | undefined,
-  viewportWidth: number,
 ) {
-  if (!sidebarRect || !headerRect) return null;
+  if (!railRect || !headerRect) return null;
 
   const top = Math.round(headerRect.bottom) + 1;
-  const isDesktop = viewportWidth >= 1024;
+  // Open flush to the right edge of the left tool rail, extending over the canvas.
+  const left = Math.max(Math.round(railRect.right) + 1, 12);
 
-  if (isDesktop) {
-    return {
-      top,
-      right: Math.max(Math.round(viewportWidth - sidebarRect.left), 12),
-    } as const;
-  }
-
-  return {
-    top,
-    left: Math.max(Math.round(sidebarRect.right) + 1, 12),
-  } as const;
+  return { top, left } as const;
 }
