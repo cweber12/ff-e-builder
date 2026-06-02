@@ -473,6 +473,20 @@
     @apply rounded-sm outline-none ring-2 ring-brand-500/30 ring-offset-1;
   }
 
+  .project-tab-toolbar-sidebar .toolbar-segmented > button,
+  .project-tab-toolbar-sidebar .toolbar-segmented > a {
+    color: var(--sidebar-text-label);
+  }
+
+  .project-tab-toolbar-sidebar .toolbar-segmented > button:hover,
+  .project-tab-toolbar-sidebar .toolbar-segmented > a:hover,
+  .project-tab-toolbar-sidebar .toolbar-segmented > button[aria-pressed='true'],
+  .project-tab-toolbar-sidebar .toolbar-segmented > button[data-active],
+  .project-tab-toolbar-sidebar .toolbar-segmented > button[aria-checked='true'],
+  .project-tab-toolbar-sidebar .toolbar-segmented > a[data-active] {
+    color: var(--sidebar-control-text-hover);
+  }
+
   /* Contained variants keep their pill/box styling and skip the underline. */
   .toolbar-segmented--quiet > button::after,
   .toolbar-segmented--rail > button::after,
@@ -517,7 +531,8 @@
   }
 
   .toolbar-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500;
+    @apply text-[11px] font-semibold uppercase tracking-[0.1em];
+    color: var(--sidebar-text-label);
   }
 
   .toolbar-stat {
@@ -557,13 +572,25 @@
   }
 
   .project-sidebar-header {
-    @apply flex h-10 items-center border-b px-3;
+    @apply grid h-10 grid-cols-[auto_1fr_auto] items-center gap-2 border-b px-3;
     border-color: var(--sidebar-header-border);
   }
 
+  .project-sidebar-header-side {
+    @apply flex min-w-0 items-center;
+  }
+
+  .project-sidebar-header-side--right {
+    @apply justify-end;
+  }
+
   .project-sidebar-header-title {
-    @apply truncate text-[11px] font-semibold uppercase tracking-[0.1em];
+    @apply truncate text-center text-[11px] font-semibold uppercase tracking-[0.1em];
     color: var(--sidebar-text-header);
+  }
+
+  .project-sidebar-header-inline-slot {
+    @apply flex min-w-0 items-center;
   }
 
   .project-sidebar-content {
@@ -627,25 +654,22 @@
     @apply gap-1.5;
   }
 
-  .sidebar-view-toggle {
-    @apply inline-flex h-8 w-full items-center gap-2 rounded-sm px-2.5 text-[11px] uppercase tracking-[0.1em]
-           text-neutral-900 transition-colors duration-150 hover:text-neutral-950;
+  .project-sidebar-header-control {
+    @apply inline-flex h-8 min-w-0 items-center gap-1.5 rounded-sm bg-transparent px-0
+           text-[11px] font-semibold uppercase tracking-[0.1em]
+           transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-offset-1;
+    color: var(--sidebar-control-text);
+    --tw-ring-color: var(--sidebar-focus-ring);
   }
 
-  .sidebar-view-toggle-label {
-    @apply text-neutral-500;
+  .project-sidebar-header-control:hover {
+    color: var(--sidebar-control-text-hover);
   }
 
-  .sidebar-view-toggle-value {
-    @apply font-semibold text-neutral-950;
-  }
-
-  .sidebar-view-toggle-icon {
-    @apply ml-auto h-3.5 w-3.5 text-neutral-500 transition-transform duration-150;
-  }
-
-  .sidebar-view-menu {
-    @apply absolute left-0 right-0 top-[calc(100%+6px)] z-40 min-w-0;
+  .project-sidebar-header-control-icon {
+    @apply h-3.5 w-3.5 shrink-0;
+    color: var(--sidebar-text-meta);
   }
 
   .catalog-sidebar-picker {
@@ -653,7 +677,8 @@
   }
 
   .catalog-sidebar-picker-room {
-    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500;
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em];
+    color: var(--sidebar-text-label);
   }
 
   .catalog-sidebar-zoom-row {
@@ -661,7 +686,8 @@
   }
 
   .catalog-sidebar-zoom-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500;
+    @apply text-[10px] font-semibold uppercase tracking-[0.12em];
+    color: var(--sidebar-text-label);
   }
 
   .catalog-sidebar-zoom-controls {

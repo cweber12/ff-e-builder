@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BudgetPageActions } from './App';
+import { BudgetOptionsMenu, BudgetPageActions } from './App';
 import type { Project, ProposalCategoryWithItems, RoomWithItems } from './types';
 
 const mockState = vi.hoisted(() => ({
@@ -66,9 +66,7 @@ describe('BudgetPageActions', () => {
     vi.clearAllMocks();
   });
 
-  it('renders explicit Set Budgets and Export groups with direct action buttons', async () => {
-    const user = userEvent.setup();
-
+  it('renders only direct budget-setting buttons in the sidebar body', () => {
     render(
       <BudgetPageActions
         project={project}
@@ -78,24 +76,9 @@ describe('BudgetPageActions', () => {
       />,
     );
 
-    expect(screen.getByText('Set Budgets')).toBeInTheDocument();
-    expect(screen.getByText('Export')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Export$/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Export CSV' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Export Excel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Export PDF' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Export CSV' }));
-    expect(mockState.exportSummaryCsv).toHaveBeenCalledTimes(1);
-    expect(mockState.exportProposalCsv).toHaveBeenCalledTimes(1);
-
-    await user.click(screen.getByRole('button', { name: 'Export Excel' }));
-    expect(mockState.exportSummaryExcel).toHaveBeenCalledTimes(1);
-    expect(mockState.exportProposalExcel).toHaveBeenCalledTimes(1);
-
-    await user.click(screen.getByRole('button', { name: 'Export PDF' }));
-    expect(mockState.exportSummaryPdf).toHaveBeenCalledTimes(1);
-    expect(mockState.exportProposalPdf).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'FF&E Budget' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Proposal Budget' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /download csv/i })).not.toBeInTheDocument();
   });
 
   it('opens both budget setting modals from direct sidebar buttons', async () => {
@@ -115,5 +98,27 @@ describe('BudgetPageActions', () => {
 
     await user.click(screen.getByRole('button', { name: 'Proposal Budget' }));
     expect(screen.getByTestId('proposal-budget-modal')).toBeInTheDocument();
+  });
+
+  it('renders budget-setting and download actions inside the options menu', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <BudgetOptionsMenu
+        project={project}
+        roomsWithItems={roomsWithItems}
+        proposalCategoriesWithItems={proposalCategoriesWithItems}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /budget options/i }));
+    expect(screen.getByRole('menuitem', { name: 'FF&E Budget' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Proposal Budget' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Download' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download CSV' }));
+    expect(mockState.exportSummaryCsv).toHaveBeenCalledTimes(1);
+    expect(mockState.exportProposalCsv).toHaveBeenCalledTimes(1);
   });
 });

@@ -6,6 +6,7 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
   useOutletContext,
   useParams,
 } from 'react-router-dom';
@@ -14,12 +15,15 @@ import { AuthGate, SignInPage, UserMenu } from './components/shared/auth/AuthGat
 import {
   CatalogView,
   CATALOG_ACTIONS_SLOT_ID,
+  CATALOG_OPTIONS_SLOT_ID,
   CATALOG_PICKER_SLOT_ID,
 } from './components/ffe/catalog/CatalogView';
 import { FfeItemList } from './components/ffe/list';
 import {
   MATERIALS_ACTIONS_SLOT_ID,
   MATERIALS_FILTER_SLOT_ID,
+  MATERIALS_HEADER_VIEW_SLOT_ID,
+  MATERIALS_OPTIONS_SLOT_ID,
   MaterialsView,
 } from './components/materials/MaterialsView';
 import { BudgetView } from './components/project/BudgetView';
@@ -30,15 +34,16 @@ import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
 import {
   ProposalActions,
-  ProposalRevisionChip,
+  ProposalOptionsMenu,
   ProposalSidebarContext,
 } from './components/project/AppBarActions';
-import { Button } from './components/primitives';
+import { Button, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from './components/primitives';
 import {
   ProjectTabToolbarSidebar,
   SidebarButton,
   SidebarButtonGroup,
-  SidebarDivider,
+  SidebarHeaderMenu,
+  SidebarHeaderSelect,
 } from './components/shared/sidebar';
 import { recordSession } from './lib/utils';
 import {
@@ -72,6 +77,7 @@ import {
   PlansPage,
   PLANS_ACTIONS_SLOT_ID,
   PLANS_FILTER_SLOT_ID,
+  PLANS_OPTIONS_SLOT_ID,
   PLANS_SUMMARY_SLOT_ID,
 } from './pages/PlansPage';
 import type { Project, RoomWithItems, ProposalCategoryWithItems } from './types';
@@ -187,23 +193,14 @@ function ProjectLayout() {
 
   const isLoading = projectsLoading || dataLoading || proposalLoading;
 
-  // Action cluster rendered in the app bar's right side
-  const sidebarButtonGroup =
+  const sidebarActions =
     !isLoading && project ? (
       isFfeRoute ? (
         isCatalogRoute ? (
-          // CatalogView portals its own toolbar (Print / Export / Editor /
-          // page counter) into this slot.
           <div id={CATALOG_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
         ) : null
       ) : isProposalRoute ? (
-        <ProposalActions
-          project={project}
-          categoriesWithItems={proposalCategoriesWithItems}
-          onAddCategory={() => setAddCategoryOpen(true)}
-          onImport={() => setProposalImportOpen(true)}
-          layout="column"
-        />
+        <ProposalActions onAddCategory={() => setAddCategoryOpen(true)} layout="column" />
       ) : isBudgetRoute ? (
         <BudgetPageActions
           project={project}
@@ -212,9 +209,9 @@ function ProjectLayout() {
           layout="column"
         />
       ) : isMaterialsRoute ? (
-        <SidebarButtonGroup id={MATERIALS_ACTIONS_SLOT_ID} />
+        <div id={MATERIALS_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
       ) : isPlansRoute ? (
-        <SidebarButtonGroup id={PLANS_ACTIONS_SLOT_ID} />
+        <div id={PLANS_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
       ) : null
     ) : null;
 
@@ -235,17 +232,51 @@ function ProjectLayout() {
 
   const sidebarHeader =
     !isLoading && project ? (
-      isFfeRoute ? (
-        <ProposalRevisionChip project={project} />
-      ) : isProposalRoute ? (
+      isProposalRoute ? (
         <ProposalSidebarContext project={project} />
       ) : isPlansRoute ? (
         <div id={PLANS_SUMMARY_SLOT_ID} className="min-w-0" />
       ) : null
     ) : null;
 
+  const sidebarHeaderLeft =
+    !isLoading && project ? (
+      isCatalogRoute ? (
+        <div id={CATALOG_OPTIONS_SLOT_ID} className="project-sidebar-header-inline-slot" />
+      ) : isProposalRoute ? (
+        <ProposalOptionsMenu
+          project={project}
+          categoriesWithItems={proposalCategoriesWithItems}
+          onAddCategory={() => setAddCategoryOpen(true)}
+          onImport={() => setProposalImportOpen(true)}
+        />
+      ) : isBudgetRoute ? (
+        <BudgetOptionsMenu
+          project={project}
+          roomsWithItems={roomsWithItems}
+          proposalCategoriesWithItems={proposalCategoriesWithItems}
+        />
+      ) : isMaterialsRoute ? (
+        <div id={MATERIALS_OPTIONS_SLOT_ID} className="project-sidebar-header-inline-slot" />
+      ) : isPlansRoute ? (
+        <div id={PLANS_OPTIONS_SLOT_ID} className="project-sidebar-header-inline-slot" />
+      ) : null
+    ) : null;
+
+  const sidebarHeaderRight =
+    !isLoading && project ? (
+      isFfeRoute ? (
+        <FfeSidebarViewSelect
+          projectId={project.id}
+          currentView={isCatalogRoute ? 'catalog' : 'list'}
+        />
+      ) : isMaterialsRoute ? (
+        <div id={MATERIALS_HEADER_VIEW_SLOT_ID} className="project-sidebar-header-inline-slot" />
+      ) : null
+    ) : null;
+
   const sidebarTitle = isFfeRoute
-    ? `FF&E — ${isCatalogRoute ? 'Catalog' : 'List'}`
+    ? 'FF&E'
     : isProposalRoute
       ? 'Proposal'
       : isPlansRoute
@@ -301,18 +332,15 @@ function ProjectLayout() {
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
               <ProjectTabToolbarSidebar
-                projectId={project.id}
                 sidebarTitle={sidebarTitle}
-                showViewToggle={isFfeRoute}
-                isCatalogRoute={isCatalogRoute}
                 collapsed={sidebarCollapsed}
                 onTogglePanel={canToggleSidebar ? toggleSidebar : null}
+                headerLeft={sidebarHeaderLeft}
+                headerRight={sidebarHeaderRight}
                 header={sidebarHeader}
                 toolbarLeft={sidebarToolbarLeft}
                 toolbarCenter={sidebarToolbarCenter}
-                actions={sidebarButtonGroup}
-                filtersLabel={isMaterialsRoute ? '' : 'Filters'}
-                actionsLabel={isMaterialsRoute || isBudgetRoute ? '' : 'Actions'}
+                actions={sidebarActions}
               />
             ) : null}
             <div className="min-h-0 min-w-0 flex-1">
@@ -393,44 +421,9 @@ export function BudgetPageActions({
   const isColumn = layout === 'column';
   const [ffeOpen, setFfeOpen] = useState(false);
   const [proposalOpen, setProposalOpen] = useState(false);
-  const { data: proposalCustomColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
-
-  const proposalColumnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
-  const exportCsv = () => {
-    exportSummaryCsv(project, roomsWithItems);
-    exportProposalCsv(
-      project,
-      proposalCategoriesWithItems,
-      proposalCustomColumnDefs,
-      proposalColumnOrder(),
-    );
-  };
-  const exportExcel = () => {
-    void exportSummaryExcel(project, roomsWithItems);
-    void exportProposalExcel(
-      project,
-      proposalCategoriesWithItems,
-      null,
-      proposalCustomColumnDefs,
-      undefined,
-      proposalColumnOrder(),
-    );
-  };
-  const exportPdf = () => {
-    exportSummaryPdf(project, roomsWithItems);
-    void exportProposalPdf(
-      project,
-      proposalCategoriesWithItems,
-      null,
-      {},
-      proposalCustomColumnDefs,
-      proposalColumnOrder(),
-    );
-  };
 
   return (
     <div className={isColumn ? 'project-sidebar-slot gap-2' : 'flex items-center gap-2'}>
-      {isColumn ? <p className="toolbar-label">Set Budgets</p> : null}
       <SidebarButtonGroup className={isColumn ? undefined : 'md:flex-row md:items-center'}>
         {isColumn ? (
           <SidebarButton type="button" onClick={() => setFfeOpen(true)}>
@@ -451,37 +444,6 @@ export function BudgetPageActions({
           </Button>
         )}
       </SidebarButtonGroup>
-      {isColumn ? <SidebarDivider /> : null}
-      {isColumn ? <p className="toolbar-label">Export</p> : null}
-      <SidebarButtonGroup className={isColumn ? undefined : 'md:flex-row md:items-center'}>
-        {isColumn ? (
-          <SidebarButton type="button" onClick={exportCsv}>
-            Export CSV
-          </SidebarButton>
-        ) : (
-          <Button type="button" variant="toolbar" onClick={exportCsv}>
-            Export CSV
-          </Button>
-        )}
-        {isColumn ? (
-          <SidebarButton type="button" onClick={exportExcel}>
-            Export Excel
-          </SidebarButton>
-        ) : (
-          <Button type="button" variant="toolbar" onClick={exportExcel}>
-            Export Excel
-          </Button>
-        )}
-        {isColumn ? (
-          <SidebarButton type="button" onClick={exportPdf}>
-            Export PDF
-          </SidebarButton>
-        ) : (
-          <Button type="button" variant="toolbar" onClick={exportPdf}>
-            Export PDF
-          </Button>
-        )}
-      </SidebarButtonGroup>
       <FfeBudgetModal
         open={ffeOpen}
         onClose={() => setFfeOpen(false)}
@@ -495,6 +457,161 @@ export function BudgetPageActions({
         categories={proposalCategoriesWithItems}
       />
     </div>
+  );
+}
+
+export function BudgetOptionsMenu({
+  project,
+  roomsWithItems,
+  proposalCategoriesWithItems,
+}: {
+  project: Project;
+  roomsWithItems: RoomWithItems[];
+  proposalCategoriesWithItems: ProposalCategoryWithItems[];
+}) {
+  const [ffeOpen, setFfeOpen] = useState(false);
+  const [proposalOpen, setProposalOpen] = useState(false);
+  const { data: proposalCustomColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
+  const proposalColumnOrder = () => readColumnConfigFromStorage(project.id, 'proposal')?.order;
+
+  return (
+    <>
+      <SidebarHeaderMenu ariaLabel="Budget options">
+        {({
+          closeMenu,
+          submenuOpen,
+          toggleSubmenu,
+          closeSubmenu,
+          submenuTriggerRef,
+          submenuPanelRef,
+          getSubmenuPosition,
+        }) => (
+          <>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                setFfeOpen(true);
+              }}
+            >
+              FF&amp;E Budget
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                setProposalOpen(true);
+              }}
+            >
+              Proposal Budget
+            </MenuItem>
+            <MenuSeparator />
+            <MenuSubTrigger
+              ref={submenuTriggerRef}
+              aria-expanded={submenuOpen}
+              onClick={toggleSubmenu}
+            >
+              Download
+            </MenuSubTrigger>
+            <MenuSub
+              open={submenuOpen}
+              panelRef={submenuPanelRef}
+              position={getSubmenuPosition({ align: 'top', edge: 'right', offsetX: 6 })}
+              className="z-[281] min-w-44"
+            >
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  exportSummaryCsv(project, roomsWithItems);
+                  exportProposalCsv(
+                    project,
+                    proposalCategoriesWithItems,
+                    proposalCustomColumnDefs,
+                    proposalColumnOrder(),
+                  );
+                }}
+              >
+                Download CSV
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  void exportSummaryExcel(project, roomsWithItems);
+                  void exportProposalExcel(
+                    project,
+                    proposalCategoriesWithItems,
+                    null,
+                    proposalCustomColumnDefs,
+                    undefined,
+                    proposalColumnOrder(),
+                  );
+                }}
+              >
+                Download Excel
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  exportSummaryPdf(project, roomsWithItems);
+                  void exportProposalPdf(
+                    project,
+                    proposalCategoriesWithItems,
+                    null,
+                    {},
+                    proposalCustomColumnDefs,
+                    proposalColumnOrder(),
+                  );
+                }}
+              >
+                Download PDF
+              </MenuItem>
+            </MenuSub>
+          </>
+        )}
+      </SidebarHeaderMenu>
+      <FfeBudgetModal
+        open={ffeOpen}
+        onClose={() => setFfeOpen(false)}
+        project={project}
+        roomsWithItems={roomsWithItems}
+      />
+      <ProposalBudgetModal
+        open={proposalOpen}
+        onClose={() => setProposalOpen(false)}
+        project={project}
+        categories={proposalCategoriesWithItems}
+      />
+    </>
+  );
+}
+
+function FfeSidebarViewSelect({
+  projectId,
+  currentView,
+}: {
+  projectId: string;
+  currentView: 'catalog' | 'list';
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <SidebarHeaderSelect
+      valueLabel={currentView === 'catalog' ? 'Catalog' : 'List'}
+      ariaLabel="FF&E view mode"
+      options={[
+        {
+          label: 'Catalog',
+          active: currentView === 'catalog',
+          onSelect: () => navigate(`/projects/${projectId}/ffe/catalog`),
+        },
+        {
+          label: 'List',
+          active: currentView === 'list',
+          onSelect: () => navigate(`/projects/${projectId}/ffe/list`),
+        },
+      ]}
+    />
   );
 }
 

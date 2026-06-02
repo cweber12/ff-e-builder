@@ -10,10 +10,7 @@ describe('ProjectTabToolbarSidebar', () => {
     render(
       <MemoryRouter>
         <ProjectTabToolbarSidebar
-          projectId="proj-1"
-          sidebarTitle="FF&E — Catalog"
-          showViewToggle={true}
-          isCatalogRoute={true}
+          sidebarTitle="FF&E"
           collapsed={true}
           onTogglePanel={noop}
           header={<div>Summary</div>}
@@ -32,12 +29,11 @@ describe('ProjectTabToolbarSidebar', () => {
     render(
       <MemoryRouter>
         <ProjectTabToolbarSidebar
-          projectId="proj-1"
-          sidebarTitle="FF&E — Catalog"
-          showViewToggle={true}
-          isCatalogRoute={true}
+          sidebarTitle="FF&E"
           collapsed={false}
           onTogglePanel={noop}
+          headerLeft={<button type="button">Options</button>}
+          headerRight={<button type="button">Catalog</button>}
           header={<div>Summary</div>}
           toolbarLeft={<div>Filters</div>}
           toolbarCenter={<div>Tools</div>}
@@ -49,16 +45,15 @@ describe('ProjectTabToolbarSidebar', () => {
     expect(screen.queryByRole('button', { name: 'Collapse project sidebar' })).toBeNull();
   });
 
-  it('shows always-visible FF&E view segmented options when expanded', () => {
+  it('renders header-left and header-right controls when expanded', () => {
     render(
       <MemoryRouter>
         <ProjectTabToolbarSidebar
-          projectId="proj-1"
-          sidebarTitle="FF&E — Catalog"
-          showViewToggle={true}
-          isCatalogRoute={true}
+          sidebarTitle="FF&E"
           collapsed={false}
           onTogglePanel={noop}
+          headerLeft={<button type="button">Options</button>}
+          headerRight={<button type="button">Catalog</button>}
           header={<div>Summary</div>}
           toolbarLeft={<div>Filters</div>}
           toolbarCenter={<div>Tools</div>}
@@ -67,8 +62,7 @@ describe('ProjectTabToolbarSidebar', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('radiogroup', { name: 'FF&E view mode' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Catalog' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'List' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Options' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Catalog' })).toBeInTheDocument();
   });
 });

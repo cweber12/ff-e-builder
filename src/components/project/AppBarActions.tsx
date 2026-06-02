@@ -1,10 +1,10 @@
 import type { Project, ProposalCategoryWithItems, ProposalStatus } from '../../types';
 import { useMemo, useState } from 'react';
-import { Download, Plus, Upload } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
-import { Button } from '../primitives';
+import { Button, MenuItem, MenuSeparator } from '../primitives';
 import {
   useUpdateProject,
   useProposalRevisions,
@@ -12,9 +12,9 @@ import {
   useRevisionChangelog,
 } from '../../hooks';
 import { useColumnConfig } from '../../hooks/shared';
-import { ColumnVisibilityPopover } from '../shared/ColumnVisibilityPopover';
+import { ColumnVisibilityPanel } from '../shared/ColumnVisibilityPopover';
 import { ProposalExportModal } from '../shared/modals/ProposalExportModal';
-import { SidebarButton } from '../shared/sidebar';
+import { SidebarButton, SidebarHeaderMenu } from '../shared/sidebar';
 
 // Default draggable column IDs for the proposal table (matches ProposalTable's PROPOSAL_HIDEABLE_IDS).
 // quantity and unitCost are sticky-right and not included here; they are always appended at export time.
@@ -43,32 +43,13 @@ interface ProposalActionsProps {
 }
 
 export function ProposalActions({
-  project,
-  categoriesWithItems,
   onAddCategory,
-  onImport,
   layout = 'row',
-}: ProposalActionsProps) {
+}: Pick<ProposalActionsProps, 'onAddCategory' | 'layout'>) {
   const isColumn = layout === 'column';
-  const { data: userProfile } = useUserProfile();
-  const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
-  const { data: revisions = [] } = useProposalRevisions(project.id);
-  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
-  const { data: changelog = [] } = useRevisionChangelog(project.id);
-  const { visibleOrder } = useColumnConfig(
-    project.id,
-    'proposal',
-    PROPOSAL_DEFAULT_COLS,
-    customColumnDefs,
-  );
-  // Product tag is now fixed chrome in the table (not draggable/hideable),
-  // but should still be available in exports.
-  const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
-  const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
-  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   return (
-    <div className={isColumn ? 'sidebar-button-group' : 'flex items-center gap-2'}>
+    <div className={isColumn ? 'project-sidebar-slot' : 'flex items-center gap-2'}>
       {isColumn ? (
         <SidebarButton variant="add" type="button" onClick={onAddCategory}>
           <Plus className="toolbar-icon" aria-hidden="true" />
@@ -80,42 +61,77 @@ export function ProposalActions({
           Add category
         </Button>
       )}
+    </div>
+  );
+}
 
-      {isColumn ? (
-        <SidebarButton type="button" onClick={onImport} title="Import from Excel">
-          <Upload className="toolbar-icon" aria-hidden="true" />
-          Import
-        </SidebarButton>
-      ) : (
-        <Button type="button" variant="toolbar" onClick={onImport} title="Import from Excel">
-          <Upload className="toolbar-icon" aria-hidden="true" />
-          Import
-        </Button>
-      )}
+export function ProposalOptionsMenu({
+  project,
+  categoriesWithItems,
+  onAddCategory,
+  onImport,
+}: ProposalActionsProps) {
+  const { data: userProfile } = useUserProfile();
+  const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
+  const { data: revisions = [] } = useProposalRevisions(project.id);
+  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
+  const { data: changelog = [] } = useRevisionChangelog(project.id);
+  const { visibleOrder } = useColumnConfig(
+    project.id,
+    'proposal',
+    PROPOSAL_DEFAULT_COLS,
+    customColumnDefs,
+  );
+  const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
+  const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [columnsAnchorRect, setColumnsAnchorRect] = useState<DOMRect | null>(null);
 
-      {isColumn ? (
-        <SidebarButton
-          type="button"
-          disabled={!hasItems}
-          onClick={() => setExportModalOpen(true)}
-          title="Export"
-        >
-          <Download className="toolbar-icon" aria-hidden="true" />
-          Export
-        </SidebarButton>
-      ) : (
-        <Button
-          type="button"
-          variant="toolbar"
-          disabled={!hasItems}
-          onClick={() => setExportModalOpen(true)}
-          title="Export"
-        >
-          <Download className="toolbar-icon" aria-hidden="true" />
-          Export
-        </Button>
-      )}
-
+  return (
+    <>
+      <SidebarHeaderMenu ariaLabel="Proposal options">
+        {({ closeMenu }) => (
+          <>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onAddCategory();
+              }}
+            >
+              Add category
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onImport();
+              }}
+            >
+              Upload
+            </MenuItem>
+            <MenuItem
+              disabled={!hasItems}
+              onClick={() => {
+                closeMenu();
+                setExportModalOpen(true);
+              }}
+            >
+              Download
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                closeMenu();
+                setColumnsAnchorRect(rect);
+                setColumnsOpen(true);
+              }}
+            >
+              Columns
+            </MenuItem>
+          </>
+        )}
+      </SidebarHeaderMenu>
       <ProposalExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
@@ -126,13 +142,15 @@ export function ProposalActions({
         revisionData={{ revisions, snapshots, changelog }}
         visibleOrder={exportVisibleOrder}
       />
-
-      <ColumnVisibilityPopover
-        projectId={project.id}
-        tableKey="proposal"
-        {...(isColumn ? { buttonClassName: 'sidebar-button' } : {})}
-      />
-    </div>
+      {columnsOpen && columnsAnchorRect ? (
+        <ColumnVisibilityPanel
+          projectId={project.id}
+          tableKey="proposal"
+          triggerRect={columnsAnchorRect}
+          onClose={() => setColumnsOpen(false)}
+        />
+      ) : null}
+    </>
   );
 }
 

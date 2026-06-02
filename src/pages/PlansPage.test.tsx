@@ -2,7 +2,12 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
-import { PLANS_ACTIONS_SLOT_ID, PLANS_FILTER_SLOT_ID, PLANS_SUMMARY_SLOT_ID } from './PlansPage';
+import {
+  PLANS_ACTIONS_SLOT_ID,
+  PLANS_FILTER_SLOT_ID,
+  PLANS_OPTIONS_SLOT_ID,
+  PLANS_SUMMARY_SLOT_ID,
+} from './PlansPage';
 
 vi.mock('../components/plans/list/PlanUploadModal', () => ({
   PlanUploadModal: vi.fn(({ open }: { open: boolean }) =>
@@ -32,36 +37,40 @@ const project: Project = {
 const createMutateAsync = vi.fn();
 const deleteMutateAsync = vi.fn();
 
-vi.mock('../hooks', () => ({
-  useMeasuredPlans: vi.fn(() => ({
-    data: [
-      {
-        id: 'plan-1',
-        projectId: 'project-1',
-        ownerUid: 'user-1',
-        name: 'Level 1 Furniture Plan',
-        sheetReference: 'A1.1',
-        imageFilename: 'plan.png',
-        imageContentType: 'image/png',
-        imageByteSize: 1024,
-        calibrationStatus: 'uncalibrated',
-        measurementCount: 0,
-        createdAt: '2026-05-06T00:00:00Z',
-        updatedAt: '2026-05-06T00:00:00Z',
-      },
-    ],
-    isLoading: false,
-  })),
-  useCreateMeasuredPlan: vi.fn(() => ({
-    mutateAsync: createMutateAsync,
-    isPending: false,
-  })),
-  useDeleteMeasuredPlan: vi.fn(() => ({
-    mutateAsync: deleteMutateAsync,
-    isPending: false,
-    variables: undefined,
-  })),
-}));
+vi.mock('../hooks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../hooks')>();
+  return {
+    ...actual,
+    useMeasuredPlans: vi.fn(() => ({
+      data: [
+        {
+          id: 'plan-1',
+          projectId: 'project-1',
+          ownerUid: 'user-1',
+          name: 'Level 1 Furniture Plan',
+          sheetReference: 'A1.1',
+          imageFilename: 'plan.png',
+          imageContentType: 'image/png',
+          imageByteSize: 1024,
+          calibrationStatus: 'uncalibrated',
+          measurementCount: 0,
+          createdAt: '2026-05-06T00:00:00Z',
+          updatedAt: '2026-05-06T00:00:00Z',
+        },
+      ],
+      isLoading: false,
+    })),
+    useCreateMeasuredPlan: vi.fn(() => ({
+      mutateAsync: createMutateAsync,
+      isPending: false,
+    })),
+    useDeleteMeasuredPlan: vi.fn(() => ({
+      mutateAsync: deleteMutateAsync,
+      isPending: false,
+      variables: undefined,
+    })),
+  };
+});
 
 vi.mock('../lib/api', () => ({
   api: {
@@ -102,6 +111,7 @@ describe('PlansPage', () => {
 
     const actionsSlot = makeSlot(PLANS_ACTIONS_SLOT_ID);
     const filterSlot = makeSlot(PLANS_FILTER_SLOT_ID);
+    const optionsSlot = makeSlot(PLANS_OPTIONS_SLOT_ID);
     const summarySlot = makeSlot(PLANS_SUMMARY_SLOT_ID);
 
     const view = render(
@@ -112,15 +122,18 @@ describe('PlansPage', () => {
 
     expect(within(actionsSlot).getByRole('button', { name: 'Upload plan' })).toBeInTheDocument();
     expect(within(filterSlot).getByRole('combobox', { name: 'Sort' })).toBeInTheDocument();
+    expect(within(optionsSlot).getByRole('button', { name: /plans options/i })).toBeInTheDocument();
     expect(within(filterSlot).queryByRole('tab', { name: 'All' })).not.toBeInTheDocument();
     expect(within(summarySlot).getByText('plan')).toBeInTheDocument();
 
     actionsSlot.remove();
     filterSlot.remove();
+    optionsSlot.remove();
     summarySlot.remove();
 
     const nextActionsSlot = makeSlot(PLANS_ACTIONS_SLOT_ID);
     const nextFilterSlot = makeSlot(PLANS_FILTER_SLOT_ID);
+    const nextOptionsSlot = makeSlot(PLANS_OPTIONS_SLOT_ID);
     const nextSummarySlot = makeSlot(PLANS_SUMMARY_SLOT_ID);
 
     view.rerender(
@@ -134,11 +147,15 @@ describe('PlansPage', () => {
         within(nextActionsSlot).getByRole('button', { name: 'Upload plan' }),
       ).toBeInTheDocument();
       expect(within(nextFilterSlot).getByRole('combobox', { name: 'Sort' })).toBeInTheDocument();
+      expect(
+        within(nextOptionsSlot).getByRole('button', { name: /plans options/i }),
+      ).toBeInTheDocument();
       expect(within(nextSummarySlot).getByText('plan')).toBeInTheDocument();
     });
 
     nextActionsSlot.remove();
     nextFilterSlot.remove();
+    nextOptionsSlot.remove();
     nextSummarySlot.remove();
   });
 });

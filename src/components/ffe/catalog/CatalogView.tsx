@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Printer,
-  SlidersHorizontal,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { SlotPortal } from '../../shared/SlotPortal';
 import { cn } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -22,8 +15,8 @@ import {
   type FfeItemSortMode,
 } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
-import { Button, SegmentedControl } from '../../primitives';
-import { SidebarButton, SidebarButtonGroup } from '../../shared/sidebar';
+import { Button, MenuItem, MenuSub, MenuSubTrigger, SegmentedControl } from '../../primitives';
+import { SidebarHeaderMenu } from '../../shared/sidebar';
 import { imageAssetToPngDataUrl } from '../../../lib/export/imageHelpers';
 import {
   type CatalogColorToken,
@@ -415,10 +408,11 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
  */
 export const CATALOG_ACTIONS_SLOT_ID = 'ffe-catalog-actions-slot';
 export const CATALOG_PICKER_SLOT_ID = 'ffe-catalog-picker-slot';
+export const CATALOG_OPTIONS_SLOT_ID = 'ffe-catalog-options-slot';
 
 /**
- * Portal of catalog actions into the project header. Renders Print, unified
- * Export, the Catalog Editor, and the page counter.
+ * Portals catalog-specific primary and options actions into the shared
+ * sidebar shell.
  */
 function CatalogActionsBar({
   project,
@@ -449,37 +443,138 @@ function CatalogActionsBar({
   onEditorOpenChange: (open: boolean) => void;
   onTypographyChange: (update: Partial<CatalogTypographyConfig>) => void;
 }) {
+  const watermarkOpts =
+    watermarkConfig.enabled && logoDataUrl
+      ? {
+          logoDataUrl,
+          companyName: watermarkConfig.includeName ? companyName : null,
+          placementH: watermarkConfig.placementH,
+          placementV: watermarkConfig.placementV,
+          opacity: watermarkConfig.opacity,
+        }
+      : null;
+
+  const exportOptions = {
+    mainImageAlignment: editorState.layoutConfig.mainImageAlignment,
+    planImageSize: editorState.layoutConfig.planImageSize,
+    showCostInfo: editorState.layoutConfig.showCostInfo,
+    showSwatchLabels: editorState.layoutConfig.showSwatchLabels,
+    showApproval: editorState.layoutConfig.showApproval,
+    showVerticalDivider: editorState.layoutConfig.showVerticalDivider,
+    showHorizontalDivider: editorState.layoutConfig.showHorizontalDivider,
+    titleColorToken: editorState.typography.titleColorToken,
+    bodyColorToken: editorState.typography.bodyColorToken,
+    metaColorToken: editorState.typography.metaColorToken,
+    sortMode,
+    watermark: watermarkOpts,
+  };
+  const swatchesOnlyOptions = { ...exportOptions, showSwatchLabels: false };
+
   return (
-    <SlotPortal slotId={CATALOG_ACTIONS_SLOT_ID}>
-      <SidebarButtonGroup>
-        <SidebarButton type="button" aria-label="Print catalog" onClick={() => window.print()}>
-          <Printer className="toolbar-icon" aria-hidden="true" />
-          Print
-        </SidebarButton>
-        <CatalogExportButton
-          project={project}
-          rooms={rooms}
-          currentItemId={currentItemId}
-          layoutConfig={editorState.layoutConfig}
-          typographyConfig={editorState.typography}
-          watermarkConfig={editorState.watermark}
-          logoDataUrl={logoDataUrl}
-          companyName={companyName}
-          sortMode={sortMode}
-        />
-        <CatalogEditorPanelButton
-          project={project}
-          currentEntry={currentEntry}
-          editorState={editorState}
-          onLayoutChange={onLayoutChange}
-          watermarkConfig={watermarkConfig}
-          onWatermarkChange={onWatermarkChange}
-          logoDataUrl={logoDataUrl}
-          onEditorOpenChange={onEditorOpenChange}
-          onTypographyChange={onTypographyChange}
-        />
-      </SidebarButtonGroup>
-    </SlotPortal>
+    <>
+      <SlotPortal slotId={CATALOG_OPTIONS_SLOT_ID}>
+        <SidebarHeaderMenu ariaLabel="Catalog options">
+          {({
+            closeMenu,
+            submenuOpen,
+            toggleSubmenu,
+            closeSubmenu,
+            submenuTriggerRef,
+            submenuPanelRef,
+            getSubmenuPosition,
+          }) => (
+            <>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  onEditorOpenChange(true);
+                }}
+              >
+                Editor
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeMenu();
+                  window.print();
+                }}
+              >
+                Print
+              </MenuItem>
+              <MenuSubTrigger
+                ref={submenuTriggerRef}
+                aria-expanded={submenuOpen}
+                onClick={toggleSubmenu}
+              >
+                Download
+              </MenuSubTrigger>
+              <MenuSub
+                open={submenuOpen}
+                panelRef={submenuPanelRef}
+                position={getSubmenuPosition({ align: 'top', edge: 'right', offsetX: 6 })}
+                className="z-[281] min-w-48"
+              >
+                <MenuItem
+                  onClick={() => {
+                    closeSubmenu();
+                    closeMenu();
+                    void exportCatalogPdf(project, rooms, exportOptions);
+                  }}
+                >
+                  Download all pages
+                </MenuItem>
+                {currentItemId ? (
+                  <MenuItem
+                    onClick={() => {
+                      closeSubmenu();
+                      closeMenu();
+                      void exportCatalogItemPdf(project, rooms, currentItemId, exportOptions);
+                    }}
+                  >
+                    Download this page
+                  </MenuItem>
+                ) : null}
+                <MenuItem
+                  onClick={() => {
+                    closeSubmenu();
+                    closeMenu();
+                    void exportCatalogPdf(project, rooms, swatchesOnlyOptions);
+                  }}
+                >
+                  Download all pages - swatches only
+                </MenuItem>
+              </MenuSub>
+            </>
+          )}
+        </SidebarHeaderMenu>
+      </SlotPortal>
+      <SlotPortal slotId={CATALOG_ACTIONS_SLOT_ID}>
+        <div className="project-sidebar-slot">
+          <Button
+            type="button"
+            variant="addAction"
+            onClick={() => onEditorOpenChange(!editorState.editorOpen)}
+            aria-label={editorState.editorOpen ? 'Close editor' : 'Open editor'}
+            aria-expanded={editorState.editorOpen}
+            aria-haspopup="dialog"
+            className="w-full justify-start"
+          >
+            <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
+            Editor
+          </Button>
+        </div>
+      </SlotPortal>
+      <CatalogEditorPanelPortal
+        project={project}
+        currentEntry={currentEntry}
+        editorState={editorState}
+        onLayoutChange={onLayoutChange}
+        watermarkConfig={watermarkConfig}
+        onWatermarkChange={onWatermarkChange}
+        logoDataUrl={logoDataUrl}
+        onEditorOpenChange={onEditorOpenChange}
+        onTypographyChange={onTypographyChange}
+      />
+    </>
   );
 }
 
@@ -583,127 +678,7 @@ function CatalogPagePicker({
   );
 }
 
-function CatalogExportButton({
-  project,
-  rooms,
-  currentItemId,
-  layoutConfig,
-  typographyConfig,
-  watermarkConfig,
-  logoDataUrl,
-  companyName,
-  sortMode,
-}: {
-  project: Project;
-  rooms: RoomWithItems[];
-  currentItemId: string | undefined;
-  layoutConfig: CatalogLayoutConfig;
-  typographyConfig: CatalogTypographyConfig;
-  watermarkConfig: WatermarkConfig;
-  logoDataUrl: string | null;
-  companyName: string | null;
-  sortMode: FfeItemSortMode;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const watermarkOpts =
-    watermarkConfig.enabled && logoDataUrl
-      ? {
-          logoDataUrl,
-          companyName: watermarkConfig.includeName ? companyName : null,
-          placementH: watermarkConfig.placementH,
-          placementV: watermarkConfig.placementV,
-          opacity: watermarkConfig.opacity,
-        }
-      : null;
-
-  const exportOptions = {
-    mainImageAlignment: layoutConfig.mainImageAlignment,
-    planImageSize: layoutConfig.planImageSize,
-    showCostInfo: layoutConfig.showCostInfo,
-    showSwatchLabels: layoutConfig.showSwatchLabels,
-    showApproval: layoutConfig.showApproval,
-    showVerticalDivider: layoutConfig.showVerticalDivider,
-    showHorizontalDivider: layoutConfig.showHorizontalDivider,
-    titleColorToken: typographyConfig.titleColorToken,
-    bodyColorToken: typographyConfig.bodyColorToken,
-    metaColorToken: typographyConfig.metaColorToken,
-    sortMode,
-    watermark: watermarkOpts,
-  };
-
-  const run = (action: () => void) => {
-    setOpen(false);
-    action();
-  };
-
-  const swatchesOnlyOptions = { ...exportOptions, showSwatchLabels: false };
-
-  return (
-    <div ref={ref} className="relative w-full">
-      <SidebarButton
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Export catalog"
-        className="justify-start"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <Download className="toolbar-icon" aria-hidden="true" />
-        Export
-        <ChevronDown className="toolbar-icon" aria-hidden="true" />
-      </SidebarButton>
-      {open && (
-        <div
-          role="menu"
-          aria-label="Export options"
-          className="catalog-actions-dropdown menu-panel"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className="menu-item catalog-actions-dropdown-item"
-            onClick={() => run(() => void exportCatalogPdf(project, rooms, exportOptions))}
-          >
-            Export all pages
-          </button>
-          {currentItemId ? (
-            <button
-              type="button"
-              role="menuitem"
-              className="menu-item catalog-actions-dropdown-item"
-              onClick={() =>
-                run(() => void exportCatalogItemPdf(project, rooms, currentItemId, exportOptions))
-              }
-            >
-              Export this page
-            </button>
-          ) : null}
-          <button
-            type="button"
-            role="menuitem"
-            className="menu-item catalog-actions-dropdown-item"
-            onClick={() => run(() => void exportCatalogPdf(project, rooms, swatchesOnlyOptions))}
-          >
-            Export all pages — swatches only
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CatalogEditorPanelButton({
+function CatalogEditorPanelPortal({
   project,
   currentEntry,
   editorState,
@@ -725,7 +700,6 @@ function CatalogEditorPanelButton({
   logoDataUrl: string | null;
 }) {
   const isOpen = editorState.editorOpen;
-  const ref = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [popoverAnchor, setPopoverAnchor] = useState<{ left: number; top: number } | null>(null);
 
@@ -733,9 +707,8 @@ function CatalogEditorPanelButton({
     if (!isOpen) return;
     const handler = (event: MouseEvent) => {
       const target = event.target as Node;
-      const clickedTrigger = ref.current?.contains(target) ?? false;
       const clickedPanel = panelRef.current?.contains(target) ?? false;
-      if (clickedTrigger || clickedPanel) return;
+      if (clickedPanel) return;
       const catalogStage = document.querySelector('.catalog-stage');
       if (!catalogStage || !catalogStage.contains(target)) onEditorOpenChange(false);
     };
@@ -761,12 +734,11 @@ function CatalogEditorPanelButton({
     const updateAnchor = () => {
       const sidebar = document.querySelector('.project-tab-toolbar-sidebar');
       const tabs = document.querySelector('[data-project-header-tabs="true"]');
-      const triggerRect = ref.current?.getBoundingClientRect();
       const sidebarRect = sidebar?.getBoundingClientRect();
       const tabsRect = tabs?.getBoundingClientRect();
 
-      const anchorX = Math.round((sidebarRect?.right ?? triggerRect?.right ?? 0) + 1);
-      const anchorY = Math.round(tabsRect?.bottom ?? triggerRect?.bottom ?? 0);
+      const anchorX = Math.round((sidebarRect?.right ?? 0) + 1);
+      const anchorY = Math.round(tabsRect?.bottom ?? 0);
       setPopoverAnchor({
         left: Math.max(anchorX, 12),
         top: anchorY + 1,
@@ -782,46 +754,31 @@ function CatalogEditorPanelButton({
     };
   }, [isOpen]);
 
-  return (
-    <div ref={ref} className="relative inline-flex w-full">
-      <SidebarButton
-        type="button"
-        aria-label={isOpen ? 'Close editor' : 'Open editor'}
-        aria-expanded={isOpen}
-        aria-haspopup="dialog"
-        selected={isOpen}
-        onClick={() => onEditorOpenChange(!isOpen)}
-      >
-        <SlidersHorizontal className="toolbar-icon" aria-hidden="true" />
-        Editor
-      </SidebarButton>
-      {isOpen && popoverAnchor
-        ? createPortal(
-            <CatalogEditorPanel
-              project={project}
-              currentEntry={currentEntry}
-              editorState={editorState}
-              onTypographyChange={onTypographyChange}
-              onLayoutChange={onLayoutChange}
-              watermarkConfig={watermarkConfig}
-              onWatermarkChange={onWatermarkChange}
-              logoDataUrl={logoDataUrl}
-              panelRef={panelRef}
-              popoverStyle={{
-                left: `${popoverAnchor.left}px`,
-                top: `${popoverAnchor.top}px`,
-                bottom: 'auto',
-                right: 'auto',
-                position: 'fixed' as const,
-                zIndex: 3200,
-                pointerEvents: 'auto',
-              }}
-              onClose={() => onEditorOpenChange(false)}
-            />,
-            document.body,
-          )
-        : null}
-    </div>
+  if (!isOpen || !popoverAnchor) return null;
+
+  return createPortal(
+    <CatalogEditorPanel
+      project={project}
+      currentEntry={currentEntry}
+      editorState={editorState}
+      onTypographyChange={onTypographyChange}
+      onLayoutChange={onLayoutChange}
+      watermarkConfig={watermarkConfig}
+      onWatermarkChange={onWatermarkChange}
+      logoDataUrl={logoDataUrl}
+      panelRef={panelRef}
+      popoverStyle={{
+        left: `${popoverAnchor.left}px`,
+        top: `${popoverAnchor.top}px`,
+        bottom: 'auto',
+        right: 'auto',
+        position: 'fixed' as const,
+        zIndex: 3200,
+        pointerEvents: 'auto',
+      }}
+      onClose={() => onEditorOpenChange(false)}
+    />,
+    document.body,
   );
 }
 

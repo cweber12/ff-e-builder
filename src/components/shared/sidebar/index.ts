@@ -4,3 +4,5 @@ export { SidebarButton } from './SidebarButton';
 export { SidebarDivider } from './SidebarDivider';
 export { SidebarFieldGroup } from './SidebarFieldGroup';
 export { SidebarSectionHeader } from './SidebarSectionHeader';
+export { SidebarHeaderMenu } from './SidebarHeaderMenu';
+export { SidebarHeaderSelect } from './SidebarHeaderSelect';

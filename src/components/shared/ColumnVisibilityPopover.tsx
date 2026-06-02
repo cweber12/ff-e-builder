@@ -152,6 +152,126 @@ interface ColumnVisibilityPopoverProps {
   buttonClassName?: string;
 }
 
+type ColumnVisibilityPanelProps = {
+  projectId: string;
+  tableKey: 'ffe' | 'proposal';
+  triggerRect: DOMRect;
+  onClose: () => void;
+};
+
+export function ColumnVisibilityPanel({
+  projectId,
+  tableKey,
+  triggerRect,
+  onClose,
+}: ColumnVisibilityPanelProps) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const { density, setDensity } = useTableDensity();
+  const { data: customDefs = [] } = useColumnDefs(projectId, tableKey);
+
+  const { defaultIds, hideableIds, labels } = getConfig(tableKey);
+  const columnConfig = useColumnConfig(projectId, tableKey, defaultIds, customDefs);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (!popoverRef.current?.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  const visibleHideable = columnConfig.visibleOrder.filter((id) => hideableIds.has(id));
+  const hiddenDefaults = columnConfig.hiddenDefaults.filter((id) => hideableIds.has(id));
+
+  return createPortal(
+    <div
+      ref={popoverRef}
+      style={{
+        position: 'fixed',
+        top: triggerRect.top,
+        left: triggerRect.right + 6,
+      }}
+      className="z-[200] w-64 rounded-sm border border-neutral-200 bg-canvas-chrome shadow-lg"
+    >
+      <div className="border-b border-neutral-100 px-3 py-2.5">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+          Row density
+        </p>
+        <div className="flex gap-1">
+          {DENSITY_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setDensity(value)}
+              className={cn(
+                'flex-1 rounded-sm border px-2 py-1 text-xs font-medium transition-colors',
+                density === value
+                  ? 'border-brand-500 bg-brand-50 text-brand-700'
+                  : 'border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:bg-canvas-shell',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-3 py-2.5">
+        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+          Columns
+        </p>
+        <div className="max-h-72 overflow-y-auto">
+          {visibleHideable.map((id) => (
+            <div
+              key={id}
+              className="group flex items-center justify-between rounded px-1 py-1 hover:bg-neutral-50"
+            >
+              <span className="truncate text-sm text-neutral-700">{labels[id] ?? id}</span>
+              <button
+                type="button"
+                title={`Hide ${labels[id] ?? id}`}
+                onClick={() => columnConfig.hideDefaultColumn(id)}
+                className="ml-2 shrink-0 rounded p-0.5 text-neutral-300 opacity-0 transition-opacity hover:bg-neutral-100 hover:text-neutral-600 group-hover:opacity-100"
+              >
+                <EyeOffIcon />
+              </button>
+            </div>
+          ))}
+
+          {hiddenDefaults.length > 0 && (
+            <>
+              {visibleHideable.length > 0 && <div className="my-1 h-px bg-neutral-100" />}
+              {hiddenDefaults.map((id) => (
+                <div
+                  key={id}
+                  className="flex items-center justify-between rounded px-1 py-1 hover:bg-neutral-50"
+                >
+                  <span className="truncate text-sm text-neutral-400 line-through">
+                    {labels[id] ?? id}
+                  </span>
+                  <button
+                    type="button"
+                    title={`Restore ${labels[id] ?? id}`}
+                    onClick={() => columnConfig.restoreDefaultColumn(id)}
+                    className="ml-2 shrink-0 rounded p-0.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                  >
+                    <PlusIcon />
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+
+          {visibleHideable.length === 0 && hiddenDefaults.length === 0 && (
+            <p className="py-2 text-center text-xs text-neutral-400">No configurable columns</p>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function ColumnVisibilityPopover({
   projectId,
   tableKey,
@@ -159,36 +279,8 @@ export function ColumnVisibilityPopover({
 }: ColumnVisibilityPopoverProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  const { density, setDensity } = useTableDensity();
-  const { data: customDefs = [] } = useColumnDefs(projectId, tableKey);
-
-  const { defaultIds, hideableIds, labels } = getConfig(tableKey);
-  const columnConfig = useColumnConfig(projectId, tableKey, defaultIds, customDefs);
-
-  // Click-outside to close.
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        !triggerRef.current?.contains(e.target as Node) &&
-        !popoverRef.current?.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
 
   const triggerRect = triggerRef.current?.getBoundingClientRect();
-
-  // Visible hideable columns in user order.
-  const visibleHideable = columnConfig.visibleOrder.filter((id) => hideableIds.has(id));
-
-  // Hidden default columns.
-  const hiddenDefaults = columnConfig.hiddenDefaults.filter((id) => hideableIds.has(id));
 
   return (
     <>
@@ -206,99 +298,14 @@ export function ColumnVisibilityPopover({
         Columns
       </SidebarButton>
 
-      {open &&
-        triggerRect &&
-        createPortal(
-          <div
-            ref={popoverRef}
-            style={{
-              position: 'fixed',
-              top: triggerRect.top,
-              left: triggerRect.right + 6,
-            }}
-            className="z-[200] w-64 rounded-sm border border-neutral-200 bg-canvas-chrome shadow-lg"
-          >
-            {/* Density section */}
-            <div className="border-b border-neutral-100 px-3 py-2.5">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                Row density
-              </p>
-              <div className="flex gap-1">
-                {DENSITY_OPTIONS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setDensity(value)}
-                    className={cn(
-                      'flex-1 rounded-sm border px-2 py-1 text-xs font-medium transition-colors',
-                      density === value
-                        ? 'border-brand-500 bg-brand-50 text-brand-700'
-                        : 'border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:bg-canvas-shell',
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Column visibility section */}
-            <div className="px-3 py-2.5">
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
-                Columns
-              </p>
-              <div className="max-h-72 overflow-y-auto">
-                {visibleHideable.map((id) => (
-                  <div
-                    key={id}
-                    className="group flex items-center justify-between rounded px-1 py-1 hover:bg-neutral-50"
-                  >
-                    <span className="truncate text-sm text-neutral-700">{labels[id] ?? id}</span>
-                    <button
-                      type="button"
-                      title={`Hide ${labels[id] ?? id}`}
-                      onClick={() => columnConfig.hideDefaultColumn(id)}
-                      className="ml-2 shrink-0 rounded p-0.5 text-neutral-300 opacity-0 transition-opacity hover:bg-neutral-100 hover:text-neutral-600 group-hover:opacity-100"
-                    >
-                      <EyeOffIcon />
-                    </button>
-                  </div>
-                ))}
-
-                {hiddenDefaults.length > 0 && (
-                  <>
-                    {visibleHideable.length > 0 && <div className="my-1 h-px bg-neutral-100" />}
-                    {hiddenDefaults.map((id) => (
-                      <div
-                        key={id}
-                        className="flex items-center justify-between rounded px-1 py-1 hover:bg-neutral-50"
-                      >
-                        <span className="truncate text-sm text-neutral-400 line-through">
-                          {labels[id] ?? id}
-                        </span>
-                        <button
-                          type="button"
-                          title={`Restore ${labels[id] ?? id}`}
-                          onClick={() => columnConfig.restoreDefaultColumn(id)}
-                          className="ml-2 shrink-0 rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
-                        >
-                          <PlusIcon />
-                        </button>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {visibleHideable.length === 0 && hiddenDefaults.length === 0 && (
-                  <p className="py-2 text-center text-xs text-neutral-400">
-                    No configurable columns
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {open && triggerRect ? (
+        <ColumnVisibilityPanel
+          projectId={projectId}
+          tableKey={tableKey}
+          triggerRect={triggerRect}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

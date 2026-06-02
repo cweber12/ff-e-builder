@@ -30,7 +30,15 @@ import type {
   Project,
 } from '../../types';
 import { imageKeys } from '../../lib/query';
-import { Button, Modal, SegmentedControl } from '../primitives';
+import {
+  Button,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
+  Modal,
+  SegmentedControl,
+} from '../primitives';
 import { SlotPortal } from '../shared/SlotPortal';
 import { ImageFrame } from '../shared/image/ImageFrame';
 import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
@@ -38,6 +46,7 @@ import { FinishForm } from './FinishForm';
 import { FinishCollisionPrompt } from './FinishCollisionPrompt';
 import { ImportFinishesExcelModal } from './ImportFinishesExcelModal';
 import { ImportMaterialsExcelModal } from './ImportMaterialsExcelModal';
+import { SidebarHeaderMenu, SidebarHeaderSelect } from '../shared/sidebar';
 
 type MaterialsViewProps = {
   project: Project;
@@ -127,6 +136,8 @@ const FILTER_OPTIONS: Array<{ value: CategoryFilter; label: string }> = [
 
 export const MATERIALS_ACTIONS_SLOT_ID = 'materials-actions-slot';
 export const MATERIALS_FILTER_SLOT_ID = 'materials-filter-slot';
+export const MATERIALS_OPTIONS_SLOT_ID = 'materials-options-slot';
+export const MATERIALS_HEADER_VIEW_SLOT_ID = 'materials-header-view-slot';
 
 export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewProps) {
   const queryClient = useQueryClient();
@@ -407,6 +418,14 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         activeTab={activeTab}
         viewMode={viewMode}
         activeCount={activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length}
+        onViewModeChange={setViewMode}
+      />
+      <MaterialsHeaderViewSelect activeTab={activeTab} onActiveTabChange={setActiveTab} />
+      <MaterialsOptionsMenu
+        activeTab={activeTab}
+        activeCount={activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length}
+        onCreateFinish={openCreateFinishForm}
+        onCreateMaterial={openCreateMaterialForm}
         onImportFromExcel={(tab) => {
           if (tab === 'finishes') {
             setShowImportFinishesModal(true);
@@ -416,8 +435,6 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         }}
         onExport={handleExport}
         onDeleteAll={openDeleteAllModal}
-        onActiveTabChange={setActiveTab}
-        onViewModeChange={setViewMode}
       />
       <MaterialsToolbarActions
         activeTab={activeTab}
@@ -605,19 +622,11 @@ function MaterialsToolbarLeft({
   activeTab,
   viewMode,
   activeCount,
-  onImportFromExcel,
-  onExport,
-  onDeleteAll,
-  onActiveTabChange,
   onViewModeChange,
 }: {
   activeTab: LibraryTab;
   viewMode: 'grid' | 'table';
   activeCount: number;
-  onImportFromExcel: (tab: LibraryTab) => void;
-  onExport: (tab: LibraryTab, format: 'csv' | 'xlsx' | 'pdf') => void;
-  onDeleteAll: (tab: LibraryTab) => void;
-  onActiveTabChange: (value: LibraryTab) => void;
   onViewModeChange: (value: 'grid' | 'table') => void;
 }) {
   return (
@@ -626,18 +635,6 @@ function MaterialsToolbarLeft({
         <h2 className="toolbar-title">
           {activeTab === 'finishes' ? 'Finishes' : 'Materials'} ({activeCount})
         </h2>
-        <SegmentedControl
-          value={activeTab}
-          onChange={onActiveTabChange}
-          ariaLabel="Library section"
-          variant="toolbar"
-          className="w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-start"
-        >
-          <SegmentedControl.Option value="finishes">Finishes</SegmentedControl.Option>
-          <SegmentedControl.Option value="materials">Materials</SegmentedControl.Option>
-        </SegmentedControl>
-        <div className="project-sidebar-divider" aria-hidden="true" />
-        <p className="toolbar-label">View</p>
         <SegmentedControl
           value={viewMode}
           onChange={onViewModeChange}
@@ -648,56 +645,147 @@ function MaterialsToolbarLeft({
           <SegmentedControl.Option value="grid">Grid</SegmentedControl.Option>
           <SegmentedControl.Option value="table">Table</SegmentedControl.Option>
         </SegmentedControl>
-        <div className="project-sidebar-divider" aria-hidden="true" />
-        <Button
-          type="button"
-          variant="toolbar"
-          onClick={() => onImportFromExcel(activeTab)}
-          className="project-sidebar-control"
-        >
-          Import from Excel
-        </Button>
-        <p className="toolbar-label">Export</p>
-        <div className="sidebar-button-group">
-          <Button
-            type="button"
-            variant="toolbar"
-            className="project-sidebar-control"
-            onClick={() => onExport(activeTab, 'csv')}
-            disabled={activeCount === 0}
-          >
-            Export CSV
-          </Button>
-          <Button
-            type="button"
-            variant="toolbar"
-            className="project-sidebar-control"
-            onClick={() => onExport(activeTab, 'xlsx')}
-            disabled={activeCount === 0}
-          >
-            Export Excel
-          </Button>
-          <Button
-            type="button"
-            variant="toolbar"
-            className="project-sidebar-control"
-            onClick={() => onExport(activeTab, 'pdf')}
-            disabled={activeCount === 0}
-          >
-            Export PDF
-          </Button>
-        </div>
-        <div className="project-sidebar-divider" aria-hidden="true" />
-        <Button
-          type="button"
-          variant="toolbar"
-          className="project-sidebar-control text-danger-600 hover:bg-danger-50 hover:text-danger-700"
-          disabled={activeCount === 0}
-          onClick={() => onDeleteAll(activeTab)}
-        >
-          Delete All
-        </Button>
       </div>
+    </SlotPortal>
+  );
+}
+
+function MaterialsHeaderViewSelect({
+  activeTab,
+  onActiveTabChange,
+}: {
+  activeTab: LibraryTab;
+  onActiveTabChange: (value: LibraryTab) => void;
+}) {
+  return (
+    <SlotPortal slotId={MATERIALS_HEADER_VIEW_SLOT_ID}>
+      <SidebarHeaderSelect
+        valueLabel={activeTab === 'finishes' ? 'Finishes' : 'Materials'}
+        ariaLabel="Materials library mode"
+        options={[
+          {
+            label: 'Finishes',
+            active: activeTab === 'finishes',
+            onSelect: () => onActiveTabChange('finishes'),
+          },
+          {
+            label: 'Materials',
+            active: activeTab === 'materials',
+            onSelect: () => onActiveTabChange('materials'),
+          },
+        ]}
+      />
+    </SlotPortal>
+  );
+}
+
+function MaterialsOptionsMenu({
+  activeTab,
+  activeCount,
+  onCreateFinish,
+  onCreateMaterial,
+  onImportFromExcel,
+  onExport,
+  onDeleteAll,
+}: {
+  activeTab: LibraryTab;
+  activeCount: number;
+  onCreateFinish: () => void;
+  onCreateMaterial: () => void;
+  onImportFromExcel: (tab: LibraryTab) => void;
+  onExport: (tab: LibraryTab, format: 'csv' | 'xlsx' | 'pdf') => void;
+  onDeleteAll: (tab: LibraryTab) => void;
+}) {
+  const primaryLabel = activeTab === 'finishes' ? 'New finish' : 'New material';
+
+  return (
+    <SlotPortal slotId={MATERIALS_OPTIONS_SLOT_ID}>
+      <SidebarHeaderMenu ariaLabel="Materials options">
+        {({
+          closeMenu,
+          submenuOpen,
+          toggleSubmenu,
+          closeSubmenu,
+          submenuTriggerRef,
+          submenuPanelRef,
+          getSubmenuPosition,
+        }) => (
+          <>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                if (activeTab === 'finishes') onCreateFinish();
+                else onCreateMaterial();
+              }}
+            >
+              {primaryLabel}
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onImportFromExcel(activeTab);
+              }}
+            >
+              Upload from Excel
+            </MenuItem>
+            <MenuSubTrigger
+              ref={submenuTriggerRef}
+              aria-expanded={submenuOpen}
+              onClick={toggleSubmenu}
+            >
+              Download
+            </MenuSubTrigger>
+            <MenuSub
+              open={submenuOpen}
+              panelRef={submenuPanelRef}
+              position={getSubmenuPosition({ align: 'top', edge: 'right', offsetX: 6 })}
+              className="z-[281] min-w-44"
+            >
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  onExport(activeTab, 'csv');
+                }}
+                disabled={activeCount === 0}
+              >
+                Download CSV
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  onExport(activeTab, 'xlsx');
+                }}
+                disabled={activeCount === 0}
+              >
+                Download Excel
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  onExport(activeTab, 'pdf');
+                }}
+                disabled={activeCount === 0}
+              >
+                Download PDF
+              </MenuItem>
+            </MenuSub>
+            <MenuSeparator />
+            <MenuItem
+              className="text-danger-700"
+              disabled={activeCount === 0}
+              onClick={() => {
+                closeMenu();
+                onDeleteAll(activeTab);
+              }}
+            >
+              Delete all
+            </MenuItem>
+          </>
+        )}
+      </SidebarHeaderMenu>
     </SlotPortal>
   );
 }

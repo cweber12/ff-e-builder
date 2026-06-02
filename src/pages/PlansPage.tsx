@@ -4,10 +4,11 @@ import { Upload } from 'lucide-react';
 import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
 import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
 import { PlanUploadModal } from '../components/plans/list/PlanUploadModal';
-import { Button } from '../components/primitives';
+import { Button, MenuItem } from '../components/primitives';
 import { useCreateMeasuredPlan, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
 import type { CreateMeasuredPlanInput } from '../lib/api';
 import type { MeasuredPlan, Project } from '../types';
+import { SidebarHeaderMenu } from '../components/shared/sidebar';
 
 type PlansPageProps = {
   project: Project;
@@ -16,6 +17,7 @@ type PlansPageProps = {
 export const PLANS_ACTIONS_SLOT_ID = 'plans-actions-slot';
 export const PLANS_FILTER_SLOT_ID = 'plans-filter-slot';
 export const PLANS_SUMMARY_SLOT_ID = 'plans-summary-slot';
+export const PLANS_OPTIONS_SLOT_ID = 'plans-options-slot';
 
 type SortId = 'added' | 'name' | 'measurements';
 
@@ -68,6 +70,8 @@ export function PlansPage({ project }: PlansPageProps) {
       <PlansSummaryBar planCount={planCount} calibratedCount={calibratedCount} />
 
       <PlansViewFilters sort={sort} onSortChange={setSort} />
+
+      <PlansOptionsMenu onUpload={() => setUploadOpen(true)} />
 
       <PlansActionsBar onUpload={() => setUploadOpen(true)} />
 
@@ -189,7 +193,7 @@ function PlansActionsBar({ onUpload }: { onUpload: () => void }) {
     <div className="project-sidebar-slot">
       <Button
         type="button"
-        variant="toolbar"
+        variant="addAction"
         onClick={onUpload}
         aria-haspopup="dialog"
         className="project-sidebar-control justify-start"
@@ -198,6 +202,28 @@ function PlansActionsBar({ onUpload }: { onUpload: () => void }) {
         Upload plan
       </Button>
     </div>,
+    slot,
+  );
+}
+
+function PlansOptionsMenu({ onUpload }: { onUpload: () => void }) {
+  const slot = useSidebarPortalSlot(PLANS_OPTIONS_SLOT_ID);
+
+  if (!slot) return null;
+
+  return createPortal(
+    <SidebarHeaderMenu ariaLabel="Plans options">
+      {({ closeMenu }) => (
+        <MenuItem
+          onClick={() => {
+            closeMenu();
+            onUpload();
+          }}
+        >
+          Upload plan
+        </MenuItem>
+      )}
+    </SidebarHeaderMenu>,
     slot,
   );
 }

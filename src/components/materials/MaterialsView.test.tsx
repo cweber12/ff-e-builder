@@ -6,6 +6,8 @@ import type { Finish, Material, Project } from '../../types';
 import {
   MATERIALS_ACTIONS_SLOT_ID,
   MATERIALS_FILTER_SLOT_ID,
+  MATERIALS_HEADER_VIEW_SLOT_ID,
+  MATERIALS_OPTIONS_SLOT_ID,
   MaterialsView,
 } from './MaterialsView';
 
@@ -120,6 +122,14 @@ function renderView() {
   actionsSlot.id = MATERIALS_ACTIONS_SLOT_ID;
   document.body.appendChild(actionsSlot);
 
+  const optionsSlot = document.createElement('div');
+  optionsSlot.id = MATERIALS_OPTIONS_SLOT_ID;
+  document.body.appendChild(optionsSlot);
+
+  const headerViewSlot = document.createElement('div');
+  headerViewSlot.id = MATERIALS_HEADER_VIEW_SLOT_ID;
+  document.body.appendChild(headerViewSlot);
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -146,7 +156,9 @@ describe('MaterialsView sidebar actions', () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: /export csv/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
+    await user.click(screen.getByRole('menuitem', { name: /download csv/i }));
 
     expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
       expect.any(Object),
@@ -156,14 +168,19 @@ describe('MaterialsView sidebar actions', () => {
     expect(mockState.exportMaterialsExcel).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('radio', { name: /table/i }));
-    await user.click(screen.getByRole('button', { name: /export excel/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
+    await user.click(screen.getByRole('menuitem', { name: /download excel/i }));
     expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
       expect.any(Object),
       expect.arrayContaining(mockState.finishes),
     );
 
-    await user.click(screen.getByRole('radio', { name: /^materials$/i }));
-    await user.click(screen.getByRole('button', { name: /export pdf/i }));
+    await user.click(screen.getByRole('button', { name: /materials library mode/i }));
+    await user.click(screen.getByRole('menuitem', { name: /^materials$/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
+    await user.click(screen.getByRole('menuitem', { name: /download pdf/i }));
 
     expect(mockState.exportMaterialsPdf).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'project-1' }),
@@ -176,21 +193,27 @@ describe('MaterialsView sidebar actions', () => {
     renderView();
 
     await user.type(screen.getByRole('textbox', { name: /search finishes/i }), 'no-match-term');
-    expect(screen.getByRole('button', { name: /export csv/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /export excel/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /export pdf/i })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
+    expect(screen.getByRole('menuitem', { name: /download csv/i })).toBeDisabled();
+    expect(screen.getByRole('menuitem', { name: /download excel/i })).toBeDisabled();
+    expect(screen.getByRole('menuitem', { name: /download pdf/i })).toBeDisabled();
 
-    await user.click(screen.getByRole('radio', { name: /^materials$/i }));
-    expect(screen.getByRole('button', { name: /export csv/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /export excel/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /export pdf/i })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /materials library mode/i }));
+    await user.click(screen.getByRole('menuitem', { name: /^materials$/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
+    expect(screen.getByRole('menuitem', { name: /download csv/i })).toBeDisabled();
+    expect(screen.getByRole('menuitem', { name: /download excel/i })).toBeDisabled();
+    expect(screen.getByRole('menuitem', { name: /download pdf/i })).toBeDisabled();
   });
 
   it('runs delete-all through per-item delete hooks for each tab', async () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: /delete all/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
 
     expect(await screen.findByText('This will permanently delete 2 finishes.')).toBeInTheDocument();
     expect(
@@ -209,8 +232,10 @@ describe('MaterialsView sidebar actions', () => {
     });
     expect(mockState.deleteMaterialMutateAsync).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('radio', { name: /^materials$/i }));
-    await user.click(screen.getByRole('button', { name: /delete all/i }));
+    await user.click(screen.getByRole('button', { name: /materials library mode/i }));
+    await user.click(screen.getByRole('menuitem', { name: /^materials$/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
 
     expect(
       await screen.findByText('This will permanently delete 1 project materials.'),
@@ -229,7 +254,8 @@ describe('MaterialsView sidebar actions', () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: /delete all/i }));
+    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => {
