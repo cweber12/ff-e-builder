@@ -84,6 +84,9 @@ export function useActionsMenu() {
       ) {
         return;
       }
+      // Portaled submenu flyouts live outside the panel refs; honor their opt-out.
+      const element = target instanceof Element ? target : target.parentElement;
+      if (element?.closest('[data-actions-menu-safe]')) return;
       closeMenu();
     };
 

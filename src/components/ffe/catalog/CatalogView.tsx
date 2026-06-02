@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { SlotPortal } from '../../shared/SlotPortal';
@@ -15,7 +15,7 @@ import {
   type FfeItemSortMode,
 } from '../../../hooks';
 import type { RoomWithItems } from '../../../types';
-import { Button, MenuItem, MenuSub, MenuSubTrigger, SegmentedControl } from '../../primitives';
+import { Button, MenuItem, MenuSub, MenuSubTrigger } from '../../primitives';
 import { SidebarHeaderMenu } from '../../shared/sidebar';
 import { imageAssetToPngDataUrl } from '../../../lib/export/imageHelpers';
 import {
@@ -43,6 +43,8 @@ type CatalogViewProps = {
 type CatalogCostDisplay = 'qtyOnly' | 'cost';
 type CatalogToggleValue = 'shown' | 'hidden';
 type CatalogZoomValue = '75' | '100' | '125' | '150';
+
+const CATALOG_ZOOM_VALUES: CatalogZoomValue[] = ['75', '100', '125', '150'];
 
 const DEFAULT_WATERMARK: WatermarkConfig = {
   enabled: false,
@@ -321,6 +323,8 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         editorState={editorState}
         onEditorOpenChange={setEditorOpen}
         onTypographyChange={handleTypographyChange}
+        zoomLevel={zoomLevel}
+        onZoomChange={setZoomLevel}
       />
 
       <CatalogToolbarPicker
@@ -328,8 +332,6 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
         currentIndex={pageIndex}
         currentEntry={entry}
         onPageChange={setPage}
-        zoomLevel={zoomLevel}
-        onZoomChange={setZoomLevel}
       />
 
       <div className="screen-only catalog-stage h-[calc(100vh-88px)]">
@@ -441,6 +443,8 @@ function CatalogActionsBar({
   editorState,
   onEditorOpenChange,
   onTypographyChange,
+  zoomLevel,
+  onZoomChange,
 }: {
   project: Project;
   rooms: RoomWithItems[];
@@ -455,6 +459,8 @@ function CatalogActionsBar({
   editorState: CatalogEditorState;
   onEditorOpenChange: (open: boolean) => void;
   onTypographyChange: (update: Partial<CatalogTypographyConfig>) => void;
+  zoomLevel: CatalogZoomValue;
+  onZoomChange: (value: CatalogZoomValue) => void;
 }) {
   const watermarkOpts =
     watermarkConfig.enabled && logoDataUrl
@@ -562,6 +568,11 @@ function CatalogActionsBar({
                   Download all pages - swatches only
                 </MenuItem>
               </MenuSub>
+              <CatalogZoomSubmenu
+                zoomLevel={zoomLevel}
+                onZoomChange={onZoomChange}
+                onCloseMenu={closeMenu}
+              />
             </>
           )}
         </SidebarHeaderMenu>
@@ -597,20 +608,68 @@ function CatalogActionsBar({
   );
 }
 
+/**
+ * Catalog zoom as a nested submenu inside the tool options dropdown. Manages its
+ * own open state and anchors to its trigger; the flyout panel is marked
+ * data-actions-menu-safe (via MenuSub) so the parent options menu stays open.
+ */
+function CatalogZoomSubmenu({
+  zoomLevel,
+  onZoomChange,
+  onCloseMenu,
+}: {
+  zoomLevel: CatalogZoomValue;
+  onZoomChange: (value: CatalogZoomValue) => void;
+  onCloseMenu: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<CSSProperties | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const toggle = () => {
+    if (!open) {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (rect) {
+        setPosition({ position: 'fixed', top: rect.top, right: window.innerWidth - rect.left });
+      }
+    }
+    setOpen((prev) => !prev);
+  };
+
+  return (
+    <>
+      <MenuSubTrigger ref={triggerRef} aria-expanded={open} onClick={toggle}>
+        Zoom
+      </MenuSubTrigger>
+      <MenuSub open={open} position={position} className="z-[281] min-w-32">
+        {CATALOG_ZOOM_VALUES.map((value) => (
+          <MenuItem
+            key={value}
+            className={value === zoomLevel ? 'font-bold' : undefined}
+            onClick={() => {
+              setOpen(false);
+              onCloseMenu();
+              onZoomChange(value);
+            }}
+          >
+            {value}%
+          </MenuItem>
+        ))}
+      </MenuSub>
+    </>
+  );
+}
+
 function CatalogToolbarPicker({
   rooms,
   currentIndex,
   currentEntry,
   onPageChange,
-  zoomLevel,
-  onZoomChange,
 }: {
   rooms: RoomWithItems[];
   currentIndex: number;
   currentEntry: CatalogEntry | undefined;
   onPageChange: (index: number) => void;
-  zoomLevel: CatalogZoomValue;
-  onZoomChange: (value: CatalogZoomValue) => void;
 }) {
   return (
     <SlotPortal slotId={CATALOG_PICKER_SLOT_ID}>
@@ -619,8 +678,6 @@ function CatalogToolbarPicker({
         currentIndex={currentIndex}
         currentEntry={currentEntry}
         onPageChange={onPageChange}
-        zoomLevel={zoomLevel}
-        onZoomChange={onZoomChange}
       />
     </SlotPortal>
   );
@@ -635,15 +692,11 @@ function CatalogPagePicker({
   currentIndex,
   currentEntry,
   onPageChange,
-  zoomLevel,
-  onZoomChange,
 }: {
   rooms: RoomWithItems[];
   currentIndex: number;
   currentEntry: CatalogEntry | undefined;
   onPageChange: (index: number) => void;
-  zoomLevel: CatalogZoomValue;
-  onZoomChange: (value: CatalogZoomValue) => void;
 }) {
   let itemIndex = 0;
 
@@ -678,21 +731,6 @@ function CatalogPagePicker({
           </optgroup>
         ))}
       </select>
-      <div className="catalog-sidebar-zoom-row">
-        <span className="catalog-sidebar-zoom-label">Zoom</span>
-        <SegmentedControl<CatalogZoomValue>
-          value={zoomLevel}
-          onChange={onZoomChange}
-          ariaLabel="Catalog zoom level"
-          variant="toolbar"
-          className="catalog-sidebar-zoom-controls [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
-        >
-          <SegmentedControl.Option value="75">75%</SegmentedControl.Option>
-          <SegmentedControl.Option value="100">100%</SegmentedControl.Option>
-          <SegmentedControl.Option value="125">125%</SegmentedControl.Option>
-          <SegmentedControl.Option value="150">150%</SegmentedControl.Option>
-        </SegmentedControl>
-      </div>
     </nav>
   );
 }

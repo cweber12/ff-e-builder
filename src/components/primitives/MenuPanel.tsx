@@ -68,7 +68,9 @@ type MenuSubProps = {
 export function MenuSub({ open, position, panelRef, className, children }: MenuSubProps) {
   if (!open || !position) return null;
   return createPortal(
-    <MenuPanel ref={panelRef} position={position} className={className}>
+    // data-actions-menu-safe keeps the parent actions menu open when this
+    // portaled flyout is clicked, even though it lives outside the parent panel.
+    <MenuPanel ref={panelRef} position={position} className={className} data-actions-menu-safe>
       {children}
     </MenuPanel>,
     document.body,
