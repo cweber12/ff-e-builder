@@ -143,6 +143,28 @@ function ProjectLayout() {
     useProposalWithItems(id ?? '', new Set());
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(min-width: 1024px)').matches,
+  );
+
+  // Track the lg breakpoint so the tool controls mount in exactly one place:
+  // the left rail on desktop, or the mobile drop panel below the header.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Collapse the mobile tool panel when navigating between tools.
+  useEffect(() => {
+    setMobilePanelOpen(false);
+  }, [location.pathname]);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
@@ -266,6 +288,8 @@ function ProjectLayout() {
     </>
   ) : null;
 
+  const hasToolControls = Boolean(sidebarHeaderLeft) || hasSection;
+
   return (
     <main
       className={[
@@ -302,13 +326,38 @@ function ProjectLayout() {
         ) : null
       ) : (
         <>
-          <ProjectHeader project={project} userMenu={<UserMenu />} />
+          <ProjectHeader
+            project={project}
+            userMenu={<UserMenu />}
+            hasToolPanel={hasToolControls}
+            toolPanelOpen={mobilePanelOpen}
+            onToggleToolPanel={() => setMobilePanelOpen((open) => !open)}
+          />
+          {project && !isDesktop && hasToolControls ? (
+            <div
+              id="project-tool-panel"
+              className={[
+                'project-tool-panel no-print border-b border-neutral-200 bg-white lg:hidden',
+                mobilePanelOpen ? '' : 'hidden',
+              ].join(' ')}
+            >
+              <div className="project-tool-sidebar-section p-4">
+                {sidebarHeaderLeft ? (
+                  <div className="project-sidebar-section flex items-center gap-2">
+                    <span className="toolbar-label">Options</span>
+                    {sidebarHeaderLeft}
+                  </div>
+                ) : null}
+                {sidebarSection}
+              </div>
+            </div>
+          ) : null}
           <div className="flex flex-1 flex-col lg:flex-row">
             {project ? (
               <ProjectToolSidebar
                 project={project}
-                optionsMenu={sidebarHeaderLeft}
-                section={sidebarSection}
+                optionsMenu={isDesktop ? sidebarHeaderLeft : undefined}
+                section={isDesktop ? sidebarSection : undefined}
               />
             ) : null}
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">

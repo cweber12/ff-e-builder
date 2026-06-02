@@ -78,27 +78,28 @@ describe('ProjectHeader', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not render a sidebar toggle when no right sidebar control is provided', () => {
+  it('does not render a tool-panel toggle when the active tool has no controls', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />, ['/projects/proj-1/materials']);
-    expect(screen.queryByRole('button', { name: /sidebar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /tool options/i })).not.toBeInTheDocument();
   });
 
-  it('renders sidebar toggle in the top header while keeping the mobile tabs row button-free', () => {
-    const onToggleSidebar = vi.fn();
+  it('renders the tool-panel toggle in the mobile tabs row, not the top row', () => {
+    const onToggleToolPanel = vi.fn();
     const { container } = renderWithRouter(
       <ProjectHeader
         project={makeProject()}
-        sidebarCollapsed={false}
-        onToggleSidebar={onToggleSidebar}
+        hasToolPanel
+        toolPanelOpen={false}
+        onToggleToolPanel={onToggleToolPanel}
       />,
       ['/projects/proj-1/materials'],
     );
 
-    const toggle = screen.getByRole('button', { name: 'Collapse project sidebar' });
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const toggle = screen.getByRole('button', { name: 'Show tool options' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     const topRow = container.querySelector('[data-project-header-top="true"]');
     const tabsRow = container.querySelector('[data-project-header-tabs="true"]');
-    expect(topRow?.querySelector('button[aria-label="Collapse project sidebar"]')).toBe(toggle);
-    expect(tabsRow?.querySelector('button')).toBeNull();
+    expect(tabsRow?.querySelector('button[aria-label="Show tool options"]')).toBe(toggle);
+    expect(topRow?.querySelector('button[aria-label="Show tool options"]')).toBeNull();
   });
 });

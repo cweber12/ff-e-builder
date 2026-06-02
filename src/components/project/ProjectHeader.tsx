@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Sidebar } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import type { Project } from '../../types';
 import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
 import { StudioMark } from '../shared/auth/AuthGate';
@@ -39,8 +39,10 @@ export interface ProjectHeaderProps {
   saveState?: SaveState;
   saveRelTime?: string | null;
   onSaveRetry?: (() => void) | null;
-  sidebarCollapsed?: boolean;
-  onToggleSidebar?: (() => void) | null;
+  /** Whether the active tool exposes controls worth a mobile panel toggle. */
+  hasToolPanel?: boolean;
+  toolPanelOpen?: boolean;
+  onToggleToolPanel?: (() => void) | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,8 +54,9 @@ export function ProjectHeader({
   saveState = 'idle',
   saveRelTime = null,
   onSaveRetry = null,
-  sidebarCollapsed = false,
-  onToggleSidebar = null,
+  hasToolPanel = false,
+  toolPanelOpen = false,
+  onToggleToolPanel = null,
 }: ProjectHeaderProps) {
   if (!project) return <SkeletonBar />;
 
@@ -80,19 +83,6 @@ export function ProjectHeader({
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <SaveStatusIndicator state={saveState} relTime={saveRelTime} errorAction={onSaveRetry} />
-          {onToggleSidebar ? (
-            <button
-              type="button"
-              className="icon-btn text-neutral-500 hover:text-neutral-950"
-              aria-label={sidebarCollapsed ? 'Open project sidebar' : 'Collapse project sidebar'}
-              aria-expanded={!sidebarCollapsed}
-              aria-controls="project-tab-toolbar-sidebar"
-              onClick={onToggleSidebar}
-              title={sidebarCollapsed ? 'Open project sidebar' : 'Collapse project sidebar'}
-            >
-              <Sidebar className="toolbar-icon" aria-hidden="true" />
-            </button>
-          ) : null}
           {userMenu}
         </div>
       </div>
@@ -105,7 +95,20 @@ export function ProjectHeader({
         <div className="justify-self-center">
           <ProjectToolNav projectId={project.id} />
         </div>
-        <div aria-hidden="true" />
+        <div className="justify-self-end">
+          {hasToolPanel && onToggleToolPanel ? (
+            <button
+              type="button"
+              className="project-tool-options-trigger"
+              aria-label={toolPanelOpen ? 'Hide tool options' : 'Show tool options'}
+              aria-expanded={toolPanelOpen}
+              aria-controls="project-tool-panel"
+              onClick={onToggleToolPanel}
+            >
+              <Menu className="toolbar-icon" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
       </div>
     </header>
   );

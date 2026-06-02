@@ -72,5 +72,9 @@ the affected sidebar/header components.
      retired the right-sidebar usage + collapse plumbing, and flipped the editor popover
      anchor to the rail (pulled forward from slice 4).
 - [x] 4. FF&E Zoom nested in options menu (editor popover anchor already done in slice 3).
-- [ ] 5. Mobile combined drop panel.
+- [x] 5. Mobile combined drop panel. Single-mount tool controls gated on the lg
+     breakpoint (rail on desktop, drop panel on mobile); header hamburger toggles the
+     panel. Also removed the ProjectHeader collapse toggle (pulled from slice 6).
+     Known limitation: the FF&E catalog editor popover anchors to the rail, so it does
+     not open on mobile (editor is desktop-oriented).
 - [ ] 6. Remove dead code (`ProjectTabToolbarSidebar`, `sidebarPreferences`, collapse) + fix tests.
