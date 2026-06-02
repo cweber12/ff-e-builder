@@ -473,17 +473,17 @@
     @apply rounded-sm outline-none ring-2 ring-brand-500/30 ring-offset-1;
   }
 
-  .project-tab-toolbar-sidebar .toolbar-segmented > button,
-  .project-tab-toolbar-sidebar .toolbar-segmented > a {
+  .project-tool-sidebar-section .toolbar-segmented > button,
+  .project-tool-sidebar-section .toolbar-segmented > a {
     color: var(--sidebar-text-label);
   }
 
-  .project-tab-toolbar-sidebar .toolbar-segmented > button:hover,
-  .project-tab-toolbar-sidebar .toolbar-segmented > a:hover,
-  .project-tab-toolbar-sidebar .toolbar-segmented > button[aria-pressed='true'],
-  .project-tab-toolbar-sidebar .toolbar-segmented > button[data-active],
-  .project-tab-toolbar-sidebar .toolbar-segmented > button[aria-checked='true'],
-  .project-tab-toolbar-sidebar .toolbar-segmented > a[data-active] {
+  .project-tool-sidebar-section .toolbar-segmented > button:hover,
+  .project-tool-sidebar-section .toolbar-segmented > a:hover,
+  .project-tool-sidebar-section .toolbar-segmented > button[aria-pressed='true'],
+  .project-tool-sidebar-section .toolbar-segmented > button[data-active],
+  .project-tool-sidebar-section .toolbar-segmented > button[aria-checked='true'],
+  .project-tool-sidebar-section .toolbar-segmented > a[data-active] {
     color: var(--sidebar-control-text-hover);
   }
 
@@ -548,14 +548,6 @@
      boundaries and no boxed section containers. */
   .project-sidebar-section {
     @apply min-w-0;
-  }
-
-  .project-sidebar-section--actions {
-    @apply pt-0;
-  }
-
-  .project-sidebar-section--context {
-    @apply pb-0;
   }
 
   .project-tool-sidebar-shell {
@@ -624,105 +616,8 @@
     transform: none;
   }
 
-  .project-tab-toolbar-sidebar--collapsed {
-    background-color: var(--sidebar-bg-collapsed);
-  }
-
-  .project-sidebar-shell {
-    @apply flex min-h-0 min-w-0 flex-col lg:h-full;
-  }
-
-  .project-tab-toolbar-sidebar {
-    border-color: var(--sidebar-border);
-    background-color: var(--sidebar-bg);
-  }
-
-  .project-sidebar-header {
-    @apply grid h-10 grid-cols-[auto_1fr_auto] items-center gap-2 border-b px-3;
-    border-color: var(--sidebar-header-border);
-  }
-
-  .project-sidebar-header-side {
-    @apply flex min-w-0 items-center;
-  }
-
-  .project-sidebar-header-side--left {
-    @apply justify-start;
-  }
-
-  .project-sidebar-header-side--right {
-    @apply justify-end;
-  }
-
-  .project-sidebar-header-title {
-    @apply truncate text-center text-[11px] font-semibold uppercase tracking-[0.1em];
-    color: var(--sidebar-text-header);
-  }
-
-  @screen lg {
-    .project-sidebar-header-side--left {
-      @apply order-3 justify-end;
-    }
-
-    .project-sidebar-header-title {
-      @apply order-2;
-    }
-
-    .project-sidebar-header-side--right {
-      @apply order-1 justify-start;
-    }
-  }
-
   .project-sidebar-header-inline-slot {
     @apply flex min-w-0 items-center;
-  }
-
-  .project-sidebar-content {
-    @apply min-w-0 flex-1;
-  }
-
-  .project-sidebar-rail {
-    @apply flex shrink-0 items-center justify-center;
-  }
-
-  .project-sidebar-rail--collapsed {
-    @apply flex-col justify-between p-2;
-  }
-
-  @screen lg {
-    .project-sidebar-rail--collapsed {
-      @apply h-full p-2;
-    }
-  }
-
-  .project-sidebar-rail-label {
-    @apply max-h-28 overflow-hidden text-center text-[9px] font-semibold uppercase tracking-[0.12em];
-    color: var(--sidebar-text-rail);
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-  }
-
-  .project-sidebar-rail-toggle {
-    @apply flex h-8 w-8 shrink-0 items-center justify-center;
-  }
-
-  .project-sidebar-title {
-    @apply mb-1 text-[10px] font-semibold uppercase tracking-[0.12em];
-    color: var(--sidebar-text-label);
-  }
-
-  .project-sidebar-section-header {
-    @apply mb-1 flex items-center justify-between gap-2;
-  }
-
-  .project-sidebar-section-meta {
-    @apply text-[10px] font-medium uppercase tracking-[0.08em];
-    color: var(--sidebar-text-meta);
-  }
-
-  .project-sidebar-divider {
-    @apply my-1 border-t;
-    border-color: var(--sidebar-divider);
   }
 
   .project-sidebar-slot {
@@ -732,10 +627,6 @@
 
   .project-sidebar-slot--stretch {
     @apply [&>*]:w-full;
-  }
-
-  .project-sidebar-field-group {
-    @apply gap-1.5;
   }
 
   .project-sidebar-header-control {
@@ -763,19 +654,6 @@
   .catalog-sidebar-picker-room {
     @apply text-[10px] font-semibold uppercase tracking-[0.16em];
     color: var(--sidebar-text-label);
-  }
-
-  .catalog-sidebar-zoom-row {
-    @apply mt-0.5 flex flex-col items-start gap-1.5;
-  }
-
-  .catalog-sidebar-zoom-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.12em];
-    color: var(--sidebar-text-label);
-  }
-
-  .catalog-sidebar-zoom-controls {
-    @apply w-full;
   }
 
   .sidebar-button-group {

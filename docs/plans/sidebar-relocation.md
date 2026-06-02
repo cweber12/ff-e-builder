@@ -1,6 +1,6 @@
 # Sidebar relocation — move right sidebar into the left rail
 
-Status: in progress. Decisions locked via grill-me session.
+Status: complete. Decisions locked via grill-me session.
 
 ## Goal
 
@@ -77,4 +77,7 @@ the affected sidebar/header components.
      panel. Also removed the ProjectHeader collapse toggle (pulled from slice 6).
      Known limitation: the FF&E catalog editor popover anchors to the rail, so it does
      not open on mobile (editor is desktop-oriented).
-- [ ] 6. Remove dead code (`ProjectTabToolbarSidebar`, `sidebarPreferences`, collapse) + fix tests.
+- [x] 6. Remove dead code: deleted ProjectTabToolbarSidebar (+ test), the now-orphaned
+     SidebarDivider / SidebarFieldGroup / SidebarSectionHeader, and lib/sidebarPreferences
+     (+ test); pruned barrels and dead CSS (right-sidebar shell/header/rail, collapsed UI,
+     catalog zoom row). Tests for header/rail/menu/anchor were updated in their slices.
