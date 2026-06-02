@@ -740,10 +740,10 @@ function MaterialsOptionsMenu({
               panelRef={submenuPanelRef}
               position={getSubmenuPosition({
                 align: 'top',
-                anchorEdge: 'left',
-                panelEdge: 'right',
+                anchorEdge: 'right',
+                panelEdge: 'left',
                 offsetY: 0,
-                offsetX: 0,
+                offsetX: 4,
               })}
               className="z-[281] min-w-44"
             >

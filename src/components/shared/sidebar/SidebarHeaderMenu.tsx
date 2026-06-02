@@ -37,7 +37,7 @@ export function SidebarHeaderMenu({
       panelClassName="z-[280] min-w-52"
       positionOptions={
         isDesktop
-          ? { align: 'top', anchorEdge: 'left', panelEdge: 'right', offsetY: 0, offsetX: 0 }
+          ? { align: 'top', anchorEdge: 'right', panelEdge: 'left', offsetY: 0, offsetX: 4 }
           : { align: 'bottom', edge: 'left', offsetY: 6 }
       }
       renderTrigger={({ triggerRef, open, toggleMenu }) => (

@@ -550,6 +550,17 @@
     @apply min-w-0;
   }
 
+  /* The rail and mobile panel sit on a white surface like the tabs, so pin the
+     sidebar control tokens to neutral here — their dark-theme values would render
+     light text invisibly on white. */
+  .project-tool-sidebar,
+  .project-tool-panel {
+    --sidebar-control-text: rgb(var(--color-neutral-700));
+    --sidebar-control-text-hover: rgb(var(--color-neutral-950));
+    --sidebar-text-label: rgb(var(--color-neutral-500));
+    --sidebar-text-meta: rgb(var(--color-neutral-500));
+  }
+
   .project-tool-sidebar-shell {
     @apply flex h-full min-h-0 min-w-0 flex-col px-4 py-4;
   }
@@ -582,6 +593,36 @@
   .project-tool-options-trigger:hover,
   .project-tool-options-trigger[aria-expanded='true'] {
     color: var(--sidebar-control-text-hover);
+  }
+
+  .project-tool-options-trigger:hover .toolbar-icon,
+  .project-tool-options-trigger[aria-expanded='true'] .toolbar-icon {
+    stroke-width: 2.25;
+  }
+
+  .project-section-select {
+    @apply inline-flex h-9 w-full min-w-0 items-center gap-1.5 rounded-sm bg-transparent px-2
+           text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500
+           transition-colors duration-150 hover:text-neutral-900
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
+    --tw-ring-color: var(--sidebar-focus-ring);
+  }
+
+  .project-section-select:hover,
+  .project-section-select[aria-expanded='true'] {
+    @apply font-bold text-neutral-950;
+  }
+
+  .project-section-select-label {
+    @apply min-w-0 flex-1 truncate text-left;
+  }
+
+  .project-section-select-icon {
+    @apply h-3.5 w-3.5 shrink-0 text-neutral-400 transition-transform duration-150;
+  }
+
+  .project-section-select[aria-expanded='true'] .project-section-select-icon {
+    @apply rotate-180 text-neutral-900;
   }
 
   .project-tool-sidebar-divider {
@@ -627,24 +668,6 @@
 
   .project-sidebar-slot--stretch {
     @apply [&>*]:w-full;
-  }
-
-  .project-sidebar-header-control {
-    @apply inline-flex h-8 min-w-0 items-center gap-1.5 rounded-sm bg-transparent px-0
-           text-[11px] font-semibold uppercase tracking-[0.1em]
-           transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-offset-1;
-    color: var(--sidebar-control-text);
-    --tw-ring-color: var(--sidebar-focus-ring);
-  }
-
-  .project-sidebar-header-control:hover {
-    color: var(--sidebar-control-text-hover);
-  }
-
-  .project-sidebar-header-control-icon {
-    @apply h-3.5 w-3.5 shrink-0;
-    color: var(--sidebar-text-meta);
   }
 
   .catalog-sidebar-picker {

@@ -28,7 +28,7 @@ function mockRect(
 }
 
 describe('SidebarHeaderMenu', () => {
-  it('anchors the desktop menu from the trigger top-left and expands leftward', async () => {
+  it('anchors the desktop menu from the trigger top-right and expands rightward', async () => {
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,
       writable: true,
@@ -50,7 +50,7 @@ describe('SidebarHeaderMenu', () => {
     expect(screen.getByRole('menu')).toHaveStyle({
       position: 'fixed',
       top: '24px',
-      right: '1180px',
+      left: '172px',
     });
   });
 

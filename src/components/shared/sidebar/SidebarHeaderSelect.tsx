@@ -14,17 +14,11 @@ type SidebarHeaderSelectProps = {
 };
 
 export function SidebarHeaderSelect({ valueLabel, ariaLabel, options }: SidebarHeaderSelectProps) {
-  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
-
   return (
     <DropdownMenu
       wrapperClassName="w-full"
       panelClassName="z-[280] min-w-44"
-      positionOptions={
-        isDesktop
-          ? { align: 'top', anchorEdge: 'left', panelEdge: 'right', offsetY: 0, offsetX: 0 }
-          : { align: 'bottom', edge: 'left', offsetY: 6 }
-      }
+      positionOptions={{ align: 'bottom', edge: 'left', offsetY: 4 }}
       renderTrigger={({ triggerRef, open, toggleMenu }) => (
         <button
           ref={triggerRef}
@@ -32,11 +26,11 @@ export function SidebarHeaderSelect({ valueLabel, ariaLabel, options }: SidebarH
           aria-label={ariaLabel}
           aria-haspopup="menu"
           aria-expanded={open}
-          className="project-sidebar-header-control justify-start"
+          className="project-section-select"
           onClick={toggleMenu}
         >
-          <span>{valueLabel}</span>
-          <ChevronDown className="project-sidebar-header-control-icon" aria-hidden="true" />
+          <span className="project-section-select-label">{valueLabel}</span>
+          <ChevronDown className="project-section-select-icon" aria-hidden="true" />
         </button>
       )}
     >

@@ -531,10 +531,10 @@ function CatalogActionsBar({
                 panelRef={submenuPanelRef}
                 position={getSubmenuPosition({
                   align: 'top',
-                  anchorEdge: 'left',
-                  panelEdge: 'right',
+                  anchorEdge: 'right',
+                  panelEdge: 'left',
                   offsetY: 0,
-                  offsetX: 0,
+                  offsetX: 4,
                 })}
                 className="z-[281] min-w-48"
               >
@@ -630,7 +630,7 @@ function CatalogZoomSubmenu({
     if (!open) {
       const rect = triggerRef.current?.getBoundingClientRect();
       if (rect) {
-        setPosition({ position: 'fixed', top: rect.top, right: window.innerWidth - rect.left });
+        setPosition({ position: 'fixed', top: rect.top, left: rect.right + 4 });
       }
     }
     setOpen((prev) => !prev);
