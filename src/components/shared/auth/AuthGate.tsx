@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import hammockMark from '../../../assets/hammock-relaxing.svg';
 import {
   createAccountWithEmailPassword,
   signInWithEmailPassword,
@@ -201,9 +202,11 @@ export function StudioMark({ compact = false }: { compact?: boolean }) {
       aria-label="Go to projects dashboard"
       className="group inline-flex items-center gap-2 transition-colors"
     >
-      <span
-        aria-hidden
-        className="inline-block h-4 w-4 rounded-[3px] bg-brand-600 transition-transform group-hover:scale-105"
+      <img
+        src={hammockMark}
+        alt=""
+        aria-hidden="true"
+        className="h-5 w-5 shrink-0 object-contain transition-transform group-hover:scale-105"
       />
       {!compact && (
         <span className="font-display text-[13px] font-semibold tracking-tight text-neutral-800 group-hover:text-brand-700">
