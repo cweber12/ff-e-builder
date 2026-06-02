@@ -78,12 +78,12 @@ describe('ProjectHeader', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not render a duplicate sidebar toggle in the tab header', () => {
+  it('does not render a sidebar toggle when no right sidebar control is provided', () => {
     renderWithRouter(<ProjectHeader project={makeProject()} />, ['/projects/proj-1/materials']);
     expect(screen.queryByRole('button', { name: /sidebar/i })).not.toBeInTheDocument();
   });
 
-  it('renders sidebar toggle in tab header when provided', () => {
+  it('renders sidebar toggle in the top header while keeping the mobile tabs row button-free', () => {
     const onToggleSidebar = vi.fn();
     const { container } = renderWithRouter(
       <ProjectHeader
@@ -96,8 +96,9 @@ describe('ProjectHeader', () => {
 
     const toggle = screen.getByRole('button', { name: 'Collapse project sidebar' });
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const topRow = container.querySelector('[data-project-header-top="true"]');
     const tabsRow = container.querySelector('[data-project-header-tabs="true"]');
-    expect(tabsRow?.firstElementChild?.querySelector('button')).toBeNull();
-    expect(tabsRow?.lastElementChild?.querySelector('button')).toBe(toggle);
+    expect(topRow?.querySelector('button[aria-label="Collapse project sidebar"]')).toBe(toggle);
+    expect(tabsRow?.querySelector('button')).toBeNull();
   });
 });

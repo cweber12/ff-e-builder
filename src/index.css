@@ -558,6 +558,20 @@
     @apply pb-0;
   }
 
+  .project-tool-sidebar-shell {
+    @apply flex h-full min-h-0 min-w-0 flex-col px-4 py-4;
+  }
+
+  .project-tool-sidebar-nav {
+    @apply flex flex-col items-stretch gap-1;
+  }
+
+  .project-tool-sidebar-link {
+    @apply inline-flex min-h-9 items-center px-2 text-[11px] font-medium uppercase tracking-[0.12em]
+           text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:font-bold
+           data-[active]:text-neutral-950;
+  }
+
   .project-tab-toolbar-sidebar--collapsed {
     background-color: var(--sidebar-bg-collapsed);
   }

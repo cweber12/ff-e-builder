@@ -26,10 +26,10 @@ describe('CatalogPage', () => {
       {
         left: 0,
         right: 1280,
-        top: 44,
-        bottom: 88,
+        top: 0,
+        bottom: 44,
         x: 0,
-        y: 44,
+        y: 0,
         width: 1280,
         height: 44,
         toJSON() {
@@ -39,7 +39,7 @@ describe('CatalogPage', () => {
       1280,
     );
 
-    expect(anchor).toEqual({ top: 89, right: 260 });
+    expect(anchor).toEqual({ top: 45, right: 260 });
   });
 
   it('keeps the mobile editor anchored from the sidebar right edge', () => {

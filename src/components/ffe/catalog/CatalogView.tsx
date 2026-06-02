@@ -52,6 +52,14 @@ const DEFAULT_WATERMARK: WatermarkConfig = {
   includeName: false,
 };
 
+function getVisibleElementRect(selector: string) {
+  const element = document.querySelector<HTMLElement>(selector);
+  if (!element) return undefined;
+
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0 ? rect : undefined;
+}
+
 export function CatalogView({ project, rooms }: CatalogViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -218,10 +226,14 @@ export function CatalogView({ project, rooms }: CatalogViewProps) {
 
   useEffect(() => {
     const updateViewportFit = () => {
-      const header = document.querySelector('[data-project-header="true"]');
-      const tabs = document.querySelector('[data-project-header-tabs="true"]');
-      const referenceRect = (tabs ?? header)?.getBoundingClientRect();
-      const topOffset = referenceRect ? Math.ceil(referenceRect.bottom) : 88;
+      const headerRect =
+        getVisibleElementRect('[data-project-header-tabs="true"]') ??
+        getVisibleElementRect('[data-project-header="true"]');
+      const topOffset = headerRect
+        ? Math.ceil(headerRect.bottom)
+        : window.innerWidth >= 1024
+          ? 44
+          : 88;
       const availableHeight = Math.max(window.innerHeight - topOffset - 16, 360);
       setViewportFitScale(Math.min(1, availableHeight / 1056));
     };
@@ -743,11 +755,13 @@ function CatalogEditorPanelPortal({
     if (!isOpen) return;
 
     const updateAnchor = () => {
-      const sidebar = document.querySelector('.project-tab-toolbar-sidebar');
-      const tabs = document.querySelector('[data-project-header-tabs="true"]');
-      const sidebarRect = sidebar?.getBoundingClientRect();
-      const tabsRect = tabs?.getBoundingClientRect();
-      setPopoverAnchor(resolveCatalogEditorPopoverAnchor(sidebarRect, tabsRect, window.innerWidth));
+      const sidebarRect = getVisibleElementRect('.project-tab-toolbar-sidebar');
+      const headerRect =
+        getVisibleElementRect('[data-project-header-tabs="true"]') ??
+        getVisibleElementRect('[data-project-header="true"]');
+      setPopoverAnchor(
+        resolveCatalogEditorPopoverAnchor(sidebarRect, headerRect, window.innerWidth),
+      );
     };
 
     updateAnchor();

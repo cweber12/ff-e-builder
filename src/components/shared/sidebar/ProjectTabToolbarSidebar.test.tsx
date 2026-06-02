@@ -1,18 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ProjectTabToolbarSidebar } from './ProjectTabToolbarSidebar';
 
-const noop = vi.fn();
-
 describe('ProjectTabToolbarSidebar', () => {
-  it('renders a slim collapsed rail with only the reopen control', () => {
+  it('renders a slim collapsed rail without an in-rail reopen control', () => {
     render(
       <MemoryRouter>
         <ProjectTabToolbarSidebar
           sidebarTitle="FF&E"
           collapsed={true}
-          onTogglePanel={noop}
           header={<div>Summary</div>}
           toolbarLeft={<div>Filters</div>}
           toolbarCenter={<div>Tools</div>}
@@ -21,9 +18,9 @@ describe('ProjectTabToolbarSidebar', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('button', { name: 'Open project sidebar' })).toBeInTheDocument();
     expect(screen.getByLabelText('Project tab sidebar')).toHaveClass('lg:border-l');
     expect(screen.getByLabelText('Project tab sidebar')).not.toHaveClass('lg:border-r');
+    expect(screen.queryByRole('button', { name: /sidebar/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Open .* section/i })).not.toBeInTheDocument();
   });
 
@@ -33,7 +30,6 @@ describe('ProjectTabToolbarSidebar', () => {
         <ProjectTabToolbarSidebar
           sidebarTitle="FF&E"
           collapsed={false}
-          onTogglePanel={noop}
           headerLeft={<button type="button">Options</button>}
           headerRight={<button type="button">Catalog</button>}
           header={<div>Summary</div>}
@@ -53,7 +49,6 @@ describe('ProjectTabToolbarSidebar', () => {
         <ProjectTabToolbarSidebar
           sidebarTitle="FF&E"
           collapsed={false}
-          onTogglePanel={noop}
           headerLeft={<button type="button">Options</button>}
           headerRight={<button type="button">Catalog</button>}
           header={<div>Summary</div>}

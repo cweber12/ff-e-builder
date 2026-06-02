@@ -1,11 +1,11 @@
 export function resolveCatalogEditorPopoverAnchor(
   sidebarRect: DOMRect | undefined,
-  tabsRect: DOMRect | undefined,
+  headerRect: DOMRect | undefined,
   viewportWidth: number,
 ) {
-  if (!sidebarRect || !tabsRect) return null;
+  if (!sidebarRect || !headerRect) return null;
 
-  const top = Math.round(tabsRect.bottom) + 1;
+  const top = Math.round(headerRect.bottom) + 1;
   const isDesktop = viewportWidth >= 1024;
 
   if (isDesktop) {

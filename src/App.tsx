@@ -31,6 +31,7 @@ import { FfeBudgetModal } from './components/project/modals/FfeBudgetModal';
 import { ProposalBudgetModal } from './components/project/modals/ProposalBudgetModal';
 import { ImportProposalExcelModal } from './components/proposal/import/ImportProposalExcelModal';
 import { ProjectHeader } from './components/project/ProjectHeader';
+import { ProjectToolSidebar } from './components/project/ProjectToolSidebar';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
 import {
   ProposalActions,
@@ -329,76 +330,78 @@ function ProjectLayout() {
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={canToggleSidebar ? toggleSidebar : null}
           />
-          <div className="flex flex-1 flex-col lg:flex-row-reverse">
-            {project ? (
-              <ProjectTabToolbarSidebar
-                sidebarTitle={sidebarTitle}
-                collapsed={sidebarCollapsed}
-                onTogglePanel={canToggleSidebar ? toggleSidebar : null}
-                headerLeft={sidebarHeaderLeft}
-                headerRight={sidebarHeaderRight}
-                header={sidebarHeader}
-                toolbarLeft={sidebarToolbarLeft}
-                toolbarCenter={sidebarToolbarCenter}
-                actions={sidebarActions}
-              />
-            ) : null}
-            <div className="min-h-0 min-w-0 flex-1">
-              {isLoading ? (
-                <div className="flex justify-center py-24">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
-                </div>
-              ) : project ? (
-                <>
-                  <h1 className="sr-only">{project.name}</h1>
-                  {isTableRoute || isCatalogRoute ? (
-                    // Full-width flush layout for table and catalog routes
-                    <div className="flex flex-1 flex-col">
-                      <Outlet
-                        context={
-                          {
-                            project,
-                            roomsWithItems,
-                            proposalCategoriesWithItems,
-                            onProposalImport: () => setProposalImportOpen(true),
-                            addCategoryOpen,
-                            onAddCategoryOpenChange: setAddCategoryOpen,
-                          } satisfies ProjectContext
-                        }
-                      />
-                    </div>
-                  ) : (
-                    // Padded layout for other routes (Budget, Materials, Plans, Overview)
-                    <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
-                      <Outlet
-                        context={
-                          {
-                            project,
-                            roomsWithItems,
-                            proposalCategoriesWithItems,
-                            onProposalImport: () => setProposalImportOpen(true),
-                            addCategoryOpen,
-                            onAddCategoryOpenChange: setAddCategoryOpen,
-                          } satisfies ProjectContext
-                        }
-                      />
-                    </section>
-                  )}
-                  {project && (
-                    <>
-                      <ImportProposalExcelModal
-                        open={proposalImportOpen}
-                        projectId={project.id}
-                        categories={proposalCategoriesWithItems}
-                        onClose={() => setProposalImportOpen(false)}
-                        onSuccess={() => {
-                          void queryClient.invalidateQueries();
-                        }}
-                      />
-                    </>
-                  )}
-                </>
+          <div className="flex flex-1 flex-col lg:flex-row">
+            {project ? <ProjectToolSidebar project={project} /> : null}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row-reverse">
+              {project ? (
+                <ProjectTabToolbarSidebar
+                  sidebarTitle={sidebarTitle}
+                  collapsed={sidebarCollapsed}
+                  headerLeft={sidebarHeaderLeft}
+                  headerRight={sidebarHeaderRight}
+                  header={sidebarHeader}
+                  toolbarLeft={sidebarToolbarLeft}
+                  toolbarCenter={sidebarToolbarCenter}
+                  actions={sidebarActions}
+                />
               ) : null}
+              <div className="min-h-0 min-w-0 flex-1">
+                {isLoading ? (
+                  <div className="flex justify-center py-24">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+                  </div>
+                ) : project ? (
+                  <>
+                    <h1 className="sr-only">{project.name}</h1>
+                    {isTableRoute || isCatalogRoute ? (
+                      // Full-width flush layout for table and catalog routes
+                      <div className="flex flex-1 flex-col">
+                        <Outlet
+                          context={
+                            {
+                              project,
+                              roomsWithItems,
+                              proposalCategoriesWithItems,
+                              onProposalImport: () => setProposalImportOpen(true),
+                              addCategoryOpen,
+                              onAddCategoryOpenChange: setAddCategoryOpen,
+                            } satisfies ProjectContext
+                          }
+                        />
+                      </div>
+                    ) : (
+                      // Padded layout for other routes (Budget, Materials, Plans, Overview)
+                      <section className="project-content mx-auto max-w-7xl flex-1 px-4 py-6 md:px-6">
+                        <Outlet
+                          context={
+                            {
+                              project,
+                              roomsWithItems,
+                              proposalCategoriesWithItems,
+                              onProposalImport: () => setProposalImportOpen(true),
+                              addCategoryOpen,
+                              onAddCategoryOpenChange: setAddCategoryOpen,
+                            } satisfies ProjectContext
+                          }
+                        />
+                      </section>
+                    )}
+                    {project && (
+                      <>
+                        <ImportProposalExcelModal
+                          open={proposalImportOpen}
+                          projectId={project.id}
+                          categories={proposalCategoriesWithItems}
+                          onClose={() => setProposalImportOpen(false)}
+                          onSuccess={() => {
+                            void queryClient.invalidateQueries();
+                          }}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : null}
+              </div>
             </div>
           </div>
         </>
