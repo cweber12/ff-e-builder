@@ -116,7 +116,7 @@ describe('Catalog navigator', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Catalog navigator' });
     expect(
-      within(dialog).getByRole('combobox', { name: 'Catalog navigator location' }),
+      within(dialog).getByRole('combobox', { name: 'Catalog navigator category' }),
     ).toHaveValue('room-living');
     expect(within(dialog).getByRole('img', { name: 'Channel Lounge Chair' })).toBeInTheDocument();
     expect(within(dialog).getByText('LR-CH-01')).toBeInTheDocument();
@@ -187,7 +187,7 @@ describe('Catalog navigator', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open catalog navigator' }));
     const dialog = screen.getByRole('dialog', { name: 'Catalog navigator' });
-    await user.click(within(dialog).getByRole('button', { name: /Add \+/ }));
+    await user.click(within(dialog).getByRole('button', { name: 'Add' }));
     const modal = screen.getByRole('dialog', { name: 'Add to FF&E' });
     await user.click(within(modal).getByRole('button', { name: 'Select category' }));
     const addButton = await within(modal).findByRole('button', { name: 'Add selected (1)' });

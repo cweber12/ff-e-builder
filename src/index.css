@@ -1135,19 +1135,32 @@
 
   .catalog-layout-popover-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
+    flex-direction: column;
+    gap: 10px;
     position: sticky;
     top: 0;
     z-index: 1;
     border-bottom: 1px solid theme('colors.neutral.200');
     background: rgb(var(--color-canvas-chrome));
-    padding: 12px 14px 10px;
+    padding: 12px 14px;
   }
 
   .catalog-layout-popover-body {
     padding: 0 14px 14px;
+  }
+
+  .catalog-navigator-header-copy {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .catalog-navigator-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
   }
 
   .catalog-navigator-panel-body {
@@ -1157,10 +1170,9 @@
     flex-direction: column;
   }
 
-  .catalog-layout-category-row {
+  .catalog-navigator-toolbar {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    justify-content: flex-end;
     border-bottom: 1px solid theme('colors.neutral.200');
     padding: 10px 0 8px;
   }
@@ -1175,31 +1187,25 @@
   .catalog-navigator-list-rows {
     display: flex;
     flex-direction: column;
-    gap: 6px;
   }
 
   .catalog-navigator-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    border: 1px solid theme('colors.neutral.200');
-    background: rgb(255 255 255 / 0.72);
-    padding: 7px 8px;
+    gap: 10px;
+    border-bottom: 1px solid theme('colors.neutral.200');
+    padding: 10px 0;
     transition:
       border-color 150ms ease,
-      background-color 150ms ease,
-      box-shadow 150ms ease;
+      color 150ms ease;
   }
 
   .catalog-navigator-row:hover {
     border-color: theme('colors.brand.300');
-    background: theme('colors.brand.50');
   }
 
   .catalog-navigator-row-active {
     border-color: theme('colors.brand.500');
-    box-shadow: inset 0 0 0 1px rgb(var(--color-brand-500) / 0.12);
-    background: rgb(255 255 255 / 0.95);
   }
 
   .catalog-navigator-row-link {
@@ -1225,12 +1231,13 @@
     display: flex;
     min-width: 0;
     flex: 1 1 auto;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
   }
 
   .catalog-navigator-row-id {
-    flex: 0 0 auto;
+    display: block;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -1239,8 +1246,8 @@
   }
 
   .catalog-navigator-row-name {
-    min-width: 0;
-    flex: 1 1 auto;
+    display: block;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1252,6 +1259,7 @@
 
   .catalog-navigator-row-actions {
     flex: 0 0 auto;
+    align-self: center;
   }
 
   .catalog-layout-category-label {

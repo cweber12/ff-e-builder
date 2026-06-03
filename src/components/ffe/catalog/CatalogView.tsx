@@ -1,14 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Images,
-  Plus,
-  SlidersHorizontal,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Images, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import { SlotPortal } from '../../shared/SlotPortal';
 import { cn } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -984,49 +976,47 @@ function CatalogNavigatorPanelPortal({
         }}
       >
         <div className="catalog-layout-popover-header">
-          <div>
-            <p className="catalog-layout-eyebrow">Catalog</p>
-            <h2 className="catalog-layout-title">Navigator</h2>
+          <div className="catalog-navigator-header-copy">
+            <div className="catalog-navigator-header-row">
+              <h2 className="catalog-layout-title">FF&amp;E Items</h2>
+              <button
+                type="button"
+                className="catalog-layout-close"
+                aria-label="Close navigator"
+                onClick={onClose}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <label htmlFor="catalog-navigator-room" className="catalog-layout-category-label">
+              Category
+            </label>
+            <select
+              id="catalog-navigator-room"
+              aria-label="Catalog navigator category"
+              className="toolbar-select catalog-layout-category-select"
+              value={selectedRoomId}
+              onChange={(event) => setSelectedRoomId(event.target.value)}
+            >
+              {rooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <button
-            type="button"
-            className="catalog-layout-close"
-            aria-label="Close navigator"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
         </div>
         <div className="catalog-layout-popover-body catalog-navigator-panel-body">
-          <div className="catalog-layout-category-row">
-            <label htmlFor="catalog-navigator-room" className="catalog-layout-category-label">
-              Location
-            </label>
-            <div className="flex items-center gap-2">
-              <select
-                id="catalog-navigator-room"
-                aria-label="Catalog navigator location"
-                className="toolbar-select min-w-0 flex-1"
-                value={selectedRoomId}
-                onChange={(event) => setSelectedRoomId(event.target.value)}
-              >
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name}
-                  </option>
-                ))}
-              </select>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setAddModalOpen(true)}
-                disabled={addableCount === 0 || isAdding || removingItemId !== null}
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Add +
-              </Button>
-            </div>
+          <div className="catalog-navigator-toolbar">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setAddModalOpen(true)}
+              disabled={addableCount === 0 || isAdding || removingItemId !== null}
+            >
+              Add
+            </Button>
           </div>
 
           <div className="catalog-navigator-list">
@@ -1059,10 +1049,9 @@ function CatalogNavigatorPanelPortal({
                             entityType="item"
                             entityId={item.id}
                             alt={item.itemName}
-                            className="h-10 w-10 rounded-sm border-0 shadow-none"
+                            className="h-14 w-14 rounded-sm border border-neutral-200 bg-white shadow-none"
                             imageClassName="object-cover"
                             placeholderClassName="bg-canvas-shell"
-                            compact
                             disabled
                           />
                         </div>
