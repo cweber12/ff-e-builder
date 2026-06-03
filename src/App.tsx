@@ -252,7 +252,7 @@ function ProjectLayout() {
 
   const sidebarHeaderRight =
     !isLoading && project ? (
-      isFfeRoute ? (
+      isFfeRoute && !isCatalogRoute ? (
         <FfeSidebarViewSelect
           projectId={project.id}
           currentView={isCatalogRoute ? 'catalog' : 'list'}
@@ -693,9 +693,24 @@ function ProjectProposalRoute() {
 }
 
 function ProjectCatalogRoute() {
-  const { project } = useProjectContext();
+  const { project, proposalCategoriesWithItems } = useProjectContext();
   const { groups } = useFfeCatalogGroups(project.id);
-  return <CatalogView project={project} rooms={groups} />;
+  const addProposalItemToFfe = useAddProposalItemToFfe(project.id);
+  const removeItemFromFfe = useRemoveItemFromFfe(project.id);
+
+  return (
+    <CatalogView
+      project={project}
+      rooms={groups}
+      proposalCategoriesWithItems={proposalCategoriesWithItems}
+      onAddToFfeItems={async (proposalItemIds) => {
+        await Promise.all(
+          proposalItemIds.map((proposalItemId) => addProposalItemToFfe.mutateAsync(proposalItemId)),
+        );
+      }}
+      onRemoveFromFfe={removeItemFromFfe.mutateAsync}
+    />
+  );
 }
 
 function ProjectMaterialsRoute() {
