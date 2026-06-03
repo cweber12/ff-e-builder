@@ -1129,6 +1129,10 @@
     pointer-events: auto;
   }
 
+  .catalog-navigator-panel {
+    height: min(720px, calc(100vh - 64px));
+  }
+
   .catalog-layout-popover-header {
     display: flex;
     align-items: flex-start;
@@ -1146,12 +1150,108 @@
     padding: 0 14px 14px;
   }
 
+  .catalog-navigator-panel-body {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
   .catalog-layout-category-row {
     display: flex;
     flex-direction: column;
     gap: 6px;
     border-bottom: 1px solid theme('colors.neutral.200');
     padding: 10px 0 8px;
+  }
+
+  .catalog-navigator-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-top: 10px;
+  }
+
+  .catalog-navigator-list-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .catalog-navigator-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid theme('colors.neutral.200');
+    background: rgb(255 255 255 / 0.72);
+    padding: 7px 8px;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+
+  .catalog-navigator-row:hover {
+    border-color: theme('colors.brand.300');
+    background: theme('colors.brand.50');
+  }
+
+  .catalog-navigator-row-active {
+    border-color: theme('colors.brand.500');
+    box-shadow: inset 0 0 0 1px rgb(var(--color-brand-500) / 0.12);
+    background: rgb(255 255 255 / 0.95);
+  }
+
+  .catalog-navigator-row-link {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .catalog-navigator-row-link:focus-visible {
+    outline: 2px solid theme('colors.brand.500');
+    outline-offset: 2px;
+  }
+
+  .catalog-navigator-row-thumb {
+    flex: 0 0 auto;
+    overflow: hidden;
+  }
+
+  .catalog-navigator-row-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .catalog-navigator-row-id {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: theme('colors.neutral.500');
+  }
+
+  .catalog-navigator-row-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'Manrope Variable', 'DM Sans Variable', sans-serif;
+    font-size: 12px;
+    font-weight: 680;
+    color: theme('colors.neutral.950');
+  }
+
+  .catalog-navigator-row-actions {
+    flex: 0 0 auto;
   }
 
   .catalog-layout-category-label {

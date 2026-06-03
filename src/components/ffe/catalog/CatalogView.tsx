@@ -5,9 +5,9 @@ import {
   ChevronRight,
   Images,
   Plus,
-  Search,
   SlidersHorizontal,
   Trash2,
+  X,
 } from 'lucide-react';
 import { SlotPortal } from '../../shared/SlotPortal';
 import { cn } from '../../../lib/utils';
@@ -347,7 +347,10 @@ export function CatalogView({
         companyName={companyName}
         sortMode={sortMode}
         editorState={editorState}
-        onEditorOpenChange={setEditorOpen}
+        onEditorOpenChange={(open) => {
+          if (open) setNavigatorOpen(false);
+          setEditorOpen(open);
+        }}
         onTypographyChange={handleTypographyChange}
         zoomLevel={zoomLevel}
         onZoomChange={setZoomLevel}
@@ -357,13 +360,18 @@ export function CatalogView({
         entries={entries}
         currentIndex={pageIndex}
         currentEntry={entry}
-        onOpenNavigator={() => setNavigatorOpen(true)}
+        onOpenNavigator={() => {
+          setEditorOpen(false);
+          setNavigatorOpen(true);
+        }}
       />
 
-      <CatalogNavigatorOverlay
+      <CatalogNavigatorPanelPortal
         open={navigatorOpen}
         entries={entries}
+        rooms={rooms}
         currentIndex={pageIndex}
+        currentEntry={entry}
         proposalCategoriesWithItems={proposalCategoriesWithItems}
         onClose={() => setNavigatorOpen(false)}
         onPageChange={setPage}
@@ -774,10 +782,12 @@ function sortProposalItems(a: ProposalItem, b: ProposalItem): number {
   });
 }
 
-function CatalogNavigatorOverlay({
+function CatalogNavigatorPanelPortal({
   open,
   entries,
+  rooms,
   currentIndex,
+  currentEntry,
   proposalCategoriesWithItems,
   onClose,
   onPageChange,
@@ -786,25 +796,84 @@ function CatalogNavigatorOverlay({
 }: {
   open: boolean;
   entries: CatalogEntry[];
+  rooms: RoomWithItems[];
   currentIndex: number;
+  currentEntry: CatalogEntry | undefined;
   proposalCategoriesWithItems: ProposalCategoryWithItems[];
   onClose: () => void;
   onPageChange: (index: number) => void;
   onAddToFfeItems?: ((proposalItemIds: string[]) => Promise<void>) | undefined;
   onRemoveFromFfe?: ((ffeItemId: string) => Promise<void>) | undefined;
 }) {
-  const [mode, setMode] = useState<'browse' | 'add'>('browse');
-  const [query, setQuery] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<{
+    top: number;
+    left?: number;
+    right?: number;
+  } | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState('');
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedProposalItemIds, setSelectedProposalItemIds] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
-      setMode('browse');
-      setQuery('');
       setSelectedProposalItemIds(new Set());
+      setAddModalOpen(false);
     }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setSelectedRoomId(currentEntry?.room.id ?? rooms[0]?.id ?? '');
+  }, [currentEntry?.room.id, open, rooms]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (addModalOpen) return;
+      const target = event.target as Node;
+      const clickedPanel = panelRef.current?.contains(target) ?? false;
+      if (clickedPanel) return;
+      const catalogStage = document.querySelector('.catalog-stage');
+      if (!catalogStage || !catalogStage.contains(target)) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [addModalOpen, open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: KeyboardEvent) => {
+      if (addModalOpen) return;
+      if (event.key !== 'Escape') return;
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
+      onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [addModalOpen, open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const updateAnchor = () => {
+      const railRect = getVisibleElementRect('.project-tool-sidebar');
+      const headerRect =
+        getVisibleElementRect('[data-project-header-tabs="true"]') ??
+        getVisibleElementRect('[data-project-header="true"]');
+      setPopoverAnchor(resolveCatalogEditorPopoverAnchor(railRect, headerRect));
+    };
+
+    updateAnchor();
+    window.addEventListener('resize', updateAnchor);
+    window.addEventListener('scroll', updateAnchor, true);
+    return () => {
+      window.removeEventListener('resize', updateAnchor);
+      window.removeEventListener('scroll', updateAnchor, true);
+    };
   }, [open]);
 
   const addableCategories = useMemo(
@@ -822,15 +891,14 @@ function CatalogNavigatorOverlay({
   );
   const addableCount = addableCategories.reduce((sum, category) => sum + category.items.length, 0);
 
-  const filteredEntries = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return entries;
-    return entries.filter(({ item, room }) =>
-      [item.itemName, item.itemIdTag, room.name, item.status]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedQuery)),
-    );
-  }, [entries, query]);
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter(({ room }) => {
+        if (!selectedRoomId) return true;
+        return room.id === selectedRoomId;
+      }),
+    [entries, selectedRoomId],
+  );
 
   const toggleProposalItem = (proposalItemId: string) => {
     setSelectedProposalItemIds((current) => {
@@ -868,7 +936,7 @@ function CatalogNavigatorOverlay({
       const label = selectedIds.length === 1 ? 'item' : 'items';
       toast.success(`Added ${selectedIds.length} ${label} to FF&E.`);
       setSelectedProposalItemIds(new Set());
-      setMode('browse');
+      setAddModalOpen(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       toast.error(`Add to FF&E failed: ${message}`);
@@ -891,124 +959,131 @@ function CatalogNavigatorOverlay({
     }
   };
 
-  return (
-    <Modal open={open} onClose={onClose} title="Catalog Navigator" className="max-w-6xl">
-      <div className="flex h-[min(78vh,760px)] min-h-0 flex-col gap-4">
-        <div className="flex flex-col gap-3 border-b border-neutral-200 pb-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative min-w-0 flex-1">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
-              aria-hidden="true"
-            />
-            <label className="sr-only" htmlFor="catalog-navigator-search">
-              Search catalog pages
-            </label>
-            <input
-              id="catalog-navigator-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="toolbar-input h-9 w-full pl-9"
-              placeholder="Search by item, ID, location, or status"
-            />
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              variant={mode === 'browse' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setMode('browse')}
-            >
-              <Images className="h-4 w-4" aria-hidden="true" />
-              Browse
-            </Button>
-            <Button
-              type="button"
-              variant={mode === 'add' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setMode('add')}
-              disabled={addableCount === 0 || isAdding || removingItemId !== null}
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Add items
-            </Button>
-          </div>
-        </div>
+  if (!open || !popoverAnchor) return null;
 
-        {mode === 'browse' ? (
-          <div className="min-h-0 overflow-y-auto pr-1">
+  return createPortal(
+    <>
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-label="Catalog navigator"
+        aria-modal="false"
+        className="catalog-layout-popover catalog-navigator-panel"
+        style={{
+          top: `${popoverAnchor.top}px`,
+          bottom: 'auto',
+          ...(popoverAnchor.left !== undefined
+            ? { left: `${popoverAnchor.left}px` }
+            : { left: 'auto' }),
+          ...(popoverAnchor.right !== undefined
+            ? { right: `${popoverAnchor.right}px` }
+            : { right: 'auto' }),
+          position: 'fixed',
+          zIndex: 3200,
+          pointerEvents: 'auto',
+        }}
+      >
+        <div className="catalog-layout-popover-header">
+          <div>
+            <p className="catalog-layout-eyebrow">Catalog</p>
+            <h2 className="catalog-layout-title">Navigator</h2>
+          </div>
+          <button
+            type="button"
+            className="catalog-layout-close"
+            aria-label="Close navigator"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="catalog-layout-popover-body catalog-navigator-panel-body">
+          <div className="catalog-layout-category-row">
+            <label htmlFor="catalog-navigator-room" className="catalog-layout-category-label">
+              Location
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                id="catalog-navigator-room"
+                aria-label="Catalog navigator location"
+                className="toolbar-select min-w-0 flex-1"
+                value={selectedRoomId}
+                onChange={(event) => setSelectedRoomId(event.target.value)}
+              >
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setAddModalOpen(true)}
+                disabled={addableCount === 0 || isAdding || removingItemId !== null}
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add +
+              </Button>
+            </div>
+          </div>
+
+          <div className="catalog-navigator-list">
             {filteredEntries.length === 0 ? (
-              <div className="surface-paper px-4 py-10 text-center text-sm text-neutral-500">
-                No catalog pages match that search.
+              <div className="surface-paper px-4 py-8 text-center text-sm text-neutral-500">
+                No catalog items in this location.
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="catalog-navigator-list-rows">
                 {filteredEntries.map((catalogEntry) => {
-                  const { item, room } = catalogEntry;
+                  const { item } = catalogEntry;
                   const entryIndex = entries.findIndex((entry) => entry.item.id === item.id);
                   const active = entryIndex === currentIndex;
                   return (
                     <article
                       key={item.id}
                       className={cn(
-                        'group overflow-hidden rounded-md border bg-white shadow-sm transition',
-                        active
-                          ? 'border-brand-500 ring-2 ring-brand-500/20'
-                          : 'border-neutral-200 hover:border-brand-300 hover:shadow-md',
+                        'catalog-navigator-row',
+                        active && 'catalog-navigator-row-active',
                       )}
                     >
                       <button
                         type="button"
-                        className="block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-                        onClick={() => {
-                          onPageChange(entryIndex);
-                          onClose();
-                        }}
+                        className="catalog-navigator-row-link"
+                        onClick={() => onPageChange(entryIndex)}
                         aria-label={`Open catalog page for ${item.itemName}`}
                       >
-                        <div className="aspect-[4/3] overflow-hidden bg-canvas-shell">
+                        <div className="catalog-navigator-row-thumb">
                           <ImageFrame
                             entityType="item"
                             entityId={item.id}
                             alt={item.itemName}
-                            className="h-full w-full rounded-none border-0 shadow-none"
+                            className="h-10 w-10 rounded-sm border-0 shadow-none"
                             imageClassName="object-cover"
                             placeholderClassName="bg-canvas-shell"
                             compact
                             disabled
                           />
                         </div>
-                        <div className="space-y-2 px-3 py-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="eyebrow truncate text-neutral-500">
-                                {item.itemIdTag || `Page ${entryIndex + 1}`}
-                              </p>
-                              <h3 className="mt-1 truncate font-display text-base font-semibold leading-tight text-neutral-950">
-                                {item.itemName}
-                              </h3>
-                            </div>
-                            <span className="num shrink-0 text-[11px] text-neutral-500">
-                              {entryIndex + 1}/{entries.length}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-xs font-medium text-neutral-500">
-                              {room.name}
-                            </p>
-                            <ItemStatusChip status={item.status} />
-                          </div>
+                        <div className="catalog-navigator-row-copy">
+                          <span className="catalog-navigator-row-id">
+                            {item.itemIdTag || `Page ${entryIndex + 1}`}
+                          </span>
+                          <span className="catalog-navigator-row-name">{item.itemName}</span>
+                          <ItemStatusChip status={item.status} className="shrink-0" />
                         </div>
                       </button>
-                      <div className="border-t border-neutral-100 px-3 py-2">
+                      <div className="catalog-navigator-row-actions">
                         <button
                           type="button"
                           onClick={() => void removeFromFfe(item)}
                           disabled={!onRemoveFromFfe || removingItemId !== null}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 transition-colors hover:text-danger-600 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:pointer-events-none disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-500 transition-colors hover:text-danger-600 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:pointer-events-none disabled:opacity-50"
                           aria-label={`Remove ${item.itemName} from FF&E`}
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          {removingItemId === item.id ? 'Removing...' : 'Remove from FF&E'}
+                          <Trash2 className="h-3 w-3" aria-hidden="true" />
+                          {removingItemId === item.id ? 'Removing' : 'Remove'}
                         </button>
                       </div>
                     </article>
@@ -1017,101 +1092,97 @@ function CatalogNavigatorOverlay({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      <Modal
+        open={addModalOpen}
+        onClose={() => {
+          if (isAdding) return;
+          setAddModalOpen(false);
+        }}
+        title="Add to FF&E"
+        className="max-w-2xl"
+      >
+        {addableCategories.length === 0 ? (
+          <p className="text-sm text-neutral-500">
+            All proposal items are already visible in FF&amp;E.
+          </p>
         ) : (
-          <div className="flex min-h-0 flex-col gap-4">
-            {addableCategories.length === 0 ? (
-              <div className="surface-paper px-4 py-10 text-center text-sm text-neutral-500">
-                All proposal items are already visible in FF&amp;E.
-              </div>
-            ) : (
-              <>
-                <div className="min-h-0 overflow-y-auto pr-1">
-                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                    {addableCategories.map((category) => {
-                      const categoryAllSelected = category.items.every((item) =>
-                        selectedProposalItemIds.has(item.id),
-                      );
-                      return (
-                        <section key={category.id} className="surface-paper p-3">
-                          <div className="mb-3 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <h3 className="eyebrow truncate text-brand-600">{category.name}</h3>
-                              <p className="num mt-0.5 text-[11px] text-neutral-500">
-                                {category.items.length} available
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              className="text-link shrink-0 text-xs font-medium text-brand-700"
-                              onClick={() => toggleCategory(category)}
-                            >
-                              {categoryAllSelected ? 'Clear' : 'Select all'}
-                            </button>
-                          </div>
-                          <div className="space-y-2">
-                            {category.items.map((item) => {
-                              const checked = selectedProposalItemIds.has(item.id);
-                              return (
-                                <label
-                                  key={item.id}
-                                  className={cn(
-                                    'flex cursor-pointer items-start gap-3 rounded border px-3 py-2 transition-colors',
-                                    checked
-                                      ? 'border-brand-300 bg-brand-50'
-                                      : 'border-neutral-200 hover:bg-canvas-shell',
-                                  )}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => toggleProposalItem(item.id)}
-                                    className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                                  />
-                                  <span className="min-w-0">
-                                    <span className="block truncate text-sm font-medium text-neutral-900">
-                                      {proposalItemLabel(item)}
-                                    </span>
-                                    {item.productTag || item.location ? (
-                                      <span className="num text-[11px] text-neutral-500">
-                                        {[item.productTag, item.location]
-                                          .filter(Boolean)
-                                          .join(' / ')}
-                                      </span>
-                                    ) : null}
-                                  </span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </section>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 pt-4">
-                  <p className="num text-xs text-neutral-500">
-                    {selectedProposalItemIds.size} selected
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" onClick={() => setMode('browse')}>
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      onClick={() => void confirmAddItems()}
-                      disabled={!onAddToFfeItems || selectedProposalItemIds.size === 0 || isAdding}
-                    >
-                      {isAdding ? 'Adding...' : `Add selected (${selectedProposalItemIds.size})`}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-500">
+              Select proposal items to add. Items already in FF&amp;E are hidden from this list.
+            </p>
+            <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+              {addableCategories.map((category) => {
+                const categoryAllSelected = category.items.every((item) =>
+                  selectedProposalItemIds.has(item.id),
+                );
+                return (
+                  <details key={category.id} open className="surface-paper p-3">
+                    <summary className="flex cursor-pointer items-center justify-between gap-3">
+                      <span className="eyebrow text-brand-600">{category.name}</span>
+                      <span className="num text-xs font-semibold text-neutral-500">
+                        {category.items.length}
+                      </span>
+                    </summary>
+                    <div className="mt-3 space-y-2">
+                      <button
+                        type="button"
+                        className="text-link text-xs font-medium text-brand-700"
+                        onClick={() => toggleCategory(category)}
+                      >
+                        {categoryAllSelected ? 'Clear category' : 'Select category'}
+                      </button>
+                      {category.items.map((item) => {
+                        const checked = selectedProposalItemIds.has(item.id);
+                        return (
+                          <label
+                            key={item.id}
+                            className="flex cursor-pointer items-start gap-2 rounded border border-neutral-200 px-2.5 py-2 hover:bg-canvas-shell"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleProposalItem(item.id)}
+                              className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                            />
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-medium text-neutral-900">
+                                {proposalItemLabel(item)}
+                              </span>
+                              {item.productTag && (
+                                <span className="num text-[11px] text-neutral-500">
+                                  {item.productTag}
+                                </span>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setAddModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => void confirmAddItems()}
+                disabled={!onAddToFfeItems || selectedProposalItemIds.size === 0 || isAdding}
+              >
+                {isAdding ? 'Adding…' : `Add selected (${selectedProposalItemIds.size})`}
+              </Button>
+            </div>
           </div>
         )}
-      </div>
-    </Modal>
+      </Modal>
+    </>,
+    document.body,
   );
 }
 

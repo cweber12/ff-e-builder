@@ -54,6 +54,44 @@ function renderCatalog(
     onRemoveFromFfe?: (ffeItemId: string) => Promise<void>;
   } = {},
 ) {
+  const header = document.createElement('div');
+  header.setAttribute('data-project-header', 'true');
+  header.getBoundingClientRect = () => {
+    return {
+      left: 0,
+      right: 1280,
+      top: 0,
+      bottom: 44,
+      x: 0,
+      y: 0,
+      width: 1280,
+      height: 44,
+      toJSON() {
+        return this;
+      },
+    };
+  };
+  document.body.appendChild(header);
+
+  const rail = document.createElement('div');
+  rail.className = 'project-tool-sidebar';
+  rail.getBoundingClientRect = () => {
+    return {
+      left: 0,
+      right: 208,
+      top: 44,
+      bottom: 920,
+      x: 0,
+      y: 44,
+      width: 208,
+      height: 876,
+      toJSON() {
+        return this;
+      },
+    };
+  };
+  document.body.appendChild(rail);
+
   return render(
     <MemoryRouter initialEntries={[`/projects/${catalogProjectFixture.id}/ffe/catalog`]}>
       <div id={CATALOG_ACTIONS_SLOT_ID} />
@@ -70,13 +108,16 @@ function renderCatalog(
 }
 
 describe('Catalog navigator', () => {
-  it('opens a thumbnail-first navigator and jumps to the selected catalog page', async () => {
+  it('opens a side navigator panel and jumps pages without closing it', async () => {
     const user = userEvent.setup();
     renderCatalog();
 
     await user.click(screen.getByRole('button', { name: 'Open catalog navigator' }));
 
-    const dialog = screen.getByRole('dialog', { name: 'Catalog Navigator' });
+    const dialog = screen.getByRole('dialog', { name: 'Catalog navigator' });
+    expect(
+      within(dialog).getByRole('combobox', { name: 'Catalog navigator location' }),
+    ).toHaveValue('room-living');
     expect(within(dialog).getByRole('img', { name: 'Channel Lounge Chair' })).toBeInTheDocument();
     expect(within(dialog).getByText('LR-CH-01')).toBeInTheDocument();
 
@@ -84,9 +125,7 @@ describe('Catalog navigator', () => {
       within(dialog).getByRole('button', { name: 'Open catalog page for Arc Floor Lamp' }),
     );
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Catalog Navigator' })).not.toBeInTheDocument(),
-    );
+    expect(screen.getByRole('dialog', { name: 'Catalog navigator' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open catalog navigator' })).toHaveTextContent(
       'Arc Floor Lamp',
     );
@@ -147,10 +186,12 @@ describe('Catalog navigator', () => {
     renderCatalog(proposalCategoriesWithItems, { onAddToFfeItems });
 
     await user.click(screen.getByRole('button', { name: 'Open catalog navigator' }));
-    const dialog = screen.getByRole('dialog', { name: 'Catalog Navigator' });
-    await user.click(within(dialog).getByRole('button', { name: 'Add items' }));
-    await user.click(within(dialog).getByRole('checkbox', { name: /Gallery Picture Light/ }));
-    await user.click(within(dialog).getByRole('button', { name: 'Add selected (1)' }));
+    const dialog = screen.getByRole('dialog', { name: 'Catalog navigator' });
+    await user.click(within(dialog).getByRole('button', { name: /Add \+/ }));
+    const modal = screen.getByRole('dialog', { name: 'Add to FF&E' });
+    await user.click(within(modal).getByRole('button', { name: 'Select category' }));
+    const addButton = await within(modal).findByRole('button', { name: 'Add selected (1)' });
+    await user.click(addButton);
 
     await waitFor(() => expect(onAddToFfeItems).toHaveBeenCalledWith(['proposal-item-1']));
   });

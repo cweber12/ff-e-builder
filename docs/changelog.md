@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- refactor(catalog): replace the catalog item dropdown with a thumbnail-first Catalog Navigator overlay that keeps Add to FF&E and Remove from FF&E as supporting actions
+- refactor(catalog): replace the catalog item dropdown with a compact side-panel Catalog Navigator that keeps Add to FF&E and Remove from FF&E as supporting actions
 - feat(ui): move project-tool tabs into a dedicated desktop left navigation rail, keep the mobile tab row, and relocate the right-sidebar toggle to the top header beside the user avatar
 - fix(ui): move the shared project tab sidebar to the desktop right edge, mirror sidebar header controls and menus for left-expanding overlays, and flush the FF&E catalog editor against the sidebar's inner border
 - refactor(ui): move sidebar secondary actions into header Options menus, shift FF&E and Materials mode selection into header dropdowns, restyle Plans Upload as a primary action, and tighten sidebar contrast and catalog control hierarchy
