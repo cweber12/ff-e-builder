@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Images, SlidersHorizontal, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Images, Plus, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { SlotPortal } from '../../shared/SlotPortal';
 import { cn } from '../../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -352,9 +352,10 @@ export function CatalogView({
         entries={entries}
         currentIndex={pageIndex}
         currentEntry={entry}
-        onOpenNavigator={() => {
+        navigatorOpen={navigatorOpen}
+        onToggleNavigator={() => {
           setEditorOpen(false);
-          setNavigatorOpen(true);
+          setNavigatorOpen((open) => !open);
         }}
       />
 
@@ -459,6 +460,7 @@ export function CatalogView({
  * the ProjectHeader tab row when on the catalog route.
  */
 export const CATALOG_ACTIONS_SLOT_ID = 'ffe-catalog-actions-slot';
+export const CATALOG_NAVIGATOR_PANEL_SLOT_ID = 'ffe-catalog-navigator-panel-slot';
 export const CATALOG_PICKER_SLOT_ID = 'ffe-catalog-picker-slot';
 export const CATALOG_OPTIONS_SLOT_ID = 'ffe-catalog-options-slot';
 
@@ -701,12 +703,14 @@ function CatalogToolbarPicker({
   entries,
   currentIndex,
   currentEntry,
-  onOpenNavigator,
+  navigatorOpen,
+  onToggleNavigator,
 }: {
   entries: CatalogEntry[];
   currentIndex: number;
   currentEntry: CatalogEntry | undefined;
-  onOpenNavigator: () => void;
+  navigatorOpen: boolean;
+  onToggleNavigator: () => void;
 }) {
   return (
     <SlotPortal slotId={CATALOG_PICKER_SLOT_ID}>
@@ -714,7 +718,8 @@ function CatalogToolbarPicker({
         entries={entries}
         currentIndex={currentIndex}
         currentEntry={currentEntry}
-        onOpenNavigator={onOpenNavigator}
+        navigatorOpen={navigatorOpen}
+        onToggleNavigator={onToggleNavigator}
       />
     </SlotPortal>
   );
@@ -727,12 +732,14 @@ function CatalogPagePicker({
   entries,
   currentIndex,
   currentEntry,
-  onOpenNavigator,
+  navigatorOpen,
+  onToggleNavigator,
 }: {
   entries: CatalogEntry[];
   currentIndex: number;
   currentEntry: CatalogEntry | undefined;
-  onOpenNavigator: () => void;
+  navigatorOpen: boolean;
+  onToggleNavigator: () => void;
 }) {
   return (
     <nav aria-label="Catalog page picker" className="no-print catalog-sidebar-picker">
@@ -742,8 +749,9 @@ function CatalogPagePicker({
       <button
         type="button"
         className="catalog-navigator-trigger"
-        onClick={onOpenNavigator}
-        aria-label="Open catalog navigator"
+        onClick={onToggleNavigator}
+        aria-label={navigatorOpen ? 'Close catalog navigator' : 'Open catalog navigator'}
+        aria-expanded={navigatorOpen}
       >
         <Images className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1 text-left">
@@ -771,10 +779,29 @@ function sortProposalItems(a: ProposalItem, b: ProposalItem): number {
   });
 }
 
+function normalizeNavigatorQuery(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function catalogEntryMatchesQuery(entry: CatalogEntry, query: string) {
+  const normalizedQuery = normalizeNavigatorQuery(query);
+  if (!normalizedQuery) return true;
+
+  const searchableValues = [
+    entry.item.itemName,
+    entry.item.itemIdTag,
+    entry.room.name,
+    entry.item.status,
+    String(entry.item.qty),
+  ];
+
+  return searchableValues.some((value) => value?.toLowerCase().includes(normalizedQuery));
+}
+
 function CatalogNavigatorPanelPortal({
   open,
   entries,
-  rooms,
+  rooms: groups,
   currentIndex,
   currentEntry,
   proposalCategoriesWithItems,
@@ -794,13 +821,11 @@ function CatalogNavigatorPanelPortal({
   onAddToFfeItems?: ((proposalItemIds: string[]) => Promise<void>) | undefined;
   onRemoveFromFfe?: ((ffeItemId: string) => Promise<void>) | undefined;
 }) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [popoverAnchor, setPopoverAnchor] = useState<{
-    top: number;
-    left?: number;
-    right?: number;
-  } | null>(null);
-  const [selectedRoomId, setSelectedRoomId] = useState('');
+  const desktopSlotAvailable =
+    typeof document !== 'undefined' &&
+    document.getElementById(CATALOG_NAVIGATOR_PANEL_SLOT_ID) !== null;
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [query, setQuery] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedProposalItemIds, setSelectedProposalItemIds] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
@@ -810,27 +835,14 @@ function CatalogNavigatorPanelPortal({
     if (!open) {
       setSelectedProposalItemIds(new Set());
       setAddModalOpen(false);
+      setQuery('');
     }
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    setSelectedRoomId(currentEntry?.room.id ?? rooms[0]?.id ?? '');
-  }, [currentEntry?.room.id, open, rooms]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (event: MouseEvent) => {
-      if (addModalOpen) return;
-      const target = event.target as Node;
-      const clickedPanel = panelRef.current?.contains(target) ?? false;
-      if (clickedPanel) return;
-      const catalogStage = document.querySelector('.catalog-stage');
-      if (!catalogStage || !catalogStage.contains(target)) onClose();
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [addModalOpen, open, onClose]);
+    setSelectedGroupId(currentEntry?.room.id ?? groups[0]?.id ?? '');
+  }, [currentEntry?.room.id, groups, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -844,26 +856,6 @@ function CatalogNavigatorPanelPortal({
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [addModalOpen, open, onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const updateAnchor = () => {
-      const railRect = getVisibleElementRect('.project-tool-sidebar');
-      const headerRect =
-        getVisibleElementRect('[data-project-header-tabs="true"]') ??
-        getVisibleElementRect('[data-project-header="true"]');
-      setPopoverAnchor(resolveCatalogEditorPopoverAnchor(railRect, headerRect));
-    };
-
-    updateAnchor();
-    window.addEventListener('resize', updateAnchor);
-    window.addEventListener('scroll', updateAnchor, true);
-    return () => {
-      window.removeEventListener('resize', updateAnchor);
-      window.removeEventListener('scroll', updateAnchor, true);
-    };
-  }, [open]);
 
   const addableCategories = useMemo(
     () =>
@@ -880,14 +872,17 @@ function CatalogNavigatorPanelPortal({
   );
   const addableCount = addableCategories.reduce((sum, category) => sum + category.items.length, 0);
 
-  const filteredEntries = useMemo(
-    () =>
-      entries.filter(({ room }) => {
-        if (!selectedRoomId) return true;
-        return room.id === selectedRoomId;
-      }),
-    [entries, selectedRoomId],
-  );
+  const filteredEntries = useMemo(() => {
+    return entries.filter((entry) => {
+      if (selectedGroupId && entry.room.id !== selectedGroupId) return false;
+      return catalogEntryMatchesQuery(entry, query);
+    });
+  }, [entries, query, selectedGroupId]);
+
+  const emptyMessage =
+    entries.length === 0
+      ? 'No FF&E items are visible in the catalog yet.'
+      : 'No FF&E items match the current filters.';
 
   const toggleProposalItem = (proposalItemId: string) => {
     setSelectedProposalItemIds((current) => {
@@ -948,224 +943,388 @@ function CatalogNavigatorPanelPortal({
     }
   };
 
-  if (!open || !popoverAnchor) return null;
+  if (!open) return null;
+
+  const panelContent = (
+    <CatalogNavigatorPanel
+      mobile={false}
+      entries={filteredEntries}
+      allEntries={entries}
+      groups={groups}
+      selectedGroupId={selectedGroupId}
+      query={query}
+      currentIndex={currentIndex}
+      currentEntry={currentEntry}
+      addableCount={addableCount}
+      isAdding={isAdding}
+      removingItemId={removingItemId}
+      removeEnabled={Boolean(onRemoveFromFfe)}
+      emptyMessage={emptyMessage}
+      onGroupChange={setSelectedGroupId}
+      onQueryChange={setQuery}
+      onOpenAddModal={() => setAddModalOpen(true)}
+      onPageChange={onPageChange}
+      onRemoveFromFfe={removeFromFfe}
+    />
+  );
+
+  if (desktopSlotAvailable) {
+    return (
+      <>
+        <SlotPortal slotId={CATALOG_NAVIGATOR_PANEL_SLOT_ID}>{panelContent}</SlotPortal>
+        <CatalogNavigatorAddModal
+          addModalOpen={addModalOpen}
+          addableCategories={addableCategories}
+          isAdding={isAdding}
+          selectedProposalItemIds={selectedProposalItemIds}
+          onClose={() => {
+            if (isAdding) return;
+            setAddModalOpen(false);
+          }}
+          onToggleCategory={toggleCategory}
+          onToggleProposalItem={toggleProposalItem}
+          onConfirmAddItems={confirmAddItems}
+        />
+      </>
+    );
+  }
 
   return createPortal(
     <>
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-label="Catalog navigator"
-        aria-modal="false"
-        className="catalog-layout-popover catalog-navigator-panel"
-        style={{
-          top: `${popoverAnchor.top}px`,
-          bottom: 'auto',
-          ...(popoverAnchor.left !== undefined
-            ? { left: `${popoverAnchor.left}px` }
-            : { left: 'auto' }),
-          ...(popoverAnchor.right !== undefined
-            ? { right: `${popoverAnchor.right}px` }
-            : { right: 'auto' }),
-          position: 'fixed',
-          zIndex: 3200,
-          pointerEvents: 'auto',
-        }}
-      >
-        <div className="catalog-layout-popover-header">
-          <div className="catalog-navigator-header-copy">
-            <div className="catalog-navigator-header-row">
-              <h2 className="catalog-layout-title">FF&amp;E Items</h2>
-              <button
-                type="button"
-                className="catalog-layout-close"
-                aria-label="Close navigator"
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-            <select
-              id="catalog-navigator-room"
-              aria-label="Catalog navigator location"
-              className="toolbar-select catalog-layout-category-select"
-              value={selectedRoomId}
-              onChange={(event) => setSelectedRoomId(event.target.value)}
-            >
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="catalog-layout-popover-body catalog-navigator-panel-body">
-          <div className="catalog-navigator-toolbar">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setAddModalOpen(true)}
-              disabled={addableCount === 0 || isAdding || removingItemId !== null}
-            >
-              Add
-            </Button>
-          </div>
-
-          <div className="catalog-navigator-list">
-            {filteredEntries.length === 0 ? (
-              <div className="surface-paper px-4 py-8 text-center text-sm text-neutral-500">
-                No catalog items in this location.
-              </div>
-            ) : (
-              <div className="catalog-navigator-list-rows">
-                {filteredEntries.map((catalogEntry) => {
-                  const { item } = catalogEntry;
-                  const entryIndex = entries.findIndex((entry) => entry.item.id === item.id);
-                  const active = entryIndex === currentIndex;
-                  return (
-                    <article
-                      key={item.id}
-                      className={cn(
-                        'catalog-navigator-row',
-                        active && 'catalog-navigator-row-active',
-                      )}
-                    >
-                      <button
-                        type="button"
-                        className="catalog-navigator-row-link"
-                        onClick={() => onPageChange(entryIndex)}
-                        aria-label={`Open catalog page for ${item.itemName}`}
-                      >
-                        <div className="catalog-navigator-row-thumb">
-                          <ImageFrame
-                            entityType="item"
-                            entityId={item.id}
-                            alt={item.itemName}
-                            className="h-[70px] w-[70px] rounded-sm border border-neutral-200 bg-white shadow-none"
-                            imageClassName="object-cover"
-                            placeholderClassName="bg-canvas-shell"
-                            disabled
-                          />
-                        </div>
-                        <div className="catalog-navigator-row-copy">
-                          <span className="catalog-navigator-row-id">
-                            {item.itemIdTag || `Page ${entryIndex + 1}`}
-                          </span>
-                          <span className="catalog-navigator-row-name">{item.itemName}</span>
-                          <ItemStatusChip status={item.status} className="shrink-0" />
-                        </div>
-                      </button>
-                      <div className="catalog-navigator-row-actions">
-                        <button
-                          type="button"
-                          onClick={() => void removeFromFfe(item)}
-                          disabled={!onRemoveFromFfe || removingItemId !== null}
-                          className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-500 transition-colors hover:text-danger-600 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:pointer-events-none disabled:opacity-50"
-                          aria-label={`Remove ${item.itemName} from FF&E`}
-                        >
-                          <Trash2 className="h-3 w-3" aria-hidden="true" />
-                          {removingItemId === item.id ? 'Removing' : 'Remove'}
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+      <div className="fixed inset-0 z-[3200] flex justify-end bg-neutral-950/20 lg:hidden">
+        <button
+          type="button"
+          aria-label="Close catalog navigator backdrop"
+          className="flex-1 cursor-default"
+          onClick={onClose}
+        />
+        <div className="relative h-full w-full max-w-[26rem] border-l border-neutral-200 bg-white shadow-2xl">
+          <CatalogNavigatorPanel
+            mobile={true}
+            entries={filteredEntries}
+            allEntries={entries}
+            groups={groups}
+            selectedGroupId={selectedGroupId}
+            query={query}
+            currentIndex={currentIndex}
+            currentEntry={currentEntry}
+            addableCount={addableCount}
+            isAdding={isAdding}
+            removingItemId={removingItemId}
+            removeEnabled={Boolean(onRemoveFromFfe)}
+            emptyMessage={emptyMessage}
+            onGroupChange={setSelectedGroupId}
+            onQueryChange={setQuery}
+            onOpenAddModal={() => setAddModalOpen(true)}
+            onPageChange={onPageChange}
+            onRemoveFromFfe={removeFromFfe}
+            onClose={onClose}
+          />
         </div>
       </div>
 
-      <Modal
-        open={addModalOpen}
+      <CatalogNavigatorAddModal
+        addModalOpen={addModalOpen}
+        addableCategories={addableCategories}
+        isAdding={isAdding}
+        selectedProposalItemIds={selectedProposalItemIds}
         onClose={() => {
           if (isAdding) return;
           setAddModalOpen(false);
         }}
-        title="Add to FF&E"
-        className="max-w-2xl"
+        onToggleCategory={toggleCategory}
+        onToggleProposalItem={toggleProposalItem}
+        onConfirmAddItems={confirmAddItems}
+      />
+    </>,
+    document.body,
+  );
+}
+
+function CatalogNavigatorPanel({
+  mobile,
+  entries,
+  allEntries,
+  groups,
+  selectedGroupId,
+  query,
+  currentIndex,
+  currentEntry,
+  addableCount,
+  isAdding,
+  removingItemId,
+  removeEnabled,
+  emptyMessage,
+  onGroupChange,
+  onQueryChange,
+  onOpenAddModal,
+  onPageChange,
+  onRemoveFromFfe,
+  onClose,
+}: {
+  mobile: boolean;
+  entries: CatalogEntry[];
+  allEntries: CatalogEntry[];
+  groups: RoomWithItems[];
+  selectedGroupId: string;
+  query: string;
+  currentIndex: number;
+  currentEntry: CatalogEntry | undefined;
+  addableCount: number;
+  isAdding: boolean;
+  removingItemId: string | null;
+  removeEnabled: boolean;
+  emptyMessage: string;
+  onGroupChange: (value: string) => void;
+  onQueryChange: (value: string) => void;
+  onOpenAddModal: () => void;
+  onPageChange: (index: number) => void;
+  onRemoveFromFfe: (item: Item) => Promise<void>;
+  onClose?: () => void;
+}) {
+  const asideClassName = mobile
+    ? 'flex h-full min-h-0 flex-col'
+    : 'project-tool-sidebar no-print hidden shrink-0 border-r border-neutral-200 bg-white lg:sticky lg:top-11 lg:block lg:h-[calc(100vh-44px)] lg:w-[24rem] lg:self-start';
+
+  return (
+    <aside className={asideClassName}>
+      <section
+        aria-label="Catalog navigator"
+        role="dialog"
+        aria-modal="false"
+        className="flex h-full min-h-0 flex-col bg-white"
       >
-        {addableCategories.length === 0 ? (
-          <p className="text-sm text-neutral-500">
-            All proposal items are already visible in FF&amp;E.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-sm text-neutral-500">
-              Select proposal items to add. Items already in FF&amp;E are hidden from this list.
-            </p>
-            <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
-              {addableCategories.map((category) => {
-                const categoryAllSelected = category.items.every((item) =>
-                  selectedProposalItemIds.has(item.id),
-                );
+        <div className="border-b border-neutral-200 px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-baseline gap-2">
+              <h2 className="eyebrow">FF&amp;E ITEMS</h2>
+              <span className="num text-[11px] font-semibold text-neutral-500">
+                {entries.length}
+              </span>
+            </div>
+            {mobile && onClose ? (
+              <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                Close
+              </Button>
+            ) : null}
+          </div>
+          <div className="mt-4 grid gap-3">
+            <select
+              aria-label="Catalog navigator location"
+              className="toolbar-select w-full"
+              value={selectedGroupId}
+              onChange={(event) => onGroupChange(event.target.value)}
+            >
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="search"
+              aria-label="Search FF&E items"
+              placeholder="Search FF&E items"
+              className="toolbar-input w-full"
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+            />
+            <Button
+              type="button"
+              variant="addAction"
+              onClick={onOpenAddModal}
+              disabled={addableCount === 0 || isAdding || removingItemId !== null}
+              className="w-full justify-start"
+            >
+              <Plus className="toolbar-icon" aria-hidden="true" />
+              Add item
+            </Button>
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {entries.length === 0 ? (
+            <div className="px-4 py-8">
+              <p className="border-y border-dashed border-neutral-200 px-4 py-8 text-center text-sm text-neutral-500">
+                {emptyMessage}
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-200">
+              {entries.map((catalogEntry) => {
+                const { item, room } = catalogEntry;
+                const entryIndex = allEntries.findIndex((entry) => entry.item.id === item.id);
+                const active = currentEntry?.item.id === item.id || entryIndex === currentIndex;
+
                 return (
-                  <details key={category.id} open className="surface-paper p-3">
-                    <summary className="flex cursor-pointer items-center justify-between gap-3">
-                      <span className="eyebrow text-brand-600">{category.name}</span>
-                      <span className="num text-xs font-semibold text-neutral-500">
-                        {category.items.length}
-                      </span>
-                    </summary>
-                    <div className="mt-3 space-y-2">
-                      <button
-                        type="button"
-                        className="text-link text-xs font-medium text-brand-700"
-                        onClick={() => toggleCategory(category)}
-                      >
-                        {categoryAllSelected ? 'Clear category' : 'Select category'}
-                      </button>
-                      {category.items.map((item) => {
-                        const checked = selectedProposalItemIds.has(item.id);
-                        return (
-                          <label
-                            key={item.id}
-                            className="flex cursor-pointer items-start gap-2 rounded border border-neutral-200 px-2.5 py-2 hover:bg-canvas-shell"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleProposalItem(item.id)}
-                              className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                            />
-                            <span className="min-w-0">
-                              <span className="block truncate text-sm font-medium text-neutral-900">
-                                {proposalItemLabel(item)}
-                              </span>
-                              {item.productTag && (
-                                <span className="num text-[11px] text-neutral-500">
-                                  {item.productTag}
-                                </span>
-                              )}
-                            </span>
-                          </label>
-                        );
-                      })}
+                  <article
+                    key={item.id}
+                    className={cn(
+                      'project-row flex items-center gap-4 px-4 py-3 transition hover:bg-canvas-shell',
+                      active && 'bg-brand-50/70',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                      onClick={() => onPageChange(entryIndex)}
+                      aria-label={`Open catalog page for ${item.itemName}`}
+                    >
+                      <div className="flex-shrink-0 overflow-hidden">
+                        <ImageFrame
+                          entityType="item"
+                          entityId={item.id}
+                          alt={item.itemName}
+                          className="h-16 w-16 object-cover"
+                          imageClassName="object-cover"
+                          placeholderClassName="bg-canvas-shell"
+                          compact
+                          disabled
+                        />
+                      </div>
+                      <div className="flex w-16 shrink-0 flex-col items-start justify-center gap-1">
+                        <p className="num text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
+                          {item.itemIdTag || `Page ${entryIndex + 1}`}
+                        </p>
+                        <p className="num text-[10px] text-neutral-500">Qty {item.qty}</p>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate font-display text-base font-semibold leading-snug text-neutral-950">
+                          {item.itemName}
+                        </h3>
+                        <p className="truncate text-xs text-neutral-500">{room.name}</p>
+                      </div>
+                    </button>
+                    <div className="flex shrink-0 flex-col items-end gap-2 self-stretch justify-center">
+                      <ItemStatusChip status={item.status} className="shrink-0" />
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onPageChange(entryIndex)}
+                        >
+                          Edit
+                        </Button>
+                        <button
+                          type="button"
+                          onClick={() => void onRemoveFromFfe(item)}
+                          disabled={!removeEnabled || removingItemId !== null}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-neutral-500 transition hover:bg-neutral-100 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:pointer-events-none disabled:opacity-50"
+                          aria-label={`Remove ${item.itemName} from FF&E`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
                     </div>
-                  </details>
+                  </article>
                 );
               })}
             </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setAddModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => void confirmAddItems()}
-                disabled={!onAddToFfeItems || selectedProposalItemIds.size === 0 || isAdding}
-              >
-                {isAdding ? 'Adding…' : `Add selected (${selectedProposalItemIds.size})`}
-              </Button>
-            </div>
+          )}
+        </div>
+      </section>
+    </aside>
+  );
+}
+
+function CatalogNavigatorAddModal({
+  addModalOpen,
+  addableCategories,
+  isAdding,
+  selectedProposalItemIds,
+  onClose,
+  onToggleCategory,
+  onToggleProposalItem,
+  onConfirmAddItems,
+}: {
+  addModalOpen: boolean;
+  addableCategories: ProposalCategoryWithItems[];
+  isAdding: boolean;
+  selectedProposalItemIds: Set<string>;
+  onClose: () => void;
+  onToggleCategory: (category: ProposalCategoryWithItems) => void;
+  onToggleProposalItem: (proposalItemId: string) => void;
+  onConfirmAddItems: () => Promise<void>;
+}) {
+  return (
+    <Modal open={addModalOpen} onClose={onClose} title="Add to FF&E" className="max-w-2xl">
+      {addableCategories.length === 0 ? (
+        <p className="text-sm text-neutral-500">
+          All proposal items are already visible in FF&amp;E.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-neutral-500">
+            Select proposal items to add. Items already in FF&amp;E are hidden from this list.
+          </p>
+          <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+            {addableCategories.map((category) => {
+              const categoryAllSelected = category.items.every((item) =>
+                selectedProposalItemIds.has(item.id),
+              );
+              return (
+                <details key={category.id} open className="surface-paper p-3">
+                  <summary className="flex cursor-pointer items-center justify-between gap-3">
+                    <span className="eyebrow text-brand-600">{category.name}</span>
+                    <span className="num text-xs font-semibold text-neutral-500">
+                      {category.items.length}
+                    </span>
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    <button
+                      type="button"
+                      className="text-link text-xs font-medium text-brand-700"
+                      onClick={() => onToggleCategory(category)}
+                    >
+                      {categoryAllSelected ? 'Clear category' : 'Select category'}
+                    </button>
+                    {category.items.map((item) => {
+                      const checked = selectedProposalItemIds.has(item.id);
+                      return (
+                        <label
+                          key={item.id}
+                          className="flex cursor-pointer items-start gap-2 rounded border border-neutral-200 px-2.5 py-2 hover:bg-canvas-shell"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => onToggleProposalItem(item.id)}
+                            className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium text-neutral-900">
+                              {proposalItemLabel(item)}
+                            </span>
+                            {item.productTag && (
+                              <span className="num text-[11px] text-neutral-500">
+                                {item.productTag}
+                              </span>
+                            )}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </details>
+              );
+            })}
           </div>
-        )}
-      </Modal>
-    </>,
-    document.body,
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => void onConfirmAddItems()}
+              disabled={selectedProposalItemIds.size === 0 || isAdding}
+            >
+              {isAdding ? 'Adding…' : `Add selected (${selectedProposalItemIds.size})`}
+            </Button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }
 

@@ -2,7 +2,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { CatalogView, CATALOG_ACTIONS_SLOT_ID, CATALOG_PICKER_SLOT_ID } from './CatalogView';
+import {
+  CatalogView,
+  CATALOG_ACTIONS_SLOT_ID,
+  CATALOG_NAVIGATOR_PANEL_SLOT_ID,
+  CATALOG_PICKER_SLOT_ID,
+} from './CatalogView';
 import { catalogProjectFixture, catalogRoomsFixture } from '../../../data/catalogFixture';
 import type { ProposalCategoryWithItems } from '../../../types';
 
@@ -95,6 +100,7 @@ function renderCatalog(
   return render(
     <MemoryRouter initialEntries={[`/projects/${catalogProjectFixture.id}/ffe/catalog`]}>
       <div id={CATALOG_ACTIONS_SLOT_ID} />
+      <div id={CATALOG_NAVIGATOR_PANEL_SLOT_ID} />
       <div id={CATALOG_PICKER_SLOT_ID} />
       <CatalogView
         project={catalogProjectFixture}
@@ -118,6 +124,8 @@ describe('Catalog navigator', () => {
     expect(
       within(dialog).getByRole('combobox', { name: 'Catalog navigator location' }),
     ).toHaveValue('room-living');
+    expect(within(dialog).getByLabelText('Search FF&E items')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Add item' })).toBeInTheDocument();
     expect(within(dialog).getByRole('img', { name: 'Channel Lounge Chair' })).toBeInTheDocument();
     expect(within(dialog).getByText('LR-CH-01')).toBeInTheDocument();
     expect(within(dialog).queryByText('Category')).not.toBeInTheDocument();
@@ -128,10 +136,10 @@ describe('Catalog navigator', () => {
     );
 
     expect(screen.getByRole('dialog', { name: 'Catalog navigator' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open catalog navigator' })).toHaveTextContent(
+    expect(screen.getByRole('button', { name: 'Close catalog navigator' })).toHaveTextContent(
       'Arc Floor Lamp',
     );
-    expect(screen.getByRole('button', { name: 'Open catalog navigator' })).toHaveTextContent(
+    expect(screen.getByRole('button', { name: 'Close catalog navigator' })).toHaveTextContent(
       'Page 2 of 3',
     );
   });
@@ -189,7 +197,7 @@ describe('Catalog navigator', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open catalog navigator' }));
     const dialog = screen.getByRole('dialog', { name: 'Catalog navigator' });
-    await user.click(within(dialog).getByRole('button', { name: 'Add' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Add item' }));
     const modal = screen.getByRole('dialog', { name: 'Add to FF&E' });
     await user.click(within(modal).getByRole('button', { name: 'Select category' }));
     const addButton = await within(modal).findByRole('button', { name: 'Add selected (1)' });

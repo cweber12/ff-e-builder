@@ -15,6 +15,7 @@ import { AuthGate, SignInPage, UserMenu } from './components/shared/auth/AuthGat
 import {
   CatalogView,
   CATALOG_ACTIONS_SLOT_ID,
+  CATALOG_NAVIGATOR_PANEL_SLOT_ID,
   CATALOG_OPTIONS_SLOT_ID,
   CATALOG_PICKER_SLOT_ID,
 } from './components/ffe/catalog/CatalogView';
@@ -360,6 +361,9 @@ function ProjectLayout() {
                 optionsMenu={isDesktop ? sidebarHeaderLeft : undefined}
                 section={isDesktop ? sidebarSection : undefined}
               />
+            ) : null}
+            {project && isDesktop && isCatalogRoute ? (
+              <div id={CATALOG_NAVIGATOR_PANEL_SLOT_ID} />
             ) : null}
             {project && isDesktop && isMaterialsRoute ? (
               <div id={MATERIALS_FINISHES_PANEL_SLOT_ID} />
