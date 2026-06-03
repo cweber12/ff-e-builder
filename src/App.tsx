@@ -35,11 +35,7 @@ import { ImportProposalExcelModal } from './components/proposal/import/ImportPro
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProjectToolSidebar } from './components/project/ProjectToolSidebar';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
-import {
-  ProposalActions,
-  ProposalOptionsMenu,
-  ProposalSidebarContext,
-} from './components/project/AppBarActions';
+import { ProposalSidebarSections } from './components/project/AppBarActions';
 import { Button, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from './components/primitives';
 import {
   SidebarButton,
@@ -188,8 +184,6 @@ function ProjectLayout() {
         isCatalogRoute ? (
           <div id={CATALOG_ACTIONS_SLOT_ID} className="project-sidebar-slot" />
         ) : null
-      ) : isProposalRoute ? (
-        <ProposalActions onAddCategory={() => setAddCategoryOpen(true)} layout="column" />
       ) : isBudgetRoute ? (
         <BudgetPageActions
           project={project}
@@ -221,25 +215,26 @@ function ProjectLayout() {
 
   const sidebarHeader =
     !isLoading && project ? (
-      isProposalRoute ? (
-        <ProposalSidebarContext project={project} />
-      ) : isPlansRoute ? (
+      isProposalRoute ? null : isPlansRoute ? (
         <div id={PLANS_SUMMARY_SLOT_ID} className="min-w-0" />
       ) : null
+    ) : null;
+
+  const proposalSidebarSection =
+    !isLoading && project && isProposalRoute ? (
+      <ProposalSidebarSections
+        project={project}
+        categoriesWithItems={proposalCategoriesWithItems}
+        onAddCategory={() => setAddCategoryOpen(true)}
+        onImport={() => setProposalImportOpen(true)}
+      />
     ) : null;
 
   const sidebarHeaderLeft =
     !isLoading && project ? (
       isCatalogRoute ? (
         <div id={CATALOG_OPTIONS_SLOT_ID} className="project-sidebar-header-inline-slot" />
-      ) : isProposalRoute ? (
-        <ProposalOptionsMenu
-          project={project}
-          categoriesWithItems={proposalCategoriesWithItems}
-          onAddCategory={() => setAddCategoryOpen(true)}
-          onImport={() => setProposalImportOpen(true)}
-        />
-      ) : isBudgetRoute ? (
+      ) : isProposalRoute ? null : isBudgetRoute ? (
         <BudgetOptionsMenu
           project={project}
           roomsWithItems={roomsWithItems}
@@ -268,13 +263,16 @@ function ProjectLayout() {
   // group reuses `.project-sidebar-section` so the relocated selects, inputs,
   // and segmented controls keep their established styling.
   const hasSection = Boolean(
+    proposalSidebarSection ||
     sidebarHeaderRight ||
     sidebarHeader ||
     sidebarToolbarLeft ||
     sidebarToolbarCenter ||
     sidebarActions,
   );
-  const sidebarSection = hasSection ? (
+  const sidebarSection = proposalSidebarSection ? (
+    <div className="project-sidebar-section">{proposalSidebarSection}</div>
+  ) : hasSection ? (
     <>
       {sidebarHeaderRight ? (
         <div className="project-sidebar-section">{sidebarHeaderRight}</div>

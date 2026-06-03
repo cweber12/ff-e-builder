@@ -15,7 +15,7 @@ const PROJECT_TOOL_TABS: ProjectToolTab[] = [
     isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/ffe`),
   },
   {
-    label: 'Proposal',
+    label: 'Item Library',
     href: (id: string) => `/projects/${id}/proposal/table`,
     isActive: (id: string, pathname: string) => pathname.includes(`/projects/${id}/proposal`),
   },

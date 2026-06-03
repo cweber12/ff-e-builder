@@ -156,6 +156,32 @@ export function ProposalTable({
         </div>
       ) : (
         <TableViewStack>
+          <section className="rounded-lg border border-neutral-200 bg-canvas-chrome px-5 py-5 shadow-sm">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0">
+                <p className="eyebrow text-brand-700">Item Library</p>
+                <h1 className="mt-1 font-display text-[1.9rem] font-semibold tracking-tight text-neutral-950">
+                  Project items organized into schedules.
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
+                  A calmer shell for specification work: image-rich item schedules, proposal-owned
+                  pricing, and focused editing without changing the underlying route or export
+                  contracts.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="toolbar-stat">
+                  {categoriesWithItems.length}{' '}
+                  {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
+                </span>
+                <span className="toolbar-stat">
+                  {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}
+                </span>
+                <span className="toolbar-stat">{formatMoney(cents(grandTotal))}</span>
+              </div>
+            </div>
+          </section>
+
           {categoriesWithItems.length === 0 ? (
             <ProposalEmptyState
               onImport={onImport}
@@ -211,7 +237,7 @@ export function ProposalTable({
           />
 
           <AddGroupModal
-            groupLabel="Category"
+            groupLabel="Schedule"
             open={addCategoryOpen}
             onClose={() => setAddCategoryOpen(false)}
             onSubmit={async (name) => {

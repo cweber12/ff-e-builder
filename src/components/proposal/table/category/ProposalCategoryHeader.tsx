@@ -93,7 +93,7 @@ export function ProposalCategoryHeader({
         <InlineTextEdit
           value={categoryName}
           onSave={onCategoryNameSave}
-          aria-label="Category name"
+          aria-label="Schedule name"
           renderDisplay={(value) => (
             <span className="truncate text-sm font-semibold tracking-tight text-neutral-900">
               {value}
@@ -197,8 +197,8 @@ function CategoryActionsMenu({
           type="button"
           aria-haspopup="menu"
           aria-expanded={open}
-          aria-label={`Open category actions for ${categoryName}`}
-          title={`Open category actions for ${categoryName}`}
+          aria-label={`Open schedule actions for ${categoryName}`}
+          title={`Open schedule actions for ${categoryName}`}
           className="icon-btn"
           onClick={toggleMenu}
         >
@@ -289,7 +289,7 @@ function CategoryActionsMenu({
               onCategoryDelete();
             }}
           >
-            Delete category
+            Delete schedule
           </MenuItem>
         </>
       )}

@@ -35,7 +35,7 @@ export function DeleteCategoryModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={category ? `Delete ${category.name}?` : 'Delete category'}
+      title={category ? `Delete ${category.name}?` : 'Delete schedule'}
     >
       <div className="flex flex-col gap-4">
         {hasItems ? (
@@ -54,7 +54,7 @@ export function DeleteCategoryModal({
                   onChange={() => setDeleteAll(false)}
                 />
                 <span className="text-sm font-medium text-neutral-800">
-                  Move items to another category
+                  Move items to another schedule
                 </span>
               </label>
               <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-neutral-200 p-3 transition has-[:checked]:border-danger-500 has-[:checked]:bg-danger-500/5">
@@ -66,7 +66,7 @@ export function DeleteCategoryModal({
                   onChange={() => setDeleteAll(true)}
                 />
                 <span className="text-sm font-medium text-neutral-800">
-                  Delete category and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  Delete schedule and all {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </span>
               </label>
             </div>
@@ -78,7 +78,7 @@ export function DeleteCategoryModal({
                   onChange={(event) => setTargetCategoryId(event.target.value)}
                   className="select-base font-normal"
                 >
-                  <option value="">Choose a category</option>
+                  <option value="">Choose a schedule</option>
                   {otherCategories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -89,7 +89,7 @@ export function DeleteCategoryModal({
             )}
           </>
         ) : (
-          <p className="text-sm text-neutral-600">This category is empty and can be deleted.</p>
+          <p className="text-sm text-neutral-600">This schedule is empty and can be deleted.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
@@ -109,7 +109,7 @@ export function DeleteCategoryModal({
               });
             }}
           >
-            Delete category
+            Delete schedule
           </Button>
         </div>
       </div>

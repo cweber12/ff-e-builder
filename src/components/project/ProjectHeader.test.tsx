@@ -51,7 +51,7 @@ describe('ProjectHeader', () => {
       'href',
       '/projects/proj-1/ffe/catalog',
     );
-    expect(screen.getByRole('link', { name: 'Proposal' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Item Library' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Plans' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Materials' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Budget' })).toBeInTheDocument();
@@ -63,11 +63,11 @@ describe('ProjectHeader', () => {
     ]);
 
     const tabNav = screen.getByRole('navigation', { name: 'Project tools' });
-    expect(within(tabNav).getByRole('link', { name: 'Proposal' })).toHaveAttribute(
+    expect(within(tabNav).getByRole('link', { name: 'Item Library' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(screen.queryByRole('heading', { name: 'Proposal' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Item Library' })).not.toBeInTheDocument();
   });
 
   it('does not render project options in the top-right cluster', () => {

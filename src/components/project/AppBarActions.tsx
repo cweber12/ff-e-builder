@@ -1,6 +1,6 @@
 import type { Project, ProposalCategoryWithItems, ProposalStatus } from '../../types';
-import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
@@ -53,12 +53,12 @@ export function ProposalActions({
       {isColumn ? (
         <SidebarButton variant="add" type="button" onClick={onAddCategory}>
           <Plus className="toolbar-icon" aria-hidden="true" />
-          Add category
+          Add schedule
         </SidebarButton>
       ) : (
         <Button type="button" variant="addAction" onClick={onAddCategory}>
           <Plus className="toolbar-icon" aria-hidden="true" />
-          Add category
+          Add schedule
         </Button>
       )}
     </div>
@@ -90,7 +90,7 @@ export function ProposalOptionsMenu({
 
   return (
     <>
-      <SidebarHeaderMenu ariaLabel="Proposal options">
+      <SidebarHeaderMenu ariaLabel="Item Library options">
         {({ closeMenu }) => (
           <>
             <MenuItem
@@ -99,7 +99,7 @@ export function ProposalOptionsMenu({
                 onAddCategory();
               }}
             >
-              Add category
+              Add schedule
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -132,6 +132,126 @@ export function ProposalOptionsMenu({
           </>
         )}
       </SidebarHeaderMenu>
+      <ProposalExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        project={project}
+        categoriesWithItems={categoriesWithItems}
+        userProfile={userProfile ?? null}
+        customColumnDefs={customColumnDefs}
+        revisionData={{ revisions, snapshots, changelog }}
+        visibleOrder={exportVisibleOrder}
+      />
+      {columnsOpen && columnsAnchorRect ? (
+        <ColumnVisibilityPanel
+          projectId={project.id}
+          tableKey="proposal"
+          triggerRect={columnsAnchorRect}
+          side={typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'left' : 'right'}
+          onClose={() => setColumnsOpen(false)}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function SidebarSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="project-sidebar-slot gap-2.5">
+      <p className="toolbar-label">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+export function ProposalSidebarSections({
+  project,
+  categoriesWithItems,
+  onAddCategory,
+  onImport,
+}: ProposalActionsProps) {
+  const { data: userProfile } = useUserProfile();
+  const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
+  const { data: revisions = [] } = useProposalRevisions(project.id);
+  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
+  const { data: changelog = [] } = useRevisionChangelog(project.id);
+  const { visibleOrder } = useColumnConfig(
+    project.id,
+    'proposal',
+    PROPOSAL_DEFAULT_COLS,
+    customColumnDefs,
+  );
+  const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
+  const hasItems = categoriesWithItems.some((category) => category.items.length > 0);
+  const scheduleCount = categoriesWithItems.length;
+  const itemCount = categoriesWithItems.reduce((sum, category) => sum + category.items.length, 0);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [columnsAnchorRect, setColumnsAnchorRect] = useState<DOMRect | null>(null);
+
+  return (
+    <>
+      <div className="project-sidebar-slot gap-3">
+        <div className="rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-3 shadow-sm">
+          <p className="eyebrow text-brand-700">Item Library</p>
+          <p className="mt-1 text-[13px] font-medium leading-5 text-neutral-900">
+            Project items organized into schedules, imagery, and pricing.
+          </p>
+          <p className="mt-2 text-[11px] leading-5 text-neutral-600">
+            A calmer, scan-first shell for specification work before users step into denser editing
+            and revision management.
+          </p>
+        </div>
+      </div>
+
+      <SidebarSection title="View">
+        <div className="flex flex-wrap gap-2">
+          <span className="toolbar-stat">List surface</span>
+          <span className="toolbar-stat">
+            {scheduleCount} {scheduleCount === 1 ? 'schedule' : 'schedules'}
+          </span>
+          <span className="toolbar-stat">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </span>
+        </div>
+      </SidebarSection>
+
+      <SidebarSection title="Actions">
+        <ProposalActions onAddCategory={onAddCategory} layout="column" />
+        <div className="project-sidebar-slot">
+          <SidebarButton type="button" onClick={onImport}>
+            <Upload className="toolbar-icon" aria-hidden="true" />
+            Import
+          </SidebarButton>
+        </div>
+      </SidebarSection>
+
+      <SidebarSection title="Display">
+        <div className="project-sidebar-slot gap-2">
+          <SidebarButton
+            type="button"
+            disabled={!hasItems}
+            onClick={() => setExportModalOpen(true)}
+          >
+            <Download className="toolbar-icon" aria-hidden="true" />
+            Export
+          </SidebarButton>
+          <SidebarButton
+            type="button"
+            onClick={(event) => {
+              setColumnsAnchorRect(event.currentTarget.getBoundingClientRect());
+              setColumnsOpen(true);
+            }}
+          >
+            Columns
+          </SidebarButton>
+        </div>
+      </SidebarSection>
+
+      <SidebarSection title="Status">
+        <ProposalSidebarContext project={project} />
+      </SidebarSection>
+
       <ProposalExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
