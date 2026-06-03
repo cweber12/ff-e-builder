@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(catalog): raise upload image fidelity for FF&E navigator previews and simplify the catalog picker/location header copy
 - fix(catalog): enlarge FF&E navigator thumbnails, simplify the panel header, and restyle item rows as compact border-separated list entries
 - refactor(catalog): replace the catalog item dropdown with a compact side-panel Catalog Navigator that keeps Add to FF&E and Remove from FF&E as supporting actions
 - feat(ui): move project-tool tabs into a dedicated desktop left navigation rail, keep the mobile tab row, and relocate the right-sidebar toggle to the top header beside the user avatar

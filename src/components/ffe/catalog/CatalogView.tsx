@@ -737,10 +737,7 @@ function CatalogPagePicker({
   return (
     <nav aria-label="Catalog page picker" className="no-print catalog-sidebar-picker">
       {currentEntry?.room.name ? (
-        <p className="catalog-sidebar-picker-room">
-          <span className="text-neutral-400">Location</span>{' '}
-          <span className="text-neutral-800">{currentEntry.room.name}</span>
-        </p>
+        <p className="catalog-sidebar-picker-room">{currentEntry.room.name}</p>
       ) : null}
       <button
         type="button"
@@ -988,12 +985,9 @@ function CatalogNavigatorPanelPortal({
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <label htmlFor="catalog-navigator-room" className="catalog-layout-category-label">
-              Category
-            </label>
             <select
               id="catalog-navigator-room"
-              aria-label="Catalog navigator category"
+              aria-label="Catalog navigator location"
               className="toolbar-select catalog-layout-category-select"
               value={selectedRoomId}
               onChange={(event) => setSelectedRoomId(event.target.value)}
@@ -1049,7 +1043,7 @@ function CatalogNavigatorPanelPortal({
                             entityType="item"
                             entityId={item.id}
                             alt={item.itemName}
-                            className="h-14 w-14 rounded-sm border border-neutral-200 bg-white shadow-none"
+                            className="h-[70px] w-[70px] rounded-sm border border-neutral-200 bg-white shadow-none"
                             imageClassName="object-cover"
                             placeholderClassName="bg-canvas-shell"
                             disabled

@@ -1,5 +1,5 @@
-const MAX_DIMENSION = 1920;
-const WEBP_QUALITY = 0.85;
+const MAX_DIMENSION = 2400;
+const WEBP_QUALITY = 0.9;
 
 export async function compressImage(file: File): Promise<File> {
   // GIF may be animated — skip conversion to avoid losing frames
@@ -26,6 +26,8 @@ export async function compressImage(file: File): Promise<File> {
 
   const canvas = new OffscreenCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
   bitmap.close();
 

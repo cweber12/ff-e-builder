@@ -116,10 +116,12 @@ describe('Catalog navigator', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Catalog navigator' });
     expect(
-      within(dialog).getByRole('combobox', { name: 'Catalog navigator category' }),
+      within(dialog).getByRole('combobox', { name: 'Catalog navigator location' }),
     ).toHaveValue('room-living');
     expect(within(dialog).getByRole('img', { name: 'Channel Lounge Chair' })).toBeInTheDocument();
     expect(within(dialog).getByText('LR-CH-01')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Category')).not.toBeInTheDocument();
+    expect(screen.queryByText('Location')).not.toBeInTheDocument();
 
     await user.click(
       within(dialog).getByRole('button', { name: 'Open catalog page for Arc Floor Lamp' }),

@@ -675,8 +675,8 @@
   }
 
   .catalog-sidebar-picker-room {
-    @apply text-[10px] font-semibold uppercase tracking-[0.16em];
-    color: var(--sidebar-text-label);
+    @apply text-sm font-semibold tracking-tight;
+    color: var(--sidebar-text-strong);
   }
 
   .catalog-navigator-trigger {
@@ -1260,15 +1260,6 @@
   .catalog-navigator-row-actions {
     flex: 0 0 auto;
     align-self: center;
-  }
-
-  .catalog-layout-category-label {
-    margin: 0;
-    font-size: 9px;
-    font-weight: 750;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: theme('colors.brand.600');
   }
 
   .catalog-layout-category-select {
