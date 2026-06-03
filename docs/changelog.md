@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(materials): replace the top-level finishes/materials switch with a docked finishes rail, FF&E-style finish rows, and desktop drag-to-assign onto materials
 - fix(catalog): raise upload image fidelity for FF&E navigator previews and simplify the catalog picker/location header copy
 - fix(catalog): enlarge FF&E navigator thumbnails, simplify the panel header, and restyle item rows as compact border-separated list entries
 - refactor(catalog): replace the catalog item dropdown with a compact side-panel Catalog Navigator that keeps Add to FF&E and Remove from FF&E as supporting actions

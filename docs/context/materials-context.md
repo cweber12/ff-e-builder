@@ -37,21 +37,37 @@ multiple items, and each item can have multiple materials.
       surface non-blocking failure feedback
 - In FF&E Catalog Editor, the `Add swatch` control in Media supports the same
   paste routing behavior for the active catalog item.
-- Use the Materials tab to view and manage all library entries for the project.
-- In the Materials toolbar, the left slot shows:
-  - an Options dropdown with View toggle plus:
-    - `Import from Excel` opens a tab-specific 3-step modal:
-      - Finish Library tab: finish import modal
-      - Project Materials tab: materials import modal
-    - `Export` opens a tab-aware format menu (CSV, Excel, PDF) and exports the
-      current filtered rows in table format:
-      - Finish Library tab: filtered finishes
-      - Project Materials tab: filtered materials
-    - `Delete All` opens a destructive confirmation that includes an exact row
-      count for the active tab and deletes through existing per-item hooks
-      (no bulk endpoint)
-  - a segmented tab switcher for Finish Library and Project Materials
-  - category filter select (Finishes tab only)
+- Use the Materials tab to view and manage project materials as the primary
+  surface.
+- On desktop, a header `Open finishes` / `Close finishes` toggle docks a
+  full-height Finishes panel directly beside the project tool rail with no gap,
+  visually extending the rail.
+- On mobile and narrow tablet widths, the same Finishes panel opens as an
+  overlay instead of a docked rail extension.
+- The Materials toolbar keeps material-only controls:
+  - a `Grid / Table` view toggle
+  - a material options menu for `New material`, `Import from Excel`, `Export`,
+    and `Delete all`
+  - material search
+- Finish-specific actions no longer live in the main Materials controls. They
+  live only inside the Finishes panel.
+- The Finishes panel top stack is ordered:
+  - `FINISHES` header with filtered count
+  - category filter select
+  - search field
+  - `New finish`
+- The Finishes panel header also includes a finish-only options menu for:
+  - `Import from Excel`
+  - `Export`
+  - `Delete all finishes`
+- The Finishes panel replaces the old Finish Library grid/table page views with
+  a single compact list styled like the FF&E list.
+- Each finish row shows a fixed thumbnail, code, source link, name,
+  sub-category, and `Edit` action. Delete moves into the finish editor footer.
+- On desktop, users can drag a finish row from the Finishes panel onto either a
+  material grid card or a material table row to assign that finish immediately.
+- On mobile, the Finishes panel is browse/edit only in the first pass; drag
+  assignment remains desktop-only.
 - Add materials while creating an item from the Add Item drawer. The drawer can
   select existing material names and can open the same material library form used
   by the table and Materials tab.

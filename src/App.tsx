@@ -22,6 +22,7 @@ import { FfeItemList } from './components/ffe/list';
 import {
   MATERIALS_ACTIONS_SLOT_ID,
   MATERIALS_FILTER_SLOT_ID,
+  MATERIALS_FINISHES_PANEL_SLOT_ID,
   MATERIALS_HEADER_VIEW_SLOT_ID,
   MATERIALS_OPTIONS_SLOT_ID,
   MaterialsView,
@@ -359,6 +360,9 @@ function ProjectLayout() {
                 optionsMenu={isDesktop ? sidebarHeaderLeft : undefined}
                 section={isDesktop ? sidebarSection : undefined}
               />
+            ) : null}
+            {project && isDesktop && isMaterialsRoute ? (
+              <div id={MATERIALS_FINISHES_PANEL_SLOT_ID} />
             ) : null}
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="min-h-0 min-w-0 flex-1">

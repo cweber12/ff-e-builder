@@ -29,6 +29,7 @@ export function FinishForm({
   submitLabel,
   onDraftChange,
   onCancel,
+  onDelete,
   onSubmit,
 }: {
   draft: FinishDraft;
@@ -37,6 +38,7 @@ export function FinishForm({
   submitLabel: string;
   onDraftChange: (draft: FinishDraft) => void;
   onCancel?: (() => void) | undefined;
+  onDelete?: (() => void) | undefined;
   onSubmit: () => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -255,6 +257,11 @@ export function FinishForm({
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">
+          {onDelete ? (
+            <Button type="button" variant="danger" onClick={onDelete} className="mr-auto">
+              Delete
+            </Button>
+          ) : null}
           {onCancel && (
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancel

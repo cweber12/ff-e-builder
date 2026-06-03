@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useEffect, useMemo, useState, type DragEvent as ReactDragEvent } from 'react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   exportFinishesExcel,
@@ -8,19 +8,20 @@ import {
   exportMaterialsPdf,
 } from '../../lib/export';
 import {
+  detectFinishCollision,
   useCreateFinish,
   useCreateMaterial,
   useDeleteFinish,
   useDeleteImage,
   useDeleteMaterial,
   useFinishes,
-  useMaterials,
   useImages,
+  useMaterials,
   useUpdateFinish,
   useUpdateMaterial,
   useUploadImage,
-  detectFinishCollision,
 } from '../../hooks';
+import { imageKeys } from '../../lib/query';
 import type {
   Finish,
   ImageAsset,
@@ -29,7 +30,6 @@ import type {
   MaterialType,
   Project,
 } from '../../types';
-import { imageKeys } from '../../lib/query';
 import {
   Button,
   MenuItem,
@@ -39,14 +39,15 @@ import {
   Modal,
   SegmentedControl,
 } from '../primitives';
+import { toast } from '../primitives/toastApi';
 import { SlotPortal } from '../shared/SlotPortal';
 import { ImageFrame } from '../shared/image/ImageFrame';
-import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
-import { FinishForm } from './FinishForm';
+import { SidebarHeaderMenu } from '../shared/sidebar';
 import { FinishCollisionPrompt } from './FinishCollisionPrompt';
+import { FinishForm } from './FinishForm';
 import { ImportFinishesExcelModal } from './ImportFinishesExcelModal';
 import { ImportMaterialsExcelModal } from './ImportMaterialsExcelModal';
-import { SidebarHeaderMenu, SidebarHeaderSelect } from '../shared/sidebar';
+import { MaterialForm, ProductLinkIcon } from './MaterialLibraryModal';
 
 type MaterialsViewProps = {
   project: Project;
@@ -138,9 +139,12 @@ export const MATERIALS_ACTIONS_SLOT_ID = 'materials-actions-slot';
 export const MATERIALS_FILTER_SLOT_ID = 'materials-filter-slot';
 export const MATERIALS_OPTIONS_SLOT_ID = 'materials-options-slot';
 export const MATERIALS_HEADER_VIEW_SLOT_ID = 'materials-header-view-slot';
+export const MATERIALS_FINISHES_PANEL_SLOT_ID = 'materials-finishes-panel-slot';
 
 export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewProps) {
   const queryClient = useQueryClient();
+  const isDesktop = useDesktopBreakpoint();
+
   const finishes = useFinishes(project.id);
   const materials = useMaterials(project.id);
   const createFinish = useCreateFinish(project.id);
@@ -151,10 +155,14 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
   const deleteMaterial = useDeleteMaterial(project.id);
   const uploadImage = useUploadImage();
 
-  const [activeTab, setActiveTab] = useState<LibraryTab>('finishes');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [query, setQuery] = useState('');
+  const [materialsQuery, setMaterialsQuery] = useState('');
+  const [finishesQuery, setFinishesQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
+  const [showFinishesPanel, setShowFinishesPanel] = useState(false);
+  const [draggingFinishId, setDraggingFinishId] = useState<string | null>(null);
+  const [dragOverMaterialId, setDragOverMaterialId] = useState<string | null>(null);
+  const [applyingMaterialId, setApplyingMaterialId] = useState<string | null>(null);
 
   const [finishDraft, setFinishDraft] = useState<FinishDraft>(emptyFinishDraft);
   const [editingFinishId, setEditingFinishId] = useState<string | null>(null);
@@ -177,11 +185,14 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
   const editingFinishImages = useImages('finish', editingFinishId ?? '');
   const deleteFinishImage = useDeleteImage('finish', editingFinishId ?? '');
 
-  const editingFinish = finishes.data?.find((f) => f.id === editingFinishId);
-  const editingMaterial = materials.data?.find((m) => m.id === editingMaterialId);
+  const editingFinish = finishes.data?.find((finish) => finish.id === editingFinishId);
+  const editingMaterial = materials.data?.find((material) => material.id === editingMaterialId);
+  const draggingFinish = draggingFinishId
+    ? (finishes.data?.find((finish) => finish.id === draggingFinishId) ?? null)
+    : null;
 
   const filteredFinishes = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = finishesQuery.trim().toLowerCase();
     return [...(finishes.data ?? [])]
       .filter((finish) => {
         if (categoryFilter === 'uncategorized') return finish.category === null;
@@ -190,14 +201,22 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
       })
       .filter((finish) => finishMatchesQuery(finish, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [finishes.data, query, categoryFilter]);
+  }, [categoryFilter, finishes.data, finishesQuery]);
 
   const filteredMaterials = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = materialsQuery.trim().toLowerCase();
     return [...(materials.data ?? [])]
       .filter((material) => materialMatchesQuery(material, normalizedQuery))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [materials.data, query]);
+  }, [materials.data, materialsQuery]);
+
+  useEffect(() => {
+    if (!isDesktop) {
+      setDraggingFinishId(null);
+      setDragOverMaterialId(null);
+      setApplyingMaterialId(null);
+    }
+  }, [isDesktop]);
 
   const resetFinishDraft = () => {
     setFinishDraft(emptyFinishDraft);
@@ -297,8 +316,8 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
         altText: savedFinish.name,
       });
     } else if (finishDraft.swatchMode === 'color' && editingFinishId) {
-      for (const img of editingFinishImages.data ?? []) {
-        await deleteFinishImage.mutateAsync(img.id);
+      for (const image of editingFinishImages.data ?? []) {
+        await deleteFinishImage.mutateAsync(image.id);
       }
     }
 
@@ -340,10 +359,11 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
     resetFinishDraft();
   };
 
-  const showForm = activeTab === 'finishes' ? showFinishForm : showMaterialForm;
-  const deleteAllCount = deleteAllSelection?.ids.length ?? 0;
-  const deleteAllTab = deleteAllSelection?.tab ?? 'finishes';
-  const deleteAllLabel = deleteAllTab === 'finishes' ? 'finishes' : 'project materials';
+  const handleFinishDelete = async () => {
+    if (!editingFinishId) return;
+    await deleteFinish.mutateAsync(editingFinishId);
+    resetFinishDraft();
+  };
 
   const openDeleteAllModal = (tab: LibraryTab) => {
     const ids =
@@ -412,102 +432,159 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
     }
   };
 
+  const assignFinishToMaterial = async (material: Material, finish: Finish) => {
+    if (material.finishId === finish.id || applyingMaterialId) return;
+
+    setApplyingMaterialId(material.id);
+    try {
+      await updateMaterial.mutateAsync({
+        id: material.id,
+        patch: { finishId: finish.id },
+      });
+      toast.success(`Applied ${finish.name} to ${material.name}.`);
+    } finally {
+      setApplyingMaterialId(null);
+      setDragOverMaterialId(null);
+      setDraggingFinishId(null);
+    }
+  };
+
+  const desktopPanelOpen = isDesktop && showFinishesPanel;
+  const mobilePanelOpen = !isDesktop && showFinishesPanel;
+  const deleteAllCount = deleteAllSelection?.ids.length ?? 0;
+  const deleteAllTab = deleteAllSelection?.tab ?? 'materials';
+  const deleteAllLabel = deleteAllTab === 'finishes' ? 'finishes' : 'project materials';
+
   return (
     <div className="grid gap-6">
-      <MaterialsToolbarLeft
-        activeTab={activeTab}
-        viewMode={viewMode}
-        activeCount={activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length}
-        onViewModeChange={setViewMode}
+      <MaterialsToolbarLeft viewMode={viewMode} onViewModeChange={setViewMode} />
+      <MaterialsHeaderToggle
+        open={showFinishesPanel}
+        onToggle={() => setShowFinishesPanel((current) => !current)}
       />
-      <MaterialsHeaderViewSelect activeTab={activeTab} onActiveTabChange={setActiveTab} />
       <MaterialsOptionsMenu
-        activeTab={activeTab}
-        activeCount={activeTab === 'finishes' ? filteredFinishes.length : filteredMaterials.length}
-        onCreateFinish={openCreateFinishForm}
+        activeCount={filteredMaterials.length}
         onCreateMaterial={openCreateMaterialForm}
-        onImportFromExcel={(tab) => {
-          if (tab === 'finishes') {
-            setShowImportFinishesModal(true);
-            return;
-          }
-          setShowImportMaterialsModal(true);
-        }}
-        onExport={handleExport}
-        onDeleteAll={openDeleteAllModal}
+        onImportFromExcel={() => setShowImportMaterialsModal(true)}
+        onExport={(format) => handleExport('materials', format)}
+        onDeleteAll={() => openDeleteAllModal('materials')}
       />
       <MaterialsToolbarActions
-        activeTab={activeTab}
-        query={query}
-        showForm={showForm}
-        categoryFilter={categoryFilter}
-        onQueryChange={setQuery}
-        onCreateFinish={openCreateFinishForm}
+        query={materialsQuery}
+        showForm={showMaterialForm}
+        onQueryChange={setMaterialsQuery}
         onCreateMaterial={openCreateMaterialForm}
-        onCategoryFilterChange={setCategoryFilter}
       />
 
-      {activeTab === 'finishes' ? (
-        <section>
-          <div className="max-h-[48rem] overflow-auto py-2">
-            {finishes.isLoading ? (
-              <p className="text-sm text-neutral-500">Loading finishes…</p>
-            ) : filteredFinishes.length === 0 ? (
-              <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
-                No finishes match the current search.
-              </p>
-            ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {filteredFinishes.map((finish) => (
-                  <FinishGridCard
-                    key={finish.id}
-                    finish={finish}
-                    onEdit={() => startEditFinish(finish)}
-                    onDelete={() => void deleteFinish.mutateAsync(finish.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <FinishesTable
-                finishes={filteredFinishes}
-                onEdit={startEditFinish}
-                onDelete={(finish) => void deleteFinish.mutateAsync(finish.id)}
-              />
-            )}
+      <section>
+        <div className="max-h-[48rem] overflow-auto py-2">
+          {materials.isLoading ? (
+            <p className="text-sm text-neutral-500">Loading materials…</p>
+          ) : filteredMaterials.length === 0 ? (
+            <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
+              No materials match the current search.
+            </p>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {filteredMaterials.map((material) => (
+                <MaterialGridCard
+                  key={material.id}
+                  material={material}
+                  finish={finishes.data?.find((finish) => finish.id === material.finishId)}
+                  isDropTarget={dragOverMaterialId === material.id}
+                  dropEnabled={desktopPanelOpen && Boolean(draggingFinish)}
+                  onDragOver={(event) => {
+                    if (!draggingFinish || !desktopPanelOpen) return;
+                    event.preventDefault();
+                    setDragOverMaterialId(material.id);
+                  }}
+                  onDrop={() => {
+                    if (!draggingFinish) return;
+                    void assignFinishToMaterial(material, draggingFinish);
+                  }}
+                  onEdit={() => startEditMaterial(material)}
+                  onDelete={() => void deleteMaterial.mutateAsync(material.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <MaterialsTable
+              materials={filteredMaterials}
+              finishes={finishes.data ?? []}
+              dragOverMaterialId={dragOverMaterialId}
+              dropEnabled={desktopPanelOpen && Boolean(draggingFinish)}
+              onDragOverMaterial={(material, event) => {
+                if (!draggingFinish || !desktopPanelOpen) return;
+                event.preventDefault();
+                setDragOverMaterialId(material.id);
+              }}
+              onDropMaterial={(material) => {
+                if (!draggingFinish) return;
+                void assignFinishToMaterial(material, draggingFinish);
+              }}
+              onEdit={startEditMaterial}
+              onDelete={(material) => void deleteMaterial.mutateAsync(material.id)}
+            />
+          )}
+        </div>
+      </section>
+
+      {desktopPanelOpen ? (
+        <SlotPortal slotId={MATERIALS_FINISHES_PANEL_SLOT_ID}>
+          <DesktopFinishesPanel
+            finishes={filteredFinishes}
+            allFinishes={finishes.data ?? []}
+            loading={finishes.isLoading}
+            draggingFinishId={draggingFinishId}
+            query={finishesQuery}
+            categoryFilter={categoryFilter}
+            onQueryChange={setFinishesQuery}
+            onCategoryFilterChange={setCategoryFilter}
+            onCreateFinish={openCreateFinishForm}
+            onEditFinish={startEditFinish}
+            onOpenImport={() => setShowImportFinishesModal(true)}
+            onExport={(format) => handleExport('finishes', format)}
+            onDeleteAll={() => openDeleteAllModal('finishes')}
+            onDragStart={(finish, event) => {
+              event.dataTransfer.effectAllowed = 'move';
+              event.dataTransfer.setData('text/plain', finish.id);
+              setDraggingFinishId(finish.id);
+            }}
+            onDragEnd={() => {
+              setDraggingFinishId(null);
+              setDragOverMaterialId(null);
+            }}
+          />
+        </SlotPortal>
+      ) : null}
+
+      {mobilePanelOpen ? (
+        <div className="fixed inset-0 z-[280] flex justify-end bg-neutral-950/20 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close finishes panel backdrop"
+            className="flex-1 cursor-default"
+            onClick={() => setShowFinishesPanel(false)}
+          />
+          <div className="relative h-full w-full max-w-[26rem] border-l border-neutral-200 bg-white shadow-2xl">
+            <MobileFinishesPanel
+              finishes={filteredFinishes}
+              allFinishes={finishes.data ?? []}
+              loading={finishes.isLoading}
+              query={finishesQuery}
+              categoryFilter={categoryFilter}
+              onQueryChange={setFinishesQuery}
+              onCategoryFilterChange={setCategoryFilter}
+              onCreateFinish={openCreateFinishForm}
+              onEditFinish={startEditFinish}
+              onOpenImport={() => setShowImportFinishesModal(true)}
+              onExport={(format) => handleExport('finishes', format)}
+              onDeleteAll={() => openDeleteAllModal('finishes')}
+              onClose={() => setShowFinishesPanel(false)}
+            />
           </div>
-        </section>
-      ) : (
-        <section>
-          <div className="max-h-[48rem] overflow-auto py-2">
-            {materials.isLoading ? (
-              <p className="text-sm text-neutral-500">Loading materials…</p>
-            ) : filteredMaterials.length === 0 ? (
-              <p className="border-y border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
-                No materials match the current search.
-              </p>
-            ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {filteredMaterials.map((material) => (
-                  <MaterialGridCard
-                    key={material.id}
-                    material={material}
-                    finish={finishes.data?.find((f) => f.id === material.finishId)}
-                    onEdit={() => startEditMaterial(material)}
-                    onDelete={() => void deleteMaterial.mutateAsync(material.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <MaterialsTable
-                materials={filteredMaterials}
-                finishes={finishes.data ?? []}
-                onEdit={startEditMaterial}
-                onDelete={(material) => void deleteMaterial.mutateAsync(material.id)}
-              />
-            )}
-          </div>
-        </section>
-      )}
+        </div>
+      ) : null}
 
       <Modal
         open={showFinishForm}
@@ -523,6 +600,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
             submitLabel={editingFinishId ? 'Save changes' : 'Add to library'}
             onDraftChange={setFinishDraft}
             onCancel={resetFinishDraft}
+            onDelete={editingFinishId ? () => void handleFinishDelete() : undefined}
             onSubmit={() => void saveFinishDraft()}
           />
         </div>
@@ -546,6 +624,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           />
         </div>
       </Modal>
+
       <Modal
         open={Boolean(deleteAllSelection)}
         onClose={() => {
@@ -558,12 +637,12 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           <p className="text-sm text-neutral-700">
             {`This will permanently delete ${deleteAllCount} ${deleteAllLabel}.`}
           </p>
-          {deleteAllTab === 'finishes' && (
+          {deleteAllTab === 'finishes' ? (
             <p className="text-sm text-danger-700">
               Deleting finishes will not delete project materials, and finish relationships may need
               relinking.
             </p>
-          )}
+          ) : null}
           <div className="flex justify-end gap-2">
             <Button
               type="button"
@@ -605,7 +684,7 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           void materials.refetch();
         }}
       />
-      {collisionPrompt && (
+      {collisionPrompt ? (
         <FinishCollisionPrompt
           existingFinish={collisionPrompt.existingFinish}
           draftName={collisionPrompt.draftName}
@@ -613,28 +692,21 @@ export function MaterialsView({ project, tool: _tool = 'ffe' }: MaterialsViewPro
           onOverwrite={() => void handleCollisionDecision('overwrite')}
           onCancel={() => setCollisionPrompt(null)}
         />
-      )}
+      ) : null}
     </div>
   );
 }
 
 function MaterialsToolbarLeft({
-  activeTab,
   viewMode,
-  activeCount,
   onViewModeChange,
 }: {
-  activeTab: LibraryTab;
   viewMode: 'grid' | 'table';
-  activeCount: number;
   onViewModeChange: (value: 'grid' | 'table') => void;
 }) {
   return (
     <SlotPortal slotId={MATERIALS_FILTER_SLOT_ID}>
       <div className="project-sidebar-slot gap-2">
-        <h2 className="toolbar-title">
-          {activeTab === 'finishes' ? 'Finishes' : 'Materials'} ({activeCount})
-        </h2>
         <SegmentedControl
           value={viewMode}
           onChange={onViewModeChange}
@@ -650,54 +722,34 @@ function MaterialsToolbarLeft({
   );
 }
 
-function MaterialsHeaderViewSelect({
-  activeTab,
-  onActiveTabChange,
-}: {
-  activeTab: LibraryTab;
-  onActiveTabChange: (value: LibraryTab) => void;
-}) {
+function MaterialsHeaderToggle({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
     <SlotPortal slotId={MATERIALS_HEADER_VIEW_SLOT_ID}>
-      <SidebarHeaderSelect
-        valueLabel={activeTab === 'finishes' ? 'Finishes' : 'Materials'}
-        ariaLabel="Materials library mode"
-        options={[
-          {
-            label: 'Finishes',
-            active: activeTab === 'finishes',
-            onSelect: () => onActiveTabChange('finishes'),
-          },
-          {
-            label: 'Materials',
-            active: activeTab === 'materials',
-            onSelect: () => onActiveTabChange('materials'),
-          },
-        ]}
-      />
+      <Button type="button" variant={open ? 'toolbarPrimary' : 'toolbar'} onClick={onToggle}>
+        {open ? 'Close finishes' : 'Open finishes'}
+        {open ? (
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        )}
+      </Button>
     </SlotPortal>
   );
 }
 
 function MaterialsOptionsMenu({
-  activeTab,
   activeCount,
-  onCreateFinish,
   onCreateMaterial,
   onImportFromExcel,
   onExport,
   onDeleteAll,
 }: {
-  activeTab: LibraryTab;
   activeCount: number;
-  onCreateFinish: () => void;
   onCreateMaterial: () => void;
-  onImportFromExcel: (tab: LibraryTab) => void;
-  onExport: (tab: LibraryTab, format: 'csv' | 'xlsx' | 'pdf') => void;
-  onDeleteAll: (tab: LibraryTab) => void;
+  onImportFromExcel: () => void;
+  onExport: (format: 'csv' | 'xlsx' | 'pdf') => void;
+  onDeleteAll: () => void;
 }) {
-  const primaryLabel = activeTab === 'finishes' ? 'New finish' : 'New material';
-
   return (
     <SlotPortal slotId={MATERIALS_OPTIONS_SLOT_ID}>
       <SidebarHeaderMenu ariaLabel="Materials options">
@@ -714,16 +766,15 @@ function MaterialsOptionsMenu({
             <MenuItem
               onClick={() => {
                 closeMenu();
-                if (activeTab === 'finishes') onCreateFinish();
-                else onCreateMaterial();
+                onCreateMaterial();
               }}
             >
-              {primaryLabel}
+              New material
             </MenuItem>
             <MenuItem
               onClick={() => {
                 closeMenu();
-                onImportFromExcel(activeTab);
+                onImportFromExcel();
               }}
             >
               Upload from Excel
@@ -751,7 +802,7 @@ function MaterialsOptionsMenu({
                 onClick={() => {
                   closeSubmenu();
                   closeMenu();
-                  onExport(activeTab, 'csv');
+                  onExport('csv');
                 }}
                 disabled={activeCount === 0}
               >
@@ -761,7 +812,7 @@ function MaterialsOptionsMenu({
                 onClick={() => {
                   closeSubmenu();
                   closeMenu();
-                  onExport(activeTab, 'xlsx');
+                  onExport('xlsx');
                 }}
                 disabled={activeCount === 0}
               >
@@ -771,7 +822,7 @@ function MaterialsOptionsMenu({
                 onClick={() => {
                   closeSubmenu();
                   closeMenu();
-                  onExport(activeTab, 'pdf');
+                  onExport('pdf');
                 }}
                 disabled={activeCount === 0}
               >
@@ -784,7 +835,7 @@ function MaterialsOptionsMenu({
               disabled={activeCount === 0}
               onClick={() => {
                 closeMenu();
-                onDeleteAll(activeTab);
+                onDeleteAll();
               }}
             >
               Delete all
@@ -797,112 +848,366 @@ function MaterialsOptionsMenu({
 }
 
 function MaterialsToolbarActions({
-  activeTab,
   query,
   showForm,
-  categoryFilter,
   onQueryChange,
-  onCreateFinish,
   onCreateMaterial,
-  onCategoryFilterChange,
 }: {
-  activeTab: LibraryTab;
   query: string;
   showForm: boolean;
-  categoryFilter: CategoryFilter;
   onQueryChange: (value: string) => void;
-  onCreateFinish: () => void;
   onCreateMaterial: () => void;
-  onCategoryFilterChange: (value: CategoryFilter) => void;
 }) {
   return (
     <SlotPortal slotId={MATERIALS_ACTIONS_SLOT_ID}>
       <div className="project-sidebar-slot">
-        {!showForm && (
+        {!showForm ? (
           <Button
             type="button"
             variant="addAction"
-            onClick={activeTab === 'finishes' ? onCreateFinish : onCreateMaterial}
+            onClick={onCreateMaterial}
             className="w-full justify-start"
           >
             <Plus className="toolbar-icon" aria-hidden="true" />
-            New {activeTab === 'finishes' ? 'finish' : 'material'}
+            New material
           </Button>
-        )}
+        ) : null}
         <input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder={activeTab === 'finishes' ? 'Search finishes' : 'Search materials'}
+          placeholder="Search materials"
           className="toolbar-input w-full"
-          aria-label={activeTab === 'finishes' ? 'Search finishes' : 'Search project materials'}
+          aria-label="Search project materials"
         />
-        {activeTab === 'finishes' && (
-          <select
-            value={categoryFilter}
-            onChange={(event) => onCategoryFilterChange(event.target.value as CategoryFilter)}
-            className="toolbar-select w-full"
-            aria-label="Filter by category"
-          >
-            {FILTER_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
     </SlotPortal>
   );
 }
 
-function FinishGridCard({
-  finish,
-  onEdit,
-  onDelete,
-}: {
-  finish: Finish;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
+function DesktopFinishesPanel(props: Omit<FinishesPanelProps, 'mobile' | 'onClose'>) {
   return (
-    <article className="tile-card flex flex-col">
-      <ImageFrame
-        entityType="finish"
-        entityId={finish.id}
-        alt={finish.name}
-        className="h-24 w-full rounded-none border-0 shadow-none"
-        imageClassName="object-cover"
-        compact
-      />
-      <div className="flex flex-1 flex-col gap-2.5 p-3">
-        <div className="min-w-0">
-          <p className="num truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
-            {finish.code || 'No code'}
-          </p>
-          <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-neutral-950">
-            {finish.name}
-          </h4>
-          {finish.category && (
-            <p className="mt-0.5 truncate text-[10px] text-neutral-500">
-              {CATEGORY_LABELS[finish.category]}
-              {finish.subCategory ? ` · ${finish.subCategory}` : ''}
-            </p>
-          )}
-        </div>
-        {finish.description && (
-          <p className="line-clamp-2 text-xs leading-snug text-neutral-600">{finish.description}</p>
-        )}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <ProductLinkIcon url={finish.sourceUrl} label={finish.name} />
-          <div className="flex gap-1">
-            <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
-              Edit
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
-              Delete
-            </Button>
+    <aside className="project-tool-sidebar no-print hidden shrink-0 border-r border-neutral-200 bg-white lg:sticky lg:top-11 lg:block lg:h-[calc(100vh-44px)] lg:w-[24rem] lg:self-start">
+      <div className="flex h-full min-h-0 flex-col">
+        <FinishesPanel {...props} mobile={false} />
+      </div>
+    </aside>
+  );
+}
+
+function MobileFinishesPanel({
+  onClose,
+  ...props
+}: Omit<FinishesPanelProps, 'mobile' | 'onClose'> & { onClose: () => void }) {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <FinishesPanel {...props} mobile={true} onClose={onClose} />
+    </div>
+  );
+}
+
+type FinishesPanelProps = {
+  finishes: Finish[];
+  allFinishes: Finish[];
+  loading: boolean;
+  draggingFinishId?: string | null;
+  query: string;
+  categoryFilter: CategoryFilter;
+  onQueryChange: (value: string) => void;
+  onCategoryFilterChange: (value: CategoryFilter) => void;
+  onCreateFinish: () => void;
+  onEditFinish: (finish: Finish) => void;
+  onOpenImport: () => void;
+  onExport: (format: 'csv' | 'xlsx' | 'pdf') => void;
+  onDeleteAll: () => void;
+  onDragStart?: (finish: Finish, event: ReactDragEvent<HTMLElement>) => void;
+  onDragEnd?: () => void;
+  mobile: boolean;
+  onClose?: () => void;
+};
+
+function FinishesPanel({
+  finishes,
+  allFinishes,
+  loading,
+  draggingFinishId = null,
+  query,
+  categoryFilter,
+  onQueryChange,
+  onCategoryFilterChange,
+  onCreateFinish,
+  onEditFinish,
+  onOpenImport,
+  onExport,
+  onDeleteAll,
+  onDragStart,
+  onDragEnd,
+  mobile,
+  onClose,
+}: FinishesPanelProps) {
+  const emptyMessage =
+    allFinishes.length === 0
+      ? 'No finishes in the library yet.'
+      : 'No finishes match the current filters.';
+
+  return (
+    <section aria-label="Finishes panel" className="flex h-full min-h-0 flex-col bg-white">
+      <div className="border-b border-neutral-200 px-4 py-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-2">
+            <h2 className="eyebrow">FINISHES</h2>
+            <span className="num text-[11px] font-semibold text-neutral-500">
+              {finishes.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <FinishesOptionsMenu
+              activeCount={finishes.length}
+              onImport={onOpenImport}
+              onExport={onExport}
+              onDeleteAll={onDeleteAll}
+            />
+            {mobile && onClose ? (
+              <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                Close
+              </Button>
+            ) : null}
           </div>
         </div>
+        <div className="mt-4 grid gap-3">
+          <select
+            value={categoryFilter}
+            onChange={(event) => onCategoryFilterChange(event.target.value as CategoryFilter)}
+            className="toolbar-select w-full"
+            aria-label="Filter finishes by category"
+          >
+            {FILTER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Search finishes"
+            className="toolbar-input w-full"
+            aria-label="Search finishes"
+          />
+          <Button
+            type="button"
+            variant="addAction"
+            onClick={onCreateFinish}
+            className="w-full justify-start"
+          >
+            <Plus className="toolbar-icon" aria-hidden="true" />
+            New finish
+          </Button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {loading ? (
+          <p className="px-4 py-4 text-sm text-neutral-500">Loading finishes…</p>
+        ) : finishes.length === 0 ? (
+          <div className="px-4 py-8">
+            <p className="border-y border-dashed border-neutral-200 px-4 py-8 text-center text-sm text-neutral-500">
+              {emptyMessage}
+            </p>
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="addAction"
+                onClick={onCreateFinish}
+                className="w-full justify-start"
+              >
+                <Plus className="toolbar-icon" aria-hidden="true" />
+                New finish
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-200">
+            {finishes.map((finish) => (
+              <FinishListRow
+                key={finish.id}
+                finish={finish}
+                dragging={draggingFinishId === finish.id}
+                draggable={!mobile && Boolean(onDragStart)}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+                onEdit={() => onEditFinish(finish)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function FinishesOptionsMenu({
+  activeCount,
+  onImport,
+  onExport,
+  onDeleteAll,
+}: {
+  activeCount: number;
+  onImport: () => void;
+  onExport: (format: 'csv' | 'xlsx' | 'pdf') => void;
+  onDeleteAll: () => void;
+}) {
+  return (
+    <div className="finishes-options-menu">
+      <SidebarHeaderMenu ariaLabel="Finishes options">
+        {({
+          closeMenu,
+          submenuOpen,
+          toggleSubmenu,
+          closeSubmenu,
+          submenuTriggerRef,
+          submenuPanelRef,
+          getSubmenuPosition,
+        }) => (
+          <>
+            <MenuItem
+              onClick={() => {
+                closeMenu();
+                onImport();
+              }}
+            >
+              Upload from Excel
+            </MenuItem>
+            <MenuSubTrigger
+              ref={submenuTriggerRef}
+              aria-expanded={submenuOpen}
+              onClick={toggleSubmenu}
+            >
+              Download
+            </MenuSubTrigger>
+            <MenuSub
+              open={submenuOpen}
+              panelRef={submenuPanelRef}
+              position={getSubmenuPosition({
+                align: 'top',
+                anchorEdge: 'right',
+                panelEdge: 'left',
+                offsetY: 0,
+                offsetX: 4,
+              })}
+              className="z-[281] min-w-44"
+            >
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  onExport('csv');
+                }}
+                disabled={activeCount === 0}
+              >
+                Download CSV
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  onExport('xlsx');
+                }}
+                disabled={activeCount === 0}
+              >
+                Download Excel
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  closeSubmenu();
+                  closeMenu();
+                  onExport('pdf');
+                }}
+                disabled={activeCount === 0}
+              >
+                Download PDF
+              </MenuItem>
+            </MenuSub>
+            <MenuSeparator />
+            <MenuItem
+              className="text-danger-700"
+              disabled={activeCount === 0}
+              onClick={() => {
+                closeMenu();
+                onDeleteAll();
+              }}
+            >
+              Delete all
+            </MenuItem>
+          </>
+        )}
+      </SidebarHeaderMenu>
+    </div>
+  );
+}
+
+function FinishListRow({
+  finish,
+  dragging,
+  draggable,
+  onDragStart,
+  onDragEnd,
+  onEdit,
+}: {
+  finish: Finish;
+  dragging: boolean;
+  draggable: boolean;
+  onDragStart: ((finish: Finish, event: ReactDragEvent<HTMLElement>) => void) | undefined;
+  onDragEnd: (() => void) | undefined;
+  onEdit: () => void;
+}) {
+  return (
+    <article
+      draggable={draggable}
+      onDragStart={onDragStart ? (event) => onDragStart(finish, event) : undefined}
+      onDragEnd={onDragEnd}
+      className={[
+        'project-row flex items-center gap-4 px-4 py-3 transition',
+        draggable
+          ? 'cursor-grab active:cursor-grabbing hover:bg-canvas-shell'
+          : 'hover:bg-canvas-shell',
+        dragging ? 'bg-brand-50/70 opacity-75' : '',
+      ].join(' ')}
+      aria-label={draggable ? `Drag finish ${finish.name}` : undefined}
+    >
+      <div className="flex-shrink-0 overflow-hidden">
+        <ImageFrame
+          entityType="finish"
+          entityId={finish.id}
+          alt={finish.name}
+          className="h-16 w-16 object-cover"
+          placeholderClassName="bg-canvas-shell"
+          placeholderContent={
+            <span className="text-[10px] font-semibold text-neutral-400">IMG</span>
+          }
+          compact
+          disabled
+        />
+      </div>
+      <div className="flex w-16 shrink-0 flex-col items-start justify-center gap-1">
+        <p className="num text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
+          {finish.code || 'No code'}
+        </p>
+        <div className="flex items-center" onMouseDown={(event) => event.stopPropagation()}>
+          <ProductLinkIcon url={finish.sourceUrl} label={finish.name} />
+        </div>
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate font-display text-base font-semibold leading-snug text-neutral-950">
+          {finish.name}
+        </h3>
+        <p className="truncate text-xs text-neutral-500">
+          {finish.subCategory ||
+            (finish.category ? CATEGORY_LABELS[finish.category] : 'Uncategorized')}
+        </p>
+      </div>
+      <div className="shrink-0" onMouseDown={(event) => event.stopPropagation()}>
+        <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
+          Edit
+        </Button>
       </div>
     </article>
   );
@@ -911,16 +1216,39 @@ function FinishGridCard({
 function MaterialGridCard({
   material,
   finish,
+  isDropTarget,
+  dropEnabled,
+  onDragOver,
+  onDrop,
   onEdit,
   onDelete,
 }: {
   material: Material;
   finish?: Finish | undefined;
+  isDropTarget: boolean;
+  dropEnabled: boolean;
+  onDragOver: (event: ReactDragEvent<HTMLElement>) => void;
+  onDrop: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   return (
-    <article className="tile-card flex flex-col">
+    <article
+      onDragOver={dropEnabled ? onDragOver : undefined}
+      onDrop={
+        dropEnabled
+          ? (event) => {
+              event.preventDefault();
+              onDrop();
+            }
+          : undefined
+      }
+      className={[
+        'tile-card flex flex-col transition',
+        dropEnabled ? 'outline-none' : '',
+        isDropTarget ? 'ring-2 ring-brand-500 ring-offset-2' : '',
+      ].join(' ')}
+    >
       {finish ? (
         <ImageFrame
           entityType="finish"
@@ -941,7 +1269,7 @@ function MaterialGridCard({
           <h4 className="mt-0.5 truncate text-sm font-semibold leading-tight text-neutral-950">
             {material.name}
           </h4>
-          {(finish || material.materialType) && (
+          {finish || material.materialType ? (
             <p className="mt-0.5 truncate text-[10px] text-neutral-500">
               {[
                 finish?.name,
@@ -950,13 +1278,13 @@ function MaterialGridCard({
                 .filter(Boolean)
                 .join(' · ')}
             </p>
-          )}
+          ) : null}
         </div>
-        {material.description && (
+        {material.description ? (
           <p className="line-clamp-2 text-xs leading-snug text-neutral-600">
             {material.description}
           </p>
-        )}
+        ) : null}
         <div className="mt-auto flex justify-end gap-1 pt-1">
           <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
             Edit
@@ -970,94 +1298,29 @@ function MaterialGridCard({
   );
 }
 
-function FinishesTable({
-  finishes,
-  onEdit,
-  onDelete,
-}: {
-  finishes: Finish[];
-  onEdit: (finish: Finish) => void;
-  onDelete: (finish: Finish) => void;
-}) {
-  return (
-    <table className="w-full min-w-[900px] border-collapse text-sm">
-      <thead className="sticky top-0 border-b border-neutral-200 bg-canvas-chrome text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
-        <tr>
-          <th className="px-3 py-3">Swatch</th>
-          <th className="px-3 py-3">Name</th>
-          <th className="px-3 py-3">Code</th>
-          <th className="px-3 py-3">Category</th>
-          <th className="px-3 py-3">Manufacturer</th>
-          <th className="px-3 py-3">Description</th>
-          <th className="px-3 py-3" aria-label="Actions" />
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-black/10">
-        {finishes.map((finish) => (
-          <tr key={finish.id}>
-            <td className="px-3 py-3">
-              <div className="flex items-center gap-2">
-                <ImageFrame
-                  entityType="finish"
-                  entityId={finish.id}
-                  alt={`${finish.name} swatch`}
-                  className="h-12 w-12 rounded-full border-neutral-200 shadow-none"
-                  imageClassName="object-cover"
-                  placeholderClassName="bg-canvas-shell"
-                  placeholderContent={
-                    <span className="text-[10px] font-semibold text-neutral-400">IMG</span>
-                  }
-                  compact
-                  disabled
-                />
-                <ProductLinkIcon url={finish.sourceUrl} label={finish.name} />
-              </div>
-            </td>
-            <td className="px-3 py-3 font-medium text-neutral-950">{finish.name}</td>
-            <td className="num px-3 py-3 text-neutral-700">{finish.code || '—'}</td>
-            <td className="px-3 py-3 text-neutral-700">
-              {finish.category ? (
-                <span>
-                  {CATEGORY_LABELS[finish.category]}
-                  {finish.subCategory ? (
-                    <span className="ml-1 text-neutral-500">· {finish.subCategory}</span>
-                  ) : null}
-                </span>
-              ) : (
-                '—'
-              )}
-            </td>
-            <td className="px-3 py-3 text-neutral-700">{finish.manufacturer || '—'}</td>
-            <td className="max-w-sm px-3 py-3 text-neutral-600">{finish.description || '—'}</td>
-            <td className="px-3 py-3">
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => onEdit(finish)}>
-                  Edit
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(finish)}>
-                  Delete
-                </Button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 function MaterialsTable({
   materials,
   finishes,
+  dragOverMaterialId,
+  dropEnabled,
+  onDragOverMaterial,
+  onDropMaterial,
   onEdit,
   onDelete,
 }: {
   materials: Material[];
   finishes: Finish[];
+  dragOverMaterialId: string | null;
+  dropEnabled: boolean;
+  onDragOverMaterial: (material: Material, event: ReactDragEvent<HTMLTableRowElement>) => void;
+  onDropMaterial: (material: Material) => void;
   onEdit: (material: Material) => void;
   onDelete: (material: Material) => void;
 }) {
-  const finishById = useMemo(() => new Map(finishes.map((f) => [f.id, f])), [finishes]);
+  const finishById = useMemo(
+    () => new Map(finishes.map((finish) => [finish.id, finish])),
+    [finishes],
+  );
 
   return (
     <table className="w-full min-w-[900px] border-collapse text-sm">
@@ -1077,7 +1340,19 @@ function MaterialsTable({
         {materials.map((material) => {
           const finish = material.finishId ? finishById.get(material.finishId) : undefined;
           return (
-            <tr key={material.id}>
+            <tr
+              key={material.id}
+              onDragOver={dropEnabled ? (event) => onDragOverMaterial(material, event) : undefined}
+              onDrop={
+                dropEnabled
+                  ? (event) => {
+                      event.preventDefault();
+                      onDropMaterial(material);
+                    }
+                  : undefined
+              }
+              className={dragOverMaterialId === material.id ? 'bg-brand-50/70' : undefined}
+            >
               <td className="px-3 py-3">
                 {finish ? (
                   <ImageFrame
@@ -1123,6 +1398,24 @@ function MaterialsTable({
       </tbody>
     </table>
   );
+}
+
+function useDesktopBreakpoint() {
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    if (typeof window.matchMedia !== 'function') return true;
+    return window.matchMedia('(min-width: 1024px)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
+  }, []);
+
+  return isDesktop;
 }
 
 function finishMatchesQuery(finish: Finish, query: string) {

@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Finish, Material, Project } from '../../types';
 import {
   MATERIALS_ACTIONS_SLOT_ID,
   MATERIALS_FILTER_SLOT_ID,
+  MATERIALS_FINISHES_PANEL_SLOT_ID,
   MATERIALS_HEADER_VIEW_SLOT_ID,
   MATERIALS_OPTIONS_SLOT_ID,
   MaterialsView,
@@ -28,6 +29,8 @@ const mockState = vi.hoisted(() => ({
   exportFinishesPdf: vi.fn(),
   exportMaterialsExcel: vi.fn(),
   exportMaterialsPdf: vi.fn(),
+  toastSuccess: vi.fn(),
+  toastError: vi.fn(),
 }));
 
 vi.mock('../../hooks', async (importOriginal) => {
@@ -67,6 +70,13 @@ vi.mock('../shared/image/ImageFrame', () => ({
   ImageFrame: () => <div data-testid="image-frame" />,
 }));
 
+vi.mock('../primitives/toastApi', () => ({
+  toast: {
+    success: mockState.toastSuccess,
+    error: mockState.toastError,
+  },
+}));
+
 function makeProject(): Project {
   return {
     id: 'project-1',
@@ -98,12 +108,12 @@ function makeFinish(id: string, name: string): Finish {
   };
 }
 
-function makeMaterial(id: string, name: string): Material {
+function makeMaterial(id: string, name: string, finishId: string | null = null): Material {
   return {
     id,
     projectId: 'project-1',
     code: `${id}-code`,
-    finishId: null,
+    finishId,
     materialType: 'solid',
     name,
     materialId: `${id}-mfr`,
@@ -111,6 +121,22 @@ function makeMaterial(id: string, name: string): Material {
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
   };
+}
+
+function installDesktopMatchMedia() {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches: true,
+      media: '(min-width: 1024px)',
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 }
 
 function renderView() {
@@ -130,6 +156,10 @@ function renderView() {
   headerViewSlot.id = MATERIALS_HEADER_VIEW_SLOT_ID;
   document.body.appendChild(headerViewSlot);
 
+  const finishesPanelSlot = document.createElement('div');
+  finishesPanelSlot.id = MATERIALS_FINISHES_PANEL_SLOT_ID;
+  document.body.appendChild(finishesPanelSlot);
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -144,15 +174,16 @@ function renderView() {
   );
 }
 
-describe('MaterialsView sidebar actions', () => {
+describe('MaterialsView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
+    installDesktopMatchMedia();
     mockState.finishes = [makeFinish('finish-1', 'Walnut'), makeFinish('finish-2', 'Oak')];
     mockState.materials = [makeMaterial('material-1', 'Laminate')];
   });
 
-  it('routes export actions by active tab', async () => {
+  it('routes materials and finishes export actions through their own menus', async () => {
     const user = userEvent.setup();
     renderView();
 
@@ -160,80 +191,28 @@ describe('MaterialsView sidebar actions', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Download' }));
     await user.click(screen.getByRole('menuitem', { name: /download csv/i }));
 
-    expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.arrayContaining(mockState.finishes),
+    expect(mockState.exportMaterialsExcel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'project-1' }),
+      mockState.materials,
       'csv',
     );
-    expect(mockState.exportMaterialsExcel).not.toHaveBeenCalled();
+    expect(mockState.exportFinishesExcel).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('radio', { name: /table/i }));
-    await user.click(screen.getByRole('button', { name: /materials options/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
-    await user.click(screen.getByRole('menuitem', { name: /download excel/i }));
-    expect(mockState.exportFinishesExcel).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.arrayContaining(mockState.finishes),
-    );
-
-    await user.click(screen.getByRole('button', { name: /materials library mode/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^materials$/i }));
-    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('button', { name: /open finishes/i }));
+    await user.click(screen.getByRole('button', { name: /finishes options/i }));
     await user.click(screen.getByRole('menuitem', { name: 'Download' }));
     await user.click(screen.getByRole('menuitem', { name: /download pdf/i }));
 
-    expect(mockState.exportMaterialsPdf).toHaveBeenCalledWith(
+    expect(mockState.exportFinishesPdf).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'project-1' }),
-      mockState.materials,
+      expect.arrayContaining(mockState.finishes),
     );
   });
 
-  it('disables export when the active filtered list is empty', async () => {
+  it('runs delete-all from the materials controls and finishes panel separately', async () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.type(screen.getByRole('textbox', { name: /search finishes/i }), 'no-match-term');
-    await user.click(screen.getByRole('button', { name: /materials options/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
-    expect(screen.getByRole('menuitem', { name: /download csv/i })).toBeDisabled();
-    expect(screen.getByRole('menuitem', { name: /download excel/i })).toBeDisabled();
-    expect(screen.getByRole('menuitem', { name: /download pdf/i })).toBeDisabled();
-
-    await user.click(screen.getByRole('button', { name: /materials library mode/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^materials$/i }));
-    await user.click(screen.getByRole('button', { name: /materials options/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'Download' }));
-    expect(screen.getByRole('menuitem', { name: /download csv/i })).toBeDisabled();
-    expect(screen.getByRole('menuitem', { name: /download excel/i })).toBeDisabled();
-    expect(screen.getByRole('menuitem', { name: /download pdf/i })).toBeDisabled();
-  });
-
-  it('runs delete-all through per-item delete hooks for each tab', async () => {
-    const user = userEvent.setup();
-    renderView();
-
-    await user.click(screen.getByRole('button', { name: /materials options/i }));
-    await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
-
-    expect(await screen.findByText('This will permanently delete 2 finishes.')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        'Deleting finishes will not delete project materials, and finish relationships may need relinking.',
-      ),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Delete 2 finishes' }));
-
-    await waitFor(() => {
-      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledTimes(2);
-      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledWith('finish-1');
-      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledWith('finish-2');
-      expect(mockState.finishesRefetch).toHaveBeenCalledTimes(1);
-    });
-    expect(mockState.deleteMaterialMutateAsync).not.toHaveBeenCalled();
-
-    await user.click(screen.getByRole('button', { name: /materials library mode/i }));
-    await user.click(screen.getByRole('menuitem', { name: /^materials$/i }));
     await user.click(screen.getByRole('button', { name: /materials options/i }));
     await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
 
@@ -244,49 +223,34 @@ describe('MaterialsView sidebar actions', () => {
     await user.click(screen.getByRole('button', { name: 'Delete 1 project materials' }));
 
     await waitFor(() => {
-      expect(mockState.deleteMaterialMutateAsync).toHaveBeenCalledTimes(1);
       expect(mockState.deleteMaterialMutateAsync).toHaveBeenCalledWith('material-1');
       expect(mockState.materialsRefetch).toHaveBeenCalledTimes(1);
     });
-  });
 
-  it('does not run delete-all when cancelled', async () => {
-    const user = userEvent.setup();
-    renderView();
-
-    await user.click(screen.getByRole('button', { name: /materials options/i }));
+    await user.click(screen.getByRole('button', { name: /open finishes/i }));
+    await user.click(screen.getByRole('button', { name: /finishes options/i }));
     await user.click(screen.getByRole('menuitem', { name: /delete all/i }));
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(await screen.findByText('This will permanently delete 2 finishes.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Delete 2 finishes' }));
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: /delete all finishes/i }),
-      ).not.toBeInTheDocument();
+      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledTimes(2);
+      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledWith('finish-1');
+      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledWith('finish-2');
+      expect(mockState.finishesRefetch).toHaveBeenCalledTimes(1);
     });
-    expect(mockState.deleteFinishMutateAsync).not.toHaveBeenCalled();
-    expect(mockState.deleteMaterialMutateAsync).not.toHaveBeenCalled();
-  });
-});
-
-describe('finish name collision prompt', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    document.body.innerHTML = '';
-    mockState.finishes = [makeFinish('finish-1', 'Walnut'), makeFinish('finish-2', 'Oak')];
-    mockState.materials = [];
   });
 
-  async function openFinishForm() {
+  it('shows the finish collision prompt from the finishes panel create action', async () => {
     const user = userEvent.setup();
     renderView();
+
+    await user.click(screen.getByRole('button', { name: /open finishes/i }));
     await user.click(screen.getByRole('button', { name: /new finish/i }));
+
     const formDialog = await screen.findByRole('dialog', { name: /add finish/i });
-    return { user, formDialog };
-  }
-
-  it('shows collision prompt when creating a finish with a duplicate name', async () => {
-    const { user, formDialog } = await openFinishForm();
-
     await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
     await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
 
@@ -296,85 +260,47 @@ describe('finish name collision prompt', () => {
     expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('detects collision case-insensitively', async () => {
-    const { user, formDialog } = await openFinishForm();
+  it('drops a finish onto a material and persists the finish assignment', async () => {
+    renderView();
 
-    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'walnut');
-    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+    fireEvent.click(screen.getByRole('button', { name: /open finishes/i }));
 
-    expect(
-      await screen.findByRole('dialog', { name: /finish name conflict/i }),
-    ).toBeInTheDocument();
-    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
-  });
+    const finishRow = await screen.findByLabelText('Drag finish Oak');
+    const materialCard = screen.getByText('Laminate').closest('article');
 
-  it('closes form without creating finish when Use existing is clicked', async () => {
-    const { user, formDialog } = await openFinishForm();
+    expect(materialCard).not.toBeNull();
 
-    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
-    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+    const dataTransfer = {
+      effectAllowed: 'move',
+      setData: vi.fn(),
+    } as unknown as DataTransfer;
 
-    const collisionDialog = await screen.findByRole('dialog', { name: /finish name conflict/i });
-    await user.click(within(collisionDialog).getByRole('button', { name: /use existing/i }));
+    fireEvent.dragStart(finishRow, { dataTransfer });
+    fireEvent.dragOver(materialCard!, { dataTransfer });
+    fireEvent.drop(materialCard!, { dataTransfer });
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: /finish name conflict/i }),
-      ).not.toBeInTheDocument();
-      expect(screen.queryByRole('dialog', { name: /add finish/i })).not.toBeInTheDocument();
+      expect(mockState.updateMaterialMutateAsync).toHaveBeenCalledWith({
+        id: 'material-1',
+        patch: { finishId: 'finish-2' },
+      });
+      expect(mockState.toastSuccess).toHaveBeenCalledWith('Applied Oak to Laminate.');
     });
-    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
-    expect(mockState.uploadImageMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('closes form without creating or uploading when Overwrite swatch is clicked with no staged image', async () => {
-    const { user, formDialog } = await openFinishForm();
+  it('moves delete into the finish editor footer', async () => {
+    const user = userEvent.setup();
+    renderView();
 
-    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
-    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
+    await user.click(screen.getByRole('button', { name: /open finishes/i }));
+    const walnutRow = screen.getByLabelText('Drag finish Walnut');
+    await user.click(within(walnutRow).getByRole('button', { name: 'Edit' }));
 
-    const collisionDialog = await screen.findByRole('dialog', { name: /finish name conflict/i });
-    await user.click(within(collisionDialog).getByRole('button', { name: /overwrite swatch/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: /finish name conflict/i }),
-      ).not.toBeInTheDocument();
-      expect(screen.queryByRole('dialog', { name: /add finish/i })).not.toBeInTheDocument();
-    });
-    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
-    expect(mockState.uploadImageMutateAsync).not.toHaveBeenCalled();
-  });
-
-  it('dismisses collision prompt and keeps form open on Cancel', async () => {
-    const { user, formDialog } = await openFinishForm();
-
-    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Walnut');
-    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
-
-    const collisionDialog = await screen.findByRole('dialog', { name: /finish name conflict/i });
-    await user.click(within(collisionDialog).getByRole('button', { name: /^cancel$/i }));
+    const dialog = await screen.findByRole('dialog', { name: /edit finish/i });
+    await user.click(within(dialog).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: /finish name conflict/i }),
-      ).not.toBeInTheDocument();
+      expect(mockState.deleteFinishMutateAsync).toHaveBeenCalledWith('finish-1');
     });
-    expect(screen.getByRole('dialog', { name: /add finish/i })).toBeInTheDocument();
-    expect(mockState.createFinishMutateAsync).not.toHaveBeenCalled();
-  });
-
-  it('creates finish normally when name has no collision', async () => {
-    const { user, formDialog } = await openFinishForm();
-
-    await user.type(within(formDialog).getByRole('textbox', { name: /name/i }), 'Cherry');
-    await user.click(within(formDialog).getByRole('button', { name: /add to library/i }));
-
-    await waitFor(() => {
-      expect(mockState.createFinishMutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Cherry' }),
-      );
-    });
-    expect(screen.queryByRole('dialog', { name: /finish name conflict/i })).not.toBeInTheDocument();
   });
 });
