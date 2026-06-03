@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - feat(item-library): relabel the Proposal tool to Item Library in the project shell, regroup proposal sidebar controls into View/Actions/Display/Status sections, and refresh schedule-oriented proposal copy without changing routes or data contracts
+- feat(item-library): add a main-header schedule selector and active-schedule summary so the Item Library now focuses on one schedule at a time instead of continuous multi-schedule scroll
 - feat(catalog): dock the FF&E item navigator as a finishes-style side panel with category/search/add controls and keep the catalog stage centered in the remaining workspace
 - feat(materials): replace the top-level finishes/materials switch with a docked finishes rail, FF&E-style finish rows, and desktop drag-to-assign onto materials
 - fix(catalog): raise upload image fidelity for FF&E navigator previews and simplify the catalog picker/location header copy

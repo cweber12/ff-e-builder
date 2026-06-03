@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { TotalsBar } from '../../shared/table/TotalsBar';
 import { TableViewStack } from '../../shared/table/TableViewWrappers';
+import { DropdownMenu, MenuItem } from '../../primitives';
 import {
   ALL_COLUMN_GROUP_ID,
   useColumnDefs,
@@ -44,6 +46,7 @@ export function ProposalTable({
 }: ProposalTableProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeColumnGroup, setActiveColumnGroup] = useState<string>(ALL_COLUMN_GROUP_ID);
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const collapsedCategoryIds = useMemo(
     () => new Set(Object.keys(collapsed).filter((id) => collapsed[id])),
     [collapsed],
@@ -115,10 +118,15 @@ export function ProposalTable({
   const [categoryToDelete, setCategoryToDelete] = useState<ProposalCategoryWithItems | null>(null);
 
   const grandTotal = proposalProjectTotalCents(categoriesWithItems);
-  const totalItemCount = categoriesWithItems.reduce(
-    (sum, category) => sum + category.items.length,
-    0,
+  const activeCategory = useMemo(
+    () => categoriesWithItems.find((category) => category.id === activeCategoryId) ?? null,
+    [activeCategoryId, categoriesWithItems],
   );
+  const selectedCategory = activeCategory ?? categoriesWithItems[0] ?? null;
+  const selectedCategorySubtotal = selectedCategory
+    ? proposalCategorySubtotalCents(selectedCategory.items)
+    : 0;
+  const selectedCategoryItemCount = selectedCategory?.items.length ?? 0;
 
   const otherCategoriesMap = useMemo(() => {
     const map = new Map<string, { id: string; name: string }[]>();
@@ -136,6 +144,26 @@ export function ProposalTable({
   const toggleCollapsed = useCallback((id: string) => {
     setCollapsed((current) => ({ ...current, [id]: !current[id] }));
   }, []);
+
+  useEffect(() => {
+    if (categoriesWithItems.length === 0) {
+      setActiveCategoryId(null);
+      return;
+    }
+
+    const hasActiveCategory = categoriesWithItems.some(
+      (category) => category.id === activeCategoryId,
+    );
+    if (!hasActiveCategory) {
+      setActiveCategoryId(categoriesWithItems[0]!.id);
+    }
+  }, [activeCategoryId, categoriesWithItems]);
+
+  useEffect(() => {
+    if (!selection) return;
+    if (selection.categoryId === activeCategoryId) return;
+    setSelection(null);
+  }, [activeCategoryId, selection]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -157,16 +185,30 @@ export function ProposalTable({
       ) : (
         <TableViewStack>
           <section className="rounded-lg border border-neutral-200 bg-canvas-chrome px-5 py-5 shadow-sm">
-            <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
                 <p className="eyebrow text-brand-700">Item Library</p>
-                <h1 className="mt-1 font-display text-[1.9rem] font-semibold tracking-tight text-neutral-950">
-                  Project items organized into schedules.
-                </h1>
+                <div className="mt-2 flex flex-col gap-3 xl:flex-row xl:items-center">
+                  <ScheduleSelect
+                    categories={categoriesWithItems}
+                    activeCategoryId={activeCategoryId}
+                    onSelect={setActiveCategoryId}
+                  />
+                  {selectedCategory ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="toolbar-stat">
+                        {selectedCategoryItemCount}{' '}
+                        {selectedCategoryItemCount === 1 ? 'item' : 'items'}
+                      </span>
+                      <span className="toolbar-stat">
+                        {formatMoney(cents(selectedCategorySubtotal))}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
-                  A calmer shell for specification work: image-rich item schedules, proposal-owned
-                  pricing, and focused editing without changing the underlying route or export
-                  contracts.
+                  Jump into one schedule at a time, scan items without the continuous scroll, and
+                  move into denser editing only when the work actually calls for it.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -174,10 +216,7 @@ export function ProposalTable({
                   {categoriesWithItems.length}{' '}
                   {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
                 </span>
-                <span className="toolbar-stat">
-                  {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}
-                </span>
-                <span className="toolbar-stat">{formatMoney(cents(grandTotal))}</span>
+                <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
               </div>
             </div>
           </section>
@@ -190,24 +229,24 @@ export function ProposalTable({
             />
           ) : null}
 
-          {categoriesWithItems.map((category) => (
+          {selectedCategory ? (
             <ProposalCategorySection
-              key={category.id}
+              key={selectedCategory.id}
               projectId={projectId}
-              categoryId={category.id}
-              categoryName={category.name}
-              items={category.items}
-              otherCategories={otherCategoriesMap.get(category.id) ?? []}
-              subtotalCents={proposalCategorySubtotalCents(category.items)}
-              collapsed={collapsed[category.id] ?? false}
-              onToggle={() => toggleCollapsed(category.id)}
+              categoryId={selectedCategory.id}
+              categoryName={selectedCategory.name}
+              items={selectedCategory.items}
+              otherCategories={otherCategoriesMap.get(selectedCategory.id) ?? []}
+              subtotalCents={selectedCategorySubtotal}
+              collapsed={collapsed[selectedCategory.id] ?? false}
+              onToggle={() => toggleCollapsed(selectedCategory.id)}
               onCategoryNameSave={(name) =>
-                updateCategory.mutate({ id: category.id, patch: { name: name.trim() } })
+                updateCategory.mutate({ id: selectedCategory.id, patch: { name: name.trim() } })
               }
-              onCategoryDelete={() => setCategoryToDelete(category)}
+              onCategoryDelete={() => setCategoryToDelete(selectedCategory)}
               onItemSave={(item, patch) => updateItem.mutate({ id: item.id, patch, projectId })}
               onItemClick={(item) => {
-                setSelection({ itemId: item.id, categoryId: category.id });
+                setSelection({ itemId: item.id, categoryId: selectedCategory.id });
               }}
               visibleColOrder={visibleColOrder}
               customColumnDefs={customColumnDefs}
@@ -223,17 +262,17 @@ export function ProposalTable({
                 await createColumnDef.mutateAsync({ label, sortOrder: customColumnDefs.length });
               }}
               proposalStatus={project?.proposalStatus ?? 'in_progress'}
-              onPrefetchItems={() => prefetchProposalItems(category.id)}
+              onPrefetchItems={() => prefetchProposalItems(selectedCategory.id)}
               activeColumnGroup={activeColumnGroup}
               onActiveColumnGroupChange={setActiveColumnGroup}
             />
-          ))}
+          ) : null}
 
           <TotalsBar
-            itemCount={totalItemCount}
-            groupCount={categoriesWithItems.length}
-            groupLabel="categories"
-            grandTotal={formatMoney(cents(grandTotal))}
+            itemCount={selectedCategoryItemCount}
+            groupCount={selectedCategory ? 1 : 0}
+            groupLabel="schedule"
+            grandTotal={formatMoney(cents(selectedCategorySubtotal))}
           />
 
           <AddGroupModal
@@ -241,7 +280,11 @@ export function ProposalTable({
             open={addCategoryOpen}
             onClose={() => setAddCategoryOpen(false)}
             onSubmit={async (name) => {
-              await createCategory.mutateAsync({ name, sortOrder: categoriesWithItems.length });
+              const createdCategory = await createCategory.mutateAsync({
+                name,
+                sortOrder: categoriesWithItems.length,
+              });
+              setActiveCategoryId(createdCategory.id);
             }}
           />
 
@@ -283,5 +326,96 @@ export function ProposalTable({
         </TableViewStack>
       )}
     </div>
+  );
+}
+
+function ScheduleSelect({
+  categories,
+  activeCategoryId,
+  onSelect,
+}: {
+  categories: ProposalCategoryWithItems[];
+  activeCategoryId: string | null;
+  onSelect: (categoryId: string) => void;
+}) {
+  const activeCategory =
+    categories.find((category) => category.id === activeCategoryId) ?? categories[0] ?? null;
+
+  if (!activeCategory) return null;
+
+  return (
+    <DropdownMenu
+      wrapperClassName="w-full max-w-[28rem]"
+      panelClassName="z-[280] min-w-[22rem] max-w-[26rem]"
+      positionOptions={{ align: 'bottom', edge: 'left', offsetY: 8 }}
+      renderTrigger={({ triggerRef, open, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label="Select active schedule"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="group flex w-full items-center gap-4 rounded-sm border border-neutral-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-brand-300 hover:bg-brand-50/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          onClick={toggleMenu}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow text-neutral-500">Schedule</p>
+            <div className="mt-1 flex min-w-0 items-center gap-3">
+              <span className="truncate font-display text-[1.35rem] font-semibold tracking-tight text-neutral-950">
+                {activeCategory.name}
+              </span>
+              <span className="shrink-0 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-700">
+                Active
+              </span>
+            </div>
+          </div>
+          <ChevronDown
+            className="h-4 w-4 shrink-0 text-neutral-400 transition group-hover:text-neutral-700 group-[aria-expanded='true']:rotate-180 group-[aria-expanded='true']:text-neutral-900"
+            aria-hidden="true"
+          />
+        </button>
+      )}
+    >
+      {({ closeMenu }) =>
+        categories.map((category) => {
+          const itemCount = category.items.length;
+          const subtotal = proposalCategorySubtotalCents(category.items);
+          const isActive = category.id === activeCategory.id;
+
+          return (
+            <MenuItem
+              key={category.id}
+              type="button"
+              className="flex items-start justify-between gap-4"
+              onClick={() => {
+                closeMenu();
+                onSelect(category.id);
+              }}
+            >
+              <div className="min-w-0">
+                <span
+                  className={
+                    isActive ? 'font-bold text-neutral-950' : 'font-medium text-neutral-800'
+                  }
+                >
+                  {category.name}
+                </span>
+                <span className="mt-1 block text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
+                  {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+              <div className="shrink-0 text-right">
+                <span className="block font-mono text-xs font-semibold tabular-nums text-neutral-800">
+                  {formatMoney(cents(subtotal))}
+                </span>
+                <span className="mt-1 block text-[11px] uppercase tracking-[0.08em] text-neutral-500">
+                  {isActive ? 'Current' : 'Open'}
+                </span>
+              </div>
+            </MenuItem>
+          );
+        })
+      }
+    </DropdownMenu>
   );
 }
