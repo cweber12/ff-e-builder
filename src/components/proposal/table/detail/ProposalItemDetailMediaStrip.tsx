@@ -26,12 +26,16 @@ export function ProposalItemDetailMediaStrip({
           entityId={itemId}
           alt={`${itemLabel} rendering`}
           className="w-full aspect-[117/75] flex-shrink-0"
-          disabled
         />
       </ImageSection>
 
       <ImageSection label="Plan" className="flex-1 min-w-0">
-        <PanZoomFrame entityType="proposal_plan" entityId={itemId} alt={`${itemLabel} plan`} />
+        <PanZoomFrame
+          entityType="proposal_plan"
+          entityId={itemId}
+          alt={`${itemLabel} plan`}
+          editable
+        />
       </ImageSection>
 
       <SwatchGallery itemId={itemId} />

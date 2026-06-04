@@ -46,4 +46,36 @@ describe('ImageFrame', () => {
 
     expect(screen.getByText('This row already has a rendering')).toBeInTheDocument();
   });
+
+  it('routes pasted images through the upload mutate path', () => {
+    render(
+      <ImageFrame
+        entityType="proposal_item"
+        entityId="00000000-0000-0000-0000-000000000002"
+        alt="MI-1 rendering"
+      />,
+    );
+
+    const frame = screen.getByTitle('Upload, paste, or update image');
+    const file = new File(['image-bytes'], 'rendering.png', { type: 'image/png' });
+
+    fireEvent.paste(frame, {
+      clipboardData: {
+        items: [
+          {
+            kind: 'file',
+            type: 'image/png',
+            getAsFile: () => file,
+          },
+        ],
+      },
+      preventDefault: vi.fn(),
+    });
+
+    expect(mockUploadMutate).toHaveBeenCalledTimes(1);
+    expect(mockUploadMutate).toHaveBeenCalledWith(
+      { file, altText: 'MI-1 rendering' },
+      expect.any(Object),
+    );
+  });
 });

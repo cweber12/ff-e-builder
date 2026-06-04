@@ -304,7 +304,7 @@ export function ImageFrame({
         }}
         title={canUpload ? 'Upload, paste, or update image' : undefined}
         className={cn(
-          'relative overflow-hidden',
+          'group relative overflow-hidden',
           // Allow callers to override the border-radius via className; default to rounded-md
           !/rounded-/.test(className ?? '') && 'rounded-md',
           canUpload &&
@@ -352,6 +352,25 @@ export function ImageFrame({
               event.currentTarget.value = '';
             }}
           />
+        )}
+        {canUpload && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between p-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            <button
+              type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                inputRef.current?.click();
+              }}
+              className="pointer-events-auto rounded-md border border-white/60 bg-white/92 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900 shadow-sm backdrop-blur-sm hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+              aria-label={`${hasImage ? 'Replace image' : 'Add image'} for ${alt}`}
+            >
+              {hasImage ? 'Replace image' : 'Add image'}
+            </button>
+            <span className="rounded-md bg-neutral-950/78 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm">
+              {upload.isPending ? 'Uploading…' : 'Ctrl+V paste'}
+            </span>
+          </div>
         )}
       </div>
 
