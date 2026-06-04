@@ -23,7 +23,7 @@ type ProposalCategoryHeaderProps = {
   onActiveCategoryChange?: (categoryId: string) => void;
   itemCount: number;
   collapsed: boolean;
-  isMobile: boolean;
+  isCompact: boolean;
   subtotalCents: number;
   hasOpenRevision: boolean;
   openRevisionLabel?: string | undefined;
@@ -57,7 +57,7 @@ export function ProposalCategoryHeader({
   onActiveCategoryChange,
   itemCount,
   collapsed,
-  isMobile,
+  isCompact,
   subtotalCents,
   hasOpenRevision,
   openRevisionLabel,
@@ -86,8 +86,8 @@ export function ProposalCategoryHeader({
   const recordMode = layoutMode === 'records';
   if (recordMode) {
     return (
-      <div className="flex flex-col gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex flex-col gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 py-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={onToggle}
@@ -108,6 +108,7 @@ export function ProposalCategoryHeader({
             activeCategoryId={activeCategoryId ?? null}
             fallbackName={categoryName}
             onSelect={onActiveCategoryChange}
+            fullWidth={isCompact}
           />
           <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
@@ -118,8 +119,8 @@ export function ProposalCategoryHeader({
             </span>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <div className="flex shrink-0 items-baseline gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-1.5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
+          <div className="flex shrink-0 items-baseline justify-between gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-1.5 sm:justify-start">
             <span className="eyebrow text-neutral-500">Schedule total</span>
             <span className="num text-sm font-semibold text-neutral-800">
               {formatMoney(cents(subtotalCents))}
@@ -190,7 +191,7 @@ export function ProposalCategoryHeader({
             Revision {openRevisionLabel}
           </Badge>
         ) : null}
-        {!collapsed && !isMobile && showTableControls && (
+        {!collapsed && !isCompact && showTableControls && (
           <ColumnGroupTabs
             groups={PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnGroups}
             activeGroupId={activeColumnGroup}
@@ -199,7 +200,7 @@ export function ProposalCategoryHeader({
         )}
       </div>
       <div className="sticky right-4 flex items-center gap-2">
-        {!collapsed && !isMobile && showTableControls && <ColumnNavArrows />}
+        {!collapsed && !isCompact && showTableControls && <ColumnNavArrows />}
         <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
           {formatMoney(cents(subtotalCents))}
         </span>
@@ -393,11 +394,13 @@ function CompactScheduleSelect({
   activeCategoryId,
   fallbackName,
   onSelect,
+  fullWidth = false,
 }: {
   categories: { id: string; name: string; itemCount: number; subtotalCents: number }[];
   activeCategoryId: string | null;
   fallbackName: string;
   onSelect?: ((categoryId: string) => void) | undefined;
+  fullWidth?: boolean;
 }) {
   const activeCategory =
     categories.find((category) => category.id === activeCategoryId) ?? categories[0] ?? null;
@@ -422,7 +425,10 @@ function CompactScheduleSelect({
           aria-label="Select active schedule"
           aria-haspopup="menu"
           aria-expanded={open}
-          className="group inline-flex min-w-0 items-center gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-left transition hover:border-brand-300 hover:bg-brand-50/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          className={cn(
+            'group inline-flex min-w-0 items-center gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-left transition hover:border-brand-300 hover:bg-brand-50/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+            fullWidth ? 'w-full justify-between' : '',
+          )}
           onClick={toggleMenu}
         >
           <span className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-neutral-900">

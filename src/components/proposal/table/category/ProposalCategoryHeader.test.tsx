@@ -20,7 +20,7 @@ describe('ProposalCategoryHeader', () => {
         onActiveCategoryChange={onActiveCategoryChange}
         itemCount={44}
         collapsed={false}
-        isMobile={false}
+        isCompact={false}
         subtotalCents={3309800}
         hasOpenRevision
         openRevisionLabel="1.2"
@@ -61,7 +61,7 @@ describe('ProposalCategoryHeader', () => {
         scheduleOptions={[]}
         itemCount={44}
         collapsed={false}
-        isMobile={false}
+        isCompact={false}
         subtotalCents={3309800}
         hasOpenRevision
         openRevisionLabel="1.2"
@@ -96,7 +96,7 @@ describe('ProposalCategoryHeader', () => {
         scheduleOptions={[]}
         itemCount={44}
         collapsed={false}
-        isMobile={false}
+        isCompact={false}
         subtotalCents={3309800}
         hasOpenRevision
         openRevisionLabel="1.2"

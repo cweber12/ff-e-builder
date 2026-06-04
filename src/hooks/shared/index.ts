@@ -24,6 +24,7 @@ export {
   useDeleteColumnDef,
 } from './useColumnDefs';
 export { useIsMobileViewport } from './useIsMobileViewport';
+export { useIsCompactViewport } from './useIsCompactViewport';
 export { useRowSelection } from './useRowSelection';
 export type { UseRowSelectionReturn, TableId } from './useRowSelection';
 export { useSaveStatus } from './useSaveStatus';

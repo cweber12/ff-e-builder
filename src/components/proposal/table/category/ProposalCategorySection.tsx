@@ -40,6 +40,7 @@ import {
   useCreateProposalItem,
   useDeleteProposalItem,
   useFinishes,
+  useIsCompactViewport,
   useIsMobileViewport,
   useMaterialCellPaste,
   useMoveProposalItem,
@@ -152,6 +153,7 @@ export function ProposalCategorySection({
     projectId,
   });
   const finishes = useFinishes(projectId);
+  const isCompact = useIsCompactViewport();
   const isMobile = useIsMobileViewport();
   const { data: revisions = [] } = useProposalRevisions(projectId);
   const { data: snapshots = [] } = useRevisionSnapshots(projectId);
@@ -258,7 +260,7 @@ export function ProposalCategorySection({
   );
 
   useLayoutEffect(() => {
-    if (isMobile || collapsed || isExpanded || sortedItems.length === 0) return;
+    if (isCompact || collapsed || isExpanded || sortedItems.length === 0) return;
     const list = recordListRef.current;
     if (!list) return;
 
@@ -300,7 +302,7 @@ export function ProposalCategorySection({
       resizeObserver?.disconnect();
       window.removeEventListener('resize', handleResize);
     };
-  }, [collapsed, isExpanded, isMobile, sortedItems]);
+  }, [collapsed, isCompact, isExpanded, sortedItems]);
 
   const handleColumnDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -449,7 +451,7 @@ export function ProposalCategorySection({
         onActiveCategoryChange={onActiveCategoryChange}
         itemCount={itemCount}
         collapsed={collapsed}
-        isMobile={isMobile}
+        isCompact={isCompact}
         subtotalCents={subtotalCents}
         hasOpenRevision={hasOpenRevision}
         openRevisionLabel={openRev?.label}
@@ -475,7 +477,7 @@ export function ProposalCategorySection({
         onExpand={() => setIsExpanded(true)}
       />
 
-      {!collapsed && !isMobile && (
+      {!collapsed && !isCompact && (
         <div className="min-w-0">
           {sortedItems.length === 0 ? (
             <EmptyScheduleState
@@ -540,7 +542,7 @@ export function ProposalCategorySection({
         </div>
       )}
 
-      {!collapsed && isMobile && (
+      {!collapsed && isCompact && (
         <div className="p-3">
           {sortedItems.length === 0 ? (
             <EmptyScheduleState
@@ -552,6 +554,7 @@ export function ProposalCategorySection({
             <ProposalCategoryMobileCards
               items={sortedItems}
               otherCategories={otherCategories}
+              compactMode={isMobile ? 'mobile' : 'tablet'}
               snapshotsByItem={
                 openRev ? (snapshotsByRevThenItem.get(openRev.id) ?? new Map()) : new Map()
               }
