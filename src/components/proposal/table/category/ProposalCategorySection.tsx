@@ -12,7 +12,6 @@ import {
 import {
   SortableContext,
   arrayMove,
-  horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
@@ -38,12 +37,8 @@ import {
   useRevisionSnapshots,
 } from '../../../../hooks';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
-import { cn } from '../../../../lib/utils';
 import { GroupedTableSection } from '../../../shared/table/TableViewWrappers';
-import { SortableColHeader } from '../../../shared/table/SortableColHeader';
-import { CustomColumnHeader } from '../../../shared/table/CustomColumnHeader';
-import { proposalGeneratedItemStickyClassNames } from '../../../shared/table/generatedItemStickyStyles';
-import { ProposalRow } from '../row/ProposalRow';
+import { ProposalRecordRow } from '../row';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
 import { ProposalCategoryMobileCards } from './ProposalCategoryMobileCards';
 import { ProposalCategoryExpandedTable } from './ProposalCategoryExpandedTable';
@@ -58,16 +53,9 @@ import {
   type PendingProposalCategoryChange,
 } from './proposalTrackedEditFlow';
 import {
-  baselineQtyColumnClassName,
-  baselineTotalColumnClassName,
-  baselineUnitCostColumnClassName,
   PROPOSAL_COLUMN_META,
   type ProposalColumnId,
-  revisionNotesColumnClassName,
   STICKY_RIGHT_COLUMN_IDS,
-  stickyRevQtyHeaderClassName,
-  stickyRevTotalHeaderClassName,
-  stickyRevUnitCostHeaderClassName,
 } from '../proposalTableConstants';
 import {
   buildProposalItemDuplicateInput,
@@ -390,6 +378,7 @@ export function ProposalCategorySection({
   return (
     <GroupedTableSection>
       <ProposalCategoryHeader
+        layoutMode="records"
         categoryName={categoryName}
         itemCount={itemCount}
         collapsed={collapsed}
@@ -419,183 +408,43 @@ export function ProposalCategorySection({
       />
 
       {!collapsed && !isMobile && (
-        <div className="min-w-0">
-          <table
-            className={cn(
-              hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
-              'w-full border-collapse text-left text-sm',
-            )}
-          >
-            <thead className="sticky top-11 z-30 bg-canvas-chrome text-xs">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleColumnDragEnd}
+        <div className="min-w-0 p-3 sm:p-4">
+          {sortedItems.length === 0 ? (
+            <div className="rounded-sm border border-dashed border-neutral-200 bg-white px-5 py-10 text-center">
+              <p className="eyebrow text-neutral-500">Schedule</p>
+              <p className="mt-2 text-sm font-medium text-neutral-800">
+                No items in this schedule yet.
+              </p>
+              <p className="mt-1 text-sm text-neutral-600">
+                Add the first item here, or switch schedules from the Item Library header.
+              </p>
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragOver={handleRowDragOver}
+              onDragEnd={handleRowDragEnd}
+              onDragCancel={handleRowDragCancel}
+            >
+              <SortableContext
+                items={sortedItems.map((item) => item.id)}
+                strategy={verticalListSortingStrategy}
               >
-                <tr>
-                  <th className="table-head-cell sticky left-0 z-40 w-8 min-w-8 px-1" />
-                  <th className="table-head-cell sticky left-8 z-40 w-24 min-w-24">ID</th>
-                  <SortableContext
-                    items={draggableColOrder}
-                    strategy={horizontalListSortingStrategy}
-                  >
-                    {draggableColOrder.map((colId) => {
-                      const meta = PROPOSAL_COLUMN_META[colId as ProposalColumnId];
-                      if (meta) {
-                        return (
-                          <SortableColHeader
-                            key={colId}
-                            colId={colId}
-                            label={meta.label}
-                            className={cn('table-head-cell', meta.className)}
-                          />
-                        );
-                      }
-                      const customDef = customColumnDefs.find((def) => def.id === colId);
-                      if (!customDef) return null;
-                      return (
-                        <SortableColHeader
-                          key={colId}
-                          colId={colId}
-                          className="table-head-cell min-w-36"
-                        >
-                          <CustomColumnHeader
-                            def={customDef}
-                            onDelete={() => onDeleteCustomColumn(customDef.id)}
-                            onRename={(label) => onRenameCustomColumn(customDef.id, label)}
-                          />
-                        </SortableColHeader>
-                      );
-                    })}
-                  </SortableContext>
-                  {hasOpenRevision ? (
-                    <>
-                      <th className={cn('table-head-cell', revisionNotesColumnClassName)}>Notes</th>
-                      <th
-                        className={cn(
-                          'table-head-cell text-neutral-500',
-                          'border-l border-l-neutral-300',
-                          baselineQtyColumnClassName,
-                        )}
-                      >
-                        <span className="block text-[10px] text-neutral-400">Before</span>
-                        Quantity
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell text-neutral-500',
-                          baselineUnitCostColumnClassName,
-                        )}
-                      >
-                        <span className="block text-[10px] text-neutral-400">Before</span>
-                        Unit Cost
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell text-neutral-500',
-                          baselineTotalColumnClassName,
-                        )}
-                      >
-                        <span className="block text-[10px] text-neutral-400">Before</span>
-                        Total
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell text-brand-700',
-                          stickyRevQtyHeaderClassName,
-                        )}
-                      >
-                        <span className="block text-[10px] text-brand-500">After</span>
-                        New Qty
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell text-brand-700',
-                          stickyRevUnitCostHeaderClassName,
-                        )}
-                      >
-                        <span className="block text-[10px] text-brand-500">After</span>
-                        New Cost
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell text-brand-700',
-                          stickyRevTotalHeaderClassName,
-                        )}
-                      >
-                        <span className="block text-[10px] text-brand-500">After</span>
-                        New Total
-                      </th>
-                    </>
-                  ) : (
-                    <>
-                      <th
-                        className={cn(
-                          'table-head-cell',
-                          proposalGeneratedItemStickyClassNames.byColumnId.quantity?.header,
-                        )}
-                      >
-                        Quantity
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell',
-                          proposalGeneratedItemStickyClassNames.byColumnId.unitCost?.header,
-                        )}
-                      >
-                        Unit Cost
-                      </th>
-                      <th
-                        className={cn(
-                          'table-head-cell',
-                          proposalGeneratedItemStickyClassNames.byColumnId.total?.header,
-                        )}
-                      >
-                        Total Cost
-                      </th>
-                    </>
-                  )}
-                  <th
-                    className={cn(
-                      'table-head-cell',
-                      proposalGeneratedItemStickyClassNames.byColumnId.actions?.header,
-                    )}
-                  />
-                </tr>
-              </DndContext>
-            </thead>
-            <tbody>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragOver={handleRowDragOver}
-                onDragEnd={handleRowDragEnd}
-                onDragCancel={handleRowDragCancel}
-              >
-                <SortableContext
-                  items={sortedItems.map((item) => item.id)}
-                  strategy={verticalListSortingStrategy}
-                >
+                <div className="flex flex-col gap-3">
                   {sortedItems.map((item) => (
                     <Fragment key={item.id}>
                       {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
-                        <tr aria-hidden="true" className="motion-reduce:hidden">
-                          <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
-                        </tr>
+                        <div aria-hidden="true" className="h-0.5 rounded-full bg-brand-500" />
                       )}
-                      <ProposalRow
-                        projectId={projectId}
+                      <ProposalRecordRow
                         item={item}
                         otherCategories={otherCategories}
-                        onSave={(patch) => handleItemSave(item, patch)}
                         onDelete={() => handleDeleteItem(item)}
                         onDuplicate={() => handleDuplicateItem(item)}
                         onAddToFfe={() => handleAddItemToFfe(item)}
                         onMove={(toCategoryId) => handleMoveItem(item, toCategoryId)}
                         onRowClick={() => onItemClick(item)}
-                        visibleColOrder={visibleColOrder}
-                        customColumnDefs={customColumnDefs}
-                        proposalStatus={proposalStatus}
                         onSwatchOpen={setActiveSwatchItemId}
                         onSwatchPaste={handleSwatchPaste}
                         isSwatchPasting={
@@ -604,19 +453,16 @@ export function ProposalCategorySection({
                         getMaterialFinishName={(material) =>
                           material.finishId ? finishNameById.get(material.finishId) : undefined
                         }
-                        autoFocusItemName={item.id === pendingFocusItemId}
                       />
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
-                        <tr aria-hidden="true" className="motion-reduce:hidden">
-                          <td colSpan={999} className="h-0.5 bg-brand-500 p-0" />
-                        </tr>
+                        <div aria-hidden="true" className="h-0.5 rounded-full bg-brand-500" />
                       )}
                     </Fragment>
                   ))}
-                </SortableContext>
-              </DndContext>
-            </tbody>
-          </table>
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
         </div>
       )}
 

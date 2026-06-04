@@ -16,6 +16,7 @@ import { ColumnNavArrows, GroupedTableHeader } from '../../../shared/table/Table
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../../lib/table/generatedItemTablePresets';
 
 type ProposalCategoryHeaderProps = {
+  layoutMode?: 'records' | 'table';
   categoryName: string;
   itemCount: number;
   collapsed: boolean;
@@ -45,6 +46,7 @@ type ProposalCategoryHeaderProps = {
 };
 
 export function ProposalCategoryHeader({
+  layoutMode = 'table',
   categoryName,
   itemCount,
   collapsed,
@@ -72,6 +74,7 @@ export function ProposalCategoryHeader({
   onOpenAddColumnModal,
   onExpand,
 }: ProposalCategoryHeaderProps) {
+  const showTableControls = layoutMode === 'table';
   return (
     <GroupedTableHeader>
       <div className="sticky left-4 flex min-w-0 flex-1 items-center gap-3">
@@ -109,7 +112,7 @@ export function ProposalCategoryHeader({
             Revision {openRevisionLabel}
           </Badge>
         )}
-        {!collapsed && !isMobile && (
+        {!collapsed && !isMobile && showTableControls && (
           <ColumnGroupTabs
             groups={PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnGroups}
             activeGroupId={activeColumnGroup}
@@ -118,7 +121,7 @@ export function ProposalCategoryHeader({
         )}
       </div>
       <div className="sticky right-4 flex items-center gap-2">
-        {!collapsed && !isMobile && <ColumnNavArrows />}
+        {!collapsed && !isMobile && showTableControls && <ColumnNavArrows />}
         <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
           {formatMoney(cents(subtotalCents))}
         </span>
@@ -132,20 +135,23 @@ export function ProposalCategoryHeader({
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           Add item
         </button>
-        <ColumnsPanel
-          title={categoryName}
-          visibleColumns={visibleColumns}
-          hiddenDefaults={hiddenDefaults}
-          customColumns={customColumnDefs}
-          onMoveColumn={onMoveColumn}
-          onHideColumn={onHideColumn}
-          onRestoreDefault={onRestoreDefault}
-          onRenameCustomColumn={onRenameCustomColumn}
-          onDeleteCustomColumn={onDeleteCustomColumn}
-          onOpenAddColumnModal={onOpenAddColumnModal}
-        />
+        {showTableControls ? (
+          <ColumnsPanel
+            title={categoryName}
+            visibleColumns={visibleColumns}
+            hiddenDefaults={hiddenDefaults}
+            customColumns={customColumnDefs}
+            onMoveColumn={onMoveColumn}
+            onHideColumn={onHideColumn}
+            onRestoreDefault={onRestoreDefault}
+            onRenameCustomColumn={onRenameCustomColumn}
+            onDeleteCustomColumn={onDeleteCustomColumn}
+            onOpenAddColumnModal={onOpenAddColumnModal}
+          />
+        ) : null}
         <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <CategoryActionsMenu
+            layoutMode={layoutMode}
             categoryName={categoryName}
             collapsed={collapsed}
             hiddenDefaults={hiddenDefaults}
@@ -164,6 +170,7 @@ export function ProposalCategoryHeader({
 }
 
 type CategoryActionsMenuProps = {
+  layoutMode: 'records' | 'table';
   categoryName: string;
   collapsed: boolean;
   hiddenDefaults: { id: string; label: string }[];
@@ -177,6 +184,7 @@ type CategoryActionsMenuProps = {
 };
 
 function CategoryActionsMenu({
+  layoutMode,
   categoryName,
   collapsed,
   hiddenDefaults,
@@ -188,6 +196,7 @@ function CategoryActionsMenu({
   onRestoreDefault,
   onOpenAddColumnModal,
 }: CategoryActionsMenuProps) {
+  const showTableControls = layoutMode === 'table';
   return (
     <DropdownMenu
       panelClassName="z-[100] min-w-52"
@@ -223,7 +232,7 @@ function CategoryActionsMenu({
                   onExpand();
                 }}
               >
-                Expand table view
+                Open Spreadsheet View
               </MenuItem>
               <MenuSeparator />
             </>
@@ -245,43 +254,47 @@ function CategoryActionsMenu({
           >
             Add all to FF&amp;E
           </MenuItem>
-          <MenuSubTrigger
-            ref={submenuTriggerRef}
-            aria-expanded={submenuOpen}
-            className="justify-between"
-            onClick={toggleSubmenu}
-          >
-            Restore or add columns
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </MenuSubTrigger>
-          <MenuSub
-            open={submenuOpen}
-            panelRef={submenuPanelRef}
-            position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: -4 })}
-            className="z-[100] min-w-44"
-          >
-            {hiddenDefaults.map((col) => (
-              <MenuItem
-                key={col.id}
-                onClick={() => {
-                  closeMenu();
-                  onRestoreDefault(col.id);
-                }}
+          {showTableControls ? (
+            <>
+              <MenuSubTrigger
+                ref={submenuTriggerRef}
+                aria-expanded={submenuOpen}
+                className="justify-between"
+                onClick={toggleSubmenu}
               >
-                {col.label}
-              </MenuItem>
-            ))}
-            {hiddenDefaults.length > 0 && <MenuSeparator />}
-            <MenuItem
-              onClick={() => {
-                closeMenu();
-                onOpenAddColumnModal();
-              }}
-            >
-              Add custom column...
-            </MenuItem>
-          </MenuSub>
-          <MenuSeparator />
+                Restore or add columns
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </MenuSubTrigger>
+              <MenuSub
+                open={submenuOpen}
+                panelRef={submenuPanelRef}
+                position={getSubmenuPosition({ align: 'top', edge: 'left', offsetX: -4 })}
+                className="z-[100] min-w-44"
+              >
+                {hiddenDefaults.map((col) => (
+                  <MenuItem
+                    key={col.id}
+                    onClick={() => {
+                      closeMenu();
+                      onRestoreDefault(col.id);
+                    }}
+                  >
+                    {col.label}
+                  </MenuItem>
+                ))}
+                {hiddenDefaults.length > 0 && <MenuSeparator />}
+                <MenuItem
+                  onClick={() => {
+                    closeMenu();
+                    onOpenAddColumnModal();
+                  }}
+                >
+                  Add custom column...
+                </MenuItem>
+              </MenuSub>
+              <MenuSeparator />
+            </>
+          ) : null}
           <MenuItem
             className={cn('text-danger-600 hover:bg-red-50 hover:text-danger-700')}
             onClick={() => {

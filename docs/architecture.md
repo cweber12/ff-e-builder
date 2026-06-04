@@ -97,7 +97,7 @@ The current implementation state and future cleanup plan for FF&E/Proposal table
 - `/projects/:id/ffe/catalog` shows printable FF&E catalog pages with a compact side-panel Catalog Navigator, inline item-text editing, option renderings, and customer approval markup.
 - `/projects/:id/ffe/materials` shows the shared project material library from the FF&E tool.
 - `/projects/:id/ffe/summary` shows FF&E budget and status summaries.
-- `/projects/:id/proposal/table` shows the editable Item Library UI for the proposal-owned item workspace, focused on one selected schedule at a time while still grouped by Proposal Category under the hood.
+- `/projects/:id/proposal/table` shows the editable Item Library UI for the proposal-owned item workspace, focused on one selected schedule at a time with a grouped record default surface while still grouped by Proposal Category under the hood.
 - `/projects/:id/proposal/materials` redirects to the shared project material library.
 - `/projects/:id/proposal/summary` redirects to the project budget view.
 - `/projects/:id/plans` shows the project-level Measured Plan library for architectural source images, selected PDF pages, and calibration readiness.
