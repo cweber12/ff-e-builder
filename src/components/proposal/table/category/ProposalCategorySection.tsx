@@ -104,6 +104,7 @@ type ProposalCategorySectionProps = {
   onPrefetchItems: () => void;
   activeColumnGroup: string;
   onActiveColumnGroupChange: (groupId: string) => void;
+  revisionMode?: boolean;
 };
 
 export function ProposalCategorySection({
@@ -135,6 +136,7 @@ export function ProposalCategorySection({
   onPrefetchItems,
   activeColumnGroup,
   onActiveColumnGroupChange,
+  revisionMode = false,
 }: ProposalCategorySectionProps) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -449,6 +451,7 @@ export function ProposalCategorySection({
         subtotalCents={subtotalCents}
         hasOpenRevision={hasOpenRevision}
         openRevisionLabel={openRev?.label}
+        revisionMode={revisionMode}
         visibleColumns={visibleColumnsForPanel}
         hiddenDefaults={hiddenDefaults}
         customColumnDefs={customColumnDefs}
@@ -505,6 +508,13 @@ export function ProposalCategorySection({
                           item={item}
                           otherCategories={otherCategories}
                           columnTemplate={recordColumnTemplate}
+                          revisionMode={revisionMode && hasOpenRevision}
+                          revisionSnapshot={
+                            openRev
+                              ? snapshotsByRevThenItem.get(openRev.id)?.get(item.id)
+                              : undefined
+                          }
+                          openRevisionLabel={openRev?.label}
                           onDelete={() => handleDeleteItem(item)}
                           onDuplicate={() => handleDuplicateItem(item)}
                           onAddToFfe={() => handleAddItemToFfe(item)}

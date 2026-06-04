@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { describe, expect, it, vi } from 'vitest';
-import type { Material, ProposalItem } from '../../../../types';
+import type { Material, ProposalItem, RevisionSnapshot } from '../../../../types';
 import { ProposalRecordRow } from './ProposalRecordRow';
 
 vi.mock('../../../shared/table/GeneratedItemImageCell', () => ({
@@ -134,5 +134,41 @@ describe('ProposalRecordRow', () => {
     );
 
     expect(screen.getByText('Material badges 2')).toBeInTheDocument();
+  });
+
+  it('shows before and after pricing only when revision mode is enabled', () => {
+    const revisionSnapshot: RevisionSnapshot = {
+      revisionId: 'rev-1',
+      itemId: item.id,
+      quantity: 3,
+      unitCostCents: 70000,
+      costStatus: 'flagged',
+    };
+
+    render(
+      <Wrapper>
+        <ProposalRecordRow
+          item={item}
+          otherCategories={[]}
+          revisionMode
+          revisionSnapshot={revisionSnapshot}
+          openRevisionLabel="1.2"
+          onDelete={vi.fn()}
+          onDuplicate={vi.fn()}
+          onAddToFfe={vi.fn()}
+          onMove={vi.fn()}
+          onRowClick={vi.fn()}
+          onSwatchOpen={vi.fn()}
+          getMaterialFinishName={() => undefined}
+        />
+      </Wrapper>,
+    );
+
+    expect(screen.getByText(/Revision 1.2/i)).toBeInTheDocument();
+    expect(screen.getByText('Before qty')).toBeInTheDocument();
+    expect(screen.getByText('After qty')).toBeInTheDocument();
+    expect(screen.getByText('3 unit')).toBeInTheDocument();
+    expect(screen.getByText('$700.00')).toBeInTheDocument();
+    expect(screen.getByText('$2,100.00')).toBeInTheDocument();
   });
 });

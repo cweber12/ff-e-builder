@@ -44,6 +44,8 @@ const PROPOSAL_STATUS_LABEL: Record<ProposalStatus, string> = {
 interface ProposalActionsProps {
   project: Project;
   categoriesWithItems: ProposalCategoryWithItems[];
+  revisionMode?: boolean;
+  onRevisionModeChange?: (next: boolean) => void;
   onAddCategory: () => void;
   onImport: () => void;
   layout?: 'row' | 'column';
@@ -174,6 +176,8 @@ function SidebarSection({ title, children }: { title: string; children: ReactNod
 export function ProposalSidebarSections({
   project,
   categoriesWithItems,
+  revisionMode = false,
+  onRevisionModeChange = () => {},
   onAddCategory,
   onImport,
 }: ProposalActionsProps) {
@@ -192,6 +196,17 @@ export function ProposalSidebarSections({
   const hasItems = categoriesWithItems.some((category) => category.items.length > 0);
   const scheduleCount = categoriesWithItems.length;
   const itemCount = categoriesWithItems.reduce((sum, category) => sum + category.items.length, 0);
+  const openRev = revisions.find((revision) => revision.closedAt === null) ?? null;
+  const flaggedCount = openRev
+    ? snapshots.filter(
+        (snapshot) => snapshot.revisionId === openRev.id && snapshot.costStatus === 'flagged',
+      ).length
+    : 0;
+  const resolvedCount = openRev
+    ? snapshots.filter(
+        (snapshot) => snapshot.revisionId === openRev.id && snapshot.costStatus === 'resolved',
+      ).length
+    : 0;
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [columnsAnchorRect, setColumnsAnchorRect] = useState<DOMRect | null>(null);
@@ -210,6 +225,26 @@ export function ProposalSidebarSections({
           <span className="toolbar-stat">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
+        </div>
+        <div className="project-sidebar-slot gap-1.5">
+          <SidebarButton
+            type="button"
+            selected={revisionMode}
+            disabled={!openRev}
+            onClick={() => onRevisionModeChange(!revisionMode)}
+          >
+            Revision mode
+          </SidebarButton>
+          {openRev ? (
+            <p className="text-[11px] leading-5 text-neutral-600">
+              Show before/after pricing for Revision {openRev.label}. {flaggedCount} flagged,{' '}
+              {resolvedCount} resolved.
+            </p>
+          ) : (
+            <p className="text-[11px] leading-5 text-neutral-500">
+              Open a revision to compare before and after pricing in the list surface.
+            </p>
+          )}
         </div>
       </SidebarSection>
 

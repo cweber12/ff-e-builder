@@ -27,6 +27,7 @@ type ProposalCategoryHeaderProps = {
   subtotalCents: number;
   hasOpenRevision: boolean;
   openRevisionLabel?: string | undefined;
+  revisionMode?: boolean;
   visibleColumns: { id: string; label: string; isCustom?: boolean }[];
   hiddenDefaults: { id: string; label: string }[];
   customColumnDefs: CustomColumnDef[];
@@ -60,6 +61,7 @@ export function ProposalCategoryHeader({
   subtotalCents,
   hasOpenRevision,
   openRevisionLabel,
+  revisionMode = false,
   visibleColumns,
   hiddenDefaults,
   customColumnDefs,
@@ -110,9 +112,9 @@ export function ProposalCategoryHeader({
           <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
-          {hasOpenRevision && openRevisionLabel ? (
+          {revisionMode && hasOpenRevision && openRevisionLabel ? (
             <span className="text-xs font-medium uppercase tracking-[0.12em] text-brand-700">
-              Revision {openRevisionLabel} open
+              Revision {openRevisionLabel} compare
             </span>
           ) : null}
         </div>
@@ -183,7 +185,7 @@ export function ProposalCategoryHeader({
         <Badge variant="neutral" size="md" className="shrink-0">
           {itemCount} {itemCount === 1 ? 'item' : 'items'}
         </Badge>
-        {hasOpenRevision && openRevisionLabel ? (
+        {revisionMode && hasOpenRevision && openRevisionLabel ? (
           <Badge variant="brand" size="md" className="shrink-0">
             Revision {openRevisionLabel}
           </Badge>

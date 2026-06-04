@@ -1,6 +1,12 @@
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
-import { cents, formatMoney, type Material, type ProposalItem } from '../../../../types';
+import {
+  cents,
+  formatMoney,
+  type Material,
+  type ProposalItem,
+  type RevisionSnapshot,
+} from '../../../../types';
 import { proposalLineTotalCents } from '../../../../lib/money';
 import { cn } from '../../../../lib/utils';
 import { GeneratedItemDragHandle } from '../../../shared/table/GeneratedItemDragHandle';
@@ -19,6 +25,9 @@ type ProposalRecordRowProps = {
   item: ProposalItem;
   otherCategories: { id: string; name: string }[];
   columnTemplate?: string | undefined;
+  revisionMode?: boolean;
+  revisionSnapshot?: RevisionSnapshot | undefined;
+  openRevisionLabel?: string | undefined;
   onDelete: () => void;
   onDuplicate: () => void;
   onAddToFfe: () => void;
@@ -34,6 +43,9 @@ export function ProposalRecordRow({
   item,
   otherCategories,
   columnTemplate,
+  revisionMode = false,
+  revisionSnapshot,
+  openRevisionLabel,
   onDelete,
   onDuplicate,
   onAddToFfe,
@@ -176,12 +188,50 @@ export function ProposalRecordRow({
 
         <div data-record-cell="pricing" className="px-5 py-5">
           <div data-record-measure="pricing" className="w-fit max-w-[11rem] space-y-3">
-            <DetailField
-              label="Quantity"
-              value={`${item.quantity} ${item.quantityUnit || 'unit'}`}
-            />
-            <DetailField label="Unit cost" value={formatMoney(cents(item.unitCostCents))} />
-            <DetailField label="Total" value={formatMoney(cents(lineTotal))} emphasis />
+            {revisionMode ? (
+              <>
+                {openRevisionLabel ? (
+                  <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-brand-700">
+                    Revision {openRevisionLabel}
+                  </p>
+                ) : null}
+                <DetailField
+                  label="Before qty"
+                  value={`${item.quantity} ${item.quantityUnit || 'unit'}`}
+                />
+                <DetailField label="Before cost" value={formatMoney(cents(item.unitCostCents))} />
+                <DetailField label="Before total" value={formatMoney(cents(lineTotal))} emphasis />
+                <DetailField
+                  label="After qty"
+                  value={formatRevisionQuantity(revisionSnapshot, item.quantityUnit || 'unit')}
+                  valueTone={revisionSnapshot?.quantity == null ? 'muted' : 'brand'}
+                />
+                <DetailField
+                  label="After cost"
+                  value={formatRevisionCost(revisionSnapshot)}
+                  valueTone={getRevisionCostTone(revisionSnapshot)}
+                />
+                <DetailField
+                  label="After total"
+                  value={formatRevisionTotal(revisionSnapshot)}
+                  emphasis
+                  valueTone={
+                    revisionSnapshot?.quantity != null && revisionSnapshot?.unitCostCents != null
+                      ? 'brand'
+                      : 'muted'
+                  }
+                />
+              </>
+            ) : (
+              <>
+                <DetailField
+                  label="Quantity"
+                  value={`${item.quantity} ${item.quantityUnit || 'unit'}`}
+                />
+                <DetailField label="Unit cost" value={formatMoney(cents(item.unitCostCents))} />
+                <DetailField label="Total" value={formatMoney(cents(lineTotal))} emphasis />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -199,10 +249,12 @@ function DetailField({
   label,
   value,
   emphasis = false,
+  valueTone = 'default',
 }: {
   label: string;
   value: string;
   emphasis?: boolean;
+  valueTone?: 'default' | 'muted' | 'brand' | 'warning' | 'success';
 }) {
   return (
     <div className="min-w-0">
@@ -213,6 +265,10 @@ function DetailField({
         className={cn(
           'mt-1 text-[13px] font-semibold leading-5 text-neutral-900 break-normal',
           emphasis && 'text-neutral-950',
+          valueTone === 'muted' && 'text-neutral-400',
+          valueTone === 'brand' && 'text-brand-700',
+          valueTone === 'warning' && 'text-amber-700',
+          valueTone === 'success' && 'text-green-700',
         )}
         style={valueClampStyle}
       >
@@ -220,4 +276,28 @@ function DetailField({
       </p>
     </div>
   );
+}
+
+function formatRevisionQuantity(snapshot: RevisionSnapshot | undefined, currentUnit: string) {
+  if (snapshot?.quantity == null) return '—';
+  return `${snapshot.quantity} ${currentUnit}`;
+}
+
+function formatRevisionCost(snapshot: RevisionSnapshot | undefined) {
+  if (snapshot?.unitCostCents == null) return '—';
+  return formatMoney(cents(snapshot.unitCostCents));
+}
+
+function formatRevisionTotal(snapshot: RevisionSnapshot | undefined) {
+  if (snapshot?.quantity == null || snapshot.unitCostCents == null) return '—';
+  return formatMoney(cents(Math.round(snapshot.quantity * snapshot.unitCostCents)));
+}
+
+function getRevisionCostTone(
+  snapshot: RevisionSnapshot | undefined,
+): 'muted' | 'warning' | 'success' | 'brand' {
+  if (snapshot?.unitCostCents == null) return 'muted';
+  if (snapshot.costStatus === 'flagged') return 'warning';
+  if (snapshot.costStatus === 'resolved') return 'success';
+  return 'brand';
 }

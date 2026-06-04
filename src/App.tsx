@@ -83,6 +83,8 @@ type ProjectContext = {
   /** Controlled Add Category modal state (lifted to ProjectLayout). */
   addCategoryOpen: boolean;
   onAddCategoryOpenChange: (open: boolean) => void;
+  proposalRevisionMode: boolean;
+  onProposalRevisionModeChange: (next: boolean) => void;
 };
 
 function App() {
@@ -141,6 +143,7 @@ function ProjectLayout() {
     useProposalWithItems(id ?? '', new Set());
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [proposalRevisionMode, setProposalRevisionMode] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     () =>
@@ -163,6 +166,10 @@ function ProjectLayout() {
   useEffect(() => {
     setMobilePanelOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    setProposalRevisionMode(false);
+  }, [id]);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
   const isFfeRoute = !!id && location.pathname.includes(`/projects/${id}/ffe`);
@@ -225,6 +232,8 @@ function ProjectLayout() {
       <ProposalSidebarSections
         project={project}
         categoriesWithItems={proposalCategoriesWithItems}
+        revisionMode={proposalRevisionMode}
+        onRevisionModeChange={setProposalRevisionMode}
         onAddCategory={() => setAddCategoryOpen(true)}
         onImport={() => setProposalImportOpen(true)}
       />
@@ -318,6 +327,8 @@ function ProjectLayout() {
                     onProposalImport: () => setProposalImportOpen(true),
                     addCategoryOpen,
                     onAddCategoryOpenChange: setAddCategoryOpen,
+                    proposalRevisionMode,
+                    onProposalRevisionModeChange: setProposalRevisionMode,
                   } satisfies ProjectContext
                 }
               />
@@ -387,6 +398,8 @@ function ProjectLayout() {
                               onProposalImport: () => setProposalImportOpen(true),
                               addCategoryOpen,
                               onAddCategoryOpenChange: setAddCategoryOpen,
+                              proposalRevisionMode,
+                              onProposalRevisionModeChange: setProposalRevisionMode,
                             } satisfies ProjectContext
                           }
                         />
@@ -403,6 +416,8 @@ function ProjectLayout() {
                               onProposalImport: () => setProposalImportOpen(true),
                               addCategoryOpen,
                               onAddCategoryOpenChange: setAddCategoryOpen,
+                              proposalRevisionMode,
+                              onProposalRevisionModeChange: setProposalRevisionMode,
                             } satisfies ProjectContext
                           }
                         />
@@ -685,8 +700,13 @@ function ProjectToolRedirect({ tool }: { tool: 'ffe' | 'proposal' }) {
 }
 
 function ProjectProposalRoute() {
-  const { project, onProposalImport, addCategoryOpen, onAddCategoryOpenChange } =
-    useProjectContext();
+  const {
+    project,
+    onProposalImport,
+    addCategoryOpen,
+    onAddCategoryOpenChange,
+    proposalRevisionMode,
+  } = useProjectContext();
   return (
     <ProposalTable
       projectId={project.id}
@@ -694,6 +714,7 @@ function ProjectProposalRoute() {
       onImport={onProposalImport}
       addCategoryOpen={addCategoryOpen}
       onAddCategoryOpenChange={onAddCategoryOpenChange}
+      revisionMode={proposalRevisionMode}
     />
   );
 }

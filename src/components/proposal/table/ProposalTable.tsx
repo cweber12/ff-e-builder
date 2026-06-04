@@ -31,6 +31,7 @@ type ProposalTableProps = {
   onDuplicate?: (() => void) | undefined;
   addCategoryOpen?: boolean;
   onAddCategoryOpenChange?: (open: boolean) => void;
+  revisionMode?: boolean;
 };
 
 export function ProposalTable({
@@ -40,6 +41,7 @@ export function ProposalTable({
   onDuplicate,
   addCategoryOpen: addCategoryOpenProp,
   onAddCategoryOpenChange,
+  revisionMode = false,
 }: ProposalTableProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeColumnGroup, setActiveColumnGroup] = useState<string>(ALL_COLUMN_GROUP_ID);
@@ -246,6 +248,7 @@ export function ProposalTable({
               onPrefetchItems={() => prefetchProposalItems(selectedCategory.id)}
               activeColumnGroup={activeColumnGroup}
               onActiveColumnGroupChange={setActiveColumnGroup}
+              revisionMode={revisionMode}
             />
           ) : null}
 
