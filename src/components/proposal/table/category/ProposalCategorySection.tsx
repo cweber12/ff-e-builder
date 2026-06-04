@@ -495,16 +495,24 @@ export function ProposalCategorySection({
         otherCategories={otherCategories}
         hasOpenRevision={hasOpenRevision}
         sensors={sensors}
+        visibleColumns={visibleColumnsForPanel}
+        hiddenDefaults={hiddenDefaults}
         draggableColOrder={draggableColOrder}
         visibleColOrder={visibleColOrder}
         customColumnDefs={customColumnDefs}
+        activeColumnGroup={activeColumnGroup}
         sortedItems={sortedItems}
         dragOverInfo={dragOverInfo}
         pendingFocusItemId={pendingFocusItemId}
         proposalStatus={proposalStatus}
         onClose={() => setIsExpanded(false)}
+        onActiveColumnGroupChange={onActiveColumnGroupChange}
         onRenameCustomColumn={onRenameCustomColumn}
         onDeleteCustomColumn={onDeleteCustomColumn}
+        onMoveColumn={onMoveColumn}
+        onHideColumn={onHideColumn}
+        onRestoreDefault={onRestoreDefault}
+        onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
         onItemSave={handleItemSave}
         onItemDelete={handleDeleteItem}
         onItemDuplicate={handleDuplicateItem}

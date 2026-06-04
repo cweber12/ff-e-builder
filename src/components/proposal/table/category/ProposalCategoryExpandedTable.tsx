@@ -1,4 +1,4 @@
-import { Fragment, type ComponentProps } from 'react';
+import { Fragment, useRef, type ComponentProps } from 'react';
 import { closestCenter, DndContext, type DragEndEvent, type DragOverEvent } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -6,6 +6,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Button } from '../../../primitives';
+import { ColumnsPanel } from '../../../shared/table/ColumnsPanel';
+import { ColumnGroupTabs } from '../../../shared/table/ColumnGroupTabs';
+import { ColumnNavArrows } from '../../../shared/table/TableViewWrappers';
 import {
   cents,
   formatMoney,
@@ -31,6 +34,7 @@ import {
   stickyRevUnitCostExpandedHeaderClassName,
 } from '../proposalTableConstants';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
+import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../../lib/table/generatedItemTablePresets';
 
 type DndSensors = ComponentProps<typeof DndContext>['sensors'];
 
@@ -43,16 +47,24 @@ type ProposalCategoryExpandedTableProps = {
   otherCategories: { id: string; name: string }[];
   hasOpenRevision: boolean;
   sensors: DndSensors;
+  visibleColumns: { id: string; label: string; isCustom?: boolean }[];
+  hiddenDefaults: { id: string; label: string }[];
   draggableColOrder: string[];
   visibleColOrder: string[];
   customColumnDefs: CustomColumnDef[];
+  activeColumnGroup: string;
   sortedItems: ProposalItem[];
   dragOverInfo: { overId: string; insertBefore: boolean } | null;
   pendingFocusItemId: string | null;
   proposalStatus: ProposalStatus;
   onClose: () => void;
+  onActiveColumnGroupChange: (groupId: string) => void;
   onRenameCustomColumn: (defId: string, label: string) => Promise<void>;
   onDeleteCustomColumn: (defId: string) => void;
+  onMoveColumn: (fromId: string, toId: string) => void;
+  onHideColumn: (id: string) => void;
+  onRestoreDefault: (id: string) => void;
+  onOpenAddColumnModal: () => void;
   onItemSave: (item: ProposalItem, patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onItemDelete: (item: ProposalItem) => void;
   onItemDuplicate: (item: ProposalItem) => void;
@@ -78,16 +90,24 @@ export function ProposalCategoryExpandedTable({
   otherCategories,
   hasOpenRevision,
   sensors,
+  visibleColumns,
+  hiddenDefaults,
   draggableColOrder,
   visibleColOrder,
   customColumnDefs,
+  activeColumnGroup,
   sortedItems,
   dragOverInfo,
   pendingFocusItemId,
   proposalStatus,
   onClose,
+  onActiveColumnGroupChange,
   onRenameCustomColumn,
   onDeleteCustomColumn,
+  onMoveColumn,
+  onHideColumn,
+  onRestoreDefault,
+  onOpenAddColumnModal,
   onItemSave,
   onItemDelete,
   onItemDuplicate,
@@ -103,46 +123,93 @@ export function ProposalCategoryExpandedTable({
   onRowDragEnd,
   onRowDragCancel,
 }: ProposalCategoryExpandedTableProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   if (!open) return null;
+  const draggableColumnIds = new Set(draggableColOrder);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (draggableColumnIds.has(String(active.id)) && draggableColumnIds.has(String(over.id))) {
+      onColumnDragEnd(event);
+      return;
+    }
+    onRowDragEnd(event);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (draggableColumnIds.has(String(event.active.id))) return;
+    onRowDragOver(event);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-neutral-950/35 p-4 backdrop-blur-sm">
       <div className="flex h-full flex-col overflow-hidden rounded-sm border border-neutral-200 bg-canvas-chrome shadow-2xl">
         <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-canvas-chrome px-4 py-3">
           <div className="min-w-0">
+            <p className="eyebrow text-brand-700">Spreadsheet View</p>
             <h2 className="truncate text-base font-semibold text-neutral-950">{categoryName}</h2>
             <p className="text-xs text-neutral-500">
-              {itemCount} {itemCount === 1 ? 'item' : 'items'} - {formatMoney(cents(subtotalCents))}
+              {itemCount} {itemCount === 1 ? 'item' : 'items'} · {formatMoney(cents(subtotalCents))}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label="Minimize table view"
-            title="Minimize table view"
-            onClick={onClose}
-          >
-            Minimize
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Close Spreadsheet View"
+              title="Close Spreadsheet View"
+              onClick={onClose}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <ColumnGroupTabs
+              groups={PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnGroups}
+              activeGroupId={activeColumnGroup}
+              onChange={onActiveColumnGroupChange}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <ColumnsPanel
+              title={`${categoryName} spreadsheet`}
+              visibleColumns={visibleColumns}
+              hiddenDefaults={hiddenDefaults}
+              customColumns={customColumnDefs}
+              onMoveColumn={onMoveColumn}
+              onHideColumn={onHideColumn}
+              onRestoreDefault={onRestoreDefault}
+              onRenameCustomColumn={onRenameCustomColumn}
+              onDeleteCustomColumn={onDeleteCustomColumn}
+              onOpenAddColumnModal={onOpenAddColumnModal}
+            />
+            <ColumnNavArrows scrollRef={scrollRef} stepPx={240} />
+          </div>
         </div>
         <div
+          ref={scrollRef}
           tabIndex={0}
-          aria-label={`${categoryName} expanded items table`}
+          aria-label={`${categoryName} Spreadsheet View table`}
           className="min-w-0 flex-1 overflow-auto"
         >
-          <table
-            className={cn(
-              hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
-              'w-full border-collapse text-left text-sm',
-            )}
+          <DndContext
+            {...(sensors !== undefined ? { sensors } : {})}
+            collisionDetection={closestCenter}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={onRowDragCancel}
           >
-            <thead className="sticky top-0 z-30 bg-canvas-chrome text-xs">
-              <DndContext
-                {...(sensors !== undefined ? { sensors } : {})}
-                collisionDetection={closestCenter}
-                onDragEnd={onColumnDragEnd}
-              >
+            <table
+              className={cn(
+                hasOpenRevision ? 'min-w-[1600px]' : 'min-w-[1320px]',
+                'w-full border-collapse text-left text-sm',
+              )}
+            >
+              <thead className="sticky top-0 z-30 bg-canvas-chrome text-xs">
                 <tr>
                   <th className="table-head-cell sticky left-0 z-40 w-8 min-w-8 px-1" />
                   <th className="table-head-cell sticky left-8 z-40 w-24 min-w-24">ID</th>
@@ -275,16 +342,8 @@ export function ProposalCategoryExpandedTable({
                     )}
                   />
                 </tr>
-              </DndContext>
-            </thead>
-            <tbody>
-              <DndContext
-                {...(sensors !== undefined ? { sensors } : {})}
-                collisionDetection={closestCenter}
-                onDragOver={onRowDragOver}
-                onDragEnd={onRowDragEnd}
-                onDragCancel={onRowDragCancel}
-              >
+              </thead>
+              <tbody>
                 <SortableContext
                   items={sortedItems.map((item) => item.id)}
                   strategy={verticalListSortingStrategy}
@@ -323,9 +382,9 @@ export function ProposalCategoryExpandedTable({
                     </Fragment>
                   ))}
                 </SortableContext>
-              </DndContext>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </DndContext>
         </div>
       </div>
     </div>
