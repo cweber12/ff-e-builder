@@ -67,7 +67,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('ProposalRecordRow', () => {
-  it('renders grouped item, plan, specs, materials, and pricing blocks', () => {
+  it('renders the flat item-library strip with row metadata and no section headers', () => {
     render(
       <Wrapper>
         <ProposalRecordRow
@@ -84,12 +84,6 @@ describe('ProposalRecordRow', () => {
       </Wrapper>,
     );
 
-    expect(screen.getByText('Item')).toBeInTheDocument();
-    expect(screen.getByText('Plan')).toBeInTheDocument();
-    expect(screen.getByText('Specs')).toBeInTheDocument();
-    expect(screen.getByText('Materials')).toBeInTheDocument();
-    expect(screen.getByText('Pricing')).toBeInTheDocument();
-
     expect(screen.getByText('Custom Table')).toBeInTheDocument();
     expect(screen.getByText('Kitchen')).toBeInTheDocument();
     expect(screen.getByText('A1.03')).toBeInTheDocument();
@@ -97,9 +91,14 @@ describe('ProposalRecordRow', () => {
     expect(screen.getByText('18 sq ft')).toBeInTheDocument();
     expect(screen.getByText('1.234')).toBeInTheDocument();
     expect(screen.getByText(/Rectangular wood table/i)).toBeInTheDocument();
-    expect(screen.getByText('2 unit')).toBeInTheDocument();
+    expect(screen.getAllByText('2 unit')).toHaveLength(2);
     expect(screen.getByText('$650.00')).toBeInTheDocument();
     expect(screen.getByText('$1,300.00')).toBeInTheDocument();
     expect(screen.queryByText(/item record/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Item')).not.toBeInTheDocument();
+    expect(screen.queryByText('Plan')).not.toBeInTheDocument();
+    expect(screen.queryByText('Specs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Materials')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pricing')).not.toBeInTheDocument();
   });
 });

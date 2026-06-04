@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(item-library): add a main-header schedule selector and active-schedule summary so the Item Library now focuses on one schedule at a time instead of continuous multi-schedule scroll
 - feat(item-library): replace the default proposal spreadsheet surface with grouped Item / Plan / Specs / Materials / Pricing records while keeping Spreadsheet View as the dense-editing path
 - fix(item-library): remove placeholder record copy, widen cramped grouped-row plan/spec blocks, and simplify default schedule header chrome for the Item Library surface
+- refactor(item-library): rebuild the default Item Library list as flat FF&E-style item strips with normal page scrolling, thin section dividers, and static schedule headers while keeping Spreadsheet View as the internal-scrolling edit surface
 - feat(catalog): dock the FF&E item navigator as a finishes-style side panel with category/search/add controls and keep the catalog stage centered in the remaining workspace
 - feat(materials): replace the top-level finishes/materials switch with a docked finishes rail, FF&E-style finish rows, and desktop drag-to-assign onto materials
 - fix(catalog): raise upload image fidelity for FF&E navigator previews and simplify the catalog picker/location header copy

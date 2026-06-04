@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { TotalsBar } from '../../shared/table/TotalsBar';
-import { TableViewStack } from '../../shared/table/TableViewWrappers';
 import { DropdownMenu, MenuItem } from '../../primitives';
 import {
   ALL_COLUMN_GROUP_ID,
@@ -166,7 +165,7 @@ export function ProposalTable({
   }, [activeCategoryId, selection]);
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex flex-1 flex-col">
       {isLoading ? (
         <div>
           {Array.from({ length: 5 }, (_, index) => (
@@ -183,7 +182,7 @@ export function ProposalTable({
           ))}
         </div>
       ) : (
-        <TableViewStack>
+        <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
           <section className="rounded-lg border border-neutral-200 bg-canvas-chrome px-5 py-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
@@ -323,7 +322,7 @@ export function ProposalTable({
               setCategoryToDelete(null);
             }}
           />
-        </TableViewStack>
+        </div>
       )}
     </div>
   );

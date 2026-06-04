@@ -37,7 +37,6 @@ import {
   useRevisionSnapshots,
 } from '../../../../hooks';
 import type { UpdateProposalItemInput } from '../../../../lib/api';
-import { GroupedTableSection } from '../../../shared/table/TableViewWrappers';
 import { ProposalRecordRow } from '../row';
 import { ProposalCategoryHeader } from './ProposalCategoryHeader';
 import { ProposalCategoryMobileCards } from './ProposalCategoryMobileCards';
@@ -374,7 +373,7 @@ export function ProposalCategorySection({
   );
 
   return (
-    <GroupedTableSection>
+    <section className="space-y-3">
       <ProposalCategoryHeader
         layoutMode="records"
         categoryName={categoryName}
@@ -406,7 +405,7 @@ export function ProposalCategorySection({
       />
 
       {!collapsed && !isMobile && (
-        <div className="min-w-0 p-3 sm:p-4">
+        <div className="min-w-0">
           {sortedItems.length === 0 ? (
             <div className="rounded-sm border border-dashed border-neutral-200 bg-white px-5 py-10 text-center">
               <p className="eyebrow text-neutral-500">Schedule</p>
@@ -429,29 +428,35 @@ export function ProposalCategorySection({
                 items={sortedItems.map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex flex-col gap-3">
+                <div className="surface-paper overflow-hidden">
                   {sortedItems.map((item) => (
                     <Fragment key={item.id}>
                       {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
                         <div aria-hidden="true" className="h-0.5 rounded-full bg-brand-500" />
                       )}
-                      <ProposalRecordRow
-                        item={item}
-                        otherCategories={otherCategories}
-                        onDelete={() => handleDeleteItem(item)}
-                        onDuplicate={() => handleDuplicateItem(item)}
-                        onAddToFfe={() => handleAddItemToFfe(item)}
-                        onMove={(toCategoryId) => handleMoveItem(item, toCategoryId)}
-                        onRowClick={() => onItemClick(item)}
-                        onSwatchOpen={setActiveSwatchItemId}
-                        onSwatchPaste={handleSwatchPaste}
-                        isSwatchPasting={
-                          materialCellPaste.isPasting && activeSwatchPasteItemId === item.id
+                      <div
+                        className={
+                          sortedItems[0]?.id === item.id ? undefined : 'border-t border-neutral-200'
                         }
-                        getMaterialFinishName={(material) =>
-                          material.finishId ? finishNameById.get(material.finishId) : undefined
-                        }
-                      />
+                      >
+                        <ProposalRecordRow
+                          item={item}
+                          otherCategories={otherCategories}
+                          onDelete={() => handleDeleteItem(item)}
+                          onDuplicate={() => handleDuplicateItem(item)}
+                          onAddToFfe={() => handleAddItemToFfe(item)}
+                          onMove={(toCategoryId) => handleMoveItem(item, toCategoryId)}
+                          onRowClick={() => onItemClick(item)}
+                          onSwatchOpen={setActiveSwatchItemId}
+                          onSwatchPaste={handleSwatchPaste}
+                          isSwatchPasting={
+                            materialCellPaste.isPasting && activeSwatchPasteItemId === item.id
+                          }
+                          getMaterialFinishName={(material) =>
+                            material.finishId ? finishNameById.get(material.finishId) : undefined
+                          }
+                        />
+                      </div>
                       {dragOverInfo?.overId === item.id && !dragOverInfo.insertBefore && (
                         <div aria-hidden="true" className="h-0.5 rounded-full bg-brand-500" />
                       )}
@@ -554,6 +559,6 @@ export function ProposalCategorySection({
           />
         )}
       </Suspense>
-    </GroupedTableSection>
+    </section>
   );
 }

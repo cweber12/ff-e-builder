@@ -76,6 +76,80 @@ export function ProposalCategoryHeader({
 }: ProposalCategoryHeaderProps) {
   const showTableControls = layoutMode === 'table';
   const recordMode = layoutMode === 'records';
+  if (recordMode) {
+    return (
+      <div className="flex flex-col gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onToggle}
+            onMouseEnter={collapsed ? onPrefetchItems : undefined}
+            aria-expanded={!collapsed}
+            aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
+            title={`${collapsed ? 'Expand' : 'Collapse'} ${categoryName}`}
+            className="shrink-0 rounded px-1 text-xs text-neutral-400 transition-colors hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+          <InlineTextEdit
+            value={categoryName}
+            onSave={onCategoryNameSave}
+            aria-label="Schedule name"
+            renderDisplay={(value) => (
+              <span className="truncate text-sm font-semibold tracking-tight text-neutral-900">
+                {value}
+              </span>
+            )}
+            inputClassName="border-neutral-300 bg-white text-sm font-semibold text-neutral-950"
+          />
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </span>
+          {hasOpenRevision && openRevisionLabel ? (
+            <span className="text-xs font-medium uppercase tracking-[0.12em] text-brand-700">
+              Revision {openRevisionLabel} open
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <div className="flex shrink-0 items-baseline gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-1.5">
+            <span className="eyebrow text-neutral-500">Schedule total</span>
+            <span className="num text-sm font-semibold text-neutral-800">
+              {formatMoney(cents(subtotalCents))}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onAddItem}
+            title={`Add item to ${categoryName}`}
+            aria-label={`Add item to ${categoryName}`}
+            className="btn-add-inline shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            Add item
+          </button>
+          <CategoryActionsMenu
+            layoutMode={layoutMode}
+            categoryName={categoryName}
+            collapsed={collapsed}
+            hiddenDefaults={hiddenDefaults}
+            onCategoryDelete={onCategoryDelete}
+            onAddItem={onAddItem}
+            onAddAllToFfe={onAddAllToFfe}
+            addableToFfeCount={addableToFfeCount}
+            onExpand={onExpand}
+            onRestoreDefault={onRestoreDefault}
+            onOpenAddColumnModal={onOpenAddColumnModal}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <GroupedTableHeader>
       <div className="sticky left-4 flex min-w-0 flex-1 items-center gap-3">
@@ -105,25 +179,13 @@ export function ProposalCategoryHeader({
           )}
           inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
         />
-        {recordMode ? (
-          <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </span>
-        ) : (
-          <Badge variant="neutral" size="md" className="shrink-0">
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </Badge>
-        )}
+        <Badge variant="neutral" size="md" className="shrink-0">
+          {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </Badge>
         {hasOpenRevision && openRevisionLabel ? (
-          recordMode ? (
-            <span className="text-xs font-medium uppercase tracking-[0.12em] text-brand-700">
-              Revision {openRevisionLabel} open
-            </span>
-          ) : (
-            <Badge variant="brand" size="md" className="shrink-0">
-              Revision {openRevisionLabel}
-            </Badge>
-          )
+          <Badge variant="brand" size="md" className="shrink-0">
+            Revision {openRevisionLabel}
+          </Badge>
         ) : null}
         {!collapsed && !isMobile && showTableControls && (
           <ColumnGroupTabs
@@ -135,18 +197,9 @@ export function ProposalCategoryHeader({
       </div>
       <div className="sticky right-4 flex items-center gap-2">
         {!collapsed && !isMobile && showTableControls && <ColumnNavArrows />}
-        {recordMode ? (
-          <div className="flex shrink-0 items-baseline gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-1.5">
-            <span className="eyebrow text-neutral-500">Schedule total</span>
-            <span className="font-mono text-sm font-semibold tabular-nums text-neutral-800">
-              {formatMoney(cents(subtotalCents))}
-            </span>
-          </div>
-        ) : (
-          <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
-            {formatMoney(cents(subtotalCents))}
-          </span>
-        )}
+        <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
+          {formatMoney(cents(subtotalCents))}
+        </span>
         <button
           type="button"
           onClick={onAddItem}
@@ -171,12 +224,7 @@ export function ProposalCategoryHeader({
             onOpenAddColumnModal={onOpenAddColumnModal}
           />
         ) : null}
-        <span
-          className={cn(
-            recordMode ? 'opacity-100' : 'opacity-0 transition-opacity group-hover:opacity-100',
-            'focus-within:opacity-100',
-          )}
-        >
+        <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <CategoryActionsMenu
             layoutMode={layoutMode}
             categoryName={categoryName}
