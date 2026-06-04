@@ -13,6 +13,7 @@ interface ProposalStatusSelectProps {
   className?: string;
   compact?: boolean;
   revisionGuard?: { openRevisionLabel: string; unresolvedCount: number };
+  blockedAction?: { label: string; onClick: () => void };
 }
 
 const STAGE_TOOLTIPS: Record<ProposalStatus, string> = {
@@ -26,7 +27,7 @@ const STAGE_TOOLTIPS: Record<ProposalStatus, string> = {
 };
 
 const STAGE_LABEL: Record<ProposalStatus, string> = {
-  in_progress: 'In progress',
+  in_progress: 'Draft',
   pricing_complete: 'Pricing complete',
   submitted: 'Submitted',
   approved: 'Approved',
@@ -39,6 +40,7 @@ export function ProposalStatusSelect({
   className,
   compact = false,
   revisionGuard,
+  blockedAction,
 }: ProposalStatusSelectProps) {
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
   const currentIndex = PROPOSAL_STATUS_CONFIG[status].stageIndex;
@@ -88,9 +90,20 @@ export function ProposalStatusSelect({
             })}
           </select>
           {isAdvanceBlocked ? (
-            <p className="text-[11px] font-medium text-danger-600">
-              Resolve flagged costs before advancing status.
-            </p>
+            <div className="flex flex-col items-start gap-1">
+              <p className="text-[11px] font-medium text-danger-600">
+                Resolve flagged costs before advancing status.
+              </p>
+              {blockedAction ? (
+                <button
+                  type="button"
+                  onClick={blockedAction.onClick}
+                  className="text-[11px] font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 transition-colors hover:text-brand-800"
+                >
+                  {blockedAction.label}
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
 

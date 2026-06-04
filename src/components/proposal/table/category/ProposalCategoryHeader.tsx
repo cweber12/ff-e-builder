@@ -113,11 +113,6 @@ export function ProposalCategoryHeader({
           <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </span>
-          {revisionMode && hasOpenRevision && openRevisionLabel ? (
-            <span className="text-xs font-medium uppercase tracking-[0.12em] text-brand-700">
-              Revision {openRevisionLabel} compare
-            </span>
-          ) : null}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
           <div className="flex shrink-0 items-baseline justify-between gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-1.5 sm:justify-start">

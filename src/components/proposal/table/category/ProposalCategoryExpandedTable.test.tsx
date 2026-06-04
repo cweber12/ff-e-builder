@@ -68,6 +68,13 @@ const item: ProposalItem = {
   linkedFfeItemId: null,
 };
 
+const flaggedItem: ProposalItem = {
+  ...item,
+  id: 'item-2',
+  productTag: 'F-02',
+  itemName: 'Flagged chair',
+};
+
 describe('ProposalCategoryExpandedTable', () => {
   it('renders Spreadsheet View controls when open', () => {
     render(
@@ -79,6 +86,7 @@ describe('ProposalCategoryExpandedTable', () => {
         projectId="project-1"
         otherCategories={[]}
         hasOpenRevision={false}
+        openRevisionLabel={undefined}
         sensors={undefined}
         visibleColumns={[]}
         hiddenDefaults={[]}
@@ -87,6 +95,8 @@ describe('ProposalCategoryExpandedTable', () => {
         customColumnDefs={[]}
         activeColumnGroup="all"
         sortedItems={[item]}
+        viewFilter="all"
+        flaggedCount={0}
         dragOverInfo={null}
         pendingFocusItemId={null}
         proposalStatus="in_progress"
@@ -120,5 +130,60 @@ describe('ProposalCategoryExpandedTable', () => {
     expect(screen.getByText('Columns Panel')).toBeInTheDocument();
     expect(screen.getByText('Column Navigation')).toBeInTheDocument();
     expect(screen.getByLabelText('Furniture Spreadsheet View table')).toBeInTheDocument();
+  });
+
+  it('shows revision and flagged-only context when opened in flagged review mode', () => {
+    render(
+      <ProposalCategoryExpandedTable
+        open
+        categoryName="Furniture"
+        itemCount={1}
+        subtotalCents={65000}
+        projectId="project-1"
+        otherCategories={[]}
+        hasOpenRevision
+        openRevisionLabel="1.2"
+        sensors={undefined}
+        visibleColumns={[]}
+        hiddenDefaults={[]}
+        draggableColOrder={[]}
+        visibleColOrder={[]}
+        customColumnDefs={[]}
+        activeColumnGroup="all"
+        sortedItems={[flaggedItem]}
+        viewFilter="flagged"
+        flaggedCount={1}
+        dragOverInfo={null}
+        pendingFocusItemId={null}
+        proposalStatus="in_progress"
+        onClose={vi.fn()}
+        onActiveColumnGroupChange={vi.fn()}
+        onRenameCustomColumn={vi.fn(() => Promise.resolve())}
+        onDeleteCustomColumn={vi.fn()}
+        onMoveColumn={vi.fn()}
+        onHideColumn={vi.fn()}
+        onRestoreDefault={vi.fn()}
+        onOpenAddColumnModal={vi.fn()}
+        onItemSave={vi.fn()}
+        onItemDelete={vi.fn()}
+        onItemDuplicate={vi.fn()}
+        onItemAddToFfe={vi.fn()}
+        onItemMove={vi.fn()}
+        onItemClick={vi.fn()}
+        onSwatchOpen={vi.fn()}
+        onSwatchPaste={vi.fn(() => Promise.resolve())}
+        isSwatchPastingForItem={vi.fn(() => false)}
+        getMaterialFinishName={vi.fn(() => undefined)}
+        onColumnDragEnd={vi.fn()}
+        onRowDragOver={vi.fn()}
+        onRowDragEnd={vi.fn()}
+        onRowDragCancel={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Revision 1.2 in progress')).toBeInTheDocument();
+    expect(screen.getByText('Flagged costs only · 1')).toBeInTheDocument();
+    expect(screen.getByText('F-02')).toBeInTheDocument();
+    expect(screen.queryByText('F-01')).not.toBeInTheDocument();
   });
 });

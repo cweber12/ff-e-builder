@@ -9,6 +9,7 @@ import {
   useDeleteProposalItem,
   useIsMobileViewport,
   useProposalRevisions,
+  useRevisionSnapshots,
   useRevisionChangelog,
   useProposalWithItems,
   useUpdateProposalItem,
@@ -44,6 +45,7 @@ export function ProposalItemDetailPanel({
 }: Props) {
   const { categoriesWithItems } = useProposalWithItems(projectId, new Set());
   const { data: revisions = [] } = useProposalRevisions(projectId);
+  const { data: snapshots = [] } = useRevisionSnapshots(projectId);
   const { data: changelogAll = [] } = useRevisionChangelog(projectId);
   const isMobile = useIsMobileViewport();
   const updateItem = useUpdateProposalItem();
@@ -59,6 +61,13 @@ export function ProposalItemDetailPanel({
       .filter((entry) => entry.revisionId === openRev.id && entry.proposalItemId === itemId)
       .sort((a, b) => b.changedAt.localeCompare(a.changedAt));
   }, [changelogAll, openRev, itemId]);
+  const currentRevisionSnapshot = useMemo(
+    () =>
+      snapshots.find(
+        (snapshot) => snapshot.revisionId === openRev?.id && snapshot.itemId === itemId,
+      ),
+    [itemId, openRev, snapshots],
+  );
 
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -149,6 +158,18 @@ export function ProposalItemDetailPanel({
           <h2 className="mt-0.5 truncate font-display text-base font-semibold text-neutral-950">
             {item.productTag || 'Unnamed item'}
           </h2>
+          {openRev ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-pill bg-brand-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-700">
+                Revision {openRev.label} in progress
+              </span>
+              {currentRevisionSnapshot?.costStatus === 'flagged' ? (
+                <span className="inline-flex items-center rounded-pill bg-warning-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-warning-700">
+                  Cost flagged
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <PrevNextButtons
           disabled={sortedItems.length < 2}

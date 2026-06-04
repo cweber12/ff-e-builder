@@ -108,6 +108,8 @@ type ProposalCategorySectionProps = {
   activeColumnGroup: string;
   onActiveColumnGroupChange: (groupId: string) => void;
   revisionMode?: boolean;
+  spreadsheetRequest?: { categoryId: string; filter: 'all' | 'flagged' } | null | undefined;
+  onSpreadsheetRequestHandled?: (() => void) | undefined;
 };
 
 export function ProposalCategorySection({
@@ -140,6 +142,8 @@ export function ProposalCategorySection({
   activeColumnGroup,
   onActiveColumnGroupChange,
   revisionMode = false,
+  spreadsheetRequest = null,
+  onSpreadsheetRequestHandled,
 }: ProposalCategorySectionProps) {
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
@@ -232,6 +236,7 @@ export function ProposalCategorySection({
   }
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [spreadsheetViewFilter, setSpreadsheetViewFilter] = useState<'all' | 'flagged'>('all');
   const [addColumnModalOpen, setAddColumnModalOpen] = useState(false);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items]);
   const draggableColOrder = useMemo(
@@ -367,6 +372,31 @@ export function ProposalCategorySection({
     () => sortedItems.filter((item) => !item.linkedFfeItemId),
     [sortedItems],
   );
+  const flaggedItemIds = useMemo(() => {
+    if (!openRev) return new Set<string>();
+    const currentRevisionSnapshots = snapshotsByRevThenItem.get(openRev.id);
+    if (!currentRevisionSnapshots) return new Set<string>();
+    return new Set(
+      Array.from(currentRevisionSnapshots.entries())
+        .filter(([, snapshot]) => snapshot.costStatus === 'flagged')
+        .map(([itemId]) => itemId),
+    );
+  }, [openRev, snapshotsByRevThenItem]);
+  const spreadsheetItems = useMemo(
+    () =>
+      spreadsheetViewFilter === 'flagged'
+        ? sortedItems.filter((item) => flaggedItemIds.has(item.id))
+        : sortedItems,
+    [flaggedItemIds, sortedItems, spreadsheetViewFilter],
+  );
+
+  useEffect(() => {
+    if (!spreadsheetRequest) return;
+    if (collapsed) onToggle();
+    setSpreadsheetViewFilter(spreadsheetRequest.filter);
+    setIsExpanded(true);
+    onSpreadsheetRequestHandled?.();
+  }, [collapsed, onSpreadsheetRequestHandled, onToggle, spreadsheetRequest]);
 
   const productTagPrefix = categoryName.slice(0, 2).toUpperCase();
   const nextProductTag = useMemo(() => {
@@ -474,7 +504,10 @@ export function ProposalCategorySection({
         onRenameCustomColumn={onRenameCustomColumn}
         onDeleteCustomColumn={onDeleteCustomColumn}
         onOpenAddColumnModal={() => setAddColumnModalOpen(true)}
-        onExpand={() => setIsExpanded(true)}
+        onExpand={() => {
+          setSpreadsheetViewFilter('all');
+          setIsExpanded(true);
+        }}
       />
 
       {!collapsed && !isCompact && (
@@ -571,11 +604,12 @@ export function ProposalCategorySection({
       <ProposalCategoryExpandedTable
         open={isExpanded}
         categoryName={categoryName}
-        itemCount={itemCount}
+        itemCount={spreadsheetItems.length}
         subtotalCents={subtotalCents}
         projectId={projectId}
         otherCategories={otherCategories}
         hasOpenRevision={hasOpenRevision}
+        openRevisionLabel={openRev?.label}
         sensors={sensors}
         visibleColumns={visibleColumnsForPanel}
         hiddenDefaults={hiddenDefaults}
@@ -583,11 +617,16 @@ export function ProposalCategorySection({
         visibleColOrder={visibleColOrder}
         customColumnDefs={customColumnDefs}
         activeColumnGroup={activeColumnGroup}
-        sortedItems={sortedItems}
+        sortedItems={spreadsheetItems}
+        viewFilter={spreadsheetViewFilter}
+        flaggedCount={flaggedItemIds.size}
         dragOverInfo={dragOverInfo}
         pendingFocusItemId={pendingFocusItemId}
         proposalStatus={proposalStatus}
-        onClose={() => setIsExpanded(false)}
+        onClose={() => {
+          setSpreadsheetViewFilter('all');
+          setIsExpanded(false);
+        }}
         onActiveColumnGroupChange={onActiveColumnGroupChange}
         onRenameCustomColumn={onRenameCustomColumn}
         onDeleteCustomColumn={onDeleteCustomColumn}

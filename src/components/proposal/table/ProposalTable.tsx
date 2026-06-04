@@ -32,6 +32,8 @@ type ProposalTableProps = {
   addCategoryOpen?: boolean;
   onAddCategoryOpenChange?: (open: boolean) => void;
   revisionMode?: boolean;
+  spreadsheetRequest?: { categoryId: string; filter: 'all' | 'flagged' } | null;
+  onSpreadsheetRequestHandled?: () => void;
 };
 
 export function ProposalTable({
@@ -42,6 +44,8 @@ export function ProposalTable({
   addCategoryOpen: addCategoryOpenProp,
   onAddCategoryOpenChange,
   revisionMode = false,
+  spreadsheetRequest = null,
+  onSpreadsheetRequestHandled,
 }: ProposalTableProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeColumnGroup, setActiveColumnGroup] = useState<string>(ALL_COLUMN_GROUP_ID);
@@ -169,6 +173,20 @@ export function ProposalTable({
   }, [activeCategoryId, categoriesWithItems]);
 
   useEffect(() => {
+    if (!spreadsheetRequest) return;
+    const requestedCategoryExists = categoriesWithItems.some(
+      (category) => category.id === spreadsheetRequest.categoryId,
+    );
+    if (!requestedCategoryExists) {
+      onSpreadsheetRequestHandled?.();
+      return;
+    }
+    if (activeCategoryId !== spreadsheetRequest.categoryId) {
+      setActiveCategoryId(spreadsheetRequest.categoryId);
+    }
+  }, [activeCategoryId, categoriesWithItems, onSpreadsheetRequestHandled, spreadsheetRequest]);
+
+  useEffect(() => {
     if (!selection) return;
     if (selection.categoryId === activeCategoryId) return;
     setSelection(null);
@@ -238,6 +256,10 @@ export function ProposalTable({
               activeColumnGroup={activeColumnGroup}
               onActiveColumnGroupChange={setActiveColumnGroup}
               revisionMode={revisionMode}
+              spreadsheetRequest={
+                spreadsheetRequest?.categoryId === selectedCategory.id ? spreadsheetRequest : null
+              }
+              onSpreadsheetRequestHandled={onSpreadsheetRequestHandled}
             />
           ) : null}
 

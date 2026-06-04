@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../../../types';
 
@@ -72,9 +73,25 @@ vi.mock('../../../hooks', async () => {
 });
 
 vi.mock('./category/ProposalCategorySection', () => ({
-  ProposalCategorySection: ({ categoryName }: { categoryName: string }) => (
-    <div data-testid="schedule-section">{categoryName}</div>
-  ),
+  ProposalCategorySection: ({
+    categoryName,
+    spreadsheetRequest,
+    onSpreadsheetRequestHandled,
+  }: {
+    categoryName: string;
+    spreadsheetRequest?: { categoryId: string; filter: 'all' | 'flagged' } | null;
+    onSpreadsheetRequestHandled?: () => void;
+  }) => {
+    React.useEffect(() => {
+      if (spreadsheetRequest) onSpreadsheetRequestHandled?.();
+    }, [onSpreadsheetRequestHandled, spreadsheetRequest]);
+
+    return (
+      <div data-testid="schedule-section" data-filter={spreadsheetRequest?.filter ?? 'none'}>
+        {categoryName}
+      </div>
+    );
+  },
 }));
 
 vi.mock('./detail/ProposalItemDetailPanel', () => ({
@@ -150,5 +167,22 @@ describe('ProposalTable active schedule selection', () => {
         items: [{ id: 'l-1', quantity: 3, unitCostCents: 12000, materials: [], cbm: 0 }],
       },
     ];
+  });
+
+  it('switches to the requested schedule when opening flagged-only Spreadsheet View', () => {
+    const onSpreadsheetRequestHandled = vi.fn();
+
+    render(
+      <ProposalTable
+        projectId={project.id}
+        project={project}
+        spreadsheetRequest={{ categoryId: 'lighting', filter: 'flagged' }}
+        onSpreadsheetRequestHandled={onSpreadsheetRequestHandled}
+      />,
+    );
+
+    expect(screen.getByTestId('schedule-section')).toHaveTextContent('Lighting');
+    expect(screen.getByTestId('schedule-section')).toHaveAttribute('data-filter', 'flagged');
+    expect(onSpreadsheetRequestHandled).toHaveBeenCalled();
   });
 });

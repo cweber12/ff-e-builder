@@ -5,7 +5,7 @@ import {
   horizontalListSortingStrategy,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from '../../../primitives';
+import { Badge, Button } from '../../../primitives';
 import { ColumnsPanel } from '../../../shared/table/ColumnsPanel';
 import { ColumnGroupTabs } from '../../../shared/table/ColumnGroupTabs';
 import { ColumnNavArrows } from '../../../shared/table/TableViewWrappers';
@@ -46,6 +46,7 @@ type ProposalCategoryExpandedTableProps = {
   projectId: string;
   otherCategories: { id: string; name: string }[];
   hasOpenRevision: boolean;
+  openRevisionLabel?: string | undefined;
   sensors: DndSensors;
   visibleColumns: { id: string; label: string; isCustom?: boolean }[];
   hiddenDefaults: { id: string; label: string }[];
@@ -54,6 +55,8 @@ type ProposalCategoryExpandedTableProps = {
   customColumnDefs: CustomColumnDef[];
   activeColumnGroup: string;
   sortedItems: ProposalItem[];
+  viewFilter?: 'all' | 'flagged' | undefined;
+  flaggedCount?: number | undefined;
   dragOverInfo: { overId: string; insertBefore: boolean } | null;
   pendingFocusItemId: string | null;
   proposalStatus: ProposalStatus;
@@ -89,6 +92,7 @@ export function ProposalCategoryExpandedTable({
   projectId,
   otherCategories,
   hasOpenRevision,
+  openRevisionLabel,
   sensors,
   visibleColumns,
   hiddenDefaults,
@@ -97,6 +101,8 @@ export function ProposalCategoryExpandedTable({
   customColumnDefs,
   activeColumnGroup,
   sortedItems,
+  viewFilter = 'all',
+  flaggedCount = 0,
   dragOverInfo,
   pendingFocusItemId,
   proposalStatus,
@@ -152,6 +158,22 @@ export function ProposalCategoryExpandedTable({
             <p className="text-xs text-neutral-500">
               {itemCount} {itemCount === 1 ? 'item' : 'items'} · {formatMoney(cents(subtotalCents))}
             </p>
+            {hasOpenRevision || viewFilter === 'flagged' ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {hasOpenRevision ? (
+                  <Badge variant="brand" size="md" className="shrink-0">
+                    {openRevisionLabel
+                      ? `Revision ${openRevisionLabel} in progress`
+                      : 'Revision in progress'}
+                  </Badge>
+                ) : null}
+                {viewFilter === 'flagged' ? (
+                  <Badge variant="warning" size="md" className="shrink-0">
+                    Flagged costs only{flaggedCount > 0 ? ` · ${flaggedCount}` : ''}
+                  </Badge>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             <Button

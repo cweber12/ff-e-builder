@@ -5,7 +5,7 @@ export const proposalStatusConfig: Record<
   { label: string; bgClass: string; textClass: string; hoverClass: string; dotClass: string }
 > = {
   in_progress: {
-    label: 'In Progress',
+    label: 'Draft',
     bgClass: 'bg-blue-50',
     textClass: 'text-blue-700',
     hoverClass: 'hover:bg-blue-100',

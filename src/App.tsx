@@ -85,6 +85,10 @@ type ProjectContext = {
   onAddCategoryOpenChange: (open: boolean) => void;
   proposalRevisionMode: boolean;
   onProposalRevisionModeChange: (next: boolean) => void;
+  proposalSpreadsheetRequest: { categoryId: string; filter: 'all' | 'flagged' } | null;
+  onProposalSpreadsheetRequest: (
+    request: { categoryId: string; filter: 'all' | 'flagged' } | null,
+  ) => void;
 };
 
 function App() {
@@ -144,6 +148,10 @@ function ProjectLayout() {
   const [proposalImportOpen, setProposalImportOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [proposalRevisionMode, setProposalRevisionMode] = useState(false);
+  const [proposalSpreadsheetRequest, setProposalSpreadsheetRequest] = useState<{
+    categoryId: string;
+    filter: 'all' | 'flagged';
+  } | null>(null);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     () =>
@@ -169,6 +177,7 @@ function ProjectLayout() {
 
   useEffect(() => {
     setProposalRevisionMode(false);
+    setProposalSpreadsheetRequest(null);
   }, [id]);
 
   const isPlanCanvasRoute = /^\/projects\/[^/]+\/plans\/[^/]+$/.test(location.pathname);
@@ -234,6 +243,7 @@ function ProjectLayout() {
         categoriesWithItems={proposalCategoriesWithItems}
         revisionMode={proposalRevisionMode}
         onRevisionModeChange={setProposalRevisionMode}
+        onOpenSpreadsheetRequest={setProposalSpreadsheetRequest}
         onAddCategory={() => setAddCategoryOpen(true)}
         onImport={() => setProposalImportOpen(true)}
       />
@@ -327,6 +337,8 @@ function ProjectLayout() {
                     onAddCategoryOpenChange: setAddCategoryOpen,
                     proposalRevisionMode,
                     onProposalRevisionModeChange: setProposalRevisionMode,
+                    proposalSpreadsheetRequest,
+                    onProposalSpreadsheetRequest: setProposalSpreadsheetRequest,
                   } satisfies ProjectContext
                 }
               />
@@ -398,6 +410,8 @@ function ProjectLayout() {
                               onAddCategoryOpenChange: setAddCategoryOpen,
                               proposalRevisionMode,
                               onProposalRevisionModeChange: setProposalRevisionMode,
+                              proposalSpreadsheetRequest,
+                              onProposalSpreadsheetRequest: setProposalSpreadsheetRequest,
                             } satisfies ProjectContext
                           }
                         />
@@ -416,6 +430,8 @@ function ProjectLayout() {
                               onAddCategoryOpenChange: setAddCategoryOpen,
                               proposalRevisionMode,
                               onProposalRevisionModeChange: setProposalRevisionMode,
+                              proposalSpreadsheetRequest,
+                              onProposalSpreadsheetRequest: setProposalSpreadsheetRequest,
                             } satisfies ProjectContext
                           }
                         />
@@ -704,6 +720,8 @@ function ProjectProposalRoute() {
     addCategoryOpen,
     onAddCategoryOpenChange,
     proposalRevisionMode,
+    proposalSpreadsheetRequest,
+    onProposalSpreadsheetRequest,
   } = useProjectContext();
   return (
     <ProposalTable
@@ -713,6 +731,8 @@ function ProjectProposalRoute() {
       addCategoryOpen={addCategoryOpen}
       onAddCategoryOpenChange={onAddCategoryOpenChange}
       revisionMode={proposalRevisionMode}
+      spreadsheetRequest={proposalSpreadsheetRequest}
+      onSpreadsheetRequestHandled={() => onProposalSpreadsheetRequest(null)}
     />
   );
 }

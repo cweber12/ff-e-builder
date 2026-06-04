@@ -34,11 +34,35 @@ describe('ProposalStatusSelect compact mode', () => {
     const statusSelect = screen.getByRole('combobox', { name: 'Proposal status' });
     const submittedOption = screen.getByRole('option', { name: 'Submitted' });
     const approvedOption = screen.getByRole('option', { name: 'Approved' });
-    const inProgressOption = screen.getByRole('option', { name: 'In progress' });
+    const draftOption = screen.getByRole('option', { name: 'Draft' });
 
     expect(statusSelect).toBeInTheDocument();
     expect(submittedOption).toBeDisabled();
     expect(approvedOption).toBeDisabled();
-    expect(inProgressOption).not.toBeDisabled();
+    expect(draftOption).not.toBeDisabled();
+  });
+
+  it('renders a blocked-action shortcut when revision issues are unresolved', async () => {
+    const user = userEvent.setup();
+    const onBlockedAction = vi.fn();
+
+    render(
+      <ProposalStatusSelect
+        status="in_progress"
+        onChange={vi.fn()}
+        compact
+        revisionGuard={{ openRevisionLabel: '2', unresolvedCount: 3 }}
+        blockedAction={{
+          label: 'Open flagged items in Spreadsheet View',
+          onClick: onBlockedAction,
+        }}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Open flagged items in Spreadsheet View' }),
+    );
+
+    expect(onBlockedAction).toHaveBeenCalledTimes(1);
   });
 });

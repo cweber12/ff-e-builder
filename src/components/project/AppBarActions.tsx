@@ -32,7 +32,7 @@ const PROPOSAL_DEFAULT_COLS = [
 ] as const;
 
 const PROPOSAL_STATUS_LABEL: Record<ProposalStatus, string> = {
-  in_progress: 'In progress',
+  in_progress: 'Draft',
   pricing_complete: 'Pricing complete',
   submitted: 'Submitted',
   approved: 'Approved',
@@ -46,6 +46,9 @@ interface ProposalActionsProps {
   categoriesWithItems: ProposalCategoryWithItems[];
   revisionMode?: boolean;
   onRevisionModeChange?: (next: boolean) => void;
+  onOpenSpreadsheetRequest?:
+    | ((request: { categoryId: string; filter: 'all' | 'flagged' } | null) => void)
+    | undefined;
   onAddCategory: () => void;
   onImport: () => void;
   layout?: 'row' | 'column';
@@ -178,6 +181,7 @@ export function ProposalSidebarSections({
   categoriesWithItems,
   revisionMode = false,
   onRevisionModeChange = () => {},
+  onOpenSpreadsheetRequest,
   onAddCategory,
   onImport,
 }: ProposalActionsProps) {
@@ -195,16 +199,6 @@ export function ProposalSidebarSections({
   const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
   const hasItems = categoriesWithItems.some((category) => category.items.length > 0);
   const openRev = revisions.find((revision) => revision.closedAt === null) ?? null;
-  const flaggedCount = openRev
-    ? snapshots.filter(
-        (snapshot) => snapshot.revisionId === openRev.id && snapshot.costStatus === 'flagged',
-      ).length
-    : 0;
-  const resolvedCount = openRev
-    ? snapshots.filter(
-        (snapshot) => snapshot.revisionId === openRev.id && snapshot.costStatus === 'resolved',
-      ).length
-    : 0;
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [columnsAnchorRect, setColumnsAnchorRect] = useState<DOMRect | null>(null);
@@ -212,7 +206,11 @@ export function ProposalSidebarSections({
   return (
     <>
       <SidebarSection title="Workflow">
-        <ProposalSidebarContext project={project} />
+        <ProposalSidebarContext
+          project={project}
+          categoriesWithItems={categoriesWithItems}
+          onOpenSpreadsheetRequest={onOpenSpreadsheetRequest}
+        />
       </SidebarSection>
 
       <SidebarSection title="View">
@@ -223,15 +221,8 @@ export function ProposalSidebarSections({
             disabled={!openRev}
             onClick={() => onRevisionModeChange(!revisionMode)}
           >
-            Revision mode
+            Compare revision values
           </SidebarButton>
-          {openRev ? (
-            <p className="text-[11px] leading-5 text-neutral-500">
-              {openRev.label} open · {flaggedCount} flagged · {resolvedCount} resolved
-            </p>
-          ) : (
-            <p className="text-[11px] leading-5 text-neutral-500">No open revision</p>
-          )}
         </div>
       </SidebarSection>
 
@@ -290,34 +281,17 @@ export function ProposalSidebarSections({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Proposal revision summary — compact chip for the top of the sidebar
-// ---------------------------------------------------------------------------
-export function ProposalRevisionChip({ project }: { project: Project }) {
-  const { data: revisions = [] } = useProposalRevisions(project.id);
-  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
-
-  const openRev = revisions.find((r) => r.closedAt === null) ?? null;
-  if (!openRev) return null;
-
-  const revSnapshots = snapshots.filter((s) => s.revisionId === openRev.id);
-  const flagged = revSnapshots.filter((s) => s.costStatus === 'flagged').length;
-  const resolved = revSnapshots.filter((s) => s.costStatus === 'resolved').length;
-
-  return (
-    <div className="flex w-full items-center justify-between gap-3 rounded-sm border border-neutral-200 bg-canvas-shell px-3 py-2">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-900">
-        {openRev.label}
-      </span>
-      <span className="flex items-center gap-3 text-[10px] font-medium text-neutral-600">
-        <span>{flagged} flagged</span>
-        <span>{resolved} resolved</span>
-      </span>
-    </div>
-  );
-}
-
-export function ProposalSidebarContext({ project }: { project: Project }) {
+export function ProposalSidebarContext({
+  project,
+  categoriesWithItems,
+  onOpenSpreadsheetRequest,
+}: {
+  project: Project;
+  categoriesWithItems: ProposalCategoryWithItems[];
+  onOpenSpreadsheetRequest?:
+    | ((request: { categoryId: string; filter: 'all' | 'flagged' } | null) => void)
+    | undefined;
+}) {
   const updateProject = useUpdateProject();
   const { data: revisions = [] } = useProposalRevisions(project.id);
   const { data: snapshots = [] } = useRevisionSnapshots(project.id);
@@ -326,6 +300,21 @@ export function ProposalSidebarContext({ project }: { project: Project }) {
   const unresolvedCount = openRev
     ? snapshots.filter((s) => s.revisionId === openRev.id && s.costStatus === 'flagged').length
     : 0;
+  const firstFlaggedCategoryId = useMemo(() => {
+    if (!openRev) return null;
+    const flaggedItemIds = new Set(
+      snapshots
+        .filter(
+          (snapshot) => snapshot.revisionId === openRev.id && snapshot.costStatus === 'flagged',
+        )
+        .map((snapshot) => snapshot.itemId),
+    );
+    if (flaggedItemIds.size === 0) return null;
+    const flaggedCategory = categoriesWithItems.find((category) =>
+      category.items.some((item) => flaggedItemIds.has(item.id)),
+    );
+    return flaggedCategory?.id ?? null;
+  }, [categoriesWithItems, openRev, snapshots]);
 
   async function handleStatusChange(next: ProposalStatus) {
     await updateProject.mutateAsync({
@@ -337,22 +326,47 @@ export function ProposalSidebarContext({ project }: { project: Project }) {
   return (
     <div className="project-sidebar-slot gap-2">
       <div className="project-sidebar-slot gap-2">
-        <p className="toolbar-label">Proposal status</p>
-        <p className="text-[12px] font-semibold text-neutral-900">
-          {PROPOSAL_STATUS_LABEL[project.proposalStatus]}
-        </p>
+        <p className="toolbar-label">Proposal workflow</p>
+        {openRev ? (
+          <div className="space-y-1">
+            <p className="text-[12px] font-semibold text-neutral-900">
+              Revision {openRev.label} in progress
+            </p>
+            <p className="text-[11px] leading-5 text-neutral-500">
+              Based on {PROPOSAL_STATUS_LABEL[openRev.triggeredAtStatus]}
+            </p>
+            <p className="text-[11px] leading-5 text-neutral-500">
+              {unresolvedCount} flagged {unresolvedCount === 1 ? 'cost' : 'costs'}
+            </p>
+          </div>
+        ) : (
+          <p className="text-[12px] font-semibold text-neutral-900">
+            {PROPOSAL_STATUS_LABEL[project.proposalStatus]}
+          </p>
+        )}
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}
           disabled={updateProject.isPending}
           compact
           className="w-full"
+          {...(firstFlaggedCategoryId && unresolvedCount > 0
+            ? {
+                blockedAction: {
+                  label: 'Open flagged items in Spreadsheet View',
+                  onClick: () =>
+                    onOpenSpreadsheetRequest?.({
+                      categoryId: firstFlaggedCategoryId,
+                      filter: 'flagged',
+                    }),
+                },
+              }
+            : {})}
           {...(openRev
             ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
             : {})}
         />
       </div>
-      <ProposalRevisionChip project={project} />
     </div>
   );
 }

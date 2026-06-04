@@ -147,7 +147,7 @@ The state of a Revision Snapshot item (`cost_status = 'flagged'`) indicating tha
 _Avoid_: Deferred Cost (legacy term for the superseded per-item deferral flag), pending cost, unresolved cost
 
 **Proposal Status**:
-The lifecycle state of a Project's Proposal workspace. One status per Project; there is no per-item status. Valid values: `in_progress`, `pricing_complete`, `submitted`, `approved`. Stored as `proposal_status` on the `projects` table. Changing status while in `pricing_complete`, `submitted`, or `approved` triggers Proposal Item Change records for tracked fields.
+The lifecycle state of a Project's Proposal workspace. One status per Project; there is no per-item status. Valid values: `in_progress`, `pricing_complete`, `submitted`, `approved`. Stored as `proposal_status` on the `projects` table. In user-facing UI, `in_progress` is displayed as **Draft** when no Revision Round is open; if a Revision Round is open, the workflow chrome should instead communicate **Revision X.Y in progress** while preserving the underlying status value. Changing status while in `pricing_complete`, `submitted`, or `approved` triggers Proposal Item Change records for tracked fields.
 _Avoid_: item status, per-row status, status per item
 
 ### Shared Table UI

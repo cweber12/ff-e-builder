@@ -14,7 +14,7 @@ export const PROPOSAL_STATUS_CONFIG: Record<
   }
 > = {
   in_progress: {
-    label: 'IN PROGRESS',
+    label: 'DRAFT',
     stageIndex: 0,
     filledColor: 'fill-neutral-400',
     precedingColor: 'fill-neutral-400',
