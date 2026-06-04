@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(item-library): move column groups, column visibility/custom-column controls, and horizontal table navigation into Spreadsheet View so the default Item Library list stays scan-first
 - feat(item-library): surface proposal custom data in the item detail panel so focused editing no longer depends on Spreadsheet View for full item context
 - refactor(item-library): tighten the default Item Library list with a compact in-row schedule switcher, stronger metadata labels, description-free rows, normalized `N/A` empty states, and larger rendering/plan imagery
+- refactor(item-library): remove CBM from the default Item Library list, move the item name above the rendering, shift location into the plan section, and drop the redundant empty plan-image status field
 - feat(catalog): dock the FF&E item navigator as a finishes-style side panel with category/search/add controls and keep the catalog stage centered in the remaining workspace
 - feat(materials): replace the top-level finishes/materials switch with a docked finishes rail, FF&E-style finish rows, and desktop drag-to-assign onto materials
 - fix(catalog): raise upload image fidelity for FF&E navigator previews and simplify the catalog picker/location header copy

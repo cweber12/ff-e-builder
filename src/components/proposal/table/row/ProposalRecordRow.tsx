@@ -72,7 +72,7 @@ export function ProposalRecordRow({
         isDragging && 'bg-brand-50/70 opacity-80 shadow-sm',
       )}
     >
-      <div className="grid gap-0 xl:grid-cols-[84px_minmax(0,2fr)_minmax(240px,1.1fr)_minmax(260px,1.2fr)_minmax(220px,0.95fr)_180px]">
+      <div className="grid gap-0 xl:grid-cols-[84px_minmax(0,2fr)_minmax(220px,1fr)_minmax(280px,1.2fr)_minmax(220px,0.95fr)_180px]">
         <div className="flex flex-col items-center justify-center gap-3 px-3 py-4 xl:border-r xl:border-neutral-200">
           <div className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
             <GeneratedItemDragHandle
@@ -98,6 +98,12 @@ export function ProposalRecordRow({
         </div>
 
         <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
+          <p
+            className="mb-3 text-[13px] font-semibold uppercase tracking-[0.04em] text-neutral-900"
+            style={valueClampStyle}
+          >
+            {item.itemName || 'Untitled item'}
+          </p>
           <div className="flex items-start gap-4">
             <GeneratedItemImageControl
               view="proposal"
@@ -106,17 +112,6 @@ export function ProposalRecordRow({
               alt={`${item.productTag || 'Proposal'} rendering`}
               className="h-28 w-[168px]"
             />
-            <div className="min-w-0 flex-1">
-              <p
-                className="text-[13px] font-semibold uppercase tracking-[0.04em] text-neutral-900"
-                style={valueClampStyle}
-              >
-                {item.itemName || 'Untitled item'}
-              </p>
-              <div className="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2">
-                <DetailField label="Location" value={displayValue(item.location)} />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -124,13 +119,13 @@ export function ProposalRecordRow({
           <div className="space-y-3">
             <DetailField label="Size" value={displayValue(item.sizeLabel)} />
             <DetailField label="Footprint" value={displayValue(item.footprintLabel)} />
-            <DetailField label="CBM" value={item.cbm > 0 ? item.cbm.toFixed(3) : 'N/A'} />
           </div>
         </div>
 
         <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
           <div className="grid gap-4 xl:grid-cols-[148px_minmax(0,1fr)] xl:items-start">
-            <div className="shrink-0">
+            <div className="shrink-0 space-y-3">
+              <DetailField label="Location" value={displayValue(item.location)} />
               <GeneratedItemImageControl
                 view="proposal"
                 kind="plan"
@@ -141,7 +136,6 @@ export function ProposalRecordRow({
             </div>
             <div className="space-y-3">
               <DetailField label="Drawing" value={displayValue(item.drawings)} />
-              <DetailField label="Plan image" value={item.plan ? 'Attached' : 'N/A'} />
             </div>
           </div>
         </div>

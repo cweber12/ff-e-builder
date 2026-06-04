@@ -89,8 +89,11 @@ describe('ProposalRecordRow', () => {
     expect(screen.getByText('A1.03')).toBeInTheDocument();
     expect(screen.getByText('72" x 36" x 30"')).toBeInTheDocument();
     expect(screen.getByText('18 sq ft')).toBeInTheDocument();
-    expect(screen.getByText('1.234')).toBeInTheDocument();
-    expect(screen.getAllByText('N/A')).toHaveLength(2);
+    expect(screen.queryByText('1.234')).not.toBeInTheDocument();
+    expect(screen.getByText('Location')).toBeInTheDocument();
+    expect(screen.getByText('Drawing')).toBeInTheDocument();
+    expect(screen.queryByText('Attached')).not.toBeInTheDocument();
+    expect(screen.getByText('N/A')).toBeInTheDocument();
     expect(screen.queryByText(/Rectangular wood table/i)).not.toBeInTheDocument();
     expect(screen.getByText('2 unit')).toBeInTheDocument();
     expect(screen.getByText('$650.00')).toBeInTheDocument();
