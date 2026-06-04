@@ -31,6 +31,7 @@ type GeneratedItemImageControlProps = {
   entityId: string;
   alt: string;
   className?: string | undefined;
+  eager?: boolean | undefined;
 };
 
 export function GeneratedItemImageControl({
@@ -39,6 +40,7 @@ export function GeneratedItemImageControl({
   entityId,
   alt,
   className,
+  eager,
 }: GeneratedItemImageControlProps) {
   const config = imageFrameConfig[view][kind];
   return (
@@ -49,6 +51,7 @@ export function GeneratedItemImageControl({
       fallbackUrl={null}
       className={cn(config.frameClassName, className)}
       compact
+      eager={eager}
     />
   );
 }

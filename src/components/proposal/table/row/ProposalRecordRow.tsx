@@ -131,6 +131,7 @@ export function ProposalRecordRow({
               entityId={item.id}
               alt={`${item.productTag || 'Proposal'} rendering`}
               className="h-28 w-[168px]"
+              eager
             />
           </div>
         </div>
@@ -155,6 +156,7 @@ export function ProposalRecordRow({
                 entityId={item.id}
                 alt={`${item.productTag || 'Proposal'} plan`}
                 className="h-28 w-[148px]"
+                eager
               />
             </div>
             <div className="space-y-3">

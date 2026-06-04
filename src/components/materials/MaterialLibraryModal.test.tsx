@@ -263,4 +263,18 @@ describe('MaterialBadges paste routing', () => {
 
     expect(onPasteImage).toHaveBeenCalledTimes(1);
   });
+
+  it('uses the simplified swatch hover copy', () => {
+    render(
+      <MaterialBadges
+        materials={[makeMaterial('mat-1', 'Door Pull', 'finish-1')]}
+        onOpen={vi.fn()}
+        onPasteImage={vi.fn()}
+        getFinishName={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Paste swatch')).toBeInTheDocument();
+    expect(screen.queryByText('Ctrl+V paste')).not.toBeInTheDocument();
+  });
 });

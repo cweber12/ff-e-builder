@@ -303,9 +303,7 @@ function ProjectLayout() {
     <main
       className={[
         'flex flex-col',
-        isPlanCanvasRoute || isTableRoute || isCatalogRoute
-          ? 'h-screen overflow-hidden'
-          : 'min-h-screen',
+        isPlanCanvasRoute || isCatalogRoute ? 'h-screen overflow-hidden' : 'min-h-screen',
       ].join(' ')}
     >
       {isPlanCanvasRoute ? (

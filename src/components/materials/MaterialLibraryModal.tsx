@@ -1117,7 +1117,7 @@ export function MaterialBadges({
         title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
       >
         <PencilEditIcon className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-        {isPasting ? 'Pasting swatch…' : onPasteImage ? 'Add or paste materials' : 'Add materials'}
+        {isPasting ? 'Pasting swatch…' : 'Add materials'}
       </button>
     );
   }
@@ -1183,8 +1183,8 @@ export function MaterialBadges({
         </span>
       )}
       {onPasteImage && !isPasting && (
-        <span className="mt-1 block rounded-md bg-neutral-950/78 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          Ctrl+V paste
+        <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          Paste swatch
         </span>
       )}
       {isPasting && (

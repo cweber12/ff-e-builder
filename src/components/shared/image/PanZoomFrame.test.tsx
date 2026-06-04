@@ -53,4 +53,19 @@ describe('PanZoomFrame', () => {
       expect.any(Object),
     );
   });
+
+  it('shows the simplified hover affordances for editable plan images', () => {
+    render(
+      <PanZoomFrame
+        entityType="proposal_plan"
+        entityId="00000000-0000-0000-0000-000000000002"
+        alt="MI-1 plan"
+        editable
+      />,
+    );
+
+    expect(screen.getByText('Paste image')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add image for MI-1 plan' })).toBeInTheDocument();
+    expect(screen.queryByText('Ctrl+V paste')).not.toBeInTheDocument();
+  });
 });

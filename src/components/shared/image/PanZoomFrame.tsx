@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { ClipboardEvent as ReactClipboardEvent } from 'react';
+import { Pencil } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { api } from '../../../lib/api';
 import { isPersistedImageEntityId, useImages, useUploadImage } from '../../../hooks';
@@ -232,21 +233,24 @@ export function PanZoomFrame({ entityType, entityId, alt, editable = false }: Pr
                 event.currentTarget.value = '';
               }}
             />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between p-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              <button
-                type="button"
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  inputRef.current?.click();
-                }}
-                className="pointer-events-auto rounded-md border border-white/60 bg-white/92 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900 shadow-sm backdrop-blur-sm hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-                aria-label={`${url ? 'Replace image' : 'Add image'} for ${alt}`}
-              >
-                {url ? 'Replace image' : 'Add image'}
-              </button>
-              <span className="rounded-md bg-neutral-950/78 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm">
-                {upload.isPending ? 'Uploading…' : 'Ctrl+V paste'}
+            <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    inputRef.current?.click();
+                  }}
+                  className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-sm transition hover:bg-white hover:text-neutral-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                  aria-label={`${url ? 'Replace image' : 'Add image'} for ${alt}`}
+                  title={url ? 'Replace image' : 'Add image'}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+                {upload.isPending ? 'Uploading…' : 'Paste image'}
               </span>
             </div>
           </>

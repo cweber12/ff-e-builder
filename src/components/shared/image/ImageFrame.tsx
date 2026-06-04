@@ -6,6 +6,7 @@ import {
   type ClipboardEvent as ReactClipboardEvent,
   type ReactNode,
 } from 'react';
+import { Pencil } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { api } from '../../../lib/api';
 import {
@@ -32,6 +33,7 @@ type ImageFrameProps = {
   onFallbackDelete?: (() => Promise<void> | void) | undefined;
   disabled?: boolean;
   compact?: boolean;
+  eager?: boolean | undefined;
 };
 
 const accept = 'image/jpeg,image/png,image/webp,image/gif';
@@ -48,12 +50,13 @@ export function ImageFrame({
   onFallbackDelete,
   disabled = false,
   compact = false,
+  eager = false,
 }: ImageFrameProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const documentPasteHandlerRef = useRef<((event: ClipboardEvent) => void) | null>(null);
-  const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
+  const [hasEnteredViewport, setHasEnteredViewport] = useState(eager);
   const canLoad = isPersistedImageEntityId(entityId);
   const images = useImages(entityType, entityId);
   const upload = useUploadImage(entityType, entityId);
@@ -102,7 +105,7 @@ export function ImageFrame({
 
   useEffect(() => {
     const node = frameRef.current;
-    if (!node || hasEnteredViewport) return undefined;
+    if (!node || hasEnteredViewport || eager) return undefined;
     if (typeof IntersectionObserver !== 'function') {
       setHasEnteredViewport(true);
       return undefined;
@@ -120,7 +123,11 @@ export function ImageFrame({
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [hasEnteredViewport]);
+  }, [eager, hasEnteredViewport]);
+
+  useEffect(() => {
+    if (eager) setHasEnteredViewport(true);
+  }, [eager]);
 
   useEffect(() => {
     let ignore = false;
@@ -354,21 +361,24 @@ export function ImageFrame({
           />
         )}
         {canUpload && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between p-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-            <button
-              type="button"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                inputRef.current?.click();
-              }}
-              className="pointer-events-auto rounded-md border border-white/60 bg-white/92 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900 shadow-sm backdrop-blur-sm hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
-              aria-label={`${hasImage ? 'Replace image' : 'Add image'} for ${alt}`}
-            >
-              {hasImage ? 'Replace image' : 'Add image'}
-            </button>
-            <span className="rounded-md bg-neutral-950/78 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm">
-              {upload.isPending ? 'Uploading…' : 'Ctrl+V paste'}
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  inputRef.current?.click();
+                }}
+                className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-sm transition hover:bg-white hover:text-neutral-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                aria-label={`${hasImage ? 'Replace image' : 'Add image'} for ${alt}`}
+                title={hasImage ? 'Replace image' : 'Add image'}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+              {upload.isPending ? 'Uploading…' : 'Paste image'}
             </span>
           </div>
         )}

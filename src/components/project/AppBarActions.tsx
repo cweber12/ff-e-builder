@@ -194,8 +194,6 @@ export function ProposalSidebarSections({
   );
   const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
   const hasItems = categoriesWithItems.some((category) => category.items.length > 0);
-  const scheduleCount = categoriesWithItems.length;
-  const itemCount = categoriesWithItems.reduce((sum, category) => sum + category.items.length, 0);
   const openRev = revisions.find((revision) => revision.closedAt === null) ?? null;
   const flaggedCount = openRev
     ? snapshots.filter(
@@ -218,14 +216,6 @@ export function ProposalSidebarSections({
       </SidebarSection>
 
       <SidebarSection title="View">
-        <div className="flex flex-wrap gap-2">
-          <span className="toolbar-stat">
-            {scheduleCount} {scheduleCount === 1 ? 'schedule' : 'schedules'}
-          </span>
-          <span className="toolbar-stat">
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </span>
-        </div>
         <div className="project-sidebar-slot gap-1.5">
           <SidebarButton
             type="button"
@@ -236,14 +226,11 @@ export function ProposalSidebarSections({
             Revision mode
           </SidebarButton>
           {openRev ? (
-            <p className="text-[11px] leading-5 text-neutral-600">
-              Show before/after pricing for Revision {openRev.label}. {flaggedCount} flagged,{' '}
-              {resolvedCount} resolved.
+            <p className="text-[11px] leading-5 text-neutral-500">
+              {openRev.label} open · {flaggedCount} flagged · {resolvedCount} resolved
             </p>
           ) : (
-            <p className="text-[11px] leading-5 text-neutral-500">
-              Open a revision to compare before and after pricing in the list surface.
-            </p>
+            <p className="text-[11px] leading-5 text-neutral-500">No open revision</p>
           )}
         </div>
       </SidebarSection>
@@ -256,10 +243,7 @@ export function ProposalSidebarSections({
             Import
           </SidebarButton>
         </div>
-      </SidebarSection>
-
-      <SidebarSection title="Display">
-        <div className="project-sidebar-slot gap-2">
+        <div className="project-sidebar-slot">
           <SidebarButton
             type="button"
             disabled={!hasItems}
@@ -268,16 +252,19 @@ export function ProposalSidebarSections({
             <Download className="toolbar-icon" aria-hidden="true" />
             Export
           </SidebarButton>
-          <SidebarButton
-            type="button"
-            onClick={(event) => {
-              setColumnsAnchorRect(event.currentTarget.getBoundingClientRect());
-              setColumnsOpen(true);
-            }}
-          >
-            Columns
-          </SidebarButton>
         </div>
+      </SidebarSection>
+
+      <SidebarSection title="Display">
+        <SidebarButton
+          type="button"
+          onClick={(event) => {
+            setColumnsAnchorRect(event.currentTarget.getBoundingClientRect());
+            setColumnsOpen(true);
+          }}
+        >
+          Columns
+        </SidebarButton>
       </SidebarSection>
 
       <ProposalExportModal
@@ -318,19 +305,13 @@ export function ProposalRevisionChip({ project }: { project: Project }) {
   const resolved = revSnapshots.filter((s) => s.costStatus === 'resolved').length;
 
   return (
-    <div className="flex w-full flex-col gap-1 rounded-sm border border-brand-200/70 bg-brand-50/40 px-3 py-2">
+    <div className="flex w-full items-center justify-between gap-3 rounded-sm border border-neutral-200 bg-canvas-shell px-3 py-2">
       <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-900">
         {openRev.label}
       </span>
-      <span className="flex items-center gap-3 text-[10px] font-medium text-neutral-700">
-        <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-warning-500" aria-hidden="true" />
-          {flagged} flagged
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden="true" />
-          {resolved} resolved
-        </span>
+      <span className="flex items-center gap-3 text-[10px] font-medium text-neutral-600">
+        <span>{flagged} flagged</span>
+        <span>{resolved} resolved</span>
       </span>
     </div>
   );
@@ -354,22 +335,18 @@ export function ProposalSidebarContext({ project }: { project: Project }) {
   }
 
   return (
-    <div className="project-sidebar-slot gap-3">
-      <div className="w-full rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-3 shadow-sm">
+    <div className="project-sidebar-slot gap-2">
+      <div className="project-sidebar-slot gap-2">
         <p className="toolbar-label">Proposal status</p>
-        <p className="mt-1 text-[13px] font-semibold text-neutral-950">
+        <p className="text-[12px] font-semibold text-neutral-900">
           {PROPOSAL_STATUS_LABEL[project.proposalStatus]}
-        </p>
-        <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-          Control the proposal workflow stage here before moving deeper into revisions and client
-          review.
         </p>
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}
           disabled={updateProject.isPending}
           compact
-          className="mt-3 w-full"
+          className="w-full"
           {...(openRev
             ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
             : {})}
