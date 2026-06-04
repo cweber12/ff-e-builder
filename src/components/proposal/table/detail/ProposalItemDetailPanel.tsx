@@ -4,6 +4,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 import { cn } from '../../../../lib/utils';
 import {
   useAddProposalItemToFfe,
+  useColumnDefs,
   useCreateProposalItem,
   useDeleteProposalItem,
   useIsMobileViewport,
@@ -49,6 +50,7 @@ export function ProposalItemDetailPanel({
   const createItem = useCreateProposalItem(categoryId);
   const deleteItem = useDeleteProposalItem(categoryId);
   const addToFfe = useAddProposalItemToFfe(projectId);
+  const { data: customColumnDefs = [] } = useColumnDefs(projectId, 'proposal');
 
   const openRev = useMemo(() => revisions.find((r) => r.closedAt === null) ?? null, [revisions]);
   const itemChangelog = useMemo<ProposalItemChangelogEntry[]>(() => {
@@ -176,6 +178,7 @@ export function ProposalItemDetailPanel({
         <div className="flex-1 p-6">
           <ProposalItemDetailForm
             item={item}
+            customColumnDefs={customColumnDefs}
             lineTotalCents={lineTotal}
             onSave={save}
             onOpenMaterials={() => setMaterialsOpen(true)}

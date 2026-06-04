@@ -1,4 +1,4 @@
-import { cents, formatMoney } from '../../../../types';
+import { cents, formatMoney, type CustomColumnDef } from '../../../../types';
 import type { ReactNode } from 'react';
 import type { ProposalItem } from '../../../../types';
 import { GeneratedItemEditableTextControl } from '../../../shared/table/GeneratedItemEditableTextCell';
@@ -13,6 +13,7 @@ import { quantityUnits } from '../proposalTableConstants';
 
 type ProposalItemDetailFormProps = {
   item: ProposalItem;
+  customColumnDefs: CustomColumnDef[];
   lineTotalCents: number;
   onSave: (patch: Omit<UpdateProposalItemInput, 'version'>) => void;
   onOpenMaterials: () => void;
@@ -20,6 +21,7 @@ type ProposalItemDetailFormProps = {
 
 export function ProposalItemDetailForm({
   item,
+  customColumnDefs,
   lineTotalCents,
   onSave,
   onOpenMaterials,
@@ -110,6 +112,31 @@ export function ProposalItemDetailForm({
         <p className="eyebrow mb-2">Materials</p>
         <GeneratedItemMaterialsControl materials={item.materials} onOpen={onOpenMaterials} />
       </div>
+
+      {customColumnDefs.length > 0 && (
+        <div className="mt-7 border-t border-neutral-200 pt-5">
+          <p className="eyebrow mb-3">Custom data</p>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-5">
+            {customColumnDefs.map((definition) => (
+              <FormField key={definition.id} label={definition.label}>
+                <GeneratedItemEditableTextControl
+                  value={item.customData[definition.id] ?? ''}
+                  onSave={(value) =>
+                    onSave({
+                      customData: {
+                        ...item.customData,
+                        [definition.id]: value,
+                      },
+                    })
+                  }
+                  ariaLabel={definition.label}
+                  multiline
+                />
+              </FormField>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-7 border-t border-neutral-200 pt-5">
         <dl className="grid grid-cols-3 gap-6">
