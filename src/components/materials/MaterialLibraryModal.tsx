@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   useEffect,
   useMemo,
@@ -1131,17 +1132,32 @@ export function MaterialBadges({
       onBlur={disablePasteTarget}
       className={cn(
         'group relative inline-block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
-        columns === 2 ? 'max-w-[14rem]' : 'max-w-[16rem]',
+        columns === 2 ? 'max-w-[11rem]' : 'max-w-[16rem]',
       )}
       title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
     >
-      <div className={cn('grid gap-y-1.5', columns === 2 ? 'grid-cols-2 gap-x-3' : 'grid-cols-1')}>
+      <div
+        className={cn(
+          'grid gap-y-1.5',
+          columns === 2
+            ? 'w-[11rem] grid-cols-2 gap-x-3 justify-items-start content-start'
+            : 'grid-cols-1',
+        )}
+      >
         {assigned.map((material) => {
           const finishName = getFinishName?.(material)?.trim() ?? '';
           return (
-            <div key={material.id} className="flex flex-col items-center gap-0.5">
+            <div
+              key={material.id}
+              className={cn(
+                'flex flex-col gap-0.5',
+                columns === 2 ? 'w-[4rem] items-start' : 'items-center',
+              )}
+            >
               <MaterialSwatchImage material={material} size="sm" />
-              <div className="w-full text-center leading-tight">
+              <div
+                className={cn('w-full leading-tight', columns === 2 ? 'text-left' : 'text-center')}
+              >
                 <span
                   title={material.name}
                   className="block w-full whitespace-normal break-words text-[10px] text-neutral-700"

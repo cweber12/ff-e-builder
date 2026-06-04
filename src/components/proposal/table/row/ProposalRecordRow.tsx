@@ -68,7 +68,7 @@ export function ProposalRecordRow({
         transition: transition ?? undefined,
       }}
       className={cn(
-        'project-row group bg-white transition-colors',
+        'project-row group rounded-[10px] border border-neutral-200 bg-white transition-colors',
         'hover:bg-canvas-shell focus-within:bg-canvas-shell',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
         isDragging && 'bg-brand-50/70 opacity-80 shadow-sm',
@@ -206,13 +206,13 @@ function DetailField({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500">
         {label}
       </p>
       <p
         className={cn(
-          'mt-1 text-[13px] leading-5 text-neutral-700 break-normal',
-          emphasis && 'font-semibold text-neutral-950',
+          'mt-1 text-[13px] font-semibold leading-5 text-neutral-900 break-normal',
+          emphasis && 'text-neutral-950',
         )}
         style={valueClampStyle}
       >

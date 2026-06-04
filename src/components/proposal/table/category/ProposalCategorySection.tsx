@@ -494,17 +494,13 @@ export function ProposalCategorySection({
                 items={sortedItems.map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div ref={recordListRef} className="surface-paper overflow-hidden">
+                <div ref={recordListRef} className="space-y-2">
                   {sortedItems.map((item) => (
                     <Fragment key={item.id}>
                       {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
                         <div aria-hidden="true" className="h-0.5 rounded-full bg-brand-500" />
                       )}
-                      <div
-                        className={
-                          sortedItems[0]?.id === item.id ? undefined : 'border-t border-neutral-200'
-                        }
-                      >
+                      <div>
                         <ProposalRecordRow
                           item={item}
                           otherCategories={otherCategories}
