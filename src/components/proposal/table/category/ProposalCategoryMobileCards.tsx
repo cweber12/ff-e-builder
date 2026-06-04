@@ -54,15 +54,24 @@ export function ProposalCategoryMobileCards({
           item.materials.length > 0
             ? `${item.materials.length} ${item.materials.length === 1 ? 'material' : 'materials'}`
             : 'N/A';
+        const cardLabel = [
+          item.itemName || item.productTag || 'item',
+          item.productTag,
+          item.location,
+        ]
+          .filter(Boolean)
+          .join(', ');
         return (
           <article
             key={item.id}
             role="button"
             tabIndex={0}
-            aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
+            aria-label={`Open details for ${cardLabel}`}
+            aria-haspopup="dialog"
+            aria-keyshortcuts="Enter Space"
             onClick={() => onItemClick(item)}
             onKeyDown={(event) => {
-              if (event.key !== 'Enter') return;
+              if (event.key !== 'Enter' && event.key !== ' ') return;
               if (event.target !== event.currentTarget) return;
               event.preventDefault();
               onItemClick(item);

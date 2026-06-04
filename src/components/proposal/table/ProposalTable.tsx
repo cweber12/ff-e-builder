@@ -307,6 +307,8 @@ export function ProposalTable({
 function ProposalTableLoadingState() {
   return (
     <div
+      role="status"
+      aria-live="polite"
       className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5"
       aria-label="Loading Item Library"
       aria-busy="true"

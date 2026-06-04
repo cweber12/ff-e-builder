@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ProposalItem, RevisionSnapshot } from '../../../../types';
 import { ProposalCategoryMobileCards } from './ProposalCategoryMobileCards';
@@ -82,5 +82,31 @@ describe('ProposalCategoryMobileCards', () => {
     expect(screen.getByText('1 material')).toBeInTheDocument();
     expect(screen.getByText('18 sq ft')).toBeInTheDocument();
     expect(screen.getByText('$1,300.00')).toBeInTheDocument();
+  });
+
+  it('opens the detail panel from keyboard Enter and Space interactions', () => {
+    const onItemClick = vi.fn();
+
+    render(
+      <ProposalCategoryMobileCards
+        items={[item]}
+        otherCategories={[]}
+        compactMode="mobile"
+        snapshotsByItem={new Map()}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        onAddToFfe={vi.fn()}
+        onMove={vi.fn()}
+        onItemClick={onItemClick}
+      />,
+    );
+
+    const card = screen.getByRole('button', {
+      name: 'Open details for Custom Table, F-01, Kitchen',
+    });
+    fireEvent.keyDown(card, { key: 'Enter' });
+    fireEvent.keyDown(card, { key: ' ' });
+
+    expect(onItemClick).toHaveBeenCalledTimes(2);
   });
 });

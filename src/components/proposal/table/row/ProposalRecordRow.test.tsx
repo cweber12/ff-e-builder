@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { describe, expect, it, vi } from 'vitest';
@@ -88,7 +88,11 @@ describe('ProposalRecordRow', () => {
     );
 
     expect(screen.getByText('Custom Table')).toBeInTheDocument();
-    expect(screen.getByLabelText('Open details for Custom Table').firstElementChild).toHaveStyle({
+    expect(
+      screen.getByRole('button', {
+        name: 'Open details for Custom Table, F-01, Kitchen',
+      }).firstElementChild,
+    ).toHaveStyle({
       gridTemplateColumns: '84px 208px 180px 236px 160px 148px',
     });
     expect(screen.getByText('Kitchen')).toBeInTheDocument();
@@ -170,5 +174,33 @@ describe('ProposalRecordRow', () => {
     expect(screen.getByText('3 unit')).toBeInTheDocument();
     expect(screen.getByText('$700.00')).toBeInTheDocument();
     expect(screen.getByText('$2,100.00')).toBeInTheDocument();
+  });
+
+  it('opens the detail panel from keyboard Enter and Space interactions', () => {
+    const onRowClick = vi.fn();
+
+    render(
+      <Wrapper>
+        <ProposalRecordRow
+          item={item}
+          otherCategories={[]}
+          onDelete={vi.fn()}
+          onDuplicate={vi.fn()}
+          onAddToFfe={vi.fn()}
+          onMove={vi.fn()}
+          onRowClick={onRowClick}
+          onSwatchOpen={vi.fn()}
+          getMaterialFinishName={() => undefined}
+        />
+      </Wrapper>,
+    );
+
+    const row = screen.getByRole('button', {
+      name: 'Open details for Custom Table, F-01, Kitchen',
+    });
+    fireEvent.keyDown(row, { key: 'Enter' });
+    fireEvent.keyDown(row, { key: ' ' });
+
+    expect(onRowClick).toHaveBeenCalledTimes(2);
   });
 });

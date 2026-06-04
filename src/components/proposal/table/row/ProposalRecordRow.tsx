@@ -61,16 +61,22 @@ export function ProposalRecordRow({
   });
 
   const lineTotal = proposalLineTotalCents(item);
+  const rowLabel = [item.itemName || item.productTag || 'item', item.productTag, item.location]
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <article
       ref={setNodeRef}
       data-item-id={item.id}
+      role="button"
       tabIndex={0}
-      aria-label={`Open details for ${item.itemName || item.productTag || 'item'}`}
+      aria-label={`Open details for ${rowLabel}`}
+      aria-haspopup="dialog"
+      aria-keyshortcuts="Enter Space"
       onClick={onRowClick}
       onKeyDown={(event) => {
-        if (event.key !== 'Enter') return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         onRowClick();
