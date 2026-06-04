@@ -2,6 +2,35 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../../../types';
 
+const mockState = vi.hoisted(() => ({
+  categoriesWithItems: [
+    {
+      id: 'furniture',
+      name: 'Furniture',
+      items: [
+        { id: 'f-1', quantity: 1, unitCostCents: 65000, materials: [], cbm: 0 },
+        { id: 'f-2', quantity: 2, unitCostCents: 28000, materials: [], cbm: 0 },
+      ],
+    },
+    {
+      id: 'lighting',
+      name: 'Lighting',
+      items: [{ id: 'l-1', quantity: 3, unitCostCents: 12000, materials: [], cbm: 0 }],
+    },
+  ] as Array<{
+    id: string;
+    name: string;
+    items: Array<{
+      id: string;
+      quantity: number;
+      unitCostCents: number;
+      materials: [];
+      cbm: number;
+    }>;
+  }>,
+  isLoading: false,
+}));
+
 vi.mock('../../../hooks', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('../../../hooks');
 
@@ -33,22 +62,8 @@ vi.mock('../../../hooks', async () => {
     }),
     usePrefetchProposalItems: () => vi.fn(),
     useProposalWithItems: () => ({
-      categoriesWithItems: [
-        {
-          id: 'furniture',
-          name: 'Furniture',
-          items: [
-            { id: 'f-1', quantity: 1, unitCostCents: 65000, materials: [], cbm: 0 },
-            { id: 'f-2', quantity: 2, unitCostCents: 28000, materials: [], cbm: 0 },
-          ],
-        },
-        {
-          id: 'lighting',
-          name: 'Lighting',
-          items: [{ id: 'l-1', quantity: 3, unitCostCents: 12000, materials: [], cbm: 0 }],
-        },
-      ],
-      isLoading: false,
+      categoriesWithItems: mockState.categoriesWithItems,
+      isLoading: mockState.isLoading,
     }),
     useUpdateColumnDef: () => ({ mutateAsync: vi.fn() }),
     useUpdateProposalCategory: () => ({ mutate: vi.fn() }),
@@ -72,10 +87,6 @@ vi.mock('./dialogs/DeleteCategoryModal', () => ({
 
 vi.mock('../../shared/modals/AddGroupModal', () => ({
   AddGroupModal: () => null,
-}));
-
-vi.mock('./ProposalEmptyState', () => ({
-  ProposalEmptyState: () => null,
 }));
 
 import { ProposalTable } from './ProposalTable';
@@ -102,5 +113,42 @@ describe('ProposalTable active schedule selection', () => {
     expect(screen.getByTestId('schedule-section')).toHaveTextContent('Furniture');
     expect(screen.queryByTestId('schedule-section')).not.toHaveTextContent('Lighting');
     expect(screen.getByText(/Library total/i)).toBeInTheDocument();
+  });
+
+  it('shows a dedicated loading state while schedule data is loading', () => {
+    mockState.isLoading = true;
+
+    render(<ProposalTable projectId={project.id} project={project} />);
+
+    expect(screen.getByLabelText('Loading Item Library')).toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-section')).not.toBeInTheDocument();
+
+    mockState.isLoading = false;
+  });
+
+  it('shows the empty library state without schedule totals when no schedules exist', () => {
+    mockState.categoriesWithItems = [];
+
+    render(<ProposalTable projectId={project.id} project={project} />);
+
+    expect(screen.getByText('No schedules yet')).toBeInTheDocument();
+    expect(screen.queryByText(/Library total/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Grand total/i)).not.toBeInTheDocument();
+
+    mockState.categoriesWithItems = [
+      {
+        id: 'furniture',
+        name: 'Furniture',
+        items: [
+          { id: 'f-1', quantity: 1, unitCostCents: 65000, materials: [], cbm: 0 },
+          { id: 'f-2', quantity: 2, unitCostCents: 28000, materials: [], cbm: 0 },
+        ],
+      },
+      {
+        id: 'lighting',
+        name: 'Lighting',
+        items: [{ id: 'l-1', quantity: 3, unitCostCents: 12000, materials: [], cbm: 0 }],
+      },
+    ];
   });
 });

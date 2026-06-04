@@ -177,29 +177,18 @@ export function ProposalTable({
   return (
     <div className="flex flex-1 flex-col">
       {isLoading ? (
-        <div>
-          {Array.from({ length: 5 }, (_, index) => (
-            <div
-              key={index}
-              className="grid h-13 grid-cols-6 items-center gap-4 border-b border-neutral-200 px-4"
-            >
-              <div className="col-span-2 h-3 rounded bg-neutral-100" />
-              <div className="h-3 rounded bg-neutral-100" />
-              <div className="h-3 rounded bg-neutral-100" />
-              <div className="h-3 rounded bg-neutral-100" />
-              <div className="h-3 rounded bg-neutral-100" />
-            </div>
-          ))}
-        </div>
+        <ProposalTableLoadingState />
       ) : (
         <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <span className="toolbar-stat">
-              {categoriesWithItems.length}{' '}
-              {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
-            </span>
-            <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
-          </div>
+          {categoriesWithItems.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="toolbar-stat">
+                {categoriesWithItems.length}{' '}
+                {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
+              </span>
+              <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
+            </div>
+          ) : null}
 
           {categoriesWithItems.length === 0 ? (
             <ProposalEmptyState
@@ -252,12 +241,14 @@ export function ProposalTable({
             />
           ) : null}
 
-          <TotalsBar
-            itemCount={selectedCategoryItemCount}
-            groupCount={selectedCategory ? 1 : 0}
-            groupLabel="schedule"
-            grandTotal={formatMoney(cents(selectedCategorySubtotal))}
-          />
+          {selectedCategory ? (
+            <TotalsBar
+              itemCount={selectedCategoryItemCount}
+              groupCount={1}
+              groupLabel="schedule"
+              grandTotal={formatMoney(cents(selectedCategorySubtotal))}
+            />
+          ) : null}
 
           <AddGroupModal
             groupLabel="Schedule"
@@ -309,6 +300,62 @@ export function ProposalTable({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function ProposalTableLoadingState() {
+  return (
+    <div
+      className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5"
+      aria-label="Loading Item Library"
+      aria-busy="true"
+    >
+      <span className="sr-only">Loading Item Library</span>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="h-8 w-28 animate-pulse rounded-full bg-neutral-100" />
+        <div className="h-8 w-40 animate-pulse rounded-full bg-neutral-100" />
+      </div>
+      <div className="h-14 animate-pulse rounded-[14px] border border-neutral-200 bg-white" />
+      {Array.from({ length: 3 }, (_, index) => (
+        <div
+          key={index}
+          className="grid animate-pulse gap-0 rounded-[10px] border border-neutral-200 bg-white xl:grid-cols-[84px_208px_220px_280px_188px_164px]"
+        >
+          <div className="flex items-center justify-center px-3 py-6 xl:border-r xl:border-neutral-200">
+            <div className="h-4 w-8 rounded bg-neutral-100" />
+          </div>
+          <div className="space-y-3 px-5 py-5 xl:border-r xl:border-neutral-200">
+            <div className="h-4 w-32 rounded bg-neutral-100" />
+            <div className="h-28 w-[168px] rounded-md bg-neutral-100" />
+          </div>
+          <div className="space-y-3 px-5 py-5 xl:border-r xl:border-neutral-200">
+            <div className="h-4 w-16 rounded bg-neutral-100" />
+            <div className="h-4 w-36 rounded bg-neutral-100" />
+            <div className="h-4 w-24 rounded bg-neutral-100" />
+          </div>
+          <div className="space-y-3 px-5 py-5 xl:border-r xl:border-neutral-200">
+            <div className="h-4 w-20 rounded bg-neutral-100" />
+            <div className="h-28 w-[148px] rounded-md bg-neutral-100" />
+            <div className="h-4 w-24 rounded bg-neutral-100" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 px-5 py-5 xl:border-r xl:border-neutral-200">
+            <div className="space-y-2">
+              <div className="h-10 w-10 rounded-full bg-neutral-100" />
+              <div className="h-3 w-14 rounded bg-neutral-100" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-10 w-10 rounded-full bg-neutral-100" />
+              <div className="h-3 w-14 rounded bg-neutral-100" />
+            </div>
+          </div>
+          <div className="space-y-3 px-5 py-5">
+            <div className="h-4 w-20 rounded bg-neutral-100" />
+            <div className="h-4 w-24 rounded bg-neutral-100" />
+            <div className="h-4 w-20 rounded bg-neutral-100" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

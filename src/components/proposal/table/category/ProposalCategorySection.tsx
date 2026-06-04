@@ -25,7 +25,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { Plus } from 'lucide-react';
 import { toast } from '../../../primitives/toastApi';
+import { Button } from '../../../primitives';
 import {
   type CustomColumnDef,
   type ProposalItem,
@@ -476,15 +478,11 @@ export function ProposalCategorySection({
       {!collapsed && !isMobile && (
         <div className="min-w-0">
           {sortedItems.length === 0 ? (
-            <div className="rounded-sm border border-dashed border-neutral-200 bg-white px-5 py-10 text-center">
-              <p className="eyebrow text-neutral-500">Schedule</p>
-              <p className="mt-2 text-sm font-medium text-neutral-800">
-                No items in this schedule yet.
-              </p>
-              <p className="mt-1 text-sm text-neutral-600">
-                Add the first item here, or switch schedules from the Item Library header.
-              </p>
-            </div>
+            <EmptyScheduleState
+              categoryName={categoryName}
+              canSwitchSchedules={scheduleOptions.length > 1}
+              onAddItem={handleAddItem}
+            />
           ) : (
             <DndContext
               sensors={sensors}
@@ -544,18 +542,26 @@ export function ProposalCategorySection({
 
       {!collapsed && isMobile && (
         <div className="p-3">
-          <ProposalCategoryMobileCards
-            items={sortedItems}
-            otherCategories={otherCategories}
-            snapshotsByItem={
-              openRev ? (snapshotsByRevThenItem.get(openRev.id) ?? new Map()) : new Map()
-            }
-            onDelete={handleDeleteItem}
-            onDuplicate={handleDuplicateItem}
-            onAddToFfe={(item) => handleAddItemToFfe(item)}
-            onMove={handleMoveItem}
-            onItemClick={onItemClick}
-          />
+          {sortedItems.length === 0 ? (
+            <EmptyScheduleState
+              categoryName={categoryName}
+              canSwitchSchedules={scheduleOptions.length > 1}
+              onAddItem={handleAddItem}
+            />
+          ) : (
+            <ProposalCategoryMobileCards
+              items={sortedItems}
+              otherCategories={otherCategories}
+              snapshotsByItem={
+                openRev ? (snapshotsByRevThenItem.get(openRev.id) ?? new Map()) : new Map()
+              }
+              onDelete={handleDeleteItem}
+              onDuplicate={handleDuplicateItem}
+              onAddToFfe={(item) => handleAddItemToFfe(item)}
+              onMove={handleMoveItem}
+              onItemClick={onItemClick}
+            />
+          )}
         </div>
       )}
 
@@ -641,5 +647,33 @@ export function ProposalCategorySection({
         )}
       </Suspense>
     </section>
+  );
+}
+
+function EmptyScheduleState({
+  categoryName,
+  canSwitchSchedules,
+  onAddItem,
+}: {
+  categoryName: string;
+  canSwitchSchedules: boolean;
+  onAddItem: () => void;
+}) {
+  return (
+    <div className="rounded-[14px] border border-dashed border-neutral-200 bg-white px-5 py-10 text-center shadow-sm">
+      <p className="eyebrow text-neutral-500">{categoryName}</p>
+      <p className="mt-2 text-sm font-medium text-neutral-800">No items in this schedule yet.</p>
+      <p className="mt-1 text-sm text-neutral-600">
+        {canSwitchSchedules
+          ? 'Add the first item here, or switch schedules from the dropdown.'
+          : 'Add the first item here to start building this schedule.'}
+      </p>
+      <div className="mt-4 flex justify-center">
+        <Button type="button" variant="addAction" size="sm" onClick={onAddItem}>
+          <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Add item
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -14,13 +14,13 @@ export function ProposalEmptyState({
 }: ProposalEmptyStateProps) {
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-12">
-      <div className="flex w-full max-w-md flex-col items-center gap-5 rounded-lg border border-neutral-200 bg-canvas-chrome px-8 py-10 text-center shadow-sm">
+      <div className="flex w-full max-w-md flex-col items-center gap-5 rounded-[14px] border border-neutral-200 bg-white px-8 py-10 text-center shadow-sm">
         <div className="flex flex-col items-center gap-2">
           <p className="eyebrow text-brand-700">Item Library</p>
-          <h2 className="font-display text-2xl text-neutral-900">No schedules yet</h2>
+          <h2 className="text-xl font-semibold text-neutral-900">No schedules yet</h2>
           <p className="text-sm text-neutral-600">
-            Start the Item Library schedule by schedule so renderings, plan images, finishes, and
-            pricing stay organized without the FF&amp;E catalog clutter.
+            Add the first schedule to organize items, plans, materials, and pricing without the
+            spreadsheet noise.
           </p>
         </div>
         <div className="flex flex-col items-center gap-3">
@@ -42,7 +42,7 @@ export function ProposalEmptyState({
               onClick={onDuplicate}
               className="text-link text-xs text-neutral-500 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
             >
-              Or duplicate from another project
+              Duplicate from another project
             </button>
           )}
         </div>

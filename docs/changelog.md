@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(item-library): remove the oversized top hero card, reduce the shell to a thin totals strip, and promote proposal status to the top of a tighter Workflow-first sidebar
 - feat(item-library): add a sidebar Revision mode toggle that keeps the default list calm by default and only reveals before/after pricing comparison in Item Library rows when explicitly enabled
 - fix(item-library): restore normal page scroll for the default Item Library list, eager-load row media, simplify image and swatch hover affordances, and trim verbose sidebar workflow copy
+- fix(item-library): refresh loading, empty-library, and empty-schedule states with cleaner cards, a record-style loading skeleton, mobile parity for empty schedules, and no stray totals when no schedules exist
 - feat(catalog): dock the FF&E item navigator as a finishes-style side panel with category/search/add controls and keep the catalog stage centered in the remaining workspace
 - feat(materials): replace the top-level finishes/materials switch with a docked finishes rail, FF&E-style finish rows, and desktop drag-to-assign onto materials
 - fix(catalog): raise upload image fidelity for FF&E navigator previews and simplify the catalog picker/location header copy
