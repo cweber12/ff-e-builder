@@ -70,6 +70,9 @@ type ProposalCategorySectionProps = {
   categoryId: string;
   categoryName: string;
   items: ProposalItem[];
+  scheduleOptions: { id: string; name: string; itemCount: number; subtotalCents: number }[];
+  activeCategoryId: string;
+  onActiveCategoryChange: (categoryId: string) => void;
   otherCategories: { id: string; name: string }[];
   subtotalCents: number;
   collapsed: boolean;
@@ -98,6 +101,9 @@ export function ProposalCategorySection({
   categoryId,
   categoryName,
   items,
+  scheduleOptions,
+  activeCategoryId,
+  onActiveCategoryChange,
   otherCategories,
   subtotalCents,
   collapsed,
@@ -377,6 +383,9 @@ export function ProposalCategorySection({
       <ProposalCategoryHeader
         layoutMode="records"
         categoryName={categoryName}
+        scheduleOptions={scheduleOptions}
+        activeCategoryId={activeCategoryId}
+        onActiveCategoryChange={onActiveCategoryChange}
         itemCount={itemCount}
         collapsed={collapsed}
         isMobile={isMobile}

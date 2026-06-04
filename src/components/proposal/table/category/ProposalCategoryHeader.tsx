@@ -18,6 +18,9 @@ import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../../lib/table/gene
 type ProposalCategoryHeaderProps = {
   layoutMode?: 'records' | 'table';
   categoryName: string;
+  scheduleOptions?: { id: string; name: string; itemCount: number; subtotalCents: number }[];
+  activeCategoryId?: string;
+  onActiveCategoryChange?: (categoryId: string) => void;
   itemCount: number;
   collapsed: boolean;
   isMobile: boolean;
@@ -48,6 +51,9 @@ type ProposalCategoryHeaderProps = {
 export function ProposalCategoryHeader({
   layoutMode = 'table',
   categoryName,
+  scheduleOptions = [],
+  activeCategoryId,
+  onActiveCategoryChange,
   itemCount,
   collapsed,
   isMobile,
@@ -78,7 +84,7 @@ export function ProposalCategoryHeader({
   const recordMode = layoutMode === 'records';
   if (recordMode) {
     return (
-      <div className="flex flex-col gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-b border-neutral-200 bg-canvas-chrome px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
@@ -95,16 +101,11 @@ export function ProposalCategoryHeader({
               <ChevronDown className="h-4 w-4" aria-hidden="true" />
             )}
           </button>
-          <InlineTextEdit
-            value={categoryName}
-            onSave={onCategoryNameSave}
-            aria-label="Schedule name"
-            renderDisplay={(value) => (
-              <span className="truncate text-sm font-semibold tracking-tight text-neutral-900">
-                {value}
-              </span>
-            )}
-            inputClassName="border-neutral-300 bg-white text-sm font-semibold text-neutral-950"
+          <CompactScheduleSelect
+            categories={scheduleOptions}
+            activeCategoryId={activeCategoryId ?? null}
+            fallbackName={categoryName}
+            onSelect={onActiveCategoryChange}
           />
           <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
             {itemCount} {itemCount === 1 ? 'item' : 'items'}
@@ -381,6 +382,95 @@ function CategoryActionsMenu({
           </MenuItem>
         </>
       )}
+    </DropdownMenu>
+  );
+}
+
+function CompactScheduleSelect({
+  categories,
+  activeCategoryId,
+  fallbackName,
+  onSelect,
+}: {
+  categories: { id: string; name: string; itemCount: number; subtotalCents: number }[];
+  activeCategoryId: string | null;
+  fallbackName: string;
+  onSelect?: ((categoryId: string) => void) | undefined;
+}) {
+  const activeCategory =
+    categories.find((category) => category.id === activeCategoryId) ?? categories[0] ?? null;
+
+  if (!activeCategory || !onSelect) {
+    return (
+      <span className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-neutral-900">
+        {fallbackName}
+      </span>
+    );
+  }
+
+  return (
+    <DropdownMenu
+      wrapperClassName="min-w-0"
+      panelClassName="z-[280] min-w-[18rem]"
+      positionOptions={{ align: 'bottom', edge: 'left', offsetY: 8 }}
+      renderTrigger={({ triggerRef, open, toggleMenu }) => (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label="Select active schedule"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="group inline-flex min-w-0 items-center gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-2 text-left transition hover:border-brand-300 hover:bg-brand-50/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          onClick={toggleMenu}
+        >
+          <span className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-neutral-900">
+            {activeCategory.name}
+          </span>
+          <ChevronDown
+            className="h-3.5 w-3.5 shrink-0 text-neutral-400 transition group-hover:text-neutral-700 group-[aria-expanded='true']:rotate-180 group-[aria-expanded='true']:text-neutral-900"
+            aria-hidden="true"
+          />
+        </button>
+      )}
+    >
+      {({ closeMenu }) =>
+        categories.map((category) => {
+          const isActive = category.id === activeCategory.id;
+
+          return (
+            <MenuItem
+              key={category.id}
+              type="button"
+              className="flex items-start justify-between gap-4"
+              onClick={() => {
+                closeMenu();
+                onSelect(category.id);
+              }}
+            >
+              <div className="min-w-0">
+                <span
+                  className={
+                    isActive ? 'font-bold text-neutral-950' : 'font-medium text-neutral-800'
+                  }
+                >
+                  {category.name}
+                </span>
+                <span className="mt-1 block text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
+                  {category.itemCount} {category.itemCount === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+              <div className="shrink-0 text-right">
+                <span className="block font-mono text-xs font-semibold tabular-nums text-neutral-800">
+                  {formatMoney(cents(category.subtotalCents))}
+                </span>
+                <span className="mt-1 block text-[11px] uppercase tracking-[0.08em] text-neutral-500">
+                  {isActive ? 'Current' : 'Open'}
+                </span>
+              </div>
+            </MenuItem>
+          );
+        })
+      }
     </DropdownMenu>
   );
 }

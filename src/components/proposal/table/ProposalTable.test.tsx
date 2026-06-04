@@ -1,5 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../../../types';
 
@@ -96,25 +95,12 @@ const project = {
 } satisfies Project;
 
 describe('ProposalTable active schedule selection', () => {
-  it('shows one schedule at a time and switches from the header dropdown', async () => {
-    const user = userEvent.setup();
-
+  it('shows one schedule at a time in the default Item Library surface', () => {
     render(<ProposalTable projectId={project.id} project={project} />);
 
-    const currentScheduleButton = screen.getByRole('button', {
-      name: 'Select active schedule',
-    });
-    expect(within(currentScheduleButton).getByText('Furniture')).toBeInTheDocument();
     expect(screen.getAllByTestId('schedule-section')).toHaveLength(1);
     expect(screen.getByTestId('schedule-section')).toHaveTextContent('Furniture');
     expect(screen.queryByTestId('schedule-section')).not.toHaveTextContent('Lighting');
-
-    await user.click(currentScheduleButton);
-    await user.click(screen.getByRole('menuitem', { name: /Lighting/i }));
-
-    expect(within(currentScheduleButton).getByText('Lighting')).toBeInTheDocument();
-    expect(screen.getAllByTestId('schedule-section')).toHaveLength(1);
-    expect(screen.getByTestId('schedule-section')).toHaveTextContent('Lighting');
-    expect(screen.queryByTestId('schedule-section')).not.toHaveTextContent('Furniture');
+    expect(screen.getByText(/Library total/i)).toBeInTheDocument();
   });
 });

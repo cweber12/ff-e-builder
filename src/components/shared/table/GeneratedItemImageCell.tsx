@@ -30,6 +30,7 @@ type GeneratedItemImageControlProps = {
   kind: GeneratedItemImageKind;
   entityId: string;
   alt: string;
+  className?: string | undefined;
 };
 
 export function GeneratedItemImageControl({
@@ -37,6 +38,7 @@ export function GeneratedItemImageControl({
   kind,
   entityId,
   alt,
+  className,
 }: GeneratedItemImageControlProps) {
   const config = imageFrameConfig[view][kind];
   return (
@@ -45,7 +47,7 @@ export function GeneratedItemImageControl({
       entityId={entityId}
       alt={alt}
       fallbackUrl={null}
-      className={config.frameClassName}
+      className={cn(config.frameClassName, className)}
       compact
     />
   );

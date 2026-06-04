@@ -8,7 +8,7 @@ import { GeneratedItemImageControl } from '../../../shared/table/GeneratedItemIm
 import { GeneratedItemMaterialsControl } from '../../../shared/table/GeneratedItemMaterialsCell';
 import { ProposalItemActionsMenu } from './ProposalItemActionsMenu';
 
-const descriptionClampStyle = {
+const valueClampStyle = {
   display: '-webkit-box',
   WebkitBoxOrient: 'vertical' as const,
   WebkitLineClamp: 2,
@@ -72,7 +72,7 @@ export function ProposalRecordRow({
         isDragging && 'bg-brand-50/70 opacity-80 shadow-sm',
       )}
     >
-      <div className="grid gap-0 xl:grid-cols-[80px_minmax(0,2.2fr)_minmax(220px,1.25fr)_minmax(240px,1.3fr)_minmax(220px,1.1fr)_180px]">
+      <div className="grid gap-0 xl:grid-cols-[84px_minmax(0,2fr)_minmax(240px,1.1fr)_minmax(260px,1.2fr)_minmax(220px,0.95fr)_180px]">
         <div className="flex flex-col items-center justify-center gap-3 px-3 py-4 xl:border-r xl:border-neutral-200">
           <div className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
             <GeneratedItemDragHandle
@@ -98,70 +98,72 @@ export function ProposalRecordRow({
         </div>
 
         <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
-          <div className="flex gap-4">
+          <div className="flex items-start gap-4">
             <GeneratedItemImageControl
               view="proposal"
               kind="rendering"
               entityId={item.id}
               alt={`${item.productTag || 'Proposal'} rendering`}
+              className="h-28 w-[168px]"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold leading-6 text-neutral-950">
+              <p
+                className="text-[13px] font-semibold uppercase tracking-[0.04em] text-neutral-900"
+                style={valueClampStyle}
+              >
                 {item.itemName || 'Untitled item'}
               </p>
-              <p className="mt-1 text-sm leading-6 text-neutral-700" style={descriptionClampStyle}>
-                {item.description || 'No product description yet.'}
-              </p>
-              <div className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2">
-                <DetailField label="Location" value={item.location || 'No location assigned'} />
-                <DetailField
-                  label="Quantity"
-                  value={`${item.quantity} ${item.quantityUnit || 'unit'}`}
-                />
+              <div className="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2">
+                <DetailField label="Location" value={displayValue(item.location)} />
               </div>
             </div>
           </div>
         </div>
 
         <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
-          <div className="space-y-2">
-            <DetailField label="Size" value={item.sizeLabel || '—'} />
-            <DetailField label="Footprint" value={item.footprintLabel || '—'} />
-            <DetailField label="CBM" value={item.cbm > 0 ? item.cbm.toFixed(3) : '—'} />
+          <div className="space-y-3">
+            <DetailField label="Size" value={displayValue(item.sizeLabel)} />
+            <DetailField label="Footprint" value={displayValue(item.footprintLabel)} />
+            <DetailField label="CBM" value={item.cbm > 0 ? item.cbm.toFixed(3) : 'N/A'} />
           </div>
         </div>
 
         <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
-          <div className="grid gap-4 xl:grid-cols-[120px_minmax(0,1fr)] xl:items-start">
+          <div className="grid gap-4 xl:grid-cols-[148px_minmax(0,1fr)] xl:items-start">
             <div className="shrink-0">
               <GeneratedItemImageControl
                 view="proposal"
                 kind="plan"
                 entityId={item.id}
                 alt={`${item.productTag || 'Proposal'} plan`}
+                className="h-28 w-[148px]"
               />
             </div>
-            <div className="space-y-2">
-              <DetailField label="Drawing" value={item.drawings || 'No drawing reference'} />
-              <DetailField label="Plan image" value={item.plan ? 'Attached' : 'Not attached'} />
+            <div className="space-y-3">
+              <DetailField label="Drawing" value={displayValue(item.drawings)} />
+              <DetailField label="Plan image" value={item.plan ? 'Attached' : 'N/A'} />
             </div>
           </div>
         </div>
 
         <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
-          <div onClick={(event) => event.stopPropagation()}>
-            <GeneratedItemMaterialsControl
-              materials={item.materials}
-              onOpen={() => onSwatchOpen(item.id)}
-              onPasteImage={onSwatchPaste ? (file) => onSwatchPaste(item, file) : undefined}
-              isPasting={isSwatchPasting}
-              getFinishName={getMaterialFinishName}
-            />
-          </div>
+          {item.materials.length > 0 ? (
+            <div onClick={(event) => event.stopPropagation()}>
+              <GeneratedItemMaterialsControl
+                materials={item.materials}
+                onOpen={() => onSwatchOpen(item.id)}
+                onPasteImage={onSwatchPaste ? (file) => onSwatchPaste(item, file) : undefined}
+                isPasting={isSwatchPasting}
+                getFinishName={getMaterialFinishName}
+              />
+            </div>
+          ) : (
+            <DetailField label="Materials" value="N/A" />
+          )}
         </div>
 
         <div className="px-4 py-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <DetailField
               label="Quantity"
               value={`${item.quantity} ${item.quantityUnit || 'unit'}`}
@@ -175,6 +177,12 @@ export function ProposalRecordRow({
   );
 }
 
+function displayValue(value: string | null | undefined) {
+  if (typeof value !== 'string') return 'N/A';
+  const trimmed = value.trim();
+  return trimmed ? trimmed : 'N/A';
+}
+
 function DetailField({
   label,
   value,
@@ -186,12 +194,15 @@ function DetailField({
 }) {
   return (
     <div className="min-w-0">
-      <p className="eyebrow text-neutral-500">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-900">
+        {label}
+      </p>
       <p
         className={cn(
-          'mt-1 text-sm leading-6 text-neutral-800 break-normal',
+          'mt-1 text-[13px] leading-5 text-neutral-700 break-normal',
           emphasis && 'font-semibold text-neutral-950',
         )}
+        style={valueClampStyle}
       >
         {value}
       </p>
