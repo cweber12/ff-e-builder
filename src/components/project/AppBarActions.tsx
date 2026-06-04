@@ -31,6 +31,13 @@ const PROPOSAL_DEFAULT_COLS = [
   'cbm',
 ] as const;
 
+const PROPOSAL_STATUS_LABEL: Record<ProposalStatus, string> = {
+  in_progress: 'In progress',
+  pricing_complete: 'Pricing complete',
+  submitted: 'Submitted',
+  approved: 'Approved',
+};
+
 // ---------------------------------------------------------------------------
 // Proposal action cluster
 // ---------------------------------------------------------------------------
@@ -191,22 +198,12 @@ export function ProposalSidebarSections({
 
   return (
     <>
-      <div className="project-sidebar-slot gap-3">
-        <div className="rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-3 shadow-sm">
-          <p className="eyebrow text-brand-700">Item Library</p>
-          <p className="mt-1 text-[13px] font-medium leading-5 text-neutral-900">
-            Project items organized into schedules, imagery, and pricing.
-          </p>
-          <p className="mt-2 text-[11px] leading-5 text-neutral-600">
-            A calmer, scan-first shell for specification work before users step into denser editing
-            and revision management.
-          </p>
-        </div>
-      </div>
+      <SidebarSection title="Workflow">
+        <ProposalSidebarContext project={project} />
+      </SidebarSection>
 
       <SidebarSection title="View">
         <div className="flex flex-wrap gap-2">
-          <span className="toolbar-stat">List surface</span>
           <span className="toolbar-stat">
             {scheduleCount} {scheduleCount === 1 ? 'schedule' : 'schedules'}
           </span>
@@ -248,10 +245,6 @@ export function ProposalSidebarSections({
         </div>
       </SidebarSection>
 
-      <SidebarSection title="Status">
-        <ProposalSidebarContext project={project} />
-      </SidebarSection>
-
       <ProposalExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
@@ -290,7 +283,7 @@ export function ProposalRevisionChip({ project }: { project: Project }) {
   const resolved = revSnapshots.filter((s) => s.costStatus === 'resolved').length;
 
   return (
-    <div className="flex w-full flex-col gap-1 rounded-sm bg-brand-50/60 px-2.5 py-1.5">
+    <div className="flex w-full flex-col gap-1 rounded-sm border border-brand-200/70 bg-brand-50/40 px-3 py-2">
       <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-900">
         {openRev.label}
       </span>
@@ -326,21 +319,28 @@ export function ProposalSidebarContext({ project }: { project: Project }) {
   }
 
   return (
-    <div className="project-sidebar-slot gap-2.5">
-      <ProposalRevisionChip project={project} />
-      <div className="w-full border-t border-neutral-200/80 pt-2">
-        <p className="toolbar-label pb-1">Proposal status</p>
+    <div className="project-sidebar-slot gap-3">
+      <div className="w-full rounded-sm border border-neutral-200 bg-canvas-chrome px-3 py-3 shadow-sm">
+        <p className="toolbar-label">Proposal status</p>
+        <p className="mt-1 text-[13px] font-semibold text-neutral-950">
+          {PROPOSAL_STATUS_LABEL[project.proposalStatus]}
+        </p>
+        <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+          Control the proposal workflow stage here before moving deeper into revisions and client
+          review.
+        </p>
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}
           disabled={updateProject.isPending}
           compact
-          className="w-full"
+          className="mt-3 w-full"
           {...(openRev
             ? { revisionGuard: { openRevisionLabel: openRev.label, unresolvedCount } }
             : {})}
         />
       </div>
+      <ProposalRevisionChip project={project} />
     </div>
   );
 }

@@ -191,24 +191,13 @@ export function ProposalTable({
         </div>
       ) : (
         <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
-          <section className="rounded-lg border border-neutral-200 bg-canvas-chrome px-5 py-5 shadow-sm">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0">
-                <p className="eyebrow text-brand-700">Item Library</p>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
-                  Jump into one schedule at a time, scan items without the continuous scroll, and
-                  move into denser editing only when the work actually calls for it.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="toolbar-stat">
-                  {categoriesWithItems.length}{' '}
-                  {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
-                </span>
-                <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
-              </div>
-            </div>
-          </section>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <span className="toolbar-stat">
+              {categoriesWithItems.length}{' '}
+              {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
+            </span>
+            <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
+          </div>
 
           {categoriesWithItems.length === 0 ? (
             <ProposalEmptyState
