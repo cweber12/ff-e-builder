@@ -75,6 +75,7 @@ describe('ProposalRecordRow', () => {
         <ProposalRecordRow
           item={item}
           otherCategories={[]}
+          columnTemplate="84px 208px 180px 236px 160px 148px"
           onDelete={vi.fn()}
           onDuplicate={vi.fn()}
           onAddToFfe={vi.fn()}
@@ -87,6 +88,9 @@ describe('ProposalRecordRow', () => {
     );
 
     expect(screen.getByText('Custom Table')).toBeInTheDocument();
+    expect(screen.getByLabelText('Open details for Custom Table').firstElementChild).toHaveStyle({
+      gridTemplateColumns: '84px 208px 180px 236px 160px 148px',
+    });
     expect(screen.getByText('Kitchen')).toBeInTheDocument();
     expect(screen.getByText('A1.03')).toBeInTheDocument();
     expect(screen.getByText('72" x 36" x 30"')).toBeInTheDocument();

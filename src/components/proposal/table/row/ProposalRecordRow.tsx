@@ -18,6 +18,7 @@ const valueClampStyle = {
 type ProposalRecordRowProps = {
   item: ProposalItem;
   otherCategories: { id: string; name: string }[];
+  columnTemplate?: string | undefined;
   onDelete: () => void;
   onDuplicate: () => void;
   onAddToFfe: () => void;
@@ -32,6 +33,7 @@ type ProposalRecordRowProps = {
 export function ProposalRecordRow({
   item,
   otherCategories,
+  columnTemplate,
   onDelete,
   onDuplicate,
   onAddToFfe,
@@ -72,8 +74,14 @@ export function ProposalRecordRow({
         isDragging && 'bg-brand-50/70 opacity-80 shadow-sm',
       )}
     >
-      <div className="grid gap-0 xl:[grid-template-columns:84px_fit-content(12.5rem)_fit-content(16rem)_fit-content(21rem)_fit-content(14rem)_fit-content(11rem)]">
-        <div className="flex flex-col items-center justify-center gap-3 px-3 py-4 xl:border-r xl:border-neutral-200">
+      <div
+        className="grid gap-0"
+        style={columnTemplate ? { gridTemplateColumns: columnTemplate } : undefined}
+      >
+        <div
+          data-record-cell="identity"
+          className="flex flex-col items-center justify-center gap-3 px-3 py-4 xl:border-r xl:border-neutral-200"
+        >
           <div className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
             <GeneratedItemDragHandle
               ariaLabel={`Drag ${item.productTag || 'item'}`}
@@ -97,8 +105,8 @@ export function ProposalRecordRow({
           </div>
         </div>
 
-        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
-          <div className="w-[168px]">
+        <div data-record-cell="item" className="px-5 py-5 xl:border-r xl:border-neutral-200">
+          <div data-record-measure="item" className="w-[168px]">
             <p
               className="mb-3 w-[168px] text-[13px] font-semibold uppercase tracking-[0.04em] text-neutral-900"
               style={valueClampStyle}
@@ -115,15 +123,18 @@ export function ProposalRecordRow({
           </div>
         </div>
 
-        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
-          <div className="space-y-3">
+        <div data-record-cell="specs" className="px-5 py-5 xl:border-r xl:border-neutral-200">
+          <div data-record-measure="specs" className="w-fit max-w-[16rem] space-y-3">
             <DetailField label="Size" value={displayValue(item.sizeLabel)} />
             <DetailField label="Footprint" value={displayValue(item.footprintLabel)} />
           </div>
         </div>
 
-        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
-          <div className="grid gap-4 xl:[grid-template-columns:148px_fit-content(9rem)] xl:items-start">
+        <div data-record-cell="plan" className="px-5 py-5 xl:border-r xl:border-neutral-200">
+          <div
+            data-record-measure="plan"
+            className="grid w-fit gap-4 xl:[grid-template-columns:148px_fit-content(9rem)] xl:items-start"
+          >
             <div className="shrink-0 space-y-3">
               <DetailField label="Location" value={displayValue(item.location)} />
               <GeneratedItemImageControl
@@ -140,9 +151,13 @@ export function ProposalRecordRow({
           </div>
         </div>
 
-        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
+        <div data-record-cell="materials" className="px-5 py-5 xl:border-r xl:border-neutral-200">
           {item.materials.length > 0 ? (
-            <div className="w-fit" onClick={(event) => event.stopPropagation()}>
+            <div
+              data-record-measure="materials"
+              className="w-fit"
+              onClick={(event) => event.stopPropagation()}
+            >
               <GeneratedItemMaterialsControl
                 materials={item.materials}
                 onOpen={() => onSwatchOpen(item.id)}
@@ -153,12 +168,14 @@ export function ProposalRecordRow({
               />
             </div>
           ) : (
-            <DetailField label="Materials" value="N/A" />
+            <div data-record-measure="materials" className="w-fit">
+              <DetailField label="Materials" value="N/A" />
+            </div>
           )}
         </div>
 
-        <div className="px-5 py-5">
-          <div className="space-y-3">
+        <div data-record-cell="pricing" className="px-5 py-5">
+          <div data-record-measure="pricing" className="w-fit max-w-[11rem] space-y-3">
             <DetailField
               label="Quantity"
               value={`${item.quantity} ${item.quantityUnit || 'unit'}`}

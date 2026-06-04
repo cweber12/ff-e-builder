@@ -1,4 +1,14 @@
-import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   closestCenter,
   DndContext,
@@ -168,6 +178,8 @@ export function ProposalCategorySection({
   const [pendingChange, setPendingChange] = useState<PendingProposalCategoryChange | null>(null);
   const [activeSwatchItemId, setActiveSwatchItemId] = useState<string | null>(null);
   const [activeSwatchPasteItemId, setActiveSwatchPasteItemId] = useState<string | null>(null);
+  const recordListRef = useRef<HTMLDivElement | null>(null);
+  const [recordColumnTemplate, setRecordColumnTemplate] = useState<string | undefined>(undefined);
   const handleSwatchPaste = useCallback(
     async (item: ProposalItem, file: File) => {
       if (materialCellPaste.isPasting) return;
@@ -240,6 +252,51 @@ export function ProposalCategorySection({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  useLayoutEffect(() => {
+    if (isMobile || collapsed || isExpanded || sortedItems.length === 0) return;
+    const list = recordListRef.current;
+    if (!list) return;
+
+    const measureWidth = (key: 'item' | 'specs' | 'plan' | 'materials' | 'pricing') => {
+      const nodes = Array.from(
+        list.querySelectorAll<HTMLElement>(`[data-record-measure="${key}"]`),
+      );
+      return nodes.reduce(
+        (widest, node) => Math.max(widest, Math.ceil(node.getBoundingClientRect().width)),
+        0,
+      );
+    };
+
+    const updateTemplate = () => {
+      const itemWidth = Math.max(208, measureWidth('item') + 40);
+      const specsWidth = Math.max(180, Math.min(296, measureWidth('specs') + 40));
+      const planWidth = Math.max(236, Math.min(360, measureWidth('plan') + 40));
+      const materialsWidth = Math.max(160, Math.min(264, measureWidth('materials') + 40));
+      const pricingWidth = Math.max(148, Math.min(216, measureWidth('pricing') + 40));
+      const nextTemplate = `84px ${itemWidth}px ${specsWidth}px ${planWidth}px ${materialsWidth}px ${pricingWidth}px`;
+
+      setRecordColumnTemplate((current) => (current === nextTemplate ? current : nextTemplate));
+    };
+
+    const frame = requestAnimationFrame(updateTemplate);
+    const handleResize = () => updateTemplate();
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => {
+            updateTemplate();
+          });
+
+    resizeObserver?.observe(list);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [collapsed, isExpanded, isMobile, sortedItems]);
 
   const handleColumnDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -437,7 +494,7 @@ export function ProposalCategorySection({
                 items={sortedItems.map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="surface-paper overflow-hidden">
+                <div ref={recordListRef} className="surface-paper overflow-hidden">
                   {sortedItems.map((item) => (
                     <Fragment key={item.id}>
                       {dragOverInfo?.overId === item.id && dragOverInfo.insertBefore && (
@@ -451,6 +508,7 @@ export function ProposalCategorySection({
                         <ProposalRecordRow
                           item={item}
                           otherCategories={otherCategories}
+                          columnTemplate={recordColumnTemplate}
                           onDelete={() => handleDeleteItem(item)}
                           onDuplicate={() => handleDuplicateItem(item)}
                           onAddToFfe={() => handleAddItemToFfe(item)}
