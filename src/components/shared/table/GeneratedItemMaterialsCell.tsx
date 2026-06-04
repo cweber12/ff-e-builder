@@ -8,6 +8,7 @@ type GeneratedItemMaterialsControlProps = {
   onPasteImage?: ((file: File) => Promise<void> | void) | undefined;
   isPasting?: boolean | undefined;
   getFinishName?: ((material: Material) => string | undefined) | undefined;
+  columns?: 1 | 2;
   tdClassName?: string | undefined;
 };
 
@@ -19,6 +20,7 @@ export function GeneratedItemMaterialsControl({
   onPasteImage,
   isPasting,
   getFinishName,
+  columns,
 }: GeneratedItemMaterialsControlProps) {
   return (
     <MaterialBadges
@@ -27,6 +29,7 @@ export function GeneratedItemMaterialsControl({
       onPasteImage={onPasteImage}
       isPasting={isPasting}
       getFinishName={getFinishName}
+      columns={columns ?? 1}
     />
   );
 }
@@ -50,6 +53,7 @@ export function GeneratedItemMaterialsCell({
         onPasteImage={onPasteImage}
         isPasting={isPasting}
         getFinishName={getFinishName}
+        columns={1}
       />
     </td>
   );

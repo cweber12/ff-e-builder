@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { describe, expect, it, vi } from 'vitest';
-import type { ProposalItem } from '../../../../types';
+import type { Material, ProposalItem } from '../../../../types';
 import { ProposalRecordRow } from './ProposalRecordRow';
 
 vi.mock('../../../shared/table/GeneratedItemImageCell', () => ({
@@ -13,7 +13,9 @@ vi.mock('../../../shared/table/GeneratedItemImageCell', () => ({
 }));
 
 vi.mock('../../../shared/table/GeneratedItemMaterialsCell', () => ({
-  GeneratedItemMaterialsControl: () => <div>Material badges</div>,
+  GeneratedItemMaterialsControl: ({ columns }: { columns?: 1 | 2 }) => (
+    <div>{`Material badges ${columns ?? 1}`}</div>
+  ),
 }));
 
 vi.mock('./ProposalItemActionsMenu', () => ({
@@ -103,5 +105,30 @@ describe('ProposalRecordRow', () => {
     expect(screen.queryByText('Plan')).not.toBeInTheDocument();
     expect(screen.queryByText('Specs')).not.toBeInTheDocument();
     expect(screen.queryByText('Pricing')).not.toBeInTheDocument();
+  });
+
+  it('uses a two-column materials layout when materials are present', () => {
+    const materialItem: ProposalItem = {
+      ...item,
+      materials: [{ id: 'mat-1', name: 'Walnut' } as Material],
+    };
+
+    render(
+      <Wrapper>
+        <ProposalRecordRow
+          item={materialItem}
+          otherCategories={[]}
+          onDelete={vi.fn()}
+          onDuplicate={vi.fn()}
+          onAddToFfe={vi.fn()}
+          onMove={vi.fn()}
+          onRowClick={vi.fn()}
+          onSwatchOpen={vi.fn()}
+          getMaterialFinishName={() => undefined}
+        />
+      </Wrapper>,
+    );
+
+    expect(screen.getByText('Material badges 2')).toBeInTheDocument();
   });
 });

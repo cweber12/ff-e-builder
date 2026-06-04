@@ -72,7 +72,7 @@ export function ProposalRecordRow({
         isDragging && 'bg-brand-50/70 opacity-80 shadow-sm',
       )}
     >
-      <div className="grid gap-0 xl:grid-cols-[84px_minmax(0,2fr)_minmax(220px,1fr)_minmax(280px,1.2fr)_minmax(220px,0.95fr)_180px]">
+      <div className="grid gap-0 xl:[grid-template-columns:84px_fit-content(12.5rem)_fit-content(16rem)_fit-content(21rem)_fit-content(14rem)_fit-content(11rem)]">
         <div className="flex flex-col items-center justify-center gap-3 px-3 py-4 xl:border-r xl:border-neutral-200">
           <div className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
             <GeneratedItemDragHandle
@@ -97,14 +97,14 @@ export function ProposalRecordRow({
           </div>
         </div>
 
-        <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
-          <p
-            className="mb-3 text-[13px] font-semibold uppercase tracking-[0.04em] text-neutral-900"
-            style={valueClampStyle}
-          >
-            {item.itemName || 'Untitled item'}
-          </p>
-          <div className="flex items-start gap-4">
+        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
+          <div className="w-[168px]">
+            <p
+              className="mb-3 w-[168px] text-[13px] font-semibold uppercase tracking-[0.04em] text-neutral-900"
+              style={valueClampStyle}
+            >
+              {item.itemName || 'Untitled item'}
+            </p>
             <GeneratedItemImageControl
               view="proposal"
               kind="rendering"
@@ -115,15 +115,15 @@ export function ProposalRecordRow({
           </div>
         </div>
 
-        <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
+        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
           <div className="space-y-3">
             <DetailField label="Size" value={displayValue(item.sizeLabel)} />
             <DetailField label="Footprint" value={displayValue(item.footprintLabel)} />
           </div>
         </div>
 
-        <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
-          <div className="grid gap-4 xl:grid-cols-[148px_minmax(0,1fr)] xl:items-start">
+        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
+          <div className="grid gap-4 xl:[grid-template-columns:148px_fit-content(9rem)] xl:items-start">
             <div className="shrink-0 space-y-3">
               <DetailField label="Location" value={displayValue(item.location)} />
               <GeneratedItemImageControl
@@ -140,15 +140,16 @@ export function ProposalRecordRow({
           </div>
         </div>
 
-        <div className="px-4 py-4 xl:border-r xl:border-neutral-200">
+        <div className="px-5 py-5 xl:border-r xl:border-neutral-200">
           {item.materials.length > 0 ? (
-            <div onClick={(event) => event.stopPropagation()}>
+            <div className="w-fit" onClick={(event) => event.stopPropagation()}>
               <GeneratedItemMaterialsControl
                 materials={item.materials}
                 onOpen={() => onSwatchOpen(item.id)}
                 onPasteImage={onSwatchPaste ? (file) => onSwatchPaste(item, file) : undefined}
                 isPasting={isSwatchPasting}
                 getFinishName={getMaterialFinishName}
+                columns={2}
               />
             </div>
           ) : (
@@ -156,7 +157,7 @@ export function ProposalRecordRow({
           )}
         </div>
 
-        <div className="px-4 py-4">
+        <div className="px-5 py-5">
           <div className="space-y-3">
             <DetailField
               label="Quantity"

@@ -21,6 +21,7 @@ import type {
   MaterialType,
   ProposalItem,
 } from '../../types';
+import { cn } from '../../lib/utils';
 import { Button, Modal } from '../primitives';
 import { ImageFrame } from '../shared/image/ImageFrame';
 
@@ -1055,12 +1056,14 @@ export function MaterialBadges({
   onPasteImage,
   isPasting = false,
   getFinishName,
+  columns = 1,
 }: {
   materials: Material[];
   onOpen: () => void;
   onPasteImage?: ((file: File) => Promise<void> | void) | undefined;
   isPasting?: boolean | undefined;
   getFinishName?: ((material: Material) => string | undefined) | undefined;
+  columns?: 1 | 2;
 }) {
   const assigned = materials.slice(0, MATERIAL_BADGE_LIMIT);
   const overflow = materials.length - assigned.length;
@@ -1126,10 +1129,13 @@ export function MaterialBadges({
       onMouseLeave={disablePasteTarget}
       onFocus={enablePasteTarget}
       onBlur={disablePasteTarget}
-      className="group relative inline-block w-full max-w-[16rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+      className={cn(
+        'group relative inline-block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500',
+        columns === 2 ? 'max-w-[14rem]' : 'max-w-[16rem]',
+      )}
       title={onPasteImage ? 'Paste swatch image (Ctrl+V)' : undefined}
     >
-      <div className="grid grid-cols-1 gap-y-1.5">
+      <div className={cn('grid gap-y-1.5', columns === 2 ? 'grid-cols-2 gap-x-3' : 'grid-cols-1')}>
         {assigned.map((material) => {
           const finishName = getFinishName?.(material)?.trim() ?? '';
           return (
