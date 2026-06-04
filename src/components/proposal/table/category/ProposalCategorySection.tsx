@@ -324,9 +324,7 @@ export function ProposalCategorySection({
     if (!pendingFocusItemId || collapsed) return;
     if (!sortedItems.some((item) => item.id === pendingFocusItemId)) return;
     requestAnimationFrame(() => {
-      const row = document.querySelector<HTMLTableRowElement>(
-        `tr[data-item-id="${pendingFocusItemId}"]`,
-      );
+      const row = document.querySelector<HTMLElement>(`[data-item-id="${pendingFocusItemId}"]`);
       row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
     setPendingFocusItemId(null);

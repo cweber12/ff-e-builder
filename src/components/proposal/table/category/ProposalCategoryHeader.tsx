@@ -75,6 +75,7 @@ export function ProposalCategoryHeader({
   onExpand,
 }: ProposalCategoryHeaderProps) {
   const showTableControls = layoutMode === 'table';
+  const recordMode = layoutMode === 'records';
   return (
     <GroupedTableHeader>
       <div className="sticky left-4 flex min-w-0 flex-1 items-center gap-3">
@@ -104,14 +105,26 @@ export function ProposalCategoryHeader({
           )}
           inputClassName="text-sm font-semibold text-neutral-950 border-neutral-300 bg-white"
         />
-        <Badge variant="neutral" size="md" className="shrink-0">
-          {itemCount} {itemCount === 1 ? 'item' : 'items'}
-        </Badge>
-        {hasOpenRevision && openRevisionLabel && (
-          <Badge variant="brand" size="md" className="shrink-0">
-            Revision {openRevisionLabel}
+        {recordMode ? (
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </span>
+        ) : (
+          <Badge variant="neutral" size="md" className="shrink-0">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
           </Badge>
         )}
+        {hasOpenRevision && openRevisionLabel ? (
+          recordMode ? (
+            <span className="text-xs font-medium uppercase tracking-[0.12em] text-brand-700">
+              Revision {openRevisionLabel} open
+            </span>
+          ) : (
+            <Badge variant="brand" size="md" className="shrink-0">
+              Revision {openRevisionLabel}
+            </Badge>
+          )
+        ) : null}
         {!collapsed && !isMobile && showTableControls && (
           <ColumnGroupTabs
             groups={PROPOSAL_GENERATED_ITEM_TABLE_PRESET.columnGroups}
@@ -122,9 +135,18 @@ export function ProposalCategoryHeader({
       </div>
       <div className="sticky right-4 flex items-center gap-2">
         {!collapsed && !isMobile && showTableControls && <ColumnNavArrows />}
-        <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
-          {formatMoney(cents(subtotalCents))}
-        </span>
+        {recordMode ? (
+          <div className="flex shrink-0 items-baseline gap-2 rounded-sm border border-neutral-200 bg-white px-3 py-1.5">
+            <span className="eyebrow text-neutral-500">Schedule total</span>
+            <span className="font-mono text-sm font-semibold tabular-nums text-neutral-800">
+              {formatMoney(cents(subtotalCents))}
+            </span>
+          </div>
+        ) : (
+          <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-neutral-700">
+            {formatMoney(cents(subtotalCents))}
+          </span>
+        )}
         <button
           type="button"
           onClick={onAddItem}
@@ -149,7 +171,12 @@ export function ProposalCategoryHeader({
             onOpenAddColumnModal={onOpenAddColumnModal}
           />
         ) : null}
-        <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <span
+          className={cn(
+            recordMode ? 'opacity-100' : 'opacity-0 transition-opacity group-hover:opacity-100',
+            'focus-within:opacity-100',
+          )}
+        >
           <CategoryActionsMenu
             layoutMode={layoutMode}
             categoryName={categoryName}

@@ -85,7 +85,6 @@ export function ProposalRecordRow({
         <span className="inline-flex shrink-0 rounded-pill bg-brand-100 px-2.5 py-1 text-[11px] font-semibold tracking-[0.12em] text-brand-700">
           {item.productTag || 'UNNAMED'}
         </span>
-        <span className="eyebrow text-neutral-400">Scan-first item record</span>
         <div className="ml-auto" onClick={(event) => event.stopPropagation()}>
           <ProposalItemActionsMenu
             itemName={item.itemName || item.productTag || item.description || 'item'}
@@ -99,7 +98,7 @@ export function ProposalRecordRow({
         </div>
       </div>
 
-      <div className="grid gap-4 px-4 py-4 xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1.35fr)_minmax(0,1.6fr)_minmax(0,1.45fr)_220px]">
+      <div className="grid gap-4 px-4 py-4 2xl:grid-cols-[minmax(0,2.35fr)_minmax(280px,1.4fr)_minmax(0,2.15fr)_minmax(220px,1.2fr)_220px]">
         <RecordBlock label="Item">
           <div className="flex gap-4">
             <GeneratedItemImageControl
@@ -126,7 +125,7 @@ export function ProposalRecordRow({
         </RecordBlock>
 
         <RecordBlock label="Plan">
-          <div className="flex gap-4">
+          <div className="grid gap-4 xl:grid-cols-[128px_minmax(0,1fr)] xl:items-start">
             <GeneratedItemImageControl
               view="proposal"
               kind="plan"
@@ -135,7 +134,7 @@ export function ProposalRecordRow({
             />
             <div className="min-w-0 flex-1">
               <p className="eyebrow text-neutral-500">Drawing</p>
-              <p className="mt-1 text-sm leading-5 text-neutral-800">
+              <p className="mt-1 text-sm leading-6 text-neutral-800">
                 {item.drawings || 'No drawing reference'}
               </p>
             </div>
@@ -144,8 +143,8 @@ export function ProposalRecordRow({
 
         <RecordBlock label="Specs">
           <div className="grid gap-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Metric label="Size" value={item.sizeLabel || '—'} />
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)]">
+              <Metric className="xl:row-span-2" label="Size" value={item.sizeLabel || '—'} />
               <Metric label="Footprint" value={item.footprintLabel || '—'} />
               <Metric label="CBM" value={item.cbm > 0 ? item.cbm.toFixed(3) : '—'} />
             </div>
@@ -199,17 +198,19 @@ function Metric({
   label,
   value,
   emphasis = false,
+  className,
 }: {
   label: string;
   value: string;
   emphasis?: boolean;
+  className?: string;
 }) {
   return (
-    <div className="rounded-sm border border-neutral-200 bg-white px-3 py-2">
+    <div className={cn('rounded-sm border border-neutral-200 bg-white px-3 py-2', className)}>
       <p className="eyebrow text-neutral-500">{label}</p>
       <p
         className={cn(
-          'mt-1 text-sm leading-5 text-neutral-800',
+          'mt-1 text-sm leading-6 text-neutral-800 break-normal',
           emphasis && 'font-semibold text-neutral-950',
         )}
       >
