@@ -12,11 +12,11 @@
   To retheme the app, override these variables in :root or a scoped selector.
 */
 :root {
-  /* Brand — lighter steps lean almost neutral so non-primary hover/selected
-     fills stay quiet, while the darker steps shift slightly inkier for links,
-     focus treatments, and primary emphasis. */
-  --color-brand-50: 247 244 240;
-  --color-brand-100: 239 233 226;
+  /* Brand — lighter steps stay close to off-white so generic surfaces never
+     feel tinted, while the darker steps remain inkier for links, focus, and
+     primary emphasis. */
+  --color-brand-50: 245 247 249;
+  --color-brand-100: 237 241 246;
   --color-brand-200: 206 215 225;
   --color-brand-300: 155 174 195;
   --color-brand-400: 103 128 157;
@@ -26,31 +26,30 @@
   --color-brand-800: 22 37 57;
   --color-brand-900: 14 24 39;
 
-  /* Neutral — warm stone-led grays for a calmer shell. These become the
-     default hierarchy for text, borders, placeholders, and chrome separation
-     around the pure-white working surfaces. */
-  --color-neutral-50: 250 247 243;
-  --color-neutral-100: 244 239 234;
-  --color-neutral-200: 228 220 212;
-  --color-neutral-300: 208 197 187;
-  --color-neutral-400: 166 151 138;
-  --color-neutral-500: 124 109 96;
-  --color-neutral-600: 91 78 69;
-  --color-neutral-700: 67 57 50;
-  --color-neutral-800: 44 37 32;
-  --color-neutral-900: 28 23 20;
-  --color-neutral-950: 17 14 12;
+  /* Neutral — near-white grays with only a slight warmth. They keep the shell
+     soft and bright without drifting into visible beige. */
+  --color-neutral-50: 251 250 248;
+  --color-neutral-100: 246 244 241;
+  --color-neutral-200: 232 228 223;
+  --color-neutral-300: 214 208 201;
+  --color-neutral-400: 169 160 150;
+  --color-neutral-500: 123 113 103;
+  --color-neutral-600: 89 81 74;
+  --color-neutral-700: 66 60 55;
+  --color-neutral-800: 44 40 37;
+  --color-neutral-900: 29 27 25;
+  --color-neutral-950: 18 17 16;
 
-  /* Surface — pure white working areas on a warm-neutral shell hierarchy. */
+  /* Surface — pure white working areas on a near-white neutral shell. */
   --color-surface: 255 255 255;
-  --color-surface-muted: 247 243 238;
+  --color-surface-muted: 249 247 244;
   --color-surface-raised: 255 255 255;
-  --color-surface-inverse: 28 23 20;
+  --color-surface-inverse: 29 27 25;
 
   /* Dedicated border tokens — used by tables, cards, and dividers when a
      stronger weight than neutral-200 is wanted. */
-  --color-border: 228 220 212;
-  --color-border-strong: 208 197 187;
+  --color-border: 232 228 223;
+  --color-border-strong: 214 208 201;
 
   /* Semantic */
   --color-danger-50: 254 242 242;
@@ -63,11 +62,12 @@
   --color-warning-500: 217 119 6;
   --color-warning-700: 154 84 6;
 
-  /* Canvas — warm-neutral app shell around white content surfaces. */
-  --color-canvas-bg: 244 239 234;
-  --color-canvas-shell: 237 231 224;
+  /* Canvas — near-white shell with slight warmth around white content
+     surfaces, so chrome stays separated without reading beige. */
+  --color-canvas-bg: 248 246 243;
+  --color-canvas-shell: 242 239 235;
   --color-canvas-chrome: 255 255 255;
-  --color-plan-line: 67 57 50;
+  --color-plan-line: 66 60 55;
   --color-plan-measure: 60 88 119;
   --color-plan-active: 31 51 76;
 

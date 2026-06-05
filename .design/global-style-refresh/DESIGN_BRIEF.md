@@ -6,7 +6,7 @@ The live application shell feels cooler and more blue-gray than desired, which m
 
 ## Solution
 
-Refresh the global visual baseline so the authenticated workspace and supporting screens share one brighter, warmer system. Content surfaces become pure white, the outer shell shifts to a warm-neutral family that complements the inkier blue accent, text hierarchy relies on near-black and dark gray instead of literal black, and interaction states use neutral grays unless the state is explicitly primary, linked, or focused.
+Refresh the global visual baseline so the authenticated workspace and supporting screens share one brighter, lighter system. Content surfaces become pure white, the outer shell shifts to a near-white neutral family with only slight warmth to complement the inkier blue accent, text hierarchy relies on near-black and dark gray instead of literal black, and interaction states use neutral grays unless the state is explicitly primary, linked, or focused.
 
 ## Experience Principles
 
@@ -16,7 +16,7 @@ Refresh the global visual baseline so the authenticated workspace and supporting
 
 ## Aesthetic Direction
 
-- **Philosophy**: Warm editorial workspace with spec-sheet precision
+- **Philosophy**: Near-white editorial workspace with spec-sheet precision
 - **Tone**: Calm, crisp, professional, restrained
 - **Reference points**: White drafting surfaces, lightly outlined productivity tools, refined editorial admin interfaces
 - **Anti-references**: Cold enterprise blue-gray SaaS; stark black-on-white document app
@@ -32,16 +32,16 @@ Components, tokens, and conventions already in the codebase that this design mus
 
 ## Component Inventory
 
-| Component                      | Status | Notes                                                                                                               |
-| ------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------- |
-| Global color tokens            | Modify | Rework `brand`, `neutral`, `surface`, `canvas`, border, and sidebar tokens to the new white + warm-neutral baseline |
-| App shell backgrounds          | Modify | Apply the new shell/canvas tones globally, including authenticated workspace and non-auth support pages             |
-| Text hierarchy                 | Modify | Keep current typography stack; shift heading, key-label, body, and meta color mapping only                          |
-| Buttons and segmented controls | Modify | Preserve structure; use gray hover/selected surfaces and reserve blue for primary/emphasis states                   |
-| Forms and field chrome         | Modify | Inputs, selects, inline editors, and toggles should feel outlined and crisp, not tinted                             |
-| Cards, tables, and panels      | Modify | Pure white content surfaces with border-led separation; avoid cool-gray fills                                       |
-| Menus, drawers, and modals     | Modify | Raised elements can keep light shadows, but should inherit the same white/warm-neutral system                       |
-| Sidebar and header chrome      | Modify | Stay slightly differentiated from white surfaces using warm-neutral backing and borders                             |
+| Component                      | Status | Notes                                                                                                                     |
+| ------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Global color tokens            | Modify | Rework `brand`, `neutral`, `surface`, `canvas`, border, and sidebar tokens to the new white + near-white neutral baseline |
+| App shell backgrounds          | Modify | Apply the new shell/canvas tones globally, including authenticated workspace and non-auth support pages                   |
+| Text hierarchy                 | Modify | Keep current typography stack; shift heading, key-label, body, and meta color mapping only                                |
+| Buttons and segmented controls | Modify | Preserve structure; use gray hover/selected surfaces and reserve blue for primary/emphasis states                         |
+| Forms and field chrome         | Modify | Inputs, selects, inline editors, and toggles should feel outlined and crisp, not tinted                                   |
+| Cards, tables, and panels      | Modify | Pure white content surfaces with border-led separation; avoid cool-gray fills                                             |
+| Menus, drawers, and modals     | Modify | Raised elements can keep light shadows, but should inherit the same white/near-white neutral system                       |
+| Sidebar and header chrome      | Modify | Stay slightly differentiated from white surfaces using near-white neutral backing and borders                             |
 
 ## Key Interactions
 
@@ -66,7 +66,7 @@ How the layout adapts across breakpoints. Note any components that change behavi
 
 Minimum requirements for this interface. Include contrast ratios, keyboard navigation, screen reader considerations, and focus management.
 
-- Body text and interactive labels must maintain accessible contrast against white and warm-neutral backgrounds.
+- Body text and interactive labels must maintain accessible contrast against white and near-white neutral backgrounds.
 - Headings and key labels should stay at a near-black level with stronger contrast than body/meta copy.
 - Blue accent usage must preserve accessible contrast for links, primary buttons, active states, and focus indicators.
 - Focus-visible treatments must remain explicit and keyboard-discernible across outlined controls, menus, drawers, and modal surfaces.

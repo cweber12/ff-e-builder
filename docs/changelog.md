@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): pull the live shell back from beige stone into a near-white neutral while keeping the white content-surface refresh
 - refactor(ui): shift the live app to pure-white content surfaces, a warm-neutral shell, inkier blue accents, and neutral-led hover/selection states
 - fix(ui): replace invalid custom-color slash-opacity `@apply` usage in the refreshed shell chrome so Vite CSS compilation succeeds again
 - refactor(ui): quiet the project shell chrome with calmer project header rows, clearer tool-tab selection states, and a lighter desktop rail that now matches the neutral/slate frame
