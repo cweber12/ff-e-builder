@@ -22,22 +22,14 @@ export type ButtonVariant =
   | 'addAction';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  // Filled actions use the slightly lighter brand-500 (was brand-600) so primary
-  // buttons read a touch brighter against the warm parchment surfaces.
-  primary: 'bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:bg-brand-600',
-  // Secondary: light neutral surface with a dark-blue border on hover —
-  // hover:bg-brand-50 now resolves to warm sand (see index.css token notes).
+  primary: 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-700',
   secondary:
-    'bg-white border border-neutral-200 text-neutral-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-50',
+    'bg-white border border-neutral-200 text-neutral-800 hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 active:bg-neutral-100',
   ghost:
-    'bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-brand-700 active:bg-neutral-100',
+    'bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 active:bg-neutral-100',
   danger: 'bg-danger-500 text-white shadow-sm hover:bg-danger-600 active:bg-danger-600',
-  // Header toolbar buttons: borderless, background-free, with an animated brand
-  // underline (.btn-toolbar in index.css). `font-semibold` is kept as a utility
-  // so it wins over the base `font-medium`.
   toolbar: 'btn-toolbar font-semibold',
   toolbarPrimary: 'btn-toolbar btn-toolbar--primary font-semibold',
-  // Dedicated Add actions: themed light fill, no border, and motion-rich affordance.
   addAction: 'btn-add-action font-semibold',
 };
 
@@ -70,7 +62,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     variant === 'toolbar' || variant === 'toolbarPrimary' || variant === 'addAction';
   const classes = cn(
     'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
-    'transition duration-150 active:scale-[0.98]',
+    'transition duration-150',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-1',
     'disabled:pointer-events-none disabled:opacity-50',
     variantClasses[variant],

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(ui): define a calmer shared live-app UI vocabulary by flattening buttons, badges, segmented controls, surface utilities, and textured/light-blue shared backgrounds into a quieter slate/gray system
 - refactor(ui): reset the live app shell to a neutral/slate token palette and collapse live typography to Manrope with JetBrains Mono data accents while leaving catalog document preview styling unchanged
 - refactor(item-library): keep Proposal status as the only Item Library sidebar control, move Upload/Download into the shared header options menu, and promote Add Schedule into the page header stats row
 - feat(item-library): make the workflow status control the primary revision signal, add a blocked-cost shortcut into flagged-only Spreadsheet View, and show local revision context inside Spreadsheet View and the item detail panel

@@ -114,7 +114,7 @@ function SegmentedControlOption<T extends string>({
       aria-pressed={active}
       data-active={active || undefined}
       disabled={optionDisabled}
-      className={className}
+      className={cn('segmented-option', className)}
       onClick={(event) => {
         onClick?.(event);
         if (!event.defaultPrevented && !optionDisabled) {

@@ -10,13 +10,9 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   uppercase?: boolean;
 };
 
-// All variants share a tinted fill + inset ring so they read as a consistent
-// chip family. warning/success/danger use the design-system semantic tokens
-// rather than Tailwind's built-in amber/emerald (which are warmer than this
-// app's cool palette).
 const variantClasses: Record<BadgeVariant, string> = {
-  neutral: 'bg-neutral-100 text-neutral-700 ring-1 ring-inset ring-neutral-500/15',
-  brand: 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-200/50',
+  neutral: 'bg-neutral-100 text-neutral-700 ring-1 ring-inset ring-neutral-300/70',
+  brand: 'bg-neutral-100 text-brand-700 ring-1 ring-inset ring-neutral-300/70',
   danger: 'bg-danger-50 text-danger-600 ring-1 ring-inset ring-danger-500/20',
   warning: 'bg-warning-50 text-warning-700 ring-1 ring-inset ring-warning-500/25',
   success: 'bg-success-50 text-success-700 ring-1 ring-inset ring-success-500/20',
