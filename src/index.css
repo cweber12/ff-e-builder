@@ -487,6 +487,47 @@
     @apply border-success-700/25 bg-success-50 text-success-700;
   }
 
+  .project-header-topbar {
+    @apply flex h-11 items-center gap-3 border-b border-neutral-200 bg-canvas-chrome/95 px-4 backdrop-blur md:px-6;
+  }
+
+  .project-header-tabs {
+    @apply grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-canvas-chrome/92 px-4 backdrop-blur md:px-6;
+  }
+
+  .project-header-crumb {
+    @apply text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-500 transition-colors;
+  }
+
+  .project-header-crumb:hover {
+    @apply text-neutral-800;
+  }
+
+  .project-header-project-link {
+    @apply min-w-0 truncate text-[15px] font-semibold leading-none tracking-[-0.02em] text-neutral-950 transition-colors;
+  }
+
+  .project-header-project-link:hover {
+    @apply text-brand-700;
+  }
+
+  .project-tool-nav-horizontal {
+    @apply inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-surface-muted p-0.5 shadow-sm;
+  }
+
+  .project-tool-nav-horizontal-link {
+    @apply inline-flex h-8 items-center rounded-[4px] px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500 transition-colors;
+  }
+
+  .project-tool-nav-horizontal-link:hover {
+    @apply bg-neutral-50 text-neutral-900;
+  }
+
+  .project-tool-nav-horizontal-link[data-active] {
+    @apply bg-white text-neutral-950 shadow-sm;
+    box-shadow: 0 0 0 1px rgb(var(--color-neutral-200)) inset;
+  }
+
   /* Project tab utility sidebar: a restrained control rail with clear section
      boundaries and no boxed section containers. */
   .project-sidebar-section {
@@ -502,24 +543,25 @@
     --sidebar-control-text-hover: rgb(var(--color-neutral-950));
     --sidebar-text-label: rgb(var(--color-neutral-500));
     --sidebar-text-meta: rgb(var(--color-neutral-500));
+    @apply border-r border-neutral-200 bg-canvas-chrome/95 backdrop-blur;
   }
 
   .project-tool-sidebar-shell {
-    @apply flex h-full min-h-0 min-w-0 flex-col px-4 py-4;
+    @apply flex h-full min-h-0 min-w-0 flex-col gap-4 px-4 py-4;
   }
 
   .project-tool-sidebar-nav {
-    @apply flex flex-col items-stretch gap-1;
+    @apply flex flex-col items-stretch gap-1.5;
   }
 
   .project-tool-sidebar-link {
-    @apply inline-flex min-h-9 items-center px-2 text-[11px] font-medium uppercase tracking-[0.12em]
-           text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:font-bold
-           data-[active]:text-neutral-950;
+    @apply inline-flex min-h-9 items-center rounded-md border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em]
+           text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 data-[active]:border-neutral-200
+           data-[active]:bg-white data-[active]:text-neutral-950 data-[active]:shadow-sm;
   }
 
   .project-tool-sidebar-row {
-    @apply flex items-center gap-1;
+    @apply flex items-center gap-1.5;
   }
 
   .project-tool-sidebar-row > .project-tool-sidebar-link {
@@ -527,33 +569,29 @@
   }
 
   .project-tool-options-trigger {
-    @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-transparent
-           text-neutral-500 transition-colors hover:text-neutral-900
+    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent
+           text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
     --tw-ring-color: var(--sidebar-focus-ring);
   }
 
   .project-tool-options-trigger:hover,
   .project-tool-options-trigger[aria-expanded='true'] {
+    @apply border-neutral-200 bg-white;
     color: var(--sidebar-control-text-hover);
   }
 
-  .project-tool-options-trigger:hover .toolbar-icon,
-  .project-tool-options-trigger[aria-expanded='true'] .toolbar-icon {
-    stroke-width: 2.25;
-  }
-
   .project-section-select {
-    @apply inline-flex h-9 w-full min-w-0 items-center gap-1.5 rounded-sm bg-transparent px-2
-           text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500
-           transition-colors duration-150 hover:text-neutral-900
+    @apply inline-flex h-9 w-full min-w-0 items-center gap-1.5 rounded-md border border-transparent bg-transparent px-3
+           text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500
+           transition-colors duration-150 hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
     --tw-ring-color: var(--sidebar-focus-ring);
   }
 
   .project-section-select:hover,
   .project-section-select[aria-expanded='true'] {
-    @apply font-bold text-neutral-950;
+    @apply border-neutral-200 bg-white text-neutral-950;
   }
 
   .project-section-select-label {
@@ -569,19 +607,19 @@
   }
 
   .project-tool-sidebar-divider {
-    @apply mx-2 my-3 border-t;
+    @apply mx-1 my-0 border-t;
     border-color: var(--sidebar-divider);
   }
 
   .project-tool-sidebar-section {
-    @apply flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto;
+    @apply flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto pt-1;
   }
 
   /* Flatten the brand-colored primary action (Add / New / Upload / Editor) so it
      reads as a neutral tab-styled row, cohesive with the nav above. */
   .project-tool-sidebar-section .btn-add-action,
   .project-tool-sidebar-section .sidebar-button--add {
-    @apply justify-start rounded-sm bg-transparent text-left font-medium shadow-none;
+    @apply justify-start rounded-md border border-transparent bg-transparent text-left font-semibold shadow-none;
     color: var(--sidebar-control-text);
     transform: none;
   }
@@ -595,7 +633,7 @@
   .project-tool-sidebar-section .sidebar-button--add:hover,
   .project-tool-sidebar-section .btn-add-action:active,
   .project-tool-sidebar-section .sidebar-button--add:active {
-    @apply bg-transparent font-bold shadow-none;
+    @apply border-neutral-200 bg-white shadow-none;
     color: var(--sidebar-control-text-hover);
     transform: none;
   }
@@ -635,8 +673,8 @@
   }
 
   .sidebar-button {
-    @apply inline-flex h-8 w-full items-center justify-start gap-2 rounded-sm bg-transparent px-2.5
-           text-left text-[11px] font-medium uppercase tracking-[0.1em]
+    @apply inline-flex h-8 w-full items-center justify-start gap-2 rounded-md border border-transparent bg-transparent px-2.5
+           text-left text-[11px] font-semibold uppercase tracking-[0.1em]
            transition-colors duration-150
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
            disabled:pointer-events-none disabled:opacity-50;
@@ -661,7 +699,7 @@
 
   .sidebar-button:hover,
   .sidebar-button--selected {
-    @apply bg-transparent font-bold;
+    @apply border-neutral-200 bg-white;
     color: var(--sidebar-control-text-hover);
   }
 
@@ -670,51 +708,20 @@
   }
 
   .sidebar-button--add {
-    @apply relative justify-center overflow-hidden bg-brand-500 text-center text-white;
-    transition:
-      color 160ms ease,
-      background-color 200ms ease,
-      box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .sidebar-button--add::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      100deg,
-      rgb(var(--color-brand-600) / 0.12) 0%,
-      rgb(var(--color-brand-700) / 0.35) 48%,
-      rgb(var(--color-brand-600) / 0.12) 100%
-    );
-    transform: translateX(-110%);
-    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
+    @apply justify-center bg-brand-600 text-center text-white;
   }
 
   .sidebar-button--add:hover {
-    @apply bg-brand-600 text-white font-bold;
-    box-shadow:
-      0 6px 16px -10px rgb(var(--color-brand-700) / 0.55),
-      0 0 0 1px rgb(var(--color-brand-700) / 0.12) inset;
-  }
-
-  .sidebar-button--add:hover::before {
-    transform: translateX(110%);
+    @apply border-transparent bg-brand-700 text-white;
   }
 
   .sidebar-button--add:active {
     @apply bg-brand-700 text-white;
   }
 
-  .sidebar-button--add:active::before {
-    transition-duration: 140ms;
-    transform: translateX(35%);
-  }
-
   .project-sidebar-control {
-    @apply inline-flex h-8 w-full items-center justify-start gap-2 rounded-sm bg-transparent px-2.5
-           text-left text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-900
+    @apply inline-flex h-8 w-full items-center justify-start gap-2 rounded-md border border-transparent bg-transparent px-2.5
+           text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900
            transition-colors duration-150;
     transform: none !important;
   }
@@ -748,7 +755,7 @@
 
   .project-sidebar-section .toolbar-segmented > button:hover,
   .project-sidebar-section .toolbar-segmented > a:hover {
-    @apply font-bold text-neutral-950;
+    @apply text-neutral-950;
     background-color: transparent;
   }
 
@@ -756,7 +763,7 @@
   .project-sidebar-section .toolbar-segmented > button[aria-checked='true'],
   .project-sidebar-section .toolbar-segmented > button[aria-pressed='true'],
   .project-sidebar-section .toolbar-segmented > a[data-active='true'] {
-    @apply bg-transparent font-bold text-neutral-950;
+    @apply bg-transparent text-neutral-950;
   }
 
   @media (prefers-reduced-motion: reduce) {

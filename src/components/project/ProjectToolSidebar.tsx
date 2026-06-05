@@ -20,7 +20,7 @@ export function ProjectToolSidebar({ project, optionsMenu, section }: ProjectToo
   return (
     <aside
       aria-label="Project navigation"
-      className="project-tool-sidebar no-print hidden shrink-0 border-r border-neutral-200 bg-white lg:sticky lg:top-11 lg:block lg:h-[calc(100vh-44px)] lg:w-[208px] lg:self-start"
+      className="project-tool-sidebar no-print hidden shrink-0 lg:sticky lg:top-11 lg:block lg:h-[calc(100vh-44px)] lg:w-[220px] lg:self-start"
     >
       <div className="project-tool-sidebar-shell">
         <ProjectToolNav

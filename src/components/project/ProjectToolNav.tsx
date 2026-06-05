@@ -59,7 +59,10 @@ export function ProjectToolNav({
   return (
     <nav
       aria-label="Project tools"
-      className={cn(isVertical ? 'project-tool-sidebar-nav' : 'flex items-stretch', className)}
+      className={cn(
+        isVertical ? 'project-tool-sidebar-nav' : 'project-tool-nav-horizontal',
+        className,
+      )}
     >
       {PROJECT_TOOL_TABS.map(({ label, href, isActive }) => {
         const selected = isActive(projectId, location.pathname);
@@ -70,9 +73,7 @@ export function ProjectToolNav({
             aria-current={selected ? 'page' : undefined}
             data-active={selected || undefined}
             className={
-              isVertical
-                ? 'project-tool-sidebar-link'
-                : 'inline-flex h-11 items-center px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900 data-[active]:font-bold data-[active]:text-neutral-950'
+              isVertical ? 'project-tool-sidebar-link' : 'project-tool-nav-horizontal-link'
             }
           >
             {label}

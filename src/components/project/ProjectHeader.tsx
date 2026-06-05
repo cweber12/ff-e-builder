@@ -13,13 +13,13 @@ import { ProjectToolNav } from './ProjectToolNav';
 function SkeletonBar() {
   return (
     <div className="shrink-0">
-      <div className="flex h-11 items-center gap-3 bg-white px-4 md:px-6 lg:border-b lg:border-neutral-200">
+      <div className="project-header-topbar">
         <StudioMark />
         <span aria-hidden className="mx-2 h-4 w-px bg-neutral-200" />
         <div className="h-2.5 w-16 animate-pulse bg-neutral-100" />
         <div className="h-4 w-40 animate-pulse bg-neutral-100" />
       </div>
-      <div className="flex h-11 items-center gap-4 border-b border-neutral-200 bg-white px-4 md:px-6 lg:hidden">
+      <div className="project-header-tabs lg:hidden">
         {[80, 64, 56, 72, 56].map((w, i) => (
           <div key={i} className="h-3 animate-pulse bg-neutral-100" style={{ width: w }} />
         ))}
@@ -62,21 +62,18 @@ export function ProjectHeader({
 
   return (
     <header data-project-header="true" className="no-print relative z-10 shrink-0 overflow-visible">
-      <div
-        data-project-header-top="true"
-        className="flex h-11 items-center gap-3 bg-white px-4 md:px-6 lg:border-b lg:border-neutral-200"
-      >
+      <div data-project-header-top="true" className="project-header-topbar">
         <StudioMark />
         <span aria-hidden className="mx-1 h-4 w-px bg-neutral-200" />
-        <Link to="/projects" className="eyebrow shrink-0 transition-colors hover:text-brand-700">
+        <Link to="/projects" className="project-header-crumb shrink-0">
           Projects
         </Link>
-        <span className="text-xs text-neutral-300" aria-hidden="true">
+        <span className="text-xs text-neutral-400" aria-hidden="true">
           /
         </span>
         <Link
           to={`/projects/${project.id}`}
-          className="min-w-0 truncate font-display text-[15px] font-semibold leading-none tracking-tight text-neutral-950 transition-colors hover:text-brand-700"
+          className="project-header-project-link"
           title={project.name}
         >
           {project.name}
@@ -87,10 +84,7 @@ export function ProjectHeader({
         </div>
       </div>
 
-      <div
-        data-project-header-tabs="true"
-        className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-white px-4 md:px-6 lg:hidden"
-      >
+      <div data-project-header-tabs="true" className="project-header-tabs lg:hidden">
         <div aria-hidden="true" />
         <div className="justify-self-center">
           <ProjectToolNav projectId={project.id} />
