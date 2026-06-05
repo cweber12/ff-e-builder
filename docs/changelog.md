@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- refactor(item-library): keep Proposal status as the only Item Library sidebar control, move Upload/Download into the shared header options menu, and promote Add Schedule into the page header stats row
 - feat(item-library): make the workflow status control the primary revision signal, add a blocked-cost shortcut into flagged-only Spreadsheet View, and show local revision context inside Spreadsheet View and the item detail panel
 - feat(item-library): relabel the Proposal tool to Item Library in the project shell, regroup proposal sidebar controls into View/Actions/Display/Status sections, and refresh schedule-oriented proposal copy without changing routes or data contracts
 - feat(item-library): add a main-header schedule selector and active-schedule summary so the Item Library now focuses on one schedule at a time instead of continuous multi-schedule scroll

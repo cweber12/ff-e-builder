@@ -21,6 +21,7 @@ import { ProposalCategorySection } from './category/ProposalCategorySection';
 import { AddGroupModal } from '../../shared/modals/AddGroupModal';
 import { DeleteCategoryModal } from './dialogs/DeleteCategoryModal';
 import { ProposalEmptyState } from './ProposalEmptyState';
+import { ProposalActions } from '../../project/AppBarActions';
 import { PROPOSAL_GENERATED_ITEM_TABLE_PRESET } from '../../../lib/table/generatedItemTablePresets';
 import { resolveGeneratedItemColumns } from '../../../lib/table/generatedItemColumnModel';
 
@@ -199,12 +200,15 @@ export function ProposalTable({
       ) : (
         <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
           {categoriesWithItems.length > 0 ? (
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <span className="toolbar-stat">
-                {categoriesWithItems.length}{' '}
-                {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
-              </span>
-              <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="toolbar-stat">
+                  {categoriesWithItems.length}{' '}
+                  {categoriesWithItems.length === 1 ? 'schedule' : 'schedules'}
+                </span>
+                <span className="toolbar-stat">Library total {formatMoney(cents(grandTotal))}</span>
+              </div>
+              <ProposalActions onAddCategory={() => setAddCategoryOpen(true)} />
             </div>
           ) : null}
 

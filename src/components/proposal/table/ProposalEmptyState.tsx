@@ -28,7 +28,7 @@ export function ProposalEmptyState({
             {onImport && (
               <Button type="button" variant="primary" size="md" onClick={onImport}>
                 <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                Import
+                Upload
               </Button>
             )}
             <Button type="button" variant="addAction" size="md" onClick={onAddCategory}>

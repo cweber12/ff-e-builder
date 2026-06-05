@@ -35,7 +35,7 @@ import { ImportProposalExcelModal } from './components/proposal/import/ImportPro
 import { ProjectHeader } from './components/project/ProjectHeader';
 import { ProjectToolSidebar } from './components/project/ProjectToolSidebar';
 import { ProposalTable } from './components/proposal/table/ProposalTable';
-import { ProposalSidebarSections } from './components/project/AppBarActions';
+import { ProposalOptionsMenu, ProposalSidebarSections } from './components/project/AppBarActions';
 import { Button, MenuItem, MenuSeparator, MenuSub, MenuSubTrigger } from './components/primitives';
 import {
   SidebarButton,
@@ -253,7 +253,14 @@ function ProjectLayout() {
     !isLoading && project ? (
       isCatalogRoute ? (
         <div id={CATALOG_OPTIONS_SLOT_ID} className="project-sidebar-header-inline-slot" />
-      ) : isProposalRoute ? null : isBudgetRoute ? (
+      ) : isProposalRoute ? (
+        <ProposalOptionsMenu
+          project={project}
+          categoriesWithItems={proposalCategoriesWithItems}
+          onAddCategory={() => setAddCategoryOpen(true)}
+          onImport={() => setProposalImportOpen(true)}
+        />
+      ) : isBudgetRoute ? (
         <BudgetOptionsMenu
           project={project}
           roomsWithItems={roomsWithItems}

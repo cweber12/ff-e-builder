@@ -1,10 +1,10 @@
 import type { Project, ProposalCategoryWithItems, ProposalStatus } from '../../types';
-import { useMemo, useState, type ReactNode } from 'react';
-import { Download, Plus, Upload } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { useUserProfile } from '../../hooks';
 import { useColumnDefs } from '../../hooks';
 import { ProposalStatusSelect } from '../shared/ProposalStatusSelect';
-import { Button, MenuItem, MenuSeparator } from '../primitives';
+import { Button, MenuItem } from '../primitives';
 import {
   useUpdateProject,
   useProposalRevisions,
@@ -12,7 +12,6 @@ import {
   useRevisionChangelog,
 } from '../../hooks';
 import { useColumnConfig } from '../../hooks/shared';
-import { ColumnVisibilityPanel } from '../shared/ColumnVisibilityPopover';
 import { ProposalExportModal } from '../shared/modals/ProposalExportModal';
 import { SidebarButton, SidebarHeaderMenu } from '../shared/sidebar';
 
@@ -80,7 +79,6 @@ export function ProposalActions({
 export function ProposalOptionsMenu({
   project,
   categoriesWithItems,
-  onAddCategory,
   onImport,
 }: ProposalActionsProps) {
   const { data: userProfile } = useUserProfile();
@@ -97,22 +95,12 @@ export function ProposalOptionsMenu({
   const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
   const hasItems = categoriesWithItems.some((c) => c.items.length > 0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [columnsOpen, setColumnsOpen] = useState(false);
-  const [columnsAnchorRect, setColumnsAnchorRect] = useState<DOMRect | null>(null);
 
   return (
     <>
       <SidebarHeaderMenu ariaLabel="Item Library options">
         {({ closeMenu }) => (
           <>
-            <MenuItem
-              onClick={() => {
-                closeMenu();
-                onAddCategory();
-              }}
-            >
-              Add schedule
-            </MenuItem>
             <MenuItem
               onClick={() => {
                 closeMenu();
@@ -130,17 +118,6 @@ export function ProposalOptionsMenu({
             >
               Download
             </MenuItem>
-            <MenuSeparator />
-            <MenuItem
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                closeMenu();
-                setColumnsAnchorRect(rect);
-                setColumnsOpen(true);
-              }}
-            >
-              Columns
-            </MenuItem>
           </>
         )}
       </SidebarHeaderMenu>
@@ -154,130 +131,21 @@ export function ProposalOptionsMenu({
         revisionData={{ revisions, snapshots, changelog }}
         visibleOrder={exportVisibleOrder}
       />
-      {columnsOpen && columnsAnchorRect ? (
-        <ColumnVisibilityPanel
-          projectId={project.id}
-          tableKey="proposal"
-          triggerRect={columnsAnchorRect}
-          side={typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'left' : 'right'}
-          onClose={() => setColumnsOpen(false)}
-        />
-      ) : null}
     </>
-  );
-}
-
-function SidebarSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="project-sidebar-slot gap-2.5">
-      <p className="toolbar-label">{title}</p>
-      {children}
-    </div>
   );
 }
 
 export function ProposalSidebarSections({
   project,
   categoriesWithItems,
-  revisionMode = false,
-  onRevisionModeChange = () => {},
   onOpenSpreadsheetRequest,
-  onAddCategory,
-  onImport,
 }: ProposalActionsProps) {
-  const { data: userProfile } = useUserProfile();
-  const { data: customColumnDefs = [] } = useColumnDefs(project.id, 'proposal');
-  const { data: revisions = [] } = useProposalRevisions(project.id);
-  const { data: snapshots = [] } = useRevisionSnapshots(project.id);
-  const { data: changelog = [] } = useRevisionChangelog(project.id);
-  const { visibleOrder } = useColumnConfig(
-    project.id,
-    'proposal',
-    PROPOSAL_DEFAULT_COLS,
-    customColumnDefs,
-  );
-  const exportVisibleOrder = useMemo(() => ['productTag', ...visibleOrder], [visibleOrder]);
-  const hasItems = categoriesWithItems.some((category) => category.items.length > 0);
-  const openRev = revisions.find((revision) => revision.closedAt === null) ?? null;
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [columnsOpen, setColumnsOpen] = useState(false);
-  const [columnsAnchorRect, setColumnsAnchorRect] = useState<DOMRect | null>(null);
-
   return (
-    <>
-      <SidebarSection title="Workflow">
-        <ProposalSidebarContext
-          project={project}
-          categoriesWithItems={categoriesWithItems}
-          onOpenSpreadsheetRequest={onOpenSpreadsheetRequest}
-        />
-      </SidebarSection>
-
-      <SidebarSection title="View">
-        <div className="project-sidebar-slot gap-1.5">
-          <SidebarButton
-            type="button"
-            selected={revisionMode}
-            disabled={!openRev}
-            onClick={() => onRevisionModeChange(!revisionMode)}
-          >
-            Compare revision values
-          </SidebarButton>
-        </div>
-      </SidebarSection>
-
-      <SidebarSection title="Actions">
-        <ProposalActions onAddCategory={onAddCategory} layout="column" />
-        <div className="project-sidebar-slot">
-          <SidebarButton type="button" onClick={onImport}>
-            <Upload className="toolbar-icon" aria-hidden="true" />
-            Import
-          </SidebarButton>
-        </div>
-        <div className="project-sidebar-slot">
-          <SidebarButton
-            type="button"
-            disabled={!hasItems}
-            onClick={() => setExportModalOpen(true)}
-          >
-            <Download className="toolbar-icon" aria-hidden="true" />
-            Export
-          </SidebarButton>
-        </div>
-      </SidebarSection>
-
-      <SidebarSection title="Display">
-        <SidebarButton
-          type="button"
-          onClick={(event) => {
-            setColumnsAnchorRect(event.currentTarget.getBoundingClientRect());
-            setColumnsOpen(true);
-          }}
-        >
-          Columns
-        </SidebarButton>
-      </SidebarSection>
-
-      <ProposalExportModal
-        open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-        project={project}
-        categoriesWithItems={categoriesWithItems}
-        userProfile={userProfile ?? null}
-        customColumnDefs={customColumnDefs}
-        revisionData={{ revisions, snapshots, changelog }}
-        visibleOrder={exportVisibleOrder}
-      />
-      {columnsOpen && columnsAnchorRect ? (
-        <ColumnVisibilityPanel
-          projectId={project.id}
-          tableKey="proposal"
-          triggerRect={columnsAnchorRect}
-          side={typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'left' : 'right'}
-          onClose={() => setColumnsOpen(false)}
-        />
-      ) : null}
-    </>
+    <ProposalSidebarContext
+      project={project}
+      categoriesWithItems={categoriesWithItems}
+      onOpenSpreadsheetRequest={onOpenSpreadsheetRequest}
+    />
   );
 }
 
@@ -326,24 +194,10 @@ export function ProposalSidebarContext({
   return (
     <div className="project-sidebar-slot gap-2">
       <div className="project-sidebar-slot gap-2">
-        <p className="toolbar-label">Proposal workflow</p>
-        {openRev ? (
-          <div className="space-y-1">
-            <p className="text-[12px] font-semibold text-neutral-900">
-              Revision {openRev.label} in progress
-            </p>
-            <p className="text-[11px] leading-5 text-neutral-500">
-              Based on {PROPOSAL_STATUS_LABEL[openRev.triggeredAtStatus]}
-            </p>
-            <p className="text-[11px] leading-5 text-neutral-500">
-              {unresolvedCount} flagged {unresolvedCount === 1 ? 'cost' : 'costs'}
-            </p>
-          </div>
-        ) : (
-          <p className="text-[12px] font-semibold text-neutral-900">
-            {PROPOSAL_STATUS_LABEL[project.proposalStatus]}
-          </p>
-        )}
+        <p className="toolbar-label">Proposal status</p>
+        <p className="text-[12px] font-semibold text-neutral-900">
+          {PROPOSAL_STATUS_LABEL[project.proposalStatus]}
+        </p>
         <ProposalStatusSelect
           status={project.proposalStatus}
           onChange={handleStatusChange}
