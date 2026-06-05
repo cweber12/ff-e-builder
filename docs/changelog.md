@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(ui): replace invalid custom-color slash-opacity `@apply` usage in the refreshed shell chrome so Vite CSS compilation succeeds again
 - refactor(ui): quiet the project shell chrome with calmer project header rows, clearer tool-tab selection states, and a lighter desktop rail that now matches the neutral/slate frame
 - refactor(ui): define a calmer shared live-app UI vocabulary by flattening buttons, badges, segmented controls, surface utilities, and textured/light-blue shared backgrounds into a quieter slate/gray system
 - refactor(ui): reset the live app shell to a neutral/slate token palette and collapse live typography to Manrope with JetBrains Mono data accents while leaving catalog document preview styling unchanged

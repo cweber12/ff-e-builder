@@ -488,11 +488,13 @@
   }
 
   .project-header-topbar {
-    @apply flex h-11 items-center gap-3 border-b border-neutral-200 bg-canvas-chrome/95 px-4 backdrop-blur md:px-6;
+    @apply flex h-11 items-center gap-3 border-b border-neutral-200 px-4 backdrop-blur md:px-6;
+    background-color: rgb(var(--color-canvas-chrome) / 0.95);
   }
 
   .project-header-tabs {
-    @apply grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 bg-canvas-chrome/92 px-4 backdrop-blur md:px-6;
+    @apply grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-neutral-200 px-4 backdrop-blur md:px-6;
+    background-color: rgb(var(--color-canvas-chrome) / 0.92);
   }
 
   .project-header-crumb {
@@ -543,7 +545,8 @@
     --sidebar-control-text-hover: rgb(var(--color-neutral-950));
     --sidebar-text-label: rgb(var(--color-neutral-500));
     --sidebar-text-meta: rgb(var(--color-neutral-500));
-    @apply border-r border-neutral-200 bg-canvas-chrome/95 backdrop-blur;
+    @apply border-r border-neutral-200 backdrop-blur;
+    background-color: rgb(var(--color-canvas-chrome) / 0.95);
   }
 
   .project-tool-sidebar-shell {
