@@ -180,7 +180,7 @@ export function GeneratedItemEditableTextControl({
             multiline && 'whitespace-pre-wrap break-words',
             isEmpty
               ? 'border border-neutral-300 text-neutral-400 hover:border-brand-500'
-              : 'text-neutral-700 hover:bg-brand-50',
+              : 'text-neutral-700 hover:bg-neutral-100',
             affordance === 'hover' &&
               'motion-reduce:transition-none motion-safe:transition-colors underline decoration-1 underline-offset-4 decoration-transparent group-hover:decoration-brand-200',
             displayClassName,

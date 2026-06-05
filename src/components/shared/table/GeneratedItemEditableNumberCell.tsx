@@ -117,7 +117,7 @@ export function GeneratedItemEditableNumberCell({
             }
           }}
           className={cn(
-            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
+            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-neutral-100',
             className,
           )}
         >
@@ -235,7 +235,7 @@ export function GeneratedItemEditableMoneyControl({
             }
           }}
           className={cn(
-            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
+            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-neutral-100',
             displayClassName,
           )}
         >
@@ -380,7 +380,7 @@ export function GeneratedItemEditableQuantityControl({
             }
           }}
           className={cn(
-            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-brand-50',
+            'block cursor-text rounded px-2 py-1 text-sm tabular-nums text-neutral-700 hover:bg-neutral-100',
             displayClassName,
           )}
         >

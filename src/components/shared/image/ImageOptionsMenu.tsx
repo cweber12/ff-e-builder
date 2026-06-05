@@ -76,7 +76,7 @@ export function ImageOptionsMenu({
       {canUpdate && (
         <button
           type="button"
-          className={cn(btnBase, 'text-neutral-700 hover:bg-brand-50')}
+          className={cn(btnBase, 'text-neutral-700 hover:bg-neutral-100')}
           onClick={() => {
             onUpdate?.();
             onClose();
@@ -88,7 +88,7 @@ export function ImageOptionsMenu({
       {canCrop && (
         <button
           type="button"
-          className={cn(btnBase, 'text-neutral-700 hover:bg-brand-50')}
+          className={cn(btnBase, 'text-neutral-700 hover:bg-neutral-100')}
           onClick={() => {
             onCrop?.();
             onClose();

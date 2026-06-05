@@ -1160,7 +1160,7 @@ function CatalogNavigatorPanel({
                     key={item.id}
                     className={cn(
                       'project-row flex items-center gap-4 px-4 py-3 transition hover:bg-canvas-shell',
-                      active && 'bg-brand-50/70',
+                      active && 'bg-neutral-100',
                     )}
                   >
                     <button

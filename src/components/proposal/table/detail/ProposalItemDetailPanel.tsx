@@ -335,7 +335,7 @@ function PanelActionsMenu({
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950"
               onClick={run(onDuplicate)}
             >
               Duplicate
@@ -343,7 +343,7 @@ function PanelActionsMenu({
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-brand-50 hover:text-brand-700"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950"
               onClick={run(onAddToFfe)}
             >
               Add to FF&amp;E
@@ -352,7 +352,7 @@ function PanelActionsMenu({
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-danger-600 hover:bg-brand-50"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-danger-600 hover:bg-neutral-100"
               onClick={run(onDelete)}
             >
               Delete item

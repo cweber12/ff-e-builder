@@ -154,7 +154,7 @@ export function ColumnsPanel({
                       key={column.id}
                       type="button"
                       onClick={() => onRestoreDefault(column.id)}
-                      className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs text-neutral-700 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+                      className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs text-neutral-700 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
                     >
                       <span className="truncate">{column.label}</span>
                       <span className="text-[10px] text-neutral-400">Restore</span>

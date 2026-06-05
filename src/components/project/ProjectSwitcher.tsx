@@ -65,8 +65,8 @@ export function ProjectSwitcher({ currentProjectId }: ProjectSwitcherProps) {
                   type="button"
                   onClick={() => handleSelect(p.id)}
                   className={cn(
-                    'w-full text-left px-4 py-2.5 flex flex-col gap-0.5 hover:bg-brand-50 transition-colors',
-                    p.id === currentProjectId && 'bg-brand-50',
+                    'w-full text-left px-4 py-2.5 flex flex-col gap-0.5 hover:bg-neutral-100 transition-colors',
+                    p.id === currentProjectId && 'bg-neutral-100',
                   )}
                 >
                   <span className="text-sm font-medium text-neutral-900 truncate">{p.name}</span>

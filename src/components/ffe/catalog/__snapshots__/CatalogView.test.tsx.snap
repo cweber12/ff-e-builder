@@ -26,7 +26,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         </h1>
         <div
           aria-label="Name for Channel Lounge Chair"
-          class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 min-w-0 inline-block text-[18px]"
+          class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-neutral-100 min-w-0 inline-block text-[18px]"
           role="button"
           tabindex="0"
         >
@@ -90,7 +90,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
                 class="grid gap-1"
               >
                 <div
-                  class="relative overflow-hidden bg-white catalog-rendering-frame border-0 shadow-none rounded-none"
+                  class="group relative overflow-hidden bg-white catalog-rendering-frame border-0 shadow-none rounded-none"
                 >
                   <div
                     class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell catalog-placeholder catalog-placeholder--dashed"
@@ -142,7 +142,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         >
           <div
             aria-label="Dimensions for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50"
+            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-neutral-100"
             role="button"
             tabindex="0"
           >
@@ -158,7 +158,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         >
           <div
             aria-label="Description for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 block"
+            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-neutral-100 block"
             role="button"
             tabindex="0"
           >
@@ -174,7 +174,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
         >
           <div
             aria-label="Notes for Channel Lounge Chair"
-            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50 block w-full"
+            class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-neutral-100 block w-full"
             role="button"
             tabindex="0"
           >
@@ -344,7 +344,7 @@ exports[`CatalogPage > matches the rendered catalog page snapshot for a fixture 
               class="grid gap-1"
             >
               <div
-                class="relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
+                class="group relative overflow-hidden bg-white border-0 shadow-none h-full w-full rounded-none"
               >
                 <div
                   class="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-neutral-400 bg-canvas-shell catalog-plan-placeholder catalog-plan-placeholder--dashed"

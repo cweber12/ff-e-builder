@@ -106,7 +106,7 @@ export function InlineTextEdit({
           }
         }}
         className={cn(
-          'cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-brand-50',
+          'cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-neutral-100',
           className,
         )}
       >
