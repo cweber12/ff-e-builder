@@ -1,11 +1,5 @@
-@import '@fontsource-variable/dm-sans';
 @import '@fontsource-variable/jetbrains-mono';
 @import '@fontsource-variable/manrope';
-/* Fraunces — restrained display serif for ALL headings (h1–h4) and .page-title.
-   `full.css` carries the opsz/SOFT/WONK axes so we can pin a crisp, non-quirky
-   cut (SOFT 0, WONK 0) rather than the default fashion-contrast letterforms.
-   Micro-labels (.eyebrow, .table-head-cell, meta) deliberately stay on Manrope. */
-@import '@fontsource-variable/fraunces/full.css';
 
 @tailwind base;
 @tailwind components;
@@ -18,61 +12,45 @@
   To retheme the app, override these variables in :root or a scoped selector.
 */
 :root {
-  /* Brand — deep steel/Prussian blue. The 200→900 steps stay blue and carry
-     every blue border, label, icon, and dark fill in the app.
+  /* Brand — cool slate-blue accent. Light steps are now pale blue-gray fills
+     instead of parchment/tan, so hover/selected states stay quiet while the
+     darker steps still carry primary actions, links, and focus treatments. */
+  --color-brand-50: 241 245 249;
+  --color-brand-100: 226 232 240;
+  --color-brand-200: 191 210 230;
+  --color-brand-300: 125 160 196;
+  --color-brand-400: 77 123 170;
+  --color-brand-500: 43 89 139;
+  --color-brand-600: 31 70 113;
+  --color-brand-700: 23 54 88;
+  --color-brand-800: 16 39 66;
+  --color-brand-900: 10 27 46;
 
-     The two lightest steps (50 / 100) are intentionally REPURPOSED as warm
-     parchment-neutral "tint" surfaces. App-wide these two are only ever used
-     as background fills (bg-brand-50 / bg-brand-100, hover + selected states,
-     chips, avatars) — never as text/border/ring. Resolving them to warm sand
-     instead of pale blue turns every light-blue fill into a neutral surface in
-     a single move, while the blue borders/text painted with brand-300..700 are
-     untouched. This is what produces the "light neutral background + dark blue
-     border" button language. Do NOT use 50/100 for text or borders. */
-  --color-brand-50: 236 229 214; /* warm sand — hover / selected fills, chips */
-  --color-brand-100: 224 214 195; /* deeper sand — active fills, avatars */
-  --color-brand-200: 148 187 220;
-  --color-brand-300: 92 149 198;
-  --color-brand-400: 52 114 174;
-  --color-brand-500: 31 88 145; /* #1F5891 — primary button blue */
-  --color-brand-600: 22 69 117; /* #164575 */
-  --color-brand-700: 16 52 92; /* #10345C */
-  --color-brand-800: 11 38 68;
-  --color-brand-900: 7 26 47;
+  /* Neutral — reset to slate. This becomes the default hierarchy for shell
+     backgrounds, borders, and text: white surfaces on light gray canvas with
+     darker slate copy and dividers. */
+  --color-neutral-50: 248 250 252;
+  --color-neutral-100: 241 245 249;
+  --color-neutral-200: 226 232 240;
+  --color-neutral-300: 203 213 225;
+  --color-neutral-400: 148 163 184;
+  --color-neutral-500: 100 116 139;
+  --color-neutral-600: 71 85 105;
+  --color-neutral-700: 51 65 85;
+  --color-neutral-800: 30 41 59;
+  --color-neutral-900: 15 23 42;
+  --color-neutral-950: 2 6 23;
 
-  /* Neutral — warm greige. Retuned from the old cool slate so the whole app
-     reads as ink on parchment rather than graphite on paper. R > G > B at
-     every step keeps a consistent warm bias; the dark end stays a warm
-     charcoal (not brown) so body text and headings remain crisp. 200 and 300
-     are kept dark enough to read as architectural ruled lines. */
-  --color-neutral-50: 247 244 237;
-  --color-neutral-100: 239 234 224;
-  --color-neutral-200: 224 217 204; /* visible card / table borders */
-  --color-neutral-300: 189 180 165; /* strong dividers */
-  --color-neutral-400: 151 141 125;
-  --color-neutral-500: 96 88 75; /* darkened a step for more readable secondary text */
-  --color-neutral-600: 68 61 52; /* darkened a step for more readable secondary text */
-  --color-neutral-700: 56 50 43;
-  --color-neutral-800: 39 35 29;
-  --color-neutral-900: 28 24 20;
-  --color-neutral-950: 19 16 13;
-
-  /* Surface — three-layer hierarchy:
-       • surface         (#FFFFFF)         → cards, tables, modals
-       • surface-muted   (#E3E9F1)         → page panel — clearly visible as
-                                              "the gray section" against the
-                                              pure-white cards above
-       • surface-raised  (#FFFFFF)         → elevated overlays
-       • surface-inverse (#0E1622)         → reserved for inverted strips */
-  --color-surface: 255 255 255; /* crisp white — cards/tables read as paper sheets laid on the parchment */
-  --color-surface-muted: 240 236 229; /* #F0ECE5 — gray panel, lightened into the new bg family */
+  /* Surface — white on cool light-gray hierarchy. */
+  --color-surface: 255 255 255;
+  --color-surface-muted: 244 247 250;
   --color-surface-raised: 255 255 255;
-  --color-surface-inverse: 28 24 20;
+  --color-surface-inverse: 15 23 42;
 
   /* Dedicated border tokens — used by tables, cards, and dividers when a
      stronger weight than neutral-200 is wanted. */
-  --color-border: 224 217 204;
-  --color-border-strong: 189 180 165;
+  --color-border: 226 232 240;
+  --color-border-strong: 203 213 225;
 
   /* Semantic */
   --color-danger-50: 254 242 242;
@@ -85,23 +63,16 @@
   --color-warning-500: 217 119 6;
   --color-warning-700: 154 84 6;
 
-  /* Plan canvas — near-white paper palette
-     The whole app now sits on a paper-textured near-white surface; the plan
-     canvas inherits the same family with a slightly stronger grain so it
-     still reads as drafting paper rather than chrome.
-       plan-line    → cool slate (saved length lines, the "ink" stroke)
-       plan-measure → steel brand (in-progress drafts, dashed)
-       plan-active  → deep brand (selected overlays, authoritative) */
-  --color-canvas-bg: 250 248 244; /* #FAF8F4 — Programa-light: near-white, faintly warm parchment */
-  --color-canvas-shell: 242 238 230; /* #F2EEE6 — warm inset / hover, lifted to match the lighter page */
-  --color-canvas-chrome: 253 252 249; /* #FDFCF9 — near-white chrome (toolbars, tables, drawers) */
-  --color-plan-line: 56 50 43; /* warm ink stroke */
-  --color-plan-measure: 31 88 145;
-  --color-plan-active: 16 52 92;
+  /* Canvas — quiet live-app shell hierarchy. */
+  --color-canvas-bg: 245 247 250;
+  --color-canvas-shell: 237 242 247;
+  --color-canvas-chrome: 250 252 255;
+  --color-plan-line: 51 65 85;
+  --color-plan-measure: 43 89 139;
+  --color-plan-active: 23 54 88;
 
-  /* Paper — near-white printable artifact surface (proposal totals, catalog
-     pages). A hair warm so it sits in the parchment family. */
-  --color-paper: 253 252 249; /* #FDFCF9 — matches chrome */
+  /* Paper stays neutral for printable-adjacent live surfaces. */
+  --color-paper: 255 255 255;
 
   /* Radius scale — architectural / spec-sheet. Tightened from the previous
      soft values so cards and controls read as precisely drawn rather than
@@ -126,7 +97,7 @@
      the app. Body anchors at 14px (the data-dense default); display steps up
      for page authority. Components should reach for these rather than ad-hoc
      arbitrary values.
-       display → page hero (Fraunces serif)
+       display → page hero / totals
        title   → page / section h1
        section → card + panel headings
        body    → default reading + controls
@@ -166,21 +137,19 @@
     0 26px 40px -14px rgb(8 14 22 / 0.14);
 
   /* Architectural rule line — the hairline used between metric rows, tool-rail
-     groups, and inspector subcards. Slightly stronger than neutral-200 so it
-     reads as an intentional drafting rule, not a default browser border. */
-  --rule-line: rgb(174 186 201 / 0.55);
+     groups, and inspector subcards. */
+  --rule-line: rgb(148 163 184 / 0.42);
 
   /* Blueprint hatch — diagonal rule pattern for empty states and the canvas
-     viewport background when no plan is loaded. Stroke uses neutral-300 at
-     low opacity so the texture is felt, not seen. */
-  --blueprint-hatch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M-1 7l8-8M5 13l8-8' stroke='%23BDB4A5' stroke-width='0.5' opacity='0.4'/></svg>");
+     viewport background when no plan is loaded. */
+  --blueprint-hatch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M-1 7l8-8M5 13l8-8' stroke='%23CBD5E1' stroke-width='0.5' opacity='0.45'/></svg>");
 
   /* Sidebar semantic tokens (v2) */
-  --sidebar-bg: rgb(var(--color-canvas-shell) / 0.72);
-  --sidebar-bg-collapsed: rgb(var(--color-canvas-shell) / 0.8);
-  --sidebar-border: rgb(var(--color-neutral-200) / 0.88);
-  --sidebar-divider: rgb(var(--color-neutral-200) / 0.72);
-  --sidebar-header-border: rgb(var(--color-neutral-300) / 0.52);
+  --sidebar-bg: rgb(var(--color-canvas-shell) / 0.84);
+  --sidebar-bg-collapsed: rgb(var(--color-canvas-shell) / 0.9);
+  --sidebar-border: rgb(var(--color-neutral-200) / 0.92);
+  --sidebar-divider: rgb(var(--color-neutral-200) / 0.78);
+  --sidebar-header-border: rgb(var(--color-neutral-300) / 0.58);
 
   --sidebar-text-header: rgb(var(--color-neutral-950));
   --sidebar-text-label: rgb(var(--color-neutral-600));
@@ -190,9 +159,9 @@
   --sidebar-control-text: rgb(var(--color-neutral-950));
   --sidebar-control-text-hover: rgb(var(--color-neutral-950));
   --sidebar-control-text-disabled: rgb(var(--color-neutral-400));
-  --sidebar-control-bg-hover: rgb(var(--color-neutral-100) / 0.35);
-  --sidebar-control-bg-active: rgb(var(--color-brand-100) / 0.36);
-  --sidebar-focus-ring: rgb(var(--color-brand-500) / 0.32);
+  --sidebar-control-bg-hover: rgb(var(--color-neutral-100) / 0.72);
+  --sidebar-control-bg-active: rgb(var(--color-brand-100) / 0.58);
+  --sidebar-focus-ring: rgb(var(--color-brand-500) / 0.26);
 }
 
 [data-theme='dark'] {
@@ -249,19 +218,17 @@
   body {
     font-family:
       'Manrope Variable',
-      'DM Sans Variable',
       system-ui,
       -apple-system,
       sans-serif;
     font-feature-settings: 'ss01', 'ss02', 'cv11';
     letter-spacing: -0.005em;
     background-color: rgb(var(--color-canvas-bg));
-    /* Subtle paper grain — two offset dot layers in a warm sepia so the
-       parchment never reads as flat. Stronger grain available via
-       .paper-texture for the plan canvas. */
+    /* Subtle slate grain so the shell stays soft without reintroducing a warm
+       parchment cast. Stronger grain remains available via .paper-texture. */
     background-image:
-      radial-gradient(rgb(120 92 54 / 0.035) 1px, transparent 1px),
-      radial-gradient(rgb(120 92 54 / 0.025) 1px, transparent 1px);
+      radial-gradient(rgb(100 116 139 / 0.03) 1px, transparent 1px),
+      radial-gradient(rgb(148 163 184 / 0.018) 1px, transparent 1px);
     background-size:
       3px 3px,
       7px 7px;
@@ -272,23 +239,15 @@
     color: rgb(var(--color-neutral-950));
   }
 
-  /* Headings use the crisp Fraunces cut for a distinctive, editorial voice that
-     still reads as clean lines rather than fashion-contrast serif. Axes match
-     .page-title (SOFT 0, WONK 0 kills the quirky alternates) but at opsz 30 —
-     a step below the page hero's 40 since section/card headers run smaller.
-     Weight stays on the `wght` axis via font-weight so utilities still respond.
-     Body and micro-labels stay on Manrope (set on body / .eyebrow / .table-head-cell). */
+  /* Live UI headings share the same sans family as body text so page, panel,
+     and control titles all read like one system. */
   h1,
   h2,
   h3,
   h4 {
-    font-family: 'Fraunces Variable', Georgia, Cambria, 'Times New Roman', serif;
-    font-variation-settings:
-      'opsz' 30,
-      'SOFT' 0,
-      'WONK' 0;
-    letter-spacing: -0.015em;
-    font-weight: 600;
+    font-family: 'Manrope Variable', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 700;
     color: rgb(var(--color-neutral-950));
   }
 
@@ -328,8 +287,8 @@
   .paper-texture {
     background-color: rgb(var(--color-canvas-bg));
     background-image:
-      radial-gradient(rgb(120 92 54 / 0.07) 1px, transparent 1px),
-      radial-gradient(rgb(120 92 54 / 0.045) 1px, transparent 1px);
+      radial-gradient(rgb(100 116 139 / 0.06) 1px, transparent 1px),
+      radial-gradient(rgb(148 163 184 / 0.03) 1px, transparent 1px);
     background-size:
       3px 3px,
       7px 7px;
@@ -1251,7 +1210,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-family: 'Manrope Variable', 'DM Sans Variable', sans-serif;
+    font-family: 'Manrope Variable', system-ui, sans-serif;
     font-size: 12px;
     font-weight: 680;
     color: theme('colors.neutral.950');
@@ -1294,7 +1253,7 @@
   .catalog-layout-title {
     margin: 0;
     font-size: 17px;
-    font-family: 'Manrope Variable', 'DM Sans Variable', sans-serif;
+    font-family: 'Manrope Variable', system-ui, sans-serif;
     font-weight: 680;
     line-height: 1.1;
     color: theme('colors.neutral.950');
@@ -1568,23 +1527,12 @@
     color: theme('colors.brand.700');
   }
 
-  /* Page title — the page-level hero (Dashboard welcome, sign-in, company
-     profile, error pages). Shares the Fraunces serif now used on all headings,
-     but steps the optical size up to opsz 40 for display-grade contrast and
-     authority. Sub-headings (h1–h4) sit at opsz 30; micro-labels stay Manrope.
-
-     Axes are pinned for a refined, credible cut: opsz 40 gives display-grade
-     contrast without the extreme thicks/thins of high opsz; SOFT 0 keeps
-     terminals crisp; WONK 0 removes the quirky alternates. Weight is left to
-     `font-semibold` so the variable `wght` axis still responds to utilities. */
+  /* Page title — same family as the rest of the live UI, but with tighter
+     spacing and line-height so hero headings still feel intentional. */
   .page-title {
-    font-family: 'Fraunces Variable', Georgia, Cambria, 'Times New Roman', serif;
-    font-variation-settings:
-      'opsz' 40,
-      'SOFT' 0,
-      'WONK' 0;
-    letter-spacing: -0.01em;
-    line-height: 1.1;
+    font-family: 'Manrope Variable', system-ui, sans-serif;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
   }
 
   /* Small uppercase metadata label — the "ID", "Manufacturer", "Status"

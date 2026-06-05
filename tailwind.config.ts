@@ -15,6 +15,8 @@ const config: Config = {
           500: 'rgb(var(--color-brand-500) / <alpha-value>)',
           600: 'rgb(var(--color-brand-600) / <alpha-value>)',
           700: 'rgb(var(--color-brand-700) / <alpha-value>)',
+          800: 'rgb(var(--color-brand-800) / <alpha-value>)',
+          900: 'rgb(var(--color-brand-900) / <alpha-value>)',
         },
         neutral: {
           50: 'rgb(var(--color-neutral-50)  / <alpha-value>)',
@@ -63,14 +65,12 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Manrope Variable', 'DM Sans Variable', 'system-ui', 'sans-serif'],
+        sans: ['Manrope Variable', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
-        // `display` stays sans (Manrope): it is applied across dense UI — panel
-        // titles, header project name, even tabular numbers — where a serif
-        // would be wrong. The serif lives in `serif` / the .page-title utility
-        // and is reserved for page-level heroes.
-        display: ['Manrope Variable', 'DM Sans Variable', 'system-ui', 'sans-serif'],
-        serif: ['Fraunces Variable', 'Georgia', 'Cambria', 'Times New Roman', 'serif'],
+        display: ['Manrope Variable', 'system-ui', 'sans-serif'],
+        // Keep `serif` mapped to the live UI sans stack so any stray usage
+        // cannot reintroduce decorative heading fonts during the refresh.
+        serif: ['Manrope Variable', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         sm: 'var(--shadow-sm)',
