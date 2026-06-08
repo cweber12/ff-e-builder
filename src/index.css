@@ -559,8 +559,8 @@
 
   .project-tool-sidebar-link {
     @apply inline-flex min-h-9 items-center rounded-md border border-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.1em]
-           text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 data-[active]:border-neutral-200
-           data-[active]:bg-white data-[active]:text-neutral-950 data-[active]:shadow-sm;
+           text-neutral-500 transition-colors hover:text-neutral-900
+           data-[active]:text-neutral-950 data-[active]:font-bold;
   }
 
   .project-tool-sidebar-row {
