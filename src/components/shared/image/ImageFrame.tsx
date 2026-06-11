@@ -377,7 +377,7 @@ export function ImageFrame({
                 <Pencil className="h-3.5 w-3.5" />
               </button>
             </div>
-            <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+            <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-black/70">
               {upload.isPending ? 'Uploading…' : 'Paste image'}
             </span>
           </div>

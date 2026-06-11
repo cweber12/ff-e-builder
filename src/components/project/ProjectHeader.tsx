@@ -61,7 +61,10 @@ export function ProjectHeader({
   if (!project) return <SkeletonBar />;
 
   return (
-    <header data-project-header="true" className="no-print relative z-10 shrink-0 overflow-visible">
+    <header
+      data-project-header="true"
+      className="no-print fixed inset-x-0 top-0 z-30 shrink-0 overflow-visible"
+    >
       <div data-project-header-top="true" className="project-header-topbar">
         <StudioMark />
         <span aria-hidden className="mx-1 h-4 w-px bg-neutral-200" />

@@ -361,6 +361,7 @@ function ProjectLayout() {
             toolPanelOpen={mobilePanelOpen}
             onToggleToolPanel={() => setMobilePanelOpen((open) => !open)}
           />
+          <div className="no-print h-22 shrink-0 lg:h-11" aria-hidden="true" />
           {project && !isDesktop && hasToolControls ? (
             <div
               id="project-tool-panel"
