@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): stamp the active sheet reference into item drawings when applying plan measurements
 - feat(plans): import multiple selected PDF pages as separate measured plans and add previous/next sheet navigation in the plan canvas
 - fix(ui): pin the project header to the viewport top with matching content offset and improve image-frame paste-overlay label contrast
 - fix(plans): restore Select tool canvas hit-testing and make measured-area resize handles easier to grab

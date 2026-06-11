@@ -42,6 +42,8 @@ import {
   formatAreaUnit,
   formatDisplayNumber,
   formatPlanLength,
+  appendDrawingReference,
+  getMeasuredPlanDrawingReference,
   getLineLength,
   measurementToRectBounds,
   normalizeRectDraft,
@@ -119,6 +121,7 @@ export function PlanCanvasPage({
     containerId: string;
     version: number;
     previousQuantity: number;
+    drawings: string;
   } | null>(null);
   const [showRecalibrationConfirm, setShowRecalibrationConfirm] = useState(false);
   const [pendingMeasurementReplace, setPendingMeasurementReplace] = useState<{
@@ -143,6 +146,7 @@ export function PlanCanvasPage({
     selectedNavigationIndex >= 0 && selectedNavigationIndex < navigationPlans.length - 1
       ? navigationPlans[selectedNavigationIndex + 1]
       : null;
+  const activeDrawingReference = getMeasuredPlanDrawingReference(selectedPlan);
 
   const selectedPlanId = selectedPlan?.id ?? '';
   const { data: calibration, isLoading: calibrationLoading } = usePlanCalibration(
@@ -660,6 +664,7 @@ export function PlanCanvasPage({
         productTag: draft.productTag.trim() || autoTag,
         description: draft.description.trim() || 'Measured area item',
         location: draft.location.trim(),
+        drawings: appendDrawingReference('', activeDrawingReference),
         ...valueFields,
       });
 
@@ -1117,6 +1122,7 @@ export function PlanCanvasPage({
     containerId: string,
     version: number,
     previousQuantity: number,
+    drawings: string,
     result?: ChangeConfirmResult,
   ) => {
     setIsApplyingMeasurement(true);
@@ -1124,6 +1130,7 @@ export function PlanCanvasPage({
       const updated = await api.proposal.updateItem(targetItemId, {
         quantity: roundedQuantity,
         quantityUnit,
+        drawings,
         version,
         changeLog: {
           columnKey: 'quantity',
@@ -1165,8 +1172,10 @@ export function PlanCanvasPage({
       setIsApplyingMeasurement(true);
       try {
         const footprint = buildFootprintFields(widthBase, heightBase, unit);
+        const drawings = appendDrawingReference(targetItem.drawings, activeDrawingReference);
         const updated = await api.proposal.updateItem(targetItem.targetItemId, {
           ...footprint,
+          drawings,
           version: targetItem.version,
         });
         queryClient.setQueryData<ProposalItem[]>(
@@ -1217,6 +1226,7 @@ export function PlanCanvasPage({
         containerId: targetItem.containerId,
         version: targetItem.version,
         previousQuantity: targetItem.quantity ?? 1,
+        drawings: appendDrawingReference(targetItem.drawings, activeDrawingReference),
       };
       if (project.proposalStatus !== 'in_progress') {
         setPendingMeasurementApply(pending);
@@ -1229,6 +1239,7 @@ export function PlanCanvasPage({
         pending.containerId,
         pending.version,
         pending.previousQuantity,
+        pending.drawings,
       );
       return;
     }
@@ -1237,8 +1248,10 @@ export function PlanCanvasPage({
     setIsApplyingMeasurement(true);
     try {
       const dimensions = `Measured from plan: ${formatDisplayNumber(widthPlanUnits)} ${unit} x ${formatDisplayNumber(heightPlanUnits)} ${unit}`;
+      const drawings = appendDrawingReference(targetItem.drawings, activeDrawingReference);
       const updated = await api.items.update(targetItem.targetItemId, {
         dimensions,
+        drawings,
         version: targetItem.version,
       });
       queryClient.setQueryData<Item[]>(itemKeys.forRoom(targetItem.containerId), (old) =>
@@ -1556,6 +1569,7 @@ export function PlanCanvasPage({
               p.containerId,
               p.version,
               p.previousQuantity,
+              p.drawings,
               result,
             );
           }}
@@ -1696,6 +1710,7 @@ function buildMeasurementItems(proposalCategoriesWithItems: ProposalCategoryWith
         containerLabel: category.name,
         containerId: category.id,
         version: item.version,
+        drawings: item.drawings,
         quantity: item.quantity,
         quantityUnit: item.quantityUnit,
         linkedFfeItemId: item.linkedFfeItemId ?? null,

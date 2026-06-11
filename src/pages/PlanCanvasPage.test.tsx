@@ -1,11 +1,44 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Project } from '../types';
 
+const hookMocks = vi.hoisted(() => ({
+  createPlanMeasurementMutateAsync: vi.fn(),
+}));
+
+const apiMocks = vi.hoisted(() => ({
+  proposalUpdateItem: vi.fn(),
+}));
+
 vi.mock('../components/plans/canvas/PlanViewport', () => ({
-  PlanViewport: vi.fn(() => <div data-testid="plan-viewport" />),
+  PlanViewport: vi.fn(
+    ({
+      onMeasurementDraftChange,
+      onNaturalSizeChange,
+    }: {
+      onMeasurementDraftChange: (draft: {
+        startX: number;
+        startY: number;
+        endX: number;
+        endY: number;
+      }) => void;
+      onNaturalSizeChange: (size: { width: number; height: number }) => void;
+    }) => (
+      <div data-testid="plan-viewport">
+        <button
+          type="button"
+          onClick={() => {
+            onNaturalSizeChange({ width: 1000, height: 1000 });
+            onMeasurementDraftChange({ startX: 0, startY: 0, endX: 100, endY: 200 });
+          }}
+        >
+          Draw measurement draft
+        </button>
+      </div>
+    ),
+  ),
 }));
 
 import { PlanCanvasPage } from './PlanCanvasPage';
@@ -97,6 +130,38 @@ const proposalCategoriesWithItems = [
         unitCostCents: 0,
         sortOrder: 0,
         version: 1,
+        createdAt: '2026-05-01T00:00:00Z',
+        updatedAt: '2026-05-01T00:00:00Z',
+        customData: {},
+      },
+      {
+        id: 'proposal-item-2',
+        categoryId: 'proposal-category-1',
+        productTag: 'P-43',
+        itemName: 'Display millwork',
+        plan: '',
+        drawings: 'A0-1',
+        location: '',
+        description: 'Display millwork',
+        notes: '',
+        sizeLabel: '',
+        sizeMode: 'imperial' as const,
+        sizeW: '',
+        sizeD: '',
+        sizeH: '',
+        sizeUnit: 'ft/in' as const,
+        footprintLabel: '',
+        footprintW: '',
+        footprintD: '',
+        footprintUnit: '',
+        footprintArea: null,
+        materials: [],
+        cbm: 0,
+        quantity: 1,
+        quantityUnit: 'unit',
+        unitCostCents: 0,
+        sortOrder: 1,
+        version: 4,
         createdAt: '2026-05-01T00:00:00Z',
         updatedAt: '2026-05-01T00:00:00Z',
         customData: {},
@@ -263,7 +328,7 @@ vi.mock('../hooks', () => ({
     isPending: false,
   })),
   useCreatePlanMeasurement: vi.fn(() => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: hookMocks.createPlanMeasurementMutateAsync,
     isPending: false,
   })),
   useUpdatePlanMeasurement: vi.fn(() => ({
@@ -328,6 +393,9 @@ vi.mock('../lib/api', () => ({
         }),
       ),
     },
+    proposal: {
+      updateItem: apiMocks.proposalUpdateItem,
+    },
   },
 }));
 
@@ -354,6 +422,11 @@ function renderPlanCanvasPage(planId: 'plan-1' | 'plan-2') {
 }
 
 describe('PlanCanvasPage', () => {
+  beforeEach(() => {
+    hookMocks.createPlanMeasurementMutateAsync.mockReset();
+    apiMocks.proposalUpdateItem.mockReset();
+  });
+
   it('renders the workspace shell for uncalibrated plans', () => {
     renderPlanCanvasPage('plan-1');
 
@@ -373,5 +446,56 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByRole('combobox', { name: /sheet/i })).toHaveValue('plan-2');
     expect(screen.getByRole('button', { name: 'Open previous sheet' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Open next sheet' })).toBeDisabled();
+  });
+
+  it('appends the active sheet reference when applying a measurement to a proposal item', async () => {
+    const displayMillwork = proposalCategoriesWithItems[0]?.items[1];
+    if (!displayMillwork) throw new Error('Expected display millwork test fixture.');
+
+    hookMocks.createPlanMeasurementMutateAsync.mockResolvedValue({
+      id: 'measurement-3',
+      measuredPlanId: 'plan-2',
+      targetKind: 'proposal',
+      targetItemId: 'proposal-item-2',
+      targetTagSnapshot: 'P-43',
+      rectX: 0,
+      rectY: 0,
+      rectWidth: 100,
+      rectHeight: 200,
+      horizontalSpanBase: 1219.2,
+      verticalSpanBase: 2438.4,
+      cropX: null,
+      cropY: null,
+      cropWidth: null,
+      cropHeight: null,
+      createdAt: '2026-05-06T00:00:00Z',
+      updatedAt: '2026-05-06T00:00:00Z',
+    });
+    apiMocks.proposalUpdateItem.mockResolvedValue({
+      ...displayMillwork,
+      drawings: 'A0-1, A1.2',
+      quantity: 32,
+      quantityUnit: 'sq ft',
+      version: 5,
+    });
+
+    renderPlanCanvasPage('plan-2');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rectangle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Draw measurement draft' }));
+    fireEvent.click(screen.getByRole('button', { name: /P-43 Display millwork/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save & apply to item' }));
+
+    await waitFor(() => {
+      expect(apiMocks.proposalUpdateItem).toHaveBeenCalledWith(
+        'proposal-item-2',
+        expect.objectContaining({
+          drawings: 'A0-1, A1.2',
+          quantity: 32,
+          quantityUnit: 'sq ft',
+          version: 4,
+        }),
+      );
+    });
   });
 });

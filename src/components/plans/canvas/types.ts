@@ -22,6 +22,7 @@ export type MeasurementItemRef = {
   containerId: string;
   version: number;
   dimensions?: string | null;
+  drawings?: string | null;
   quantity?: number;
   quantityUnit?: string;
   linkedFfeItemId?: string | null;

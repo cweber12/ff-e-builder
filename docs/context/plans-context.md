@@ -193,6 +193,8 @@ Apply modes:
 - `proposal-footprint` → writes footprint W × D fields directly (no `quantity`, no change log, not price-affecting)
 - `ffe-dimensions` → writes the FF&E `dimensions` string
 
+All measurement application paths stamp the active sheet reference into the target item's `drawings` field. The value is `MeasuredPlan.sheetReference` when present, otherwise the plan name. Existing drawing refs are preserved and the active ref is appended only when missing. This stamp is supporting metadata and does not create its own proposal changelog confirmation or price-affecting entry. Highlight-only Plan Image saves do not stamp drawings because they do not apply a Measurement.
+
 Flow (`handleSaveAndApplyMeasurement` → `persistMeasurement()` then `applyMeasurementValue()`):
 
 1. `persistMeasurement()` upserts the `Measurement` row (geometry + base spans)
