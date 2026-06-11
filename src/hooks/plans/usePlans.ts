@@ -4,12 +4,71 @@ import { api } from '../../lib/api';
 import { removeListItem } from '../optimisticList';
 import { planKeys } from '../../lib/query';
 import type {
+  CreatePlanDocumentInput,
   CreateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
   UpsertPlanLengthLineInput,
   UpsertPlanMeasurementInput,
 } from '../../lib/api';
-import type { LengthLine, Measurement, MeasuredPlan, PlanCalibration } from '../../types';
+import type {
+  LengthLine,
+  Measurement,
+  MeasuredPlan,
+  PlanDocument,
+  PlanDocumentDetail,
+  PlanCalibration,
+} from '../../types';
+
+export function usePlanDocuments(projectId: string) {
+  return useQuery({
+    queryKey: planKeys.documents(projectId),
+    queryFn: () => api.plans.listDocuments(projectId),
+    enabled: projectId.length > 0,
+  });
+}
+
+export function usePlanDocument(projectId: string, documentId: string) {
+  return useQuery({
+    queryKey: planKeys.documentDetail(projectId, documentId),
+    queryFn: () => api.plans.getDocument(projectId, documentId),
+    enabled: projectId.length > 0 && documentId.length > 0,
+  });
+}
+
+export function useCreatePlanDocument(projectId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreatePlanDocumentInput) => api.plans.createDocument(projectId, input),
+    onSuccess: (created) => {
+      queryClient.setQueryData<PlanDocument[]>(planKeys.documents(projectId), (old) => [
+        created,
+        ...(old ?? []),
+      ]);
+      void queryClient.invalidateQueries({ queryKey: planKeys.forProject(projectId) });
+    },
+    onError: (err) => toast.error(`Plan document upload failed: ${err.message}`),
+  });
+}
+
+export function useDeletePlanDocument(projectId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (document: PlanDocument) => api.plans.deleteDocument(projectId, document.id),
+    onSuccess: (_data, document) => {
+      queryClient.setQueryData<PlanDocument[]>(planKeys.documents(projectId), (old) =>
+        removeListItem(old, document.id),
+      );
+      queryClient.setQueryData<PlanDocumentDetail | undefined>(
+        planKeys.documentDetail(projectId, document.id),
+        undefined,
+      );
+      void queryClient.invalidateQueries({ queryKey: planKeys.forProject(projectId) });
+    },
+    onError: (err) => toast.error(`Plan document delete failed: ${err.message}`),
+  });
+}
 
 export function useMeasuredPlans(projectId: string) {
   return useQuery({

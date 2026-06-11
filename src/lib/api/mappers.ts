@@ -13,6 +13,7 @@ import type {
   Measurement,
   PlanCalibration,
   MeasuredPlan,
+  PlanDocument,
   Project,
   ProposalCategory,
   ProposalItem,
@@ -183,24 +184,46 @@ export interface RawMeasuredPlan {
   id: string;
   project_id: string;
   owner_uid: string;
+  plan_document_id?: string | null;
+  sheet_index?: number | null;
+  page_label?: string | null;
   name: string;
   sheet_reference: string;
-  source_type: MeasuredPlan['sourceType'];
+  source_type?: MeasuredPlan['sourceType'] | null;
   image_filename: string;
   image_content_type: string;
   image_byte_size: number;
-  pdf_filename: string | null;
-  pdf_content_type: string | null;
-  pdf_byte_size: number | null;
-  pdf_page_number: number | null;
-  pdf_page_width_pt: string | null;
-  pdf_page_height_pt: string | null;
-  pdf_render_scale: string | null;
-  pdf_rendered_width_px: number | null;
-  pdf_rendered_height_px: number | null;
-  pdf_rotation: number | null;
+  pdf_filename?: string | null;
+  pdf_content_type?: string | null;
+  pdf_byte_size?: number | null;
+  pdf_page_number?: number | null;
+  pdf_page_width_pt?: string | null;
+  pdf_page_height_pt?: string | null;
+  pdf_render_scale?: string | null;
+  pdf_rendered_width_px?: number | null;
+  pdf_rendered_height_px?: number | null;
+  pdf_rotation?: number | null;
   calibration_status: CalibrationStatus;
   measurement_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RawPlanDocument {
+  id: string;
+  project_id: string;
+  owner_uid: string;
+  name: string;
+  source_type: PlanDocument['sourceType'];
+  source_r2_key: string;
+  source_filename: string;
+  source_content_type: string;
+  source_byte_size: number;
+  cover_measured_plan_id: string | null;
+  sheet_count: number;
+  calibrated_sheet_count: number;
+  measurement_count: number;
+  cover_sheet: RawMeasuredPlan | null;
   created_at: string;
   updated_at: string;
 }
@@ -462,24 +485,46 @@ export const mapMeasuredPlan = (r: RawMeasuredPlan): MeasuredPlan => ({
   id: r.id,
   projectId: r.project_id,
   ownerUid: r.owner_uid,
+  planDocumentId: r.plan_document_id ?? '',
+  sheetIndex: r.sheet_index ?? 1,
+  pageLabel: r.page_label ?? '',
   name: r.name,
   sheetReference: r.sheet_reference ?? '',
   sourceType: r.source_type ?? 'image',
   imageFilename: r.image_filename,
   imageContentType: r.image_content_type,
   imageByteSize: r.image_byte_size,
-  pdfFilename: r.pdf_filename,
-  pdfContentType: r.pdf_content_type,
-  pdfByteSize: r.pdf_byte_size,
-  pdfPageNumber: r.pdf_page_number,
-  pdfPageWidthPt: r.pdf_page_width_pt === null ? null : Number(r.pdf_page_width_pt),
-  pdfPageHeightPt: r.pdf_page_height_pt === null ? null : Number(r.pdf_page_height_pt),
-  pdfRenderScale: r.pdf_render_scale === null ? null : Number(r.pdf_render_scale),
-  pdfRenderedWidthPx: r.pdf_rendered_width_px,
-  pdfRenderedHeightPx: r.pdf_rendered_height_px,
-  pdfRotation: r.pdf_rotation,
+  pdfFilename: r.pdf_filename ?? null,
+  pdfContentType: r.pdf_content_type ?? null,
+  pdfByteSize: r.pdf_byte_size ?? null,
+  pdfPageNumber: r.pdf_page_number ?? null,
+  pdfPageWidthPt: r.pdf_page_width_pt == null ? null : Number(r.pdf_page_width_pt),
+  pdfPageHeightPt: r.pdf_page_height_pt == null ? null : Number(r.pdf_page_height_pt),
+  pdfRenderScale: r.pdf_render_scale == null ? null : Number(r.pdf_render_scale),
+  pdfRenderedWidthPx: r.pdf_rendered_width_px ?? null,
+  pdfRenderedHeightPx: r.pdf_rendered_height_px ?? null,
+  pdfRotation: r.pdf_rotation ?? null,
   calibrationStatus: r.calibration_status,
   measurementCount: r.measurement_count,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export const mapPlanDocument = (r: RawPlanDocument): PlanDocument => ({
+  id: r.id,
+  projectId: r.project_id,
+  ownerUid: r.owner_uid,
+  name: r.name,
+  sourceType: r.source_type,
+  sourceFilename: r.source_filename,
+  sourceContentType: r.source_content_type,
+  sourceByteSize: r.source_byte_size,
+  sourceR2Key: r.source_r2_key,
+  coverMeasuredPlanId: r.cover_measured_plan_id,
+  sheetCount: r.sheet_count,
+  calibratedSheetCount: r.calibrated_sheet_count,
+  measurementCount: r.measurement_count,
+  coverSheet: r.cover_sheet ? mapMeasuredPlan(r.cover_sheet) : null,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });

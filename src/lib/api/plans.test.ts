@@ -5,6 +5,226 @@ import { plansApi } from './plans';
 setupApiTest();
 
 describe('plansApi', () => {
+  it('lists plan documents with cover sheet summaries', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        documents: [
+          {
+            id: 'document-1',
+            project_id: 'project-1',
+            owner_uid: 'user-1',
+            name: 'Architectural Set',
+            source_type: 'pdf',
+            source_r2_key: 'source-key',
+            source_filename: 'drawings.pdf',
+            source_content_type: 'application/pdf',
+            source_byte_size: 54321,
+            cover_measured_plan_id: 'plan-1',
+            sheet_count: 2,
+            calibrated_sheet_count: 1,
+            measurement_count: 3,
+            cover_sheet: {
+              id: 'plan-1',
+              project_id: 'project-1',
+              owner_uid: 'user-1',
+              plan_document_id: 'document-1',
+              sheet_index: 1,
+              page_label: '',
+              name: 'Floor Plan',
+              sheet_reference: 'A1.01',
+              source_type: 'pdf-page',
+              image_filename: 'floor.png',
+              image_content_type: 'image/png',
+              image_byte_size: 12345,
+              pdf_filename: 'drawings.pdf',
+              pdf_content_type: 'application/pdf',
+              pdf_byte_size: 54321,
+              pdf_page_number: 1,
+              pdf_page_width_pt: '792.0000',
+              pdf_page_height_pt: '612.0000',
+              pdf_render_scale: '2.00000000',
+              pdf_rendered_width_px: 1584,
+              pdf_rendered_height_px: 1224,
+              pdf_rotation: 0,
+              calibration_status: 'calibrated',
+              measurement_count: 3,
+              created_at: '2026-05-06T00:00:00Z',
+              updated_at: '2026-05-06T00:00:00Z',
+            },
+            created_at: '2026-05-06T00:00:00Z',
+            updated_at: '2026-05-07T00:00:00Z',
+          },
+        ],
+      }),
+    );
+
+    const documents = await plansApi.listDocuments('project-1');
+
+    expect(documents).toHaveLength(1);
+    expect(documents[0]).toMatchObject({
+      id: 'document-1',
+      projectId: 'project-1',
+      name: 'Architectural Set',
+      sourceType: 'pdf',
+      sheetCount: 2,
+      calibratedSheetCount: 1,
+      measurementCount: 3,
+    });
+    expect(documents[0]?.coverSheet).toMatchObject({
+      id: 'plan-1',
+      planDocumentId: 'document-1',
+      sheetIndex: 1,
+      sourceType: 'pdf-page',
+    });
+  });
+
+  it('loads a plan document detail with child sheets', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        document: {
+          id: 'document-1',
+          project_id: 'project-1',
+          owner_uid: 'user-1',
+          name: 'Architectural Set',
+          source_type: 'pdf',
+          source_r2_key: 'source-key',
+          source_filename: 'drawings.pdf',
+          source_content_type: 'application/pdf',
+          source_byte_size: 54321,
+          cover_measured_plan_id: 'plan-1',
+          sheet_count: 1,
+          calibrated_sheet_count: 0,
+          measurement_count: 0,
+          cover_sheet: null,
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-07T00:00:00Z',
+        },
+        sheets: [
+          {
+            id: 'plan-1',
+            project_id: 'project-1',
+            owner_uid: 'user-1',
+            plan_document_id: 'document-1',
+            sheet_index: 1,
+            page_label: '',
+            name: 'Floor Plan',
+            sheet_reference: 'A1.01',
+            source_type: 'pdf-page',
+            image_filename: 'floor.png',
+            image_content_type: 'image/png',
+            image_byte_size: 12345,
+            pdf_filename: 'drawings.pdf',
+            pdf_content_type: 'application/pdf',
+            pdf_byte_size: 54321,
+            pdf_page_number: 1,
+            pdf_page_width_pt: '792.0000',
+            pdf_page_height_pt: '612.0000',
+            pdf_render_scale: '2.00000000',
+            pdf_rendered_width_px: 1584,
+            pdf_rendered_height_px: 1224,
+            pdf_rotation: 0,
+            calibration_status: 'uncalibrated',
+            measurement_count: 0,
+            created_at: '2026-05-06T00:00:00Z',
+            updated_at: '2026-05-06T00:00:00Z',
+          },
+        ],
+      }),
+    );
+
+    const detail = await plansApi.getDocument('project-1', 'document-1');
+
+    expect(detail.document).toMatchObject({
+      id: 'document-1',
+      coverSheet: null,
+    });
+    expect(detail.sheets).toHaveLength(1);
+    expect(detail.sheets[0]).toMatchObject({
+      id: 'plan-1',
+      planDocumentId: 'document-1',
+      sheetReference: 'A1.01',
+    });
+  });
+
+  it('creates a plan document with sheets_json and render file fields', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        document: {
+          id: 'document-1',
+          project_id: 'project-1',
+          owner_uid: 'user-1',
+          name: 'Architectural Set',
+          source_type: 'pdf',
+          source_r2_key: 'source-key',
+          source_filename: 'drawings.pdf',
+          source_content_type: 'application/pdf',
+          source_byte_size: 54321,
+          cover_measured_plan_id: 'plan-1',
+          sheet_count: 1,
+          calibrated_sheet_count: 0,
+          measurement_count: 0,
+          cover_sheet: null,
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-07T00:00:00Z',
+        },
+      }),
+    );
+
+    const sourceFile = new File(['pdf'], 'drawings.pdf', { type: 'application/pdf' });
+    const renderFile = new File(['png'], 'page-1.png', { type: 'image/png' });
+    await plansApi.createDocument('project-1', {
+      documentName: 'Architectural Set',
+      sourceFile,
+      sheets: [
+        {
+          clientSheetId: 'page-1',
+          sheetIndex: 1,
+          name: 'Floor Plan',
+          sheetReference: 'A1.01',
+          renderFile,
+          pdfPageNumber: 1,
+          pdfPageWidthPt: 792,
+          pdfPageHeightPt: 612,
+          pdfRenderScale: 2,
+          pdfRenderedWidthPx: 1584,
+          pdfRenderedHeightPx: 1224,
+          pdfRotation: 0,
+        },
+      ],
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBeInstanceOf(FormData);
+    const formData = init?.body as FormData;
+    expect(formData.get('document_name')).toBe('Architectural Set');
+    expect(formData.get('source_file')).toBe(sourceFile);
+    expect(formData.get('sheet_render_1')).toBe(renderFile);
+    const sheetsJson = formData.get('sheets_json');
+    expect(typeof sheetsJson).toBe('string');
+    const sheets = JSON.parse(sheetsJson as string) as Array<Record<string, unknown>>;
+    expect(sheets).toHaveLength(1);
+    expect(sheets[0]).toMatchObject({
+      clientSheetId: 'page-1',
+      renderFileField: 'sheet_render_1',
+      sheetIndex: 1,
+      name: 'Floor Plan',
+      sheetReference: 'A1.01',
+      pdfPageNumber: 1,
+    });
+  });
+
+  it('deletes a plan document', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await plansApi.deleteDocument('project-1', 'document-1');
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/projects/project-1/plan-documents/document-1'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
   it('lists measured plans for a project', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({

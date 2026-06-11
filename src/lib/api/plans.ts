@@ -3,16 +3,20 @@ import {
   mapLengthLine,
   mapMeasuredPlan,
   mapMeasurement,
+  mapPlanDocument,
   mapPlanCalibration,
   type RawLengthLine,
   type RawMeasuredPlan,
   type RawMeasurement,
+  type RawPlanDocument,
   type RawPlanCalibration,
 } from './mappers';
 import type {
   LengthLine,
   Measurement,
   MeasuredPlan,
+  PlanDocument,
+  PlanDocumentDetail,
   PlanCalibration,
   PlanMeasurementUnit,
 } from '../../types';
@@ -29,6 +33,28 @@ export type CreateMeasuredPlanInput = {
   pdfRenderedWidthPx?: number;
   pdfRenderedHeightPx?: number;
   pdfRotation?: number;
+};
+
+export type CreatePlanDocumentSheetInput = {
+  clientSheetId: string;
+  sheetIndex: number;
+  name: string;
+  sheetReference?: string;
+  pageLabel?: string;
+  renderFile?: File;
+  pdfPageNumber?: number;
+  pdfPageWidthPt?: number;
+  pdfPageHeightPt?: number;
+  pdfRenderScale?: number;
+  pdfRenderedWidthPx?: number;
+  pdfRenderedHeightPx?: number;
+  pdfRotation?: number;
+};
+
+export type CreatePlanDocumentInput = {
+  documentName: string;
+  sourceFile: File;
+  sheets: CreatePlanDocumentSheetInput[];
 };
 
 export type UpdatePlanCalibrationInput = {
@@ -67,6 +93,60 @@ export type UpsertPlanMeasurementInput = {
 };
 
 export const plansApi = {
+  listDocuments: (projectId: string): Promise<PlanDocument[]> =>
+    apiFetch<{ documents: RawPlanDocument[] }>(`/api/v1/projects/${projectId}/plan-documents`).then(
+      (r) => r.documents.map(mapPlanDocument),
+    ),
+
+  getDocument: (projectId: string, documentId: string): Promise<PlanDocumentDetail> =>
+    apiFetch<{ document: RawPlanDocument; sheets: RawMeasuredPlan[] }>(
+      `/api/v1/projects/${projectId}/plan-documents/${documentId}`,
+    ).then((r) => ({
+      document: mapPlanDocument(r.document),
+      sheets: r.sheets.map(mapMeasuredPlan),
+    })),
+
+  createDocument: (projectId: string, input: CreatePlanDocumentInput): Promise<PlanDocument> => {
+    const formData = new FormData();
+    formData.set('document_name', input.documentName);
+    formData.set('source_file', input.sourceFile);
+
+    const sheets = input.sheets.map((sheet, index) => {
+      const renderFileField = sheet.renderFile ? `sheet_render_${index + 1}` : undefined;
+      if (sheet.renderFile && renderFileField) {
+        formData.set(renderFileField, sheet.renderFile);
+      }
+
+      return {
+        clientSheetId: sheet.clientSheetId,
+        renderFileField,
+        sheetIndex: sheet.sheetIndex,
+        name: sheet.name,
+        sheetReference: sheet.sheetReference ?? '',
+        pageLabel: sheet.pageLabel ?? '',
+        pdfPageNumber: sheet.pdfPageNumber,
+        pdfPageWidthPt: sheet.pdfPageWidthPt,
+        pdfPageHeightPt: sheet.pdfPageHeightPt,
+        pdfRenderScale: sheet.pdfRenderScale,
+        pdfRenderedWidthPx: sheet.pdfRenderedWidthPx,
+        pdfRenderedHeightPx: sheet.pdfRenderedHeightPx,
+        pdfRotation: sheet.pdfRotation,
+      };
+    });
+
+    formData.set('sheets_json', JSON.stringify(sheets));
+
+    return apiFetch<{ document: RawPlanDocument }>(`/api/v1/projects/${projectId}/plan-documents`, {
+      method: 'POST',
+      body: formData,
+    }).then((r) => mapPlanDocument(r.document));
+  },
+
+  deleteDocument: (projectId: string, documentId: string): Promise<void> =>
+    apiFetch<void>(`/api/v1/projects/${projectId}/plan-documents/${documentId}`, {
+      method: 'DELETE',
+    }),
+
   list: (projectId: string): Promise<MeasuredPlan[]> =>
     apiFetch<{ plans: RawMeasuredPlan[] }>(`/api/v1/projects/${projectId}/plans`).then((r) =>
       r.plans.map(mapMeasuredPlan),

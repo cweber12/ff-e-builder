@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): add client types, API methods, and hooks for plan documents
 - feat(plans): add document-level Plans schema and Worker APIs for grouping measurable sheets under plan documents
 - feat(plans): stamp the active sheet reference into item drawings when applying plan measurements
 - feat(plans): import multiple selected PDF pages as separate measured plans and add previous/next sheet navigation in the plan canvas

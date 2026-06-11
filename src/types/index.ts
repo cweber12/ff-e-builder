@@ -9,6 +9,9 @@ export type {
   MeasurementTargetKind,
   MeasuredPlan,
   MeasuredPlanSourceType,
+  PlanDocument,
+  PlanDocumentDetail,
+  PlanDocumentSourceType,
   PlanCalibration,
   PlanMeasurementUnit,
 } from './plan';

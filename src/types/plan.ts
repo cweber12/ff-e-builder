@@ -4,10 +4,39 @@ export type PlanMeasurementUnit = 'in' | 'ft' | 'mm' | 'cm' | 'm';
 
 export type MeasuredPlanSourceType = 'image' | 'pdf-page';
 
+export type PlanDocumentSourceType = 'image' | 'pdf';
+
+export type PlanDocument = {
+  id: string;
+  projectId: string;
+  ownerUid: string;
+  name: string;
+  sourceType: PlanDocumentSourceType;
+  sourceFilename: string;
+  sourceContentType: string;
+  sourceByteSize: number;
+  sourceR2Key: string;
+  coverMeasuredPlanId: string | null;
+  sheetCount: number;
+  calibratedSheetCount: number;
+  measurementCount: number;
+  coverSheet: MeasuredPlan | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PlanDocumentDetail = {
+  document: PlanDocument;
+  sheets: MeasuredPlan[];
+};
+
 export type MeasuredPlan = {
   id: string;
   projectId: string;
   ownerUid: string;
+  planDocumentId: string;
+  sheetIndex: number;
+  pageLabel: string;
   name: string;
   sheetReference: string;
   sourceType: MeasuredPlanSourceType;

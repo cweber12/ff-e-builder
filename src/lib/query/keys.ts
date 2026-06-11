@@ -8,6 +8,9 @@ export const projectKeys = {
 
 export const planKeys = {
   forProject: (projectId: string) => ['plans', projectId] as const,
+  documents: (projectId: string) => ['plans', projectId, 'documents'] as const,
+  documentDetail: (projectId: string, documentId: string) =>
+    ['plans', projectId, 'documents', documentId] as const,
   calibration: (projectId: string, planId: string) =>
     ['plans', projectId, planId, 'calibration'] as const,
   lengthLines: (projectId: string, planId: string) =>

@@ -375,6 +375,12 @@ type MeasurementDisplay = {
 ## Hooks — `src/hooks/plans/usePlans.ts`
 
 ```ts
+// Plan documents
+usePlanDocuments(projectId);
+usePlanDocument(projectId, documentId);
+useCreatePlanDocument(projectId);
+useDeletePlanDocument(projectId);
+
 // Plan CRUD
 useMeasuredPlans(projectId);
 useCreateMeasuredPlan(projectId); // optimistic prepend to cache
@@ -403,6 +409,20 @@ Add new keys to `src/hooks/queryKeys.ts` (e.g. `calibrationKeys`, `measurementKe
 ---
 
 ## API client — `src/lib/api/plans.ts`
+
+Document methods:
+
+| Method           | Signature                                      | Purpose                                     |
+| ---------------- | ---------------------------------------------- | ------------------------------------------- |
+| `listDocuments`  | `(projectId) → PlanDocument[]`                 | List document summaries with cover sheets   |
+| `getDocument`    | `(projectId, documentId) → PlanDocumentDetail` | Load one document plus all child sheets     |
+| `createDocument` | `(projectId, input: CreatePlanDocumentInput)`  | Create document and sheets via multipart    |
+| `deleteDocument` | `(projectId, documentId)`                      | Delete document and all child sheet records |
+
+`CreatePlanDocumentInput` is the client-facing shape for the Worker `sheets_json`
+contract. It accepts a `sourceFile`, document name, and sheet metadata. For PDF
+sheets, pass each rendered PNG as `sheet.renderFile`; the API client assigns stable
+multipart field names and writes matching `renderFileField` values into `sheets_json`.
 
 | Method              | Signature                                                | Purpose                          |
 | ------------------- | -------------------------------------------------------- | -------------------------------- |
