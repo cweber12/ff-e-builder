@@ -182,10 +182,28 @@ export interface ProposalItem {
 
 export type CalibrationStatus = 'uncalibrated' | 'calibrated';
 
+export interface PlanDocument {
+  id: string;
+  project_id: string;
+  owner_uid: string;
+  name: string;
+  source_type: 'image' | 'pdf';
+  source_r2_key: string;
+  source_filename: string;
+  source_content_type: string;
+  source_byte_size: number;
+  cover_measured_plan_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MeasuredPlan {
   id: string;
   project_id: string;
   owner_uid: string;
+  plan_document_id: string;
+  sheet_index: number;
+  page_label: string;
   name: string;
   sheet_reference: string;
   source_type: 'image' | 'pdf-page';
@@ -538,6 +556,30 @@ export const CreateMeasuredPlanSchema = z.object({
   pdf_rotation: z.coerce.number().int().optional(),
 });
 export type CreateMeasuredPlanInput = z.infer<typeof CreateMeasuredPlanSchema>;
+
+export const CreatePlanDocumentFormSchema = z.object({
+  document_name: z.string().min(1).max(255),
+  sheets_json: z.string().min(1),
+});
+
+export const CreatePlanDocumentSheetSchema = z.object({
+  clientSheetId: z.string().min(1).max(100),
+  renderFileField: z.string().min(1).max(100).optional(),
+  sheetIndex: z.coerce.number().int().positive(),
+  name: z.string().min(1).max(255),
+  sheetReference: z.string().max(100).default(''),
+  pageLabel: z.string().max(100).default(''),
+  pdfPageNumber: z.coerce.number().int().positive().optional(),
+  pdfPageWidthPt: z.coerce.number().positive().optional(),
+  pdfPageHeightPt: z.coerce.number().positive().optional(),
+  pdfRenderScale: z.coerce.number().positive().optional(),
+  pdfRenderedWidthPx: z.coerce.number().int().positive().optional(),
+  pdfRenderedHeightPx: z.coerce.number().int().positive().optional(),
+  pdfRotation: z.coerce.number().int().optional(),
+});
+
+export const CreatePlanDocumentSheetsSchema = z.array(CreatePlanDocumentSheetSchema).min(1).max(80);
+export type CreatePlanDocumentSheetInput = z.infer<typeof CreatePlanDocumentSheetSchema>;
 
 export const UpdatePlanCalibrationSchema = z.object({
   start_x: z.number().min(0),

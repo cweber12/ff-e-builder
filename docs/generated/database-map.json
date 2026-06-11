@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-05-26T22:39:41.696Z",
+  "generatedAt": "2026-06-11T23:26:48.694Z",
   "generatedBy": "pnpm db:scan",
   "source": "scripts/database-map.ts",
   "migrations": [
@@ -356,6 +356,35 @@
       "createsTables": [],
       "altersTables": ["image_assets"],
       "createsIndexes": []
+    },
+    {
+      "filename": "0038_finish_library_split.sql",
+      "summary": "Migration: 0038_finish_library_split",
+      "createsTables": ["finishes"],
+      "altersTables": ["image_assets", "materials"],
+      "createsIndexes": [
+        "finishes_project_code_idx",
+        "finishes_project_id_idx",
+        "finishes_project_name_idx",
+        "image_assets_entity_lookup_idx",
+        "image_assets_finish_id_idx",
+        "image_assets_primary_finish_idx",
+        "materials_project_code_idx"
+      ]
+    },
+    {
+      "filename": "0039_proposal_item_footprint.sql",
+      "summary": "Migration: 0039_proposal_item_footprint",
+      "createsTables": [],
+      "altersTables": ["items", "proposal_items"],
+      "createsIndexes": []
+    },
+    {
+      "filename": "0040_plan_documents.sql",
+      "summary": "Migration: 0040_plan_documents",
+      "createsTables": ["plan_documents"],
+      "altersTables": ["measured_plans", "plan_documents"],
+      "createsIndexes": ["measured_plans_document_idx", "plan_documents_project_idx"]
     }
   ],
   "tables": [
@@ -521,6 +550,168 @@
           "column": "owner_uid",
           "references": "user_profiles(owner_uid)",
           "introducedBy": "0034_companies.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "finishes",
+      "introducedBy": "0038_finish_library_split.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": "gen_random_uuid()",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sub_category": {
+          "name": "sub_category",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "swatch_hex": {
+          "name": "swatch_hex",
+          "type": "text",
+          "nullable": false,
+          "default": "'#D9D4C8'",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "finishes_project_id_idx",
+          "table": "finishes",
+          "unique": false,
+          "columns": ["project_id"],
+          "where": null,
+          "introducedBy": "0038_finish_library_split.sql"
+        },
+        {
+          "name": "finishes_project_name_idx",
+          "table": "finishes",
+          "unique": true,
+          "columns": ["project_id", "lower(name)"],
+          "where": null,
+          "introducedBy": "0038_finish_library_split.sql"
+        },
+        {
+          "name": "finishes_project_code_idx",
+          "table": "finishes",
+          "unique": true,
+          "columns": ["project_id", "code"],
+          "where": null,
+          "introducedBy": "0038_finish_library_split.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "finishes",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0038_finish_library_split.sql"
         }
       ],
       "notes": []
@@ -759,6 +950,16 @@
           "introducedBy": "0037_image_thumbnails.sql",
           "removedBy": null,
           "notes": []
+        },
+        "finish_id": {
+          "name": "finish_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": "finishes(id)",
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
         }
       },
       "indexes": [
@@ -835,22 +1036,6 @@
           "introducedBy": "0007_image_asset_entity_type.sql"
         },
         {
-          "name": "image_assets_entity_lookup_idx",
-          "table": "image_assets",
-          "unique": false,
-          "columns": [
-            "project_id",
-            "entity_type",
-            "room_id",
-            "item_id",
-            "material_id",
-            "proposal_item_id",
-            "is_primary"
-          ],
-          "where": null,
-          "introducedBy": "0012_proposal_rename.sql"
-        },
-        {
           "name": "image_assets_proposal_item_id_idx",
           "table": "image_assets",
           "unique": false,
@@ -905,6 +1090,39 @@
           "columns": ["company_id"],
           "where": "company_id IS NOT NULL AND entity_type = 'company_logo'",
           "introducedBy": "0034_companies.sql"
+        },
+        {
+          "name": "image_assets_finish_id_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": ["finish_id"],
+          "where": "finish_id IS NOT NULL",
+          "introducedBy": "0038_finish_library_split.sql"
+        },
+        {
+          "name": "image_assets_entity_lookup_idx",
+          "table": "image_assets",
+          "unique": false,
+          "columns": [
+            "project_id",
+            "entity_type",
+            "room_id",
+            "item_id",
+            "material_id",
+            "proposal_item_id",
+            "finish_id",
+            "is_primary"
+          ],
+          "where": null,
+          "introducedBy": "0038_finish_library_split.sql"
+        },
+        {
+          "name": "image_assets_primary_finish_idx",
+          "table": "image_assets",
+          "unique": true,
+          "columns": ["finish_id", "entity_type"],
+          "where": "is_primary AND entity_type = 'finish'",
+          "introducedBy": "0038_finish_library_split.sql"
         }
       ],
       "foreignKeys": [
@@ -943,6 +1161,12 @@
           "column": "company_id",
           "references": "companies(id)",
           "introducedBy": "0034_companies.sql"
+        },
+        {
+          "table": "image_assets",
+          "column": "finish_id",
+          "references": "finishes(id)",
+          "introducedBy": "0038_finish_library_split.sql"
         }
       ],
       "notes": []
@@ -1517,6 +1741,56 @@
           "introducedBy": "0029_items_ffe_visibility.sql",
           "removedBy": null,
           "notes": []
+        },
+        "footprint_label": {
+          "name": "footprint_label",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_w": {
+          "name": "footprint_w",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_d": {
+          "name": "footprint_d",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_unit": {
+          "name": "footprint_unit",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_area": {
+          "name": "footprint_area",
+          "type": "numeric(12,3)",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
         }
       },
       "indexes": [
@@ -1897,6 +2171,36 @@
           "introducedBy": "0036_material_categories.sql",
           "removedBy": null,
           "notes": []
+        },
+        "finish_id": {
+          "name": "finish_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "references": "finishes(id)",
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "material_type": {
+          "name": "material_type",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0038_finish_library_split.sql",
+          "removedBy": null,
+          "notes": []
         }
       },
       "indexes": [
@@ -1915,6 +2219,14 @@
           "columns": ["project_id", "lower(name)"],
           "where": null,
           "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "name": "materials_project_code_idx",
+          "table": "materials",
+          "unique": true,
+          "columns": ["project_id", "code"],
+          "where": null,
+          "introducedBy": "0038_finish_library_split.sql"
         }
       ],
       "foreignKeys": [
@@ -1923,6 +2235,12 @@
           "column": "project_id",
           "references": "projects(id)",
           "introducedBy": "0003_material_library.sql"
+        },
+        {
+          "table": "materials",
+          "column": "finish_id",
+          "references": "finishes(id)",
+          "introducedBy": "0038_finish_library_split.sql"
         }
       ],
       "notes": []
@@ -2161,6 +2479,36 @@
           "introducedBy": "0020_pdf_backed_measured_plans.sql",
           "removedBy": null,
           "notes": []
+        },
+        "plan_document_id": {
+          "name": "plan_document_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "sheet_index": {
+          "name": "sheet_index",
+          "type": "integer",
+          "nullable": false,
+          "default": "1",
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "page_label": {
+          "name": "page_label",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
         }
       },
       "indexes": [
@@ -2179,6 +2527,14 @@
           "columns": ["pdf_r2_key"],
           "where": "pdf_r2_key IS NOT NULL",
           "introducedBy": "0020_pdf_backed_measured_plans.sql"
+        },
+        {
+          "name": "measured_plans_document_idx",
+          "table": "measured_plans",
+          "unique": false,
+          "columns": ["plan_document_id", "sheet_index", "created_at"],
+          "where": null,
+          "introducedBy": "0040_plan_documents.sql"
         }
       ],
       "foreignKeys": [
@@ -2510,6 +2866,152 @@
           "column": "measured_plan_id",
           "references": "measured_plans(id)",
           "introducedBy": "0015_plans_tool.sql"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "name": "plan_documents",
+      "introducedBy": "0040_plan_documents.sql",
+      "renamedFrom": [],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "references": "projects(id)",
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "owner_uid": {
+          "name": "owner_uid",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_r2_key": {
+          "name": "source_r2_key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_filename": {
+          "name": "source_filename",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_content_type": {
+          "name": "source_content_type",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "source_byte_size": {
+          "name": "source_byte_size",
+          "type": "integer",
+          "nullable": false,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "cover_measured_plan_id": {
+          "name": "cover_measured_plan_id",
+          "type": "uuid",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "default": "now()",
+          "references": null,
+          "introducedBy": "0040_plan_documents.sql",
+          "removedBy": null,
+          "notes": []
+        }
+      },
+      "indexes": [
+        {
+          "name": "plan_documents_project_idx",
+          "table": "plan_documents",
+          "unique": false,
+          "columns": ["project_id", "updated_at DESC", "created_at DESC"],
+          "where": null,
+          "introducedBy": "0040_plan_documents.sql"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "table": "plan_documents",
+          "column": "project_id",
+          "references": "projects(id)",
+          "introducedBy": "0040_plan_documents.sql"
         }
       ],
       "notes": []
@@ -3377,6 +3879,56 @@
           "introducedBy": "0031_proposal_item_name.sql",
           "removedBy": null,
           "notes": []
+        },
+        "footprint_label": {
+          "name": "footprint_label",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_w": {
+          "name": "footprint_w",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_d": {
+          "name": "footprint_d",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_unit": {
+          "name": "footprint_unit",
+          "type": "text",
+          "nullable": false,
+          "default": "''",
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
+        },
+        "footprint_area": {
+          "name": "footprint_area",
+          "type": "numeric(12,3)",
+          "nullable": null,
+          "default": null,
+          "references": null,
+          "introducedBy": "0039_proposal_item_footprint.sql",
+          "removedBy": null,
+          "notes": []
         }
       },
       "indexes": [
@@ -3820,6 +4372,30 @@
       "introducedBy": "0034_companies.sql"
     },
     {
+      "name": "finishes_project_code_idx",
+      "table": "finishes",
+      "unique": true,
+      "columns": ["project_id", "code"],
+      "where": null,
+      "introducedBy": "0038_finish_library_split.sql"
+    },
+    {
+      "name": "finishes_project_id_idx",
+      "table": "finishes",
+      "unique": false,
+      "columns": ["project_id"],
+      "where": null,
+      "introducedBy": "0038_finish_library_split.sql"
+    },
+    {
+      "name": "finishes_project_name_idx",
+      "table": "finishes",
+      "unique": true,
+      "columns": ["project_id", "lower(name)"],
+      "where": null,
+      "introducedBy": "0038_finish_library_split.sql"
+    },
+    {
       "name": "image_assets_company_id_idx",
       "table": "image_assets",
       "unique": false,
@@ -3846,10 +4422,19 @@
         "item_id",
         "material_id",
         "proposal_item_id",
+        "finish_id",
         "is_primary"
       ],
       "where": null,
-      "introducedBy": "0012_proposal_rename.sql"
+      "introducedBy": "0038_finish_library_split.sql"
+    },
+    {
+      "name": "image_assets_finish_id_idx",
+      "table": "image_assets",
+      "unique": false,
+      "columns": ["finish_id"],
+      "where": "finish_id IS NOT NULL",
+      "introducedBy": "0038_finish_library_split.sql"
     },
     {
       "name": "image_assets_item_id_idx",
@@ -3874,6 +4459,14 @@
       "columns": ["owner_uid"],
       "where": null,
       "introducedBy": "0002_image_assets.sql"
+    },
+    {
+      "name": "image_assets_primary_finish_idx",
+      "table": "image_assets",
+      "unique": true,
+      "columns": ["finish_id", "entity_type"],
+      "where": "is_primary AND entity_type = 'finish'",
+      "introducedBy": "0038_finish_library_split.sql"
     },
     {
       "name": "image_assets_primary_item_idx",
@@ -4028,6 +4621,14 @@
       "introducedBy": "0004_material_swatches.sql"
     },
     {
+      "name": "materials_project_code_idx",
+      "table": "materials",
+      "unique": true,
+      "columns": ["project_id", "code"],
+      "where": null,
+      "introducedBy": "0038_finish_library_split.sql"
+    },
+    {
       "name": "materials_project_id_idx",
       "table": "materials",
       "unique": false,
@@ -4042,6 +4643,14 @@
       "columns": ["project_id", "lower(name)"],
       "where": null,
       "introducedBy": "0003_material_library.sql"
+    },
+    {
+      "name": "measured_plans_document_idx",
+      "table": "measured_plans",
+      "unique": false,
+      "columns": ["plan_document_id", "sheet_index", "created_at"],
+      "where": null,
+      "introducedBy": "0040_plan_documents.sql"
     },
     {
       "name": "measured_plans_pdf_r2_key_idx",
@@ -4066,6 +4675,14 @@
       "columns": ["measured_plan_id", "created_at DESC"],
       "where": null,
       "introducedBy": "0015_plans_tool.sql"
+    },
+    {
+      "name": "plan_documents_project_idx",
+      "table": "plan_documents",
+      "unique": false,
+      "columns": ["project_id", "updated_at DESC", "created_at DESC"],
+      "where": null,
+      "introducedBy": "0040_plan_documents.sql"
     },
     {
       "name": "projects_budget_idx",

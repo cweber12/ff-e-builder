@@ -12,6 +12,31 @@ The plans module allows users to:
 
 ---
 
+## Plan document model
+
+Plans now have a two-level data model:
+
+```text
+PlanDocument
+  -> MeasuredPlan sheet
+  -> MeasuredPlan sheet
+```
+
+`PlanDocument` is the document/drawing-set parent. `MeasuredPlan` remains the sheet-level canvas object and still owns calibration, length lines, measurements, and the rendered image used by the viewport.
+
+Current implementation contract:
+
+- Every `measured_plans` row belongs to exactly one `plan_documents` row via `measured_plans.plan_document_id`.
+- Existing flat measured plans are backfilled into one-sheet documents. Old PDF pages are not automatically grouped into multi-page documents.
+- Document-level counts (`sheet_count`, `calibrated_sheet_count`, `measurement_count`) are computed in SQL, not stored on `plan_documents`.
+- `plan_documents.cover_measured_plan_id` is optional; APIs fall back to the lowest `sheet_index` sheet when no cover is set.
+- New document-based PDF uploads store the source PDF once on `plan_documents.source_r2_key`; each sheet stores its rendered PNG in `measured_plans.image_r2_key`. `measured_plans.pdf_r2_key` is legacy-only for old flat PDF-page uploads.
+- One-sheet image documents may share the same R2 key for `plan_documents.source_r2_key` and `measured_plans.image_r2_key`; delete paths must dedupe R2 keys before deleting.
+- Calibration remains sheet-specific. No document-wide calibration is inferred or applied automatically.
+- Measurement apply continues stamping `MeasuredPlan.sheetReference || MeasuredPlan.name` into item `drawings`; document name is not included.
+
+---
+
 ## Project stack
 
 React 18 + TypeScript 5 + Vite 5, Tailwind 3, shadcn/ui primitives, @tanstack/react-query, Firebase Auth → Cloudflare Workers (Hono 4) → Neon Postgres (hand-written SQL via @neondatabase/serverless), pnpm monorepo (`src/` client, `api/` worker).
@@ -452,6 +477,26 @@ Every handler follows this order:
 5. Return `c.json({ plan: row }, 201)`
 
 `calibrationStatus` and `measurementCount` are computed via SQL `LEFT JOIN` / `COUNT` — never `UPDATE` them directly. Calibration uses `ON CONFLICT measured_plan_id DO UPDATE` (one calibration per plan).
+
+Document endpoints:
+
+| Method   | Path                                     | Purpose                                                                                              |
+| -------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `GET`    | `/:projectId/plan-documents`             | List document summaries with SQL-derived counts and a cover sheet                                    |
+| `POST`   | `/:projectId/plan-documents`             | Create one document and all selected sheets in one all-or-nothing operation                          |
+| `GET`    | `/:projectId/plan-documents/:documentId` | Load one document summary plus all child sheets                                                      |
+| `DELETE` | `/:projectId/plan-documents/:documentId` | Delete the document, child sheets, child measurement/calibration/length records, and deduped R2 keys |
+
+Document create uses multipart form data:
+
+```text
+document_name = "Architectural Set - Rev 3"
+source_file = drawings.pdf
+sheets_json = [{ ...sheet metadata..., "renderFileField": "sheet_render_page_1" }]
+sheet_render_page_1 = rendered PNG
+```
+
+For image documents, exactly one sheet is accepted and the source image can be reused as the sheet image. For PDF documents, every sheet requires PDF page/render metadata and a PNG render file. If any upload or DB insert fails, the Worker deletes any R2 objects uploaded for that request and returns an error without leaving a partial document.
 
 ---
 
