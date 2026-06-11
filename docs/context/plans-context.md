@@ -279,7 +279,7 @@ Does not render the canvas directly — delegates to child components.
 - Handles zoom, pan, rotation state
 - Converts screen coords → image coords for all pointer events
 - Renders all SVG overlays (calibration line, length lines, measurement rects, highlight, crop frame)
-- Select tool hit-tests saved measured areas, renders resize handles, previews resize in image-space coordinates, and persists updated Measurement geometry on pointer release
+- Select tool hit-tests saved measured areas, renders resize handles/edge hit targets, previews resize in image-space coordinates, and persists updated Measurement geometry on pointer release
 
 ### `src/components/plans/canvas/PlanInspector.tsx` — right panel (340px)
 

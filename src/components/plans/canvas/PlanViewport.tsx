@@ -27,7 +27,7 @@ import type { PlanToolId } from './types';
 
 const MAX_ZOOM = 12;
 const ZOOM_STEP = 1.16;
-const RESIZE_HANDLE_VIEWPORT_RADIUS = 10;
+const RESIZE_HANDLE_VIEWPORT_RADIUS = 16;
 const MIN_RESIZE_RECT_SIZE = 2;
 
 type ResizeHandle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
@@ -476,9 +476,9 @@ export function PlanViewport({
   );
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!imageUrl || event.button !== 0) return;
+    if (!imageUrl || !isPrimaryPointerButton(event.button)) return;
     updateCrosshairFromEvent(event);
-    event.currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     setIsInteracting(true);
     pointerStart.current = { clientX: event.clientX, clientY: event.clientY };
     movedSincePointerDown.current = false;
@@ -494,34 +494,31 @@ export function PlanViewport({
       const point = imagePointFromClient(event.clientX, event.clientY);
       if (!point) return;
 
-      if (selectedMeasurement && selectedMeasurementRect) {
+      if (selectedMeasurement && selectedDisplayRect) {
         const handle = getResizeHandleAtPoint(
           point,
-          selectedMeasurementRect,
+          selectedDisplayRect,
           RESIZE_HANDLE_VIEWPORT_RADIUS / effectiveScale,
         );
         if (handle) {
           resizeDragStart.current = {
             measurement: selectedMeasurement,
             handle,
-            initialRect: selectedMeasurementRect,
+            initialRect: selectedDisplayRect,
           };
           setHoverResizeHandle(handle);
           setResizingMeasurement({
             measurementId: selectedMeasurement.id,
-            rect: selectedMeasurementRect,
+            rect: selectedDisplayRect,
           });
           return;
         }
       }
 
-      for (let index = measurements.length - 1; index >= 0; index -= 1) {
-        const measurement = measurements[index];
-        if (measurement && pointInRect(point, measurementToRectBounds(measurement))) {
-          onMeasurementSelect(measurement.id);
-          setHoverResizeHandle(null);
-          break;
-        }
+      const measurement = findTopmostMeasurementAtPoint(point, measurements);
+      if (measurement) {
+        onMeasurementSelect(measurement.id);
+        setHoverResizeHandle(null);
       }
       return;
     }
@@ -672,13 +669,8 @@ export function PlanViewport({
     if (shouldAttemptSelect) {
       const point = imagePointFromClient(event.clientX, event.clientY);
       if (point) {
-        for (let index = measurements.length - 1; index >= 0; index -= 1) {
-          const measurement = measurements[index];
-          if (measurement && pointInRect(point, measurementToRectBounds(measurement))) {
-            onMeasurementSelect(measurement.id);
-            break;
-          }
-        }
+        const measurement = findTopmostMeasurementAtPoint(point, measurements);
+        if (measurement) onMeasurementSelect(measurement.id);
       }
     }
 
@@ -740,6 +732,7 @@ export function PlanViewport({
     <div className="h-full min-h-0">
       <div
         ref={containerRef}
+        data-testid="plan-viewport-canvas"
         className="paper-texture relative h-full overflow-hidden"
         style={{ cursor, touchAction: 'none' }}
         onPointerDown={handlePointerDown}
@@ -1029,6 +1022,10 @@ export function PlanViewport({
   );
 }
 
+function isPrimaryPointerButton(button: number | undefined) {
+  return button === 0 || button === undefined;
+}
+
 function ResizeHandles({
   rect,
   viewportPointFromImage,
@@ -1100,7 +1097,41 @@ function getResizeHandleAtPoint(
     }
   }
 
-  return nearestHandle;
+  if (nearestHandle) return nearestHandle;
+
+  const left = rect.x;
+  const right = rect.x + rect.width;
+  const top = rect.y;
+  const bottom = rect.y + rect.height;
+  const withinHorizontalSpan = point.x >= left - tolerance && point.x <= right + tolerance;
+  const withinVerticalSpan = point.y >= top - tolerance && point.y <= bottom + tolerance;
+  const edgeCandidates: Array<{ handle: ResizeHandle; distance: number }> = [];
+
+  if (withinHorizontalSpan) {
+    edgeCandidates.push({ handle: 'n', distance: Math.abs(point.y - top) });
+    edgeCandidates.push({ handle: 's', distance: Math.abs(point.y - bottom) });
+  }
+  if (withinVerticalSpan) {
+    edgeCandidates.push({ handle: 'w', distance: Math.abs(point.x - left) });
+    edgeCandidates.push({ handle: 'e', distance: Math.abs(point.x - right) });
+  }
+
+  const nearestEdge = edgeCandidates
+    .filter((candidate) => candidate.distance <= tolerance)
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  return nearestEdge?.handle ?? null;
+}
+
+function findTopmostMeasurementAtPoint(point: ImagePoint, measurements: Measurement[]) {
+  for (let index = measurements.length - 1; index >= 0; index -= 1) {
+    const measurement = measurements[index];
+    if (measurement && pointInRect(point, measurementToRectBounds(measurement))) {
+      return measurement;
+    }
+  }
+
+  return null;
 }
 
 function resizeRectFromHandle(

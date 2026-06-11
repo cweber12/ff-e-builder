@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix(plans): restore Select tool canvas hit-testing and make measured-area resize handles easier to grab
 - fix(plans): show selected measurement details and actions in the inspector while using the Select tool
 - feat(plans): add a Select tool for resizing saved measured areas, raise plan zoom to 1200%, smooth canvas drag updates, and brighten cropped plan-image highlights without a darker outline
 - fix(ui): pull the live shell back from beige stone into a near-white neutral while keeping the white content-surface refresh
