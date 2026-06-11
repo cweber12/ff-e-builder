@@ -7,7 +7,8 @@ The plans module allows users to:
 1. **Upload** architectural plans (image or PDF) for a project
 2. **Calibrate** plans by mapping a drawn pixel line to a known real-world measurement
 3. **Measure flow** — draw a rectangle on a calibrated plan, link it to a proposal item, optionally crop a plan image and/or apply the computed sq ft to the item's quantity
-4. **Highlight flow** — draw a rectangle on a calibrated plan and save a cropped region as the item's plan image (no quantity update; used for unit-cost items)
+4. **Select/edit flow** — select a saved measured area on the canvas and resize its stored measurement rectangle without silently reapplying proposal quantity/footprint values
+5. **Highlight flow** — draw a rectangle on a calibrated plan and save a cropped region as the item's plan image (no quantity update; used for unit-cost items)
 
 ---
 
@@ -252,7 +253,7 @@ Three-column layout (`xl:grid-cols-[88px_minmax(0,1fr)_340px]`):
 Central state manager. Key state:
 
 ```ts
-activeTool: PlanToolId                          // 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan'
+activeTool: PlanToolId                          // 'calibrate' | 'select' | 'length' | 'rectangle' | 'crop' | 'pan'
 rectangleMode: RectangleModeId                  // 'measure' | 'highlight'
 calibrationDraft: LineDraft | null
 calibrationFeetInput / calibrationInchesInput / calibrationLengthInput / calibrationUnit
@@ -278,6 +279,7 @@ Does not render the canvas directly — delegates to child components.
 - Handles zoom, pan, rotation state
 - Converts screen coords → image coords for all pointer events
 - Renders all SVG overlays (calibration line, length lines, measurement rects, highlight, crop frame)
+- Select tool hit-tests saved measured areas, renders resize handles, previews resize in image-space coordinates, and persists updated Measurement geometry on pointer release
 
 ### `src/components/plans/canvas/PlanInspector.tsx` — right panel (340px)
 
@@ -306,7 +308,7 @@ Dropdown for picking measurement target. Shows hierarchy: Category → Item. Bui
 ## Canvas types — `src/components/plans/canvas/types.ts`
 
 ```ts
-type PlanToolId = 'calibrate' | 'length' | 'rectangle' | 'crop' | 'pan';
+type PlanToolId = 'calibrate' | 'select' | 'length' | 'rectangle' | 'crop' | 'pan';
 type RectangleModeId = 'measure' | 'highlight';
 type MeasurementApplicationMode =
   | 'proposal-horizontal' // horizontal span → quantity (ln ft)

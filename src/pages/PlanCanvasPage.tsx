@@ -46,6 +46,7 @@ import {
   normalizeRectDraft,
   parseFeetAndInches,
   type LineDraft,
+  type RectBounds,
   type RectDraft,
 } from '../lib/plans';
 import { imageKeys, itemKeys, proposalKeys } from '../lib/query';
@@ -870,6 +871,43 @@ export function PlanCanvasPage({
     setSelectedMeasurementTargetKey('');
   };
 
+  const handleResizeMeasurement = async (measurement: Measurement, rect: RectBounds) => {
+    if (!calibration) return;
+
+    try {
+      const updated = await updateMeasurement.mutateAsync({
+        measurementId: measurement.id,
+        input: {
+          targetKind: measurement.targetKind,
+          targetItemId: measurement.targetItemId,
+          targetTagSnapshot: measurement.targetTagSnapshot,
+          rectX: rect.x,
+          rectY: rect.y,
+          rectWidth: rect.width,
+          rectHeight: rect.height,
+          horizontalSpanBase: convertPlanUnitsToBase(
+            rect.width / calibration.pixelsPerUnit,
+            calibration.unit,
+          ),
+          verticalSpanBase: convertPlanUnitsToBase(
+            rect.height / calibration.pixelsPerUnit,
+            calibration.unit,
+          ),
+          cropX: measurement.cropX,
+          cropY: measurement.cropY,
+          cropWidth: measurement.cropWidth,
+          cropHeight: measurement.cropHeight,
+        },
+      });
+      setSelectedMeasurementId(updated.id);
+      setMeasurementDraft(null);
+      setCropDraft(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Measurement resize failed.';
+      toast.error(message);
+    }
+  };
+
   const handleSaveCrop = async () => {
     if (!selectedMeasurement || !normalizedCropDraft) return;
     const measurementCrop = pixelCropToMeasurementCrop(normalizedCropDraft, planNaturalSize);
@@ -1333,11 +1371,16 @@ export function PlanCanvasPage({
               onMeasurementSelect={(measurementId) => {
                 const item = measurementItemsByMeasurementId.get(measurementId);
                 setSelectedMeasurementId(measurementId);
-                setActiveTool((currentTool) => (currentTool === 'crop' ? 'crop' : 'rectangle'));
+                setActiveTool((currentTool) =>
+                  currentTool === 'crop' || currentTool === 'select' ? currentTool : 'rectangle',
+                );
                 setMeasurementDraft(null);
                 setCropDraft(null);
                 if (item) setSelectedMeasurementTargetKey(item.key);
               }}
+              onMeasurementResize={(measurement, rect) =>
+                void handleResizeMeasurement(measurement, rect)
+              }
               onNaturalSizeChange={setPlanNaturalSize}
             />
           </main>
@@ -1654,12 +1697,9 @@ async function createHighlightedPlanCrop({
   const highlightY = measurementRect.y - cropY;
 
   context.save();
-  context.fillStyle = 'rgba(255, 212, 0, 0.2)';
-  context.strokeStyle = '#FFD400';
-  context.lineWidth = Math.max(1.5, Math.min(cropWidth, cropHeight) * 0.008);
+  context.fillStyle = 'rgba(255, 230, 0, 0.42)';
   context.setLineDash([]);
   context.fillRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
-  context.strokeRect(highlightX, highlightY, measurementRect.width, measurementRect.height);
   context.restore();
 
   return await canvasToBlob(canvas);

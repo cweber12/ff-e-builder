@@ -512,11 +512,19 @@ export function PlanInspector({
         </section>
 
         <section
-          className={activeTool === 'rectangle' || activeTool === 'crop' ? 'block' : 'hidden'}
+          className={
+            activeTool === 'rectangle' || activeTool === 'crop' || activeTool === 'select'
+              ? 'block'
+              : 'hidden'
+          }
         >
           <div className="flex w-full items-center justify-between gap-3 text-left">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-              {activeTool === 'crop' ? 'Crop Image' : 'Measured Items'}
+              {activeTool === 'crop'
+                ? 'Crop Image'
+                : activeTool === 'select'
+                  ? 'Select Area'
+                  : 'Measured Items'}
             </span>
             <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
               <span className="rounded-full bg-neutral-100 px-2 py-1 text-neutral-500">
@@ -525,7 +533,7 @@ export function PlanInspector({
             </span>
           </div>
 
-          {activeTool === 'rectangle' || activeTool === 'crop' ? (
+          {activeTool === 'rectangle' || activeTool === 'crop' || activeTool === 'select' ? (
             <>
               {activeTool === 'rectangle' ? (
                 <div className="mt-3 space-y-3">

@@ -81,6 +81,7 @@ export function PlanToolRail({ activeTool, isCalibrated, onToolChange }: PlanToo
 
 function ToolIcon({ toolId }: { toolId: PlanToolId }) {
   if (toolId === 'calibrate') return <CalibrateIcon />;
+  if (toolId === 'select') return <SelectIcon />;
   if (toolId === 'length') return <LengthLineIcon />;
   if (toolId === 'rectangle') return <RectangleIcon />;
   if (toolId === 'crop') return <CropIcon />;
@@ -89,6 +90,17 @@ function ToolIcon({ toolId }: { toolId: PlanToolId }) {
 
 function ToolbarIcon({ children }: { children: ReactNode }) {
   return <span className="h-5 w-5">{children}</span>;
+}
+
+function SelectIcon() {
+  return (
+    <ToolbarIcon>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M5 3.5 14.5 10 10.2 11.2 8 16.5 5 3.5Z" strokeLinejoin="round" />
+        <path d="M10.3 11.2 14.2 15.1" strokeLinecap="round" />
+      </svg>
+    </ToolbarIcon>
+  );
 }
 
 function CalibrateIcon() {

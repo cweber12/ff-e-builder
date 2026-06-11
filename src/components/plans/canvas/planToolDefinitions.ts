@@ -23,6 +23,12 @@ export const PLAN_TOOL_DEFINITIONS: PlanToolDefinition[] = [
     group: 'measure',
   },
   {
+    id: 'select',
+    label: 'Select',
+    description: 'Select and resize saved measured areas.',
+    group: 'measure',
+  },
+  {
     id: 'rectangle',
     label: 'Rectangle',
     description: 'Capture an item footprint and associate it with an item.',

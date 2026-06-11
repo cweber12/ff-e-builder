@@ -123,9 +123,9 @@ export function RectOverlay({
   return (
     <polygon
       points={pointsAttr}
-      fill={fill ?? (active ? 'rgba(255, 212, 0, 0.2)' : 'rgba(41, 53, 69, 0.04)')}
-      stroke={stroke ?? (active ? '#FFD400' : '#5C6A7C')}
-      strokeWidth={strokeWidth ?? (active ? 2.5 : 1.5)}
+      fill={fill ?? (active ? 'rgba(255, 230, 0, 0.38)' : 'rgba(41, 53, 69, 0.04)')}
+      stroke={stroke ?? (active ? '#FFE600' : '#5C6A7C')}
+      strokeWidth={strokeWidth ?? (active ? 1.75 : 1.5)}
       strokeDasharray={dashed ? '8 6' : undefined}
       strokeLinejoin="round"
     />
