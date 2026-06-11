@@ -128,9 +128,9 @@ type Measurement = {
 
 **Image path:** file picker → name/sheet ref → `useCreateMeasuredPlan` → `POST /:id/plans`
 
-**PDF path:** file picker → `renderPdfThumbnails()` generates page previews → user picks page → `renderPdfPageAsPngFile({ file, pageNumber, scale: 2 })` renders PNG → name/sheet ref → `useCreateMeasuredPlan` with both `file` (PNG) and `sourcePdfFile` (original PDF)
+**PDF path:** file picker → `renderPdfThumbnails()` generates page previews → all pages are selected by default → user deselects irrelevant pages → user edits per-page sheet refs/names → each selected page runs `renderPdfPageAsPngFile({ file, pageNumber, scale: 2 })` and `useCreateMeasuredPlan` sequentially with both `file` (PNG) and `sourcePdfFile` (original PDF)
 
-The worker stores both the PNG and original PDF in R2 and writes all PDF metadata to the `measured_plans` row.
+Each selected PDF page becomes its own `MeasuredPlan` row. The worker stores both that page's rendered PNG and the original PDF in R2 and writes that page's PDF metadata to the `measured_plans` row. Successful pages remain created if a later selected page fails.
 
 ---
 
@@ -247,6 +247,8 @@ Used for measuring walls, doorways, or other architectural features not in the p
 ## Canvas architecture
 
 Three-column layout (`xl:grid-cols-[88px_minmax(0,1fr)_340px]`):
+
+The canvas header keeps the sheet dropdown and adds previous/next buttons. Navigation operates over the loaded `MeasuredPlan` rows, ordering pages from the same source PDF by `pdfPageNumber`, then falling back to sheet reference/name.
 
 ### `src/pages/PlanCanvasPage.tsx` — state orchestrator
 

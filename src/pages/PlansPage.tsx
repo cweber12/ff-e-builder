@@ -62,7 +62,6 @@ export function PlansPage({ project }: PlansPageProps) {
 
   async function handleCreatePlan(input: CreateMeasuredPlanInput) {
     await createPlan.mutateAsync(input);
-    setUploadOpen(false);
   }
 
   return (

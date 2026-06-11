@@ -362,6 +362,16 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByRole('option', { name: /A1.2 - Level 2 Furniture Plan/i })).toHaveValue(
       'plan-2',
     );
+    expect(screen.getByRole('button', { name: 'Open previous sheet' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Open next sheet' })).not.toBeDisabled();
     expect(screen.getByTestId('plan-viewport')).toBeInTheDocument();
+  });
+
+  it('enables previous sheet navigation on later sheets', () => {
+    renderPlanCanvasPage('plan-2');
+
+    expect(screen.getByRole('combobox', { name: /sheet/i })).toHaveValue('plan-2');
+    expect(screen.getByRole('button', { name: 'Open previous sheet' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Open next sheet' })).toBeDisabled();
   });
 });

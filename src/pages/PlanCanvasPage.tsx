@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -54,6 +55,7 @@ import type {
   CropParams,
   Item,
   Measurement,
+  MeasuredPlan,
   PlanMeasurementUnit,
   Project,
   ProposalCategoryWithItems,
@@ -128,6 +130,19 @@ export function PlanCanvasPage({
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
     [planId, plans],
   );
+  const navigationPlans = useMemo(
+    () => [...(plans ?? [])].sort(comparePlansForNavigation),
+    [plans],
+  );
+  const selectedNavigationIndex = selectedPlan
+    ? navigationPlans.findIndex((candidate) => candidate.id === selectedPlan.id)
+    : -1;
+  const previousPlan =
+    selectedNavigationIndex > 0 ? navigationPlans[selectedNavigationIndex - 1] : null;
+  const nextPlan =
+    selectedNavigationIndex >= 0 && selectedNavigationIndex < navigationPlans.length - 1
+      ? navigationPlans[selectedNavigationIndex + 1]
+      : null;
 
   const selectedPlanId = selectedPlan?.id ?? '';
   const { data: calibration, isLoading: calibrationLoading } = usePlanCalibration(
@@ -1276,22 +1291,46 @@ export function PlanCanvasPage({
               <span aria-hidden className="h-3 w-px bg-neutral-300" />
               <span className="text-neutral-500">Workspace</span>
             </div>
-            <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              Sheet
-              <select
-                value={selectedPlan.id}
-                onChange={(event) =>
-                  navigate(`/projects/${project.id}/plans/${event.target.value}`)
-                }
-                className="min-w-44 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-sm font-medium normal-case tracking-normal text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label="Open previous sheet"
+                disabled={!previousPlan}
+                onClick={() => {
+                  if (previousPlan) navigate(`/projects/${project.id}/plans/${previousPlan.id}`);
+                }}
+                className="icon-btn h-8 w-8 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {(plans ?? []).map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.sheetReference ? `${plan.sheetReference} - ${plan.name}` : plan.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                Sheet
+                <select
+                  value={selectedPlan.id}
+                  onChange={(event) =>
+                    navigate(`/projects/${project.id}/plans/${event.target.value}`)
+                  }
+                  className="min-w-44 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-sm font-medium normal-case tracking-normal text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+                >
+                  {navigationPlans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.sheetReference ? `${plan.sheetReference} - ${plan.name}` : plan.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                aria-label="Open next sheet"
+                disabled={!nextPlan}
+                onClick={() => {
+                  if (nextPlan) navigate(`/projects/${project.id}/plans/${nextPlan.id}`);
+                }}
+                className="icon-btn h-8 w-8 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 py-2.5">
@@ -1802,6 +1841,36 @@ function insertAfterColumn(order: string[], columnId: string, anchorId: string) 
   if (anchorIndex === -1) return [...order, columnId];
 
   return [...order.slice(0, anchorIndex + 1), columnId, ...order.slice(anchorIndex + 1)];
+}
+
+function comparePlansForNavigation(a: MeasuredPlan, b: MeasuredPlan) {
+  if (
+    a.pdfFilename &&
+    b.pdfFilename &&
+    a.pdfFilename === b.pdfFilename &&
+    a.pdfPageNumber !== null &&
+    b.pdfPageNumber !== null
+  ) {
+    return a.pdfPageNumber - b.pdfPageNumber;
+  }
+
+  const aSheet = a.sheetReference.trim();
+  const bSheet = b.sheetReference.trim();
+  if (aSheet || bSheet) {
+    const sheetResult = aSheet.localeCompare(bSheet, undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    });
+    if (sheetResult !== 0) return sheetResult;
+  }
+
+  const nameResult = a.name.localeCompare(b.name, undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
+  if (nameResult !== 0) return nameResult;
+
+  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 }
 
 function PlanCanvasSkeleton() {

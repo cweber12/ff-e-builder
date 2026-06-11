@@ -22,6 +22,7 @@ const MAX_PDF_BYTES = 50 * 1024 * 1024;
 const PDF_RENDER_SCALE = 2;
 
 type Step = 1 | 2 | 3;
+type PdfPageDetails = Record<number, { name: string; sheetReference: string }>;
 
 export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanUploadModalProps) {
   const [step, setStep] = useState<Step>(1);
@@ -30,16 +31,19 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
   const [pdfPages, setPdfPages] = useState<PdfPagePreview[]>([]);
-  const [selectedPdfPage, setSelectedPdfPage] = useState<number | null>(null);
+  const [selectedPdfPages, setSelectedPdfPages] = useState<number[]>([]);
+  const [pdfPageDetails, setPdfPageDetails] = useState<PdfPageDetails>({});
   const [isPreparingPdf, setIsPreparingPdf] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(
+    null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedFileIsPdf = file?.type === PLAN_PDF_TYPE;
-  const selectedPdfPagePreview =
-    selectedPdfPage === null
-      ? null
-      : (pdfPages.find((page) => page.pageNumber === selectedPdfPage) ?? null);
+  const selectedPdfPagePreviews = pdfPages.filter((page) =>
+    selectedPdfPages.includes(page.pageNumber),
+  );
 
   const totalSteps = selectedFileIsPdf ? 3 : 2;
   const visibleStep = selectedFileIsPdf ? step : step === 3 ? 2 : step;
@@ -52,9 +56,11 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
       setFile(null);
       setFileError('');
       setPdfPages([]);
-      setSelectedPdfPage(null);
+      setSelectedPdfPages([]);
+      setPdfPageDetails({});
       setIsPreparingPdf(false);
       setIsDragging(false);
+      setUploadProgress(null);
     }
   }, [open]);
 
@@ -63,27 +69,34 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
     fileError.length === 0 &&
     !isPreparingPdf &&
     (!selectedFileIsPdf || pdfPages.length > 0);
-  const canAdvanceFromPage = !selectedFileIsPdf || selectedPdfPage !== null;
+  const canAdvanceFromPage = !selectedFileIsPdf || selectedPdfPages.length > 0;
   const canSubmit =
     file !== null &&
-    fileError.length === 0 &&
-    name.trim().length > 0 &&
+    (step === 3 || fileError.length === 0) &&
     !creating &&
     !isPreparingPdf &&
-    (!selectedFileIsPdf || selectedPdfPagePreview !== null);
+    uploadProgress === null &&
+    (selectedFileIsPdf
+      ? selectedPdfPagePreviews.length > 0 &&
+        selectedPdfPagePreviews.every(
+          (page) => (pdfPageDetails[page.pageNumber]?.name ?? '').trim().length > 0,
+        )
+      : name.trim().length > 0);
 
   async function handleFileChange(nextFile: File | null) {
     setFile(nextFile);
     setFileError('');
     setPdfPages([]);
-    setSelectedPdfPage(null);
+    setSelectedPdfPages([]);
+    setPdfPageDetails({});
+    setUploadProgress(null);
     if (!nextFile) return;
 
+    const baseName = nextFile.name
+      .replace(/\.[^.]+$/, '')
+      .replace(/[_-]+/g, ' ')
+      .trim();
     if (name.trim().length === 0) {
-      const baseName = nextFile.name
-        .replace(/\.[^.]+$/, '')
-        .replace(/[_-]+/g, ' ')
-        .trim();
       setName(baseName.length > 0 ? baseName : nextFile.name);
     }
 
@@ -96,7 +109,20 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
       try {
         const pages = await renderPdfThumbnails(nextFile);
         setPdfPages(pages);
-        setSelectedPdfPage(pages[0]?.pageNumber ?? null);
+        setSelectedPdfPages(pages.map((page) => page.pageNumber));
+        setPdfPageDetails(
+          Object.fromEntries(
+            pages.map((page) => [
+              page.pageNumber,
+              {
+                name: `${baseName.length > 0 ? baseName : nextFile.name} page ${String(
+                  page.pageNumber,
+                ).padStart(2, '0')}`,
+                sheetReference: '',
+              },
+            ]),
+          ),
+        );
       } catch (err) {
         setFileError(err instanceof Error ? err.message : 'Could not read this PDF.');
       } finally {
@@ -141,40 +167,63 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
 
   async function handleSubmit() {
     if (!canSubmit || !file) return;
+    setFileError('');
 
     if (selectedFileIsPdf) {
-      if (!selectedPdfPagePreview) return;
-      setIsPreparingPdf(true);
-      try {
-        const renderedPage = await renderPdfPageAsPngFile({
-          file,
-          pageNumber: selectedPdfPagePreview.pageNumber,
-          filename: `${name.trim() || file.name.replace(/\.[^.]+$/, '')}-page-${String(
-            selectedPdfPagePreview.pageNumber,
-          ).padStart(3, '0')}.png`,
-          scale: PDF_RENDER_SCALE,
-        });
+      const pagesToUpload = selectedPdfPagePreviews.sort((a, b) => a.pageNumber - b.pageNumber);
+      if (pagesToUpload.length === 0) return;
 
-        await onCreatePlan({
-          name: name.trim(),
-          sheetReference: sheetReference.trim(),
-          file: renderedPage.file,
-          sourcePdfFile: file,
-          pdfPageNumber: renderedPage.pageNumber,
-          pdfPageWidthPt: renderedPage.pageWidthPt,
-          pdfPageHeightPt: renderedPage.pageHeightPt,
-          pdfRenderScale: renderedPage.renderScale,
-          pdfRenderedWidthPx: renderedPage.renderedWidthPx,
-          pdfRenderedHeightPx: renderedPage.renderedHeightPx,
-          pdfRotation: renderedPage.rotation,
-        });
+      let completedUploads = 0;
+      setIsPreparingPdf(true);
+      setUploadProgress({ current: 0, total: pagesToUpload.length });
+      try {
+        for (const [index, page] of pagesToUpload.entries()) {
+          const details = pdfPageDetails[page.pageNumber] ?? {
+            name: '',
+            sheetReference: '',
+          };
+          const trimmedName = details.name.trim();
+          const renderedPage = await renderPdfPageAsPngFile({
+            file,
+            pageNumber: page.pageNumber,
+            filename: `${trimmedName || file.name.replace(/\.[^.]+$/, '')}-page-${String(
+              page.pageNumber,
+            ).padStart(3, '0')}.png`,
+            scale: PDF_RENDER_SCALE,
+          });
+
+          await onCreatePlan({
+            name: trimmedName,
+            sheetReference: details.sheetReference.trim(),
+            file: renderedPage.file,
+            sourcePdfFile: file,
+            pdfPageNumber: renderedPage.pageNumber,
+            pdfPageWidthPt: renderedPage.pageWidthPt,
+            pdfPageHeightPt: renderedPage.pageHeightPt,
+            pdfRenderScale: renderedPage.renderScale,
+            pdfRenderedWidthPx: renderedPage.renderedWidthPx,
+            pdfRenderedHeightPx: renderedPage.renderedHeightPx,
+            pdfRotation: renderedPage.rotation,
+          });
+          completedUploads = index + 1;
+          setUploadProgress({ current: index + 1, total: pagesToUpload.length });
+        }
+        onClose();
       } catch (err) {
+        const remaining = pagesToUpload.length - completedUploads;
         setFileError(
-          err instanceof Error ? err.message : 'Could not render the selected PDF page.',
+          err instanceof Error
+            ? `${err.message} ${completedUploads} page${
+                completedUploads === 1 ? '' : 's'
+              } uploaded; ${remaining} remaining.`
+            : `${completedUploads} page${
+                completedUploads === 1 ? '' : 's'
+              } uploaded; ${remaining} remaining.`,
         );
         return;
       } finally {
         setIsPreparingPdf(false);
+        setUploadProgress(null);
       }
     } else {
       await onCreatePlan({
@@ -182,10 +231,18 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
         sheetReference: sheetReference.trim(),
         file,
       });
+      onClose();
     }
   }
 
-  const submitLabel = creating || isPreparingPdf ? 'Uploading plan…' : 'Upload plan';
+  const submitLabel =
+    creating || isPreparingPdf
+      ? uploadProgress
+        ? `Uploading ${uploadProgress.current + 1}/${uploadProgress.total}…`
+        : 'Uploading plan…'
+      : selectedFileIsPdf
+        ? `Upload ${selectedPdfPages.length} page${selectedPdfPages.length === 1 ? '' : 's'}`
+        : 'Upload plan';
 
   return (
     <Modal
@@ -219,9 +276,17 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
           {step === 2 ? (
             <StepPage
               pages={pdfPages}
-              selectedPdfPage={selectedPdfPage}
+              selectedPdfPages={selectedPdfPages}
               isPreparingPdf={isPreparingPdf}
-              onSelect={setSelectedPdfPage}
+              onToggle={(pageNumber) => {
+                setSelectedPdfPages((current) =>
+                  current.includes(pageNumber)
+                    ? current.filter((candidate) => candidate !== pageNumber)
+                    : [...current, pageNumber].sort((a, b) => a - b),
+                );
+              }}
+              onSelectAll={() => setSelectedPdfPages(pdfPages.map((page) => page.pageNumber))}
+              onClearSelection={() => setSelectedPdfPages([])}
             />
           ) : null}
 
@@ -232,7 +297,17 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
               sheetReference={sheetReference}
               onNameChange={setName}
               onSheetReferenceChange={setSheetReference}
-              selectedPdfPage={selectedPdfPage}
+              selectedPdfPages={selectedPdfPagePreviews}
+              pdfPageDetails={pdfPageDetails}
+              onPdfPageDetailsChange={(pageNumber, details) => {
+                setPdfPageDetails((current) => ({
+                  ...current,
+                  [pageNumber]: {
+                    ...(current[pageNumber] ?? { name: '', sheetReference: '' }),
+                    ...details,
+                  },
+                }));
+              }}
             />
           ) : null}
         </div>
@@ -284,7 +359,7 @@ function StepRibbon({
   isPdf: boolean;
 }) {
   const labels = isPdf
-    ? ['Choose source', 'Pick page', 'Name & ref']
+    ? ['Choose source', 'Pick pages', 'Name & ref']
     : ['Choose source', 'Name & ref'];
 
   return (
@@ -449,41 +524,52 @@ function StepSource({
 
 function StepPage({
   pages,
-  selectedPdfPage,
+  selectedPdfPages,
   isPreparingPdf,
-  onSelect,
+  onToggle,
+  onSelectAll,
+  onClearSelection,
 }: {
   pages: PdfPagePreview[];
-  selectedPdfPage: number | null;
+  selectedPdfPages: number[];
   isPreparingPdf: boolean;
-  onSelect: (pageNumber: number) => void;
+  onToggle: (pageNumber: number) => void;
+  onSelectAll: () => void;
+  onClearSelection: () => void;
 }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm leading-6 text-neutral-500">
-          Pick the sheet that should become the measured plan.
+          Select the PDF pages to import. Each selected page becomes its own measured plan.
         </p>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-          {isPreparingPdf ? 'Loading…' : `${pages.length} page${pages.length === 1 ? '' : 's'}`}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            {isPreparingPdf ? 'Loading…' : `${selectedPdfPages.length}/${pages.length} selected`}
+          </span>
+          <Button type="button" variant="ghost" size="sm" onClick={onSelectAll}>
+            All
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onClearSelection}>
+            None
+          </Button>
+        </div>
       </div>
 
       {pages.length > 0 ? (
         <div
           className="grid max-h-[26rem] gap-3 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-4"
-          role="radiogroup"
+          role="group"
           aria-label="PDF pages"
         >
           {pages.map((page) => {
-            const active = page.pageNumber === selectedPdfPage;
+            const active = selectedPdfPages.includes(page.pageNumber);
             return (
               <button
                 key={page.pageNumber}
                 type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => onSelect(page.pageNumber)}
+                aria-pressed={active}
+                onClick={() => onToggle(page.pageNumber)}
                 className={[
                   'group relative overflow-hidden rounded-xl border bg-white text-left transition focus-ring',
                   active
@@ -523,15 +609,24 @@ function StepDetails({
   sheetReference,
   onNameChange,
   onSheetReferenceChange,
-  selectedPdfPage,
+  selectedPdfPages,
+  pdfPageDetails,
+  onPdfPageDetailsChange,
 }: {
   file: File | null;
   name: string;
   sheetReference: string;
   onNameChange: (value: string) => void;
   onSheetReferenceChange: (value: string) => void;
-  selectedPdfPage: number | null;
+  selectedPdfPages: PdfPagePreview[];
+  pdfPageDetails: PdfPageDetails;
+  onPdfPageDetailsChange: (
+    pageNumber: number,
+    details: Partial<{ name: string; sheetReference: string }>,
+  ) => void;
 }) {
+  const isPdf = file?.type === PLAN_PDF_TYPE;
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
@@ -541,40 +636,94 @@ function StepDetails({
             {file?.name ?? 'No source selected'}
           </p>
           <p className="num-muted mt-0.5 text-xs">
-            {file ? formatBytes(file.size) : '—'}
-            {selectedPdfPage !== null ? ` · page ${String(selectedPdfPage).padStart(2, '0')}` : ''}
+            {file ? formatBytes(file.size) : '-'}
+            {isPdf
+              ? ` · ${selectedPdfPages.length} selected page${
+                  selectedPdfPages.length === 1 ? '' : 's'
+                }`
+              : ''}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-[1.6fr_1fr]">
-        <label className="block">
-          <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
-            Plan name
-          </span>
-          <input
-            required
-            value={name}
-            onChange={(event) => onNameChange(event.target.value)}
-            placeholder="Level 1 Furniture Plan"
-            className="input-base"
-            aria-label="Plan name"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
-            Sheet reference
-          </span>
-          <input
-            value={sheetReference}
-            onChange={(event) => onSheetReferenceChange(event.target.value)}
-            placeholder="A1.1"
-            className="input-base num"
-            aria-label="Sheet reference"
-          />
-          <span className="mt-1 block text-[11px] text-neutral-400">Optional · e.g. A1.1</span>
-        </label>
-      </div>
+      {isPdf ? (
+        <div className="max-h-[21rem] overflow-y-auto rounded-xl border border-neutral-200">
+          <div className="grid grid-cols-[72px_minmax(0,0.7fr)_minmax(0,1.3fr)] gap-3 border-b border-neutral-200 bg-neutral-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+            <span>Page</span>
+            <span>Sheet ref</span>
+            <span>Page name</span>
+          </div>
+          <div className="divide-y divide-neutral-100">
+            {selectedPdfPages.map((page) => {
+              const details = pdfPageDetails[page.pageNumber] ?? {
+                name: '',
+                sheetReference: '',
+              };
+
+              return (
+                <div
+                  key={page.pageNumber}
+                  className="grid grid-cols-[72px_minmax(0,0.7fr)_minmax(0,1.3fr)] gap-3 px-3 py-2.5"
+                >
+                  <span className="num flex items-center text-xs font-semibold text-neutral-500">
+                    {String(page.pageNumber).padStart(2, '0')}
+                  </span>
+                  <input
+                    value={details.sheetReference}
+                    onChange={(event) =>
+                      onPdfPageDetailsChange(page.pageNumber, {
+                        sheetReference: event.target.value,
+                      })
+                    }
+                    placeholder="A1-1"
+                    className="input-base num !py-1.5 text-sm"
+                    aria-label={`Sheet reference for page ${page.pageNumber}`}
+                  />
+                  <input
+                    required
+                    value={details.name}
+                    onChange={(event) =>
+                      onPdfPageDetailsChange(page.pageNumber, { name: event.target.value })
+                    }
+                    placeholder="Level 1 Furniture Plan"
+                    className="input-base !py-1.5 text-sm"
+                    aria-label={`Page name for page ${page.pageNumber}`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-[1.6fr_1fr]">
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+              Plan name
+            </span>
+            <input
+              required
+              value={name}
+              onChange={(event) => onNameChange(event.target.value)}
+              placeholder="Level 1 Furniture Plan"
+              className="input-base"
+              aria-label="Plan name"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+              Sheet reference
+            </span>
+            <input
+              value={sheetReference}
+              onChange={(event) => onSheetReferenceChange(event.target.value)}
+              placeholder="A1.1"
+              className="input-base num"
+              aria-label="Sheet reference"
+            />
+            <span className="mt-1 block text-[11px] text-neutral-400">Optional · e.g. A1.1</span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }
