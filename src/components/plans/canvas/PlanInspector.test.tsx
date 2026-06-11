@@ -223,6 +223,23 @@ describe('PlanInspector', () => {
     expect(screen.getByRole('button', { name: 'Remove saved crop' })).toBeEnabled();
   });
 
+  it('shows selected measurement information and actions in Select mode', () => {
+    render(
+      <PlanInspector
+        {...buildProps({
+          activeTool: 'select',
+          selectedMeasurement: measurements[1]!,
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Select Area')).toBeInTheDocument();
+    expect(screen.getByText('Selected measurement')).toBeInTheDocument();
+    expect(screen.getByText('P-42')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open crop editor' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Manage measurement' })).toBeInTheDocument();
+  });
+
   it('shows proposal apply-mode options in the draft panel and reports changes', () => {
     const onMeasurementApplicationModeChange = vi.fn();
 

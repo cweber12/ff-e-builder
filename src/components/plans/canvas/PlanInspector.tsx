@@ -817,7 +817,8 @@ export function PlanInspector({
                 </div>
               ) : null}
 
-              {activeTool === 'rectangle' && !normalizedMeasurementDraft ? (
+              {(activeTool === 'rectangle' || activeTool === 'select') &&
+              !normalizedMeasurementDraft ? (
                 <div className="mt-4 border-t border-neutral-200 pt-3">
                   {selectedMeasurement ? (
                     <div className="space-y-3">

@@ -287,6 +287,7 @@ Renders tool-specific panels based on `activeTool`:
 
 - **Calibrate panel:** feet+inches or decimal input + unit selector + Save button
 - **Length panel:** list, select, label edit, delete
+- **Select panel:** selected Measurement details, crop editor shortcut, clear/remove controls, and saved-area picker fallback
 - **Rectangle panel (measure mode):** `MeasuredAreaSelect` dropdown, dimension display, application mode selector, Save/Apply/Crop buttons
 - **Rectangle panel (highlight mode):** target item selector, Set Highlight button
 - **Crop panel:** Save crop to item button
