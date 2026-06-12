@@ -651,8 +651,11 @@ calibration status, measurement count, sheet metadata edit controls, cover-sheet
 to the existing canvas route at `/projects/${projectId}/plans/${sheet.id}`. Cover changes call
 `PATCH /plan-documents/:id` with `cover_measured_plan_id`; the Worker rejects cover sheets that do
 not belong to the active document. Sheet title/reference changes call `PATCH /plans/:planId`; the
-Worker updates the sheet and touches the parent document `updated_at`. Sheet add/delete/reorder
-controls are not part of the current slice.
+Worker updates the sheet and touches the parent document `updated_at`. Sheet deletes call
+`DELETE /plans/:planId` after a confirmation that calls out saved Measurements and last-sheet
+document deletion. The Worker deletes a single sheet in multi-sheet documents, moves cover to the
+next sheet when needed, and deletes the whole document when the last sheet is deleted. Sheet
+add/reorder controls are not part of the current slice.
 
 ---
 

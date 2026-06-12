@@ -1,8 +1,13 @@
 import { type FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, FileText, Star } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Check, FileText, Star, Trash2 } from 'lucide-react';
 import { Button } from '../components/primitives';
-import { usePlanDocument, useUpdateMeasuredPlan, useUpdatePlanDocument } from '../hooks';
+import {
+  useDeleteMeasuredPlan,
+  usePlanDocument,
+  useUpdateMeasuredPlan,
+  useUpdatePlanDocument,
+} from '../hooks';
 import type { MeasuredPlan, Project } from '../types';
 
 type PlanDocumentPageProps = {
@@ -11,9 +16,11 @@ type PlanDocumentPageProps = {
 };
 
 export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps) {
+  const navigate = useNavigate();
   const { data, isLoading } = usePlanDocument(project.id, documentId);
   const updateDocument = useUpdatePlanDocument(project.id, documentId);
   const updateSheet = useUpdateMeasuredPlan(project.id);
+  const deleteSheet = useDeleteMeasuredPlan(project.id);
   const [nameDraft, setNameDraft] = useState('');
 
   useEffect(() => {
@@ -25,6 +32,27 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
     const name = nameDraft.trim();
     if (!data || name.length === 0 || name === data.document.name) return;
     await updateDocument.mutateAsync({ name });
+  }
+
+  async function handleDeleteSheet(sheet: MeasuredPlan, sheetCount: number) {
+    const measurementWarning =
+      sheet.measurementCount > 0
+        ? ` ${sheet.measurementCount} saved measurement${sheet.measurementCount === 1 ? '' : 's'} will be removed.`
+        : '';
+    const lastSheetWarning =
+      sheetCount <= 1
+        ? ' This is the last sheet, so the entire plan document will be deleted.'
+        : '';
+    const confirmed = window.confirm(
+      `Delete "${sheet.name}"?${measurementWarning}${lastSheetWarning}`,
+    );
+
+    if (!confirmed) return;
+    await deleteSheet.mutateAsync(sheet);
+
+    if (sheetCount <= 1) {
+      navigate(`/projects/${project.id}/plans`);
+    }
   }
 
   if (isLoading) {
@@ -145,6 +173,7 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
                   updatingSheet={
                     updateSheet.isPending && updateSheet.variables?.planId === sheet.id
                   }
+                  deletingSheet={deleteSheet.isPending && deleteSheet.variables?.id === sheet.id}
                   onSetCover={() =>
                     void updateDocument.mutateAsync({ coverMeasuredPlanId: sheet.id })
                   }
@@ -154,6 +183,7 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
                       input,
                     })
                   }
+                  onDelete={() => void handleDeleteSheet(sheet, sheets.length)}
                 />
               ))}
             </div>
@@ -179,16 +209,20 @@ function SheetRow({
   isCover,
   settingCover,
   updatingSheet,
+  deletingSheet,
   onSetCover,
   onSaveSheet,
+  onDelete,
 }: {
   projectId: string;
   sheet: MeasuredPlan;
   isCover: boolean;
   settingCover: boolean;
   updatingSheet: boolean;
+  deletingSheet: boolean;
   onSetCover: () => void;
   onSaveSheet: (input: { name?: string; sheetReference?: string }) => void;
+  onDelete: () => void;
 }) {
   const [sheetReferenceDraft, setSheetReferenceDraft] = useState(sheet.sheetReference);
   const [nameDraft, setNameDraft] = useState(sheet.name);
@@ -291,6 +325,18 @@ function SheetRow({
         )}
         <Button asChild variant="secondary" size="sm">
           <Link to={openHref}>Open sheet</Link>
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={deletingSheet}
+          onClick={onDelete}
+          aria-label={`Delete ${sheet.name}`}
+          className="hover:border-danger-500 hover:text-danger-600"
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+          {deletingSheet ? 'Deleting' : 'Delete'}
         </Button>
       </div>
     </div>

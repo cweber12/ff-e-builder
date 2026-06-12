@@ -6,6 +6,7 @@ import { PlanDocumentPage } from './PlanDocumentPage';
 
 const updateDocumentMutateAsync = vi.fn();
 const updateMeasuredPlanMutateAsync = vi.fn();
+const deleteMeasuredPlanMutateAsync = vi.fn();
 
 const project: Project = {
   id: 'project-1',
@@ -119,6 +120,11 @@ vi.mock('../hooks', async (importOriginal) => {
       isPending: false,
       variables: undefined,
     })),
+    useDeleteMeasuredPlan: vi.fn(() => ({
+      mutateAsync: deleteMeasuredPlanMutateAsync,
+      isPending: false,
+      variables: undefined,
+    })),
   };
 });
 
@@ -128,6 +134,8 @@ describe('PlanDocumentPage', () => {
     updateDocumentMutateAsync.mockResolvedValue(undefined);
     updateMeasuredPlanMutateAsync.mockReset();
     updateMeasuredPlanMutateAsync.mockResolvedValue(undefined);
+    deleteMeasuredPlanMutateAsync.mockReset();
+    deleteMeasuredPlanMutateAsync.mockResolvedValue(undefined);
   });
 
   it('renders document summary and sheet links', () => {
@@ -147,6 +155,9 @@ describe('PlanDocumentPage', () => {
       '/projects/project-1/plans/plan-2',
     );
     expect(screen.getByText('Cover')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Delete Level 1 Furniture Plan' }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Set Level 2 Furniture Plan as cover sheet' }),
     ).toBeInTheDocument();
@@ -215,5 +226,31 @@ describe('PlanDocumentPage', () => {
         },
       });
     });
+  });
+
+  it('confirms and deletes a sheet', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    render(
+      <MemoryRouter>
+        <PlanDocumentPage project={project} documentId="document-1" />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Level 1 Furniture Plan' }));
+
+    await waitFor(() => {
+      expect(deleteMeasuredPlanMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'plan-1',
+          measurementCount: 3,
+        }),
+      );
+    });
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Delete "Level 1 Furniture Plan"? 3 saved measurements will be removed.',
+    );
+
+    confirmSpy.mockRestore();
   });
 });

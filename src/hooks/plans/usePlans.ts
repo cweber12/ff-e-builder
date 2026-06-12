@@ -161,6 +161,56 @@ export function useDeleteMeasuredPlan(projectId: string) {
       queryClient.setQueryData<MeasuredPlan[]>(planKeys.forProject(projectId), (old) =>
         removeListItem(old, plan.id),
       );
+      queryClient.setQueryData<PlanDocumentDetail | undefined>(
+        planKeys.documentDetail(projectId, plan.planDocumentId),
+        (old) => {
+          if (!old) return old;
+
+          const sheets = old.sheets.filter((sheet) => sheet.id !== plan.id);
+          if (sheets.length === 0) return undefined;
+
+          const fallbackCover = sheets[0] ?? null;
+          const deletedCover = old.document.coverMeasuredPlanId === plan.id;
+          return {
+            ...old,
+            document: {
+              ...old.document,
+              sheetCount: Math.max(0, old.document.sheetCount - 1),
+              calibratedSheetCount:
+                plan.calibrationStatus === 'calibrated'
+                  ? Math.max(0, old.document.calibratedSheetCount - 1)
+                  : old.document.calibratedSheetCount,
+              measurementCount: Math.max(0, old.document.measurementCount - plan.measurementCount),
+              coverMeasuredPlanId: deletedCover
+                ? (fallbackCover?.id ?? null)
+                : old.document.coverMeasuredPlanId,
+              coverSheet: deletedCover ? fallbackCover : old.document.coverSheet,
+            },
+            sheets,
+          };
+        },
+      );
+      queryClient.setQueryData<PlanDocument[]>(planKeys.documents(projectId), (old) =>
+        (old ?? [])
+          .map((document) => {
+            if (document.id !== plan.planDocumentId) return document;
+
+            const deletedCover = document.coverMeasuredPlanId === plan.id;
+            return {
+              ...document,
+              sheetCount: Math.max(0, document.sheetCount - 1),
+              calibratedSheetCount:
+                plan.calibrationStatus === 'calibrated'
+                  ? Math.max(0, document.calibratedSheetCount - 1)
+                  : document.calibratedSheetCount,
+              measurementCount: Math.max(0, document.measurementCount - plan.measurementCount),
+              coverMeasuredPlanId: deletedCover ? null : document.coverMeasuredPlanId,
+              coverSheet: deletedCover ? null : document.coverSheet,
+            };
+          })
+          .filter((document) => document.sheetCount > 0),
+      );
+      void queryClient.invalidateQueries({ queryKey: planKeys.documents(projectId) });
     },
     onError: (err) => toast.error(`Measured Plan delete failed: ${err.message}`),
   });
