@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): auto-detect PDF sheet references during plan document upload
 - feat(plans): show PDF plan document upload progress, large-set warnings, and render failure messages
 - feat(plans): delete measured plan sheets from the document sheet index
 - feat(plans): edit measured plan sheet titles and references from the document sheet index

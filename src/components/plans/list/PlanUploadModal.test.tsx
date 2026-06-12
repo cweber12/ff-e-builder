@@ -118,6 +118,22 @@ describe('PlanUploadModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('prefills PDF page sheet refs detected during thumbnail rendering', async () => {
+    const pdfFile = new File(['pdf'], 'detected refs.pdf', { type: 'application/pdf' });
+
+    pdfMocks.renderPdfThumbnails.mockResolvedValue([
+      pagePreview(1, 'A1-1'),
+      pagePreview(2, 'A1-2'),
+    ]);
+
+    render(<PlanUploadModal open creating={false} onClose={vi.fn()} onCreateDocument={vi.fn()} />);
+
+    await choosePdfAndOpenDetails(pdfFile);
+
+    expect(screen.getByLabelText('Sheet reference for page 1')).toHaveValue('A1-1');
+    expect(screen.getByLabelText('Sheet reference for page 2')).toHaveValue('A1-2');
+  });
+
   it('shows a large drawing set warning before uploading many selected PDF pages', async () => {
     const pdfFile = new File(['pdf'], 'large drawing set.pdf', { type: 'application/pdf' });
     const onCreateDocument = vi
@@ -255,12 +271,13 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-function pagePreview(pageNumber: number) {
+function pagePreview(pageNumber: number, detectedSheetReference?: string) {
   return {
     pageNumber,
     widthPt: 100,
     heightPt: 200,
     rotation: 0,
     thumbnailUrl: `data:image/png;base64,page-${pageNumber}`,
+    detectedSheetReference,
   };
 }

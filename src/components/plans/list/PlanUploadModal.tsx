@@ -134,7 +134,7 @@ export function PlanUploadModal({
                 name: `${baseName.length > 0 ? baseName : nextFile.name} page ${String(
                   page.pageNumber,
                 ).padStart(2, '0')}`,
-                sheetReference: '',
+                sheetReference: page.detectedSheetReference ?? '',
               },
             ]),
           ),

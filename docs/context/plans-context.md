@@ -155,7 +155,7 @@ type Measurement = {
 
 **Image path:** file picker → document name + sheet title/ref → `useCreatePlanDocument` → `POST /:id/plan-documents`
 
-**PDF path:** file picker → `renderPdfThumbnails()` generates page previews → all pages are selected by default → user deselects irrelevant pages → user edits document name and per-page sheet refs/names → each selected page runs `renderPdfPageAsPngFile({ file, pageNumber, scale: 2 })` → `useCreatePlanDocument` uploads the source PDF, `sheets_json`, and all rendered PNG sheet files in one request
+**PDF path:** file picker → `renderPdfThumbnails()` generates page previews and scans lower title-block text for sheet references → all pages are selected by default with detected refs prefilled → user deselects irrelevant pages → user edits document name and per-page sheet refs/names → each selected page runs `renderPdfPageAsPngFile({ file, pageNumber, scale: 2 })` → `useCreatePlanDocument` uploads the source PDF, `sheets_json`, and all rendered PNG sheet files in one request
 
 Each selected PDF page becomes its own `MeasuredPlan` sheet row under one `PlanDocument`. The worker stores the source PDF once on the document, stores one rendered PNG per sheet, writes PDF page metadata to each `measured_plans` row, and treats document creation as all-or-nothing.
 
