@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): show uploaded plans as document cards with a document detail sheet index
 - feat(plans): route plan uploads through document-first creation with one batch request per drawing set
 - feat(plans): add client types, API methods, and hooks for plan documents
 - feat(plans): add document-level Plans schema and Worker APIs for grouping measurable sheets under plan documents

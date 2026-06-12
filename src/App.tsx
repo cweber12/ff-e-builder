@@ -65,6 +65,7 @@ import {
 import { DashboardPage } from './pages/DashboardPage';
 import { CompanyProfilePage } from './pages/CompanyProfilePage';
 import { PlanCanvasPage } from './pages/PlanCanvasPage';
+import { PlanDocumentPage } from './pages/PlanDocumentPage';
 import { ProjectOverviewPage } from './pages/ProjectOverviewPage';
 import {
   PlansPage,
@@ -123,6 +124,7 @@ function App() {
           <Route path="proposal/materials" element={<ProjectRedirectTo target="materials" />} />
           <Route path="proposal/summary" element={<ProjectRedirectTo target="budget" />} />
           <Route path="plans" element={<ProjectPlansRoute />} />
+          <Route path="plans/documents/:documentId" element={<ProjectPlanDocumentRoute />} />
           <Route path="plans/:planId" element={<ProjectPlanCanvasRoute />} />
           <Route path="materials" element={<ProjectMaterialsRoute />} />
           <Route path="budget" element={<ProjectBudgetRoute />} />
@@ -785,6 +787,12 @@ function ProjectBudgetRoute() {
 function ProjectPlansRoute() {
   const { project } = useProjectContext();
   return <PlansPage project={project} />;
+}
+
+function ProjectPlanDocumentRoute() {
+  const { project } = useProjectContext();
+  const { documentId = '' } = useParams();
+  return <PlanDocumentPage project={project} documentId={documentId} />;
 }
 
 function ProjectPlanCanvasRoute() {

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Upload } from 'lucide-react';
-import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
+import { Search, Upload } from 'lucide-react';
+import { PlanDocumentCard } from '../components/plans/list/PlanDocumentCard';
 import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
 import { PlanUploadModal } from '../components/plans/list/PlanUploadModal';
 import { Button, MenuItem } from '../components/primitives';
-import { useCreatePlanDocument, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
+import { useCreatePlanDocument, useDeletePlanDocument, usePlanDocuments } from '../hooks';
 import type { CreatePlanDocumentInput } from '../lib/api';
-import type { MeasuredPlan, Project } from '../types';
+import type { PlanDocument, Project } from '../types';
 import { SidebarHeaderMenu } from '../components/shared/sidebar';
 
 type PlansPageProps = {
@@ -19,45 +19,62 @@ export const PLANS_FILTER_SLOT_ID = 'plans-filter-slot';
 export const PLANS_SUMMARY_SLOT_ID = 'plans-summary-slot';
 export const PLANS_OPTIONS_SLOT_ID = 'plans-options-slot';
 
-type SortId = 'added' | 'name' | 'measurements';
+type SortId = 'updated' | 'name' | 'sheets' | 'measurements';
 
 const SORTS: { id: SortId; label: string }[] = [
-  { id: 'added', label: 'Recently added' },
+  { id: 'updated', label: 'Recently updated' },
   { id: 'name', label: 'Name' },
+  { id: 'sheets', label: 'Sheet count' },
   { id: 'measurements', label: 'Measurement count' },
 ];
 
 export function PlansPage({ project }: PlansPageProps) {
-  const { data: plans, isLoading } = useMeasuredPlans(project.id);
+  const { data: documents, isLoading } = usePlanDocuments(project.id);
   const createDocument = useCreatePlanDocument(project.id);
-  const deletePlan = useDeleteMeasuredPlan(project.id);
-  const [sort, setSort] = useState<SortId>('added');
+  const deleteDocument = useDeletePlanDocument(project.id);
+  const [sort, setSort] = useState<SortId>('updated');
+  const [query, setQuery] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  const planCount = plans?.length ?? 0;
+  const documentCount = documents?.length ?? 0;
+  const sheetCount = useMemo(
+    () => (documents ?? []).reduce((total, document) => total + document.sheetCount, 0),
+    [documents],
+  );
   const calibratedCount = useMemo(
-    () => (plans ?? []).filter((plan) => plan.calibrationStatus === 'calibrated').length,
-    [plans],
+    () => (documents ?? []).reduce((total, document) => total + document.calibratedSheetCount, 0),
+    [documents],
   );
 
-  const visiblePlans = useMemo(() => {
-    const list = plans ?? [];
-    const sorted = [...list].sort((a, b) => {
-      if (sort === 'name') return a.name.localeCompare(b.name);
-      if (sort === 'measurements') return b.measurementCount - a.measurementCount;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  const visibleDocuments = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const list = (documents ?? []).filter((document) => {
+      if (!normalizedQuery) return true;
+      const coverSheet = document.coverSheet;
+      return [
+        document.name,
+        document.sourceFilename,
+        coverSheet?.name,
+        coverSheet?.sheetReference,
+      ].some((value) => value?.toLocaleLowerCase().includes(normalizedQuery));
     });
-    return sorted;
-  }, [plans, sort]);
 
-  async function handleDelete(plan: MeasuredPlan) {
+    return [...list].sort((a, b) => {
+      if (sort === 'name') return a.name.localeCompare(b.name);
+      if (sort === 'sheets') return b.sheetCount - a.sheetCount;
+      if (sort === 'measurements') return b.measurementCount - a.measurementCount;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }, [documents, query, sort]);
+
+  async function handleDelete(document: PlanDocument) {
     const message =
-      plan.measurementCount > 0
-        ? `Delete "${plan.name}"? ${plan.measurementCount} saved measurement${plan.measurementCount === 1 ? '' : 's'} reference this plan.`
-        : `Delete "${plan.name}"?`;
+      document.measurementCount > 0
+        ? `Delete "${document.name}"? This will remove ${document.sheetCount} sheet${document.sheetCount === 1 ? '' : 's'} and ${document.measurementCount} saved measurement${document.measurementCount === 1 ? '' : 's'}.`
+        : `Delete "${document.name}" and its ${document.sheetCount} sheet${document.sheetCount === 1 ? '' : 's'}?`;
 
     if (!window.confirm(message)) return;
-    await deletePlan.mutateAsync(plan);
+    await deleteDocument.mutateAsync(document);
   }
 
   async function handleCreateDocument(input: CreatePlanDocumentInput) {
@@ -66,9 +83,13 @@ export function PlansPage({ project }: PlansPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl py-4">
-      <PlansSummaryBar planCount={planCount} calibratedCount={calibratedCount} />
+      <PlansSummaryBar
+        documentCount={documentCount}
+        sheetCount={sheetCount}
+        calibratedCount={calibratedCount}
+      />
 
-      <PlansViewFilters sort={sort} onSortChange={setSort} />
+      <PlansViewFilters query={query} sort={sort} onQueryChange={setQuery} onSortChange={setSort} />
 
       <PlansOptionsMenu onUpload={() => setUploadOpen(true)} />
 
@@ -84,31 +105,40 @@ export function PlansPage({ project }: PlansPageProps) {
       <section>
         {isLoading ? (
           <PlanGridSkeleton />
-        ) : visiblePlans.length > 0 ? (
+        ) : visibleDocuments.length > 0 ? (
           <div className="flex flex-wrap justify-center gap-4">
-            {visiblePlans.map((plan, index) => (
+            {visibleDocuments.map((document, index) => (
               <div
-                key={plan.id}
+                key={document.id}
                 className="animate-fade-up w-full md:w-[calc(50%-0.5rem)] xl:w-[calc(33.333%-0.75rem)] 2xl:w-[calc(25%-0.75rem)]"
                 style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }}
               >
-                <MeasuredPlanCard
-                  plan={plan}
+                <PlanDocumentCard
+                  document={document}
                   projectId={project.id}
-                  onDelete={() => void handleDelete(plan)}
-                  deleting={deletePlan.isPending && deletePlan.variables?.id === plan.id}
+                  onDelete={() => void handleDelete(document)}
+                  deleting={
+                    deleteDocument.isPending && deleteDocument.variables?.id === document.id
+                  }
                 />
               </div>
             ))}
           </div>
-        ) : planCount === 0 ? (
+        ) : documentCount === 0 ? (
           <EmptyState
-            title="No plans uploaded yet"
-            description="Upload the first architectural image or PDF page for this project to start building the Plans workspace."
-            actionLabel="Upload your first plan"
+            title="No plan documents uploaded yet"
+            description="Upload the first architectural image or PDF drawing set for this project to start building the Plans workspace."
+            actionLabel="Upload your first document"
             onAction={() => setUploadOpen(true)}
           />
-        ) : null}
+        ) : (
+          <EmptyState
+            title="No matching plan documents"
+            description="Adjust the search term to find a document by name, source file, cover sheet, or sheet reference."
+            actionLabel="Clear search"
+            onAction={() => setQuery('')}
+          />
+        )}
       </section>
     </div>
   );
@@ -134,10 +164,14 @@ function useSidebarPortalSlot(slotId: string) {
 }
 
 function PlansViewFilters({
+  query,
   sort,
+  onQueryChange,
   onSortChange,
 }: {
+  query: string;
   sort: SortId;
+  onQueryChange: (value: string) => void;
   onSortChange: (value: SortId) => void;
 }) {
   const slot = useSidebarPortalSlot(PLANS_FILTER_SLOT_ID);
@@ -145,20 +179,38 @@ function PlansViewFilters({
   if (!slot) return null;
 
   return createPortal(
-    <label className="toolbar-label flex w-full flex-col items-start gap-1">
-      <span>Sort</span>
-      <select
-        value={sort}
-        onChange={(event) => onSortChange(event.target.value as SortId)}
-        className="toolbar-select w-full"
-      >
-        {SORTS.map((entry) => (
-          <option key={entry.id} value={entry.id}>
-            {entry.label}
-          </option>
-        ))}
-      </select>
-    </label>,
+    <div className="flex w-full flex-col gap-3">
+      <label className="toolbar-label flex w-full flex-col items-start gap-1">
+        <span>Search</span>
+        <div className="relative w-full">
+          <Search
+            className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
+          <input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Document or sheet"
+            className="toolbar-input w-full pl-8"
+          />
+        </div>
+      </label>
+
+      <label className="toolbar-label flex w-full flex-col items-start gap-1">
+        <span>Sort</span>
+        <select
+          value={sort}
+          onChange={(event) => onSortChange(event.target.value as SortId)}
+          className="toolbar-select w-full"
+        >
+          {SORTS.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>,
     slot,
   );
 }
@@ -228,10 +280,12 @@ function PlansOptionsMenu({ onUpload }: { onUpload: () => void }) {
 }
 
 function PlansSummaryBar({
-  planCount,
+  documentCount,
+  sheetCount,
   calibratedCount,
 }: {
-  planCount: number;
+  documentCount: number;
+  sheetCount: number;
   calibratedCount: number;
 }) {
   const slot = useSidebarPortalSlot(PLANS_SUMMARY_SLOT_ID);
@@ -241,8 +295,12 @@ function PlansSummaryBar({
   return createPortal(
     <div className="flex w-full items-center gap-1.5">
       <span className="toolbar-stat flex-1 justify-center !px-2 !py-0.5 text-[10px]">
-        <span className="num text-neutral-950">{planCount}</span>
-        <span className="text-neutral-500">plan{planCount === 1 ? '' : 's'}</span>
+        <span className="num text-neutral-950">{documentCount}</span>
+        <span className="text-neutral-500">doc{documentCount === 1 ? '' : 's'}</span>
+      </span>
+      <span className="toolbar-stat flex-1 justify-center !px-2 !py-0.5 text-[10px]">
+        <span className="num text-neutral-950">{sheetCount}</span>
+        <span className="text-neutral-500">sheet{sheetCount === 1 ? '' : 's'}</span>
       </span>
       <span className="toolbar-stat toolbar-stat--success flex-1 justify-center !px-2 !py-0.5 text-[10px]">
         <span className="num">{calibratedCount}</span>

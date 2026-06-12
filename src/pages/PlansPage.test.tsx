@@ -41,19 +41,50 @@ vi.mock('../hooks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../hooks')>();
   return {
     ...actual,
-    useMeasuredPlans: vi.fn(() => ({
+    usePlanDocuments: vi.fn(() => ({
       data: [
         {
-          id: 'plan-1',
+          id: 'document-1',
           projectId: 'project-1',
           ownerUid: 'user-1',
-          name: 'Level 1 Furniture Plan',
-          sheetReference: 'A1.1',
-          imageFilename: 'plan.png',
-          imageContentType: 'image/png',
-          imageByteSize: 1024,
-          calibrationStatus: 'uncalibrated',
-          measurementCount: 0,
+          name: 'Issued Architectural Set',
+          sourceType: 'pdf',
+          sourceFilename: 'issued-set.pdf',
+          sourceContentType: 'application/pdf',
+          sourceByteSize: 4096,
+          sourceR2Key: 'users/user-1/projects/project-1/plan-documents/document-1/source.pdf',
+          coverMeasuredPlanId: 'plan-1',
+          sheetCount: 2,
+          calibratedSheetCount: 1,
+          measurementCount: 3,
+          coverSheet: {
+            id: 'plan-1',
+            projectId: 'project-1',
+            ownerUid: 'user-1',
+            planDocumentId: 'document-1',
+            sheetIndex: 1,
+            pageLabel: '1',
+            name: 'Level 1 Furniture Plan',
+            sheetReference: 'A1.1',
+            sourceType: 'pdf-page',
+            imageFilename: 'plan.png',
+            imageContentType: 'image/png',
+            imageByteSize: 1024,
+            pdfFilename: 'issued-set.pdf',
+            pdfContentType: 'application/pdf',
+            pdfByteSize: 4096,
+            pdfPageNumber: 1,
+            pdfPageWidthPt: 612,
+            pdfPageHeightPt: 792,
+            pdfRenderScale: 2,
+            pdfRenderedWidthPx: 1224,
+            pdfRenderedHeightPx: 1584,
+            pdfRotation: 0,
+            calibrationStatus: 'calibrated',
+            measurementCount: 3,
+            createdAt: '2026-05-06T00:00:00Z',
+            updatedAt: '2026-05-06T00:00:00Z',
+          },
           createdAt: '2026-05-06T00:00:00Z',
           updatedAt: '2026-05-06T00:00:00Z',
         },
@@ -64,7 +95,7 @@ vi.mock('../hooks', async (importOriginal) => {
       mutateAsync: createMutateAsync,
       isPending: false,
     })),
-    useDeleteMeasuredPlan: vi.fn(() => ({
+    useDeletePlanDocument: vi.fn(() => ({
       mutateAsync: deleteMutateAsync,
       isPending: false,
       variables: undefined,
@@ -81,7 +112,7 @@ vi.mock('../lib/api', () => ({
 }));
 
 describe('PlansPage', () => {
-  it('renders plan cards and opens the upload modal from toolbar actions', () => {
+  it('renders document cards and opens the upload modal from toolbar actions', () => {
     const slot = document.createElement('div');
     slot.id = PLANS_ACTIONS_SLOT_ID;
     document.body.appendChild(slot);
@@ -92,7 +123,8 @@ describe('PlansPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Level 1 Furniture Plan')).toBeInTheDocument();
+    expect(screen.getByText('Issued Architectural Set')).toBeInTheDocument();
+    expect(screen.getByText('2 sheets')).toBeInTheDocument();
     expect(screen.queryByTestId('plan-upload-modal')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Upload plan' }));
@@ -121,10 +153,12 @@ describe('PlansPage', () => {
     );
 
     expect(within(actionsSlot).getByRole('button', { name: 'Upload plan' })).toBeInTheDocument();
+    expect(within(filterSlot).getByRole('textbox', { name: 'Search' })).toBeInTheDocument();
     expect(within(filterSlot).getByRole('combobox', { name: 'Sort' })).toBeInTheDocument();
     expect(within(optionsSlot).getByRole('button', { name: /plans options/i })).toBeInTheDocument();
     expect(within(filterSlot).queryByRole('tab', { name: 'All' })).not.toBeInTheDocument();
-    expect(within(summarySlot).getByText('plan')).toBeInTheDocument();
+    expect(within(summarySlot).getByText('doc')).toBeInTheDocument();
+    expect(within(summarySlot).getByText('sheets')).toBeInTheDocument();
 
     actionsSlot.remove();
     filterSlot.remove();
@@ -146,11 +180,12 @@ describe('PlansPage', () => {
       expect(
         within(nextActionsSlot).getByRole('button', { name: 'Upload plan' }),
       ).toBeInTheDocument();
+      expect(within(nextFilterSlot).getByRole('textbox', { name: 'Search' })).toBeInTheDocument();
       expect(within(nextFilterSlot).getByRole('combobox', { name: 'Sort' })).toBeInTheDocument();
       expect(
         within(nextOptionsSlot).getByRole('button', { name: /plans options/i }),
       ).toBeInTheDocument();
-      expect(within(nextSummarySlot).getByText('plan')).toBeInTheDocument();
+      expect(within(nextSummarySlot).getByText('doc')).toBeInTheDocument();
     });
 
     nextActionsSlot.remove();

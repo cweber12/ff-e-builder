@@ -48,11 +48,13 @@ React 18 + TypeScript 5 + Vite 5, Tailwind 3, shadcn/ui primitives, @tanstack/re
 Both routes are fully implemented and production-ready:
 
 ```tsx
-<Route path="plans" element={<ProjectPlansRoute />} />           // → PlansPage
-<Route path="plans/:planId" element={<ProjectPlanCanvasRoute />} /> // → PlanCanvasPage
+<Route path="plans" element={<ProjectPlansRoute />} />                         // → PlansPage document library
+<Route path="plans/documents/:documentId" element={<ProjectPlanDocumentRoute />} /> // → PlanDocumentPage sheet index
+<Route path="plans/:planId" element={<ProjectPlanCanvasRoute />} />            // → PlanCanvasPage sheet canvas
 ```
 
-`ProjectPlansRoute` and `ProjectPlanCanvasRoute` call `useOutletContext<ProjectContext>()` to receive `project`.
+`ProjectPlansRoute`, `ProjectPlanDocumentRoute`, and `ProjectPlanCanvasRoute` call
+`useOutletContext<ProjectContext>()` to receive `project`.
 
 ---
 
@@ -622,14 +624,24 @@ useEffect(() => {
 
 ## PlansPage — `src/pages/PlansPage.tsx`
 
-- Header with plan count badge and calibration status badge
-- Filter by calibration status: `'all' | 'calibrated' | 'uncalibrated'`
-- Sort by: `'added' | 'name' | 'measurement count'`
-- Responsive card grid (`md:grid-cols-2 2xl:grid-cols-3`) — `MeasuredPlanCard` per plan
-- `PlanUploadModal` for creating new plans
-- Delete guard: `window.confirm` with measurement count warning
+- Document library view backed by `usePlanDocuments(projectId)`, not the flat sheet list
+- Sidebar summary shows document count, sheet count, and calibrated sheet count
+- Search matches document name, source filename, cover sheet title, and cover sheet reference
+- Sort by: `'updated' | 'name' | 'sheet count' | 'measurement count'`
+- Responsive card grid (`md:grid-cols-2 2xl:grid-cols-3`) — `PlanDocumentCard` per document
+- `PlanUploadModal` creates plan documents through `useCreatePlanDocument`
+- Document delete guard warns that deleting a document removes all sheets and measurements
 
-`MeasuredPlanCard` loads preview via blob URL lifecycle pattern; shows calibration badge and source label (PDF page number or image file size). Links to `/projects/${projectId}/plans/${plan.id}`.
+`PlanDocumentCard` loads the cover sheet preview via the same blob URL lifecycle pattern as
+`MeasuredPlanCard`. It links to `/projects/${projectId}/plans/documents/${document.id}`.
+
+## PlanDocumentPage — `src/pages/PlanDocumentPage.tsx`
+
+Document detail is a scan-first sheet index. It loads `usePlanDocument(projectId, documentId)`,
+shows document counts, then renders every `MeasuredPlan` sheet as a row with sheet reference/title,
+source page/file context, calibration status, measurement count, and a link to the existing canvas
+route at `/projects/${projectId}/plans/${sheet.id}`. Sheet add/delete/reorder controls are not part
+of the current slice.
 
 ---
 
