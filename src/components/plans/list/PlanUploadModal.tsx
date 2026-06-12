@@ -19,10 +19,16 @@ const PLAN_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'imag
 const PLAN_PDF_TYPE = 'application/pdf';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
+const LARGE_PDF_PAGE_WARNING_THRESHOLD = 20;
 const PDF_RENDER_SCALE = 2;
 
 type Step = 1 | 2 | 3;
 type PdfPageDetails = Record<number, { name: string; sheetReference: string }>;
+type UploadProgress = {
+  phase: 'rendering' | 'uploading';
+  current: number;
+  total: number;
+};
 
 export function PlanUploadModal({
   open,
@@ -41,9 +47,7 @@ export function PlanUploadModal({
   const [pdfPageDetails, setPdfPageDetails] = useState<PdfPageDetails>({});
   const [isPreparingPdf, setIsPreparingPdf] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(
-    null,
-  );
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedFileIsPdf = file?.type === PLAN_PDF_TYPE;
@@ -186,7 +190,7 @@ export function PlanUploadModal({
       if (pagesToUpload.length === 0) return;
 
       setIsPreparingPdf(true);
-      setUploadProgress({ current: 0, total: pagesToUpload.length });
+      setUploadProgress({ phase: 'rendering', current: 0, total: pagesToUpload.length });
       try {
         const renderedSheets = [];
         for (const [index, page] of pagesToUpload.entries()) {
@@ -218,9 +222,18 @@ export function PlanUploadModal({
             pdfRenderedHeightPx: renderedPage.renderedHeightPx,
             pdfRotation: renderedPage.rotation,
           });
-          setUploadProgress({ current: index + 1, total: pagesToUpload.length });
+          setUploadProgress({
+            phase: 'rendering',
+            current: index + 1,
+            total: pagesToUpload.length,
+          });
         }
 
+        setUploadProgress({
+          phase: 'uploading',
+          current: pagesToUpload.length,
+          total: pagesToUpload.length,
+        });
         await onCreateDocument({
           documentName: documentName.trim(),
           sourceFile: file,
@@ -252,13 +265,13 @@ export function PlanUploadModal({
   }
 
   const submitLabel =
-    creating || isPreparingPdf
-      ? uploadProgress
-        ? `Preparing ${Math.min(uploadProgress.current + 1, uploadProgress.total)}/${uploadProgress.total}…`
-        : 'Uploading document…'
-      : selectedFileIsPdf
-        ? `Upload document`
-        : 'Upload document';
+    uploadProgress?.phase === 'rendering'
+      ? `Rendering ${uploadProgress.current}/${uploadProgress.total}`
+      : creating || uploadProgress?.phase === 'uploading'
+        ? 'Uploading document…'
+        : selectedFileIsPdf
+          ? `Upload document`
+          : 'Upload document';
 
   return (
     <Modal
@@ -327,6 +340,14 @@ export function PlanUploadModal({
                 }));
               }}
             />
+          ) : null}
+
+          {uploadProgress ? <UploadProgressPanel progress={uploadProgress} /> : null}
+
+          {step !== 1 && fileError ? (
+            <p className="mt-4 rounded-md bg-warning-50 px-3 py-2 text-xs font-medium text-warning-700">
+              {fileError}
+            </p>
           ) : null}
         </div>
 
@@ -648,6 +669,7 @@ function StepDetails({
   ) => void;
 }) {
   const isPdf = file?.type === PLAN_PDF_TYPE;
+  const showLargePdfWarning = isPdf && selectedPdfPages.length >= LARGE_PDF_PAGE_WARNING_THRESHOLD;
 
   return (
     <div className="space-y-5">
@@ -667,6 +689,12 @@ function StepDetails({
           </p>
         </div>
       </div>
+
+      {showLargePdfWarning ? (
+        <div className="rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-xs leading-5 text-warning-800">
+          Large drawing set: rendering and upload may take a few minutes. Keep this window open.
+        </div>
+      ) : null}
 
       <label className="block">
         <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
@@ -760,6 +788,44 @@ function StepDetails({
           </label>
         </div>
       )}
+    </div>
+  );
+}
+
+function UploadProgressPanel({ progress }: { progress: UploadProgress }) {
+  const progressValue =
+    progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+  const boundedProgressValue = progress.phase === 'uploading' ? 100 : progressValue;
+  const title = progress.phase === 'rendering' ? 'Rendering selected pages' : 'Uploading document';
+  const detail =
+    progress.phase === 'rendering'
+      ? progress.current < progress.total
+        ? `Page ${progress.current + 1} of ${progress.total}`
+        : `${progress.total} pages rendered`
+      : 'Saving the document and sheet images';
+
+  return (
+    <div className="mt-5 rounded-lg border border-brand-100 bg-brand-50/60 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">{title}</p>
+          <p className="mt-0.5 text-xs text-neutral-500">{detail}</p>
+        </div>
+        <span className="num text-xs font-semibold text-brand-700">{boundedProgressValue}%</span>
+      </div>
+      <div
+        className="mt-3 h-2 overflow-hidden rounded-full bg-white"
+        role="progressbar"
+        aria-label={title}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={boundedProgressValue}
+      >
+        <div
+          className="h-full rounded-full bg-brand-600 transition-[width] duration-200"
+          style={{ width: `${boundedProgressValue}%` }}
+        />
+      </div>
     </div>
   );
 }

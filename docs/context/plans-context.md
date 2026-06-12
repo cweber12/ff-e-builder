@@ -159,6 +159,10 @@ type Measurement = {
 
 Each selected PDF page becomes its own `MeasuredPlan` sheet row under one `PlanDocument`. The worker stores the source PDF once on the document, stores one rendered PNG per sheet, writes PDF page metadata to each `measured_plans` row, and treats document creation as all-or-nothing.
 
+The upload modal keeps PDF users on the details step while selected pages render locally, shows a
+progress panel for page rendering and final document upload, warns when selected PDFs contain 20+
+pages, and surfaces render/upload failures without returning the user to the source step.
+
 ---
 
 ### 2. Calibrate a plan

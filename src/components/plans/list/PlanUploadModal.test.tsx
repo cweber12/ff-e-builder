@@ -117,7 +117,143 @@ describe('PlanUploadModal', () => {
     expect(createdDocument?.sheets[0]?.renderFile).toBeInstanceOf(File);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('shows a large drawing set warning before uploading many selected PDF pages', async () => {
+    const pdfFile = new File(['pdf'], 'large drawing set.pdf', { type: 'application/pdf' });
+    const onCreateDocument = vi
+      .fn<(input: CreatePlanDocumentInput) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    pdfMocks.renderPdfThumbnails.mockResolvedValue(
+      Array.from({ length: 20 }, (_, index) => pagePreview(index + 1)),
+    );
+
+    render(
+      <PlanUploadModal
+        open
+        creating={false}
+        onClose={vi.fn()}
+        onCreateDocument={onCreateDocument}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Plan source'), {
+      target: { files: [pdfFile] },
+    });
+
+    await waitFor(() => expect(pdfMocks.renderPdfThumbnails).toHaveBeenCalledWith(pdfFile));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByText('20/20 selected')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByText(/Large drawing set:/)).toBeInTheDocument();
+    expect(screen.getByText(/Keep this window open/)).toBeInTheDocument();
+  });
+
+  it('shows upload progress while the final PDF document request is pending', async () => {
+    const pdfFile = new File(['pdf'], 'architectural set.pdf', { type: 'application/pdf' });
+    const upload = deferred<void>();
+    const onCreateDocument = vi
+      .fn<(input: CreatePlanDocumentInput) => Promise<void>>()
+      .mockReturnValue(upload.promise);
+
+    pdfMocks.renderPdfThumbnails.mockResolvedValue([pagePreview(1), pagePreview(2)]);
+    mockRenderedPages();
+
+    const onClose = vi.fn();
+
+    render(
+      <PlanUploadModal
+        open
+        creating={false}
+        onClose={onClose}
+        onCreateDocument={onCreateDocument}
+      />,
+    );
+
+    await choosePdfAndOpenDetails(pdfFile);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Upload document' }));
+
+    await waitFor(() => expect(onCreateDocument).toHaveBeenCalledTimes(1));
+    expect(screen.getByText('Uploading document')).toBeInTheDocument();
+    expect(screen.getByText('Saving the document and sheet images')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Uploading document' })).toHaveAttribute(
+      'aria-valuenow',
+      '100',
+    );
+
+    upload.resolve();
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it('surfaces PDF render failures and clears upload progress', async () => {
+    const pdfFile = new File(['pdf'], 'architectural set.pdf', { type: 'application/pdf' });
+    const onCreateDocument = vi
+      .fn<(input: CreatePlanDocumentInput) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    pdfMocks.renderPdfThumbnails.mockResolvedValue([pagePreview(1)]);
+    pdfMocks.renderPdfPageAsPngFile.mockRejectedValue(new Error('Render failed'));
+
+    render(
+      <PlanUploadModal
+        open
+        creating={false}
+        onClose={vi.fn()}
+        onCreateDocument={onCreateDocument}
+      />,
+    );
+
+    await choosePdfAndOpenDetails(pdfFile);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Upload document' }));
+
+    await waitFor(() => expect(screen.getByText('Render failed')).toBeInTheDocument());
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(onCreateDocument).not.toHaveBeenCalled();
+  });
 });
+
+async function choosePdfAndOpenDetails(pdfFile: File) {
+  fireEvent.change(screen.getByLabelText('Plan source'), {
+    target: { files: [pdfFile] },
+  });
+
+  await waitFor(() => expect(pdfMocks.renderPdfThumbnails).toHaveBeenCalledWith(pdfFile));
+
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+}
+
+function mockRenderedPages() {
+  pdfMocks.renderPdfPageAsPngFile.mockImplementation(
+    ({ pageNumber, filename }: { pageNumber: number; filename: string }) =>
+      Promise.resolve({
+        file: new File(['png'], filename, { type: 'image/png' }),
+        pageNumber,
+        pageWidthPt: 100,
+        pageHeightPt: 200,
+        renderScale: 2,
+        renderedWidthPx: 200,
+        renderedHeightPx: 400,
+        rotation: 0,
+      }),
+  );
+}
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, resolve, reject };
+}
 
 function pagePreview(pageNumber: number) {
   return {
