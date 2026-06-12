@@ -171,6 +171,158 @@ describe('Plan document uploads', () => {
     expect(sql.transaction).not.toHaveBeenCalled();
   });
 
+  it('rolls back uploaded document R2 keys when the create transaction fails', async () => {
+    const sql = makeSqlMock();
+    sql.transaction.mockRejectedValueOnce(new Error('insert failed'));
+    mockGetDb.mockReturnValue(sql);
+
+    const body = new FormData();
+    body.append('document_name', 'Architectural Set');
+    body.append(
+      'sheets_json',
+      JSON.stringify([
+        {
+          clientSheetId: 'page-1',
+          renderFileField: 'sheet_render_1',
+          sheetIndex: 1,
+          name: 'Floor Plan',
+          sheetReference: 'A1.01',
+          pdfPageNumber: 1,
+          pdfPageWidthPt: 612,
+          pdfPageHeightPt: 792,
+          pdfRenderScale: 2,
+          pdfRenderedWidthPx: 1224,
+          pdfRenderedHeightPx: 1584,
+          pdfRotation: 0,
+        },
+      ]),
+    );
+    body.append(
+      'source_file',
+      new File(['pdf-bytes'], 'drawings.pdf', { type: 'application/pdf' }),
+    );
+    body.append('sheet_render_1', new File(['png-bytes'], 'page-1.png', { type: 'image/png' }));
+
+    const res = await app.fetch(
+      new Request(`http://localhost/api/v1/projects/${projectId}/plan-documents`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer token' },
+        body,
+      }),
+      mockEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(bucketPut).toHaveBeenCalledTimes(2);
+    expect(bucketDelete).toHaveBeenCalledTimes(1);
+    const deletedKeys = bucketDelete.mock.calls[0]?.[0] as string[];
+    expect(deletedKeys).toHaveLength(2);
+    expect(deletedKeys.some((key) => key.includes('/source/drawings.pdf'))).toBe(true);
+    expect(deletedKeys.some((key) => key.includes('/sheets/'))).toBe(true);
+  });
+
+  it('deletes a plan document and dedupes shared source/render R2 keys', async () => {
+    const sql = makeSqlMock();
+    sql
+      .mockResolvedValueOnce([
+        {
+          id: 'document-1',
+          project_id: projectId,
+          owner_uid: 'user-123',
+          name: 'Level 2 Furniture Plan',
+          source_type: 'image',
+          source_r2_key: 'shared-image-key',
+          source_filename: 'level-2.png',
+          source_content_type: 'image/png',
+          source_byte_size: 11,
+          cover_measured_plan_id: 'sheet-1',
+          created_at: '2026-06-11T00:00:00.000Z',
+          updated_at: '2026-06-11T00:00:00.000Z',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          image_r2_key: 'shared-image-key',
+          pdf_r2_key: null,
+        },
+      ]);
+    mockGetDb.mockReturnValue(sql);
+
+    const res = await app.fetch(
+      new Request(`http://localhost/api/v1/projects/${projectId}/plan-documents/document-1`, {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer token' },
+      }),
+      mockEnv,
+    );
+
+    expect(res.status).toBe(204);
+    expect(sql.transaction).toHaveBeenCalledTimes(1);
+    expect(bucketDelete).toHaveBeenCalledWith(['shared-image-key']);
+  });
+
+  it('deletes one sheet from a multi-sheet document and lets SQL move cover fallback', async () => {
+    const sql = makeSqlMock();
+    sql
+      .mockResolvedValueOnce([
+        {
+          id: 'sheet-1',
+          project_id: projectId,
+          owner_uid: 'user-123',
+          plan_document_id: 'document-1',
+          sheet_index: 1,
+          page_label: '1',
+          name: 'Floor Plan',
+          sheet_reference: 'A1.01',
+          source_type: 'pdf-page',
+          image_r2_key: 'render-key-1',
+          image_filename: 'floor.png',
+          image_content_type: 'image/png',
+          image_byte_size: 11,
+          pdf_r2_key: 'legacy-pdf-key',
+          pdf_filename: 'drawings.pdf',
+          pdf_content_type: 'application/pdf',
+          pdf_byte_size: 11,
+          pdf_page_number: 1,
+          pdf_page_width_pt: 612,
+          pdf_page_height_pt: 792,
+          pdf_render_scale: 2,
+          pdf_rendered_width_px: 1224,
+          pdf_rendered_height_px: 1584,
+          pdf_rotation: 0,
+          created_at: '2026-06-11T00:00:00.000Z',
+          updated_at: '2026-06-11T00:00:00.000Z',
+        },
+      ])
+      .mockResolvedValueOnce([{ count: 2 }]);
+    mockGetDb.mockReturnValue(sql);
+
+    const res = await app.fetch(
+      new Request(`http://localhost/api/v1/projects/${projectId}/plans/sheet-1`, {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer token' },
+      }),
+      mockEnv,
+    );
+
+    expect(res.status).toBe(204);
+    expect(sql.transaction).toHaveBeenCalledTimes(1);
+    expect(bucketDelete).toHaveBeenCalledWith(['render-key-1', 'legacy-pdf-key']);
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(
+      statements.some(
+        (statement) =>
+          statement.includes('UPDATE plan_documents pd') &&
+          statement.includes('cover_measured_plan_id = ('),
+      ),
+    ).toBe(true);
+    expect(statements.some((statement) => statement.includes('DELETE FROM measured_plans'))).toBe(
+      true,
+    );
+  });
+
   it('updates document metadata and cover sheet after validating sheet ownership', async () => {
     const sql = makeSqlMock();
     sql
