@@ -225,6 +225,52 @@ describe('plansApi', () => {
     );
   });
 
+  it('updates plan document metadata and cover sheet', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        document: {
+          id: 'document-1',
+          project_id: 'project-1',
+          owner_uid: 'user-1',
+          name: 'Architectural Set - Revision 2',
+          source_type: 'pdf',
+          source_r2_key: 'source-key',
+          source_filename: 'drawings.pdf',
+          source_content_type: 'application/pdf',
+          source_byte_size: 54321,
+          cover_measured_plan_id: 'plan-2',
+          sheet_count: 2,
+          calibrated_sheet_count: 1,
+          measurement_count: 3,
+          cover_sheet: null,
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-07T00:00:00Z',
+        },
+      }),
+    );
+
+    await expect(
+      plansApi.updateDocument('project-1', 'document-1', {
+        name: 'Architectural Set - Revision 2',
+        coverMeasuredPlanId: 'plan-2',
+      }),
+    ).resolves.toMatchObject({
+      id: 'document-1',
+      name: 'Architectural Set - Revision 2',
+      coverMeasuredPlanId: 'plan-2',
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/projects/project-1/plan-documents/document-1'),
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+    expect(JSON.parse(init?.body as string)).toEqual({
+      name: 'Architectural Set - Revision 2',
+      cover_measured_plan_id: 'plan-2',
+    });
+  });
+
   it('lists measured plans for a project', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({

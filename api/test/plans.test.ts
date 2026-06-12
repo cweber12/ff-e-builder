@@ -170,4 +170,76 @@ describe('Plan document uploads', () => {
     expect(bucketPut).not.toHaveBeenCalled();
     expect(sql.transaction).not.toHaveBeenCalled();
   });
+
+  it('updates document metadata and cover sheet after validating sheet ownership', async () => {
+    const sql = makeSqlMock();
+    sql
+      .mockResolvedValueOnce([
+        {
+          id: 'document-1',
+          project_id: projectId,
+          owner_uid: 'user-123',
+          name: 'Architectural Set',
+          source_type: 'pdf',
+          source_r2_key: 'source-key',
+          source_filename: 'drawings.pdf',
+          source_content_type: 'application/pdf',
+          source_byte_size: 11,
+          cover_measured_plan_id: 'sheet-1',
+          created_at: '2026-06-11T00:00:00.000Z',
+          updated_at: '2026-06-11T00:00:00.000Z',
+        },
+      ])
+      .mockResolvedValueOnce([{ id: 'sheet-2' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'document-1',
+          project_id: projectId,
+          owner_uid: 'user-123',
+          name: 'Architectural Set - Revision 2',
+          source_type: 'pdf',
+          source_r2_key: 'source-key',
+          source_filename: 'drawings.pdf',
+          source_content_type: 'application/pdf',
+          source_byte_size: 11,
+          cover_measured_plan_id: 'sheet-2',
+          sheet_count: 2,
+          calibrated_sheet_count: 1,
+          measurement_count: 3,
+          created_at: '2026-06-11T00:00:00.000Z',
+          updated_at: '2026-06-12T00:00:00.000Z',
+        },
+      ]);
+    mockGetDb.mockReturnValue(sql);
+
+    const res = await app.fetch(
+      new Request(`http://localhost/api/v1/projects/${projectId}/plan-documents/document-1`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: 'Bearer token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Architectural Set - Revision 2',
+          cover_measured_plan_id: 'sheet-2',
+        }),
+      }),
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      document: {
+        id: 'document-1',
+        name: 'Architectural Set - Revision 2',
+        cover_measured_plan_id: 'sheet-2',
+        sheet_count: 2,
+      },
+    });
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements.some((statement) => statement.includes('UPDATE plan_documents'))).toBe(true);
+  });
 });

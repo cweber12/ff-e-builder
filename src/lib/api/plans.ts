@@ -57,6 +57,11 @@ export type CreatePlanDocumentInput = {
   sheets: CreatePlanDocumentSheetInput[];
 };
 
+export type UpdatePlanDocumentInput = {
+  name?: string;
+  coverMeasuredPlanId?: string | null;
+};
+
 export type UpdatePlanCalibrationInput = {
   startX: number;
   startY: number;
@@ -146,6 +151,24 @@ export const plansApi = {
     apiFetch<void>(`/api/v1/projects/${projectId}/plan-documents/${documentId}`, {
       method: 'DELETE',
     }),
+
+  updateDocument: (
+    projectId: string,
+    documentId: string,
+    input: UpdatePlanDocumentInput,
+  ): Promise<PlanDocument> =>
+    apiFetch<{ document: RawPlanDocument }>(
+      `/api/v1/projects/${projectId}/plan-documents/${documentId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          ...(input.name !== undefined ? { name: input.name } : {}),
+          ...(input.coverMeasuredPlanId !== undefined
+            ? { cover_measured_plan_id: input.coverMeasuredPlanId }
+            : {}),
+        }),
+      },
+    ).then((r) => mapPlanDocument(r.document)),
 
   list: (projectId: string): Promise<MeasuredPlan[]> =>
     apiFetch<{ plans: RawMeasuredPlan[] }>(`/api/v1/projects/${projectId}/plans`).then((r) =>

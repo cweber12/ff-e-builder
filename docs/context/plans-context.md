@@ -422,6 +422,7 @@ Document methods:
 | `listDocuments`  | `(projectId) → PlanDocument[]`                 | List document summaries with cover sheets   |
 | `getDocument`    | `(projectId, documentId) → PlanDocumentDetail` | Load one document plus all child sheets     |
 | `createDocument` | `(projectId, input: CreatePlanDocumentInput)`  | Create document and sheets via multipart    |
+| `updateDocument` | `(projectId, documentId, input)`               | Rename document and/or set cover sheet      |
 | `deleteDocument` | `(projectId, documentId)`                      | Delete document and all child sheet records |
 
 `CreatePlanDocumentInput` is the client-facing shape for the Worker `sheets_json`
@@ -510,6 +511,7 @@ Document endpoints:
 | `GET`    | `/:projectId/plan-documents`             | List document summaries with SQL-derived counts and a cover sheet                                    |
 | `POST`   | `/:projectId/plan-documents`             | Create one document and all selected sheets in one all-or-nothing operation                          |
 | `GET`    | `/:projectId/plan-documents/:documentId` | Load one document summary plus all child sheets                                                      |
+| `PATCH`  | `/:projectId/plan-documents/:documentId` | Rename the document and/or set `cover_measured_plan_id` after validating the sheet belongs to it     |
 | `DELETE` | `/:projectId/plan-documents/:documentId` | Delete the document, child sheets, child measurement/calibration/length records, and deduped R2 keys |
 
 Document create uses multipart form data:
@@ -641,10 +643,12 @@ useEffect(() => {
 ## PlanDocumentPage — `src/pages/PlanDocumentPage.tsx`
 
 Document detail is a scan-first sheet index. It loads `usePlanDocument(projectId, documentId)`,
-shows document counts, then renders every `MeasuredPlan` sheet as a row with sheet reference/title,
-source page/file context, calibration status, measurement count, and a link to the existing canvas
-route at `/projects/${projectId}/plans/${sheet.id}`. Sheet add/delete/reorder controls are not part
-of the current slice.
+shows document counts, allows inline document-name editing through `useUpdatePlanDocument`, then
+renders every `MeasuredPlan` sheet as a row with sheet reference/title, source page/file context,
+calibration status, measurement count, cover-sheet control, and a link to the existing canvas route
+at `/projects/${projectId}/plans/${sheet.id}`. Cover changes call `PATCH /plan-documents/:id` with
+`cover_measured_plan_id`; the Worker rejects cover sheets that do not belong to the active document.
+Sheet add/delete/reorder controls are not part of the current slice.
 
 ---
 

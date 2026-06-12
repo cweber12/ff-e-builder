@@ -14,6 +14,7 @@ import {
   CreatePlanDocumentSheetsSchema,
   CreateMeasuredPlanSchema,
   UpdatePlanCalibrationSchema,
+  UpdatePlanDocumentSchema,
   UpsertMeasurementSchema,
   UpsertLengthLineSchema,
   type CreatePlanDocumentSheetInput,
@@ -239,6 +240,94 @@ async function getOwnedPlanDocument(
   `;
 
   return (rows[0] as PlanDocument | undefined) ?? null;
+}
+
+async function getPlanDocumentSummary(
+  env: Env,
+  uid: string,
+  projectId: string,
+  documentId: string,
+): Promise<PlanDocumentSummaryRow | null> {
+  const sql = getDb(env);
+  const rows = await sql`
+    WITH stats AS (
+      SELECT
+        pd.id AS document_id,
+        COUNT(DISTINCT mp.id)::int AS sheet_count,
+        COUNT(DISTINCT pc.id)::int AS calibrated_sheet_count,
+        COUNT(m.id)::int AS measurement_count
+      FROM plan_documents pd
+      LEFT JOIN measured_plans mp ON mp.plan_document_id = pd.id
+      LEFT JOIN plan_calibrations pc ON pc.measured_plan_id = mp.id
+      LEFT JOIN measurements m ON m.measured_plan_id = mp.id
+      WHERE pd.id = ${documentId}
+        AND pd.project_id = ${projectId}
+        AND pd.owner_uid = ${uid}
+      GROUP BY pd.id
+    )
+    SELECT
+      pd.*,
+      stats.sheet_count,
+      stats.calibrated_sheet_count,
+      stats.measurement_count,
+      cover.id AS cover_id,
+      cover.project_id AS cover_project_id,
+      cover.owner_uid AS cover_owner_uid,
+      cover.plan_document_id AS cover_plan_document_id,
+      cover.sheet_index AS cover_sheet_index,
+      cover.page_label AS cover_page_label,
+      cover.name AS cover_name,
+      cover.sheet_reference AS cover_sheet_reference,
+      cover.source_type AS cover_source_type,
+      cover.image_r2_key AS cover_image_r2_key,
+      cover.image_filename AS cover_image_filename,
+      cover.image_content_type AS cover_image_content_type,
+      cover.image_byte_size AS cover_image_byte_size,
+      cover.pdf_r2_key AS cover_pdf_r2_key,
+      cover.pdf_filename AS cover_pdf_filename,
+      cover.pdf_content_type AS cover_pdf_content_type,
+      cover.pdf_byte_size AS cover_pdf_byte_size,
+      cover.pdf_page_number AS cover_pdf_page_number,
+      cover.pdf_page_width_pt AS cover_pdf_page_width_pt,
+      cover.pdf_page_height_pt AS cover_pdf_page_height_pt,
+      cover.pdf_render_scale AS cover_pdf_render_scale,
+      cover.pdf_rendered_width_px AS cover_pdf_rendered_width_px,
+      cover.pdf_rendered_height_px AS cover_pdf_rendered_height_px,
+      cover.pdf_rotation AS cover_pdf_rotation,
+      cover.created_at AS cover_created_at,
+      cover.updated_at AS cover_updated_at,
+      cover.calibration_status AS cover_calibration_status,
+      cover.measurement_count AS cover_measurement_count
+    FROM plan_documents pd
+    INNER JOIN stats ON stats.document_id = pd.id
+    LEFT JOIN LATERAL (
+      SELECT
+        mp.*,
+        CASE WHEN pc.id IS NULL THEN 'uncalibrated' ELSE 'calibrated' END AS calibration_status,
+        COUNT(m.id)::int AS measurement_count
+      FROM measured_plans mp
+      LEFT JOIN plan_calibrations pc ON pc.measured_plan_id = mp.id
+      LEFT JOIN measurements m ON m.measured_plan_id = mp.id
+      WHERE mp.id = COALESCE(
+        pd.cover_measured_plan_id,
+        (
+          SELECT first_sheet.id
+          FROM measured_plans first_sheet
+          WHERE first_sheet.plan_document_id = pd.id
+          ORDER BY first_sheet.sheet_index, first_sheet.created_at
+          LIMIT 1
+        )
+      )
+      GROUP BY mp.id, pc.id
+      LIMIT 1
+    ) cover ON true
+    WHERE pd.id = ${documentId}
+      AND pd.project_id = ${projectId}
+      AND pd.owner_uid = ${uid}
+    LIMIT 1
+  `;
+
+  return (rows[0] as PlanDocumentSummaryRow | undefined) ?? null;
 }
 
 async function getOwnedLengthLine(
@@ -634,85 +723,10 @@ router.get('/:projectId/plan-documents/:documentId', async (c) => {
   const document = await getOwnedPlanDocument(c.env, uid, projectId, documentId);
   if (!document) return c.json({ error: 'Not found' }, 404);
 
-  const sql = getDb(c.env);
-  const documentRows = await sql`
-    WITH stats AS (
-      SELECT
-        pd.id AS document_id,
-        COUNT(DISTINCT mp.id)::int AS sheet_count,
-        COUNT(DISTINCT pc.id)::int AS calibrated_sheet_count,
-        COUNT(m.id)::int AS measurement_count
-      FROM plan_documents pd
-      LEFT JOIN measured_plans mp ON mp.plan_document_id = pd.id
-      LEFT JOIN plan_calibrations pc ON pc.measured_plan_id = mp.id
-      LEFT JOIN measurements m ON m.measured_plan_id = mp.id
-      WHERE pd.id = ${documentId}
-        AND pd.project_id = ${projectId}
-        AND pd.owner_uid = ${uid}
-      GROUP BY pd.id
-    )
-    SELECT
-      pd.*,
-      stats.sheet_count,
-      stats.calibrated_sheet_count,
-      stats.measurement_count,
-      cover.id AS cover_id,
-      cover.project_id AS cover_project_id,
-      cover.owner_uid AS cover_owner_uid,
-      cover.plan_document_id AS cover_plan_document_id,
-      cover.sheet_index AS cover_sheet_index,
-      cover.page_label AS cover_page_label,
-      cover.name AS cover_name,
-      cover.sheet_reference AS cover_sheet_reference,
-      cover.source_type AS cover_source_type,
-      cover.image_r2_key AS cover_image_r2_key,
-      cover.image_filename AS cover_image_filename,
-      cover.image_content_type AS cover_image_content_type,
-      cover.image_byte_size AS cover_image_byte_size,
-      cover.pdf_r2_key AS cover_pdf_r2_key,
-      cover.pdf_filename AS cover_pdf_filename,
-      cover.pdf_content_type AS cover_pdf_content_type,
-      cover.pdf_byte_size AS cover_pdf_byte_size,
-      cover.pdf_page_number AS cover_pdf_page_number,
-      cover.pdf_page_width_pt AS cover_pdf_page_width_pt,
-      cover.pdf_page_height_pt AS cover_pdf_page_height_pt,
-      cover.pdf_render_scale AS cover_pdf_render_scale,
-      cover.pdf_rendered_width_px AS cover_pdf_rendered_width_px,
-      cover.pdf_rendered_height_px AS cover_pdf_rendered_height_px,
-      cover.pdf_rotation AS cover_pdf_rotation,
-      cover.created_at AS cover_created_at,
-      cover.updated_at AS cover_updated_at,
-      cover.calibration_status AS cover_calibration_status,
-      cover.measurement_count AS cover_measurement_count
-    FROM plan_documents pd
-    INNER JOIN stats ON stats.document_id = pd.id
-    LEFT JOIN LATERAL (
-      SELECT
-        mp.*,
-        CASE WHEN pc.id IS NULL THEN 'uncalibrated' ELSE 'calibrated' END AS calibration_status,
-        COUNT(m.id)::int AS measurement_count
-      FROM measured_plans mp
-      LEFT JOIN plan_calibrations pc ON pc.measured_plan_id = mp.id
-      LEFT JOIN measurements m ON m.measured_plan_id = mp.id
-      WHERE mp.id = COALESCE(
-        pd.cover_measured_plan_id,
-        (
-          SELECT first_sheet.id
-          FROM measured_plans first_sheet
-          WHERE first_sheet.plan_document_id = pd.id
-          ORDER BY first_sheet.sheet_index, first_sheet.created_at
-          LIMIT 1
-        )
-      )
-      GROUP BY mp.id, pc.id
-      LIMIT 1
-    ) cover ON true
-    WHERE pd.id = ${documentId}
-      AND pd.project_id = ${projectId}
-      AND pd.owner_uid = ${uid}
-    LIMIT 1
-  `;
+  const summary = await getPlanDocumentSummary(c.env, uid, projectId, documentId);
+  if (!summary) return c.json({ error: 'Not found' }, 404);
 
+  const sql = getDb(c.env);
   const sheetRows = await sql`
     SELECT
       mp.*,
@@ -732,9 +746,60 @@ router.get('/:projectId/plan-documents/:documentId', async (c) => {
   `;
 
   return c.json({
-    document: documentSummaryFromRow(documentRows[0] as PlanDocumentSummaryRow),
+    document: documentSummaryFromRow(summary),
     sheets: sheetRows as RawMeasuredPlanListRow[],
   });
+});
+
+router.patch('/:projectId/plan-documents/:documentId', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const documentId = c.req.param('documentId');
+
+  const document = await getOwnedPlanDocument(c.env, uid, projectId, documentId);
+  if (!document) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json().catch(() => null);
+  const parsed = UpdatePlanDocumentSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const sql = getDb(c.env);
+  const requestedCoverId = parsed.data.cover_measured_plan_id;
+  if (requestedCoverId !== undefined && requestedCoverId !== null) {
+    const coverRows = await sql`
+      SELECT id
+      FROM measured_plans
+      WHERE id = ${requestedCoverId}
+        AND plan_document_id = ${documentId}
+        AND project_id = ${projectId}
+        AND owner_uid = ${uid}
+      LIMIT 1
+    `;
+
+    if (coverRows.length === 0) {
+      return c.json({ error: 'Cover sheet must belong to this plan document' }, 400);
+    }
+  }
+
+  const nextName = parsed.data.name ?? document.name;
+  const nextCoverId =
+    requestedCoverId === undefined ? document.cover_measured_plan_id : requestedCoverId;
+
+  await sql`
+    UPDATE plan_documents
+    SET
+      name = ${nextName},
+      cover_measured_plan_id = ${nextCoverId},
+      updated_at = now()
+    WHERE id = ${documentId}
+      AND project_id = ${projectId}
+      AND owner_uid = ${uid}
+  `;
+
+  const summary = await getPlanDocumentSummary(c.env, uid, projectId, documentId);
+  if (!summary) return c.json({ error: 'Not found' }, 404);
+
+  return c.json({ document: documentSummaryFromRow(summary) });
 });
 
 router.delete('/:projectId/plan-documents/:documentId', async (c) => {

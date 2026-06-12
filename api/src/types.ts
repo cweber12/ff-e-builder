@@ -581,6 +581,17 @@ export const CreatePlanDocumentSheetSchema = z.object({
 export const CreatePlanDocumentSheetsSchema = z.array(CreatePlanDocumentSheetSchema).min(1).max(80);
 export type CreatePlanDocumentSheetInput = z.infer<typeof CreatePlanDocumentSheetSchema>;
 
+export const UpdatePlanDocumentSchema = z
+  .object({
+    name: z.string().trim().min(1).max(255).optional(),
+    cover_measured_plan_id: z.string().min(1).max(100).nullable().optional(),
+  })
+  .refine(
+    (value) => value.name !== undefined || value.cover_measured_plan_id !== undefined,
+    'At least one document field is required',
+  );
+export type UpdatePlanDocumentInput = z.infer<typeof UpdatePlanDocumentSchema>;
+
 export const UpdatePlanCalibrationSchema = z.object({
   start_x: z.number().min(0),
   start_y: z.number().min(0),

@@ -20,6 +20,7 @@ export type {
   CreatePlanDocumentInput,
   CreateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
+  UpdatePlanDocumentInput,
   UpsertPlanLengthLineInput,
   UpsertPlanMeasurementInput,
 } from './api/plans';

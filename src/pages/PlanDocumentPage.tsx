@@ -1,7 +1,8 @@
+import { type FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, Check, FileText, Star } from 'lucide-react';
 import { Button } from '../components/primitives';
-import { usePlanDocument } from '../hooks';
+import { usePlanDocument, useUpdatePlanDocument } from '../hooks';
 import type { MeasuredPlan, Project } from '../types';
 
 type PlanDocumentPageProps = {
@@ -11,6 +12,19 @@ type PlanDocumentPageProps = {
 
 export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps) {
   const { data, isLoading } = usePlanDocument(project.id, documentId);
+  const updateDocument = useUpdatePlanDocument(project.id, documentId);
+  const [nameDraft, setNameDraft] = useState('');
+
+  useEffect(() => {
+    if (data?.document.name) setNameDraft(data.document.name);
+  }, [data?.document.name]);
+
+  async function handleSaveName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = nameDraft.trim();
+    if (!data || name.length === 0 || name === data.document.name) return;
+    await updateDocument.mutateAsync({ name });
+  }
 
   if (isLoading) {
     return (
@@ -47,6 +61,7 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
   }
 
   const { document, sheets } = data;
+  const nameChanged = nameDraft.trim().length > 0 && nameDraft.trim() !== document.name;
 
   return (
     <div className="mx-auto max-w-6xl py-4">
@@ -65,9 +80,28 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
               <FileText className="h-4 w-4" aria-hidden="true" />
               {document.sourceType === 'pdf' ? 'PDF document' : 'Image document'}
             </div>
-            <h2 className="mt-2 truncate font-display text-2xl font-semibold text-neutral-950">
-              {document.name}
-            </h2>
+            <form onSubmit={(event) => void handleSaveName(event)} className="mt-2 flex gap-2">
+              <label className="sr-only" htmlFor="plan-document-name">
+                Document name
+              </label>
+              <input
+                id="plan-document-name"
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value)}
+                className="min-w-0 flex-1 border border-neutral-200 bg-white px-3 py-2 font-display text-2xl font-semibold text-neutral-950 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+              />
+              <Button
+                type="submit"
+                variant="secondary"
+                size="sm"
+                disabled={!nameChanged || updateDocument.isPending}
+                aria-label="Save document name"
+                className="mt-1 shrink-0"
+              >
+                <Check className="h-4 w-4" aria-hidden="true" />
+                Save
+              </Button>
+            </form>
             <p className="mt-2 text-sm text-neutral-500">
               {document.sourceFilename} · Updated {formatDate(document.updatedAt)}
             </p>
@@ -98,7 +132,19 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
             </div>
             <div className="divide-y divide-neutral-200">
               {sheets.map((sheet) => (
-                <SheetRow key={sheet.id} projectId={project.id} sheet={sheet} />
+                <SheetRow
+                  key={sheet.id}
+                  projectId={project.id}
+                  sheet={sheet}
+                  isCover={document.coverMeasuredPlanId === sheet.id}
+                  settingCover={
+                    updateDocument.isPending &&
+                    updateDocument.variables?.coverMeasuredPlanId === sheet.id
+                  }
+                  onSetCover={() =>
+                    void updateDocument.mutateAsync({ coverMeasuredPlanId: sheet.id })
+                  }
+                />
               ))}
             </div>
           </div>
@@ -117,7 +163,19 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
   );
 }
 
-function SheetRow({ projectId, sheet }: { projectId: string; sheet: MeasuredPlan }) {
+function SheetRow({
+  projectId,
+  sheet,
+  isCover,
+  settingCover,
+  onSetCover,
+}: {
+  projectId: string;
+  sheet: MeasuredPlan;
+  isCover: boolean;
+  settingCover: boolean;
+  onSetCover: () => void;
+}) {
   const openHref = `/projects/${projectId}/plans/${sheet.id}`;
   const calibrated = sheet.calibrationStatus === 'calibrated';
   const sourceLabel =
@@ -159,7 +217,25 @@ function SheetRow({ projectId, sheet }: { projectId: string; sheet: MeasuredPlan
         </span>
       </div>
 
-      <div className="flex justify-start md:justify-end">
+      <div className="flex flex-wrap justify-start gap-2 md:justify-end">
+        {isCover ? (
+          <span className="status-chip status-chip--neutral">
+            <Star className="h-3.5 w-3.5" aria-hidden="true" />
+            Cover
+          </span>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={settingCover}
+            onClick={onSetCover}
+            aria-label={`Set ${sheet.name} as cover sheet`}
+          >
+            <Star className="h-4 w-4" aria-hidden="true" />
+            {settingCover ? 'Saving' : 'Set cover'}
+          </Button>
+        )}
         <Button asChild variant="secondary" size="sm">
           <Link to={openHref}>Open sheet</Link>
         </Button>

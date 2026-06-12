@@ -7,6 +7,7 @@ import type {
   CreatePlanDocumentInput,
   CreateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
+  UpdatePlanDocumentInput,
   UpsertPlanLengthLineInput,
   UpsertPlanMeasurementInput,
 } from '../../lib/api';
@@ -67,6 +68,26 @@ export function useDeletePlanDocument(projectId: string) {
       void queryClient.invalidateQueries({ queryKey: planKeys.forProject(projectId) });
     },
     onError: (err) => toast.error(`Plan document delete failed: ${err.message}`),
+  });
+}
+
+export function useUpdatePlanDocument(projectId: string, documentId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdatePlanDocumentInput) =>
+      api.plans.updateDocument(projectId, documentId, input),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<PlanDocument[]>(planKeys.documents(projectId), (old) =>
+        (old ?? []).map((document) => (document.id === updated.id ? updated : document)),
+      );
+      queryClient.setQueryData<PlanDocumentDetail | undefined>(
+        planKeys.documentDetail(projectId, updated.id),
+        (old) => (old ? { ...old, document: updated } : old),
+      );
+      void queryClient.invalidateQueries({ queryKey: planKeys.forProject(projectId) });
+    },
+    onError: (err) => toast.error(`Plan document update failed: ${err.message}`),
   });
 }
 

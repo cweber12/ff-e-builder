@@ -3,6 +3,7 @@ export {
   usePlanDocument,
   useCreatePlanDocument,
   useDeletePlanDocument,
+  useUpdatePlanDocument,
   useMeasuredPlans,
   useCreateMeasuredPlan,
   useDeleteMeasuredPlan,
