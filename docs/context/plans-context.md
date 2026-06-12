@@ -151,11 +151,11 @@ type Measurement = {
 
 ### 1. Upload a plan — `src/components/plans/list/PlanUploadModal.tsx`
 
-**Image path:** file picker → name/sheet ref → `useCreateMeasuredPlan` → `POST /:id/plans`
+**Image path:** file picker → document name + sheet title/ref → `useCreatePlanDocument` → `POST /:id/plan-documents`
 
-**PDF path:** file picker → `renderPdfThumbnails()` generates page previews → all pages are selected by default → user deselects irrelevant pages → user edits per-page sheet refs/names → each selected page runs `renderPdfPageAsPngFile({ file, pageNumber, scale: 2 })` and `useCreateMeasuredPlan` sequentially with both `file` (PNG) and `sourcePdfFile` (original PDF)
+**PDF path:** file picker → `renderPdfThumbnails()` generates page previews → all pages are selected by default → user deselects irrelevant pages → user edits document name and per-page sheet refs/names → each selected page runs `renderPdfPageAsPngFile({ file, pageNumber, scale: 2 })` → `useCreatePlanDocument` uploads the source PDF, `sheets_json`, and all rendered PNG sheet files in one request
 
-Each selected PDF page becomes its own `MeasuredPlan` row. The worker stores both that page's rendered PNG and the original PDF in R2 and writes that page's PDF metadata to the `measured_plans` row. Successful pages remain created if a later selected page fails.
+Each selected PDF page becomes its own `MeasuredPlan` sheet row under one `PlanDocument`. The worker stores the source PDF once on the document, stores one rendered PNG per sheet, writes PDF page metadata to each `measured_plans` row, and treats document creation as all-or-nothing.
 
 ---
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import type { CreateMeasuredPlanInput } from '../../../lib/api';
+import type { CreatePlanDocumentInput } from '../../../lib/api';
 import {
   renderPdfPageAsPngFile,
   renderPdfThumbnails,
@@ -12,7 +12,7 @@ type PlanUploadModalProps = {
   open: boolean;
   creating: boolean;
   onClose: () => void;
-  onCreatePlan: (input: CreateMeasuredPlanInput) => Promise<unknown>;
+  onCreateDocument: (input: CreatePlanDocumentInput) => Promise<unknown>;
 };
 
 const PLAN_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
@@ -24,9 +24,15 @@ const PDF_RENDER_SCALE = 2;
 type Step = 1 | 2 | 3;
 type PdfPageDetails = Record<number, { name: string; sheetReference: string }>;
 
-export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanUploadModalProps) {
+export function PlanUploadModal({
+  open,
+  creating,
+  onClose,
+  onCreateDocument,
+}: PlanUploadModalProps) {
   const [step, setStep] = useState<Step>(1);
-  const [name, setName] = useState('');
+  const [documentName, setDocumentName] = useState('');
+  const [sheetName, setSheetName] = useState('');
   const [sheetReference, setSheetReference] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
@@ -51,7 +57,8 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
   useEffect(() => {
     if (!open) {
       setStep(1);
-      setName('');
+      setDocumentName('');
+      setSheetName('');
       setSheetReference('');
       setFile(null);
       setFileError('');
@@ -76,12 +83,13 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
     !creating &&
     !isPreparingPdf &&
     uploadProgress === null &&
+    documentName.trim().length > 0 &&
     (selectedFileIsPdf
       ? selectedPdfPagePreviews.length > 0 &&
         selectedPdfPagePreviews.every(
           (page) => (pdfPageDetails[page.pageNumber]?.name ?? '').trim().length > 0,
         )
-      : name.trim().length > 0);
+      : sheetName.trim().length > 0);
 
   async function handleFileChange(nextFile: File | null) {
     setFile(nextFile);
@@ -96,8 +104,12 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
       .replace(/\.[^.]+$/, '')
       .replace(/[_-]+/g, ' ')
       .trim();
-    if (name.trim().length === 0) {
-      setName(baseName.length > 0 ? baseName : nextFile.name);
+    const nextName = baseName.length > 0 ? baseName : nextFile.name;
+    if (documentName.trim().length === 0) {
+      setDocumentName(nextName);
+    }
+    if (sheetName.trim().length === 0) {
+      setSheetName(nextName);
     }
 
     if (nextFile.type === PLAN_PDF_TYPE) {
@@ -173,10 +185,10 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
       const pagesToUpload = selectedPdfPagePreviews.sort((a, b) => a.pageNumber - b.pageNumber);
       if (pagesToUpload.length === 0) return;
 
-      let completedUploads = 0;
       setIsPreparingPdf(true);
       setUploadProgress({ current: 0, total: pagesToUpload.length });
       try {
+        const renderedSheets = [];
         for (const [index, page] of pagesToUpload.entries()) {
           const details = pdfPageDetails[page.pageNumber] ?? {
             name: '',
@@ -192,11 +204,12 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
             scale: PDF_RENDER_SCALE,
           });
 
-          await onCreatePlan({
+          renderedSheets.push({
+            clientSheetId: `page-${renderedPage.pageNumber}`,
+            sheetIndex: index + 1,
             name: trimmedName,
             sheetReference: details.sheetReference.trim(),
-            file: renderedPage.file,
-            sourcePdfFile: file,
+            renderFile: renderedPage.file,
             pdfPageNumber: renderedPage.pageNumber,
             pdfPageWidthPt: renderedPage.pageWidthPt,
             pdfPageHeightPt: renderedPage.pageHeightPt,
@@ -205,31 +218,34 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
             pdfRenderedHeightPx: renderedPage.renderedHeightPx,
             pdfRotation: renderedPage.rotation,
           });
-          completedUploads = index + 1;
           setUploadProgress({ current: index + 1, total: pagesToUpload.length });
         }
+
+        await onCreateDocument({
+          documentName: documentName.trim(),
+          sourceFile: file,
+          sheets: renderedSheets,
+        });
         onClose();
       } catch (err) {
-        const remaining = pagesToUpload.length - completedUploads;
-        setFileError(
-          err instanceof Error
-            ? `${err.message} ${completedUploads} page${
-                completedUploads === 1 ? '' : 's'
-              } uploaded; ${remaining} remaining.`
-            : `${completedUploads} page${
-                completedUploads === 1 ? '' : 's'
-              } uploaded; ${remaining} remaining.`,
-        );
+        setFileError(err instanceof Error ? err.message : 'Could not upload this plan document.');
         return;
       } finally {
         setIsPreparingPdf(false);
         setUploadProgress(null);
       }
     } else {
-      await onCreatePlan({
-        name: name.trim(),
-        sheetReference: sheetReference.trim(),
-        file,
+      await onCreateDocument({
+        documentName: documentName.trim(),
+        sourceFile: file,
+        sheets: [
+          {
+            clientSheetId: 'image-1',
+            sheetIndex: 1,
+            name: sheetName.trim(),
+            sheetReference: sheetReference.trim(),
+          },
+        ],
       });
       onClose();
     }
@@ -238,17 +254,17 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
   const submitLabel =
     creating || isPreparingPdf
       ? uploadProgress
-        ? `Uploading ${uploadProgress.current + 1}/${uploadProgress.total}…`
-        : 'Uploading plan…'
+        ? `Preparing ${Math.min(uploadProgress.current + 1, uploadProgress.total)}/${uploadProgress.total}…`
+        : 'Uploading document…'
       : selectedFileIsPdf
-        ? `Upload ${selectedPdfPages.length} page${selectedPdfPages.length === 1 ? '' : 's'}`
-        : 'Upload plan';
+        ? `Upload document`
+        : 'Upload document';
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Upload measured plan"
+      title="Upload plan document"
       className="max-w-3xl w-[min(100%,52rem)]"
     >
       <div className="-mx-6 -my-4">
@@ -293,9 +309,11 @@ export function PlanUploadModal({ open, creating, onClose, onCreatePlan }: PlanU
           {step === 3 ? (
             <StepDetails
               file={file}
-              name={name}
+              documentName={documentName}
+              sheetName={sheetName}
               sheetReference={sheetReference}
-              onNameChange={setName}
+              onDocumentNameChange={setDocumentName}
+              onSheetNameChange={setSheetName}
               onSheetReferenceChange={setSheetReference}
               selectedPdfPages={selectedPdfPagePreviews}
               pdfPageDetails={pdfPageDetails}
@@ -431,8 +449,8 @@ function StepSource({
   return (
     <div className="space-y-4">
       <p className="text-sm leading-6 text-neutral-500">
-        Drag an architectural sheet onto this panel, or click to browse. Images become measured
-        plans directly. PDFs continue to the page picker.
+        Drag an architectural sheet or drawing set onto this panel, or click to browse. Images
+        create one-sheet documents. PDFs continue to the page picker.
       </p>
 
       <div
@@ -541,7 +559,7 @@ function StepPage({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm leading-6 text-neutral-500">
-          Select the PDF pages to import. Each selected page becomes its own measured plan.
+          Select the PDF pages to import. Each selected page becomes a sheet inside one document.
         </p>
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
@@ -605,18 +623,22 @@ function StepPage({
 
 function StepDetails({
   file,
-  name,
+  documentName,
+  sheetName,
   sheetReference,
-  onNameChange,
+  onDocumentNameChange,
+  onSheetNameChange,
   onSheetReferenceChange,
   selectedPdfPages,
   pdfPageDetails,
   onPdfPageDetailsChange,
 }: {
   file: File | null;
-  name: string;
+  documentName: string;
+  sheetName: string;
   sheetReference: string;
-  onNameChange: (value: string) => void;
+  onDocumentNameChange: (value: string) => void;
+  onSheetNameChange: (value: string) => void;
   onSheetReferenceChange: (value: string) => void;
   selectedPdfPages: PdfPagePreview[];
   pdfPageDetails: PdfPageDetails;
@@ -645,6 +667,20 @@ function StepDetails({
           </p>
         </div>
       </div>
+
+      <label className="block">
+        <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+          Document name
+        </span>
+        <input
+          required
+          value={documentName}
+          onChange={(event) => onDocumentNameChange(event.target.value)}
+          placeholder="Architectural Set - Rev 3"
+          className="input-base"
+          aria-label="Document name"
+        />
+      </label>
 
       {isPdf ? (
         <div className="max-h-[21rem] overflow-y-auto rounded-xl border border-neutral-200">
@@ -698,15 +734,15 @@ function StepDetails({
         <div className="grid gap-4 sm:grid-cols-[1.6fr_1fr]">
           <label className="block">
             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
-              Plan name
+              Sheet title
             </span>
             <input
               required
-              value={name}
-              onChange={(event) => onNameChange(event.target.value)}
+              value={sheetName}
+              onChange={(event) => onSheetNameChange(event.target.value)}
               placeholder="Level 1 Furniture Plan"
               className="input-base"
-              aria-label="Plan name"
+              aria-label="Sheet title"
             />
           </label>
           <label className="block">

@@ -60,7 +60,7 @@ vi.mock('../hooks', async (importOriginal) => {
       ],
       isLoading: false,
     })),
-    useCreateMeasuredPlan: vi.fn(() => ({
+    useCreatePlanDocument: vi.fn(() => ({
       mutateAsync: createMutateAsync,
       isPending: false,
     })),

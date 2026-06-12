@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CreatePlanDocumentInput } from '../../../lib/api';
 import { PlanUploadModal } from './PlanUploadModal';
 
 const pdfMocks = vi.hoisted(() => ({
@@ -18,9 +19,11 @@ describe('PlanUploadModal', () => {
     pdfMocks.renderPdfPageAsPngFile.mockReset();
   });
 
-  it('uploads every selected PDF page with editable sheet refs and page names', async () => {
+  it('uploads selected PDF pages as one plan document with editable sheet refs and page names', async () => {
     const pdfFile = new File(['pdf'], 'architectural set.pdf', { type: 'application/pdf' });
-    const onCreatePlan = vi.fn().mockResolvedValue(undefined);
+    const onCreateDocument = vi
+      .fn<(input: CreatePlanDocumentInput) => Promise<void>>()
+      .mockResolvedValue(undefined);
     const onClose = vi.fn();
 
     pdfMocks.renderPdfThumbnails.mockResolvedValue([
@@ -42,7 +45,14 @@ describe('PlanUploadModal', () => {
         }),
     );
 
-    render(<PlanUploadModal open creating={false} onClose={onClose} onCreatePlan={onCreatePlan} />);
+    render(
+      <PlanUploadModal
+        open
+        creating={false}
+        onClose={onClose}
+        onCreateDocument={onCreateDocument}
+      />,
+    );
 
     fireEvent.change(screen.getByLabelText('Plan source'), {
       target: { files: [pdfFile] },
@@ -66,36 +76,45 @@ describe('PlanUploadModal', () => {
       target: { value: 'Enlarged furniture plan' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Upload 3 pages' }));
+    fireEvent.change(screen.getByLabelText('Document name'), {
+      target: { value: 'Architectural Set - Rev 3' },
+    });
 
-    await waitFor(() => expect(onCreatePlan).toHaveBeenCalledTimes(3));
-    expect(onCreatePlan).toHaveBeenNthCalledWith(
-      1,
+    fireEvent.click(screen.getByRole('button', { name: 'Upload document' }));
+
+    await waitFor(() => expect(onCreateDocument).toHaveBeenCalledTimes(1));
+    expect(onCreateDocument).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'architectural set page 01',
-        sheetReference: 'A1-1',
-        sourcePdfFile: pdfFile,
-        pdfPageNumber: 1,
+        documentName: 'Architectural Set - Rev 3',
+        sourceFile: pdfFile,
+        sheets: [
+          expect.objectContaining({
+            clientSheetId: 'page-1',
+            sheetIndex: 1,
+            name: 'architectural set page 01',
+            sheetReference: 'A1-1',
+            pdfPageNumber: 1,
+          }),
+          expect.objectContaining({
+            clientSheetId: 'page-2',
+            sheetIndex: 2,
+            name: 'Enlarged furniture plan',
+            sheetReference: 'A1-2',
+            pdfPageNumber: 2,
+          }),
+          expect.objectContaining({
+            clientSheetId: 'page-3',
+            sheetIndex: 3,
+            name: 'architectural set page 03',
+            sheetReference: '',
+            pdfPageNumber: 3,
+          }),
+        ],
       }),
     );
-    expect(onCreatePlan).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        name: 'Enlarged furniture plan',
-        sheetReference: 'A1-2',
-        sourcePdfFile: pdfFile,
-        pdfPageNumber: 2,
-      }),
-    );
-    expect(onCreatePlan).toHaveBeenNthCalledWith(
-      3,
-      expect.objectContaining({
-        name: 'architectural set page 03',
-        sheetReference: '',
-        sourcePdfFile: pdfFile,
-        pdfPageNumber: 3,
-      }),
-    );
+    const createdDocument = onCreateDocument.mock.calls[0]?.[0];
+    expect(createdDocument?.sheets[0]?.name).toBe('architectural set page 01');
+    expect(createdDocument?.sheets[0]?.renderFile).toBeInstanceOf(File);
     expect(onClose).toHaveBeenCalled();
   });
 });

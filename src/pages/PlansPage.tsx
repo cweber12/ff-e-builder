@@ -5,8 +5,8 @@ import { MeasuredPlanCard } from '../components/plans/list/MeasuredPlanCard';
 import { PlanGridSkeleton } from '../components/plans/list/PlanGridSkeleton';
 import { PlanUploadModal } from '../components/plans/list/PlanUploadModal';
 import { Button, MenuItem } from '../components/primitives';
-import { useCreateMeasuredPlan, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
-import type { CreateMeasuredPlanInput } from '../lib/api';
+import { useCreatePlanDocument, useDeleteMeasuredPlan, useMeasuredPlans } from '../hooks';
+import type { CreatePlanDocumentInput } from '../lib/api';
 import type { MeasuredPlan, Project } from '../types';
 import { SidebarHeaderMenu } from '../components/shared/sidebar';
 
@@ -29,7 +29,7 @@ const SORTS: { id: SortId; label: string }[] = [
 
 export function PlansPage({ project }: PlansPageProps) {
   const { data: plans, isLoading } = useMeasuredPlans(project.id);
-  const createPlan = useCreateMeasuredPlan(project.id);
+  const createDocument = useCreatePlanDocument(project.id);
   const deletePlan = useDeleteMeasuredPlan(project.id);
   const [sort, setSort] = useState<SortId>('added');
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -60,8 +60,8 @@ export function PlansPage({ project }: PlansPageProps) {
     await deletePlan.mutateAsync(plan);
   }
 
-  async function handleCreatePlan(input: CreateMeasuredPlanInput) {
-    await createPlan.mutateAsync(input);
+  async function handleCreateDocument(input: CreatePlanDocumentInput) {
+    await createDocument.mutateAsync(input);
   }
 
   return (
@@ -76,9 +76,9 @@ export function PlansPage({ project }: PlansPageProps) {
 
       <PlanUploadModal
         open={uploadOpen}
-        creating={createPlan.isPending}
+        creating={createDocument.isPending}
         onClose={() => setUploadOpen(false)}
-        onCreatePlan={handleCreatePlan}
+        onCreateDocument={handleCreateDocument}
       />
 
       <section>
