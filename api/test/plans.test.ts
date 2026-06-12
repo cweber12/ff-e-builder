@@ -242,4 +242,104 @@ describe('Plan document uploads', () => {
     );
     expect(statements.some((statement) => statement.includes('UPDATE plan_documents'))).toBe(true);
   });
+
+  it('updates measured plan sheet metadata and touches the parent document', async () => {
+    const sql = makeSqlMock();
+    sql
+      .mockResolvedValueOnce([
+        {
+          id: 'sheet-1',
+          project_id: projectId,
+          owner_uid: 'user-123',
+          plan_document_id: 'document-1',
+          sheet_index: 1,
+          page_label: '1',
+          name: 'Floor Plan',
+          sheet_reference: 'A1.01',
+          source_type: 'pdf-page',
+          image_r2_key: 'render-key',
+          image_filename: 'floor.png',
+          image_content_type: 'image/png',
+          image_byte_size: 11,
+          pdf_r2_key: null,
+          pdf_filename: 'drawings.pdf',
+          pdf_content_type: 'application/pdf',
+          pdf_byte_size: 11,
+          pdf_page_number: 1,
+          pdf_page_width_pt: 612,
+          pdf_page_height_pt: 792,
+          pdf_render_scale: 2,
+          pdf_rendered_width_px: 1224,
+          pdf_rendered_height_px: 1584,
+          pdf_rotation: 0,
+          created_at: '2026-06-11T00:00:00.000Z',
+          updated_at: '2026-06-11T00:00:00.000Z',
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'sheet-1',
+          project_id: projectId,
+          owner_uid: 'user-123',
+          plan_document_id: 'document-1',
+          sheet_index: 1,
+          page_label: '1',
+          name: 'Floor Plan - Revision A',
+          sheet_reference: 'A1.01A',
+          source_type: 'pdf-page',
+          image_r2_key: 'render-key',
+          image_filename: 'floor.png',
+          image_content_type: 'image/png',
+          image_byte_size: 11,
+          pdf_r2_key: null,
+          pdf_filename: 'drawings.pdf',
+          pdf_content_type: 'application/pdf',
+          pdf_byte_size: 11,
+          pdf_page_number: 1,
+          pdf_page_width_pt: 612,
+          pdf_page_height_pt: 792,
+          pdf_render_scale: 2,
+          pdf_rendered_width_px: 1224,
+          pdf_rendered_height_px: 1584,
+          pdf_rotation: 0,
+          calibration_status: 'uncalibrated',
+          measurement_count: 0,
+          created_at: '2026-06-11T00:00:00.000Z',
+          updated_at: '2026-06-12T00:00:00.000Z',
+        },
+      ]);
+    mockGetDb.mockReturnValue(sql);
+
+    const res = await app.fetch(
+      new Request(`http://localhost/api/v1/projects/${projectId}/plans/sheet-1`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: 'Bearer token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Floor Plan - Revision A',
+          sheet_reference: 'A1.01A',
+        }),
+      }),
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      plan: {
+        id: 'sheet-1',
+        name: 'Floor Plan - Revision A',
+        sheet_reference: 'A1.01A',
+      },
+    });
+    expect(sql.transaction).toHaveBeenCalledTimes(1);
+    const statements = (sql.mock.calls as Array<[TemplateStringsArray, ...unknown[]]>).map(
+      ([strings]) => Array.from(strings).join(' '),
+    );
+    expect(statements.some((statement) => statement.includes('UPDATE measured_plans'))).toBe(true);
+    expect(statements.some((statement) => statement.includes('UPDATE plan_documents'))).toBe(true);
+  });
 });

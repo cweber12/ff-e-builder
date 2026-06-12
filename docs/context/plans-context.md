@@ -434,6 +434,7 @@ multipart field names and writes matching `renderFileField` values into `sheets_
 | ------------------- | -------------------------------------------------------- | -------------------------------- |
 | `list`              | `(projectId)`                                            | List all plans                   |
 | `create`            | `(projectId, input: CreateMeasuredPlanInput)`            | Upload image or PDF-rendered PNG |
+| `update`            | `(projectId, planId, input)`                             | Rename sheet title/reference     |
 | `delete`            | `(projectId, planId)`                                    | Delete plan + R2 keys            |
 | `downloadContent`   | `(projectId, planId) → Blob`                             | Fetch image/PNG for viewport     |
 | `getCalibration`    | `(projectId, planId)`                                    | Load calibration or null         |
@@ -513,6 +514,7 @@ Document endpoints:
 | `GET`    | `/:projectId/plan-documents/:documentId` | Load one document summary plus all child sheets                                                      |
 | `PATCH`  | `/:projectId/plan-documents/:documentId` | Rename the document and/or set `cover_measured_plan_id` after validating the sheet belongs to it     |
 | `DELETE` | `/:projectId/plan-documents/:documentId` | Delete the document, child sheets, child measurement/calibration/length records, and deduped R2 keys |
+| `PATCH`  | `/:projectId/plans/:planId`              | Rename a measured-plan sheet and/or update its sheet reference/page label                            |
 
 Document create uses multipart form data:
 
@@ -645,10 +647,12 @@ useEffect(() => {
 Document detail is a scan-first sheet index. It loads `usePlanDocument(projectId, documentId)`,
 shows document counts, allows inline document-name editing through `useUpdatePlanDocument`, then
 renders every `MeasuredPlan` sheet as a row with sheet reference/title, source page/file context,
-calibration status, measurement count, cover-sheet control, and a link to the existing canvas route
-at `/projects/${projectId}/plans/${sheet.id}`. Cover changes call `PATCH /plan-documents/:id` with
-`cover_measured_plan_id`; the Worker rejects cover sheets that do not belong to the active document.
-Sheet add/delete/reorder controls are not part of the current slice.
+calibration status, measurement count, sheet metadata edit controls, cover-sheet control, and a link
+to the existing canvas route at `/projects/${projectId}/plans/${sheet.id}`. Cover changes call
+`PATCH /plan-documents/:id` with `cover_measured_plan_id`; the Worker rejects cover sheets that do
+not belong to the active document. Sheet title/reference changes call `PATCH /plans/:planId`; the
+Worker updates the sheet and touches the parent document `updated_at`. Sheet add/delete/reorder
+controls are not part of the current slice.
 
 ---
 

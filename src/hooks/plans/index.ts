@@ -6,6 +6,7 @@ export {
   useUpdatePlanDocument,
   useMeasuredPlans,
   useCreateMeasuredPlan,
+  useUpdateMeasuredPlan,
   useDeleteMeasuredPlan,
   usePlanCalibration,
   usePlanLengthLines,

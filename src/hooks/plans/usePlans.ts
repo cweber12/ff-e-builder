@@ -6,6 +6,7 @@ import { planKeys } from '../../lib/query';
 import type {
   CreatePlanDocumentInput,
   CreateMeasuredPlanInput,
+  UpdateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
   UpdatePlanDocumentInput,
   UpsertPlanLengthLineInput,
@@ -111,6 +112,43 @@ export function useCreateMeasuredPlan(projectId: string) {
       ]);
     },
     onError: (err) => toast.error(`Measured Plan upload failed: ${err.message}`),
+  });
+}
+
+export function useUpdateMeasuredPlan(projectId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ planId, input }: { planId: string; input: UpdateMeasuredPlanInput }) =>
+      api.plans.update(projectId, planId, input),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MeasuredPlan[]>(planKeys.forProject(projectId), (old) =>
+        (old ?? []).map((plan) => (plan.id === updated.id ? updated : plan)),
+      );
+      queryClient.setQueryData<PlanDocumentDetail | undefined>(
+        planKeys.documentDetail(projectId, updated.planDocumentId),
+        (old) =>
+          old
+            ? {
+                ...old,
+                document:
+                  old.document.coverMeasuredPlanId === updated.id
+                    ? { ...old.document, coverSheet: updated }
+                    : old.document,
+                sheets: old.sheets.map((sheet) => (sheet.id === updated.id ? updated : sheet)),
+              }
+            : old,
+      );
+      queryClient.setQueryData<PlanDocument[]>(planKeys.documents(projectId), (old) =>
+        (old ?? []).map((document) =>
+          document.coverMeasuredPlanId === updated.id
+            ? { ...document, coverSheet: updated }
+            : document,
+        ),
+      );
+      void queryClient.invalidateQueries({ queryKey: planKeys.documents(projectId) });
+    },
+    onError: (err) => toast.error(`Measured Plan update failed: ${err.message}`),
   });
 }
 

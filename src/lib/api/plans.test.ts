@@ -306,6 +306,62 @@ describe('plansApi', () => {
     ]);
   });
 
+  it('updates measured plan sheet metadata', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        plan: {
+          id: 'plan-1',
+          project_id: 'project-1',
+          owner_uid: 'user-1',
+          plan_document_id: 'document-1',
+          sheet_index: 1,
+          page_label: '1',
+          name: 'Floor Plan - Revision A',
+          sheet_reference: 'A1.01A',
+          source_type: 'pdf-page',
+          image_filename: 'floor.png',
+          image_content_type: 'image/png',
+          image_byte_size: 12345,
+          pdf_filename: 'drawings.pdf',
+          pdf_content_type: 'application/pdf',
+          pdf_byte_size: 54321,
+          pdf_page_number: 1,
+          pdf_page_width_pt: '792.0000',
+          pdf_page_height_pt: '612.0000',
+          pdf_render_scale: '2.00000000',
+          pdf_rendered_width_px: 1584,
+          pdf_rendered_height_px: 1224,
+          pdf_rotation: 0,
+          calibration_status: 'calibrated',
+          measurement_count: 3,
+          created_at: '2026-05-06T00:00:00Z',
+          updated_at: '2026-05-07T00:00:00Z',
+        },
+      }),
+    );
+
+    await expect(
+      plansApi.update('project-1', 'plan-1', {
+        name: 'Floor Plan - Revision A',
+        sheetReference: 'A1.01A',
+      }),
+    ).resolves.toMatchObject({
+      id: 'plan-1',
+      name: 'Floor Plan - Revision A',
+      sheetReference: 'A1.01A',
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/projects/project-1/plans/plan-1'),
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+    expect(JSON.parse(init?.body as string)).toEqual({
+      name: 'Floor Plan - Revision A',
+      sheet_reference: 'A1.01A',
+    });
+  });
+
   it('uploads a measured plan with multipart form data', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({

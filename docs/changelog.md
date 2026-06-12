@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(plans): edit measured plan sheet titles and references from the document sheet index
 - feat(plans): edit plan document names and choose cover sheets from the document sheet index
 - feat(plans): scope canvas sheet navigation to the active plan document
 - feat(plans): show uploaded plans as document cards with a document detail sheet index

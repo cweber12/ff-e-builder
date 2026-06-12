@@ -19,6 +19,7 @@ export type { CreateMaterialInput, UpdateMaterialInput } from './api/materials';
 export type {
   CreatePlanDocumentInput,
   CreateMeasuredPlanInput,
+  UpdateMeasuredPlanInput,
   UpdatePlanCalibrationInput,
   UpdatePlanDocumentInput,
   UpsertPlanLengthLineInput,

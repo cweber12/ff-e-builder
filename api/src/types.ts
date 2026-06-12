@@ -557,6 +557,21 @@ export const CreateMeasuredPlanSchema = z.object({
 });
 export type CreateMeasuredPlanInput = z.infer<typeof CreateMeasuredPlanSchema>;
 
+export const UpdateMeasuredPlanSchema = z
+  .object({
+    name: z.string().trim().min(1).max(255).optional(),
+    sheet_reference: z.string().max(100).optional(),
+    page_label: z.string().max(100).optional(),
+  })
+  .refine(
+    (value) =>
+      value.name !== undefined ||
+      value.sheet_reference !== undefined ||
+      value.page_label !== undefined,
+    'At least one sheet field is required',
+  );
+export type UpdateMeasuredPlanInput = z.infer<typeof UpdateMeasuredPlanSchema>;
+
 export const CreatePlanDocumentFormSchema = z.object({
   document_name: z.string().min(1).max(255),
   sheets_json: z.string().min(1),

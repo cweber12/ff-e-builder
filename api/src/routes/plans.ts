@@ -15,6 +15,7 @@ import {
   CreateMeasuredPlanSchema,
   UpdatePlanCalibrationSchema,
   UpdatePlanDocumentSchema,
+  UpdateMeasuredPlanSchema,
   UpsertMeasurementSchema,
   UpsertLengthLineSchema,
   type CreatePlanDocumentSheetInput,
@@ -221,6 +222,34 @@ async function getOwnedMeasuredPlan(
   `;
 
   return (rows[0] as MeasuredPlan | undefined) ?? null;
+}
+
+async function getMeasuredPlanSummary(
+  env: Env,
+  uid: string,
+  projectId: string,
+  planId: string,
+): Promise<RawMeasuredPlanListRow | null> {
+  const sql = getDb(env);
+  const rows = await sql`
+    SELECT
+      mp.*,
+      CASE
+        WHEN pc.id IS NULL THEN 'uncalibrated'
+        ELSE 'calibrated'
+      END AS calibration_status,
+      COUNT(m.id)::int AS measurement_count
+    FROM measured_plans mp
+    LEFT JOIN plan_calibrations pc ON pc.measured_plan_id = mp.id
+    LEFT JOIN measurements m ON m.measured_plan_id = mp.id
+    WHERE mp.id = ${planId}
+      AND mp.project_id = ${projectId}
+      AND mp.owner_uid = ${uid}
+    GROUP BY mp.id, pc.id
+    LIMIT 1
+  `;
+
+  return (rows[0] as RawMeasuredPlanListRow | undefined) ?? null;
 }
 
 async function getOwnedPlanDocument(
@@ -1087,6 +1116,50 @@ router.post('/:id/plans', async (c) => {
     if (pdfR2Key) await c.env.IMAGES_BUCKET.delete(pdfR2Key).catch(() => undefined);
     throw err;
   }
+});
+
+router.patch('/:projectId/plans/:planId', async (c) => {
+  const uid = c.get('uid');
+  const projectId = c.req.param('projectId');
+  const planId = c.req.param('planId');
+
+  const plan = await getOwnedMeasuredPlan(c.env, uid, projectId, planId);
+  if (!plan) return c.json({ error: 'Not found' }, 404);
+
+  const body: unknown = await c.req.json().catch(() => null);
+  const parsed = UpdateMeasuredPlanSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+
+  const nextName = parsed.data.name ?? plan.name;
+  const nextSheetReference = parsed.data.sheet_reference ?? plan.sheet_reference;
+  const nextPageLabel = parsed.data.page_label ?? plan.page_label;
+  const sql = getDb(c.env);
+
+  await sql.transaction([
+    sql`
+      UPDATE measured_plans
+      SET
+        name = ${nextName},
+        sheet_reference = ${nextSheetReference},
+        page_label = ${nextPageLabel},
+        updated_at = now()
+      WHERE id = ${planId}
+        AND project_id = ${projectId}
+        AND owner_uid = ${uid}
+    `,
+    sql`
+      UPDATE plan_documents
+      SET updated_at = now()
+      WHERE id = ${plan.plan_document_id}
+        AND project_id = ${projectId}
+        AND owner_uid = ${uid}
+    `,
+  ]);
+
+  const updated = await getMeasuredPlanSummary(c.env, uid, projectId, planId);
+  if (!updated) return c.json({ error: 'Not found' }, 404);
+
+  return c.json({ plan: updated });
 });
 
 router.get('/:projectId/plans/:planId/content', async (c) => {

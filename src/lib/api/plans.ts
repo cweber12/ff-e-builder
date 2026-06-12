@@ -35,6 +35,12 @@ export type CreateMeasuredPlanInput = {
   pdfRotation?: number;
 };
 
+export type UpdateMeasuredPlanInput = {
+  name?: string;
+  sheetReference?: string;
+  pageLabel?: string;
+};
+
 export type CreatePlanDocumentSheetInput = {
   clientSheetId: string;
   sheetIndex: number;
@@ -208,6 +214,20 @@ export const plansApi = {
       body: formData,
     }).then((r) => mapMeasuredPlan(r.plan));
   },
+
+  update: (
+    projectId: string,
+    planId: string,
+    input: UpdateMeasuredPlanInput,
+  ): Promise<MeasuredPlan> =>
+    apiFetch<{ plan: RawMeasuredPlan }>(`/api/v1/projects/${projectId}/plans/${planId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.sheetReference !== undefined ? { sheet_reference: input.sheetReference } : {}),
+        ...(input.pageLabel !== undefined ? { page_label: input.pageLabel } : {}),
+      }),
+    }).then((r) => mapMeasuredPlan(r.plan)),
 
   delete: (projectId: string, planId: string): Promise<void> =>
     apiFetch<void>(`/api/v1/projects/${projectId}/plans/${planId}`, {

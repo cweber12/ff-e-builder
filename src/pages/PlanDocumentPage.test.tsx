@@ -5,6 +5,7 @@ import type { Project } from '../types';
 import { PlanDocumentPage } from './PlanDocumentPage';
 
 const updateDocumentMutateAsync = vi.fn();
+const updateMeasuredPlanMutateAsync = vi.fn();
 
 const project: Project = {
   id: 'project-1',
@@ -113,6 +114,11 @@ vi.mock('../hooks', async (importOriginal) => {
       isPending: false,
       variables: undefined,
     })),
+    useUpdateMeasuredPlan: vi.fn(() => ({
+      mutateAsync: updateMeasuredPlanMutateAsync,
+      isPending: false,
+      variables: undefined,
+    })),
   };
 });
 
@@ -120,6 +126,8 @@ describe('PlanDocumentPage', () => {
   beforeEach(() => {
     updateDocumentMutateAsync.mockReset();
     updateDocumentMutateAsync.mockResolvedValue(undefined);
+    updateMeasuredPlanMutateAsync.mockReset();
+    updateMeasuredPlanMutateAsync.mockResolvedValue(undefined);
   });
 
   it('renders document summary and sheet links', () => {
@@ -131,12 +139,9 @@ describe('PlanDocumentPage', () => {
 
     expect(screen.getByDisplayValue('Issued Architectural Set')).toBeInTheDocument();
     expect(screen.getByText('issued-set.pdf · Updated May 7, 2026')).toBeInTheDocument();
-    expect(screen.getByText('A1.1')).toBeInTheDocument();
-    expect(screen.getByText('A1.2')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Level 1 Furniture Plan' })).toHaveAttribute(
-      'href',
-      '/projects/project-1/plans/plan-1',
-    );
+    expect(screen.getByDisplayValue('A1.1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('A1.2')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Level 1 Furniture Plan')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Open sheet' })[1]).toHaveAttribute(
       'href',
       '/projects/project-1/plans/plan-2',
@@ -180,6 +185,34 @@ describe('PlanDocumentPage', () => {
     await waitFor(() => {
       expect(updateDocumentMutateAsync).toHaveBeenCalledWith({
         coverMeasuredPlanId: 'plan-2',
+      });
+    });
+  });
+
+  it('saves sheet title and reference edits', async () => {
+    render(
+      <MemoryRouter>
+        <PlanDocumentPage project={project} documentId="document-1" />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Sheet reference for Level 2 Furniture Plan'), {
+      target: { value: 'A1.2A' },
+    });
+    fireEvent.change(screen.getByLabelText('Sheet title for Level 2 Furniture Plan'), {
+      target: { value: 'Level 2 Furniture Plan - Revision A' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Save sheet metadata for Level 2 Furniture Plan' }),
+    );
+
+    await waitFor(() => {
+      expect(updateMeasuredPlanMutateAsync).toHaveBeenCalledWith({
+        planId: 'plan-2',
+        input: {
+          name: 'Level 2 Furniture Plan - Revision A',
+          sheetReference: 'A1.2A',
+        },
       });
     });
   });

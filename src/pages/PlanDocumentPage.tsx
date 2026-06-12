@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, FileText, Star } from 'lucide-react';
 import { Button } from '../components/primitives';
-import { usePlanDocument, useUpdatePlanDocument } from '../hooks';
+import { usePlanDocument, useUpdateMeasuredPlan, useUpdatePlanDocument } from '../hooks';
 import type { MeasuredPlan, Project } from '../types';
 
 type PlanDocumentPageProps = {
@@ -13,6 +13,7 @@ type PlanDocumentPageProps = {
 export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps) {
   const { data, isLoading } = usePlanDocument(project.id, documentId);
   const updateDocument = useUpdatePlanDocument(project.id, documentId);
+  const updateSheet = useUpdateMeasuredPlan(project.id);
   const [nameDraft, setNameDraft] = useState('');
 
   useEffect(() => {
@@ -141,8 +142,17 @@ export function PlanDocumentPage({ project, documentId }: PlanDocumentPageProps)
                     updateDocument.isPending &&
                     updateDocument.variables?.coverMeasuredPlanId === sheet.id
                   }
+                  updatingSheet={
+                    updateSheet.isPending && updateSheet.variables?.planId === sheet.id
+                  }
                   onSetCover={() =>
                     void updateDocument.mutateAsync({ coverMeasuredPlanId: sheet.id })
+                  }
+                  onSaveSheet={(input) =>
+                    void updateSheet.mutateAsync({
+                      planId: sheet.id,
+                      input,
+                    })
                   }
                 />
               ))}
@@ -168,37 +178,69 @@ function SheetRow({
   sheet,
   isCover,
   settingCover,
+  updatingSheet,
   onSetCover,
+  onSaveSheet,
 }: {
   projectId: string;
   sheet: MeasuredPlan;
   isCover: boolean;
   settingCover: boolean;
+  updatingSheet: boolean;
   onSetCover: () => void;
+  onSaveSheet: (input: { name?: string; sheetReference?: string }) => void;
 }) {
+  const [sheetReferenceDraft, setSheetReferenceDraft] = useState(sheet.sheetReference);
+  const [nameDraft, setNameDraft] = useState(sheet.name);
   const openHref = `/projects/${projectId}/plans/${sheet.id}`;
   const calibrated = sheet.calibrationStatus === 'calibrated';
   const sourceLabel =
     sheet.sourceType === 'pdf-page' && sheet.pdfPageNumber
       ? `Page ${sheet.pdfPageNumber}`
       : formatBytes(sheet.imageByteSize);
+  const sheetReferenceChanged = sheetReferenceDraft.trim() !== sheet.sheetReference;
+  const nameChanged = nameDraft.trim().length > 0 && nameDraft.trim() !== sheet.name;
+  const canSaveSheet = sheetReferenceChanged || nameChanged;
+
+  useEffect(() => {
+    setSheetReferenceDraft(sheet.sheetReference);
+    setNameDraft(sheet.name);
+  }, [sheet.name, sheet.sheetReference]);
+
+  function handleSaveSheet() {
+    if (!canSaveSheet) return;
+    onSaveSheet({
+      ...(nameChanged ? { name: nameDraft.trim() } : {}),
+      ...(sheetReferenceChanged ? { sheetReference: sheetReferenceDraft.trim() } : {}),
+    });
+  }
 
   return (
     <div className="grid gap-3 px-4 py-4 md:grid-cols-[88px_minmax(0,1.4fr)_minmax(0,1fr)_140px_150px] md:items-center">
       <div>
-        <p className="num text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-700">
-          {sheet.sheetReference || sheet.pageLabel || `Sheet ${sheet.sheetIndex}`}
-        </p>
+        <label className="sr-only" htmlFor={`sheet-reference-${sheet.id}`}>
+          Sheet reference for {sheet.name}
+        </label>
+        <input
+          id={`sheet-reference-${sheet.id}`}
+          value={sheetReferenceDraft}
+          onChange={(event) => setSheetReferenceDraft(event.target.value)}
+          placeholder={sheet.pageLabel || `Sheet ${sheet.sheetIndex}`}
+          className="num w-full min-w-0 border border-neutral-200 bg-white px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-700 outline-none transition placeholder:text-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+        />
         <p className="num-muted mt-0.5 text-[11px] md:hidden">Sheet {sheet.sheetIndex}</p>
       </div>
 
       <div className="min-w-0">
-        <Link
-          to={openHref}
-          className="block truncate font-display text-base font-semibold text-neutral-950 hover:text-brand-700"
-        >
-          {sheet.name}
-        </Link>
+        <label className="sr-only" htmlFor={`sheet-name-${sheet.id}`}>
+          Sheet title for {sheet.name}
+        </label>
+        <input
+          id={`sheet-name-${sheet.id}`}
+          value={nameDraft}
+          onChange={(event) => setNameDraft(event.target.value)}
+          className="w-full min-w-0 border border-neutral-200 bg-white px-2.5 py-1.5 font-display text-base font-semibold text-neutral-950 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+        />
         <p className="num-muted mt-1 text-xs">{sheet.measurementCount} measurements</p>
       </div>
 
@@ -218,6 +260,17 @@ function SheetRow({
       </div>
 
       <div className="flex flex-wrap justify-start gap-2 md:justify-end">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={!canSaveSheet || updatingSheet}
+          onClick={handleSaveSheet}
+          aria-label={`Save sheet metadata for ${sheet.name}`}
+        >
+          <Check className="h-4 w-4" aria-hidden="true" />
+          {updatingSheet ? 'Saving' : 'Save'}
+        </Button>
         {isCover ? (
           <span className="status-chip status-chip--neutral">
             <Star className="h-3.5 w-3.5" aria-hidden="true" />
