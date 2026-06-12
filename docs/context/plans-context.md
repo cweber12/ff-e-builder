@@ -277,7 +277,10 @@ Used for measuring walls, doorways, or other architectural features not in the p
 
 Three-column layout (`xl:grid-cols-[88px_minmax(0,1fr)_340px]`):
 
-The canvas header keeps the sheet dropdown and adds previous/next buttons. Navigation operates over the loaded `MeasuredPlan` rows, ordering pages from the same source PDF by `pdfPageNumber`, then falling back to sheet reference/name.
+The canvas header keeps the document sheet dropdown and previous/next buttons. Navigation is scoped
+to sibling `MeasuredPlan` rows with the same `planDocumentId` as the active sheet, ordered by
+`sheetIndex`, then PDF page number, then sheet reference/name fallback. The header back link returns
+to the active document's sheet index route.
 
 ### `src/pages/PlanCanvasPage.tsx` — state orchestrator
 

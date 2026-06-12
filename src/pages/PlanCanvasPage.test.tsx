@@ -177,6 +177,9 @@ vi.mock('../hooks', () => ({
         id: 'plan-1',
         projectId: 'project-1',
         ownerUid: 'user-1',
+        planDocumentId: 'document-1',
+        sheetIndex: 1,
+        pageLabel: '1',
         name: 'Level 1 Furniture Plan',
         sheetReference: 'A1.1',
         sourceType: 'image' as const,
@@ -202,6 +205,9 @@ vi.mock('../hooks', () => ({
         id: 'plan-2',
         projectId: 'project-1',
         ownerUid: 'user-1',
+        planDocumentId: 'document-1',
+        sheetIndex: 2,
+        pageLabel: '2',
         name: 'Level 2 Furniture Plan',
         sheetReference: 'A1.2',
         sourceType: 'image' as const,
@@ -220,6 +226,34 @@ vi.mock('../hooks', () => ({
         pdfRotation: null,
         calibrationStatus: 'calibrated',
         measurementCount: 3,
+        createdAt: '2026-05-06T00:00:00Z',
+        updatedAt: '2026-05-06T00:00:00Z',
+      },
+      {
+        id: 'plan-3',
+        projectId: 'project-1',
+        ownerUid: 'user-1',
+        planDocumentId: 'document-2',
+        sheetIndex: 1,
+        pageLabel: '1',
+        name: 'Reflected Ceiling Plan',
+        sheetReference: 'A2.1',
+        sourceType: 'image' as const,
+        imageFilename: 'ceiling.png',
+        imageContentType: 'image/png',
+        imageByteSize: 2048,
+        pdfFilename: null,
+        pdfContentType: null,
+        pdfByteSize: null,
+        pdfPageNumber: null,
+        pdfPageWidthPt: null,
+        pdfPageHeightPt: null,
+        pdfRenderScale: null,
+        pdfRenderedWidthPx: null,
+        pdfRenderedHeightPx: null,
+        pdfRotation: null,
+        calibrationStatus: 'uncalibrated',
+        measurementCount: 0,
         createdAt: '2026-05-06T00:00:00Z',
         updatedAt: '2026-05-06T00:00:00Z',
       },
@@ -435,6 +469,14 @@ describe('PlanCanvasPage', () => {
     expect(screen.getByRole('option', { name: /A1.2 - Level 2 Furniture Plan/i })).toHaveValue(
       'plan-2',
     );
+    expect(
+      screen.queryByRole('option', { name: /A2.1 - Reflected Ceiling Plan/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /document/i })).toHaveAttribute(
+      'href',
+      '/projects/project-1/plans/documents/document-1',
+    );
+    expect(screen.getByText('Sheet 1 of 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open previous sheet' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Open next sheet' })).not.toBeDisabled();
     expect(screen.getByTestId('plan-viewport')).toBeInTheDocument();
@@ -444,6 +486,7 @@ describe('PlanCanvasPage', () => {
     renderPlanCanvasPage('plan-2');
 
     expect(screen.getByRole('combobox', { name: /sheet/i })).toHaveValue('plan-2');
+    expect(screen.getByText('Sheet 2 of 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open previous sheet' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Open next sheet' })).toBeDisabled();
   });

@@ -133,10 +133,18 @@ export function PlanCanvasPage({
     () => plans?.find((candidate) => candidate.id === planId) ?? null,
     [planId, plans],
   );
-  const navigationPlans = useMemo(
-    () => [...(plans ?? [])].sort(comparePlansForNavigation),
-    [plans],
-  );
+  const navigationPlans = useMemo(() => {
+    const list = plans ?? [];
+    if (!selectedPlan) return [...list].sort(comparePlansForNavigation);
+
+    const documentSheets = list.filter(
+      (candidate) =>
+        selectedPlan.planDocumentId.length > 0 &&
+        candidate.planDocumentId === selectedPlan.planDocumentId,
+    );
+
+    return [...(documentSheets.length > 0 ? documentSheets : list)].sort(comparePlansForNavigation);
+  }, [plans, selectedPlan]);
   const selectedNavigationIndex = selectedPlan
     ? navigationPlans.findIndex((candidate) => candidate.id === selectedPlan.id)
     : -1;
@@ -146,6 +154,10 @@ export function PlanCanvasPage({
     selectedNavigationIndex >= 0 && selectedNavigationIndex < navigationPlans.length - 1
       ? navigationPlans[selectedNavigationIndex + 1]
       : null;
+  const documentHref =
+    selectedPlan?.planDocumentId && selectedPlan.planDocumentId.length > 0
+      ? `/projects/${project.id}/plans/documents/${selectedPlan.planDocumentId}`
+      : `/projects/${project.id}/plans`;
   const activeDrawingReference = getMeasuredPlanDrawingReference(selectedPlan);
 
   const selectedPlanId = selectedPlan?.id ?? '';
@@ -1295,14 +1307,13 @@ export function PlanCanvasPage({
         <header className="border-b border-neutral-200 bg-canvas-chrome/95 px-4 backdrop-blur md:px-5">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-3 border-b border-neutral-200/70 py-1.5">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-              <Link
-                to={`/projects/${project.id}/plans`}
-                className="transition hover:text-brand-700"
-              >
-                ← Plans
+              <Link to={documentHref} className="transition hover:text-brand-700">
+                ← Document
               </Link>
               <span aria-hidden className="h-3 w-px bg-neutral-300" />
-              <span className="text-neutral-500">Workspace</span>
+              <span className="text-neutral-500">
+                Sheet {selectedNavigationIndex + 1} of {navigationPlans.length}
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -1317,7 +1328,7 @@ export function PlanCanvasPage({
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
               <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                Sheet
+                Document sheet
                 <select
                   value={selectedPlan.id}
                   onChange={(event) =>
@@ -1859,6 +1870,15 @@ function insertAfterColumn(order: string[], columnId: string, anchorId: string) 
 }
 
 function comparePlansForNavigation(a: MeasuredPlan, b: MeasuredPlan) {
+  if (
+    a.planDocumentId &&
+    b.planDocumentId &&
+    a.planDocumentId === b.planDocumentId &&
+    a.sheetIndex !== b.sheetIndex
+  ) {
+    return a.sheetIndex - b.sheetIndex;
+  }
+
   if (
     a.pdfFilename &&
     b.pdfFilename &&
